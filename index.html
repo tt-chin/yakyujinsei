@@ -2467,7 +2467,7 @@ function endGame(reason){
     const url=base+'?seed='+encodeURIComponent(SEED)+'&rv=1&rules=JP1';
     urlBtn.disabled=true;urlBtn.textContent='⏳ コピー中…';
     let copied=false;
-    try{if(window.isSecureContext&&navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(url);copied=true;}}
+    try{if(window.isSecureContext&&navigator.clipboard&&navigator.clipboard.writeText){copied=await Promise.race([navigator.clipboard.writeText(url).then(()=>true).catch(()=>false),new Promise(resolve=>setTimeout(()=>resolve(false),1200))]);}}
     catch(err){console.warn('Clipboard API unavailable',err);}
     if(!copied){
       const ta=document.createElement('textarea');ta.value=url;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
