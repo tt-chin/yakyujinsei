@@ -383,7 +383,7 @@ const EVENTS=[
  {n:'ブルペンで追加練習',for:'P',gt:'新しい握りを発見。球の伸びが明らかに増した',bt:'投げるほど制球が乱れ、フォームまで崩れた',g:{brk:2},b:{ctl:-2}},
  {n:'遠投トレーニング',for:'A',gt:'レーザービーム育成中',bt:'肩に張りが出て、コーチがストップ',g:{arm:2},b:{arm:-2}},
  {n:'映像分析講座',for:'*',gt:'投打の癖を見抜き、判断力が大幅アップ',bt:'情報を詰め込みすぎて、試合では考えすぎた',g:{eye:2,cat:2,ctl:1},b:{eye:-2,ctl:-1}},
- {n:'走塁特訓',for:'A',gt:'スタート判断が爆速で上達',bt:'ハムストリングを痛めて2週間離脱した。',g:{spd:2},b:{spd:-1,inj:5}},
+ {n:'走塁特訓',for:'A',gt:'スタート判断が爆速で上達',bt:'ハムストリングを痛めて2週間離脱した',g:{spd:2},b:{spd:-1,inj:5}},
  {n:'守備千本ノック',for:'A',gt:'グラブが掃除機みたいに吸い込む',bt:'イレギュラーを食らいまくって自信喪失',g:{rng:1,fld:2},b:{fld:-2}},
  {n:'死球の恐怖',for:'*',gt:'身をひねって回避。反応が速すぎる',bt:'速球をまともに食らった',g:{spd:1},b:{inj:12}},
  {n:'メディア取材',for:'*',gt:'受け答えが好評で人気アップ。野球へのやる気も増した',bt:'失言が記事になり、プレッシャーで調子を崩した',g:{sta:1},b:{con:-1,ctl:-1,sta:-1}},
@@ -921,7 +921,7 @@ function phasePre(){
     };
   }
   /* 大學季前：是否投入選秀與旅外（大二～大四） */
-  if(S.stage==='U'&&S.stageYr>=2){
+  if(false){ /* 大学ドラフトは大学4年終了後の pathChoiceU4 でのみ実施 */
     const o=ovr();
     const opts=[
       {t:'NPBドラフトへ参加',s:`現在の総合能力 ${o}｜年齢補正：若いほど高評価`,f:()=>runDraft(true,afterAsk)},
@@ -2247,7 +2247,7 @@ function retireScene(tiers){
     else if(i===2)txt=`キャリア最後のシリーズ前、球団が簡単なセレモニーを開催。額装ユニフォームと記念レリーフが贈られ、仲間がハイタッチで送り出す。地元紙は「スーパースターではない。だが、どの監督も欲しがる選手だ」と記した。`;
     else txt=`無人の球場の写真に「Thank you, baseball.」の一文だけを添えて投稿。日本時間の深夜、いいねは静かに10万を超えた。`;
   }else{
-    txt=`スポットライトはない。スパイクを磨いてバッグへ入れ、仲間と一人ずつ抱き合い、球場を出る前にスコアボードをもう一度振り返る。二軍球場の夕日は10年前と同じように美しい。`;
+    const retirementGround=S.stage==='CORP'?'社会人野球のグラウンド':S.stage==='IND'?'地方球場':S.stage==='U'?'大学野球のグラウンド':S.stage==='HS'?'母校のグラウンド':'球場';txt=`スポットライトはない。スパイクを磨いてバッグへ入れ、仲間と一人ずつ抱き合い、球場を出る前にスコアボードをもう一度振り返る。${retirementGround}の夕日は10年前と同じように美しい。`;
   }
   card('gold','引退の日',txt);
   /* 名人堂票選(可多聯盟並存) */
@@ -2410,7 +2410,7 @@ function endGame(reason){
   const cur=lv.st==='married'?`妻 ${lv.partner}（子ども${lv.kids}人）`:lv.st==='dating'?`交際中 ${lv.partner}（${lv.dyrs||0}年）`:lv.st==='divorced'?'離婚':'独身';
   const exStr=lv.exes.length?`｜前妻 ${lv.exes.map(e=>`${e.name}（${e.kids}）`).join('、')}`:'';
   const totKids=lv.kids+lv.exes.reduce((t,e)=>t+e.kids,0);
-  card('','キャリアプロフィール',`特性：${tr.join(' ')||'（なし）'}<br>家族：${cur}${exStr}｜子ども合計 ${totKids} 人${lv.affairs?`｜不倫 ${lv.affairs}(${lv.caught})`:''}<br>日本代表出場：${S.intlCount}大会｜キャリア通算の大故障：${S.bigInj}回${S.pos==='P'?`｜トミー・ジョン手術：${S.tjCount}回`:''}<br>生涯収入：<b class="hl" style="font-size:18px">${fmtMoney(Math.round(S.careerEarnings))}</b> 円`);
+  card('','キャリアプロフィール',`特性：${tr.join(' ')||'（なし）'}<br>家族：${cur}${exStr}｜子ども合計 ${totKids} 人${lv.affairs?`｜不倫 ${lv.affairs}(${lv.caught})`:''}<br>日本代表出場：${S.intlCount}大会｜キャリア通算の大故障：${S.bigInj}回${S.pos==='P'?`｜トミー・ジョン手術：${S.tjCount}回`:''}<br>生涯収入：<b class="hl" style="font-size:18px">${fmtMoney(Math.round(S.careerEarnings))}</b>`);
   /* 球迷留言 */
   const pool=FAN[best].slice(); const picks=[];
   while(picks.length<3&&pool.length)picks.push(pool.splice(Math.floor(R()*pool.length),1)[0]);
@@ -2464,7 +2464,7 @@ function endGame(reason){
   });
   urlBtn.addEventListener('click',async()=>{
     const base=location.href.split('#')[0].split('?')[0];
-    const url=base+'?seed='+encodeURIComponent(SEED);
+    const url=base+'?seed='+encodeURIComponent(SEED)+'&rv=1&rules=JP1';
     urlBtn.disabled=true;urlBtn.textContent='⏳ コピー中…';
     let copied=false;
     try{if(window.isSecureContext&&navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(url);copied=true;}}
@@ -2730,7 +2730,7 @@ function shareImage(evals,out){
   }
 
   c.fillStyle='#ffc95c'; c.font='bold 16px sans-serif';
-  c.fillText('生涯収入 '+fmtMoney(Math.round(S.careerEarnings))+' 円',PAD,y); y+=26;
+  c.fillText('生涯収入 '+fmtMoney(Math.round(S.careerEarnings)),PAD,y); y+=26;
   c.fillStyle='#8fae9c'; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
   c.textAlign='right'; c.fillText(APP_VER,W-PAD,H-40); c.textAlign='left';
 
@@ -2860,7 +2860,7 @@ $('btn-start').onclick=()=>{
 
   signTo = function(org,lv,teamId,yrs,mult){ const rec=teamId?teamRec(teamId):pickRecord(listByOrg(org));if(!rec)throw new Error('INVALID_TEAM_MASTER');const changed=rec.teamId!==S.orgTeamId;S.org=org;S.lv=lv;S.stage='PRO';S.team='';S.orgTeamId=rec.teamId;if(changed){S.teamYears=0;S.champThisTeam=false;S.champTeam=null;}const annual=Math.round(salaryFor(lv,S.lastD||0)*(mult||1)/10000)*10000;S.currentSalary=annual;S.ct={org,teamId:rec.teamId,startYear:S.year,yrs:yrs||2,remainingYears:yrs||2,annualSalary:annual,totalValue:annual*(yrs||2),contractType:'NORMAL',extOffered:false,mult:mult||1};card('info','契約',`<b class="hl">${escapeHTML(rec.name)}</b>と${S.ct.yrs}年契約を結んだ（年俸 ${fmtMoney(annual)}）。`);board(2); };
 
-  stageLabel = function(){if(S.stage==='HS')return '高校'+S.stageYr+'年';if(S.stage==='U')return '大学'+S.stageYr+'年';if(S.stage==='CORP')return '社会人'+S.corpYears+'年目';if(S.stage==='IND')return '独立リーグ'+S.indYears+'年目';return LV[S.lv]?.n||S.stage;};
+  stageLabel = function(){if(S.stage==='HS')return '高校'+S.stageYr+'年';if(S.stage==='U')return '大学'+S.stageYr+'年';if(S.stage==='CORP')return '社会人'+(S.corpYears+1)+'年目';if(S.stage==='IND')return '独立リーグ'+(S.indYears+1)+'年目';return LV[S.lv]?.n||S.stage;};
   board = function(phase){LEGACY.board(phase);$('bd-name').firstChild.textContent=S.name;$('bd-sal').textContent=Math.round((S.currentSalary||0)/10000).toLocaleString();const lbl=$('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='現在年俸（万円）';};
 
   function setSchool(kind){const a=kind==='U'?DATA.universities:DATA.highSchools,r=pickRecord(a);S.schoolId=r.schoolId;S.schoolTier=r.tier;S.team=r.name;S.lv=kind;S.org='AMATEUR';}
@@ -2902,7 +2902,13 @@ $('btn-start').onclick=()=>{
   movement = function(){if(S.stage==='HS'){if(S.stageYr<3)advance();else pathChoiceHS();return;}if(S.stage==='U'){if(S.stageYr<4)advance();else pathChoiceU4();return;}if(S.stage==='CORP'){S.corpYears++;const eligible=(S.entryRoute==='HS'?S.corpYears>=3:S.corpYears>=2);const opts=[{t:'社会人野球を続ける',main:true,f:advance},{t:'独立リーグへ移籍',f:()=>{setAmateur('IND');advance();}},{t:'現役を退く',warn:true,f:()=>endGame('社会人野球で現役生活を終えた。')}];if(eligible)opts.unshift({t:'NPBドラフトへ再挑戦',main:true,f:()=>enterDraftPath('CORP')});choose('社会人シーズン終了',opts);return;}if(S.stage==='IND'){S.indYears++;choose('独立リーグシーズン終了',[{t:'NPBドラフトへ再挑戦',main:true,f:()=>enterDraftPath('IND')},{t:'独立リーグに残留',f:advance},{t:'社会人野球へ',f:()=>{setAmateur('CORP');advance();}},{t:'現役を退く',warn:true,f:()=>endGame('独立リーグで現役生活を終えた。')}]);return;}if(S.org==='NPB'&&S.lv==='NPB1'&&S.seasonFactor>0){S.npbRosterDays+=Math.round(145*S.seasonFactor);while(S.npbRosterDays>=145){S.npbRosterDays-=145;S.npbFaSeasons++;}S.faElig=S.npbFaSeasons>=8;}LEGACY.movement();};
 
   const legacyEndGame=LEGACY.endGame;
-  endGame=function(reason){legacyEndGame(reason);setTimeout(()=>{document.querySelectorAll('.card').forEach(c=>{c.innerHTML=c.innerHTML.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');});},0);};
+  endGame=function(reason){legacyEndGame(reason);setTimeout(()=>{
+    /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
+    document.querySelectorAll('.card').forEach(c=>{
+      const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
+      for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeValue=n.nodeValue.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');
+    });
+  },0);};
 
   function startJapanese(){let params=new URLSearchParams(location.search),rv=params.get('rv')||'1',rules=params.get('rules')||RULES_VERSION;if(rv!=='1'||rules!==RULES_VERSION){alert('このリプレイ形式には対応していません（UNSUPPORTED_REPLAY_VERSION）');return;}let sv=normalizeSeed($('seed-show').value||params.get('seed'));if(!sv)sv=generateSeed();SEED=sv;const pos=document.querySelector('#seg-pos button.on')?.dataset.v||'P';const nm=normalizePlayerName($('in-name').value,SEED,pos);S={rngState:0};seedInit(SEED);S=newState(nm,pos);history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}&rv=1&rules=${RULES_VERSION}`);$('start').style.display='none';$('board').style.display='';$('act').style.display='';card('info','選手誕生',`${S.year}年春、${POSN[S.pos]} <b class="hl">${escapeHTML(S.name)}</b>は<b class="hl">${escapeHTML(S.team)}</b>野球部に入部した。ここから、すべての選択が野球人生を変える。`);startYear();}
   $('btn-start').onclick=startJapanese;
