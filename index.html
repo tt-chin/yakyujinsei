@@ -2247,7 +2247,7 @@ function retireScene(tiers){
     else if(i===2)txt=`キャリア最後のシリーズ前、球団が簡単なセレモニーを開催。額装ユニフォームと記念レリーフが贈られ、仲間がハイタッチで送り出す。地元紙は「スーパースターではない。だが、どの監督も欲しがる選手だ」と記した。`;
     else txt=`無人の球場の写真に「Thank you, baseball.」の一文だけを添えて投稿。日本時間の深夜、いいねは静かに10万を超えた。`;
   }else{
-    const retirementGround=S.stage==='CORP'?'社会人野球のグラウンド':S.stage==='IND'?'地方球場':S.stage==='U'?'大学野球のグラウンド':S.stage==='HS'?'母校のグラウンド':'球場';txt=`スポットライトはない。スパイクを磨いてバッグへ入れ、仲間と一人ずつ抱き合い、球場を出る前にスコアボードをもう一度振り返る。${retirementGround}の夕日は10年前と同じように美しい。`;
+    const retirementGround=S.stage==='CORP'?'社会人野球のグラウンド':S.stage==='IND'?'地方球場':S.stage==='U'?'大学野球のグラウンド':S.stage==='HS'?'母校のグラウンド':'球場';txt=`スポットライトはない。スパイクを磨いてバッグへ入れ、仲間と一人ずつ抱き合い、${retirementGround}を後にする前にスコアボードをもう一度振り返る。初めてこのグラウンドに立った日の夕日と同じように美しい。`;
   }
   card('gold','引退の日',txt);
   /* 名人堂票選(可多聯盟並存) */
@@ -2595,7 +2595,7 @@ function shareImage(evals,out){
   const posN={P:roleN(S.role)+'投手',C:'捕手',IF:'内野手',OF:'外野手'}[S.pos];
 
   // Header
-  c.fillStyle='#8fae9c'; c.font='13px sans-serif'; c.fillText('Y a K y o L i f e・引退記念',PAD,30);
+  c.fillStyle='#8fae9c'; c.font='13px sans-serif'; c.fillText('野球人生シミュレーター・引退記念',PAD,30);
   c.fillStyle='#ffc95c'; c.font='bold 36px sans-serif'; c.fillText(S.name,PAD,52);
   c.fillStyle='#e8efe9'; c.font='15px sans-serif';
   c.fillText(`${primaryPos()}｜${playerType()}｜${hist.length?hist[0].y:'?'}–${S.year}｜引退時${S.age}歳${S.pos==='P'&&S.tjCount?`｜TJ×${S.tjCount}`:''}`,PAD,98);
