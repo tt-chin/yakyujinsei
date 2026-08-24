@@ -989,9 +989,11 @@ function drawEvents(n,done){
   }}]);
 }
 /* 出廠預設為全虛構人名;玩家可透過隱藏編輯器自訂名單(僅存於玩家本機) */
-let CHEER=['林小青','チェン・ルオトン','チャン・ペイチ','王永恩','シュ・ユンシー','蘇彩鎮','ジョウ・イージエ','郭志宣'];
+let CHEER=['高橋美咲','佐藤彩花','中村ひなた','小林結衣','山本玲奈','伊藤七海','渡辺さくら','加藤真央','松本葵','吉田莉子','岡田美月','清水楓'];
+const PARTNER_JOB={'高橋美咲':'チアリーダー','佐藤彩花':'スポーツアナウンサー','中村ひなた':'タレント','小林結衣':'女優','山本玲奈':'歌手','伊藤七海':'スポーツキャスター','渡辺さくら':'モデル','加藤真央':'お笑いタレント','松本葵':'チアリーダー','吉田莉子':'アイドル','岡田美月':'フリーアナウンサー','清水楓':'俳優','森川あかり':'スポーツキャスター'};
+function partnerJob(name){return PARTNER_JOB[name]||'タレント';}
 const CHEER_DEFAULT=CHEER.slice();
-let CHEER_SAFE=['風水沙']; /* 不會變成小三的名單:可交往/結婚,永不出現在不倫人選 */
+let CHEER_SAFE=['森川あかり']; /* 不會變成小三的名單:可交往/結婚,永不出現在不倫人選 */
 function datePool(){ /* 交往/結婚名單 */
   if(CHEER_SAFE.length>=CHEER.length) return CHEER_SAFE.slice();      /* 安全名單較長:直接整組替換 */
   return CHEER_SAFE.concat(CHEER.slice(CHEER_SAFE.length));           /* 較短:同數量替換進名單 */
@@ -1037,16 +1039,16 @@ function loveEvent(next){
   /* ---------- 未婚/離婚:緋聞 → 雙重關卡 → 交往 ---------- */
   if(L.st==='single'||L.st==='divorced'){
     const p=pick(datePool());
-    card('info','グラウンド外の話題',`あなたと人気チアの <b class="hl">${p}</b>が球場外で一緒にいるところを撮られ、熱愛疑惑が芸能面のトップに。${L.exes.length?'（コメント欄：「離婚歴あるのにモテすぎやろ」）':''}`);
+    card('info','グラウンド外の話題',`あなたと人気${partnerJob(p)}の <b class="hl">${p}</b>が球場外で一緒にいるところを撮られ、熱愛疑惑が芸能面のトップに。${L.exes.length?'（コメント欄：「離婚歴あるのにモテすぎやろ」）':''}`);
     choose('記者がマイクを向けてきた。「お二人は付き合っているんですか？」',[
-      {t:'堂々と認める：「温かく見守ってください」',s:'彼女が認められるか次第（球団に恋愛禁止令の噂）',f:()=>{
+      {t:'堂々と認める：「温かく見守ってください」',s:'相手の所属先が認めるか次第（厳しいイメージ管理の噂）',f:()=>{
         if(chance(65)){ L.st='dating'; L.partner=p; L.dyrs=0; L.datedTimes=(L.datedTimes||0)+1;
           const gt=loveGainTxt('sta',1); board(1);
           card('gold','交際公表',`<b class="hl">${p}</b>がSNSに手をつないだ写真を投稿。「祝福ありがとうございます」。恋は人を輝かせる――${gt}。二人は正式に交際を始めた。`);
           if(L.datedTimes>=3&&L.kids===0&&!S.traits.married&&!S.traits.confidante){ S.traits.confidante=true;
             card('gold','隠し称号：女友達止まり',`3度目の恋も同じ結末。「私はあなたを好きになったのに、あなたは親友としか見てくれなかった」――誰かの人生で、永遠に脇役の人もいる。`); board(1); }
         }
-        else{ card('bad','一方的な交際宣言',`翌日、彼女は所属事務所を通じて「ただの友人です」と否定。チアには<b class="dn">恋愛禁止令</b>があるとの噂で、相当な圧力らしい。一人だけ取り残されてクッソ気まずい。`); }
+        else{ card('bad','一方的な交際宣言',`翌日、${p}は所属先を通じて「ただの友人です」と否定。${partnerJob(p)}として<b class="dn">イメージ管理が厳しい</b>らしく、相当な圧力があったようだ。一人だけ取り残されてクッソ気まずい。`); }
         next(); }},
       {t:'笑って答えず、足早に立ち去る',main:true,s:'認めなければ進展なし',f:()=>{
         card('info','つづく','熱愛騒動は3日で鎮火。まだタイミングではなかったのかもしれない。'); next(); }}]); return;
@@ -1531,7 +1533,7 @@ function awards(bucket,st){
 
   /* 3. 投手個人獎項 */
   if(S.pos==='P'){
-    const aw='年間最優秀投手';
+    const aw='最優秀投手賞';
     if(isSP() && st.era <= th.era[0] && st.IP >= th.g){ 
       const god = st.era <= th.era[1] && st.IP >= 150;
       const p = god ? 100 : clamp(30 + Math.round((th.era[0] - st.era) * 35 + (st.IP - th.g) * 0.4), 30, 95);
@@ -1540,17 +1542,17 @@ function awards(bucket,st){
     if(S.role==='CL' && st.SV >= th.sv[0]){
       const god = st.SV >= th.sv[1];
       const p = god ? 100 : clamp(28 + (st.SV - th.sv[0]) * 5, 28, 95);
-      if(chance(p)) h.push(`${y} ${lgN}セーブキング`);
+      if(chance(p)) h.push(`${y} ${lgN}最多セーブ`);
     }
     if(S.role==='MR' && (st.HLD||0) >= th.hld[0]){
       const god = (st.HLD||0) >= th.hld[1];
       const p = god ? 100 : clamp(28 + ((st.HLD||0) - th.hld[0]) * 4, 28, 95);
-      if(chance(p)) h.push(`${y} ${lgN}ホールド王`);
+      if(chance(p)) h.push(`${y} ${lgN}最優秀中継ぎ`);
     }
     if(st.SO >= th.so[0]){
       const god = st.SO >= th.so[1];
       const p = god ? 100 : clamp(25 + Math.round((st.SO - th.so[0]) * 1.2), 25, 95);
-      if(chance(p)) h.push(`${y} ${lgN}三振王`);
+      if(chance(p)) h.push(`${y} ${lgN}最多奪三振`);
     }
   }
   /* 4. 野手個人獎項 */
@@ -1558,17 +1560,17 @@ function awards(bucket,st){
     if(st.PA >= 350 && st.avg >= th.avg[0]){
       const god = st.avg >= th.avg[1];
       const p = god ? 100 : clamp(25 + Math.floor((st.avg - th.avg[0]) / 0.005) * 6, 25, 95);
-      if(chance(p)) h.push(`${y} ${lgN}ストライクキング`);
+      if(chance(p)) h.push(`${y} ${lgN}首位打者`);
     }
     if(st.PA >= 300 && st.HR >= th.hr[0]){
       const god = st.HR >= th.hr[1];
       const p = god ? 100 : clamp(25 + (st.HR - th.hr[0]) * 5, 25, 95);
-      if(chance(p)) h.push(`${y} ${lgN}ホームラン王`);
+      if(chance(p)) h.push(`${y} ${lgN}本塁打王`);
     }
     if(st.PA >= 300 && st.SB >= 25){ // SB不隨場次放大，全聯盟標準一致
       const god = st.SB >= 45;
       const p = god ? 100 : clamp(25 + (st.SB - 25) * 4, 25, 95);
-      if(chance(p)) h.push(`${y} ${lgN}盗み王`);
+      if(chance(p)) h.push(`${y} ${lgN}盗塁王`);
     }
     if(st.PA >= 300 && st.RBI >= th.rbi[0]){
       const god = st.RBI >= th.rbi[1];
@@ -1579,17 +1581,17 @@ function awards(bucket,st){
     if(st.PA >= 350 && obp >= th.obp[0]){
       const god = obp >= th.obp[1];
       const p = god ? 100 : clamp(25 + Math.floor((obp - th.obp[0]) / 0.005) * 5, 25, 95);
-      if(chance(p)) h.push(`${y} ${lgN}出塁王`);
+      if(chance(p)) h.push(`${y} ${lgN}最高出塁率`);
     }
     const def1 = st.DEF || 0;
     if(S.dpos !== 'DH' && S.seasonFactor >= 0.7){
       if(def1 >= 6){
         const pGlove = clamp(38 + (def1 - 6) * 5, 38, 95);
-        if(chance(pGlove)) h.push(`${y} ${lgN}ゴールデングローブ`);
+        if(chance(pGlove)) h.push(`${y} ${lgN}ゴールデングラブ賞`);
       }
       if(def1 >= 11){
         const pDef = clamp(30 + (def1 - 11) * 6, 30, 95);
-        if(chance(pDef)) h.push(`${y} ${lgN}ディフェンスキング`);
+        if(chance(pDef)) h.push(`${y} ${lgN}年間最優秀守備選手`);
       }
     }
   }
@@ -2158,7 +2160,7 @@ function defShare(bucket){ /* 守備貢獻占生涯總價值比重 0~1 */
 function posLegendPhrase(bucket){ /* 依守備占比與獎項決定守位敘述 */
   const share=defShare(bucket), st=S.stats[bucket];
   const dp=S.dpos||(S.pos==='C'?'C':null);
-  const hasGlove=S.honors.some(h=>h.includes('ゴールデングローブ')||h.includes('ディフェンスキング'));
+  const hasGlove=S.honors.some(h=>h.includes('ゴールデングラブ賞')||h.includes('年間最優秀守備選手'));
   if(S.pos==='P'||!dp||dp==='DH')return '';
   const posN=DPN[dp]||'';
   if(share>=0.34||(hasGlove&&share>=0.22))return `、${{SS:'史上最高の遊撃手の一人',CF:'守備範囲でリーグを震撼させた中堅手',C:'捕手守備の化身',_:'守備のレジェンド'}[dp]||('球界屈指の'+posN)}として`;
@@ -2168,7 +2170,7 @@ function posLegendPhrase(bucket){ /* 依守備占比與獎項決定守位敘述 
 function honorScore(bucket){
   const lg={CPBL:'台湾プロ野球',NPB:'NPB',MLB:'メジャーリーグ'}[bucket];
   const champ={CPBL:'台湾シリーズ優勝',NPB:'日本一',MLB:'ワールドシリーズチャンピオン'}[bucket];
-  const ace='年間最優秀投手';
+  const ace='最優秀投手賞';
   let sc=0,mvp=0,aceN=0,king=0;
   S.honors.forEach(h=>{
     if(h.includes(champ)){sc+=90;return;}
@@ -2176,8 +2178,8 @@ function honorScore(bucket){
     if(!h.includes(lg))return;
     if(h.includes('年間MVP')){sc+=420;mvp++;}
     else if(h.includes('新人王'))sc+=140;
-    else if(h.includes('ゴールデングローブ')){sc+=300;king++;}
-    else if(h.includes('ディフェンスキング')){sc+=220;king++;}
+    else if(h.includes('ゴールデングラブ賞')){sc+=300;king++;}
+    else if(h.includes('年間最優秀守備選手')){sc+=220;king++;}
     else if(h.includes('王')){sc+=160;king++;}
     else if(h.includes('オールスターゲーム'))sc+=(S.pos==='P'?70:40);
   });
