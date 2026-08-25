@@ -433,7 +433,7 @@ function traitCard(key,name,desc,tone){ S.traits[key]=true;
 function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
     if(!S.removed.includes(label))S.removed.push(label); } }
 /* 只會這個:只吃三種角色維度——打擊(力量/Contact)、跑壘(速度)、守備(綜合) */
-function careerAllStars(){ let n=0; ['CPBL','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
+function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
 function toolGap(){ const a=S.ab;
   const hit=Math.max(a.pow,a.con);        /* 打擊維度:力量或 Contact 取高 */
   const run=a.spd;                         /* 跑壘維度 */
@@ -945,10 +945,10 @@ function phasePre(){
   if(S.stage==='PRO'&&S.age>=36&&S.rehab===0){
     const oldOpts=[{t:'もう一年挑戦する',main:true,f:afterAsk}];
     /* 旅外老將(衰退期):放棄現有合約,落葉歸根返台;ovr<30(真的打不動)不給 */
-    if(S.org!=='CPBL'&&ovr()>=LV.CPBL2.min){
+    if(['MLB','MiLB','KBO','CPBL'].includes(S.org)&&ovr()>=LV.NPB2.min){
       oldOpts.push({t:'契約を断り、日本球界へ戻る',s:'全盛期は過ぎた。それでも最後のプレーを故郷のファンに見せたい',f:()=>{
-        card('good','故郷へ帰る',`全盛期はとうに過ぎた。それでも日本の球団は手を差し伸べてくれた――求めているのは今の数字だけではない。海の向こうで積み上げた実績と、あなたの名前そのものだ。契約を断って日本球界へ戻り、最後のプレーを日本のファンに見せることを決めた。`);
-        signTo('CPBL','CPBL1'); advance();
+        const returnLv=ovr()>=LV.NPB1.min?'NPB1':'NPB2';
+        signTo('NPB',returnLv);card('good','日本球界復帰',`海外で積み上げた経験を携え、<b class="hl">${S.teamName()}</b>で日本球界へ復帰した。`);advance();
       }});
     }
     oldOpts.push({t:'引退記者会見を開く',warn:true,s:'現役を引退する',f:()=>{buyoutRemaining();daibaFarewell(()=>endGame('功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'));}});
@@ -1505,13 +1505,14 @@ function proSeason(){
 }
 function awards(bucket,st){
   if(!LV[S.lv].top||S.seasonFactor===0)return;
-  const y=S.year,h=S.honors,lgN={CPBL:'台湾プロ野球',NPB:'NPB',MLB:'メジャーリーグ'}[bucket];
+  const y=S.year,h=S.honors,lgN={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ'}[bucket];
 
   /* 建立符合 simSeason 數學邏輯的門檻表 [基礎門檻, 鬼神保底門檻] */
   /* 比率數據(ERA/AVG/OBP)與非場次連動數據(SV/HLD/SB)三個聯盟統一標準 */
   /* 只有吃打席/局數的(HR/RBI/SO)依 120:143:162 場次等比放大 */
   const TH = {
     CPBL: { g: 120, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [130, 180], avg: [0.300, 0.360], hr: [20, 32], rbi: [75, 105], obp: [0.370, 0.430] },
+    KBO:  { g: 144, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [156, 216], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 126], obp: [0.370, 0.430] },
     NPB:  { g: 143, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [155, 215], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 125], obp: [0.370, 0.430] },
     MLB:  { g: 162, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [175, 240], avg: [0.300, 0.360], hr: [27, 43], rbi: [100, 140], obp: [0.370, 0.430] }
   };
@@ -1520,9 +1521,9 @@ function awards(bucket,st){
   /* 1. 明星賽入選：隨表現 (d值) 動態提升機率 */
   { const d=st.d;
     let asP=clamp(28+d*7,3,92);
-    if(bucket==='CPBL'&&S.orgTeamId==='台中マンモス')asP=clamp(asP+30,3,97); /* 人氣球團加成 */
+    if(bucket==='CPBL'&&S.orgTeamId==='CPBL_TAICHUNG_MAMMOTHS')asP=clamp(asP+30,3,97); /* 人気球団補正 */
     if(chance(asP)){ S.stats[bucket].AS++;
-      h.push(`${y} ${lgN}オールスターゲーム`+((bucket==='CPBL'&&S.orgTeamId==='台中マンモス'&&d<2)?'(人気セレクション)':'')); } }
+      h.push(`${y} ${lgN}オールスターゲーム`+((bucket==='CPBL'&&S.orgTeamId==='CPBL_TAICHUNG_MAMMOTHS'&&d<2)?'(ファン投票選出)':'')); } }
 
   /* 2. 新人王：依 d 值成長機率 */
   const rookieOK=bucket!=='CPBL'||!(S.stats.NPB||S.stats.MLB||S.stats.MINOR);
@@ -1707,7 +1708,6 @@ function movement(){
   }
   /* 職業 */
   if(S.skipMid){ advance(); return; } /* 復健年不異動 */
-  if(o<30){ buyoutRemaining(1); endGame('能力が台湾プロ野球二軍の最低水準を下回り、'+S.year+' 年シーズン終了後に自由契約となり、現役引退を余儀なくされた。'); return; }
   if(S.org==='NPB')S.npbYears++;
   if(LV[S.lv].top){ /* 轉換聯盟：直接解除球團 5 年控制期限制，往後只要合約到期就是自由球員 */
     if(S.svcOrg && S.svcOrg!==S.org){ S.faElig=true; }
@@ -1716,7 +1716,7 @@ function movement(){
   }
   /* 神主牌:同隊連續年數(轉隊會歸零,見 doTrade/signTo) */
   if(S.stage==='PRO'&&LV[S.lv].top){ S.teamYears=(S.teamYears||0)+1;
-    if(!S.traits.goldcloth&&S.orgTeamId==='台中マンモス'&&(S.teamTally.CPBL&&S.teamTally.CPBL['台中マンモス']>=10)){ S.traits.goldcloth=true;
+    if(!S.traits.goldcloth&&S.orgTeamId==='CPBL_TAICHUNG_MAMMOTHS'&&(S.teamTally.CPBL&&S.teamTally.CPBL['CPBL_TAICHUNG_MAMMOTHS']>=10)){ S.traits.goldcloth=true;
       card('gold','隠し属性解放：ゴールデングラブ常連','台中マンモス一筋10年。あなたは球団の象徴となった。黄金のユニフォームを着た姿は、本拠地のファンにとって信仰そのものだ。'); board(1); }
     if(!S.traits.franchise&&S.teamYears>=7&&S.champThisTeam&&S.champTeam===S.orgTeamId){ S.traits.franchise=true;
       card('gold','隠し属性解放：神カード','この街のファンはあなたの成長を見守ってきた。放出すれば本拠地が炎上することをフロントも分かっている――<b class="hl">所属球団との再契約は年俸係数を1.2倍以上に固定し、引退評価にも加点</b>。'); }
@@ -1821,9 +1821,8 @@ function handleDemotion(o,path,idx){
       if(S.org==='MiLB'){
         if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP())))alts.push({t:'NPB一軍への転職',s:'NPB移籍契約',f:()=>{buyoutRemaining();signTo('NPB','NPB1');advance();}});
         else if(o>=LV.NPB2.min&&chance(50))alts.push({t:'日本の二軍（支配下）へ移籍',f:()=>{buyoutRemaining();signTo('NPB','NPB2');advance();}});
-        if(o>=LV.CPBL1.min)alts.push({t:'日本へ戻り、NPB一軍へ加入',s:'落ち葉は根に戻ります',f:()=>{buyoutRemaining();signTo('CPBL','CPBL1');advance();}});
       }else if(S.org==='NPB'&&o>=LV.CPBL1.min&&chance(70)){
-        alts.push({t:'日本へ戻り、NPB一軍へ加入',f:()=>{buyoutRemaining();signTo('CPBL','CPBL1');advance();}});
+        alts.push({t:'台湾プロ野球からのオファーを受ける',s:'台湾プロ野球一軍契約',f:()=>{buyoutRemaining();signTo('CPBL','CPBL1');advance();}});
       }
       if(alts.length){
         card('bad','ダウングレードの通知',`成績が基準に届かず、球団は<b class="dn">${LV[path[t]].n}</b>への降格を通告。しかし同時に、他リーグからオファーが届いた。`);
@@ -1949,9 +1948,9 @@ function faFlow(o){
        card('info','契約更改',`<b class="hl">${S.teamName()}</b>と<b class="hl">${y}年</b>契約で更改（年俸係数×${m.toFixed(2)}）。`); advance(); })},
     {t:'FA宣言して市場の評価を確かめる',warn:true,s:'成績次第ではオファー0件、元球団へ減俸で戻る可能性あり',f:()=>faMarket(o,d)}];
   /* 5a 旅外球員合約到期:多一個返台加盟中職的選項(落葉歸根) */
-  if(S.org!=='CPBL'&&o>=LV.CPBL1.min){
-    faOpts.push({t:'日本へ戻り、NPB一軍へ加入',s:'故郷へ戻り、慣れ親しんだ本拠地へ',
-      f:()=>{ signTo('CPBL','CPBL1'); card('good','日本球界復帰',`海外挑戦を終え、<b class="hl">${S.teamName()}</b>へ復帰。故郷のファンの前で再びプレーする道を選んだ。`); advance(); }});
+  if(['MLB','MiLB','KBO','CPBL'].includes(S.org)&&o>=LV.NPB2.min){
+    faOpts.push({t:'日本球界へ戻る',s:'故郷へ戻り、NPB球団からのオファーを受ける',
+      f:()=>{ signTo('NPB',o>=LV.NPB1.min?'NPB1':'NPB2'); card('good','日本球界復帰',`海外挑戦を終え、<b class="hl">${S.teamName()}</b>へ復帰。故郷のファンの前で再びプレーする道を選んだ。`); advance(); }});
   }
   choose(`契約満了・FA権取得（所属球団の優勝確率 ${teamChampRate(S.orgTeamId)}%）`,faOpts);
 }
@@ -2122,8 +2121,8 @@ function advance(){
   S.age++; S.year++; S.stageYr++; startYear();
 }
 /* ================= 生涯終章 ================= */
-const TIER_TH={CPBL:[12000,7000,4300,2100],NPB:[8500,6200,3000,1900],MLB:[7500,6200,3500,1900]}; /* M2:五帶金字塔校準(擬真玩家尺)——成功稀有化、浮沉為大宗、失敗有感 */
-const LG_N={CPBL:'台湾プロ野球',NPB:'NPB',MLB:'メジャーリーグ',MINOR:'マイナーリーグ/二軍'};
+const TIER_TH={CPBL:[8500,6000,3100,1800],KBO:[8200,5900,3000,1800],NPB:[8000,5800,3000,1800],MLB:[8500,6500,3600,2000]};
+const LG_N={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ',MINOR:'マイナーリーグ/二軍'};
 function careerScore(st){
   if(S.pos==='P')return st.W*13+st.SV*6+st.SO*0.9+st.IP*0.35;
   return st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+Math.max(0,st.DEF||0)*6;
@@ -2150,7 +2149,7 @@ function primaryPos(){ /* 生涯主守位:過半→該位;無過半→工具人/
 function capTeam(bucket){ /* 該聯盟效力最久的球隊,作為名人堂帽徽 */
   const tb=(S.teamTally&&S.teamTally[bucket])||{}; let best=null,bn=-1;
   for(const k in tb)if(tb[k]>bn){bn=tb[k];best=k;}
-  return best;
+  return best&&window.TEAM_MASTER&&window.TEAM_MASTER[best]?window.TEAM_MASTER[best].name:best;
 }
 function defShare(bucket){ /* 守備貢獻占生涯總價值比重 0~1 */
   const st=S.stats[bucket]; if(!st||S.pos==='P')return 0;
@@ -2169,8 +2168,8 @@ function posLegendPhrase(bucket){ /* 依守備占比與獎項決定守位敘述 
   return '';
 }
 function honorScore(bucket){
-  const lg={CPBL:'台湾プロ野球',NPB:'NPB',MLB:'メジャーリーグ'}[bucket];
-  const champ={CPBL:'台湾シリーズ優勝',NPB:'日本一',MLB:'ワールドシリーズチャンピオン'}[bucket];
+  const lg={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ'}[bucket];
+  const champ={CPBL:'台湾シリーズ優勝',KBO:'韓国シリーズ優勝',NPB:'日本一',MLB:'ワールドシリーズチャンピオン'}[bucket];
   const ace='最優秀投手賞';
   let sc=0,mvp=0,aceN=0,king=0;
   S.honors.forEach(h=>{
@@ -2184,6 +2183,10 @@ function honorScore(bucket){
     else if(h.includes('王')){sc+=160;king++;}
     else if(h.includes('オールスターゲーム'))sc+=(S.pos==='P'?70:40);
   });
+  if(bucket==='NPB'){
+    sc+=(S.intlCount||0)*80;
+    S.honors.forEach(h=>{if(!/ワールド・ベースボール・クラシック|WBSCプレミア12/.test(h))return;if(h.includes('優勝'))sc+=200;else if(h.includes('準優勝'))sc+=100;});
+  }
   if(S.traits.franchise)sc+=200; /* 神主牌:忠誠加成 */
   return {sc,mvp,aceN,king};
 }
@@ -2229,7 +2232,7 @@ function retireScene(tiers){
   /* tiers: {CPBL:{i,sc},NPB:...,MLB:...} 有出賽才有 */
   /* 生涯代表聯盟＝出賽最久的頂級聯盟;分級取生涯最佳(i 最小) */
   let lg=bucketOf(S.lv), bestI=4;
-  const order=['MLB','NPB','CPBL'];
+  const order=['MLB','NPB','KBO','CPBL'];
   order.forEach(b=>{ if(tiers[b]&&tiers[b].i<bestI){ bestI=tiers[b].i; } });
   /* 代表聯盟:在最佳分級的聯盟中,取出賽年資最多者 */
   let repYr=-1;
@@ -2242,11 +2245,15 @@ function retireScene(tiers){
     else if(i===2)txt=`${S.pos==='P'?'シーズン最後の本拠地戦、球団はあなたを先発マウンドへ送った。1回を投げ終えて交代すると、観客は総立ちで拍手。仲間はダッグアウト前に二列で並び、ハイタッチで迎えた。花火もライブもない。ただスタンドには「全力の一球一球をありがとう」と手書きした横断幕が掲げられていた。':'シーズン最後の本拠地戦、球団はあなたを一番打者で先発起用。最初の打席後に交代すると、観客は総立ちで拍手。仲間はダッグアウト前に二列で並び、ハイタッチで迎えた。花火もライブもない。ただスタンドには「全力で走った一歩一歩をありがとう」と手書きした横断幕が掲げられていた。'}`;
     else txt=`チームの公式ウェブサイトのプレスリリースで引退を発表しましたね。あなたがこの投稿を投稿した夜、何十人もの古いファンがあなたのソーシャルメディアに殺到し、「お疲れ様でした」というメッセージを残しました。それがプロ野球の特徴です。誰もが儀式を持っているわけではありませんが、真剣にプレーする人には必ずそれを覚えている人がいます。`;
   }else if(lg==='NPB'){
-    if(i<=1)txt=`球団が<b class="hl">引退試合</b>を用意した。最後の守備を終えると一人グラウンドに残され、両軍選手が整列。花束、監督との抱擁、そして3回、4回、5回と<b class="hl">胴上げ</b>された。花束を抱えて場内を一周すると、日本のファンが中国語で「謝謝」と書いたタオルを掲げている。会見では「ここでプレーできたことが人生最大の誇り」と語った。翌朝、宙を舞う写真が全スポーツ紙の一面を飾った。`;
-    else if(i===2)txt=`最終戦後、球団が短い引退セレモニーを開催。花束、額装した記念ユニフォーム、監督との記念撮影。場内放送が通算成績を読み上げると、ビジターのファンも立ち上がって拍手した。会見で記者がたどたどしい中国語で「また戻ってきますか」と尋ねると、あなたは笑ってうなずいた。`;
-    else txt=`球団を通じて引退を発表した。ロッカーを片づけた日、通訳が選手通路の最後まで付き添い、警備員も深々と頭を下げた。異国で戦った日々は終わり、スーツケースには捨てられなかった練習着が数枚残った。`;
+    if(i<=1)txt=`球団が<b class="hl">引退試合</b>を用意した。最後の守備を終えると一人グラウンドに残され、両軍選手が整列。花束、監督との抱擁、そして何度も<b class="hl">胴上げ</b>された。花束を抱えて場内を一周し、満員のファンへ深々と頭を下げた。翌朝、宙を舞う写真が全スポーツ紙の一面を飾った。`;
+    else if(i===2)txt=`最終戦後、球団が短い引退セレモニーを開催。花束、額装した記念ユニフォーム、監督との記念撮影。場内放送が通算成績を読み上げると、ビジターのファンも立ち上がって拍手した。会見では、支えてくれたファンと仲間への感謝を語った。`;
+    else txt=`球団を通じて引退を発表した。ロッカーを片づけた日、仲間やスタッフが選手通路の最後まで見送り、警備員も深々と頭を下げた。スーツケースには、捨てられなかった練習着が数枚残った。`;
+  }else if(lg==='KBO'){
+    if(i<=1)txt=`球団が本拠地最終戦を引退試合として開催した。最後のプレーを終えると両軍の選手が整列し、満員のファンが総立ちで拍手。大型ビジョンには韓国で戦った日々が映し出され、古巣の仲間から花束が贈られた。`;
+    else if(i===2)txt=`シーズン最終戦後、球団が引退セレモニーを開催した。場内放送がKBO通算成績を読み上げると、ホームとビジター双方のファンから温かい拍手が送られた。`;
+    else txt=`球団を通じて現役引退を発表した。ロッカーを片づけ、支えてくれた韓国のチームメートとスタッフへ一人ずつ感謝を伝えた。`;
   }else if(lg==='MLB'){
-    if(i<=1)txt=`本拠地最終戦。最後の打席を前に観客は3分間の総立ち拍手。主審も脇へ下がって静かに待った。打席後に交代すると、全員がダッグアウトから出て抱きしめ、大型ビジョンに功績映像が流れる――<b class="hl">Curtain Call</b>。再び姿を見せ、二度帽子を振った。会見には各国メディアが詰めかけ、台湾の放送局は一晩中特番を放送した。`;
+    if(i<=1)txt=`本拠地最終戦。最後の打席を前に観客は3分間の総立ち拍手。主審も脇へ下がって静かに待った。打席後に交代すると、全員がダッグアウトから出て抱きしめ、大型ビジョンに功績映像が流れる――<b class="hl">Curtain Call</b>。再び姿を見せ、二度帽子を振った。会見には各国メディアが詰めかけ、日本のスポーツメディアも一晩中特集を放送した。`;
     else if(i===2)txt=`キャリア最後のシリーズ前、球団が簡単なセレモニーを開催。額装ユニフォームと記念レリーフが贈られ、仲間がハイタッチで送り出す。地元紙は「スーパースターではない。だが、どの監督も欲しがる選手だ」と記した。`;
     else txt=`無人の球場の写真に「Thank you, baseball.」の一文だけを添えて投稿。日本時間の深夜、いいねは静かに10万を超えた。`;
   }else{
@@ -2255,13 +2262,13 @@ function retireScene(tiers){
   card('gold','引退の日',txt);
   /* 名人堂票選(可多聯盟並存) */
   const hofs=[]; let firstBallot=false; const hofLeagues=[];
-  const HOF_CFG={CPBL:{n:'台湾プロ野球殿堂',wait:5,total:132,lg:'台湾プロ野球'},NPB:{n:'日本フィールド野球場',wait:5,total:326,lg:'NPB'},MLB:{n:'野球殿堂',wait:5,total:389,lg:'メジャーリーグ'}};
-  ['CPBL','NPB','MLB'].forEach(b=>{ const t=tiers[b]; if(!t)return;
+  const HOF_CFG={CPBL:{n:'台湾プロ野球殿堂',wait:5,total:132,lg:'台湾プロ野球'},KBO:{n:'韓国野球殿堂',wait:5,total:250,lg:'KBO'},NPB:{n:'日本野球殿堂',wait:5,total:326,lg:'NPB'},MLB:{n:'アメリカ野球殿堂',wait:5,total:389,lg:'メジャーリーグ'}};
+  ['CPBL','KBO','NPB','MLB'].forEach(b=>{ const t=tiers[b]; if(!t)return;
     const cfg=HOF_CFG[b];
     if(t.i===0){
       /* 第一年當選門檻:評價分明顯超標(1.15×名人堂門檻)才 first-ballot,否則需等 N 年 */
       const th=TIER_TH[b][0];
-      const fbMult={CPBL:1.12,NPB:1.12,MLB:1.2}[b]||1.2; /* 大聯盟最嚴,中職日職放寬 */
+      const fbMult={CPBL:1.15,KBO:1.15,NPB:1.12,MLB:1.2}[b]||1.2;
       const firstNow = t.sc>=th*fbMult;
       const ballotYr = firstNow?1:ri(2,6);
       if(firstNow){ firstBallot=true; }
@@ -2270,7 +2277,7 @@ function retireScene(tiers){
       const votes=Math.round(cfg.total*Math.max(75,pct)/100);
       if(!S.hofInfo)S.hofInfo=[]; S.hofInfo.push({lg:cfg.lg,yr:ballotYr,pct:Math.max(75,pct).toFixed(1)}); /* 供結算圖 */
       const cap=capTeam(b), phr=posLegendPhrase(b);
-      hofs.push(`引退する<b class="hl">${cfg.wait}</b>年以降 (${yr+cfg.wait}年) が候補に入り、<b class="hl">いいえ。${ballotYr}年次投票</b>による<b class="hl">${votes}</b>投票数（得票率${Math.max(75,pct).toFixed(1)}％） 勝利した<b class="hl">${cfg.n}</b> - あなた<b class="hl">${cap||'—'}</b>代表選手ステータス${phr}あなたの名前を残してください。${ballotYr===1?'<b class="hl">一票入魂，首輪即殿堂。</b>':''}プレートにあるチームエンブレムは、${cap||'—'}。`);
+      hofs.push(`引退から<b class="hl">${cfg.wait}年後</b>（${yr+cfg.wait}年）に候補入りし、<b class="hl">${ballotYr}年目の投票</b>で<b class="hl">${votes}票</b>（得票率${Math.max(75,pct).toFixed(1)}%）を獲得。<b class="hl">${cfg.n}</b>入りを果たした。${cap?`代表球団は<b class="hl">${cap}</b>${phr}。`:''}${ballotYr===1?'<b class="hl">初回投票での殿堂入り。</b>':''}`);
     }else if(t.i===1){
       const pct=55+R()*17, tries=ri(3,9);
       hofs.push(`${tries}年連続で${cfg.n}の候補となり、最高得票率は${pct.toFixed(1)}%。しかし最後まで75%の壁を越えられなかった。`);
@@ -2279,7 +2286,7 @@ function retireScene(tiers){
     S.legendLeague=hofLeagues[0]||''; }
   if(hofs.length)card('gold','殿堂入り投票',hofs.join('<br><br>'));
   if(S.traits.legend){ card('gold','隠し特性解放：'+(S.legendLeague||'')+'歴史に残る名選手',
-    `投票の最初の年に殿堂入りの金色のローブを着ましょう - あなたは殿堂に入っただけでなく、あなた自身も<b class="hl">時代を定義した</b>。この名前はに書き込まれます${S.legendLeague||''}歴史の教科書。`); }
+    `初回投票で殿堂入り――ただ名を連ねただけではない。あなたは<b class="hl">一つの時代を築いた</b>。その名は${S.legendLeague||'野球界'}の歴史に刻まれる。`); }
 }
 function endGame(reason){
   S.done=true; actClear();
@@ -2287,7 +2294,7 @@ function endGame(reason){
   card('info','引退する',reason);
   /* 各聯盟數據與評價 */
   let tables='',evals=[],best=99; const tiersByLg={};
-  ['MLB','NPB','CPBL','MINOR'].forEach(b=>{ if(S.stats[b]){ tables+=statTable(b);
+  ['MLB','NPB','KBO','CPBL','MINOR'].forEach(b=>{ if(S.stats[b]){ tables+=statTable(b);
     if(b!=='MINOR'){ const t=tierOf(b); tiersByLg[b]=t; evals.push(`<span class="tag">${t.name}</span>（評価点${t.sc}）`); best=Math.min(best,t.i); } } });
   if(best===99)best=4;
   retireScene(tiersByLg);
@@ -2467,7 +2474,7 @@ function endGame(reason){
   });
   urlBtn.addEventListener('click',async()=>{
     const base=location.href.split('#')[0].split('?')[0];
-    const url=base+'?seed='+encodeURIComponent(SEED)+'&rv=1&rules=JP1';
+    const url=base+'?seed='+encodeURIComponent(SEED)+'&rv=1&rules=JP3';
     urlBtn.disabled=true;urlBtn.textContent='⏳ コピー中…';
     let copied=false;
     try{if(window.isSecureContext&&navigator.clipboard&&navigator.clipboard.writeText){copied=await Promise.race([navigator.clipboard.writeText(url).then(()=>true).catch(()=>false),new Promise(resolve=>setTimeout(()=>resolve(false),1200))]);}}
@@ -2499,7 +2506,7 @@ function shareImage(evals,out){
   const keepTr=Object.keys(TN2).filter(k=>S.traits[k]).map(k=>({label:TN2[k],key:k,neg:negK.includes(k)}));
   const remTr=(S.removed||[]).map(l=>({label:l,key:'',neg:false,rem:true}));
   /* 生涯數據列(每聯盟一列) */
-  const leagues=['MLB','NPB','CPBL'].filter(b=>S.stats[b]);
+  const leagues=['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]);
   /* 生涯里程碑 + 名人堂資訊(加在榮譽最前面) */
   const milestones = [];
   const isPit = S.pos==='P';
@@ -2508,7 +2515,7 @@ function shareImage(evals,out){
     milestones.push(`${h.lg}殿堂入り・${h.yr}年目、得票率${h.pct}%`); }); }
   /* 跨聯盟生涯合計里程碑 */
   { let tG=0,tH=0,tHR=0,tRBI=0,tSB=0,tW=0,tSV=0,tHLD=0,tSO=0,tIP=0;
-    ['CPBL','NPB','MLB'].forEach(b=>{ const st=S.stats[b]; if(!st)return;
+    ['CPBL','KBO','NPB','MLB'].forEach(b=>{ const st=S.stats[b]; if(!st)return;
       tH+=st.H||0;tHR+=st.HR||0;tRBI+=st.RBI||0;tSB+=st.SB||0;
       tW+=st.W||0;tSV+=st.SV||0;tHLD+=st.HLD||0;tSO+=st.SO||0;tIP+=st.IP||0; });
     if(isPit){
@@ -2802,7 +2809,7 @@ $('btn-start').onclick=()=>{
 (() => {
   'use strict';
   const RNG_VERSION = 1;
-  const RULES_VERSION = 'JP1';
+  const RULES_VERSION = 'JP3';
   const DATA = window.__YAKYO_JP_DATA__;
   const LEGACY = { board, movement, phasePre, phaseMid, proSeason, endGame };
 
@@ -2811,15 +2818,15 @@ $('btn-start').onclick=()=>{
   Object.assign(DPN,{SS:'遊撃手','2B':'二塁手','3B':'三塁手','1B':'一塁手',CF:'中堅手',RF:'右翼手',LF:'左翼手',DH:'指名打者',C:'捕手'});
   Object.assign(LV,{
     HS:{n:'高校野球',par:38,min:0,g:20,org:'AMATEUR'}, U:{n:'大学野球',par:44,min:0,g:24,org:'AMATEUR'},
-    CORP:{n:'社会人野球',par:49,min:43,g:45,org:'CORP'}, IND:{n:'独立リーグ',par:46,min:40,g:70,org:'IND',top:'IND'},
-    NPB_DEV:{n:'NPB育成',par:45,min:40,g:100,org:'NPB'}, NPB2:{n:'NPB二軍',par:52,min:47,g:100,org:'NPB'}, NPB1:{n:'NPB一軍',par:58,min:53,g:143,org:'NPB',top:'NPB'},
-    KBO2:{n:'KBOフューチャース',par:51,min:46,g:90,org:'KBO'}, KBO1:{n:'KBO一軍',par:56,min:51,g:144,org:'KBO',top:'KBO'},
-    CPBL2:{n:'台湾プロ野球二軍',par:47,min:42,g:80,org:'CPBL'}, CPBL1:{n:'台湾プロ野球一軍',par:53,min:48,g:120,org:'CPBL',top:'CPBL'},
+    CORP:{n:'社会人野球',par:37,min:32,g:45,org:'CORP'}, IND:{n:'独立リーグ',par:35,min:30,g:70,org:'IND',top:'IND'},
+    NPB_DEV:{n:'NPB育成',par:35,min:30,g:100,org:'NPB'}, NPB2:{n:'NPB二軍',par:52,min:47,g:100,org:'NPB'}, NPB1:{n:'NPB一軍',par:58,min:53,g:143,org:'NPB',top:'NPB'},
+    KBO2:{n:'KBOフューチャース',par:39,min:35,g:90,org:'KBO'}, KBO1:{n:'KBO一軍',par:50,min:47,g:144,org:'KBO',top:'KBO'},
+    CPBL2:{n:'台湾プロ野球二軍',par:39,min:35,g:80,org:'CPBL'}, CPBL1:{n:'台湾プロ野球一軍',par:48,min:45,g:120,org:'CPBL',top:'CPBL'},
     R:{n:'ルーキーリーグ',par:43,min:39,g:55,org:'MiLB'}, A1:{n:'1A',par:47,min:43,g:110,org:'MiLB'}, A2:{n:'2A',par:51,min:47,g:120,org:'MiLB'}, A3:{n:'3A',par:56,min:52,g:130,org:'MiLB'}, MLB:{n:'メジャーリーグ',par:63,min:58,g:162,org:'MLB',top:'MLB'}
   });
   Object.assign(PATHS,{NPB:['NPB_DEV','NPB2','NPB1'],KBO:['KBO2','KBO1'],CPBL:['CPBL2','CPBL1'],MiLB:['R','A1','A2','A3','MLB'],MLB:['R','A1','A2','A3','MLB'],IND:['IND'],CORP:['CORP']});
   if(typeof LG_N==='object')Object.assign(LG_N,{NPB:'NPB',KBO:'KBO',CPBL:'CPBL',MLB:'MLB',MINOR:'マイナー／二軍',IND:'独立',CORP:'社会人'});
-  if(typeof TIER_TH==='object')Object.assign(TIER_TH,{KBO:[8000,5800,2900,1800],IND:[3000,1800,900,400],CORP:[3000,1800,900,400]});
+  if(typeof TIER_TH==='object')Object.assign(TIER_TH,{NPB:[8000,5800,3000,1800],MLB:[8500,6500,3600,2000],KBO:[8200,5900,3000,1800],CPBL:[8500,6000,3100,1800],IND:[3000,1800,900,400],CORP:[3000,1800,900,400]});
 
   window.TEAM_MASTER = Object.freeze(Object.fromEntries(DATA.teams.map(x=>[x.teamId,Object.freeze(x)])));
   for(const t of DATA.teams){ if(t.color)TEAM_COLOR[t.teamId]=t.color; }
@@ -2846,7 +2853,7 @@ $('btn-start').onclick=()=>{
   salaryFor = function(lv,d){
     const m={CORP:[4200000,0,0,4200000,9000000],IND:[2400000,100000,0,1800000,5000000],NPB_DEV:[3000000,0,0,3000000,5000000],NPB2:[5000000,300000,0,5000000,16000000],NPB1:[16000000,4000000,3000000,16000000,600000000],KBO2:[8000000,400000,0,8000000,30000000],KBO1:[40000000,8000000,2000000,40000000,1500000000],CPBL2:[4000000,200000,0,4000000,12000000],CPBL1:[12000000,3000000,800000,12000000,400000000],R:[3000000,0,0,3000000,3000000],A1:[4000000,0,0,4000000,4000000],A2:[6000000,0,0,6000000,6000000],A3:[10000000,500000,0,10000000,30000000],MLB:[120000000,30000000,12000000,120000000,6000000000]}[lv];
     if(!m)throw new Error('UNKNOWN_SALARY_LEVEL:'+lv);if(lv==='CORP')return Math.round(clamp(4200000+(ovr()-40)*150000,4200000,9000000)/10000)*10000;
-    const p=clamp(d||0,0,26),star=Math.max(0,p-8);return Math.round(clamp(m[0]+p*m[1]+star*star*m[2],m[3],m[4])/10000)*10000;
+    const p=clamp(Math.floor(Number(d)||0),0,26),star=Math.max(0,p-7);return Math.round(clamp(m[0]+p*m[1]+star*star*m[2],m[3],m[4])/10000)*10000;
   };
 
   newState = function(name,pos){
@@ -2863,6 +2870,17 @@ $('btn-start').onclick=()=>{
 
   signTo = function(org,lv,teamId,yrs,mult){ const rec=teamId?teamRec(teamId):pickRecord(listByOrg(org));if(!rec)throw new Error('INVALID_TEAM_MASTER');const changed=rec.teamId!==S.orgTeamId;S.org=org;S.lv=lv;S.stage='PRO';S.team='';S.orgTeamId=rec.teamId;if(changed){S.teamYears=0;S.champThisTeam=false;S.champTeam=null;}const annual=Math.round(salaryFor(lv,S.lastD||0)*(mult||1)/10000)*10000;S.currentSalary=annual;S.ct={org,teamId:rec.teamId,startYear:S.year,yrs:yrs||2,remainingYears:yrs||2,annualSalary:annual,totalValue:annual*(yrs||2),contractType:'NORMAL',extOffered:false,mult:mult||1};card('info','契約',`<b class="hl">${escapeHTML(rec.name)}</b>と${S.ct.yrs}年契約を結んだ（年俸 ${fmtMoney(annual)}）。`);board(2); };
 
+  /* トレードは同一組織の固定球団ID間だけで行い、移籍先を必ず通知する。 */
+  doTradeExec = function(){
+    const from=teamRec(S.orgTeamId),candidates=listByOrg(S.org).filter(t=>t.teamId!==S.orgTeamId);
+    if(!from||!candidates.length){card('info','トレード見送り','移籍可能な球団がないため、トレードは成立しなかった。');return null;}
+    const to=pickRecord(candidates);S.teamYears=0;S.champThisTeam=false;S.champTeam=null;S.orgTeamId=to.teamId;
+    if(S.ct){S.ct.org=S.org;S.ct.teamId=to.teamId;}
+    S.lastTrade={year:S.year,fromTeamId:from.teamId,toTeamId:to.teamId};
+    card('info','トレード成立',`<b class="hl">${escapeHTML(from.name)}</b>から<b class="hl">${escapeHTML(to.name)}</b>へ移籍した。`);board(1);
+    return S.lastTrade;
+  };
+
   stageLabel = function(){if(S.stage==='HS')return '高校'+S.stageYr+'年';if(S.stage==='U')return '大学'+S.stageYr+'年';if(S.stage==='CORP')return '社会人'+(S.corpYears+1)+'年目';if(S.stage==='IND')return '独立リーグ'+(S.indYears+1)+'年目';return LV[S.lv]?.n||S.stage;};
   board = function(phase){LEGACY.board(phase);$('bd-name').firstChild.textContent=S.name;$('bd-sal').textContent=Math.round((S.currentSalary||0)/10000).toLocaleString();const lbl=$('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='現在年俸（万円）';};
 
@@ -2878,7 +2896,28 @@ $('btn-start').onclick=()=>{
     choose(`NPBドラフト会議・${escapeHTML(rec.name)}が${type==='DEVELOPMENT'?'育成':''}${rd}巡目で指名`,[{t:'指名を受けて入団',main:true,f:accept},{t:'指名を拒否する',warn:true,s:'交渉権を放棄して別の進路へ',f:()=>{S.draftRights.status='DECLINED';S.draftRights=null;cb('fail');}}]);
   };
 
-  pathChoiceHS = function(){choose(`高校卒業・総合能力${ovr()}――人生最初の分岐点`,[{t:'NPBドラフトへ',main:true,f:()=>enterDraftPath('HS')},{t:'大学へ進学',f:()=>{S.stage='U';S.stageYr=0;setSchool('U');advance();}},{t:'社会人野球へ',f:()=>{setAmateur('CORP');advance();}},{t:'独立リーグへ',f:()=>{setAmateur('IND');advance();}}]);};
+  pathChoiceHS = function(){
+    const o=ovr(),opts=[
+      {t:'NPBドラフトへ',main:true,f:()=>enterDraftPath('HS')},
+      {t:'大学へ進学',f:()=>{S.stage='U';S.stageYr=0;setSchool('U');advance();}},
+      {t:'社会人野球へ',f:()=>{setAmateur('CORP');advance();}},
+      {t:'独立リーグへ',f:()=>{setAmateur('IND');advance();}}
+    ];
+    if(o>=50){
+      const lv=o>=54?'A1':'R';
+      opts.push({t:'米国プロ組織と契約する',s:`MLB球団傘下の${LV[lv].n}から挑戦`,f:()=>{
+        const pool=listByOrg('MiLB').slice(),offers=[];
+        const count=ri(2,3);
+        while(offers.length<count&&pool.length)offers.push(pool.splice(Math.floor(R()*pool.length),1)[0]);
+        choose('MiLB国際契約オファー',offers.map(rec=>({
+          t:`${rec.name}（${LV[lv].n}）`,
+          s:'高校卒業後、米国の育成組織からスタート',
+          f:()=>{signTo('MiLB',lv,rec.teamId,ri(3,4),1);S.ct.contractType='ROOKIE';advance();}
+        })));
+      }});
+    }
+    choose(`高校卒業・総合能力${o}――人生最初の分岐点`,opts);
+  };
   pathChoiceU4 = function(){choose(`大学卒業・総合能力${ovr()}`,[{t:'NPBドラフトへ',main:true,f:()=>enterDraftPath('U')},{t:'社会人野球へ',f:()=>{setAmateur('CORP');advance();}},{t:'独立リーグへ',f:()=>{setAmateur('IND');advance();}},{t:'現役を退く',warn:true,f:()=>endGame('大学卒業を機に現役を退いた。')}]);};
 
   function cupOnce(key,name,klass){const doneKey=key+':'+S.year;if(S.domesticCompletedKeys[doneKey])return null;const bonus=S.schoolTier==='S'?6:S.schoolTier==='A'?2:-2,power=ovr()+bonus+ri(-8,8),national=klass.startsWith('NATIONAL'),cuts=national?[64,58,52,46]:[58,52,46,40],idx=power>=cuts[0]?0:power>=cuts[1]?1:power>=cuts[2]?2:power>=cuts[3]?3:4,res=['優勝','準優勝','ベスト4','ベスト8','予選敗退'][idx],pts=Math.min(10,[7,5,4,3,1][idx]+Math.floor(ovr()/22)+(national?1:0)),games=[5,5,4,3,2][idx];S.pool+=pts;S.domesticCompletedKeys[doneKey]=true;S.domesticTournamentLog.push({year:S.year,key,result:res,deemedGames:games,points:pts,amaD:[10,7,5,3,1][idx],injury:false});if(idx===0)S.honors.push(`${S.year} ${name}優勝`);return `${name}：<b class="hl">${res}</b>（能力点+${pts}）`;}
@@ -2902,13 +2941,74 @@ $('btn-start').onclick=()=>{
 
   daibaFarewell = function(cont){const cp=S.stats&&S.stats.CPBL,playedCPBL=!!(cp&&cp.yr>0);if(S.stage==='PRO'&&playedCPBL&&S.org!=='CPBL'&&!S._daiba){S._daiba=true;card('gold','台湾球界への別れ',`かつてプレーした台湾プロ野球から招待を受け、古巣の本拠地で始球式を務めた。台湾のファンへ感謝を伝え、キャリア最後の一球を投じた。`);}cont();};
 
-  function overseasOffer(org,lv,label,o,finish){const min={KBO:56,CPBL:53,MiLB:60}[org]||99;if(o<min)return null;const rec=pickRecord(listByOrg(org)),annual=Math.round(salaryFor(lv,S.lastD||0)*1.3/10000)*10000;return{t:`${label}：${rec.name}`,s:`${LV[lv].n}｜年俸${fmtMoney(annual)}`,f:()=>{signTo(org,lv,rec.teamId,ri(1,3),1.3);S.ct.contractType='OVERSEAS_FA';finish();}};}
-  crossOffers = function(o){const finish=()=>advance(),opts=[];if(S.org==='NPB'&&S.lv==='NPB1'&&(S.lastD||0)>=1){const k=overseasOffer('KBO','KBO1','KBO挑戦',o,finish),c=overseasOffer('CPBL','CPBL1','台湾挑戦',o,finish),m=overseasOffer('MiLB',o>=63?'MLB':'A3','MLB挑戦',o,finish);if(k)opts.push(k);if(c)opts.push(c);if(m)opts.push(m);}else if(['KBO','CPBL','MiLB','MLB'].includes(S.org)&&o>=53){const rec=pickRecord(listByOrg('NPB'));opts.push({t:`NPBへ復帰：${rec.name}`,s:'日本球界復帰オファー',f:()=>{signTo('NPB','NPB1',rec.teamId,ri(1,3),1);finish();}});}if(!opts.length){finish();return;}opts.push({t:'現在の球団に残留',main:true,f:finish});choose('シーズン後の移籍オファー',opts);};
+  function overseasOffer(org,lv,label,o,minD,finish){
+    const min={KBO:47,CPBL:45,MiLB:60}[org]||99;
+    if(o<min||(S.lastD||0)<minD)return null;
+    const rec=pickRecord(listByOrg(org)),annual=Math.round(salaryFor(lv,S.lastD||0)*1.3/10000)*10000;
+    return{t:`${label}：${rec.name}`,s:`${LV[lv].n}｜年俸${fmtMoney(annual)}`,f:()=>{signTo(org,lv,rec.teamId,ri(1,3),1.3);S.ct.contractType='OVERSEAS_FA';finish();}};
+  }
+  crossOffers = function(o){
+    const finish=()=>advance(),opts=[];
+    if(S.org==='NPB'&&S.lv==='NPB1'){
+      const k=overseasOffer('KBO','KBO1','韓国プロ野球への海外移籍',o,1,finish);
+      const c=overseasOffer('CPBL','CPBL1','台湾プロ野球への海外移籍',o,0,finish);
+      const m=overseasOffer('MiLB','MLB','MLBへの海外移籍',o,2,finish);
+      if(k)opts.push(k);if(c)opts.push(c);if(m)opts.push(m);
+    }else if(['KBO','CPBL','MiLB','MLB'].includes(S.org)&&o>=47){
+      const rec=pickRecord(listByOrg('NPB')),lv=o>=53?'NPB1':'NPB2';
+      opts.push({t:`NPBへ復帰：${rec.name}`,s:`${LV[lv].n}契約`,f:()=>{signTo('NPB',lv,rec.teamId,ri(1,3),1);finish();}});
+    }
+    if(!opts.length){finish();return;}
+    opts.splice(4);opts.push({t:'現在の球団に残留',main:true,f:finish});choose('シーズン後の海外移籍オファー',opts);
+  };
 
   function renewAndAdvance(mult=1){S.currentSalary=Math.round(salaryFor(S.lv,S.lastD||0)*mult/10000)*10000;S.ct={...(S.ct||{}),org:S.org,teamId:S.orgTeamId,startYear:S.year,yrs:1,remainingYears:1,annualSalary:S.currentSalary,totalValue:S.currentSalary,contractType:'NORMAL',mult};card('info','契約更改',`年俸${fmtMoney(S.currentSalary)}で契約を更新した。`);advance();}
-  faFlow = function(o){if(S.org==='NPB'&&S.npbFaSeasons<8){renewAndAdvance();return;}const overseas=S.org==='NPB'&&S.npbFaSeasons>=9;S.faType=overseas?'OVERSEAS':'DOMESTIC';choose(`FA権取得・${overseas?'海外FA':'国内FA'}`,[{t:'権利を行使せず残留',main:true,f:()=>renewAndAdvance(1)},{t:'FA宣言して市場へ',warn:true,f:()=>faMarket(o,S.lastD||0)}]);};
-  faMarket = function(o,d){const key=S.year+':'+S.faType;if(S.faMarketKey===key){card('bad','FA市場','同じオフのFA市場は再生成できない。');renewAndAdvance(.9);return;}S.faMarketKey=key;let n=d>=3?3:d>=1?2:d>=-1&&chance(60)?1:d<=-2&&chance(30)?1:0;const orgs=S.faType==='DOMESTIC'?['NPB']:['NPB','KBO','CPBL','MiLB'],offers=[];for(let i=0;i<n;i++){const org=orgs[i%orgs.length],lv=org==='NPB'?'NPB1':org==='KBO'?'KBO1':org==='CPBL'?'CPBL1':o>=63?'MLB':'A3',min={NPB:53,KBO:56,CPBL:53,MiLB:60}[org];if(o<min)continue;const rec=pickRecord(listByOrg(org));offers.push({org,lv,rec,mult:org==='NPB'?1.25:1.3});}if(!offers.length){card('bad','FA市場','獲得オファーなし。');renewAndAdvance(.9);return;}choose('FA市場オファー一覧',[...offers.map(x=>({t:`${x.rec.name}（${LV[x.lv].n}）`,s:`年俸${fmtMoney(Math.round(salaryFor(x.lv,d)*x.mult))}`,f:()=>{S.faUsed=true;if(S.org==='NPB')S.npbFaSeasons=0;signTo(x.org,x.lv,x.rec.teamId,ri(1,4),x.mult);S.ct.contractType=S.faType==='DOMESTIC'?'DOMESTIC_FA':'OVERSEAS_FA';advance();}})),{t:'宣言残留',main:true,f:()=>renewAndAdvance(1.1)}]);};
-  outOfOrg = function(o){const opts=[];if(o>=40){const ind=pickRecord(listByOrg('IND'));opts.push({t:`独立リーグ・${ind.name}`,f:()=>{S.stage='IND';S.stageYr=0;S.lv='IND';S.org='IND';S.orgTeamId=ind.teamId;S.team=ind.name;S.indYears=0;advance();}});const corp=pickRecord(listByOrg('CORP'));opts.push({t:`社会人・${corp.name}`,f:()=>{S.stage='CORP';S.stageYr=0;S.lv='CORP';S.org='CORP';S.orgTeamId=corp.teamId;S.team=corp.name;S.corpYears=0;advance();}});}if(o>=53){const cp=pickRecord(listByOrg('CPBL'));opts.push({t:`台湾プロ野球・${cp.name}`,f:()=>{signTo('CPBL','CPBL1',cp.teamId,1,1);advance();}});}if(o>=56){const kb=pickRecord(listByOrg('KBO'));opts.push({t:`KBO・${kb.name}`,f:()=>{signTo('KBO','KBO1',kb.teamId,1,1);advance();}});}opts.push({t:'現役を退く',warn:true,f:()=>endGame('戦力外通告を受け、現役を退いた。')});choose('戦力外・再起オファー',opts);};
+  faFlow = function(o){
+    if(S.org!=='NPB'||S.npbFaSeasons<8){renewAndAdvance();return;}
+    const declareFA=type=>{S.faType=type;S.faUsed=true;S.npbFaSeasons=0;faMarket(o,S.lastD||0);};
+    const opts=[{t:'権利を行使せず残留',main:true,f:()=>renewAndAdvance(1)},{t:'国内FAを宣言',warn:true,f:()=>declareFA('DOMESTIC')}];
+    if(S.npbFaSeasons>=9)opts.push({t:'海外FAを宣言',warn:true,f:()=>declareFA('OVERSEAS')});
+    choose(`FA権取得・登録${S.npbFaSeasons}シーズン`,opts);
+  };
+  faMarket = function(o,d){
+    const key=`FA:${S.year}:${S.faType}`;
+    if(S.faMarketKey===key){card('bad','FA市場','同じオフのFA市場は再生成できない。');renewAndAdvance(.9);return;}
+    S.faMarketKey=key;
+    let n=d>=3?3:d>=1?2:d>=-1&&chance(60)?1:d<=-2&&chance(30)?1:0;
+    if(S.traits.cancer)n=Math.max(0,n-1);n=Math.min(4,n);
+    const eligible=S.faType==='DOMESTIC'?[{org:'NPB',lv:'NPB1',mult:1.25}]:[
+      {org:'NPB',lv:'NPB1',mult:1.25},
+      ...(o>=47&&d>=1?[{org:'KBO',lv:'KBO1',mult:1.30}]:[]),
+      ...(o>=45&&d>=0?[{org:'CPBL',lv:'CPBL1',mult:1.30}]:[]),
+      ...(o>=60&&d>=2?[{org:'MiLB',lv:'MLB',mult:1.30}]:[])
+    ];
+    for(let i=eligible.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[eligible[i],eligible[j]]=[eligible[j],eligible[i]];}
+    const offers=[];
+    for(const e of eligible){if(offers.length>=n)break;const pool=listByOrg(e.org).filter(t=>!(e.org==='NPB'&&t.teamId===S.orgTeamId));if(!pool.length)continue;offers.push({...e,rec:pickRecord(pool)});}
+    if(!offers.length){card('bad','FA市場','獲得オファーはなかった。元球団と単年契約を結ぶ。');renewAndAdvance(.9);return;}
+    choose('FA市場オファー一覧',[...offers.map(x=>({t:`${x.rec.name}（${LV[x.lv].n}）`,s:`年俸${fmtMoney(Math.round(salaryFor(x.lv,d)*x.mult))}`,f:()=>{signTo(x.org,x.lv,x.rec.teamId,ri(1,4),x.mult);S.ct.contractType=S.faType==='DOMESTIC'?'DOMESTIC_FA':'OVERSEAS_FA';advance();}})),{t:'宣言残留',main:true,f:()=>renewAndAdvance(1.1)}]);
+  };
+  outOfOrg = function(o){
+    buyoutRemaining(1);
+    if(o<30){endGame(`総合能力が最低戦力基準の30を下回り、獲得オファーがないまま${S.year}年に現役を引退した。`);return;}
+    const candidates=[];
+    const pushPro=(org,lv,label)=>{const rec=pickRecord(listByOrg(org));candidates.push({score:LV[lv].par,t:`${label}・${rec.name}`,s:`${LV[lv].n}契約`,f:()=>{signTo(org,lv,rec.teamId,1,1);advance();}});};
+    const pushAma=stage=>{const rec=pickRecord(listByOrg(stage));candidates.push({score:LV[stage].par,t:`${stage==='CORP'?'社会人野球':'独立リーグ'}・${rec.name}`,f:()=>{S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=rec.teamId;S.team=rec.name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;advance();}});};
+    if(o>=30)pushAma('IND');if(o>=32)pushAma('CORP');
+    const npbDevEligible=S.age<=26||(S.age<=29&&chance(30))||(S.npbYears||0)>0;
+    if(o>=30&&npbDevEligible)pushPro('NPB','NPB_DEV','NPB育成再契約');
+    if(o>=47)pushPro('KBO','KBO1','韓国プロ野球への海外移籍オファー');else if(o>=35)pushPro('KBO','KBO2','韓国プロ野球への海外移籍オファー');
+    if(o>=45)pushPro('CPBL','CPBL1','台湾プロ野球への海外移籍オファー');else if(o>=35)pushPro('CPBL','CPBL2','台湾プロ野球への海外移籍オファー');
+    if(o>=52)pushPro('MiLB','A3','米国プロ野球への海外移籍オファー');
+    else {
+      const milbAgeOK=S.age<=26||(S.age<=29&&chance(30));
+      if(milbAgeOK){if(o>=47)pushPro('MiLB','A2','米国プロ野球への海外移籍オファー');else if(o>=43)pushPro('MiLB','A1','米国プロ野球への海外移籍オファー');else if(o>=39)pushPro('MiLB','R','米国プロ野球への海外移籍オファー');}
+    }
+    candidates.sort((a,b)=>b.score-a.score);const offers=candidates.slice(0,4).map(({score,...x})=>x);
+    if(!offers.length){endGame(`戦力外通告後に獲得オファーがなく、${S.year}年に現役を引退した。`);return;}
+    offers.push({t:'現役を退く',warn:true,f:()=>endGame('戦力外通告を受け、現役を引退した。')});
+    choose('戦力外・再起オファー（最大4球団）',offers);
+  };
 
   phaseEnd = function(){board(2);if(S.stage==='PRO'){const paid=S.currentSalary||salaryFor(S.lv,S.lastD||0);S.currentSalary=Math.round(salaryFor(S.lv,S.lastD||0)*dpMult()/10000)*10000;S.careerEarnings+=paid;card('','シーズン終了',`今季支給年俸：<b class="hl">${fmtMoney(paid)}</b>｜次年度年俸：${fmtMoney(S.currentSalary)}｜生涯収入：${fmtMoney(S.careerEarnings)}`);}else if(S.stage==='CORP'){const pay=salaryFor('CORP',S.lastD||0);S.corpIncome+=pay;S.careerEarnings+=pay;card('','社会人給与',`企業給与${fmtMoney(pay)}を受領した。`);}const go=()=>movement();if(S.pool>0){const p=S.pool;S.pool=0;choose('',[{t:`能力点を分配（${p}点）`,main:true,f:()=>allocUI({pool:p},'シーズン成果の能力点',go)}]);}else go();};
 
@@ -2928,7 +3028,7 @@ $('btn-start').onclick=()=>{
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();
   $('btn-restart').onclick=()=>{if(confirm('この野球人生を終了して最初からやり直しますか？'))location.href=location.pathname;};
-  const badge=$('ver-badge');if(badge)badge.textContent='JP1';
+  const badge=$('ver-badge');if(badge)badge.textContent='JP3';
 })();
 
 </script>
