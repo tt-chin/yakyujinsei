@@ -1,0 +1,13 @@
+/* 日本版ダークレッドテーマ */
+body{background-image:radial-gradient(ellipse 120% 60% at 50% -10%,#5c172244 0%,transparent 60%)}
+#board{background:linear-gradient(#351118,#210b10)}
+.bd-cell,.tag,.statline,.abrow .bar{background:#1c0a0e}
+#act{background:linear-gradient(#210b10ee,#16090b)}
+.btn.main{background:linear-gradient(#5a202b,#40151e);border-color:#7f3442}
+#start{background-image:radial-gradient(ellipse 120% 50% at 50% -5%,#6b1d2daa,transparent 60%)}
+.field input,.seg button{background-color:#251014}
+.seg button.on{background:#35151b}
+#btn-restart{border-color:#63303a;color:#c39da2}
+#btn-restart:active,#act-toggle,#seed-show{background:#1c0a0e!important;border-color:#63303a!important}
+.abrow .bar i{background:linear-gradient(90deg,#8d3445,var(--amber))}
+
