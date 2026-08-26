@@ -1,6 +1,6 @@
 import { RNG_VERSION, RULES_VERSION } from '../config.js';
 import { JP_DATA } from '../data/jp-data.js';
-import { demotionChoiceText, findDemotionTarget, isBelowActiveMinimum } from './career-policy.js';
+import { crossOfferTitle, crossOfferTypeForOrg, demotionChoiceText, findDemotionTarget, isBelowActiveMinimum } from './career-policy.js';
 
 window.__YAKYO_JP_DATA__ = JP_DATA;
 
@@ -2768,7 +2768,7 @@ $('btn-start').onclick=()=>{
     return{t:`${label}：${rec.name}`,s:`${LV[lv].n}｜年俸${fmtMoney(annual)}`,f:()=>{signTo(org,lv,rec.teamId,ri(1,3),1.3);S.ct.contractType='OVERSEAS_FA';finish();}};
   }
   crossOffers = function(o){
-    const finish=()=>advance(),opts=[];
+    const finish=()=>advance(),opts=[],offerType=crossOfferTypeForOrg(S.org);
     if(S.org==='NPB'&&S.lv==='NPB1'){
       const k=overseasOffer('KBO','KBO1','韓国プロ野球への海外移籍',o,1,finish);
       const c=overseasOffer('CPBL','CPBL1','台湾プロ野球への海外移籍',o,0,finish);
@@ -2779,7 +2779,7 @@ $('btn-start').onclick=()=>{
       opts.push({t:`NPBへ復帰：${rec.name}`,s:`${LV[lv].n}契約`,f:()=>{signTo('NPB',lv,rec.teamId,ri(1,3),1);finish();}});
     }
     if(!opts.length){finish();return;}
-    opts.splice(4);opts.push({t:'現在の球団に残留',main:true,f:finish});choose('シーズン後の海外移籍オファー',opts);
+    opts.splice(4);opts.push({t:'現在の球団に残留',main:true,f:finish});choose(crossOfferTitle(offerType),opts);
   };
 
   function renewAndAdvance(mult=1){S.currentSalary=Math.round(salaryFor(S.lv,S.lastD||0)*mult/10000)*10000;S.ct={...(S.ct||{}),org:S.org,teamId:S.orgTeamId,startYear:S.year,yrs:1,remainingYears:1,annualSalary:S.currentSalary,totalValue:S.currentSalary,contractType:'NORMAL',mult};card('info','契約更改',`年俸${fmtMoney(S.currentSalary)}で契約を更新した。`);advance();}

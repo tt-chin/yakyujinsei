@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import {
+  crossOfferTitle,
+  crossOfferTypeForOrg,
   demotionChoiceText,
   findDemotionTarget,
   isBelowActiveMinimum,
@@ -49,5 +51,18 @@ assert.match(game, /retireBelowActiveMinimum\(\)/);
 assert.match(game, /card\('bad','現役続行を断念','総合力が現役続行の最低基準を下回ったため、ユニフォームを脱ぐことを決断した。'\)/);
 assert.doesNotMatch(game, /権限移譲を受け入れる/);
 assert.match(game, /LV\[targetLevel\]\.n\+'への降格を受け入れる'/);
+
+// NPBから海外、海外からNPBへの復帰を明示的な種別で区別する。
+assert.equal(crossOfferTypeForOrg('NPB'), 'overseas_transfer');
+assert.equal(crossOfferTitle(crossOfferTypeForOrg('NPB')), 'シーズン後の海外移籍オファー');
+for (const org of ['KBO', 'CPBL', 'MiLB', 'MLB']) {
+  assert.equal(crossOfferTypeForOrg(org), 'npb_return');
+  assert.equal(crossOfferTitle(crossOfferTypeForOrg(org)), 'NPB復帰オファー');
+}
+assert.equal(crossOfferTypeForOrg('OTHER'), 'transfer');
+assert.equal(crossOfferTitle('transfer'), '移籍オファー');
+assert.match(game, /t:`NPBへ復帰：\$\{rec\.name\}`/);
+assert.match(game, /signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1\);finish\(\)/);
+assert.match(game, /t:'現在の球団に残留',main:true,f:finish/);
 
 console.log('Career movement policy checks passed.');
