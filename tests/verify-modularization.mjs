@@ -29,10 +29,10 @@ assert.match(config, /VERSION = '1\.0\.0'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(game, /version:VERSION/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
-assert.match(html, /id="ver-badge"/);
-assert.match(html, /id="ver-badge"[^>]*font-size:12px[^>]*color:var\(--amber\)[^>]*opacity:1/);
-assert.doesNotMatch(html, /id="app-version"/);
-assert.match(game, /versionBadge\.textContent='v'\+VERSION/);
+assert.doesNotMatch(html, /id="ver-badge"/);
+assert.match(html, /<h1 id="logo-tap"><em>野球人生シミュレーター<\/em><span id="app-version"[^>]*><\/span><\/h1>/);
+assert.doesNotMatch(html, /v1\.0\.0/);
+assert.match(game, /appVersion\.textContent='v'\+VERSION/);
 
 const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}`;
 assert.doesNotMatch(forbidden, /UNSUPPORTED_REPLAY_VERSION/);

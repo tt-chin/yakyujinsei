@@ -2845,7 +2845,7 @@ $('btn-start').onclick=()=>{
   },0);};
 
   function startJapanese(){let params=new URLSearchParams(location.search);let sv=normalizeSeed($('seed-show').value||params.get('seed'));if(!sv)sv=generateSeed();SEED=sv;const pos=document.querySelector('#seg-pos button.on')?.dataset.v||'P';const nm=normalizePlayerName($('in-name').value,SEED,pos);S={rngState:0};seedInit(SEED);S=newState(nm,pos);history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}`);$('start').style.display='none';$('board').style.display='';$('act').style.display='';card('info','選手誕生',`${S.year}年春、${POSN[S.pos]} <b class="hl">${escapeHTML(S.name)}</b>は<b class="hl">${escapeHTML(S.team)}</b>野球部に入部した。ここから、すべての選択が野球人生を変える。`);startYear();}
-  const versionBadge=$('ver-badge');if(versionBadge)versionBadge.textContent='v'+VERSION;
+  const appVersion=$('app-version');if(appVersion)appVersion.textContent='v'+VERSION;
   $('btn-start').onclick=startJapanese;
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();
