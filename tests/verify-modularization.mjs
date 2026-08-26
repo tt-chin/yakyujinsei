@@ -7,13 +7,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = relative => readFile(path.join(root, relative), 'utf8');
 
 const [html, config, data, game, main, baseCss, themeCss] = await Promise.all([
-  read('index.html'),
-  read('src/config.js'),
-  read('src/data/jp-data.js'),
-  read('src/engine/game.js'),
-  read('src/main.js'),
-  read('styles/base.css'),
-  read('styles/jp-theme.css'),
+  read('docs/index.html'),
+  read('docs/src/config.js'),
+  read('docs/src/data/jp-data.js'),
+  read('docs/src/engine/game.js'),
+  read('docs/src/main.js'),
+  read('docs/styles/base.css'),
+  read('docs/styles/jp-theme.css'),
 ]);
 
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);

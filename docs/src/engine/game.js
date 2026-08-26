@@ -2297,17 +2297,17 @@ function endGame(reason){
       try{copied=document.execCommand('copy');}catch(err){}ta.remove();
     }
     if(copied){urlBtn.textContent='✅ コピーしました';shareOut.innerHTML='<div class="statline" role="status">リプレイURLをコピーしました。</div>';}
-    else{urlBtn.textContent='URLを選択してコピー';shareOut.innerHTML='<label class="statline" style="display:block">下のURLを長押し／選択してコピーしてください。<input value="'+url.replace(/&/g,'&amp;').replace(/"/g、'&quot;')+'" readonly style="width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:#1c0a0e;border:1px solid var(--edge);border-radius:6px"></label>';const input=shareOut.querySelector('input');input.focus();input.select();}
-    urlBtn.disabled=false;setTimeout(()=>{urlBtn.textContent='🔗 リプレイURLをコピー';}、1800);
+    else{urlBtn.textContent='URLを選択してコピー';shareOut.innerHTML='<label class="statline" style="display:block">下のURLを長押し／選択してコピーしてください。<input value="'+url.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" readonly style="width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:#1c0a0e;border:1px solid var(--edge);border-radius:6px"></label>';const input=shareOut.querySelector('input');input.focus();input.select();}
+    urlBtn.disabled=false;setTimeout(()=>{urlBtn.textContent='🔗 リプレイURLをコピー';},1800);
   });
-  choose(''、[
-    {t:'⚾ 新しい野球人生を始める（新規シード）'、main:true、f:()=>{location.href=location.pathname;}}、
-    {t:'同じシードでやり直す'、s:'seed: '+SEED、f:()=>{location.href=location.pathname+'?seed='+SEED;}}]);
+  choose('',[
+    {t:'⚾ 新しい野球人生を始める（新規シード）',main:true,f:()=>{location.href=location.pathname;}},
+    {t:'同じシードでやり直す',s:'seed: '+SEED,f:()=>{location.href=location.pathname+'?seed='+SEED;}}]);
   /* 結果画面のスクロール位置：既定の最下部スクロールを上書き、「現役生活に幕」の先頭へ移動、結果の1行目から読めるようにする。 */
   setTimeout(()=>{ try{
     const heads=document.querySelectorAll('.yr-head');
-    for(const h of heads){ if(h.textContent==='現役生活に幕'){ h.scrollIntoView({behavior:'auto'、block:'start'}); break; } }
-  }catch(e){} }、 250);
+    for(const h of heads){ if(h.textContent==='現役生活に幕'){ h.scrollIntoView({behavior:'auto',block:'start'}); break; } }
+  }catch(e){} },250);
 }
 /* 結算圖（Canvas 產生 PNG、可長按儲存または自動下載）。 */
 function shareImage(evals,out){
@@ -2590,28 +2590,28 @@ function shareImage(evals,out){
 })();
 let selPos='P';
 $('seed-show').value=SEED;
-$('seed-re').onclick=e=>{e.preventDefault();SEED=(0).toString(36).slice(2、10);$('seed-show').value=SEED;};
+$('seed-re').onclick=e=>{e.preventDefault();SEED=(0).toString(36).slice(2,10);$('seed-show').value=SEED;};
 document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#seg-pos button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); selPos=b.dataset.v;
 });
 $('btn-start').onclick=()=>{
-  const defName=(selPos==='P')?'投山翔太':(selPos==='IF')?'守田巧':(['走川隼人'、'強肩剛'][Math.floor((0)*2)]); /* に応じて守備位置既定名(外野/捕手隨機)。 */
+  const defName=(selPos==='P')?'投山翔太':(selPos==='IF')?'守田巧':(['走川隼人','強肩剛'][Math.floor((0)*2)]); /* に応じて守備位置既定名(外野/捕手隨機)。 */
   const nm=$('in-name').value.trim()||defName;
   const sv=$('seed-show').value.trim(); if(sv)SEED=sv; /* プレイヤーはシード値を直接入力できる。 */
-  history.replaceState(null、''、'?seed='+encodeURIComponent(SEED));
+  history.replaceState(null,'','?seed='+encodeURIComponent(SEED));
   seedInit(SEED);
-  S=newState(nm、selPos、null);
+  S=newState(nm,selPos,null);
   S.teamName=function(){
     if(!this.orgTeam)return '';
     if(this.lv==='MLB')return this.orgTeam;
-    if(LV[this.lv].org==='MiLB')return this.orgTeam+({R:'ルーキーリーグ'、A1:'1A'、A2:'2A'、A3:'3A'}[this.lv]);
+    if(LV[this.lv].org==='MiLB')return this.orgTeam+({R:'ルーキーリーグ',A1:'1A',A2:'2A',A3:'3A'}[this.lv]);
     if(this.lv==='CPBL1'||this.lv==='NPB1')return this.orgTeam;
     return this.orgTeam+'二軍';
   };
   $('start').style.display='none';
   $('board').style.display=''; $('act').style.display='';
-  card('info'、'選手誕生'、`${S.year}年春、${POSN[S.pos]}の<b class="hl">${S.name}</b>は<b class="hl">${S.team}</b>野球部へ入部した。3年後の進路は自分で選ぶ。<br><span style="color:var(--dim);font-size:12px">ヒント：22歳までに「6」を累計5回出すと、隠し特性が覚醒する。</span>`);
+  card('info','選手誕生',`${S.year}年春、${POSN[S.pos]}の<b class="hl">${S.name}</b>は<b class="hl">${S.team}</b>野球部へ入部した。3年後の進路は自分で選ぶ。<br><span style="color:var(--dim);font-size:12px">ヒント：22歳までに「6」を累計5回出すと、隠し特性が覚醒する。</span>`);
   startYear();
 };
 (function(){ const vb=document.getElementById('ver-badge'); if(vb)vb.textContent=APP_VER; })();
@@ -2620,34 +2620,34 @@ $('btn-start').onclick=()=>{
 (() => {
   'use strict';
   const DATA = JP_DATA;
-  const LEGACY = { board、 movement、 phasePre、 phaseMid、 proSeason、 endGame };
+  const LEGACY = { board, movement, phasePre, phaseMid, proSeason, endGame };
 
-  Object.assign(ABL、{sta:'スタミナ'、vel:'球速'、ctl:'制球'、brk:'変化球'、con:'ミート'、pow:'パワー'、spd:'走力'、eye:'選球眼'、rng:'守備範囲'、fld:'捕球'、arm:'肩力'、cat:'リード'});
-  Object.assign(POSN、{P:'投手'、C:'捕手'、IF:'内野手'、OF:'外野手'});
-  Object.assign(DPN、{SS:'遊撃手'、'2B':'二塁手'、'3B':'三塁手'、'1B':'一塁手'、CF:'中堅手'、RF:'右翼手'、LF:'左翼手'、DH:'指名打者'、C:'捕手'});
-  Object.assign(LV、{
-    HS:{n:'高校野球'、par:38、min:0、g:20、org:'AMATEUR'}、 U:{n:'大学野球'、par:44、min:0、g:24、org:'AMATEUR'}、
-    CORP:{n:'社会人野球'、par:37、min:32、g:45、org:'CORP'}、 IND:{n:'独立リーグ'、par:35、min:30、g:70、org:'IND'、top:'IND'}、
-    NPB_DEV:{n:'NPB育成'、par:35、min:30、g:100、org:'NPB'}、 NPB2:{n:'NPB二軍'、par:52、min:47、g:100、org:'NPB'}、 NPB1:{n:'NPB一軍'、par:58、min:53、g:143、org:'NPB'、top:'NPB'}、
-    KBO2:{n:'KBOフューチャース'、par:39、min:35、g:90、org:'KBO'}、 KBO1:{n:'KBO一軍'、par:50、min:47、g:144、org:'KBO'、top:'KBO'}、
-    CPBL2:{n:'台湾プロ野球二軍'、par:39、min:35、g:80、org:'CPBL'}、 CPBL1:{n:'台湾プロ野球一軍'、par:48、min:45、g:120、org:'CPBL'、top:'CPBL'}、
-    R:{n:'ルーキーリーグ'、par:43、min:39、g:55、org:'MiLB'}、 A1:{n:'1A'、par:47、min:43、g:110、org:'MiLB'}、 A2:{n:'2A'、par:51、min:47、g:120、org:'MiLB'}、 A3:{n:'3A'、par:56、min:52、g:130、org:'MiLB'}、 MLB:{n:'メジャーリーグ'、par:63、min:58、g:162、org:'MLB'、top:'MLB'}
+  Object.assign(ABL,{sta:'スタミナ',vel:'球速',ctl:'制球',brk:'変化球',con:'ミート',pow:'パワー',spd:'走力',eye:'選球眼',rng:'守備範囲',fld:'捕球',arm:'肩力',cat:'リード'});
+  Object.assign(POSN,{P:'投手',C:'捕手',IF:'内野手',OF:'外野手'});
+  Object.assign(DPN,{SS:'遊撃手','2B':'二塁手','3B':'三塁手','1B':'一塁手',CF:'中堅手',RF:'右翼手',LF:'左翼手',DH:'指名打者',C:'捕手'});
+  Object.assign(LV,{
+    HS:{n:'高校野球',par:38,min:0,g:20,org:'AMATEUR'}, U:{n:'大学野球',par:44,min:0,g:24,org:'AMATEUR'},
+    CORP:{n:'社会人野球',par:37,min:32,g:45,org:'CORP'}, IND:{n:'独立リーグ',par:35,min:30,g:70,org:'IND',top:'IND'},
+    NPB_DEV:{n:'NPB育成',par:35,min:30,g:100,org:'NPB'}, NPB2:{n:'NPB二軍',par:52,min:47,g:100,org:'NPB'}, NPB1:{n:'NPB一軍',par:58,min:53,g:143,org:'NPB',top:'NPB'},
+    KBO2:{n:'KBOフューチャース',par:39,min:35,g:90,org:'KBO'}, KBO1:{n:'KBO一軍',par:50,min:47,g:144,org:'KBO',top:'KBO'},
+    CPBL2:{n:'台湾プロ野球二軍',par:39,min:35,g:80,org:'CPBL'}, CPBL1:{n:'台湾プロ野球一軍',par:48,min:45,g:120,org:'CPBL',top:'CPBL'},
+    R:{n:'ルーキーリーグ',par:43,min:39,g:55,org:'MiLB'}, A1:{n:'1A',par:47,min:43,g:110,org:'MiLB'}, A2:{n:'2A',par:51,min:47,g:120,org:'MiLB'}, A3:{n:'3A',par:56,min:52,g:130,org:'MiLB'}, MLB:{n:'メジャーリーグ',par:63,min:58,g:162,org:'MLB',top:'MLB'}
   });
-  Object.assign(PATHS、{NPB:['NPB_DEV'、'NPB2'、'NPB1']、KBO:['KBO2'、'KBO1']、CPBL:['CPBL2'、'CPBL1']、MiLB:['R'、'A1'、'A2'、'A3'、'MLB']、MLB:['R'、'A1'、'A2'、'A3'、'MLB']、IND:['IND']、CORP:['CORP']});
-  if(typeof LG_N==='object')Object.assign(LG_N、{NPB:'NPB'、KBO:'KBO'、CPBL:'CPBL'、MLB:'MLB'、MINOR:'マイナー／二軍'、IND:'独立'、CORP:'社会人'});
-  if(typeof TIER_TH==='object')Object.assign(TIER_TH、{NPB:[8000、5800、3000、1800]、MLB:[8500、6500、3600、2000]、KBO:[8200、5900、3000、1800]、CPBL:[8500、6000、3100、1800]、IND:[3000、1800、900、400]、CORP:[3000、1800、900、400]});
+  Object.assign(PATHS,{NPB:['NPB_DEV','NPB2','NPB1'],KBO:['KBO2','KBO1'],CPBL:['CPBL2','CPBL1'],MiLB:['R','A1','A2','A3','MLB'],MLB:['R','A1','A2','A3','MLB'],IND:['IND'],CORP:['CORP']});
+  if(typeof LG_N==='object')Object.assign(LG_N,{NPB:'NPB',KBO:'KBO',CPBL:'CPBL',MLB:'MLB',MINOR:'マイナー／二軍',IND:'独立',CORP:'社会人'});
+  if(typeof TIER_TH==='object')Object.assign(TIER_TH,{NPB:[8000,5800,3000,1800],MLB:[8500,6500,3600,2000],KBO:[8200,5900,3000,1800],CPBL:[8500,6000,3100,1800],IND:[3000,1800,900,400],CORP:[3000,1800,900,400]});
 
-  window.TEAM_MASTER = Object.freeze(Object.fromEntries(DATA.teams.map(x=>[x.teamId、Object.freeze(x)])));
+  window.TEAM_MASTER = Object.freeze(Object.fromEntries(DATA.teams.map(x=>[x.teamId,Object.freeze(x)])));
   for(const t of DATA.teams){ if(t.color)TEAM_COLOR[t.teamId]=t.color; }
 
   function normalizeSeed(raw){
-    return [...String(raw??'').normalize('NFKC').trim().replace(/[\u0000-\u001f\u007f-\u009f]/g、'')].slice(0、24).join('');
+    return [...String(raw??'').normalize('NFKC').trim().replace(/[\u0000-\u001f\u007f-\u009f]/g,'')].slice(0,24).join('');
   }
-  function fnv1a32(str){ let h=0x811C9DC5; for(const b of new TextEncoder().encode(str)){h^=b;h=Math.imul(h、0x01000193)>>>0;} return h>>>0; }
-  function generateSeed(){ const a=new Uint32Array(2);crypto.getRandomValues(a);return (a[0].toString(36)+a[1].toString(36)).slice(0、8); }
-  function deriveSeedInt(seed、salt){ return fnv1a32('v1\0'+seed+'\0'+salt); }
-  function deriveDefaultName(seed、pos){ const names={P:['投山翔太']、C:['強肩剛']、IF:['守田巧']、OF:['走川隼人']}[pos];return names[deriveSeedInt(seed、'defaultName:'+pos)%names.length]; }
-  function normalizePlayerName(raw、seed、pos){ const n=[...String(raw??'').normalize('NFKC').trim().replace(/[\u0000-\u001f\u007f-\u009f]/g、'')].slice(0、10).join('');return n||deriveDefaultName(seed、pos); }
+  function fnv1a32(str){ let h=0x811C9DC5; for(const b of new TextEncoder().encode(str)){h^=b;h=Math.imul(h,0x01000193)>>>0;} return h>>>0; }
+  function generateSeed(){ const a=new Uint32Array(2);crypto.getRandomValues(a);return (a[0].toString(36)+a[1].toString(36)).slice(0,8); }
+  function deriveSeedInt(seed,salt){ return fnv1a32('v1\0'+seed+'\0'+salt); }
+  function deriveDefaultName(seed,pos){ const names={P:['投山翔太'],C:['強肩剛'],IF:['守田巧'],OF:['走川隼人']}[pos];return names[deriveSeedInt(seed,'defaultName:'+pos)%names.length]; }
+  function normalizePlayerName(raw,seed,pos){ const n=[...String(raw??'').normalize('NFKC').trim().replace(/[\u0000-\u001f\u007f-\u009f]/g,'')].slice(0,10).join('');return n||deriveDefaultName(seed,pos); }
   function escapeHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function teamRec(id){return id?window.TEAM_MASTER[id]||null:null;}
   function teamDisplay(id,lv){ const t=teamRec(id);if(!t)return'';if(['NPB_DEV','NPB2','KBO2','CPBL2','R','A1','A2','A3'].includes(lv))return t.name+' '+LV[lv].n;return t.name; }

@@ -6,7 +6,7 @@
 |---|---|
 |対象システム|YaKyoLife - 棒球人生模擬器／野球人生シミュレーター|
 |原本|`C:/Users/rtsai/Downloads/index.html`（台湾華語、v1.3.7）|
-|日本語版|`C:\Users\rtsai\OneDrive\文档\ChatGPT\野球人生\index.html`|
+|日本語版|`C:\Users\rtsai\OneDrive\文档\ChatGPT\野球人生\docs\index.html`|
 |文書種別|実装準拠・詳細設計書|
 |対象範囲|画面、状態、乱数、能力、イベント、恋愛、故障、シーズン、契約、移籍、国際大会、受賞、引退、共有画像、全表示文言|
 |生成基準|台湾華語版v1.3.7を基礎資料とし、日本語版は日本人選手・日本野球進路へローカライズした拡張実装とする。翻訳のみの箇所は原本ロジックを維持し、7章・13～15章の拡張仕様は日本語版固有ロジックとして実装する|
@@ -2210,11 +2210,11 @@ function escapeHTML(value){
 JP3のゲーム仕様、DOM、表示文、翻訳、条件分岐および乱数消費順を変更せず、GitHub Pagesからビルドなしで配信できるES Modules構成へ分割する。`index.html`は画面骨格と外部ファイルの読込だけを担当する。
 
 ```text
-index.html
-styles/
+docs/index.html
+docs/styles/
   base.css
   jp-theme.css
-src/
+docs/src/
   config.js
   data/
     jp-data.js
@@ -2226,24 +2226,24 @@ tests/
   fixed-seed-regression.json
 ```
 
-- `styles/base.css`: 既存CSSの基礎、レイアウト、コンポーネント、レスポンシブ指定。元の記述順を維持する。
-- `styles/jp-theme.css`: 「日本版ダークレッドテーマ」以降の上書き。`base.css`の後に読み込む。
-- `src/config.js`: `RNG_VERSION=1`と`RULES_VERSION='JP3'`の内部識別子。
-- `src/data/jp-data.js`: 高校50校、大学25校、90球団および国際大会Master。
-- `src/engine/game.js`: 状態`S`、ゲーム判定、フェーズ、UI生成、引退、共有画像を含むJP3互換エンジン。既存の基礎エンジンとJP3オーバーレイの評価順を同一ファイル内で維持する。
-- `src/main.js`: ES Modulesのエントリーポイント。ゲームエンジンを一度だけ読み込む。
+- `docs/styles/base.css`: 既存CSSの基礎、レイアウト、コンポーネント、レスポンシブ指定。元の記述順を維持する。
+- `docs/styles/jp-theme.css`: 「日本版ダークレッドテーマ」以降の上書き。`base.css`の後に読み込む。
+- `docs/src/config.js`: `RNG_VERSION=1`と`RULES_VERSION='JP3'`の内部識別子。
+- `docs/src/data/jp-data.js`: 高校50校、大学25校、90球団および国際大会Master。
+- `docs/src/engine/game.js`: 状態`S`、ゲーム判定、フェーズ、UI生成、引退、共有画像を含むJP3互換エンジン。既存の基礎エンジンとJP3オーバーレイの評価順を同一ファイル内で維持する。
+- `docs/src/main.js`: ES Modulesのエントリーポイント。ゲームエンジンを一度だけ読み込む。
 
 ### 25.1 状態と依存関係
 
-状態`S`とフェーズキュー`stepQ`の所有元は`src/engine/game.js`だけとする。状態の複製や別の真実源は作らない。依存関係は`main.js → engine/game.js → config.js・data/jp-data.js`の一方向であり、循環importを持たない。JP3オーバーレイが退避する`LEGACY`関数と、その後の関数再代入は従来と同じ順で同一モジュール内に置く。
+状態`S`とフェーズキュー`stepQ`の所有元は`docs/src/engine/game.js`だけとする。状態の複製や別の真実源は作らない。依存関係は`main.js → engine/game.js → config.js・data/jp-data.js`の一方向であり、循環importを持たない。JP3オーバーレイが退避する`LEGACY`関数と、その後の関数再代入は従来と同じ順で同一モジュール内に置く。
 
 ### 25.2 RNGとseed-only URL
 
-RNGの実装と所有元は`src/engine/game.js`である。`seedInit`、`R`、`ri`、`pick`、`chance`、`N0`の式、評価順、呼出し位置を変更しない。Masterの配列順、短絡評価、コールバック順も変更しない。共有URLは現在のページURLを基準に`?seed=<SEED>`だけを生成する。旧URLの`rv`と`rules`は読み取らず、拒否や旧エンジン切替にも使用しない。
+RNGの実装と所有元は`docs/src/engine/game.js`である。`seedInit`、`R`、`ri`、`pick`、`chance`、`N0`の式、評価順、呼出し位置を変更しない。Masterの配列順、短絡評価、コールバック順も変更しない。共有URLは現在のページURLを基準に`?seed=<SEED>`だけを生成する。旧URLの`rv`と`rules`は読み取らず、拒否や旧エンジン切替にも使用しない。
 
 ### 25.3 DOM初期化と配信
 
-HTML解析後、`<script type="module" src="./src/main.js">`からエンジンを評価し、従来と同じ順でポジション選択、開始、seed再生成、再開始のイベントを登録する。全参照は相対パスであり、リポジトリのルートをGitHub Pagesの公開ディレクトリとしてそのまま配置する。ビルド、npm、サーバー処理は不要である。
+HTML解析後、`<script type="module" src="./src/main.js">`からエンジンを評価し、従来と同じ順でポジション選択、開始、seed再生成、再開始のイベントを登録する。全参照は相対パスであり、`docs/`をGitHub Pagesの公開ディレクトリとしてそのまま配置する。ビルド、npm、サーバー処理は不要である。
 
 ### 25.4 回帰テスト
 
