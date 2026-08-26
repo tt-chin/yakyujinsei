@@ -21,6 +21,7 @@ assert.match(html, /<link rel="stylesheet" href="\.\/styles\/jp-theme\.css">/);
 assert.match(html, /<script type="module" src="\.\/src\/main\.js"><\/script>/);
 assert.doesNotMatch(html, /<style>/);
 assert.equal((html.match(/<script/g) || []).length, 1);
+assert.match(html, /href="https:\/\/x\.com\/dog_cat_150"[^>]*>犬猫（@dog_cat_150）<\/a>/);
 
 assert.match(main, /import '\.\/engine\/game\.js';/);
 assert.match(game, /import \{ VERSION \} from '\.\.\/config\.js';/);
