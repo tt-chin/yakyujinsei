@@ -7,7 +7,7 @@ body{background-image:radial-gradient(ellipse 120% 60% at 50% -10%,#f3c5cc 0%,tr
 #act{background:linear-gradient(#fffdfdee,#fff8f8f2)}
 .btn.main{background:linear-gradient(#b62a42,#96182e);border-color:#801326;color:#fff}
 .btn.warn{border-color:#c86e7b}
-.die,.stitch{background:#fff}
+.die{background:#fff}
 .die{color:#3a1017;box-shadow:inset 0 -3px 0 #8d344522}
 #start{background-image:radial-gradient(ellipse 120% 50% at 50% -5%,#f0b9c3,transparent 60%)}
 .field input,.seg button{background-color:#fff}

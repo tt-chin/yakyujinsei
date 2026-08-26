@@ -19,6 +19,8 @@ const [html, config, data, game, main, baseCss, themeCss] = await Promise.all([
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/jp-theme\.css">/);
 assert.match(html, /<script type="module" src="\.\/src\/main\.js"><\/script>/);
+assert.match(html, /<link rel="icon" type="image\/png" href="\.\/assets\/baseball-icon\.png">/);
+assert.match(baseCss, /url\('\.\.\/assets\/baseball-icon\.png'\)/);
 assert.doesNotMatch(html, /<style>/);
 assert.equal((html.match(/<script/g) || []).length, 1);
 assert.match(html, /href="https:\/\/x\.com\/dog_cat_150"[^>]*>犬猫（@dog_cat_150）<\/a>/);
