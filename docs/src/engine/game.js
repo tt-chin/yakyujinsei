@@ -374,7 +374,7 @@ function playerType(){
 }
 function abCost(k){ /* 次の能力段階に必要なポイント(は addAb コスト式と一致させる)。 */
   const cur=S.ab[k], pk=(S.pot&&S.pot[k])||62, isP=S.pos==='P';
-  let c=isP?(cur>=66?7:cur>=58?4:cur>=50?2:1):(cur>=72?3:cur>=64?2:1);
+  let c=isP?(cur>=66?7:cur>=60?4:cur>=55?2:1):(cur>=72?3:cur>=64?2:1);
   if(cur>=pk)c*=isP?4:3; return c;
 }
 function addAb(k,v){ if(!(k in S.ab))return 0; const o=S.ab[k];
@@ -385,7 +385,7 @@ function addAb(k,v){ if(!(k in S.ab))return 0; const o=S.ab[k];
   const pk=(S&&S.pot&&S.pot[k])||62;
   const isP=S&&S.pos==='P';
   while(bud>0&&cur<80){
-    let cost=isP?(cur>=66?7:cur>=58?4:cur>=50?2:1)      /* 投手のみ有4項、養成成本最陡。 */
+    let cost=isP?(cur>=66?7:cur>=60?4:cur>=55?2:1)      /* 投手のみ有4項、養成成本最陡。 */
               :(cur>=72?3:cur>=64?2:1);                    /* 野手9項、中高段変化貴。 */
     if(cur>=pk)cost*=isP?4:3; /* 天花板之上：投手×4、野手×3。 */
     if(bud>=cost){bud-=cost;cur++;} else break; }
@@ -967,7 +967,7 @@ function addAbStat(k,amt){
   
   /* 能力上限未到達なら通常コストで加算し、上限に達した時点で止める。 */
   while(bud>0 && cur<pk){
-    let c = isP ? (cur>=66?7:cur>=58?4:cur>=50?2:1) : (cur>=72?3:cur>=64?2:1);
+    let c = isP ? (cur>=66?7:cur>=60?4:cur>=55?2:1) : (cur>=72?3:cur>=64?2:1);
     bud--; cr++; if(cr>=c){ cr-=c; cur++; gained++; }
   }
   
@@ -1007,7 +1007,7 @@ function resolveEvent(ev,mode,done){
         statBonus(bud,out); /* 全額を成績ボーナス。 */
       } else {
         while(bud>0 && cur<pk){
-          let c = isP ? (cur>=66?7:cur>=58?4:cur>=50?2:1) : (cur>=72?3:cur>=64?2:1);
+          let c = isP ? (cur>=66?7:cur>=60?4:cur>=55?2:1) : (cur>=72?3:cur>=64?2:1);
           bud--; cr++; if(cr>=c){ cr-=c; cur++; gained++; }
         }
         if(!S.carry) S.carry={}; S.carry[k]=cr; S.ab[k]=cur;
@@ -2845,6 +2845,7 @@ $('btn-start').onclick=()=>{
   },0);};
 
   function startJapanese(){let params=new URLSearchParams(location.search);let sv=normalizeSeed($('seed-show').value||params.get('seed'));if(!sv)sv=generateSeed();SEED=sv;const pos=document.querySelector('#seg-pos button.on')?.dataset.v||'P';const nm=normalizePlayerName($('in-name').value,SEED,pos);S={rngState:0};seedInit(SEED);S=newState(nm,pos);history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}`);$('start').style.display='none';$('board').style.display='';$('act').style.display='';card('info','選手誕生',`${S.year}年春、${POSN[S.pos]} <b class="hl">${escapeHTML(S.name)}</b>は<b class="hl">${escapeHTML(S.team)}</b>野球部に入部した。ここから、すべての選択が野球人生を変える。`);startYear();}
+  const versionBadge=$('ver-badge');if(versionBadge)versionBadge.textContent='v'+VERSION;
   $('btn-start').onclick=startJapanese;
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();

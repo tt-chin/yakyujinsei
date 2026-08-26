@@ -29,8 +29,9 @@ assert.match(config, /VERSION = '1\.0\.0'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(game, /version:VERSION/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
-assert.doesNotMatch(html, /id="ver-badge"/);
-assert.doesNotMatch(game, /ver-badge/);
+assert.match(html, /id="ver-badge"/);
+assert.doesNotMatch(html, /id="app-version"/);
+assert.match(game, /versionBadge\.textContent='v'\+VERSION/);
 
 const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}`;
 assert.doesNotMatch(forbidden, /UNSUPPORTED_REPLAY_VERSION/);
@@ -44,6 +45,9 @@ assert.equal((data.match(/"schoolId"/g) || []).length, 75);
 assert.equal((data.match(/"eventKey"/g) || []).length, 2);
 assert.match(themeCss, /日本版ダークレッドテーマ/);
 assert.ok(baseCss.length > 8_000);
+
+assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 4);
+assert.doesNotMatch(game, /cur>=66\?7:cur>=58\?4:cur>=55\?2:1/);
 
 function fnv1a32(value) {
   let hash = 0x811C9DC5;
