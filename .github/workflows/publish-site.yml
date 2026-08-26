@@ -1,0 +1,54 @@
+name: Publish website
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-yakyujinsei-site
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout development repository
+        uses: actions/checkout@v4
+
+      - name: Checkout publication repository
+        uses: actions/checkout@v4
+        with:
+          repository: tt-chin/yakyujinsei-site
+          ref: main
+          token: ${{ secrets.DEPLOY_REPO_TOKEN }}
+          path: published-site
+
+      - name: Sync docs contents to publication repository
+        shell: bash
+        run: |
+          rsync -av --delete \
+            --exclude=".git/" \
+            --exclude="CNAME" \
+            docs/ published-site/
+
+      - name: Commit and push publication update
+        shell: bash
+        working-directory: published-site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          if git diff --cached --quiet; then
+            echo "No publication changes."
+            exit 0
+          fi
+          git commit -m "Publish website from tt-chin/yakyujinsei"
+          git push origin main
