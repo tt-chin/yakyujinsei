@@ -45,7 +45,9 @@ assert.match(game, /history\.replaceState\(null,'',`\?seed=\$\{encodeURIComponen
 assert.equal((data.match(/"teamId"/g) || []).length, 90);
 assert.equal((data.match(/"schoolId"/g) || []).length, 75);
 assert.equal((data.match(/"eventKey"/g) || []).length, 2);
-assert.match(themeCss, /日本版ダークレッドテーマ/);
+assert.match(themeCss, /日本版ライトレッドテーマ/);
+assert.match(baseCss, /--bg:#fff8f8/);
+assert.match(game, /const imageColor=\{bg:'#fff8f8'/);
 assert.ok(baseCss.length > 8_000);
 
 assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 4);

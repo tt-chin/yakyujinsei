@@ -1,13 +1,19 @@
-/* 日本版ダークレッドテーマ */
-body{background-image:radial-gradient(ellipse 120% 60% at 50% -10%,#5c172244 0%,transparent 60%)}
-#board{background:linear-gradient(#351118,#210b10)}
-.bd-cell,.tag,.statline,.abrow .bar{background:#1c0a0e}
-#act{background:linear-gradient(#210b10ee,#16090b)}
-.btn.main{background:linear-gradient(#5a202b,#40151e);border-color:#7f3442}
-#start{background-image:radial-gradient(ellipse 120% 50% at 50% -5%,#6b1d2daa,transparent 60%)}
-.field input,.seg button{background-color:#251014}
-.seg button.on{background:#35151b}
-#btn-restart{border-color:#63303a;color:#c39da2}
-#btn-restart:active,#act-toggle,#seed-show{background:#1c0a0e!important;border-color:#63303a!important}
-.abrow .bar i{background:linear-gradient(90deg,#8d3445,var(--amber))}
+/* 日本版ライトレッドテーマ */
+body{background-image:radial-gradient(ellipse 120% 60% at 50% -10%,#f3c5cc 0%,transparent 60%)}
+#board{background:linear-gradient(#fff,#fff3f4);box-shadow:0 6px 18px #7d263022}
+.bd-cell,.tag,.statline,.abrow .bar{background:#fff7f7}
+.bd-cell b{text-shadow:0 0 8px #a7193033}
+.lamp i{background:#ead5d8;border-color:#d9a1aa}
+#act{background:linear-gradient(#fffdfdee,#fff8f8f2)}
+.btn.main{background:linear-gradient(#b62a42,#96182e);border-color:#801326;color:#fff}
+.btn.warn{border-color:#c86e7b}
+.die,.stitch{background:#fff}
+.die{color:#3a1017;box-shadow:inset 0 -3px 0 #8d344522}
+#start{background-image:radial-gradient(ellipse 120% 50% at 50% -5%,#f0b9c3,transparent 60%)}
+.field input,.seg button{background-color:#fff}
+.seg button.on{background:#fbeaec}
+#btn-restart{border-color:#d9a1aa;color:#875d64}
+#btn-restart:active,#act-toggle,#seed-show{background:#fff7f7!important;border-color:#d9a1aa!important}
+#act-toggle{color:#875d64}
+.abrow .bar i{background:linear-gradient(90deg,#d7697a,var(--amber))}
 

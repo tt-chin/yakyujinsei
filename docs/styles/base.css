@@ -1,7 +1,7 @@
 :root{
-  --bg:#16090b; --panel:#251014; --panel2:#35151b; --edge:#63303a;
-  --chalk:#f4e9e5; --dim:#c39da2; --amber:#ffc95c; --clay:#cf625e;
-  --good:#8fd08f; --bad:#e2695c; --blue:#7fb3d5;
+  --bg:#fff8f8; --panel:#ffffff; --panel2:#fbeaec; --edge:#d9a1aa;
+  --chalk:#3a1017; --dim:#875d64; --amber:#a71930; --clay:#c94b5d;
+  --good:#2f7d4a; --bad:#c62828; --blue:#356f9f;
   --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
   --sans:'Noto Sans TC',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
 }

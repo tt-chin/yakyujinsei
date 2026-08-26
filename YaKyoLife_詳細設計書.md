@@ -2230,7 +2230,7 @@ tests/
 ```
 
 - `docs/styles/base.css`: 既存CSSの基礎、レイアウト、コンポーネント、レスポンシブ指定。元の記述順を維持する。
-- `docs/styles/jp-theme.css`: 「日本版ダークレッドテーマ」以降の上書き。`base.css`の後に読み込む。
+- `docs/styles/jp-theme.css`: 「日本版ライトレッドテーマ」の上書き。近白色の背景、白いパネル、深紅の強調色を使用し、`base.css`の後に読み込む。
 - `docs/src/config.js`: `VERSION='1.0.0'`の単一バージョン識別子。
 - `docs/src/data/jp-data.js`: 高校50校、大学25校、90球団および国際大会Master。
 - `docs/src/engine/game.js`: 状態`S`、ゲーム判定、フェーズ、UI生成、引退、共有画像を含むバージョン1.0.0互換エンジン。既存の基礎エンジンと日本版オーバーレイの評価順を同一ファイル内で維持する。

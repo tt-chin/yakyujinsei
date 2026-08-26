@@ -2230,14 +2230,14 @@ function endGame(reason){
   const TN={genius:'天才',iron:'鉄人',glass:'スペランカー',scum:'クズ男',late:'遅咲き',disc:'自律の鬼',academy:'理論派',intlace:'国際大会の鬼',franchise:'球団の顔',clutch:'強心臓',phoenix:'復活',onetool:'一芸特化',rubber:'ラバーアーム',goldcloth:'ゴールデングラブ常連',mrteam:(teamNick(S.mrTeamName||'')||'')+'ミスター',confidante:'女友達止まり',smallschool:'弱小校の星',grinder:'努力の人',legend:(S.legendLeague||'')+'歴史に残る名選手',yips:'記憶喪失',distract:'私生活多忙',cancer:'ロッカールームの癌',ambience:'ムードメーカー',thief:'給料泥棒',combo:'小細工無用',rainbow:(S.rainbowLg||'')+'ジャーニーマン',taiwan:'Team Taiwan'};
   const posT={pos:['legend','taiwan','goldcloth','mrteam','confidante','genius','late','disc','academy','intlace','franchise','clutch','phoenix','rubber','onetool','smallschool','grinder','combo','rainbow'],neg:['glass','scum','yips','distract','cancer','ambience','thief']};
   const tagStyle=k=>{
-    if(k==='legend'||k==='taiwan')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歴史的選手/台湾代表への貢献：金。 */
-    if(k==='goldcloth')return 'background:#3a3505;border-color:#e8d43a;color:#fff35a'; /* ゴールデングラブ常連：黄。 */
-    if(k==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#ffc95c'; return 'background:#1a1a1a;border-color:'+tc+';color:'+tc; }
-    if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7';        /* 天才：銀。 */
+    if(k==='legend'||k==='taiwan')return 'background:#fff7dc;border-color:#c79520;color:#795b00'; /* 歴史的選手/台湾代表への貢献：金。 */
+    if(k==='goldcloth')return 'background:#fffbe0;border-color:#c5a800;color:#6f6000'; /* ゴールデングラブ常連：黄。 */
+    if(k==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#a71930'; return 'background:#ffffff;border-color:'+tc+';color:'+tc; }
+    if(k==='genius')return 'background:#f3f5f8;border-color:#9aa5b5;color:#4c5868';        /* 天才：銀。 */
     return ''; /* 好影響：既定色はアンバー。 */
   };
   posT.pos.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="${tagStyle(k)}">${TN[k]}</span>`); });
-  posT.neg.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="background:#2a0f0f;border-color:#c0392b;color:#ff8b7a">${TN[k]}</span>`); });
+  posT.neg.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="background:#fff0f0;border-color:#c0392b;color:#a71930">${TN[k]}</span>`); });
   (S.removed||[]).forEach(lbl=>tr.push(`<span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${lbl}</span>`));
   const lv=S.love;
   const cur=lv.st==='married'?`妻 ${lv.partner}（子ども${lv.kids}人）`:lv.st==='dating'?`交際中 ${lv.partner}（${lv.dyrs||0}年）`:lv.st==='divorced'?'離婚':'独身';
@@ -2307,7 +2307,7 @@ function endGame(reason){
       try{copied=document.execCommand('copy');}catch(err){}ta.remove();
     }
     if(copied){urlBtn.textContent='✅ コピーしました';shareOut.innerHTML='<div class="statline" role="status">リプレイURLをコピーしました。</div>';}
-    else{urlBtn.textContent='URLを選択してコピー';shareOut.innerHTML='<label class="statline" style="display:block">下のURLを長押し／選択してコピーしてください。<input value="'+url.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" readonly style="width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:#1c0a0e;border:1px solid var(--edge);border-radius:6px"></label>';const input=shareOut.querySelector('input');input.focus();input.select();}
+    else{urlBtn.textContent='URLを選択してコピー';shareOut.innerHTML='<label class="statline" style="display:block">下のURLを長押し／選択してコピーしてください。<input value="'+url.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" readonly style="width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:var(--panel);border:1px solid var(--edge);border-radius:6px"></label>';const input=shareOut.querySelector('input');input.focus();input.select();}
     urlBtn.disabled=false;setTimeout(()=>{urlBtn.textContent='🔗 リプレイURLをコピー';},1800);
   });
   choose('',[
@@ -2422,51 +2422,52 @@ function shareImage(evals,out){
   H+=70;
   cv.width=W*scale; cv.height=H*scale;
   c.scale(scale,scale);
-  c.fillStyle='#1b090c'; c.fillRect(0,0,W,H);
-  c.strokeStyle='#6b2731'; c.lineWidth=3; c.strokeRect(10,10,W-20,H-20);
+  const imageColor={bg:'#fff8f8',panel:'#ffffff',edge:'#c9828e',text:'#3a1017',dim:'#875d64',accent:'#a71930',soft:'#6f4048',bad:'#c62828'};
+  c.fillStyle=imageColor.bg; c.fillRect(0,0,W,H);
+  c.strokeStyle=imageColor.edge; c.lineWidth=3; c.strokeRect(10,10,W-20,H-20);
   c.textBaseline='top';
   const posN={P:roleN(S.role)+'投手',C:'捕手',IF:'内野手',OF:'外野手'}[S.pos];
 
   // Header
-  c.fillStyle='#d2a0a7'; c.font='13px sans-serif'; c.fillText('野球人生シミュレーター・引退記念',PAD,30);
-  c.fillStyle='#ffc95c'; c.font='bold 36px sans-serif'; c.fillText(S.name,PAD,52);
-  c.fillStyle='#f5e7e9'; c.font='15px sans-serif';
+  c.fillStyle=imageColor.dim; c.font='13px sans-serif'; c.fillText('野球人生シミュレーター・引退記念',PAD,30);
+  c.fillStyle=imageColor.accent; c.font='bold 36px sans-serif'; c.fillText(S.name,PAD,52);
+  c.fillStyle=imageColor.text; c.font='15px sans-serif';
   c.fillText(`${primaryPos()}｜${playerType()}｜${hist.length?hist[0].y:'?'}–${S.year}｜引退時${S.age}歳${S.pos==='P'&&S.tjCount?`｜TJ×${S.tjCount}`:''}`,PAD,98);
   // 特性列(header 右方)。
   let y=126;
   function tagColor(o){
-    if(o.rem)return {bg:'#242424',bd:'#4a4a4a',fg:'#8a8a8a'};
-    if(o.key==='legend'||o.key==='taiwan')return {bg:'#3a2c05',bd:'#ffc95c',fg:'#ffe08a'}; /* 金（歴史的選手・Team Taiwan）。 */
-    if(o.key==='goldcloth')return {bg:'#3a3505',bd:'#e8d43a',fg:'#fff35a'}; /* 黄。 */
-    if(o.key==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#ffc95c'; return {bg:'#1a1a1a',bd:tc,fg:tc}; }
-    if(o.key==='genius')return {bg:'#232733',bd:'#c8d0e0',fg:'#e8eef7'}; /* 銀。 */
-    if(o.neg)return {bg:'#2a0f0f',bd:'#c0392b',fg:'#ff8b7a'};             /* 赤。 */
-    return {bg:'#3b151b',bd:'#7d303b',fg:'#f0a7b1'};                      /* 赤系の標準特性。 */
+    if(o.rem)return {bg:'#f1eeee',bd:'#b7aaad',fg:'#81757a'};
+    if(o.key==='legend'||o.key==='taiwan')return {bg:'#fff7dc',bd:'#c79520',fg:'#795b00'}; /* 金（歴史的選手・Team Taiwan）。 */
+    if(o.key==='goldcloth')return {bg:'#fffbe0',bd:'#c5a800',fg:'#6f6000'}; /* 黄。 */
+    if(o.key==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||imageColor.accent; return {bg:'#ffffff',bd:tc,fg:tc}; }
+    if(o.key==='genius')return {bg:'#f3f5f8',bd:'#9aa5b5',fg:'#4c5868'}; /* 銀。 */
+    if(o.neg)return {bg:'#fff0f0',bd:'#c0392b',fg:'#a71930'};             /* 赤。 */
+    return {bg:'#fbe9ec',bd:'#c95b6c',fg:'#7f1d2d'};                      /* 赤系の標準特性。 */
   }
   function drawTags(items){ items.forEach(function(o){ const t=o.label, col=tagColor(o);
     c.font='12px sans-serif'; const w=c.measureText(t).width+16;
     c.fillStyle=col.bg; c.strokeStyle=col.bd; c.lineWidth=1;
     c.fillRect(tagx,y,w,20); c.strokeRect(tagx,y,w,20);
     c.fillStyle=col.fg; c.fillText(t,tagx+8,y+3);
-    if(o.rem){ c.strokeStyle='#8a8a8a'; c.beginPath(); c.moveTo(tagx+4,y+10); c.lineTo(tagx+w-4,y+10); c.stroke(); }
+    if(o.rem){ c.strokeStyle='#81757a'; c.beginPath(); c.moveTo(tagx+4,y+10); c.lineTo(tagx+w-4,y+10); c.stroke(); }
     tagx+=w+8; if(tagx>W-160){tagx=PAD;y+=26;}
   }); }
   var tagx=PAD;
   if(keepTr.length||remTr.length){ drawTags(keepTr.concat(remTr)); y+=30; }
 
-  function hr(){ c.strokeStyle='#6b2731'; c.lineWidth=1; c.beginPath(); c.moveTo(PAD,y); c.lineTo(W-PAD,y); c.stroke(); y+=12; }
-  function sectionTitle(t){ c.fillStyle='#d2a0a7'; c.font='bold 13px sans-serif'; c.fillText(t,PAD,y); y+=22; }
+  function hr(){ c.strokeStyle=imageColor.edge; c.lineWidth=1; c.beginPath(); c.moveTo(PAD,y); c.lineTo(W-PAD,y); c.stroke(); y+=12; }
+  function sectionTitle(t){ c.fillStyle=imageColor.dim; c.font='bold 13px sans-serif'; c.fillText(t,PAD,y); y+=22; }
 
   // 評価。
   hr(); sectionTitle('通算評価');
-  c.font='bold 16px sans-serif'; c.fillStyle='#ffc95c';
+  c.font='bold 16px sans-serif'; c.fillStyle=imageColor.accent;
   tiers.forEach(function(t){ c.fillText('★ '+t,PAD,y); y+=24; }); y+=6;
 
   // 通算成績表。
   hr(); sectionTitle('通算成績');
   const cols=isP?[['League',90],['Yrs',36],['G',48],['IP',54],['W',36],['L',36],['SV',48],['HLD',48],['SO',52],['BB',48],['ERA',52],['WHIP',54]]
                 :[['League',80],['Yrs',34],['G',40],['PA',46],['AVG',48],['OBP',48],['SLG',48],['OPS',48],['H',44],['HR',38],['RBI',44],['SB',40],['DEF',40]];
-  function row(cells,head){ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?'#d2a0a7':'#f5e7e9';
+  function row(cells,head){ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?imageColor.dim:imageColor.text;
     cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=cols[i][1]; }); y+=head?24:26; }
   row(cols.map(cc=>cc[0]),true);
   leagues.forEach(function(b){ const st=S.stats[b];
@@ -2485,7 +2486,7 @@ function shareImage(evals,out){
   // 国際大会通算成績。
   if(S.intlCount>0){ const IS=S.intlStat;
     hr(); sectionTitle('国際大会通算（日本代表 '+S.intlCount+' 大会）');
-    const rowIntl=(cells,head)=>{ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?'#d2a0a7':'#f5e7e9';
+    const rowIntl=(cells,head)=>{ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?imageColor.dim:imageColor.text;
       cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=ic[i][1]; }); y+=head?24:28; };
     var ic;
     if(isP){ const era=IS.IP>0?(IS.ER*9/IS.IP).toFixed(2):'-';
@@ -2502,7 +2503,7 @@ function shareImage(evals,out){
 
   // 栄誉(横2列,長文は自動改行)。
   hr(); sectionTitle('通算タイトル（'+honors.length+' 件）');
-  c.font='13px sans-serif'; c.fillStyle='#efb2ba';
+  c.font='13px sans-serif'; c.fillStyle=imageColor.soft;
   let startY = y;
   let currY = startY;
   honorBlocks.forEach(function(b, i){
@@ -2517,10 +2518,10 @@ function shareImage(evals,out){
   if(amaLogs.length > 0){
     hr(); sectionTitle('キャリア年表（アマチュア成績）');
     const hc=[['年',48],['年齢',40],['チーム',150],['成績',W-PAD*2-238]];
-    let x=PAD; c.font='bold 12px monospace'; c.fillStyle='#d2a0a7';
+    let x=PAD; c.font='bold 12px monospace'; c.fillStyle=imageColor.dim;
     hc.forEach(function(h){ c.fillText(h[0],x,y); x+=h[1]; }); y+=20;
     c.font='11px monospace';
-    amaLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?'#ff8b7a':'#edd7da';
+    amaLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?imageColor.bad:imageColor.text;
       const cells=[String(r.y),String(r.age),r.tm,r.line];
       cells.forEach(function(cell,i){
         let t=String(cell); const maxw=hc[i][1]-8;
@@ -2533,10 +2534,10 @@ function shareImage(evals,out){
     const hc = isP
       ? [['年',46],['年齢',36],['チーム',124],['G',45],['IP',55],['W',36],['L',36],['SV',42],['HLD',42],['SO',46],['BB',46],['ERA',52],['WHIP',54]]
       : [['年',46],['年齢',34],['チーム',120],['G',36],['PA',42],['AVG',46],['OBP',46],['SLG',46],['OPS',46],['H',40],['HR',36],['RBI',40],['SB',36],['DEF',40]];
-    let x=PAD; c.font='bold 12px monospace'; c.fillStyle='#d2a0a7';
+    let x=PAD; c.font='bold 12px monospace'; c.fillStyle=imageColor.dim;
     hc.forEach(function(h){ c.fillText(h[0],x,y); x+=h[1]; }); y+=20;
     c.font='12px monospace';
-    proLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?'#ff8b7a':'#edd7da';
+    proLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?imageColor.bad:imageColor.text;
       const tmS=r.tm;
       const s = r.st || {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
       let cells = [];
@@ -2562,9 +2563,9 @@ function shareImage(evals,out){
     y+=4;
   }
 
-  c.fillStyle='#ffc95c'; c.font='bold 16px sans-serif';
+  c.fillStyle=imageColor.accent; c.font='bold 16px sans-serif';
   c.fillText('生涯収入 '+fmtMoney(Math.round(S.careerEarnings)),PAD,y); y+=26;
-  c.fillStyle='#d2a0a7'; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
+  c.fillStyle=imageColor.dim; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
   c.textAlign='right'; c.fillText(VERSION,W-PAD,H-40); c.textAlign='left';
 
   const url=cv.toDataURL('image/png');
