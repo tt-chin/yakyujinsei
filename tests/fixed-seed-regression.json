@@ -1,0 +1,22 @@
+{
+  "baseline": "pre-modularization version 1.0.0 index.html",
+  "comparison": "browser DOM text after player creation and first training allocation prompt",
+  "consoleErrors": 0,
+  "fullCareerSmoke": {
+    "seed": "end-flow-test",
+    "retirementYear": 2058,
+    "retired": true,
+    "seedOnlyUrl": "?seed=end-flow-test",
+    "shareImageCreated": true,
+    "shareUrlOperated": true,
+    "consoleErrors": 0
+  },
+  "cases": [
+    { "seed": "yakyo-test-001", "position": "P", "matched": true },
+    { "seed": "jp3-pitcher-02", "position": "P", "matched": true },
+    { "seed": "jp3-pitcher-03", "position": "P", "matched": true },
+    { "seed": "jp3-catcher-01", "position": "C", "matched": true },
+    { "seed": "jp3-infielder-01", "position": "IF", "matched": true },
+    { "seed": "jp3-outfielder-01", "position": "OF", "matched": true }
+  ]
+}
