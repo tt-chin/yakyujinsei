@@ -48,6 +48,8 @@ assert.equal((data.match(/"teamId"/g) || []).length, 90);
 assert.equal((data.match(/"schoolId"/g) || []).length, 75);
 assert.equal((data.match(/"eventKey"/g) || []).length, 2);
 assert.match(themeCss, /日本版ライトレッドテーマ/);
+assert.match(themeCss, /\.btn small\{color:#6f303d\}/);
+assert.match(themeCss, /\.btn\.main small\{color:#fff4f5\}/);
 assert.match(baseCss, /--bg:#fff8f8/);
 assert.match(game, /const imageColor=\{bg:'#fff8f8'/);
 assert.ok(baseCss.length > 8_000);
