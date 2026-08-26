@@ -16,9 +16,11 @@ export function demotionChoiceText(targetLevel, levels) {
   return `${levels[targetLevel].n}への降格を受け入れ、再起を目指す`;
 }
 
-export function crossOfferTypeForOrg(org) {
-  if (org === 'NPB') return 'overseas_transfer';
-  if (['KBO', 'CPBL', 'MiLB', 'MLB'].includes(org)) return 'npb_return';
+export function crossOfferType(currentOrg, destinationOrg) {
+  const overseas = ['KBO', 'CPBL', 'MiLB', 'MLB'];
+  if (currentOrg === 'NPB' && overseas.includes(destinationOrg)) return 'overseas_transfer';
+  if (overseas.includes(currentOrg) && destinationOrg === 'NPB') return 'npb_return';
+  if (overseas.includes(currentOrg) && overseas.includes(destinationOrg)) return 'overseas_to_overseas';
   return 'transfer';
 }
 

@@ -1,3 +1,2 @@
-export const RNG_VERSION = 1;
-export const RULES_VERSION = 'JP3';
+export const VERSION = '1.0.0';
 

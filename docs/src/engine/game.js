@@ -1,6 +1,6 @@
-import { RNG_VERSION, RULES_VERSION } from '../config.js';
+import { VERSION } from '../config.js';
 import { JP_DATA } from '../data/jp-data.js';
-import { crossOfferTitle, crossOfferTypeForOrg, demotionChoiceText, findDemotionTarget, isBelowActiveMinimum } from './career-policy.js';
+import { crossOfferTitle, crossOfferType, demotionChoiceText, findDemotionTarget, isBelowActiveMinimum } from './career-policy.js';
 
 window.__YAKYO_JP_DATA__ = JP_DATA;
 
@@ -135,7 +135,6 @@ function dposReview(cont){
     f:()=>{ S.dpos=p; card('info','守備位置の変更',`球団のシーズン終了後評価により、新シーズンから<b class="hl">${DPN[p]}</b>へコンバート。`); cont(); }}));
   choose(`守備位置会議：首脳陣は、${DPN[S.dpos]}を守るのはもう厳しいと判断（${LV[S.lv].n}基準）`,opts);
 }
-const APP_VER='v1.3.7';
 const TEAM_COLOR={
   /* CPBL。 */
   '台中マンモス':'#ffd800','府城ライオンズ':'#ff7f00','桃園コングス':'#8b1a1a','新北ナイツ':'#003f87','台北ダイナソーズ':'#c8102e','高雄イーグルス':'#1a7a3a',
@@ -2166,7 +2165,7 @@ function endGame(reason){
         if(isP){
           const era = s.IP>0 ? (s.ER*9/s.IP).toFixed(2) : '-';
           const whip = s.IP>0 ? ((s.H+s.BB)/s.IP).toFixed(2) : '-';
-          return `<tr style="${cS}"><td>${r.y}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}</td><td>${s.G}</td><td>${fmtIP(s.IP)}</td><td>${s.W}</td><td>${s.L}</td><td>${s.SV||0}</td><td>${s.HLD||0}</td><td>${s.SO}</td><td>${s.BB||0}</td><td>${era}</td><td>${whip}</td></tr>`;
+          return `<tr style="${cS}"><td>${r.y}</td><td>${r.age}</td><td class="career-team"><span>${r.tm}</span></td><td>${s.G}</td><td>${fmtIP(s.IP)}</td><td>${s.W}</td><td>${s.L}</td><td>${s.SV||0}</td><td>${s.HLD||0}</td><td>${s.SO}</td><td>${s.BB||0}</td><td>${era}</td><td>${whip}</td></tr>`;
         } else {
           const obpN = s.PA>0 ? (s.H+s.BB)/s.PA : 0;
           const slgN = slgOf(s);
@@ -2174,10 +2173,10 @@ function endGame(reason){
           const obp = s.PA>0 ? obpN.toFixed(3).replace(/^0/,'') : '-';
           const slg = s.AB>0 ? slgN.toFixed(3).replace(/^0/,'') : '-';
           const ops = s.AB>0 ? (obpN+slgN).toFixed(3).replace(/^0/,'') : '-';
-          return `<tr style="${cS}"><td>${r.y}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}${r.p?"·"+r.p:""}</td><td>${s.G}</td><td>${s.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${s.H}</td><td>${s.HR}</td><td>${s.RBI}</td><td>${s.SB}</td><td>${s.DEF>0?'+':''}${s.DEF||0}</td></tr>`;
+          return `<tr style="${cS}"><td>${r.y}</td><td>${r.age}</td><td class="career-team"><span>${r.tm}${r.p?"·"+r.p:""}</span></td><td>${s.G}</td><td>${s.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${s.H}</td><td>${s.HR}</td><td>${s.RBI}</td><td>${s.SB}</td><td>${s.DEF>0?'+':''}${s.DEF||0}</td></tr>`;
         }
       }).join('');
-      card('','キャリア年表 (キャリアの実績)',`<table class="fin">${head}${rows}</table>`);
+      card('','キャリア年表 (キャリアの実績)',`<div class="career-table-scroll"><table class="fin career-table">${head}${rows}</table></div>`);
     }
   }
   let intlTable='';
@@ -2566,7 +2565,7 @@ function shareImage(evals,out){
   c.fillStyle='#ffc95c'; c.font='bold 16px sans-serif';
   c.fillText('生涯収入 '+fmtMoney(Math.round(S.careerEarnings)),PAD,y); y+=26;
   c.fillStyle='#d2a0a7'; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
-  c.textAlign='right'; c.fillText(APP_VER,W-PAD,H-40); c.textAlign='left';
+  c.textAlign='right'; c.fillText(VERSION,W-PAD,H-40); c.textAlign='left';
 
   const url=cv.toDataURL('image/png');
   const fileName='野球人生リザルト_'+S.name+'.png';
@@ -2625,9 +2624,8 @@ $('btn-start').onclick=()=>{
   card('info','選手誕生',`${S.year}年春、${POSN[S.pos]}の<b class="hl">${S.name}</b>は<b class="hl">${S.team}</b>野球部へ入部した。3年後の進路は自分で選ぶ。<br><span style="color:var(--dim);font-size:12px">ヒント：22歳までに「6」を累計5回出すと、隠し特性が覚醒する。</span>`);
   startYear();
 };
-(function(){ const vb=document.getElementById('ver-badge'); if(vb)vb.textContent=APP_VER; })();
 
-/* ================= 日本版仕様オーバーレイ JP1 ================= */
+/* ================= 日本版仕様オーバーレイ 1.0.0 ================= */
 (() => {
   'use strict';
   const DATA = JP_DATA;
@@ -2681,7 +2679,7 @@ $('btn-start').onclick=()=>{
     const pot={},sh=POS_AB[pos].slice();for(let i=sh.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]];}
     sh.forEach((k,i)=>pot[k]=pos==='P'?(i===0?ri(70,80):i===1?ri(58,68):i===2?ri(50,60):ri(44,54)):(i===0?ri(72,80):i===1?ri(64,74):i===2?ri(56,68):ri(46,62)));
     const tierRoll=Math.floor(R()*100),tier=tierRoll<30?'S':tierRoll<80?'A':'B',schools=DATA.highSchools.filter(x=>x.tier===tier),school=pickRecord(schools.length?schools:DATA.highSchools);
-    const state={name,pos,role:null,seed:SEED,rngVersion:RNG_VERSION,rulesVersion:RULES_VERSION,rngState:S.rngState,age:16,year:2026,stage:'HS',stageYr:1,lv:'HS',org:'AMATEUR',pot,ab,team:school.name,schoolId:school.schoolId,schoolTier:tier,entryRoute:'HS',orgTeamId:null,teamTally:{NPB:{},KBO:{},CPBL:{},MLB:{},IND:{},CORP:{}},
+    const state={name,pos,role:null,seed:SEED,version:VERSION,rngState:S.rngState,age:16,year:2026,stage:'HS',stageYr:1,lv:'HS',org:'AMATEUR',pot,ab,team:school.name,schoolId:school.schoolId,schoolTier:tier,entryRoute:'HS',orgTeamId:null,teamTally:{NPB:{},KBO:{},CPBL:{},MLB:{},IND:{},CORP:{}},
       traits:{genius:false,glass:false,iron:false,scum:false,late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,taiwan:false},removed:[],cntSave:0,cntSaveWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,samePick:0,samePickKey:null,teamYears:0,six:0,bigInj:0,ironStreak:0,npbYears:0,npbDevYears:0,corpYears:0,indYears:0,injNext:0,tmpInj:0,rehab:0,currentSalary:0,careerEarnings:0,careerSigningBonus:0,careerBuyout:0,corpIncome:0,pool:0,seasonFactor:1,stats:{NPB:null,KBO:null,CPBL:null,MLB:null,MINOR:null,IND:null,CORP:null},honors:[],intlCount:0,intlCompletedKeys:{},intlLastEventKey:null,intlDispatchStatus:null,intlDeclinedCount:0,intlStat:{G:0,PA:0,AB:0,H:0,HR:0,RBI:0,IP:0,SO:0,ER:0,W:0,SV:0},intlBest:null,dpos:null,dposYears:{},roleYears:{},tradeRefuse:0,champThisTeam:false,svc:0,svcOrg:null,faElig:false,npbRosterDays:0,npbFaSeasons:0,faType:null,faUsed:false,faMarketKey:null,tradeHeat:0,complainCount:0,demotionRefused:false,tj:0,tjCount:0,effort:'普通投',tjSuccess:0,love:{st:'single',partner:null,kids:0,caught:0,affairs:0,exes:[],dyrs:0,datedTimes:0},log:[],ct:null,draftRights:null,domesticTournamentLog:[],domesticTournamentStats:{},domesticCompletedKeys:{},done:false};
     Object.defineProperty(state,'salary',{get(){return this.careerEarnings;},set(v){this.careerEarnings=v;},enumerable:false});
     Object.defineProperty(state,'orgTeam',{get(){return this.orgTeamId;},set(v){this.orgTeamId=teamRec(v)?v:(DATA.teams.find(t=>t.name===v)?.teamId||v);},enumerable:false});
@@ -2768,13 +2766,16 @@ $('btn-start').onclick=()=>{
     return{t:`${label}：${rec.name}`,s:`${LV[lv].n}｜年俸${fmtMoney(annual)}`,f:()=>{signTo(org,lv,rec.teamId,ri(1,3),1.3);S.ct.contractType='OVERSEAS_FA';finish();}};
   }
   crossOffers = function(o){
-    const finish=()=>advance(),opts=[],offerType=crossOfferTypeForOrg(S.org);
+    const finish=()=>advance(),opts=[];
+    let offerType='transfer';
     if(S.org==='NPB'&&S.lv==='NPB1'){
+      offerType=crossOfferType(S.org,'MiLB');
       const k=overseasOffer('KBO','KBO1','韓国プロ野球への海外移籍',o,1,finish);
       const c=overseasOffer('CPBL','CPBL1','台湾プロ野球への海外移籍',o,0,finish);
       const m=overseasOffer('MiLB','MLB','MLBへの海外移籍',o,2,finish);
       if(k)opts.push(k);if(c)opts.push(c);if(m)opts.push(m);
     }else if(['KBO','CPBL','MiLB','MLB'].includes(S.org)&&o>=47){
+      offerType=crossOfferType(S.org,'NPB');
       const rec=pickRecord(listByOrg('NPB')),lv=o>=53?'NPB1':'NPB2';
       opts.push({t:`NPBへ復帰：${rec.name}`,s:`${LV[lv].n}契約`,f:()=>{signTo('NPB',lv,rec.teamId,ri(1,3),1);finish();}});
     }
@@ -2848,5 +2849,4 @@ $('btn-start').onclick=()=>{
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();
   $('btn-restart').onclick=()=>{if(confirm('この野球人生を終了して最初からやり直しますか？'))location.href=location.pathname;};
-  const badge=$('ver-badge');if(badge)badge.textContent='JP3';
 })();

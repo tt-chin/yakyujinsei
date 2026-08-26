@@ -5,7 +5,7 @@ import path from 'node:path';
 
 import {
   crossOfferTitle,
-  crossOfferTypeForOrg,
+  crossOfferType,
   demotionChoiceText,
   findDemotionTarget,
   isBelowActiveMinimum,
@@ -42,7 +42,10 @@ assert.equal(fromNpb1, 'NPB2');
 assert.equal(demotionChoiceText(fromNpb1, levels), '二軍降格を受け入れ、再起を目指す');
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
+const [game, baseCss] = await Promise.all([
+  readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8'),
+  readFile(path.join(root, 'docs/styles/base.css'), 'utf8'),
+]);
 const forcedCheck = game.indexOf('if(isBelowActiveMinimum(o)){');
 const injuryYearCheck = game.indexOf("if(S.skipMid){ advance(); return; }");
 const demotionCheck = game.indexOf('handleDemotion(o,path,idx)');
@@ -53,16 +56,25 @@ assert.doesNotMatch(game, /権限移譲を受け入れる/);
 assert.match(game, /LV\[targetLevel\]\.n\+'への降格を受け入れる'/);
 
 // NPBから海外、海外からNPBへの復帰を明示的な種別で区別する。
-assert.equal(crossOfferTypeForOrg('NPB'), 'overseas_transfer');
-assert.equal(crossOfferTitle(crossOfferTypeForOrg('NPB')), 'シーズン後の海外移籍オファー');
+assert.equal(crossOfferType('NPB', 'MiLB'), 'overseas_transfer');
+assert.equal(crossOfferTitle(crossOfferType('NPB', 'MiLB')), 'シーズン後の海外移籍オファー');
 for (const org of ['KBO', 'CPBL', 'MiLB', 'MLB']) {
-  assert.equal(crossOfferTypeForOrg(org), 'npb_return');
-  assert.equal(crossOfferTitle(crossOfferTypeForOrg(org)), 'NPB復帰オファー');
+  assert.equal(crossOfferType(org, 'NPB'), 'npb_return');
+  assert.equal(crossOfferTitle(crossOfferType(org, 'NPB')), 'NPB復帰オファー');
 }
-assert.equal(crossOfferTypeForOrg('OTHER'), 'transfer');
-assert.equal(crossOfferTitle('transfer'), '移籍オファー');
+assert.equal(crossOfferType('MiLB', 'KBO'), 'overseas_to_overseas');
+assert.equal(crossOfferTitle(crossOfferType('MiLB', 'KBO')), '移籍オファー');
 assert.match(game, /t:`NPBへ復帰：\$\{rec\.name\}`/);
 assert.match(game, /signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1\);finish\(\)/);
 assert.match(game, /t:'現在の球団に残留',main:true,f:finish/);
+
+// 長い球団名はチーム列だけ最大2行とし、成績列は横スクロール内で改行させない。
+assert.match(game, /class="career-table-scroll"/);
+assert.match(game, /class="fin career-table"/);
+assert.match(game, /class="career-team"><span>/);
+assert.match(baseCss, /\.career-table-scroll\{[^}]*overflow-x:auto/);
+assert.match(baseCss, /table\.fin\.career-table th,table\.fin\.career-table td\{white-space:nowrap\}/);
+assert.match(baseCss, /\.career-team\{[^}]*max-width:220px[^}]*white-space:normal/);
+assert.match(baseCss, /-webkit-line-clamp:2/);
 
 console.log('Career movement policy checks passed.');

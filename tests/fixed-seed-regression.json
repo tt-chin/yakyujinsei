@@ -1,5 +1,5 @@
 {
-  "baseline": "pre-modularization JP3 index.html",
+  "baseline": "pre-modularization version 1.0.0 index.html",
   "comparison": "browser DOM text after player creation and first training allocation prompt",
   "consoleErrors": 0,
   "fullCareerSmoke": {

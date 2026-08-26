@@ -46,6 +46,11 @@ table.fin{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:
 table.fin th,table.fin td{border-bottom:1px solid var(--edge);padding:4px 4px;text-align:right}
 table.fin th{color:var(--dim);font-weight:500;letter-spacing:.05em}
 table.fin td:first-child,table.fin th:first-child{text-align:left}
+.career-table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.fin.career-table{width:max-content;min-width:100%;table-layout:auto}
+table.fin.career-table th,table.fin.career-table td{white-space:nowrap}
+table.fin.career-table .career-team{width:220px;min-width:140px;max-width:220px;text-align:left;white-space:normal;line-height:1.35}
+table.fin.career-table .career-team span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .divider{text-align:center;color:var(--dim);font-size:11px;letter-spacing:.4em;padding:6px 0 0}
 .yr-head{text-align:center;color:var(--dim);font-size:11px;letter-spacing:.3em;padding:8px 0 0;cursor:pointer;user-select:none}
 .yr-head:hover{color:var(--amber)}

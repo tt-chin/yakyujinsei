@@ -23,10 +23,14 @@ assert.doesNotMatch(html, /<style>/);
 assert.equal((html.match(/<script/g) || []).length, 1);
 
 assert.match(main, /import '\.\/engine\/game\.js';/);
-assert.match(game, /import \{ RNG_VERSION, RULES_VERSION \} from '\.\.\/config\.js';/);
+assert.match(game, /import \{ VERSION \} from '\.\.\/config\.js';/);
 assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
-assert.match(config, /RNG_VERSION = 1/);
-assert.match(config, /RULES_VERSION = 'JP3'/);
+assert.match(config, /VERSION = '1\.0\.0'/);
+assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
+assert.match(game, /version:VERSION/);
+assert.doesNotMatch(game, /rngVersion|rulesVersion/);
+assert.doesNotMatch(html, /id="ver-badge"/);
+assert.doesNotMatch(game, /ver-badge/);
 
 const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}`;
 assert.doesNotMatch(forbidden, /UNSUPPORTED_REPLAY_VERSION/);
@@ -70,4 +74,4 @@ assert.deepEqual(actual, [
 ]);
 assert.equal(rngState, 2095430971);
 
-console.log('JP3 modularization static and RNG checks passed.');
+console.log('Version 1.0.0 modularization static and RNG checks passed.');
