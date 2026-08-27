@@ -77,7 +77,10 @@ assert.equal(salaryAwardBonus(['2031 NPB年間MVP'], 2032), 0);
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
-assert.match(game, /次年度年俸：オフシーズン確定後/);
+assert.doesNotMatch(game, /次年度年俸：オフシーズン確定後/);
+assert.match(game, /今季支給年俸：<b class="hl">\$\{fmtMoney\(paid\)\}<\/b>｜生涯収入：\$\{fmtMoney\(S\.careerEarnings\)\}/);
+assert.match(game, /card\('info','来季年俸決定',`所属先の確定に伴い、来季の年俸は/);
+assert.match(game, /card\('info','来季年俸決定',`昇格後の所属レベルを基準に再計算し、来季の年俸は/);
 assert.doesNotMatch(game, /次年度年俸：\$\{fmtMoney\(S\.currentSalary\)\}/);
 assert.match(game, /const fromLv=S\.lv;\s*S\.lv=to; applyPromotionSalary\(fromLv,to\);/);
 assert.match(game, /Object\.values\(PATHS\)\.some\(path=>path\.includes\(fromLv\)&&path\.includes\(toLv\)\)/);

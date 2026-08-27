@@ -2,6 +2,7 @@ import { VERSION } from '../config.js';
 import { JP_DATA } from '../data/jp-data.js';
 import { crossOfferTitle, crossOfferType, demotionChoiceText, findDemotionTarget, isBelowActiveMinimum } from './career-policy.js';
 import { contractSalaryUpdate, promotionSalaryUpdate, salaryAwardBonus, salaryEvaluationD } from './salary-promotion-policy.js';
+import { honorScoreFor } from './hall-of-fame-policy.js';
 
 window.__YAKYO_JP_DATA__ = JP_DATA;
 
@@ -1352,7 +1353,7 @@ function awards(bucket,st){
     if(isSP() && st.era <= th.era[0] && st.IP >= th.g){ 
       const god = st.era <= th.era[1] && st.IP >= 150;
       const p = god ? 100 : clamp(30 + Math.round((th.era[0] - st.era) * 35 + (st.IP - th.g) * 0.4), 30, 95);
-      if(chance(p)) h.push(`${y} ${aw}`);
+      if(chance(p)) h.push(`${y} ${lgN}${aw}`);
     }
     if(S.role==='CL' && st.SV >= th.sv[0]){
       const god = st.SV >= th.sv[1];
@@ -1998,27 +1999,7 @@ function posLegendPhrase(bucket){ /* に応じて守備割合とタイトル決�
   return '';
 }
 function honorScore(bucket){
-  const lg={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ'}[bucket];
-  const champ={CPBL:'台湾シリーズ優勝',KBO:'韓国シリーズ優勝',NPB:'日本一',MLB:'ワールドシリーズチャンピオン'}[bucket];
-  const ace='最優秀投手賞';
-  let sc=0,mvp=0,aceN=0,king=0;
-  S.honors.forEach(h=>{
-    if(h.includes(champ)){sc+=90;return;}
-    if(h.includes(ace)){sc+=460;aceN++;return;}
-    if(!h.includes(lg))return;
-    if(h.includes('年間MVP')){sc+=420;mvp++;}
-    else if(h.includes('新人王'))sc+=140;
-    else if(h.includes('ゴールデングラブ賞')){sc+=300;king++;}
-    else if(h.includes('年間最優秀守備選手')){sc+=220;king++;}
-    else if(h.includes('王')){sc+=160;king++;}
-    else if(h.includes('オールスターゲーム'))sc+=(S.pos==='P'?70:40);
-  });
-  if(bucket==='NPB'){
-    sc+=(S.intlCount||0)*80;
-    S.honors.forEach(h=>{if(!/ワールド・ベースボール・クラシック|WBSCプレミア12/.test(h))return;if(h.includes('優勝'))sc+=200;else if(h.includes('準優勝'))sc+=100;});
-  }
-  if(S.traits.franchise)sc+=200; /* 神主牌：忠誠ボーナス。 */
-  return {sc,mvp,aceN,king};
+  return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise});
 }
 function tierOf(bucket){
   const st=S.stats[bucket]; if(!st)return null;
@@ -2633,7 +2614,7 @@ $('btn-start').onclick=()=>{
   startYear();
 };
 
-/* ================= 日本版仕様オーバーレイ 1.0.0 ================= */
+/* ================= 日本版仕様オーバーレイ 1.0.1 ================= */
 (() => {
   'use strict';
   const DATA = JP_DATA;
@@ -2693,7 +2674,7 @@ $('btn-start').onclick=()=>{
     S.currentSalary=updated.currentSalary;
     if(updated.contract)S.ct=updated.contract;
     pendingOffseasonSalary=null;
-    card('info','次年度年俸',`オフシーズンの所属先確定後、次年度年俸は<b class="hl">${fmtMoney(S.currentSalary)}</b>に決まった。`);
+    card('info','来季年俸決定',`所属先の確定に伴い、来季の年俸は<b class="hl">${fmtMoney(S.currentSalary)}</b>となった。`);
     board(2);
   }
   applyPromotionSalary=function(fromLv,toLv){
@@ -2704,7 +2685,7 @@ $('btn-start').onclick=()=>{
     S.currentSalary=updated.currentSalary;
     if(updated.contract)S.ct=updated.contract;
     pendingOffseasonSalary=null;
-    card('info','次年度年俸',`昇格後の所属レベルを基準に再計算し、次年度年俸は<b class="hl">${fmtMoney(S.currentSalary)}</b>に決まった。`);
+    card('info','来季年俸決定',`昇格後の所属レベルを基準に再計算し、来季の年俸は<b class="hl">${fmtMoney(S.currentSalary)}</b>となった。`);
   };
   markClubInitiatedRenewal=function(){
     if(pendingOffseasonSalary)pendingOffseasonSalary.preventDecrease=true;
@@ -2870,7 +2851,7 @@ $('btn-start').onclick=()=>{
     choose('戦力外・再起オファー（最大4球団）',offers);
   };
 
-  phaseEnd = function(){board(2);if(S.stage==='PRO'){const paid=S.currentSalary||salaryFor(S.lv,S.lastD||0);pendingOffseasonSalary={preventDecrease:salaryAwardBonus(S.honors,S.year)>=2};S.careerEarnings+=paid;card('','シーズン終了',`今季支給年俸：<b class="hl">${fmtMoney(paid)}</b>｜次年度年俸：オフシーズン確定後｜生涯収入：${fmtMoney(S.careerEarnings)}`);}else if(S.stage==='CORP'){const pay=salaryFor('CORP',S.lastD||0);S.corpIncome+=pay;S.careerEarnings+=pay;card('','社会人給与',`企業給与${fmtMoney(pay)}を受領した。`);}const go=()=>movement();if(S.pool>0){const p=S.pool;S.pool=0;choose('',[{t:`能力点を分配（${p}点）`,main:true,f:()=>allocUI({pool:p},'シーズン成果の能力点',go)}]);}else go();};
+  phaseEnd = function(){board(2);if(S.stage==='PRO'){const paid=S.currentSalary||salaryFor(S.lv,S.lastD||0);pendingOffseasonSalary={preventDecrease:salaryAwardBonus(S.honors,S.year)>=2};S.careerEarnings+=paid;card('','シーズン終了',`今季支給年俸：<b class="hl">${fmtMoney(paid)}</b>｜生涯収入：${fmtMoney(S.careerEarnings)}`);}else if(S.stage==='CORP'){const pay=salaryFor('CORP',S.lastD||0);S.corpIncome+=pay;S.careerEarnings+=pay;card('','社会人給与',`企業給与${fmtMoney(pay)}を受領した。`);}const go=()=>movement();if(S.pool>0){const p=S.pool;S.pool=0;choose('',[{t:`能力点を分配（${p}点）`,main:true,f:()=>allocUI({pool:p},'シーズン成果の能力点',go)}]);}else go();};
 
   movement = function(){if(S.stage==='HS'){if(S.stageYr<3)advance();else pathChoiceHS();return;}if(S.stage==='U'){if(S.stageYr<4)advance();else pathChoiceU4();return;}if(S.stage==='CORP'){S.corpYears++;const eligible=(S.entryRoute==='HS'?S.corpYears>=3:S.corpYears>=2);const opts=[{t:'社会人野球を続ける',main:true,f:advance},{t:'独立リーグへ移籍',f:()=>{setAmateur('IND');advance();}},{t:'現役を退く',warn:true,f:()=>endGame('社会人野球で現役生活を終えた。')}];if(eligible)opts.unshift({t:'NPBドラフトへ再挑戦',main:true,f:()=>enterDraftPath('CORP')});choose('社会人シーズン終了',opts);return;}if(S.stage==='IND'){S.indYears++;choose('独立リーグシーズン終了',[{t:'NPBドラフトへ再挑戦',main:true,f:()=>enterDraftPath('IND')},{t:'独立リーグに残留',f:advance},{t:'社会人野球へ',f:()=>{setAmateur('CORP');advance();}},{t:'現役を退く',warn:true,f:()=>endGame('独立リーグで現役生活を終えた。')}]);return;}if(S.org==='NPB'&&S.lv==='NPB1'&&S.seasonFactor>0){S.npbRosterDays+=Math.round(145*S.seasonFactor);while(S.npbRosterDays>=145){S.npbRosterDays-=145;S.npbFaSeasons++;}S.faElig=S.npbFaSeasons>=8;}LEGACY.movement();};
 
