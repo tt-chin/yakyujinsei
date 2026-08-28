@@ -54,6 +54,12 @@ for (const bucket of Object.keys(leagueNames)) {
   assert.equal(honorScoreFor({ bucket, honors: ['2035 最優秀投手賞'], position: 'P' }).sc, 0, 'リーグ不明賞を加点しない');
 }
 
+for (const event of ['ワールド・ベースボール・クラシック', 'WBSCプレミア12']) {
+  assert.equal(honorScoreFor({ bucket: 'NPB', honors: [`2035 ${event}優勝`], position: 'B' }).sc, 200);
+  assert.equal(honorScoreFor({ bucket: 'NPB', honors: [`2035 ${event}準優勝`], position: 'B' }).sc, 100);
+  assert.equal(honorScoreFor({ bucket: 'NPB', honors: [`2035 ${event}ベスト4`], position: 'B' }).sc, 0);
+  assert.equal(honorScoreFor({ bucket: 'NPB', honors: [`2035 ${event}ベスト8`], position: 'B' }).sc, 0);
+}
 const intlHonors = ['2035 ワールド・ベースボール・クラシック優勝'];
 assert.equal(honorScoreFor({ bucket: 'NPB', honors: intlHonors, position: 'B', intlCount: 2 }).sc, 360);
 for (const bucket of ['CPBL', 'KBO', 'MLB']) {
@@ -73,5 +79,20 @@ const moritaHonorScore = honorScoreFor({ bucket: 'KBO', honors: moritaHonors, po
 assert.equal(moritaHonorScore, 3940);
 assert.equal(3691 + moritaHonorScore, 7631);
 assert.ok(3691 + moritaHonorScore < 8200);
+
+const hashikawaHonors = [
+  ...Array(4).fill('NPB首位打者'),
+  ...Array(2).fill('NPB打点王'),
+  ...Array(2).fill('NPB本塁打王'),
+  ...Array(5).fill('NPBオールスターゲーム'),
+  'WBSCプレミア12優勝',
+  'WBSCプレミア12準優勝',
+  'ワールド・ベースボール・クラシックベスト4',
+  'ワールド・ベースボール・クラシックベスト4',
+].map((honor, index) => `${2030 + index} ${honor}`);
+const hashikawaHonorScore = honorScoreFor({ bucket: 'NPB', honors: hashikawaHonors, position: 'B', intlCount: 4 }).sc;
+assert.equal(hashikawaHonorScore, 2100);
+assert.equal(Math.round(3157.6 + hashikawaHonorScore), 5258);
+assert.ok(5258 < 5800);
 
 console.log('Hall of fame policy checks passed.');

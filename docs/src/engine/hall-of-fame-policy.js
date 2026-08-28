@@ -65,8 +65,8 @@ export function honorScoreFor({ bucket, honors = [], position, intlCount = 0, fr
     sc += intlCount * 80;
     honors.forEach(honor => {
       if (!/ワールド・ベースボール・クラシック|WBSCプレミア12/.test(honor)) return;
-      if (honor.includes('優勝')) sc += 200;
-      else if (honor.includes('準優勝')) sc += 100;
+      if (honor.includes('準優勝')) sc += 100;
+      else if (honor.includes('優勝')) sc += 200;
     });
   }
   if (franchise) sc += 200;

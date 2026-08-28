@@ -3,6 +3,7 @@ import { JP_DATA } from '../data/jp-data.js';
 import { crossOfferTitle, crossOfferType, demotionChoiceText, findDemotionTarget, isBelowActiveMinimum } from './career-policy.js';
 import { contractSalaryUpdate, promotionSalaryUpdate, salaryAwardBonus, salaryEvaluationD } from './salary-promotion-policy.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
+import { canPlayHighSchoolFall, canPlaySenbatsu, nextSenbatsuEligibleYear, qualificationResult, qualifiesForChampionship, qualifiesForCorporateJapan, qualifiesForUniversityJingu, tournamentResult } from './domestic-tournament-policy.js';
 
 window.__YAKYO_JP_DATA__ = JP_DATA;
 
@@ -1035,7 +1036,7 @@ function resolveEvent(ev,mode,done){
 /* シーズン中即時可解鎖的特性。 */
 function allocDone(touched,isDice){
   const keys=Object.keys(touched);
-  if(isDice&&S.stage!=='HS'&&keys.length){ /* プロ・大学の開幕前ダイスだけを集中育成判定へ使用。 */
+  if(isDice&&S.stage!=='HS'&&keys.length){ /* 高校以外（大学・社会人・独立・プロ）の開幕前ダイスだけを集中育成判定へ使用。 */
     const tot=Object.values(touched).reduce((a,b)=>a+b,0);
     let mk=keys[0]; keys.forEach(k=>{ if(touched[k]>touched[mk])mk=k; });
     const focused=(touched[mk]/tot>=0.75)?mk:null; /* 75%以上を同じ能力へ投入した場合に集中育成と判定。 */
@@ -2614,7 +2615,7 @@ $('btn-start').onclick=()=>{
   startYear();
 };
 
-/* ================= 日本版仕様オーバーレイ 1.0.1 ================= */
+/* ================= 日本版仕様オーバーレイ 1.0.2 ================= */
 (() => {
   'use strict';
   const DATA = JP_DATA;
@@ -2699,7 +2700,7 @@ $('btn-start').onclick=()=>{
     const pot={},sh=POS_AB[pos].slice();for(let i=sh.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]];}
     sh.forEach((k,i)=>pot[k]=pos==='P'?(i===0?ri(70,80):i===1?ri(58,68):i===2?ri(50,60):ri(44,54)):(i===0?ri(72,80):i===1?ri(64,74):i===2?ri(56,68):ri(46,62)));
     const tierRoll=Math.floor(R()*100),tier=tierRoll<30?'S':tierRoll<80?'A':'B',schools=DATA.highSchools.filter(x=>x.tier===tier),school=pickRecord(schools.length?schools:DATA.highSchools);
-    const state={name,pos,role:null,seed:SEED,version:VERSION,rngState:S.rngState,age:16,year:2026,stage:'HS',stageYr:1,lv:'HS',org:'AMATEUR',pot,ab,team:school.name,schoolId:school.schoolId,schoolTier:tier,entryRoute:'HS',orgTeamId:null,teamTally:{NPB:{},KBO:{},CPBL:{},MLB:{},IND:{},CORP:{}},
+    const state={name,pos,role:null,seed:SEED,version:VERSION,rngState:S.rngState,age:16,year:2026,stage:'HS',stageYr:1,lv:'HS',org:'AMATEUR',pot,ab,team:school.name,schoolId:school.schoolId,schoolTier:tier,senbatsuEligibleYear:null,entryRoute:'HS',orgTeamId:null,teamTally:{NPB:{},KBO:{},CPBL:{},MLB:{},IND:{},CORP:{}},
       traits:{genius:false,glass:false,iron:false,scum:false,late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,taiwan:false},removed:[],cntSave:0,cntSaveWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,samePick:0,samePickKey:null,teamYears:0,six:0,bigInj:0,ironStreak:0,npbYears:0,npbDevYears:0,corpYears:0,indYears:0,injNext:0,tmpInj:0,rehab:0,currentSalary:0,careerEarnings:0,careerSigningBonus:0,careerBuyout:0,corpIncome:0,pool:0,seasonFactor:1,stats:{NPB:null,KBO:null,CPBL:null,MLB:null,MINOR:null,IND:null,CORP:null},honors:[],intlCount:0,intlCompletedKeys:{},intlLastEventKey:null,intlDispatchStatus:null,intlDeclinedCount:0,intlStat:{G:0,PA:0,AB:0,H:0,HR:0,RBI:0,IP:0,SO:0,ER:0,W:0,SV:0},intlBest:null,dpos:null,dposYears:{},roleYears:{},tradeRefuse:0,champThisTeam:false,svc:0,svcOrg:null,faElig:false,npbRosterDays:0,npbFaSeasons:0,faType:null,faUsed:false,faMarketKey:null,tradeHeat:0,complainCount:0,demotionRefused:false,tj:0,tjCount:0,effort:'普通投',tjSuccess:0,love:{st:'single',partner:null,kids:0,caught:0,affairs:0,exes:[],dyrs:0,datedTimes:0},log:[],ct:null,draftRights:null,domesticTournamentLog:[],domesticTournamentStats:{},domesticCompletedKeys:{},done:false};
     Object.defineProperty(state,'salary',{get(){return this.careerEarnings;},set(v){this.careerEarnings=v;},enumerable:false});
     Object.defineProperty(state,'orgTeam',{get(){return this.orgTeamId;},set(v){this.orgTeamId=teamRec(v)?v:(DATA.teams.find(t=>t.name===v)?.teamId||v);},enumerable:false});
@@ -2758,13 +2759,50 @@ $('btn-start').onclick=()=>{
   };
   pathChoiceU4 = function(){choose(`大学卒業・総合能力${ovr()}`,[{t:'NPBドラフトへ',main:true,f:()=>enterDraftPath('U')},{t:'社会人野球へ',f:()=>{setAmateur('CORP');advance();}},{t:'独立リーグへ',f:()=>{setAmateur('IND');advance();}},{t:'現役を退く',warn:true,f:()=>endGame('大学卒業を機に現役を退いた。')}]);};
 
-  function cupOnce(key,name,klass){const doneKey=key+':'+S.year;if(S.domesticCompletedKeys[doneKey])return null;const bonus=S.schoolTier==='S'?6:S.schoolTier==='A'?2:-2,power=ovr()+bonus+ri(-8,8),national=klass.startsWith('NATIONAL'),cuts=national?[64,58,52,46]:[58,52,46,40],idx=power>=cuts[0]?0:power>=cuts[1]?1:power>=cuts[2]?2:power>=cuts[3]?3:4,res=['優勝','準優勝','ベスト4','ベスト8','予選敗退'][idx],pts=Math.min(10,[7,5,4,3,1][idx]+Math.floor(ovr()/22)+(national?1:0)),games=[5,5,4,3,2][idx];S.pool+=pts;S.domesticCompletedKeys[doneKey]=true;S.domesticTournamentLog.push({year:S.year,key,result:res,deemedGames:games,points:pts,amaD:[10,7,5,3,1][idx],injury:false});if(idx===0)S.honors.push(`${S.year} ${name}優勝`);return `${name}：<b class="hl">${res}</b>（能力点+${pts}）`;}
-  amateurSeason = function(){if(S.seasonFactor===0){card('bad','','今季はリハビリに専念した。');S.log.push({y:S.year,age:S.age,tm:S.team,line:'全休',inj:true});nextStep();return;}let rows=[];
-    if(S.stage==='HS'){rows.push(cupOnce('HS_FALL','秋季地区大会','LOCAL'));if(S.stageYr>=2)rows.push(cupOnce('HS_SENBATSU','選抜高校野球大会','NATIONAL6'));rows.push(cupOnce('HS_SUMMER_LOCAL','夏の地方大会','LOCAL'));if(rows.at(-1)?.includes('優勝'))rows.push(cupOnce('HS_KOSHIEN','全国高校野球選手権大会','NATIONAL6'));}
-    else if(S.stage==='U'){rows.push(cupOnce('U_SPRING','春季リーグ戦','LEAGUE10'));if(rows.at(-1)?.includes('優勝'))rows.push(cupOnce('U_CHAMP','全日本大学野球選手権大会','NATIONAL5'));rows.push(cupOnce('U_AUTUMN','秋季リーグ戦','LEAGUE10'));rows.push(cupOnce('U_JINGU','明治神宮大会・大学の部','NATIONAL4'));}
-    else if(S.stage==='CORP'){rows.push(cupOnce('JABA_REGIONAL','JABA地区大会','NATIONAL5'),cupOnce('CORP_CITY','都市対抗野球大会','NATIONAL5'),cupOnce('CORP_JAPAN','社会人野球日本選手権大会','NATIONAL5'));}
-    else rows.push(cupOnce('IND_REGULAR','独立リーグ公式戦','LEAGUE70'),cupOnce('IND_CHAMP','グランドチャンピオンシップ','NATIONAL5'));
-    rows=rows.filter(Boolean);S.log.push({y:S.year,age:S.age,tm:S.team,line:rows.map(x=>x.replace(/<[^>]+>/g,'')).join('、'),inj:false});card('','国内大会',rows.join('<br>'));maybeIntl(()=>nextStep());};
+  function cupOnce(key,name,klass,{pointMode='STANDARD'}={}){
+    const doneKey=key+':'+S.year;if(S.domesticCompletedKeys[doneKey])return null;
+    const bonus=S.schoolTier==='S'?6:S.schoolTier==='A'?2:-2,overall=ovr(),power=overall+bonus+ri(-8,8),national=klass.startsWith('NATIONAL');
+    const result=tournamentResult({power,national,overall,pointMode});
+    S.pool+=result.points;S.domesticCompletedKeys[doneKey]=true;
+    S.domesticTournamentLog.push({year:S.year,key,result:result.result,deemedGames:result.deemedGames,points:result.points,amaD:result.amaD,injury:false});
+    if(result.isChampion)S.honors.push(`${S.year} ${name}優勝`);
+    return {...result,html:`${name}：<b class="hl">${result.result}</b>（能力点+${result.points}）`};
+  }
+  function qualifierOnce(key,name){
+    const doneKey=key+':'+S.year;if(S.domesticCompletedKeys[doneKey])return null;
+    const bonus=S.schoolTier==='S'?6:S.schoolTier==='A'?2:-2,result=qualificationResult(ovr()+bonus+ri(-8,8));
+    S.domesticCompletedKeys[doneKey]=true;
+    S.domesticTournamentLog.push({year:S.year,key,result:result.result,deemedGames:result.deemedGames,points:0,amaD:0,injury:false});
+    return {...result,html:`${name}：<b class="hl">${result.result}</b>（能力点なし）`};
+  }
+  amateurSeason = function(){if(S.seasonFactor===0){card('bad','','今季はリハビリに専念した。');S.log.push({y:S.year,age:S.age,tm:S.team,line:'全休',inj:true});nextStep();return;}const results=[];
+    const add=result=>{if(result)results.push(result);return result;};
+    if(S.stage==='HS'){
+      if(canPlaySenbatsu(S.stageYr,S.senbatsuEligibleYear,S.year)){add(cupOnce('HS_SENBATSU','選抜高校野球大会','NATIONAL6'));S.senbatsuEligibleYear=null;}
+      const summer=add(cupOnce('HS_SUMMER_LOCAL','夏の地方大会','LOCAL'));
+      if(qualifiesForChampionship(summer))add(cupOnce('HS_KOSHIEN','全国高校野球選手権大会','NATIONAL6'));
+      if(canPlayHighSchoolFall(S.stageYr)){const fall=add(cupOnce('HS_FALL','秋季地区大会','LOCAL'));S.senbatsuEligibleYear=nextSenbatsuEligibleYear(fall,S.year);}
+    }else if(S.stage==='U'){
+      const spring=add(cupOnce('U_SPRING','春季リーグ戦','LEAGUE10',{pointMode:'UNIVERSITY'}));
+      if(qualifiesForChampionship(spring))add(cupOnce('U_CHAMP','全日本大学野球選手権大会','NATIONAL5',{pointMode:'UNIVERSITY'}));
+      const autumn=add(cupOnce('U_AUTUMN','秋季リーグ戦','LEAGUE10',{pointMode:'UNIVERSITY'}));
+      if(qualifiesForChampionship(autumn)){
+        const university=DATA.universities.find(record=>record.schoolId===S.schoolId),route=university?.jinguRoute;
+        if(qualifiesForUniversityJingu(autumn,route,null))add(cupOnce('U_JINGU','明治神宮大会・大学の部','NATIONAL4',{pointMode:'UNIVERSITY'}));
+        else if(route==='PLAYOFF'){const qualifier=add(qualifierOnce('U_JINGU_QUAL','明治神宮大会地区代表決定戦'));if(qualifiesForUniversityJingu(autumn,route,qualifier))add(cupOnce('U_JINGU','明治神宮大会・大学の部','NATIONAL4',{pointMode:'UNIVERSITY'}));}
+      }
+    }else if(S.stage==='CORP'){
+      const jaba=add(cupOnce('JABA_REGIONAL','JABA地区大会','NATIONAL5'));
+      const cityQualifier=add(qualifierOnce('CORP_CITY_QUAL','都市対抗地区予選'));
+      const city=cityQualifier?.isQualified?add(cupOnce('CORP_CITY','都市対抗野球大会','NATIONAL5')):null;
+      let japanQualified=qualifiesForCorporateJapan(jaba,city,null);
+      if(!japanQualified){const japanQualifier=add(qualifierOnce('CORP_JAPAN_QUAL','日本選手権地区最終予選'));japanQualified=qualifiesForCorporateJapan(jaba,city,japanQualifier);}
+      if(japanQualified)add(cupOnce('CORP_JAPAN','社会人野球日本選手権大会','NATIONAL5'));
+    }else{
+      const regular=add(cupOnce('IND_REGULAR','独立リーグ公式戦','LEAGUE70'));
+      if(qualifiesForChampionship(regular))add(cupOnce('IND_CHAMP','グランドチャンピオンシップ','NATIONAL5'));
+    }
+    const rows=results.map(result=>result.html);S.log.push({y:S.year,age:S.age,tm:S.team,line:rows.map(x=>x.replace(/<[^>]+>/g,'')).join('、'),inj:false});card('','国内大会',rows.join('<br>'));maybeIntl(()=>nextStep());};
 
   function intlEvents(year){const official=DATA.intlEvents.filter(e=>Number(e.startDate.slice(0,4))===year);if(official.length)return official;const out=[];if(year>2026&&(year-2026)%4===0)out.push({eventKey:'WBC:'+year,name:'ワールド・ベースボール・クラシック',startDate:year+'-03-05',endDate:year+'-03-17',status:'ESTIMATED',priority:1});if(year>2027&&(year-2027)%4===0)out.push({eventKey:'P12:'+year,name:'WBSCプレミア12',startDate:year+'-11-10',endDate:year+'-11-21',status:'ESTIMATED',priority:2});return out.sort((a,b)=>a.startDate.localeCompare(b.startDate)||a.priority-b.priority);}
   function intlPhase(e){return Number(e.startDate.slice(5,7))<=6?'PRE':'POST';}
