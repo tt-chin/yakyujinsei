@@ -75,9 +75,11 @@ export function appendSalaryEvaluation(history = [], entry) {
     .slice(-3);
 }
 
-export function calculateMarketRating(history = []) {
+export function calculateMarketRating(history = [], options = {}) {
   const recent = [...history].sort((a, b) => a.year - b.year).slice(-3);
-  const rawWeights = recent.length === 1 ? [0.6] : recent.length === 2 ? [0.3, 0.6] : [0.1, 0.3, 0.6];
+  const table={HEALTHY:[0.1,0.3,0.6],MINOR:[0.15,0.35,0.5],MAJOR:[0.25,0.4,0.35],REHAB:[0.3,0.5,0.2]};
+  const fullWeights=table[options.marketInjury]||table.HEALTHY;
+  const rawWeights=fullWeights.slice(3-recent.length);
   const weightTotal = rawWeights.reduce((sum, value) => sum + value, 0);
   const components = recent.map((entry, index) => {
     const normalizedWeight = weightTotal ? rawWeights[index] / weightTotal : 0;

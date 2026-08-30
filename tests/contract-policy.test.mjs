@@ -12,4 +12,5 @@ assert.equal(calculateScheduledBuyout(paid.contract,.7).buyoutAmount,70_000_000)
 const legacy=normalizeContract({yrs:2,mult:1,annualSalary:12_000_000,org:'NPB',teamId:'T1'},{currentYear:2030,currentSalary:9_000_000});assert.equal(legacy.schemaVersion,2);assert.deepEqual(legacy.annualSchedule.map(x=>x.year),[2030,2031]);assert.equal(legacy.guaranteedTotal,24_000_000);
 const rookie=createContract({contractId:'R',org:'NPB',teamId:'T1',signedYear:2028,startYear:2028,years:2,annualSalary:16_000_000,contractType:'ROOKIE'});assert.equal(rookie.annualSalary,16_000_000);assert.equal(rookie.guaranteedTotal,32_000_000);
 let ended=markSalaryPaid(markSalaryPaid(rookie,2028).contract,2029).contract;assert.equal(ended.annualSalary,0);assert.equal(ended.remainingYears,0);assert.equal(salaryDueForYear(ended,2030).contractEnded,true);
+const proof=createContract({contractId:'P',org:'MLB',teamId:'T2',signedYear:2030,startYear:2031,years:1,annualSalary:120_000_000,contractType:'PROOF'});const injuredProof=markSalaryPaid(proof,2031);assert.equal(injuredProof.amount,120_000_000);assert.equal(injuredProof.contract.paidTotal,120_000_000);
 console.log('contract policy tests passed');
