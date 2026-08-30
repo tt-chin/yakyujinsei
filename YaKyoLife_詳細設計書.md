@@ -72,8 +72,8 @@
 
 ## 5. 乱数・再現性
 
-製品バージョンは `VERSION="1.0.4"` の1種類だけを使用し、内部状態の`version`へ保持する。乱数状態は`rngState`で管理するが、別個の乱数版・ルール版は設けない。共有URLは`?seed=...`だけとし、`rv`・`rules`・アプリ版数を含めない。実行時は常に配信中の最新規則を使用し、旧規則エンジンは保持しない。同じseedでもゲーム更新後に同一結果を完全再現できることは保証しない。
-右上固定バッジは使用せず、開始画面タイトル「野球人生シミュレーター」の右側に小さなバージョンを表示する。表示値はHTMLへ直接記入せず、HTTP配信時に単一の`VERSION`から`v1.0.4`形式で生成する。ES Modulesが動作しない`file://`直開きでは表示しない。`Produced by`の下にはバージョンを表示しない。
+製品バージョンは `VERSION="1.1.0"` の1種類だけを使用し、内部状態の`version`へ保持する。乱数状態は`rngState`で管理するが、別個の乱数版・ルール版は設けない。共有URLは`?seed=...`だけとし、`rv`・`rules`・アプリ版数を含めない。実行時は常に配信中の最新規則を使用し、旧規則エンジンは保持しない。同じseedでもゲーム更新後に同一結果を完全再現できることは保証しない。
+右上固定バッジは使用せず、開始画面タイトル「野球人生シミュレーター」の右側に小さなバージョンを表示する。表示値はHTMLへ直接記入せず、HTTP配信時に単一の`VERSION`から`v1.1.0`形式で生成する。ES Modulesが動作しない`file://`直開きでは表示しない。`Produced by`の下にはバージョンを表示しない。
 
 - `normalizeSeed(raw)`: `String(raw ?? '').normalize('NFKC').trim()` を実行し、Unicode制御文字U+0000～U+001FとU+007F～U+009Fを除去後、Unicodeコードポイント単位で先頭24文字へ制限する。大文字・小文字は区別する。空になった場合だけ新規シード生成へ進み、URL表示には `encodeURIComponent` を使用する。
 - `fnv1a32(str)`: `TextEncoder` でUTF-8バイト列へ変換し、初期値`0x811C9DC5`、各バイトごとにXOR後 `Math.imul(h,0x01000193)>>>0` を適用するFNV-1a 32bit純関数。
@@ -215,7 +215,7 @@ function R(){
 |3A `A3`|1,000万円|50万円|0|1,000万円|3,000万円|
 |MLB `MLB`|1億2,000万円|3,000万円|1,200万円|1億2,000万円|60億円|
 
-`d`は守備値ではなく、現在階層の平均能力からどれだけ上回ったかを表す「リーグ基準差」である。投手は`d=(vel+ctl+brk)/3-par`、野手は`d=con*0.50+pow*0.20+eye*0.18+spd*0.12-par-0.5`で算出する。年俸計算では小数部分を切り捨て、`perf=clamp(floor(d),0,26)`、`star=max(0,perf-7)` とする。基本候補額は `rawSalary=baseSalary+perf*linearStep+star*star*starStep` で算定するため、二次加算は`d>7`、すなわち整数評価8から始まる。社会人だけ `rawSalary=clamp(420万円+(o-40)*15万円,420万円,900万円)`、独立は上記式を使用する。最終額は `candidateSalary=roundTo10000(clamp(rawSalary*contractMult*dpMult*roleMult,min,max))` とする。`contractMult`、`dpMult`、`roleMult` は13.2で固定する。
+`d`は守備値ではなく、現在階層の平均能力からどれだけ上回ったかを表す「リーグ基準差」である。投手は`d=(vel+ctl+brk)/3-par`、野手は`d=con*0.50+pow*0.20+eye*0.18+spd*0.12-par-0.5`で算出する。年俸計算では直近3季の市場評価を60%・30%・10%で合成し、小数部分を切り捨てず`rating=clamp(Number(marketRating)||0,0,26)`、`star=max(0,rating-7)` とする。基本候補額は `rawSalary=baseSalary+rating*linearStep+star*star*starStep` で算定する。社会人だけ `rawSalary=clamp(420万円+(o-40)*15万円,420万円,900万円)`、独立は上記式を使用する。最終額は `candidateSalary=roundTo10000(clamp(rawSalary*contractMult*dpMult*roleMult,min,max))` とする。`contractMult`、`dpMult`、`roleMult` は13.2で固定する。
 
 ### 7.4 高校マスタ（50校）
 
@@ -549,6 +549,8 @@ KBOは日本人選手を外国人枠として扱うゲーム内モデルとす�
 |`ct.annualSalary`|円／年|契約作成時|複数年契約の年額|
 |`ct.totalValue`|円|契約作成時|契約総額表示。未支給分は生涯収入へ含めない|
 |`lastSalaryPaidYear`|年／null|プロまたは独立リーグの年俸支給時|同一年度の重複支給防止|
+|`salaryEvaluationHistory`|配列|職業・独立リーグの年度評価確定時|直近3季の市場評価（年昇順）|
+|`lastSalaryEvaluation`|object／null|年度評価確定時|最新の評価明細とデータ出所|
 
 通常シーズンの支給額は故障で減額せず `paidSalary=currentSalary` とする。シーズン終了時に `careerEarnings += paidSalary` と `lastSalaryPaidYear=year` を同時に確定し、同年度の再支給は `SALARY_ALREADY_PAID_FOR_YEAR` とする。契約金受領時は `careerSigningBonus` と `careerEarnings`、バイアウト受領時は `careerBuyout` と `careerEarnings` の両方へ加算する。バイアウトは市場年俸を再計算せず、`ct.annualSalary` と未払い年数から計算する。社会人給与は `corpIncome` と `careerEarnings` の両方へ加算し、独立リーグ年俸も競技収入として `careerEarnings` へ一度だけ含める。
 
@@ -579,7 +581,7 @@ KBOは日本人選手を外国人枠として扱うゲーム内モデルとす�
 
 レベルを跨ぐ候補年俸では、評価値を `targetRating=rating+fromLevel.par-toLevel.par` で換算してから移籍先の `salaryFor` を適用する。同一組織内の昇格では、昇格前の `currentSalary` と換算後候補額の高い方を採用し、昇格による減俸を禁止する。降格、戦力外後の再契約、FA、海外移籍、NPB復帰も同じ換算入口を使用するが、各フローの既存減俸保護だけを適用する。複数年契約の通常継続年は年俸を再評価せず、`currentSalary`、`ct.annualSalary`、`ct.totalValue`を実契約年俸から同期する。シーズン終了時は当年年俸と生涯収入だけを確定し、新契約または昇降格がない契約途中の年俸を上書きしない。
 
-年度賞は給与テーブルそのものを変更せず、当該年度の `effectiveDBonus` として評価する。年間MVP・最優秀投手賞・沢村賞相当は+2、最多勝・最優秀防御率・最多奪三振・最多セーブ・最優秀中継ぎ・首位打者・本塁打王・打点王・最高出塁率・盗塁王・ゴールデングラブ賞・年間最優秀守備選手は各+1とし、合計+3を上限とする。計算は `salaryFor(level,lastD+effectiveDBonus) × contractMult × dpMult` の順で行う。オールスター選出は年俸加点へ含めない。
+年度賞は給与テーブルそのものを変更せず、当該年度の`awardAdjustment`として評価する。正式な個人成績があるNPB・MLB・MiLB・KBO・CPBLは実成績、出場量、当年受賞から`payD`を作り、最近3季を60%・30%・10%で合成する。成績値が0でも必要フィールドが存在すれば欠損とは扱わない。独立リーグは正式な個人成績が未実装のため、PA・IP・ERA・WHIP・OPS等を生成せず、`st.baseD`または旧評価を使用し、出所を`LEGACY_NO_INDIVIDUAL_STATS`として保存する。確認可能な大会結果だけを団体成果加算（公式戦優勝+0.20、グランドチャンピオンシップ優勝+0.35・準優勝+0.15、年上限+0.50）へ使用し、表示文字から結果を推測しない。年間MVP・最優秀投手賞・沢村賞は各+0.75、主要個人王座は各+0.35、ゴールデングラブ賞・年間最優秀守備選手・新人王は各+0.25、合計+1.5を上限とし、オールスター・代表成績は加点しない。
 
 ドラフト初年度年俸は支配下1～2巡目1,600万円、3～6巡目1,200万円、育成300万円で固定し、契約金は14.1の表を別途加算する。契約満了後から通常式へ移行する。社会人給与は毎年7.3式、独立リーグは毎年更改、MiLBのR～2Aは固定額、3Aだけ成績連動とする。
 
@@ -2242,7 +2244,7 @@ tests/
 - `docs/styles/base.css`: 既存CSSの基礎、レイアウト、コンポーネント、レスポンシブ指定。元の記述順を維持する。
 - `docs/styles/jp-theme.css`: 「日本版ライトレッドテーマ」の上書き。近白色の背景、白いパネル、深紅の強調色を使用し、`base.css`の後に読み込む。
 - `docs/assets/baseball-icon.png`: 開始画面、favicon、Apple Touchアイコンで共用する透過背景の野球アイコン。
-- `docs/src/config.js`: `VERSION='1.0.4'`の単一バージョン識別子。
+- `docs/src/config.js`: `VERSION='1.1.0'`の単一バージョン識別子。
 - `docs/src/data/jp-data.js`: 高校50校、大学25校、90球団および国際大会Master。
 - `docs/src/engine/domestic-tournament-policy.js`: 国内大会の構造化結果、大学専用能力点、選抜・神宮・社会人大会の資格判定。
 - `docs/src/engine/game.js`: 状態`S`、ゲーム判定、フェーズ、UI生成、引退、共有画像を含むバージョン1.0.0互換エンジン。既存の基礎エンジンと日本版オーバーレイの評価順を同一ファイル内で維持する。

@@ -2,6 +2,13 @@ export function promotionSalaryUpdate(currentSalary, candidateSalary, contract) 
   return contractSalaryUpdate(currentSalary, candidateSalary, contract, true);
 }
 
+export function calculateSalaryCurve(rating, curve) {
+  const value = Math.max(0, Math.min(26, Number(rating) || 0));
+  const star = Math.max(0, value - 7);
+  return Math.max(curve.min, Math.min(curve.max,
+    curve.base + value * curve.linear + star * star * curve.quadratic));
+}
+
 export function roundToTenThousandYen(value) {
   const amount = Number(value);
   if (!Number.isFinite(amount)) return 0;
@@ -74,6 +81,8 @@ export function migrateLegacySalaryState(state) {
     ...state,
     lastSalaryPaidYear: Object.hasOwn(state, 'lastSalaryPaidYear') ? state.lastSalaryPaidYear : null,
     careerBuyout: Object.hasOwn(state, 'careerBuyout') ? Number(state.careerBuyout) || 0 : 0,
+    salaryEvaluationHistory: Array.isArray(state.salaryEvaluationHistory) ? state.salaryEvaluationHistory.slice(-3) : [],
+    lastSalaryEvaluation: Object.hasOwn(state, 'lastSalaryEvaluation') ? state.lastSalaryEvaluation : null,
   };
   if (state.ct) {
     const annual = Number(state.ct.annualSalary) || Number(state.currentSalary) || 0;

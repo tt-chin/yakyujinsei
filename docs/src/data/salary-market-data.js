@@ -1,0 +1,15 @@
+export const MARKET_BASELINES = Object.freeze({
+  NPB_DEV: Object.freeze({ pitcherERA: 4.80, pitcherWHIP: 1.45, hitterOPS: 0.650, hitterAVG: 0.235 }),
+  NPB2: Object.freeze({ pitcherERA: 4.40, pitcherWHIP: 1.40, hitterOPS: 0.680, hitterAVG: 0.245 }),
+  NPB1: Object.freeze({ pitcherERA: 4.00, pitcherWHIP: 1.32, hitterOPS: 0.720, hitterAVG: 0.255 }),
+  KBO2: Object.freeze({ pitcherERA: 4.80, pitcherWHIP: 1.45, hitterOPS: 0.690, hitterAVG: 0.245 }),
+  KBO1: Object.freeze({ pitcherERA: 4.50, pitcherWHIP: 1.40, hitterOPS: 0.750, hitterAVG: 0.260 }),
+  CPBL2: Object.freeze({ pitcherERA: 4.90, pitcherWHIP: 1.47, hitterOPS: 0.690, hitterAVG: 0.245 }),
+  CPBL1: Object.freeze({ pitcherERA: 4.60, pitcherWHIP: 1.42, hitterOPS: 0.750, hitterAVG: 0.260 }),
+  R: Object.freeze({ pitcherERA: 5.00, pitcherWHIP: 1.50, hitterOPS: 0.650, hitterAVG: 0.235 }),
+  A1: Object.freeze({ pitcherERA: 4.80, pitcherWHIP: 1.46, hitterOPS: 0.670, hitterAVG: 0.240 }),
+  A2: Object.freeze({ pitcherERA: 4.60, pitcherWHIP: 1.42, hitterOPS: 0.690, hitterAVG: 0.245 }),
+  A3: Object.freeze({ pitcherERA: 4.40, pitcherWHIP: 1.38, hitterOPS: 0.710, hitterAVG: 0.250 }),
+  MLB: Object.freeze({ pitcherERA: 4.30, pitcherWHIP: 1.32, hitterOPS: 0.730, hitterAVG: 0.250 }),
+  IND: Object.freeze({ pitcherERA: 4.80, pitcherWHIP: 1.45, hitterOPS: 0.680, hitterAVG: 0.245 }),
+});

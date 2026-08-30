@@ -88,5 +88,7 @@ assert.equal(migrated.careerBuyout, 0);
 assert.equal(migrated.ct.annualSalary, 12_000_000);
 assert.equal(migrated.ct.totalValue, 24_000_000);
 assert.equal(migrated.ct.remainingYears, 2);
+assert.deepEqual(migrated.salaryEvaluationHistory, []);
+assert.equal(migrated.lastSalaryEvaluation, null);
 
-console.log('Salary policy v1.0.4 unit checks passed.');
+console.log('Salary policy migration checks passed.');

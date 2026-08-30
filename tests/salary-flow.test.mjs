@@ -5,8 +5,10 @@ import path from 'node:path';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
+const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 
 assert.match(game, /lastSalaryPaidYear:null/);
+assert.match(game, /salaryEvaluationHistory:\[\],lastSalaryEvaluation:null/);
 assert.match(game, /recordAnnualSalaryPayment\(S,S\.year,paid\)/);
 assert.match(game, /recordAnnualSalaryPayment\(S,S\.year,pay\)/);
 assert.match(game, /SALARY_ALREADY_PAID_FOR_YEAR|recordAnnualSalaryPayment/);
@@ -18,6 +20,18 @@ assert.match(game, /salaryCandidate\(\{sourceLevel:fromLv,targetLevel:toLv/);
 assert.match(game, /applyDemotionSalary\(fromLv,targetLevel\)/);
 assert.match(game, /const sourceLevel=S\.lv,sourceStage=S\.stage/);
 assert.match(game, /sourceLevel:sourceStage==='PRO'&&LV\[sourceLevel\]\?sourceLevel:lv/);
+assert.match(game, /rating:sourceStage==='PRO'\?currentMarketRating\(\):0/);
+assert.match(game, /recordSalaryEvaluation\(st\)/);
+assert.match(game, /if\(S\.stage==='IND'\)recordIndependentSalaryEvaluation\(results\)/);
+assert.match(game, /LEGACY_RATING_FALLBACK/);
+assert.match(evaluationPolicy, /LEGACY_NO_INDIVIDUAL_STATS/);
+assert.doesNotMatch(game, /Math\.floor\(Number\(d\)\|\|0\)/);
+assert.equal((game.match(/baseSalary\*contractMult\*positionMult/g) || []).length, 1, '守備位置倍率は候補年俸へ一度だけ適用');
+assert.doesNotMatch(evaluationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
+assert.equal((game.match(/\bR\(/g) || []).length, 36);
+assert.equal((game.match(/\bri\(/g) || []).length, 80);
+assert.equal((game.match(/\bchance\(/g) || []).length, 61);
+assert.equal((game.match(/\bpick\(/g) || []).length, 25);
 
 assert.match(game, /S\.ct=synchronizeContractSalary\(S\.ct,S\.currentSalary\)/);
 assert.match(game, /S\.currentSalary=candidate\.annualSalary/);
@@ -35,4 +49,4 @@ assert.match(game, /NPB1:\{n:'NPB一軍',par:58/);
 assert.match(game, /A3:\{n:'3A',par:56/);
 assert.match(game, /MLB:\{n:'メジャーリーグ',par:63/);
 
-console.log('Salary flow v1.0.4 checks passed.');
+console.log('Salary flow v1.1.0 checks passed.');
