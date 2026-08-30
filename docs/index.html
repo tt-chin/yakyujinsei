@@ -47,7 +47,7 @@
       <div class="bd-cell"><b id="bd-age">16</b><span>年齢</span></div>
       <div class="bd-cell"><b id="bd-year">2026</b><span>年度</span></div>
       <div class="bd-cell"><b id="bd-ovr">30</b><span>総合</span></div>
-      <div class="bd-cell"><b id="bd-sal">0</b><span>現在年俸（万円）</span></div>
+      <div class="bd-cell" id="salary-detail-trigger" role="button" tabindex="0" aria-haspopup="dialog"><b id="bd-sal">0</b><span>現在年俸（万円）</span><small>年俸の内訳を見る</small></div>
     </div>
     <div id="lamps">
       <span class="lamp" id="lp0"><i></i>シーズン前</span>
@@ -59,6 +59,9 @@
   <button id="act-toggle" style="display:none">⌄ 選択肢を閉じる</button>
   <footer id="act" style="display:none"></footer>
 </div>
+<section id="salary-detail-panel" class="salary-detail-panel" role="dialog" aria-modal="true" aria-labelledby="salary-detail-title" hidden>
+  <div class="salary-detail-dialog"><button id="salary-detail-close" class="salary-detail-close" aria-label="閉じる">×</button><h2 id="salary-detail-title" tabindex="-1">年俸の内訳</h2><div id="salary-detail-body"></div></div>
+</section>
 
 
 

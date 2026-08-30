@@ -22,6 +22,9 @@ body{background:var(--bg);color:var(--chalk);font-family:var(--sans);font-size:1
 .bd-cell b{display:block;font-family:var(--mono);font-size:17px;font-weight:700;color:var(--amber);
   text-shadow:0 0 8px #ffc95c55;line-height:1.2}
 .bd-cell span{font-size:10px;color:var(--dim);letter-spacing:.15em}
+#salary-detail-trigger{cursor:pointer}
+#salary-detail-trigger small{display:block;font-size:8px;color:var(--dim);line-height:1.2;letter-spacing:0}
+#salary-detail-trigger:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 #lamps{display:flex;gap:14px;justify-content:center;margin-top:7px}
 .lamp{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);letter-spacing:.12em}
 .lamp i{width:9px;height:9px;border-radius:50%;background:#243c2e;border:1px solid #35543f;display:inline-block}
@@ -119,4 +122,14 @@ table.fin.career-table .career-team span{display:-webkit-box;-webkit-box-orient:
 #act-toggle{display:block;margin:0 auto -4px;background:#0e2015;border:1px solid #2b4a38;
  border-bottom:none;color:#8fae9c;font-size:11px;padding:3px 14px;border-radius:10px 10px 0 0;cursor:pointer}
 #act.collapsed{display:none!important}
+.salary-detail-panel{position:fixed;inset:0;z-index:100;background:#3a101755;display:flex;align-items:center;justify-content:center;padding:16px}
+.salary-detail-panel[hidden]{display:none}
+.salary-detail-dialog{position:relative;width:min(520px,100%);max-height:min(760px,calc(100dvh - 32px));overflow:auto;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:20px;color:var(--chalk);box-shadow:0 16px 48px #3a101744}
+.salary-detail-dialog h2{font-size:20px;color:var(--amber);padding-right:36px}.salary-detail-dialog h3{font-size:13px;color:var(--dim);margin-top:18px;border-bottom:1px solid var(--edge);padding-bottom:4px}
+.salary-detail-dialog dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;margin-top:7px}.salary-detail-dialog dd{font-family:var(--mono);text-align:right}.salary-detail-dialog ul{padding-left:20px;margin-top:7px}
+.salary-detail-summary,.salary-market-components{margin-top:10px;font-family:var(--mono);font-size:13px;overflow-wrap:anywhere}.salary-market-components strong{display:block;margin-top:5px}
+.salary-detail-close{position:absolute;right:12px;top:10px;width:36px;height:36px;border:1px solid var(--edge);border-radius:50%;background:var(--panel2);color:var(--chalk);font-size:24px;cursor:pointer}
+.salary-detail-link{display:inline-block;margin:6px 0 0;padding:4px 9px;border:1px solid var(--edge);border-radius:7px;background:var(--panel2);color:var(--amber);font:700 12px var(--sans);cursor:pointer}
+body.salary-detail-open{overflow:hidden}
+@media(max-width:560px){.salary-detail-panel{align-items:flex-end;padding:0}.salary-detail-dialog{width:100%;max-height:92dvh;border-radius:14px 14px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}}
 

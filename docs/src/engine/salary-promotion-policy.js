@@ -83,6 +83,8 @@ export function migrateLegacySalaryState(state) {
     careerBuyout: Object.hasOwn(state, 'careerBuyout') ? Number(state.careerBuyout) || 0 : 0,
     salaryEvaluationHistory: Array.isArray(state.salaryEvaluationHistory) ? state.salaryEvaluationHistory.slice(-3) : [],
     lastSalaryEvaluation: Object.hasOwn(state, 'lastSalaryEvaluation') ? state.lastSalaryEvaluation : null,
+    lastSalaryDecision: Object.hasOwn(state, 'lastSalaryDecision') ? state.lastSalaryDecision : null,
+    salaryDecisionHistory: Array.isArray(state.salaryDecisionHistory) ? state.salaryDecisionHistory.slice(-10) : [],
   };
   if (state.ct) {
     const annual = Number(state.ct.annualSalary) || Number(state.currentSalary) || 0;
