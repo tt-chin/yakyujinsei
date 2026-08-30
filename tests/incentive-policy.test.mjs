@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {applyIncentivePayment,createIncentiveTerms,evaluateIncentive} from '../docs/src/engine/incentive-policy.js';
+const npb=createIncentiveTerms({org:'NPB',annualSalary:50_000_000}),mlb=createIncentiveTerms({org:'MLB',annualSalary:120_000_000});
+assert.equal(npb.annualMax,3_500_000);assert.equal(mlb.annualMax,12_000_000);assert.equal(createIncentiveTerms({org:'IND',annualSalary:5_000_000}),null);
+assert.deepEqual(evaluateIncentive({terms:npb,evaluation:{payD:1,sampleStatus:'FULL'},honors:['2030 NPB年間MVP'],year:2030}).level,'FULL');
+assert.equal(evaluateIncentive({terms:npb,evaluation:{payD:3,sampleStatus:'FULL'},honors:[],year:2030}).amount,1_750_000);
+assert.equal(evaluateIncentive({terms:npb,evaluation:{payD:9,sampleStatus:'INSUFFICIENT'},honors:[],year:2030}).level,'NONE');
+assert.equal(evaluateIncentive({terms:null,evaluation:{payD:9},honors:[],year:2030}).amount,0);
+const state={careerEarnings:10,careerIncentive:0,yearlyIncentivePaid:{},currentSalary:50_000_000},contract={contractId:'C',incentive:npb,annualSchedule:[{amount:50_000_000}]};const once=applyIncentivePayment(state,{contract,evaluation:{payD:3,sampleStatus:'FULL'},honors:[],year:2030}),twice=applyIncentivePayment(once.state,{contract,evaluation:{payD:9,sampleStatus:'FULL'},honors:['2030 NPB年間MVP'],year:2030});assert.equal(once.state.careerIncentive,1_750_000);assert.equal(twice.paid,false);assert.equal(twice.state.careerIncentive,1_750_000);assert.equal(twice.state.currentSalary,50_000_000);assert.deepEqual(twice.state.yearlyIncentivePaid['2030'],once.state.yearlyIncentivePaid['2030']);
+console.log('incentive policy tests passed');

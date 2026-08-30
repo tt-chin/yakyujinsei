@@ -78,7 +78,7 @@ assert.equal(salaryAwardBonus(['2031 NPB年間MVP'], 2032), 0);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
 assert.doesNotMatch(game, /次年度年俸：オフシーズン確定後/);
-assert.match(game, /今季支給年俸：<b class="hl">\$\{fmtMoney\(paid\)\}<\/b>｜生涯収入：\$\{fmtMoney\(S\.careerEarnings\)\}/);
+assert.match(game, /今季支給年俸：<b class="hl">\$\{fmtMoney\(paid\)\}<\/b>｜出来高：/);
 assert.match(game, /card\('info','来季年俸決定',`所属先の確定に伴い、来季の年俸は/);
 assert.match(game, /\$\{preventDecrease\?'昇格後の最低保障を確認':'降格後も現契約を維持'\}し、来季の年俸は/);
 assert.doesNotMatch(game, /次年度年俸：\$\{fmtMoney\(S\.currentSalary\)\}/);
@@ -87,6 +87,6 @@ assert.match(game, /Object\.values\(PATHS\)\.some\(path=>path\.includes\(fromLv\
 assert.match(game, /applyLevelMinimumToUnpaidSchedule\(S\.ct,minimumSalary,S\.year\+1\)/);
 assert.match(game, /if\(normalizeContract\(S\.ct\)\.remainingYears===0\)return/);
 assert.match(game, /markClubInitiatedRenewal\(renewalYears\)/);
-assert.match(game, /renewAndAdvance\(\.9,true\)/);
+assert.match(game, /市場価×0\.90。減俸保護は適用されない/);
 
 console.log('Salary promotion policy checks passed.');

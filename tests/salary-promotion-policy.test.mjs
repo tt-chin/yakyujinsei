@@ -88,7 +88,7 @@ assert.equal(migrated.lastSalaryPaidYear, null);
 assert.equal(migrated.careerBuyout, 0);
 assert.equal(migrated.ct.annualSalary, 12_000_000);
 assert.equal(migrated.ct.guaranteedTotal, 24_000_000);
-assert.equal(migrated.ct.schemaVersion, 2);
+assert.equal(migrated.ct.schemaVersion, 3);
 assert.equal(migrated.ct.remainingYears, 2);
 assert.deepEqual(migrated.salaryEvaluationHistory, []);
 assert.equal(migrated.lastSalaryDecision, null);

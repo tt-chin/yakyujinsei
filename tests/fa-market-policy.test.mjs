@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';
+import {baseFaOfferCount,buildFaOffer,calculateOfferAnnualSalary,competitionMultiplier,contractTypeMultiplier,generateBidJitters,resolveFaMarket} from '../docs/src/engine/market-policy.js';
+assert.deepEqual([6,3,1,-1,-2].map(baseFaOfferCount),[4,3,2,1,0]);assert.deepEqual([1,2,3,4].map(competitionMultiplier),[1,1.025,1.05,1.075]);assert.equal(contractTypeMultiplier('LONG'),.95);assert.equal(contractTypeMultiplier('SHORT'),1.05);assert.equal(contractTypeMultiplier('PROOF'),1.05);
+const breakdown={injuryMultiplier:.93,positionMultiplier:1.15,contractTypeMultiplier:.95,teamDemandMultiplier:1.05,franchiseMultiplier:1,competitionMultiplier:1.05,bidJitterMultiplier:1.02};const annual=calculateOfferAnnualSalary({marketSalary:45_000_000,breakdown});assert.equal(annual,51_420_000);
+const offer=buildFaOffer({offerId:'O',teamId:'T',org:'NPB',level:'NPB1',category:'C',demandScore:2,years:4,contractType:'LONG',marketSalary:45_000_000,levelMinimum:16_000_000,breakdown,incentiveTerms:{annualMax:3_000_000}});assert.equal(offer.annualSalary,annual);assert.equal(offer.guaranteedTotal,annual*4);assert.equal(offer.breakdown.teamDemandMultiplier,1.05);
+let calls=0;const jitter=generateBidJitters(['B','A','C'],()=>{calls++;return .5;});assert.equal(calls,3);assert.deepEqual(jitter.map(x=>x.teamId),['A','B','C']);assert.ok(jitter.every(x=>x.multiplier===1));
+const existing={marketKey:'K',offers:[1]};calls=0;assert.equal(resolveFaMarket(existing,'K',()=>{calls++;return{};}),existing);assert.equal(calls,0);resolveFaMarket(existing,'X',()=>{calls++;return{};});assert.equal(calls,1);
+console.log('FA market policy tests passed');
