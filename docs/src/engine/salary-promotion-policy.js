@@ -85,10 +85,12 @@ export function migrateLegacySalaryState(state) {
     lastSalaryEvaluation: Object.hasOwn(state, 'lastSalaryEvaluation') ? state.lastSalaryEvaluation : null,
     lastSalaryDecision: Object.hasOwn(state, 'lastSalaryDecision') ? state.lastSalaryDecision : null,
     salaryDecisionHistory: Array.isArray(state.salaryDecisionHistory) ? state.salaryDecisionHistory.slice(-10) : [],
+    contractSequence: Math.max(0, Math.round(Number(state.contractSequence) || 0)),
   };
   if (state.ct) {
-    const annual = Number(state.ct.annualSalary) || Number(state.currentSalary) || 0;
-    migrated.ct = synchronizeContractSalary(state.ct, annual);
+    migrated.ct = normalizeContract(state.ct, { currentYear: state.year, currentSalary: state.currentSalary, org: state.org, teamId: state.orgTeamId });
+    const due = migrated.ct.annualSchedule.find(item => item.year === Number(state.year) && !item.paid);
+    migrated.currentSalary = due?.amount || migrated.ct.annualSalary;
   }
   return migrated;
 }
@@ -119,3 +121,4 @@ export function salaryAwardBonus(honors, year) {
 export function salaryEvaluationD(lastD, honors, year) {
   return (Number(lastD) || 0) + salaryAwardBonus(honors, year);
 }
+import { normalizeContract } from './contract-policy.js';

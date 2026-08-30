@@ -65,7 +65,7 @@ for (const org of ['KBO', 'CPBL', 'MiLB', 'MLB']) {
 assert.equal(crossOfferType('MiLB', 'KBO'), 'overseas_to_overseas');
 assert.equal(crossOfferTitle(crossOfferType('MiLB', 'KBO')), '移籍オファー');
 assert.match(game, /t:`NPBへ復帰：\$\{rec\.name\}`/);
-assert.match(game, /signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1\);finish\(\)/);
+assert.match(game, /buyoutRemaining\(\);signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN'\);finish\(\)/);
 assert.match(game, /t:'現在の球団に残留',main:true,f:finish/);
 
 // 長い球団名はチーム列だけ最大2行とし、成績列は横スクロール内で改行させない。

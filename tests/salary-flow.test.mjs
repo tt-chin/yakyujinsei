@@ -6,14 +6,15 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
+const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 
 assert.match(game, /lastSalaryPaidYear:null/);
 assert.match(game, /salaryEvaluationHistory:\[\],lastSalaryEvaluation:null,lastSalaryDecision:null,salaryDecisionHistory:\[\]/);
-assert.match(game, /recordAnnualSalaryPayment\(S,S\.year,paid\)/);
-assert.match(game, /recordAnnualSalaryPayment\(S,S\.year,pay\)/);
-assert.match(game, /SALARY_ALREADY_PAID_FOR_YEAR|recordAnnualSalaryPayment/);
+assert.match(game, /salaryDueForYear\(S\.ct,S\.year\)/);
+assert.match(game, /markSalaryPaid\(S\.ct,S\.year\)/);
+assert.match(game, /PRO_PLAYER_WITHOUT_CONTRACT/);
 assert.match(game, /stage==='IND'.*salaryCandidate\(\{sourceLevel:'IND',targetLevel:'IND'/s);
-assert.match(game, /S\.ct=null;S\.careerEarnings=payment\.careerEarnings/);
+assert.match(game, /S\.ct=null;if\(S\.lastSalaryPaidYear===S\.year\)/);
 
 assert.match(game, /convertRatingBetweenLevels\(rating,sourceLevel,targetLevel,LV\)/);
 assert.match(game, /salaryCandidate\(\{sourceLevel:fromLv,targetLevel:toLv/);
@@ -33,12 +34,15 @@ assert.equal((game.match(/\bri\(/g) || []).length, 80);
 assert.equal((game.match(/\bchance\(/g) || []).length, 61);
 assert.equal((game.match(/\bpick\(/g) || []).length, 25);
 
-assert.match(game, /S\.ct=synchronizeContractSalary\(S\.ct,S\.currentSalary\)/);
-assert.match(game, /S\.currentSalary=candidate\.annualSalary/);
+assert.match(game, /S\.ct=fixedContract/);
+assert.match(game, /createContract\(/);
 assert.doesNotMatch(game, /S\.ct\.annualSalary=S\.currentSalary/);
-assert.match(game, /pendingOffseasonSalary=!S\.ct\|\|Math\.max\(0,Number\(S\.ct\.remainingYears\?\?S\.ct\.yrs\)\|\|0\)<=1/);
+assert.match(game, /applyLevelMinimumToUnpaidSchedule/);
+assert.match(game, /transferContract/);
+assert.match(game, /appendExtension/);
 
-assert.match(game, /calculateLegacyContractBuyout\(\{contract:S\.ct,currentSalary:S\.currentSalary/);
+assert.match(game, /calculateScheduledBuyout\(S\.ct,rate\)/);
+assert.doesNotMatch(game, /calculateLegacyContractBuyout/);
 assert.doesNotMatch(game, /const yearly=Math\.round\(salaryFor\(S\.lv,S\.lastD\|\|0\)/);
 assert.match(game, /S\.careerBuyout=\(S\.careerBuyout\|\|0\)\+result\.buyoutAmount/);
 assert.match(game, /S\.ct=null;\s*S\.currentSalary=0/);
@@ -49,4 +53,5 @@ assert.match(game, /NPB1:\{n:'NPB一軍',par:58/);
 assert.match(game, /A3:\{n:'3A',par:56/);
 assert.match(game, /MLB:\{n:'メジャーリーグ',par:63/);
 
-console.log('Salary flow v1.1.1 checks passed.');
+assert.doesNotMatch(contractPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
+console.log('Salary flow v1.2.0 checks passed.');

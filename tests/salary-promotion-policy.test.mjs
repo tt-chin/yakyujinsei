@@ -80,13 +80,15 @@ assert.equal(paid.lastSalaryPaidYear, 2030);
 assert.throws(() => recordAnnualSalaryPayment(paid, 2030, 2_400_000), /SALARY_ALREADY_PAID_FOR_YEAR/);
 
 const migrated = migrateLegacySalaryState({
+  year: 2030,
   currentSalary: 12_000_000,
   ct: { yrs: 2, contractType: 'ROOKIE' },
 });
 assert.equal(migrated.lastSalaryPaidYear, null);
 assert.equal(migrated.careerBuyout, 0);
 assert.equal(migrated.ct.annualSalary, 12_000_000);
-assert.equal(migrated.ct.totalValue, 24_000_000);
+assert.equal(migrated.ct.guaranteedTotal, 24_000_000);
+assert.equal(migrated.ct.schemaVersion, 2);
 assert.equal(migrated.ct.remainingYears, 2);
 assert.deepEqual(migrated.salaryEvaluationHistory, []);
 assert.equal(migrated.lastSalaryDecision, null);
