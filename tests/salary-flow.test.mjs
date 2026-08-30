@@ -13,7 +13,7 @@ const arbitrationPolicy = await readFile(path.join(root, 'docs/src/engine/arbitr
 
 assert.match(game, /lastSalaryPaidYear:null/);
 assert.match(game, /salaryEvaluationHistory:\[\],lastSalaryEvaluation:null,lastSalaryDecision:null,salaryDecisionHistory:\[\]/);
-assert.match(game, /salaryDueForYear\(S\.ct,S\.year\)/);
+assert.match(game, /salaryDueForYear\(S\.ct,S\.year\)/);assert.match(game,/contractContinuationForNextYear\(S\.ct,S\.year\)/);
 assert.match(game, /markSalaryPaid\(S\.ct,S\.year\)/);
 assert.match(game, /PRO_PLAYER_WITHOUT_CONTRACT/);
 assert.match(game, /stage==='IND'.*salaryCandidate\(\{sourceLevel:'IND',targetLevel:'IND'/s);
@@ -63,4 +63,6 @@ assert.match(game,/contractType:'CONTROL'/);assert.match(game,/contractType:'ARB
 assert.match(game,/S\.serviceTime\.MLB\+\+/);assert.doesNotMatch(game,/S\.serviceTime\.MLB.*MINOR/);
 assert.match(game,/careerBaseSalary:0/);assert.match(game,/careerIncentive:0/);assert.match(game,/yearlyIncentivePaid:\{\}/);assert.match(game,/lastFaMarket:null/);
 assert.match(game,/generateBidJitters\(selected\.map\(x=>x\.team\.teamId\),R\)/);assert.match(game,/S\.lastFaMarket\?\.marketKey===key/);assert.match(game,/applyIncentivePayment/);
-console.log('Salary flow v1.4.0 checks passed.');
+assert.match(game,/現契約を継続/);assert.match(game,/来季年俸/);assert.match(game,/契約残り/);assert.match(game,/年俸の再計算はありません/);assert.match(game,/今季の実績は次回の契約評価へ反映されます/);assert.doesNotMatch(game,/今季の好成績は次回の契約評価へ反映されます/);
+assert.match(game,/floorApplied:contractType==='CONTROL'&&control\.floorApplied/);
+console.log('Salary flow v1.4.1 checks passed.');

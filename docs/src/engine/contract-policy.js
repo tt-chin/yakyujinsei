@@ -27,6 +27,8 @@ export function normalizeContract(contract,fallback={}) {
 
 export function salaryDueForYear(contract,year){const c=normalizeContract(contract,{currentYear:year}),index=c.annualSchedule.findIndex(item=>item.year===Number(year));if(index>=0)return{amount:c.annualSchedule[index].amount,scheduleIndex:index,alreadyPaid:c.annualSchedule[index].paid,contractEnded:false};return{amount:0,scheduleIndex:-1,alreadyPaid:false,contractEnded:Number(year)>c.endYear};}
 
+export function contractContinuationForNextYear(contract,currentYear){const c=normalizeContract(contract,{currentYear});if(c.remainingYears<=0)return null;const nextYear=Number(currentYear)+1,due=salaryDueForYear(c,nextYear);if(due.scheduleIndex<0||due.alreadyPaid)throw new Error('CONTRACT_NEXT_YEAR_SCHEDULE_MISSING');return{nextYear,nextSalary:due.amount,remainingYears:c.remainingYears};}
+
 export function markSalaryPaid(contract,year){const c=normalizeContract(contract,{currentYear:year}),due=salaryDueForYear(c,year);if(due.scheduleIndex<0)return{contract:c,amount:0,contractEnded:due.contractEnded};if(due.alreadyPaid)throw new Error('CONTRACT_SALARY_ALREADY_PAID');const schedule=cloneSchedule(c.annualSchedule);schedule[due.scheduleIndex].paid=true;return{contract:deriveContractTotals({...c,annualSchedule:schedule}),amount:due.amount,contractEnded:false};}
 
 export function applyLevelMinimumToUnpaidSchedule(contract,minimumAnnualSalary,effectiveYear){const minimum=roundYen(minimumAnnualSalary),schedule=cloneSchedule(contract.annualSchedule).map(item=>!item.paid&&item.year>=Number(effectiveYear)?{...item,amount:Math.max(item.amount,minimum)}:item);return deriveContractTotals({...contract,annualSchedule:schedule});}

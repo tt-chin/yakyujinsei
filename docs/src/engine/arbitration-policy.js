@@ -6,6 +6,7 @@ export function calculateArbitrationTerms({marketSalary,previousSalary,marketRat
   const clubMult=clamp(.91+rating*.045+Math.min(years,6)*.045,.80,1.45);
   const playerMult=clamp(clubMult+.08+Math.max(0,rating)*.018,.92,1.70);
   const middleMult=(clubMult+playerMult)/2;
-  const protect=value=>Math.max(applyForcedCutProtection(market*value,previous),Number(levelMinimum)||0);
-  return{clubMult,playerMult,middleMult,winChance:clamp(47+rating*8+Math.min(years,6)*2,15,88),clubSalary:protect(clubMult),playerSalary:protect(playerMult),middleSalary:protect(middleMult),marketSalary:market,previousSalary:previous,marketRating:rating,serviceYears:years,levelMinimum:Number(levelMinimum)||0};
+  const minimum=Number(levelMinimum)||0,protect=value=>{const beforeMinimum=applyForcedCutProtection(market*value,previous);return{salary:Math.max(beforeMinimum,minimum),floorApplied:minimum>beforeMinimum};};
+  const club=protect(clubMult),player=protect(playerMult),middle=protect(middleMult);
+  return{clubMult,playerMult,middleMult,winChance:clamp(47+rating*8+Math.min(years,6)*2,15,88),clubSalary:club.salary,playerSalary:player.salary,middleSalary:middle.salary,clubFloorApplied:club.floorApplied,playerFloorApplied:player.floorApplied,middleFloorApplied:middle.floorApplied,marketSalary:market,previousSalary:previous,marketRating:rating,serviceYears:years,levelMinimum:minimum};
 }

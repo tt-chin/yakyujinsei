@@ -3,6 +3,7 @@ const finiteOrNull = value => Number.isFinite(Number(value)) ? Number(value) : n
 export function deriveSalaryReasonCodes(input = {}) {
   const codes = [];
   const current = input.currentEvaluation || {};
+  if (input.floorApplied) codes.push('LEAGUE_MINIMUM_APPLIED');
   if (Number(current.performanceAdjustment) >= 1) codes.push('STRONG_PERFORMANCE');
   if (Number(current.performanceAdjustment) <= -0.75) codes.push('POOR_PERFORMANCE');
   if (Number(current.workloadAdjustment) >= 0.25) codes.push('FULL_WORKLOAD');
@@ -61,6 +62,7 @@ export function appendSalaryDecision(history = [], decision) {
 }
 
 const LABELS = {
+  LEAGUE_MINIMUM_APPLIED:'リーグ最低年俸が適用されました',
   STRONG_PERFORMANCE:'今季の実績が市場評価を押し上げました', POOR_PERFORMANCE:'今季の実績が市場評価を押し下げました',
   FULL_WORKLOAD:'十分な出場量が評価されました', LIMITED_WORKLOAD:'出場量が限られたため評価が下がりました',
   AWARD_BONUS:'受賞実績が評価に加算されました', LEVEL_PAR_DOWNWARD_CONVERSION:'上位カテゴリー基準へ換算しました',
