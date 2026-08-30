@@ -2,21 +2,95 @@ export function promotionSalaryUpdate(currentSalary, candidateSalary, contract) 
   return contractSalaryUpdate(currentSalary, candidateSalary, contract, true);
 }
 
-export function contractSalaryUpdate(currentSalary, candidateSalary, contract, preventDecrease) {
-  const annualSalary = Math.max(
-    0,
-    Math.round(Number(candidateSalary) || 0),
-    preventDecrease ? Math.round(Number(currentSalary) || 0) : 0,
+export function roundToTenThousandYen(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return 0;
+  return Math.max(0, Math.round(amount / 10_000) * 10_000);
+}
+
+export function convertRatingBetweenLevels(rating, fromLevel, toLevel, levelTable) {
+  if (fromLevel === toLevel) return Number(rating) || 0;
+  const fromPar = Number(levelTable?.[fromLevel]?.par);
+  const toPar = Number(levelTable?.[toLevel]?.par);
+  if (!Number.isFinite(fromPar) || !Number.isFinite(toPar)) {
+    throw new Error('UNKNOWN_LEVEL_FOR_RATING_CONVERSION');
+  }
+  return (Number(rating) || 0) + fromPar - toPar;
+}
+
+export function synchronizeContractSalary(contract, annualSalary) {
+  if (!contract) return null;
+  const years = Math.max(1, Math.round(Number(contract.remainingYears ?? contract.yrs ?? 1) || 1));
+  const annual = roundToTenThousandYen(annualSalary);
+  return {
+    ...contract,
+    yrs: years,
+    remainingYears: years,
+    annualSalary: annual,
+    totalValue: annual * years,
+  };
+}
+
+export function calculateLegacyContractBuyout({
+  contract,
+  currentSalary,
+  currentYear,
+  lastSalaryPaidYear,
+  rate,
+}) {
+  const contractAnnual = Number(contract?.annualSalary);
+  const annualSalary = roundToTenThousandYen(
+    contractAnnual > 0 ? contractAnnual : currentSalary,
   );
+  const contractYears = Math.max(
+    0,
+    Math.round(Number(contract?.remainingYears ?? contract?.yrs ?? 0) || 0),
+  );
+  const currentSeasonPaid = lastSalaryPaidYear === currentYear;
+  const unpaidYears = Math.max(0, contractYears - (currentSeasonPaid ? 1 : 0));
+  const fullRemainingValue = annualSalary * unpaidYears;
+  const normalizedRate = Math.max(0, Math.min(1, Number(rate) || 0));
+  return {
+    annualSalary,
+    unpaidYears,
+    fullRemainingValue,
+    buyoutAmount: roundToTenThousandYen(fullRemainingValue * normalizedRate),
+    currentSeasonPaid,
+  };
+}
+
+export function recordAnnualSalaryPayment(state, year, annualSalary) {
+  if (state.lastSalaryPaidYear === year) throw new Error('SALARY_ALREADY_PAID_FOR_YEAR');
+  const paid = roundToTenThousandYen(annualSalary);
+  return {
+    ...state,
+    careerEarnings: (Number(state.careerEarnings) || 0) + paid,
+    lastSalaryPaidYear: year,
+  };
+}
+
+export function migrateLegacySalaryState(state) {
+  const migrated = {
+    ...state,
+    lastSalaryPaidYear: Object.hasOwn(state, 'lastSalaryPaidYear') ? state.lastSalaryPaidYear : null,
+    careerBuyout: Object.hasOwn(state, 'careerBuyout') ? Number(state.careerBuyout) || 0 : 0,
+  };
+  if (state.ct) {
+    const annual = Number(state.ct.annualSalary) || Number(state.currentSalary) || 0;
+    migrated.ct = synchronizeContractSalary(state.ct, annual);
+  }
+  return migrated;
+}
+
+export function contractSalaryUpdate(currentSalary, candidateSalary, contract, preventDecrease) {
+  const annualSalary = roundToTenThousandYen(Math.max(
+    Number(candidateSalary) || 0,
+    preventDecrease ? Number(currentSalary) || 0 : 0,
+  ));
   if (!contract) return { currentSalary: annualSalary, contract: null };
-  const years = Math.max(1, Math.round(Number(contract.yrs || contract.remainingYears) || 1));
   return {
     currentSalary: annualSalary,
-    contract: {
-      ...contract,
-      annualSalary,
-      totalValue: annualSalary * years,
-    },
+    contract: synchronizeContractSalary(contract, annualSalary),
   };
 }
 

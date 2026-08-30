@@ -80,12 +80,12 @@ const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
 assert.doesNotMatch(game, /次年度年俸：オフシーズン確定後/);
 assert.match(game, /今季支給年俸：<b class="hl">\$\{fmtMoney\(paid\)\}<\/b>｜生涯収入：\$\{fmtMoney\(S\.careerEarnings\)\}/);
 assert.match(game, /card\('info','来季年俸決定',`所属先の確定に伴い、来季の年俸は/);
-assert.match(game, /card\('info','来季年俸決定',`昇格後の所属レベルを基準に再計算し、来季の年俸は/);
+assert.match(game, /\$\{preventDecrease\?'昇格':'降格'\}後の所属レベルを基準に再計算し、来季の年俸は/);
 assert.doesNotMatch(game, /次年度年俸：\$\{fmtMoney\(S\.currentSalary\)\}/);
 assert.match(game, /const fromLv=S\.lv;\s*S\.lv=to; applyPromotionSalary\(fromLv,to\);/);
 assert.match(game, /Object\.values\(PATHS\)\.some\(path=>path\.includes\(fromLv\)&&path\.includes\(toLv\)\)/);
-assert.match(game, /salaryCandidate\(toLv,S\.ct\?\.mult\|\|1\)/);
-assert.match(game, /pendingOffseasonSalary=\{preventDecrease:salaryAwardBonus\(S\.honors,S\.year\)>=2\}/);
+assert.match(game, /salaryCandidate\(\{sourceLevel:fromLv,targetLevel:toLv,contractMult:S\.ct\?\.mult\|\|1\}\)/);
+assert.match(game, /pendingOffseasonSalary=!S\.ct\|\|Math\.max\(0,Number\(S\.ct\.remainingYears\?\?S\.ct\.yrs\)\|\|0\)<=1\?\{preventDecrease:salaryAwardBonus\(S\.honors,S\.year\)>=2\}:null/);
 assert.match(game, /markClubInitiatedRenewal\(\)/);
 assert.match(game, /renewAndAdvance\(\.9,true\)/);
 

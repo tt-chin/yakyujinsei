@@ -72,8 +72,8 @@
 
 ## 5. 乱数・再現性
 
-製品バージョンは `VERSION="1.0.3"` の1種類だけを使用し、内部状態の`version`へ保持する。乱数状態は`rngState`で管理するが、別個の乱数版・ルール版は設けない。共有URLは`?seed=...`だけとし、`rv`・`rules`・アプリ版数を含めない。実行時は常に配信中の最新規則を使用し、旧規則エンジンは保持しない。同じseedでもゲーム更新後に同一結果を完全再現できることは保証しない。
-右上固定バッジは使用せず、開始画面タイトル「野球人生シミュレーター」の右側に小さなバージョンを表示する。表示値はHTMLへ直接記入せず、HTTP配信時に単一の`VERSION`から`v1.0.3`形式で生成する。ES Modulesが動作しない`file://`直開きでは表示しない。`Produced by`の下にはバージョンを表示しない。
+製品バージョンは `VERSION="1.0.4"` の1種類だけを使用し、内部状態の`version`へ保持する。乱数状態は`rngState`で管理するが、別個の乱数版・ルール版は設けない。共有URLは`?seed=...`だけとし、`rv`・`rules`・アプリ版数を含めない。実行時は常に配信中の最新規則を使用し、旧規則エンジンは保持しない。同じseedでもゲーム更新後に同一結果を完全再現できることは保証しない。
+右上固定バッジは使用せず、開始画面タイトル「野球人生シミュレーター」の右側に小さなバージョンを表示する。表示値はHTMLへ直接記入せず、HTTP配信時に単一の`VERSION`から`v1.0.4`形式で生成する。ES Modulesが動作しない`file://`直開きでは表示しない。`Produced by`の下にはバージョンを表示しない。
 
 - `normalizeSeed(raw)`: `String(raw ?? '').normalize('NFKC').trim()` を実行し、Unicode制御文字U+0000～U+001FとU+007F～U+009Fを除去後、Unicodeコードポイント単位で先頭24文字へ制限する。大文字・小文字は区別する。空になった場合だけ新規シード生成へ進み、URL表示には `encodeURIComponent` を使用する。
 - `fnv1a32(str)`: `TextEncoder` でUTF-8バイト列へ変換し、初期値`0x811C9DC5`、各バイトごとにXOR後 `Math.imul(h,0x01000193)>>>0` を適用するFNV-1a 32bit純関数。
@@ -548,8 +548,9 @@ KBOは日本人選手を外国人枠として扱うゲーム内モデルとす�
 |`corpIncome`|円|社会人所属年の終了時に企業給与を加算|社会人給与の別集計|
 |`ct.annualSalary`|円／年|契約作成時|複数年契約の年額|
 |`ct.totalValue`|円|契約作成時|契約総額表示。未支給分は生涯収入へ含めない|
+|`lastSalaryPaidYear`|年／null|プロまたは独立リーグの年俸支給時|同一年度の重複支給防止|
 
-通常シーズンの支給額は故障や二軍降格で減額せず `paidSalary=currentSalary` とする。シーズン途中加入・退団だけ `activeDays/seasonDays` で日割りする。シーズン終了時に `careerEarnings += paidSalary`、契約金受領時に `careerSigningBonus` と `careerEarnings` の両方へ加算し、バイアウト受領時も `careerBuyout` と `careerEarnings` の両方へ加算する。社会人給与は `corpIncome` と `careerEarnings` の両方へ必ず加算する。`includeCorpIncomeInCareerEarnings` と設定UIは廃止し、独立リーグ給与も競技収入として常に `careerEarnings` に含める。
+通常シーズンの支給額は故障で減額せず `paidSalary=currentSalary` とする。シーズン終了時に `careerEarnings += paidSalary` と `lastSalaryPaidYear=year` を同時に確定し、同年度の再支給は `SALARY_ALREADY_PAID_FOR_YEAR` とする。契約金受領時は `careerSigningBonus` と `careerEarnings`、バイアウト受領時は `careerBuyout` と `careerEarnings` の両方へ加算する。バイアウトは市場年俸を再計算せず、`ct.annualSalary` と未払い年数から計算する。社会人給与は `corpIncome` と `careerEarnings` の両方へ加算し、独立リーグ年俸も競技収入として `careerEarnings` へ一度だけ含める。
 
 スコアボードは「現在年俸」と「生涯収入」を別表示し、引退画面・共有画像は `careerEarnings` を主表示、契約金とバイアウトを内訳表示する。新規開始時は全額0円で初期化する。
 
@@ -576,7 +577,7 @@ KBOは日本人選手を外国人枠として扱うゲーム内モデルとす�
 
 複数の `contractMult` 条件は重ね掛けせず、成立した契約種別の値を1つだけ採用する。`roleMult` と `dpMult` は重ね掛けする。年齢は契約年数にだけ使用し、年俸候補額へ直接掛けない。契約年数は `maxYears=clamp(40-age,1,7)`、直近成績 `d<0` は最大2年、`d>=8` は最大5年、`d>=14` は最大7年とする。
 
-NPBの通常更改では、前年年俸1億円以下の減額下限を前年の75%、1億円超を前年の60%とする。`renewedSalary=max(candidateSalary,currentSalary*(currentSalary>1億円?0.60:0.75))` とし、選手が制限超過減額へ同意するイベントを選んだ場合だけ候補額まで下げられる。FA、自由契約、育成再契約、海外移籍はこの下限を適用しない。昇格時は新レベル下限以上、降格時も契約期間中は `ct.annualSalary` を維持する。同一組織内の昇格では、昇格前の `currentSalary` と、昇格後レベルの `salaryFor` に契約係数・守備係数を掛けた候補額の高い方を次年度年俸とし、昇格による減俸を禁止する。球団主導の延長契約・契約更新も `currentSalary` を下限とするが、降格、戦力外、FA市場オファーなし、宣言残留、明示的な減俸イベントにはこの下限を適用しない。シーズン終了時は今季支給年俸と生涯収入だけを確定し、次年度年俸は昇降格・契約更改・FA・移籍などオフシーズンの所属先確定後に `currentSalary` と契約情報へ反映する。
+レベルを跨ぐ候補年俸では、評価値を `targetRating=rating+fromLevel.par-toLevel.par` で換算してから移籍先の `salaryFor` を適用する。同一組織内の昇格では、昇格前の `currentSalary` と換算後候補額の高い方を採用し、昇格による減俸を禁止する。降格、戦力外後の再契約、FA、海外移籍、NPB復帰も同じ換算入口を使用するが、各フローの既存減俸保護だけを適用する。複数年契約の通常継続年は年俸を再評価せず、`currentSalary`、`ct.annualSalary`、`ct.totalValue`を実契約年俸から同期する。シーズン終了時は当年年俸と生涯収入だけを確定し、新契約または昇降格がない契約途中の年俸を上書きしない。
 
 年度賞は給与テーブルそのものを変更せず、当該年度の `effectiveDBonus` として評価する。年間MVP・最優秀投手賞・沢村賞相当は+2、最多勝・最優秀防御率・最多奪三振・最多セーブ・最優秀中継ぎ・首位打者・本塁打王・打点王・最高出塁率・盗塁王・ゴールデングラブ賞・年間最優秀守備選手は各+1とし、合計+3を上限とする。計算は `salaryFor(level,lastD+effectiveDBonus) × contractMult × dpMult` の順で行う。オールスター選出は年俸加点へ含めない。
 
@@ -2241,7 +2242,7 @@ tests/
 - `docs/styles/base.css`: 既存CSSの基礎、レイアウト、コンポーネント、レスポンシブ指定。元の記述順を維持する。
 - `docs/styles/jp-theme.css`: 「日本版ライトレッドテーマ」の上書き。近白色の背景、白いパネル、深紅の強調色を使用し、`base.css`の後に読み込む。
 - `docs/assets/baseball-icon.png`: 開始画面、favicon、Apple Touchアイコンで共用する透過背景の野球アイコン。
-- `docs/src/config.js`: `VERSION='1.0.3'`の単一バージョン識別子。
+- `docs/src/config.js`: `VERSION='1.0.4'`の単一バージョン識別子。
 - `docs/src/data/jp-data.js`: 高校50校、大学25校、90球団および国際大会Master。
 - `docs/src/engine/domestic-tournament-policy.js`: 国内大会の構造化結果、大学専用能力点、選抜・神宮・社会人大会の資格判定。
 - `docs/src/engine/game.js`: 状態`S`、ゲーム判定、フェーズ、UI生成、引退、共有画像を含むバージョン1.0.0互換エンジン。既存の基礎エンジンと日本版オーバーレイの評価順を同一ファイル内で維持する。

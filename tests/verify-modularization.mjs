@@ -28,7 +28,7 @@ assert.match(html, /href="https:\/\/x\.com\/dog_cat_150"[^>]*>犬猫（@dog_cat_
 assert.match(main, /import '\.\/engine\/game\.js';/);
 assert.match(game, /import \{ VERSION \} from '\.\.\/config\.js';/);
 assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
-assert.match(config, /VERSION = '1\.0\.3'/);
+assert.match(config, /VERSION = '1\.0\.4'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(game, /version:VERSION/);
 assert.match(game, /fillText\(VERSION,W-PAD,H-40\)/);
@@ -87,4 +87,4 @@ assert.deepEqual(actual, [
 ]);
 assert.equal(rngState, 2095430971);
 
-console.log('Version 1.0.3 modularization static and RNG checks passed.');
+console.log('Version 1.0.4 modularization static and RNG checks passed.');
