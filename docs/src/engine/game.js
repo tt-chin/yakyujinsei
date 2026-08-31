@@ -633,6 +633,7 @@ function actToggleSync(){
   t.style.display=has?'block':'none';
   t.textContent=a.classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる';
 }
+function escapeDiagnosticHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function choose(title,opts){
   actClear(); const a=$('act'), generation=++choiceGeneration, token=createChoiceActionToken(generation);
   activeChoiceToken=token; a.style.pointerEvents='';
@@ -642,7 +643,7 @@ function choose(title,opts){
     b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'');
     b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
     b.disabled=false;
-    b.onclick=()=>runChoiceAction({action:o.f,currentMarkup:()=>a.innerHTML,clear:actClear,restore:()=>choose(title,opts),token,currentGeneration:()=>choiceGeneration,currentToken:()=>activeChoiceToken,activateToken:t=>{activeChoiceToken=t;},isCurrentChoice:()=>b.isConnected&&a.contains(b),buttonLabel:b.textContent.trim(),disableAll:()=>{a.querySelectorAll('button').forEach(button=>{button.disabled=true;});a.style.pointerEvents='none';},errorContext:()=>{const ct=S?.ct,schedule=Array.isArray(ct?.annualSchedule)?ct.annualSchedule:[],due=schedule.find(x=>Number(x.year)===Number(S?.year));return{year:S?.year??null,age:S?.age??null,stage:S?.stage??null,org:S?.org??null,level:S?.lv??null,contractId:ct?.contractId??null,contractStartYear:ct?.startYear??null,contractEndYear:ct?.endYear??null,contractRemainingYears:ct?.remainingYears??null,contractAnnualSalary:ct?.annualSalary??null,currentSalary:S?.currentSalary??null,lastSalaryPaidYear:S?.lastSalaryPaidYear??null,currentYearSchedule:due?{year:due.year,amount:due.amount,paid:Boolean(due.paid)}:null};},reportError:(error,d)=>{const val=x=>escapeHTML(String(x??'—')),schedule=d.currentYearSchedule?`${val(d.currentYearSchedule.amount)}円／${d.currentYearSchedule.paid?'支払済':'未払い'}`:'なし';card('bad','処理中にエラーが発生しました',`選択処理を完了できませんでした。<br><b>エラーコード：${val(d.code)}</b><br><small>年度 ${val(d.year)}｜年齢 ${val(d.age)}｜${val(d.org)} ${val(d.level)}<br>契約ID ${val(d.contractId)}｜期間 ${val(d.contractStartYear)}～${val(d.contractEndYear)}｜残り ${val(d.contractRemainingYears)}年<br>現在年俸 ${val(d.currentSalary)}円｜最終支給年 ${val(d.lastSalaryPaidYear)}｜当年schedule ${schedule}</small><br>もう一度選択せず、この画面をスクリーンショットして報告してください。`);actToggleSync();}}); a.appendChild(b); });
+    b.onclick=()=>runChoiceAction({action:o.f,currentMarkup:()=>a.innerHTML,clear:actClear,restore:()=>choose(title,opts),token,currentGeneration:()=>choiceGeneration,currentToken:()=>activeChoiceToken,activateToken:t=>{activeChoiceToken=t;},isCurrentChoice:()=>b.isConnected&&a.contains(b),buttonLabel:b.textContent.trim(),disableAll:()=>{a.querySelectorAll('button').forEach(button=>{button.disabled=true;});a.style.pointerEvents='none';},errorContext:()=>{const ct=S?.ct,schedule=Array.isArray(ct?.annualSchedule)?ct.annualSchedule:[],due=schedule.find(x=>Number(x.year)===Number(S?.year));return{year:S?.year??null,age:S?.age??null,stage:S?.stage??null,org:S?.org??null,level:S?.lv??null,contractId:ct?.contractId??null,contractStartYear:ct?.startYear??null,contractEndYear:ct?.endYear??null,contractRemainingYears:ct?.remainingYears??null,contractAnnualSalary:ct?.annualSalary??null,currentSalary:S?.currentSalary??null,lastSalaryPaidYear:S?.lastSalaryPaidYear??null,currentYearSchedule:due?{year:due.year,amount:due.amount,paid:Boolean(due.paid)}:null};},reportError:(error,d)=>{const val=x=>escapeDiagnosticHTML(String(x??'—')),schedule=d.currentYearSchedule?`${val(d.currentYearSchedule.amount)}円／${d.currentYearSchedule.paid?'支払済':'未払い'}`:'なし';card('bad','処理中にエラーが発生しました',`選択処理を完了できませんでした。<br><b>エラーコード：${val(d.code)}</b><br><small>年度 ${val(d.year)}｜年齢 ${val(d.age)}｜${val(d.org)} ${val(d.level)}<br>契約ID ${val(d.contractId)}｜期間 ${val(d.contractStartYear)}～${val(d.contractEndYear)}｜残り ${val(d.contractRemainingYears)}年<br>現在年俸 ${val(d.currentSalary)}円｜最終支給年 ${val(d.lastSalaryPaidYear)}｜当年schedule ${schedule}</small><br>もう一度選択せず、この画面をスクリーンショットして報告してください。`);actToggleSync();}}); a.appendChild(b); });
   actToggleSync(); scrollBottom();
 }
 /* 能力加算介面：mode {dice：[..]} または {pool：n}。 */
@@ -1554,7 +1555,7 @@ function movement(){
     retireBelowActiveMinimum();
     return;
   }
-  if(S.skipMid){ advance(); return; } /* 復健年不異動作。 */
+  if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);advance();return;} /* リハビリ全休年も満了契約の来季更新を飛ばさない。 */
   if(S.org==='NPB')S.npbYears++;
   if(LV[S.lv].top){ /* 轉換リーグ：直接解除球団 5 年控制期制限、往後のみ要契約満了就是自由球員。 */
     if(S.svcOrg && S.svcOrg!==S.org){ S.faElig=true; }

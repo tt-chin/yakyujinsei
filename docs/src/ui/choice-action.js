@@ -46,9 +46,14 @@ export function runChoiceAction({
     const context = errorContext() || {};
     const details = { code: safeErrorCode(error), message: String(error?.message || error), stack: error?.stack || null, ...context };
     console.error('CHOICE_ACTION_FAILED', details);
-    reportError(error, details);
     token.running = false;
-    if (currentToken ? currentToken() === token : currentGeneration() === startGeneration) restore();
+    try {
+      reportError(error, details);
+    } catch (reportingError) {
+      console.error('CHOICE_ACTION_REPORT_FAILED', { message: String(reportingError?.message || reportingError), stack: reportingError?.stack || null, originalCode: details.code });
+    } finally {
+      if (currentToken ? currentToken() === token : currentGeneration() === startGeneration) restore();
+    }
     throw error;
   }
 }

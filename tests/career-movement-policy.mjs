@@ -47,7 +47,7 @@ const [game, baseCss] = await Promise.all([
   readFile(path.join(root, 'docs/styles/base.css'), 'utf8'),
 ]);
 const forcedCheck = game.indexOf('if(isBelowActiveMinimum(o)){');
-const injuryYearCheck = game.indexOf("if(S.skipMid){ advance(); return; }");
+const injuryYearCheck = game.indexOf("if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);advance();return;}");
 const demotionCheck = game.indexOf('handleDemotion(o,path,idx)');
 assert.ok(forcedCheck >= 0 && forcedCheck < injuryYearCheck && forcedCheck < demotionCheck);
 assert.match(game, /retireBelowActiveMinimum\(\)/);

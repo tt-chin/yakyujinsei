@@ -94,7 +94,23 @@ function nestedHarness() {
   assert.match(h.markup, />A</); assert.equal(h.generation, 2); assert.equal(h.token.running, false);
 }
 
+// エラー表示自体が失敗しても、元の例外を維持して選択肢を復元する。
+{
+  const h = harness(); const original = console.error; console.error = () => {};
+  try {
+    assert.throws(() => runChoiceAction({
+      action: () => { throw new Error('PRIMARY_FAILURE'); }, token: h.token,
+      currentGeneration: () => h.generation, currentMarkup: () => h.markup,
+      disableAll: () => {}, clear: () => {}, restore: () => { h.generation = 2; h.markup = '<button>復元済み</button>'; },
+      reportError: () => { throw new ReferenceError('REPORT_FAILURE'); },
+    }), /PRIMARY_FAILURE/);
+  } finally { console.error = original; }
+  assert.match(h.markup, /復元済み/);
+}
+
 const game = fs.readFileSync(new URL('../docs/src/engine/game.js', import.meta.url), 'utf8');
 assert.match(game, /function allocUI\(mode,label,done\)\{\s*actClear\(\); \+\+choiceGeneration;/);
+assert.match(game, /function escapeDiagnosticHTML\(v\)/);
+assert.doesNotMatch(game, /const val=x=>escapeHTML\(String\(x\?\?'—'\)\)/);
 
 console.log('choice action tests: ok');
