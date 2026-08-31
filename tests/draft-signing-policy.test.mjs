@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createContract } from '../docs/src/engine/contract-policy.js';
 import { acceptDraftSelection, declineDraftSelection, draftSigningTerms } from '../docs/src/engine/draft-signing-policy.js';
-import { runChoiceAction } from '../docs/src/ui/choice-action.js';
+import { runChoiceAction, safeErrorCode } from '../docs/src/ui/choice-action.js';
 
 function initialState({ stage = 'HS', stageYr = 3, age = 18, year = 2028 } = {}) {
   return {
@@ -81,6 +81,8 @@ function accept(state, type, round) {
 }
 
 assert.deepEqual(draftSigningTerms('ROSTER', 2), { level: 'NPB2', contractType: 'CONTROL', rookieSalary: 16_000_000 });
+assert.equal(safeErrorCode(new Error('PRO_PLAYER_WITHOUT_CONTRACT')), 'PRO_PLAYER_WITHOUT_CONTRACT');
+assert.equal(safeErrorCode(new TypeError('Cannot read private data')), 'UNEXPECTED_ERROR');
 const game = fs.readFileSync(new URL('../docs/src/engine/game.js', import.meta.url), 'utf8');
 assert.match(game, /if\(result==='signed'\)\{advance\(\);return;\}/);
 assert.match(game, /cb\(result\)/); assert.match(game, /cb\(declineDraftSelection\(S\)\)/);
