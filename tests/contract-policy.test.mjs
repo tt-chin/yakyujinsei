@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { appendExtension, applyLevelMinimumToUnpaidSchedule, calculateScheduledBuyout, contractContinuationForNextYear, createContract, markSalaryPaid, normalizeContract, salaryDueForYear, transferContract } from '../docs/src/engine/contract-policy.js';
+import { appendExtension, applyLevelMinimumToUnpaidSchedule, calculateScheduledBuyout, contractContinuationForNextYear, contractNeedsRenewal, createContract, markSalaryPaid, normalizeContract, salaryDueForYear, transferContract } from '../docs/src/engine/contract-policy.js';
 
 const base=createContract({contractId:'NPB:T1:2028:001',org:'NPB',teamId:'T1',signedYear:2028,startYear:2029,years:3,annualSalary:50_000_000,contractType:'NORMAL',signedMarketRating:5.25,positionMultiplierAtSigning:1.15,contractMultiplier:1.1});
 assert.equal(base.schemaVersion,3);assert.equal(base.annualSchedule.length,3);assert.equal(base.guaranteedTotal,150_000_000);assert.equal(base.remainingYears,3);
@@ -16,5 +16,6 @@ const v2=normalizeContract({...base,schemaVersion:2});assert.equal(v2.schemaVers
 const rookie=createContract({contractId:'R',org:'NPB',teamId:'T1',signedYear:2028,startYear:2028,years:2,annualSalary:16_000_000,contractType:'ROOKIE'});assert.equal(rookie.annualSalary,16_000_000);assert.equal(rookie.guaranteedTotal,32_000_000);
 let ended=markSalaryPaid(markSalaryPaid(rookie,2028).contract,2029).contract;assert.equal(ended.annualSalary,0);assert.equal(ended.remainingYears,0);assert.equal(salaryDueForYear(ended,2030).contractEnded,true);
 assert.equal(contractContinuationForNextYear(ended,2029),null);
+assert.equal(contractNeedsRenewal(rookie),false);assert.equal(contractNeedsRenewal(ended),true);assert.equal(contractNeedsRenewal(null),false);
 const proof=createContract({contractId:'P',org:'MLB',teamId:'T2',signedYear:2030,startYear:2031,years:1,annualSalary:120_000_000,contractType:'PROOF'});const injuredProof=markSalaryPaid(proof,2031);assert.equal(injuredProof.amount,120_000_000);assert.equal(injuredProof.contract.paidTotal,120_000_000);
 console.log('contract policy tests passed');

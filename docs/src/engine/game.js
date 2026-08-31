@@ -6,7 +6,7 @@ import { calculateSalaryCurve, convertRatingBetweenLevels, roundToTenThousandYen
 import { appendSalaryEvaluation, buildIndependentLeagueFallbackEntry, buildSalaryEvaluationEntry, calculateMarketRating, hasActualPerformanceData } from './salary-evaluation-policy.js';
 import { appendSalaryDecision, buildSalaryDecision, salaryReasonLabel } from './salary-explanation-policy.js';
 import { createSalaryDetailController } from '../ui/salary-detail.js';
-import { appendExtension, applyLevelMinimumToUnpaidSchedule, calculateScheduledBuyout, contractContinuationForNextYear, createContract, markSalaryPaid, normalizeContract, salaryDueForYear, transferContract } from './contract-policy.js';
+import { appendExtension, applyLevelMinimumToUnpaidSchedule, calculateScheduledBuyout, contractContinuationForNextYear, contractNeedsRenewal, createContract, markSalaryPaid, normalizeContract, salaryDueForYear, transferContract } from './contract-policy.js';
 import { calculateControlOffer, getContractStage, migrateServiceTime } from './control-period-policy.js';
 import { classifyMarketInjury, injurySalaryMultiplier, isRecentStar } from './injury-market-policy.js';
 import { calculateArbitrationTerms } from './arbitration-policy.js';
@@ -2742,7 +2742,7 @@ $('btn-start').onclick=()=>{
     card('info','来季年俸決定',`${preventDecrease?'昇格後の最低保障を確認':'降格後も現契約を維持'}し、来季の年俸は<b class="hl">${fmtMoney(S.currentSalary)}</b>となった。${changed?salaryDecisionSummary()+' '+salaryDecisionLink():''}`);bindLatestSalaryDetailLink();
   }
   applyPromotionSalary=function(fromLv,toLv){applyLevelSalary(fromLv,toLv,true);};
-  applyDemotionSalary=function(fromLv,toLv){applyLevelSalary(fromLv,toLv,false);};
+  applyDemotionSalary=function(fromLv,toLv){const renewalRequired=contractNeedsRenewal(S.ct);applyLevelSalary(fromLv,toLv,false);if(renewalRequired)markClubInitiatedRenewal(1);};
   markClubInitiatedRenewal=function(years){
     pendingOffseasonSalary={preventDecrease:true,years:1,mult:1,contractType:'CONTROL'};
   };

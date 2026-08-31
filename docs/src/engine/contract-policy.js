@@ -29,6 +29,8 @@ export function salaryDueForYear(contract,year){const c=normalizeContract(contra
 
 export function contractContinuationForNextYear(contract,currentYear){const c=normalizeContract(contract,{currentYear});if(c.remainingYears<=0)return null;const nextYear=Number(currentYear)+1,due=salaryDueForYear(c,nextYear);if(due.scheduleIndex<0||due.alreadyPaid)throw new Error('CONTRACT_NEXT_YEAR_SCHEDULE_MISSING');return{nextYear,nextSalary:due.amount,remainingYears:c.remainingYears};}
 
+export function contractNeedsRenewal(contract){return Boolean(contract)&&normalizeContract(contract,{}).remainingYears<=0;}
+
 export function markSalaryPaid(contract,year){const c=normalizeContract(contract,{currentYear:year}),due=salaryDueForYear(c,year);if(due.scheduleIndex<0)return{contract:c,amount:0,contractEnded:due.contractEnded};if(due.alreadyPaid)throw new Error('CONTRACT_SALARY_ALREADY_PAID');const schedule=cloneSchedule(c.annualSchedule);schedule[due.scheduleIndex].paid=true;return{contract:deriveContractTotals({...c,annualSchedule:schedule}),amount:due.amount,contractEnded:false};}
 
 export function applyLevelMinimumToUnpaidSchedule(contract,minimumAnnualSalary,effectiveYear){const minimum=roundYen(minimumAnnualSalary),schedule=cloneSchedule(contract.annualSchedule).map(item=>!item.paid&&item.year>=Number(effectiveYear)?{...item,amount:Math.max(item.amount,minimum)}:item);return deriveContractTotals({...contract,annualSchedule:schedule});}
