@@ -10,22 +10,37 @@ export function createChoiceActionToken(generation) {
 export function runChoiceAction({
   action, currentMarkup, clear, restore, reportError, errorContext = () => ({}),
   token = createChoiceActionToken(0), currentGeneration = () => token.generation,
-  disableAll = () => {}, debug = (...args) => console.debug(...args),
+  currentToken = null, activateToken = () => {}, isCurrentChoice = () => false,
+  buttonLabel = '', disableAll = () => {}, debug = (...args) => console.debug(...args),
+  reportInvariant = (...args) => console.error(...args),
 }) {
   const startGeneration = token.generation;
-  if (currentGeneration() !== startGeneration) {
-    debug('STALE_CHOICE_ACTION_IGNORED', { actionGeneration: startGeneration, currentGeneration: currentGeneration() });
-    return 'stale';
+  const activeGeneration = currentGeneration();
+  const tokenIsCurrent = currentToken ? currentToken() === token : activeGeneration === startGeneration;
+  if (tokenIsCurrent && activeGeneration !== startGeneration && isCurrentChoice()) {
+    const details = { generation: startGeneration, currentGeneration: activeGeneration, buttonLabel };
+    reportInvariant('CURRENT_CHOICE_MARKED_STALE', details);
+    activateToken(token);
+  }
+  if (!tokenIsCurrent) {
+    const details = { generation: startGeneration, currentGeneration: activeGeneration, buttonLabel };
+    if (isCurrentChoice()) {
+      reportInvariant('CURRENT_CHOICE_MARKED_STALE', details);
+      activateToken(token);
+    } else {
+      debug('STALE_CHOICE_ACTION_IGNORED', details);
+      return 'stale';
+    }
   }
   if (token.running) {
-    debug('DUPLICATE_CHOICE_ACTION_BLOCKED', { generation: startGeneration });
+    debug('DUPLICATE_CHOICE_ACTION_BLOCKED', { generation: startGeneration, currentGeneration: currentGeneration(), buttonLabel });
     return 'duplicate';
   }
   token.running = true;
   disableAll();
   try {
     const result = action();
-    if (currentGeneration() === startGeneration) clear();
+    if (currentToken ? currentToken() === token : currentGeneration() === startGeneration) clear();
     return result;
   } catch (error) {
     const context = errorContext() || {};
@@ -33,7 +48,7 @@ export function runChoiceAction({
     console.error('CHOICE_ACTION_FAILED', details);
     reportError(error, details);
     token.running = false;
-    if (currentGeneration() === startGeneration) restore();
+    if (currentToken ? currentToken() === token : currentGeneration() === startGeneration) restore();
     throw error;
   }
 }
