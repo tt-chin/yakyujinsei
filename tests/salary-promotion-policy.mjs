@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import {
   contractSalaryUpdate,
+  convertRatingBetweenLevels,
   promotionSalaryUpdate,
   salaryAwardBonus,
   salaryEvaluationD,
@@ -22,6 +23,15 @@ const salaryFor = (level, lastD) => {
   const star = Math.max(0, p - 7);
   return Math.max(m[3], Math.min(m[4], m[0] + p * m[1] + star * star * m[2]));
 };
+
+// v1.4.5越境回帰: NPB一軍→CPBL一軍はpar差を1回だけ適用し、現契約年俸を評価に混ぜない。
+const crossBorderLevels = { NPB1: { par: 58 }, CPBL1: { par: 48 } };
+assert.equal(convertRatingBetweenLevels(6, 'NPB1', 'CPBL1', crossBorderLevels), 16);
+assert.equal(convertRatingBetweenLevels(6, 'CPBL1', 'NPB1', crossBorderLevels), -4);
+const currentFixedSalary = 5_000_000;
+const newMarketSalary = salaryFor('CPBL1', convertRatingBetweenLevels(6, 'NPB1', 'CPBL1', crossBorderLevels));
+assert.equal(newMarketSalary, 124_800_000);
+assert.notEqual(newMarketSalary, currentFixedSalary);
 
 // Test 1: NPB二軍で年俸1,600万円の選手が、評価3で一軍昇格しても減俸されない。
 const npbCandidate = salaryFor('NPB1', 3);

@@ -39,6 +39,11 @@ assert.equal((game.match(/\bri\(/g) || []).length, 77);
 assert.equal((game.match(/\bchance\(/g) || []).length, 60);
 assert.equal((game.match(/\bpick\(/g) || []).length, 25);
 
+// v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
+assert.match(game, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\)\.annualSalary/);
+assert.match(game, /signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN',\{annualSalary\}\)/);
+assert.doesNotMatch(game, /annualSalary=salaryCandidate\([^\n]*\b(?:R|ri|chance|pick)\s*\(/);
+
 assert.match(game, /S\.ct=fixedContract/);
 assert.match(game, /createContract\(/);
 assert.doesNotMatch(game, /S\.ct\.annualSalary=S\.currentSalary/);
@@ -67,4 +72,4 @@ assert.match(game,/careerBaseSalary:0/);assert.match(game,/careerIncentive:0/);a
 assert.match(game,/generateBidJitters\(selected\.map\(x=>x\.team\.teamId\),R\)/);assert.match(game,/S\.lastFaMarket\?\.marketKey===key/);assert.match(game,/applyIncentivePayment/);
 assert.match(game,/現契約を継続/);assert.match(game,/来季年俸/);assert.match(game,/契約残り/);assert.match(game,/年俸の再計算はありません/);assert.match(game,/今季の実績は次回の契約評価へ反映されます/);assert.doesNotMatch(game,/今季の好成績は次回の契約評価へ反映されます/);
 assert.match(game,/floorApplied:contractType==='CONTROL'&&control\.floorApplied/);
-console.log('Salary flow v1.4.4 checks passed.');
+console.log('Salary flow v1.4.5 checks passed.');

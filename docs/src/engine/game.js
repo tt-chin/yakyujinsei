@@ -2918,8 +2918,8 @@ $('btn-start').onclick=()=>{
       if(k)opts.push(k);if(c)opts.push(c);if(m)opts.push(m);
     }else if(['KBO','CPBL','MiLB','MLB'].includes(S.org)&&o>=47){
       offerType=crossOfferType(S.org,'NPB');
-      const rec=pickRecord(listByOrg('NPB')),lv=o>=53?'NPB1':'NPB2';
-      opts.push({t:`NPBへ復帰：${rec.name}`,s:`${LV[lv].n}契約`,f:()=>{buyoutRemaining();signTo('NPB',lv,rec.teamId,ri(1,3),1,'RETURN');finish();}});
+      const rec=pickRecord(listByOrg('NPB')),lv=o>=53?'NPB1':'NPB2',annualSalary=salaryCandidate({sourceLevel:S.lv,targetLevel:lv,contractMult:1}).annualSalary;
+      opts.push({t:`NPBへ復帰：${rec.name}`,s:`${LV[lv].n}契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('NPB',lv,rec.teamId,ri(1,3),1,'RETURN',{annualSalary});finish();}});
     }
     if(!opts.length){finish();return;}
     opts.splice(4);opts.push({t:'現在の球団に残留',main:true,f:finish});choose(crossOfferTitle(offerType),opts);
