@@ -71,6 +71,23 @@ assert.match(game, /s:`\$\{LV\[lv\]\.n\}契約｜年俸\$\{fmtMoney\(annualSalar
 assert.match(game, /buyoutRemaining\(\);signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN',\{annualSalary\}\);finish\(\)/);
 assert.match(game, /t:'現在の球団に残留',main:true,f:finish/);
 
+// v1.4.5追加回帰: NPB降格時のCPBLオファーは、移籍前階層から計算した表示年俸を契約へ引き継ぐ。
+assert.match(game, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:'CPBL1',contractMult:1\}\)\.annualSalary/);
+assert.match(game, /s:`台湾プロ野球一軍契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
+assert.match(game, /signTo\('CPBL','CPBL1',undefined,undefined,undefined,undefined,\{annualSalary\}\)/);
+assert.match(game, /\{t:LV\[targetLevel\]\.n\+'への降格を受け入れる',main:true,f:\(\)=>\{const fromLv=S\.lv;S\.lv=targetLevel;applyDemotionSalary\(fromLv,targetLevel\)/);
+
+// 戦力外・再起の同一候補生成関数はKBO、CPBL、MiLBの全階層で同じ年俸を表示・締結する。NPB育成処理は旧経路のまま。
+assert.match(game, /if\(org==='NPB'\)\{candidates\.push\(\{score:LV\[lv\]\.par,t:`\$\{label\}・\$\{rec\.name\}`,s:`\$\{LV\[lv\]\.n\}契約`,f:\(\)=>\{signTo\(org,lv,rec\.teamId,1,1,'RELEASE_RECONTRACT'\)/);
+assert.match(game, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\)\.annualSalary;candidates\.push/);
+assert.match(game, /s:`\$\{LV\[lv\]\.n\}契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
+assert.match(game, /signTo\(org,lv,rec\.teamId,1,1,'RELEASE_RECONTRACT',\{annualSalary\}\)/);
+for (const route of [
+  "pushPro('KBO','KBO1'", "pushPro('KBO','KBO2'",
+  "pushPro('CPBL','CPBL1'", "pushPro('CPBL','CPBL2'",
+  "pushPro('MiLB','A3'", "pushPro('MiLB','A2'", "pushPro('MiLB','A1'", "pushPro('MiLB','R'",
+]) assert.ok(game.includes(route), route);
+
 // 長い球団名はチーム列だけ最大2行とし、成績列は横スクロール内で改行させない。
 assert.match(game, /class="career-table-scroll"/);
 assert.match(game, /class="fin career-table"/);

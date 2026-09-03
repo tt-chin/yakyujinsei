@@ -1670,7 +1670,8 @@ function handleDemotion(o,path,idx){
         if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP())))alts.push({t:'NPB一軍への転職',s:'NPB移籍契約',f:()=>{buyoutRemaining();signTo('NPB','NPB1');advance();}});
         else if(o>=LV.NPB2.min&&chance(50))alts.push({t:'日本の二軍（支配下）へ移籍',f:()=>{buyoutRemaining();signTo('NPB','NPB2');advance();}});
       }else if(S.org==='NPB'&&o>=LV.CPBL1.min&&chance(70)){
-        alts.push({t:'台湾プロ野球からのオファーを受ける',s:'台湾プロ野球一軍契約',f:()=>{buyoutRemaining();signTo('CPBL','CPBL1');advance();}});
+        const annualSalary=salaryCandidate({sourceLevel:S.lv,targetLevel:'CPBL1',contractMult:1}).annualSalary;
+        alts.push({t:'台湾プロ野球からのオファーを受ける',s:`台湾プロ野球一軍契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('CPBL','CPBL1',undefined,undefined,undefined,undefined,{annualSalary});advance();}});
       }
       if(alts.length){
         card('bad','降格通告',`成績が基準に届かず、球団は<b class="dn">${LV[targetLevel].n}</b>への降格を通告。しかし同時に、他リーグからオファーが届いた。`);
@@ -2965,7 +2966,7 @@ $('btn-start').onclick=()=>{
     if(isBelowActiveMinimum(o)){retireBelowActiveMinimum();return;}
     buyoutRemaining(1);
     const candidates=[];
-    const pushPro=(org,lv,label)=>{const rec=pickRecord(listByOrg(org));candidates.push({score:LV[lv].par,t:`${label}・${rec.name}`,s:`${LV[lv].n}契約`,f:()=>{signTo(org,lv,rec.teamId,1,1,'RELEASE_RECONTRACT');advance();}});};
+    const pushPro=(org,lv,label)=>{const rec=pickRecord(listByOrg(org));if(org==='NPB'){candidates.push({score:LV[lv].par,t:`${label}・${rec.name}`,s:`${LV[lv].n}契約`,f:()=>{signTo(org,lv,rec.teamId,1,1,'RELEASE_RECONTRACT');advance();}});return;}const annualSalary=salaryCandidate({sourceLevel:S.lv,targetLevel:lv,contractMult:1}).annualSalary;candidates.push({score:LV[lv].par,t:`${label}・${rec.name}`,s:`${LV[lv].n}契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{signTo(org,lv,rec.teamId,1,1,'RELEASE_RECONTRACT',{annualSalary});advance();}});};
     const pushAma=stage=>{const rec=pickRecord(listByOrg(stage));candidates.push({score:LV[stage].par,t:`${stage==='CORP'?'社会人野球':'独立リーグ'}・${rec.name}`,f:()=>{S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=rec.teamId;S.team=rec.name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;advance();}});};
     if(o>=30)pushAma('IND');if(o>=32)pushAma('CORP');
     const npbDevEligible=S.age<=26||(S.age<=29&&chance(30))||(S.npbYears||0)>0;

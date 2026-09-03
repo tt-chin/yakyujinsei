@@ -44,6 +44,12 @@ assert.match(game, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLeve
 assert.match(game, /signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN',\{annualSalary\}\)/);
 assert.doesNotMatch(game, /annualSalary=salaryCandidate\([^\n]*\b(?:R|ri|chance|pick)\s*\(/);
 
+// 降格時と戦力外後の海外候補でも、表示時の計算はRNGを呼ばず、表示額をsignToへ渡す。
+assert.match(game, /sourceLevel:S\.lv,targetLevel:'CPBL1',contractMult:1/);
+assert.match(game, /sourceLevel:S\.lv,targetLevel:lv,contractMult:1/);
+assert.match(game, /signTo\('CPBL','CPBL1'[^\n]*\{annualSalary\}/);
+assert.match(game, /signTo\(org,lv,rec\.teamId,1,1,'RELEASE_RECONTRACT',\{annualSalary\}\)/);
+
 assert.match(game, /S\.ct=fixedContract/);
 assert.match(game, /createContract\(/);
 assert.doesNotMatch(game, /S\.ct\.annualSalary=S\.currentSalary/);
