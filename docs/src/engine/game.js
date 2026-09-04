@@ -640,7 +640,7 @@ function actToggleSync(){
   t.textContent=a.classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる';
 }
 function escapeDiagnosticHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
-function runWithResultView(action){const navigation=navigationController();navigation?.beginAction();try{return action();}finally{navigation?.completeAction();}}
+function runWithResultView(action){const navigation=navigationController(),before=$('log').querySelectorAll('.card').length;navigation?.beginAction();try{return action();}finally{navigation?.completeAction($('log').querySelectorAll('.card').length>before);}}
 function choose(title,opts){
   actClear(); const a=$('act'), generation=++choiceGeneration, token=createChoiceActionToken(generation);
   activeChoiceToken=token; a.style.pointerEvents='';
