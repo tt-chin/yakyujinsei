@@ -2298,7 +2298,7 @@ HTML解析後、`<script type="module" src="./src/main.js">`からエンジン�
 
 ### 25.10 v1.5.1 記録分類・コンディション表示
 
-成績bucketは階級Masterの`top`を権威値とし、NPB育成・二軍・一軍は`NPB`、KBO二軍・一軍は`KBO`、台湾プロ野球二軍・一軍は`CPBL`、R・1A・2A・3Aは`MINOR`、MLB・独立・社会人は各組織bucketへ集計する。未知または`top`未設定の階級は`UNKNOWN_STAT_BUCKET:<lv>`を送出し、MiLBへfallbackしない。年度成績値とRNG呼出順は変更しない。
+成績bucketは階級Masterの`statBucket`を権威値とし、NPB育成・二軍・一軍は`NPB`、KBO二軍・一軍は`KBO`、台湾プロ野球二軍・一軍は`CPBL`、R・1A・2A・3Aは`MINOR`、MLB・独立・社会人は各組織bucketへ集計する。未知または`statBucket`未設定の階級は`UNKNOWN_STAT_BUCKET:<lv>`を送出し、MiLBへfallbackしない。既存の`top`は一軍判定専用として変更せず、年度成績値とRNG呼出順を維持する。
 
 リハビリ表示は`skipMid===true && seasonFactor===0`を今季全休の現在状態として優先し、残存`rehab`がある場合は残り年数も併記する。能力画面と選手詳細は同じ副作用のない表示関数を使用し、生涯累計は「大きな故障（通算）」と表示する。記録画面は既存の`S.log.length`を「プレー年数」、リーグ別`S.stats`を「リーグ別通算成績」として表示する。
 

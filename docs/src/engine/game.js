@@ -2078,7 +2078,7 @@ const FAN={
 function retireScene(tiers){
   /* tiers： {CPBL：{i、sc}、NPB：...、MLB：...} 出試合実績がある場合だけ作成。 */
   /* 代表リーグは在籍年数が最長のトップリーグ、評価階級はキャリア最高値（i最小）。 */
-  let lg=LV[S.lv]?.top||'MINOR', bestI=4;
+  let lg=LV[S.lv]?.statBucket||'MINOR', bestI=4;
   const order=['MLB','NPB','KBO','CPBL'];
   order.forEach(b=>{ if(tiers[b]&&tiers[b].i<bestI){ bestI=tiers[b].i; } });
   /* 代表リーグ：最大評価のリーグから、在籍年数が最長のものを採用。 */
@@ -2663,11 +2663,11 @@ $('btn-start').onclick=()=>{
   Object.assign(DPN,{SS:'遊撃手','2B':'二塁手','3B':'三塁手','1B':'一塁手',CF:'中堅手',RF:'右翼手',LF:'左翼手',DH:'指名打者',C:'捕手'});
   Object.assign(LV,{
     HS:{n:'高校野球',par:38,min:0,g:20,org:'AMATEUR'}, U:{n:'大学野球',par:44,min:0,g:24,org:'AMATEUR'},
-    CORP:{n:'社会人野球',par:37,min:32,g:45,org:'CORP',top:'CORP'}, IND:{n:'独立リーグ',par:35,min:30,g:70,org:'IND',top:'IND'},
-    NPB_DEV:{n:'NPB育成',par:35,min:30,g:100,org:'NPB',top:'NPB'}, NPB2:{n:'NPB二軍',par:52,min:47,g:100,org:'NPB',top:'NPB'}, NPB1:{n:'NPB一軍',par:58,min:53,g:143,org:'NPB',top:'NPB'},
-    KBO2:{n:'KBOフューチャース',par:39,min:35,g:90,org:'KBO',top:'KBO'}, KBO1:{n:'KBO一軍',par:50,min:47,g:144,org:'KBO',top:'KBO'},
-    CPBL2:{n:'台湾プロ野球二軍',par:39,min:35,g:80,org:'CPBL',top:'CPBL'}, CPBL1:{n:'台湾プロ野球一軍',par:48,min:45,g:120,org:'CPBL',top:'CPBL'},
-    R:{n:'ルーキーリーグ',par:43,min:39,g:55,org:'MiLB',top:'MINOR'}, A1:{n:'1A',par:47,min:43,g:110,org:'MiLB',top:'MINOR'}, A2:{n:'2A',par:51,min:47,g:120,org:'MiLB',top:'MINOR'}, A3:{n:'3A',par:56,min:52,g:130,org:'MiLB',top:'MINOR'}, MLB:{n:'メジャーリーグ',par:63,min:58,g:162,org:'MLB',top:'MLB'}
+    CORP:{n:'社会人野球',par:37,min:32,g:45,org:'CORP',statBucket:'CORP'}, IND:{n:'独立リーグ',par:35,min:30,g:70,org:'IND',top:'IND',statBucket:'IND'},
+    NPB_DEV:{n:'NPB育成',par:35,min:30,g:100,org:'NPB',statBucket:'NPB'}, NPB2:{n:'NPB二軍',par:52,min:47,g:100,org:'NPB',statBucket:'NPB'}, NPB1:{n:'NPB一軍',par:58,min:53,g:143,org:'NPB',top:'NPB',statBucket:'NPB'},
+    KBO2:{n:'KBOフューチャース',par:39,min:35,g:90,org:'KBO',statBucket:'KBO'}, KBO1:{n:'KBO一軍',par:50,min:47,g:144,org:'KBO',top:'KBO',statBucket:'KBO'},
+    CPBL2:{n:'台湾プロ野球二軍',par:39,min:35,g:80,org:'CPBL',statBucket:'CPBL'}, CPBL1:{n:'台湾プロ野球一軍',par:48,min:45,g:120,org:'CPBL',top:'CPBL',statBucket:'CPBL'},
+    R:{n:'ルーキーリーグ',par:43,min:39,g:55,org:'MiLB',statBucket:'MINOR'}, A1:{n:'1A',par:47,min:43,g:110,org:'MiLB',statBucket:'MINOR'}, A2:{n:'2A',par:51,min:47,g:120,org:'MiLB',statBucket:'MINOR'}, A3:{n:'3A',par:56,min:52,g:130,org:'MiLB',statBucket:'MINOR'}, MLB:{n:'メジャーリーグ',par:63,min:58,g:162,org:'MLB',top:'MLB',statBucket:'MLB'}
   });
   Object.assign(PATHS,{NPB:['NPB_DEV','NPB2','NPB1'],KBO:['KBO2','KBO1'],CPBL:['CPBL2','CPBL1'],MiLB:['R','A1','A2','A3','MLB'],MLB:['R','A1','A2','A3','MLB'],IND:['IND'],CORP:['CORP']});
   if(typeof LG_N==='object')Object.assign(LG_N,{NPB:'NPB',KBO:'KBO',CPBL:'CPBL',MLB:'MLB',MINOR:'マイナー／二軍',IND:'独立',CORP:'社会人'});
