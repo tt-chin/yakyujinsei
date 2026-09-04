@@ -58,16 +58,17 @@
   </header>
   <nav id="main-nav" aria-label="メインメニュー" style="display:none">
     <button type="button" data-main-view="home" aria-current="page">ホーム</button>
-    <button type="button" data-main-view="action">育成・行動<span class="nav-pending" hidden>選択待ち</span></button>
+    <button type="button" data-main-view="ability">能力</button>
     <button type="button" data-main-view="record">記録</button>
     <button type="button" data-main-view="player">選手詳細</button>
   </nav>
   <div id="view-host">
-    <section id="view-home" class="main-view" data-main-panel="home"><main id="log"></main></section>
-    <section id="view-action" class="main-view" data-main-panel="action" hidden>
+    <section id="view-home" class="main-view" data-main-panel="home">
       <button id="act-toggle" style="display:none">⌄ 選択肢を閉じる</button>
       <footer id="act" style="display:none"></footer>
+      <main id="log"></main>
     </section>
+    <section id="view-ability" class="main-view" data-main-panel="ability" hidden><div id="ability-summary"></div></section>
     <section id="view-record" class="main-view" data-main-panel="record" hidden><div id="record-summary"></div></section>
     <section id="view-player" class="main-view" data-main-panel="player" hidden>
       <div id="detail-tabs" role="tablist" aria-label="選手詳細">
