@@ -58,9 +58,8 @@
   </header>
   <nav id="main-nav" aria-label="メインメニュー" style="display:none">
     <button type="button" data-main-view="home" aria-current="page">ホーム</button>
-    <button type="button" data-main-view="ability">能力</button>
-    <button type="button" data-main-view="record">記録</button>
-    <button type="button" data-main-view="player">選手詳細</button>
+    <button type="button" data-main-view="player">選手</button>
+    <button type="button" data-main-view="career">キャリア</button>
   </nav>
   <div id="view-host">
     <section id="view-home" class="main-view" data-main-panel="home">
@@ -68,16 +67,21 @@
       <button id="act-toggle" style="display:none">⌄ 選択肢を閉じる</button>
       <footer id="act" style="display:none"></footer>
     </section>
-    <section id="view-ability" class="main-view" data-main-panel="ability" hidden><div id="ability-summary"></div></section>
-    <section id="view-record" class="main-view" data-main-panel="record" hidden><div id="record-summary"></div></section>
     <section id="view-player" class="main-view" data-main-panel="player" hidden>
-      <div id="detail-tabs" role="tablist" aria-label="選手詳細">
-        <button type="button" role="tab" data-detail-tab="achievements" aria-selected="true">実績</button>
-        <button type="button" role="tab" data-detail-tab="contract" aria-selected="false">契約・収入</button>
-        <button type="button" role="tab" data-detail-tab="traits" aria-selected="false">特性</button>
-        <button type="button" role="tab" data-detail-tab="yearly" aria-selected="false">年度別</button>
+      <div id="player-tabs" role="tablist" aria-label="選手">
+        <button type="button" role="tab" data-player-tab="ability" aria-selected="true">能力・コンディション</button>
+        <button type="button" role="tab" data-player-tab="traits" aria-selected="false">特性</button>
       </div>
-      <div id="detail-content" role="tabpanel" tabindex="0"></div>
+      <div id="player-content" role="tabpanel" tabindex="0"></div>
+    </section>
+    <section id="view-career" class="main-view" data-main-panel="career" hidden>
+      <div id="career-tabs" role="tablist" aria-label="キャリア">
+        <button type="button" role="tab" data-career-tab="stats" aria-selected="true">通算成績</button>
+        <button type="button" role="tab" data-career-tab="achievements" aria-selected="false">実績</button>
+        <button type="button" role="tab" data-career-tab="contract" aria-selected="false">契約・収入</button>
+        <button type="button" role="tab" data-career-tab="yearly" aria-selected="false">年度別</button>
+      </div>
+      <div id="career-content" role="tabpanel" tabindex="0"></div>
     </section>
   </div>
 </div>
