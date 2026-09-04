@@ -17,6 +17,8 @@ import { acceptDraftSelection, declineDraftSelection, draftSigningTerms, isDraft
 import { createChoiceActionToken, runChoiceAction } from '../ui/choice-action.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
+import { resolveStatBucket } from './stat-bucket.js';
+import { formatRehabStatus } from '../ui/condition-view-model.js';
 import { canPlayHighSchoolFall, canPlaySenbatsu, nextSenbatsuEligibleYear, qualificationResult, qualifiesForChampionship, qualifiesForCorporateJapan, qualifiesForUniversityJingu, tournamentResult } from './domestic-tournament-policy.js';
 
 window.__YAKYO_JP_DATA__ = JP_DATA;
@@ -257,7 +259,7 @@ function newState(name,pos,role){
     stats:{CPBL:null,NPB:null,MLB:null,MINOR:null},honors:[],intlCount:0,intlLock:null,intlStat:{G:0,PA:0,AB:0,H:0,HR:0,RBI:0,IP:0,SO:0,ER:0,W:0,SV:0},intlBest:null,dpos:null,dposYears:{},roleYears:{},tradeRefuse:0,champThisTeam:false,svc:0,svcOrg:null,faElig:false,tradeHeat:0,complainCount:0,demotionRefused:false,tj:0,tjCount:0,effort:'ノーマル',tjSuccess:0,love:{st:'single',partner:null,kids:0,caught:0,affairs:0,exes:[],dyrs:0,datedTimes:0},traits2:{},log:[],ct:null,done:false};
 }
 function blankStat(){return {yr:0,G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,AS:0,DEF:0};}
-function bucketOf(lv){ const l=lv&&LV[lv]; return l&&l.top?l.top:'MINOR'; } /* アマチュア引退時はlvが空なのでMINORへ分類。 */
+function bucketOf(lv){return resolveStatBucket(LV,lv);}
 function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隠し特性解放：'+name,desc); board(0); }
 function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -597,8 +599,9 @@ const TRAIT_LABELS={genius:'天才',glass:'スペランカー',iron:'鉄人',scu
 function currentAffiliation(){if(!S)return '記録なし';if(S.stage==='HS'||S.stage==='U'||S.stage==='CORP'||S.stage==='IND')return S.team||'記録なし';return typeof S.teamName==='function'?S.teamName():S.team||'記録なし';}
 function statSummary(bucket,st){if(!st)return '';if(S.pos==='P')return `登板 ${st.G||0}｜投球回 ${fmtIP(st.IP||0)}｜${st.W||0}勝${st.L||0}敗｜奪三振 ${st.SO||0}`;const pa=st.PA||0,ab=st.AB||0,avg=ab?(st.H||0)/ab:0;return `出場 ${st.G||0}｜打席 ${pa}｜打率 ${avg.toFixed(3).replace(/^0/,'')}｜本塁打 ${st.HR||0}｜打点 ${st.RBI||0}`;}
 function buildRecordViewModel(){const labels={NPB:'NPB',KBO:'KBO',CPBL:'台湾プロ野球',MLB:'MLB',MINOR:'MiLB',IND:'独立リーグ',CORP:'社会人野球'};return Object.freeze({seasons:Array.isArray(S.log)?S.log.length:0,affiliation:currentAffiliation(),internationalCount:S.intlCount||0,honorCount:Array.isArray(S.honors)?S.honors.length:0,careerEarnings:fmtMoney(S.careerEarnings||0),totals:Object.entries(S.stats||{}).filter(([,st])=>st).map(([bucket,st])=>Object.freeze({label:labels[bucket]||bucket,summary:statSummary(bucket,st)}))});}
-function buildAbilityViewModel(){const condition=[{label:'スタミナ',value:String(S.ab.sta||0)},{label:'シーズン稼働率',value:`${Math.round((S.seasonFactor??1)*100)}%`},{label:'次回故障リスク加算',value:`${S.injNext||0}%`},{label:'今季一時故障リスク加算',value:`${S.tmpInj||0}%`},{label:'大きな故障',value:`${S.bigInj||0}回`},{label:'リハビリ',value:S.rehab>0?`残り${S.rehab}年`:'なし'}];if(S.pos==='P')condition.push({label:'TJゲージ',value:String(S.tj||0)},{label:'トミー・ジョン手術',value:`${S.tjCount||0}回`});return Object.freeze({overall:ovr(),positionLabel:POSN[S.pos],abilities:POS_AB[S.pos].map(key=>Object.freeze({key,label:ABL[key],current:S.ab[key]||0,potential:S.pot?.[key]??62})),condition:condition.map(item=>Object.freeze(item))});}
-function buildPlayerDetailViewModel(){const active=Object.entries(S.traits||{}).filter(([,enabled])=>enabled).map(([key])=>TRAIT_LABELS[key]||key);const removed=(S.removed||[]).map(item=>typeof item==='string'?item:String(item?.name||item?.key||item));const condition=[`大きな故障 ${S.bigInj||0}回`];if(S.pos==='P')condition.push(`トミー・ジョン手術 ${S.tjCount||0}回`,S.rehab>0?`リハビリ中（残り${S.rehab}年）`:`TJゲージ ${S.tj||0}`);else if(S.rehab>0)condition.push(`リハビリ中（残り${S.rehab}年）`);const ct=S.ct||null,contractDescription=ct?`${ct.startYear||S.year}～${ct.endYear||S.year}年 ${ct.contractType||'契約'}`:'契約なし';return Object.freeze({achievements:[...(S.honors||[])],contract:Object.freeze({currentSalary:fmtMoney(S.currentSalary||0),description:contractDescription,remainingYears:ct?`${ct.remainingYears||0}年`:'—',careerEarnings:fmtMoney(S.careerEarnings||0)}),traits:Object.freeze({active,removed,condition}),yearly:(S.log||[]).map(row=>Object.freeze({year:row.y,age:row.age,team:row.tm,summary:row.line||''}))});}
+function rehabStatusText(){return formatRehabStatus(S);}
+function buildAbilityViewModel(){const condition=[{label:'スタミナ',value:String(S.ab.sta||0)},{label:'シーズン稼働率',value:`${Math.round((S.seasonFactor??1)*100)}%`},{label:'次回故障リスク加算',value:`${S.injNext||0}%`},{label:'今季一時故障リスク加算',value:`${S.tmpInj||0}%`},{label:'大きな故障（通算）',value:`${S.bigInj||0}回`},{label:'リハビリ',value:rehabStatusText()}];if(S.pos==='P')condition.push({label:'TJゲージ',value:String(S.tj||0)},{label:'トミー・ジョン手術',value:`${S.tjCount||0}回`});return Object.freeze({overall:ovr(),positionLabel:POSN[S.pos],abilities:POS_AB[S.pos].map(key=>Object.freeze({key,label:ABL[key],current:S.ab[key]||0,potential:S.pot?.[key]??62})),condition:condition.map(item=>Object.freeze(item))});}
+function buildPlayerDetailViewModel(){const active=Object.entries(S.traits||{}).filter(([,enabled])=>enabled).map(([key])=>TRAIT_LABELS[key]||key);const removed=(S.removed||[]).map(item=>typeof item==='string'?item:String(item?.name||item?.key||item));const condition=[`大きな故障（通算） ${S.bigInj||0}回`,`リハビリ ${rehabStatusText()}`];if(S.pos==='P')condition.push(`トミー・ジョン手術 ${S.tjCount||0}回`,`TJゲージ ${S.tj||0}`);const ct=S.ct||null,contractDescription=ct?`${ct.startYear||S.year}～${ct.endYear||S.year}年 ${ct.contractType||'契約'}`:'契約なし';return Object.freeze({achievements:[...(S.honors||[])],contract:Object.freeze({currentSalary:fmtMoney(S.currentSalary||0),description:contractDescription,remainingYears:ct?`${ct.remainingYears||0}年`:'—',careerEarnings:fmtMoney(S.careerEarnings||0)}),traits:Object.freeze({active,removed,condition}),yearly:(S.log||[]).map(row=>Object.freeze({year:row.y,age:row.age,team:row.tm,summary:row.line||''}))});}
 /* UI基盤。 */
 const $=id=>document.getElementById(id);
 var _curYearBody=null; /* 當前年度的內容容器。 */
@@ -2075,7 +2078,7 @@ const FAN={
 function retireScene(tiers){
   /* tiers： {CPBL：{i、sc}、NPB：...、MLB：...} 出試合実績がある場合だけ作成。 */
   /* 代表リーグは在籍年数が最長のトップリーグ、評価階級はキャリア最高値（i最小）。 */
-  let lg=bucketOf(S.lv), bestI=4;
+  let lg=LV[S.lv]?.top||'MINOR', bestI=4;
   const order=['MLB','NPB','KBO','CPBL'];
   order.forEach(b=>{ if(tiers[b]&&tiers[b].i<bestI){ bestI=tiers[b].i; } });
   /* 代表リーグ：最大評価のリーグから、在籍年数が最長のものを採用。 */
@@ -2660,11 +2663,11 @@ $('btn-start').onclick=()=>{
   Object.assign(DPN,{SS:'遊撃手','2B':'二塁手','3B':'三塁手','1B':'一塁手',CF:'中堅手',RF:'右翼手',LF:'左翼手',DH:'指名打者',C:'捕手'});
   Object.assign(LV,{
     HS:{n:'高校野球',par:38,min:0,g:20,org:'AMATEUR'}, U:{n:'大学野球',par:44,min:0,g:24,org:'AMATEUR'},
-    CORP:{n:'社会人野球',par:37,min:32,g:45,org:'CORP'}, IND:{n:'独立リーグ',par:35,min:30,g:70,org:'IND',top:'IND'},
-    NPB_DEV:{n:'NPB育成',par:35,min:30,g:100,org:'NPB'}, NPB2:{n:'NPB二軍',par:52,min:47,g:100,org:'NPB'}, NPB1:{n:'NPB一軍',par:58,min:53,g:143,org:'NPB',top:'NPB'},
-    KBO2:{n:'KBOフューチャース',par:39,min:35,g:90,org:'KBO'}, KBO1:{n:'KBO一軍',par:50,min:47,g:144,org:'KBO',top:'KBO'},
-    CPBL2:{n:'台湾プロ野球二軍',par:39,min:35,g:80,org:'CPBL'}, CPBL1:{n:'台湾プロ野球一軍',par:48,min:45,g:120,org:'CPBL',top:'CPBL'},
-    R:{n:'ルーキーリーグ',par:43,min:39,g:55,org:'MiLB'}, A1:{n:'1A',par:47,min:43,g:110,org:'MiLB'}, A2:{n:'2A',par:51,min:47,g:120,org:'MiLB'}, A3:{n:'3A',par:56,min:52,g:130,org:'MiLB'}, MLB:{n:'メジャーリーグ',par:63,min:58,g:162,org:'MLB',top:'MLB'}
+    CORP:{n:'社会人野球',par:37,min:32,g:45,org:'CORP',top:'CORP'}, IND:{n:'独立リーグ',par:35,min:30,g:70,org:'IND',top:'IND'},
+    NPB_DEV:{n:'NPB育成',par:35,min:30,g:100,org:'NPB',top:'NPB'}, NPB2:{n:'NPB二軍',par:52,min:47,g:100,org:'NPB',top:'NPB'}, NPB1:{n:'NPB一軍',par:58,min:53,g:143,org:'NPB',top:'NPB'},
+    KBO2:{n:'KBOフューチャース',par:39,min:35,g:90,org:'KBO',top:'KBO'}, KBO1:{n:'KBO一軍',par:50,min:47,g:144,org:'KBO',top:'KBO'},
+    CPBL2:{n:'台湾プロ野球二軍',par:39,min:35,g:80,org:'CPBL',top:'CPBL'}, CPBL1:{n:'台湾プロ野球一軍',par:48,min:45,g:120,org:'CPBL',top:'CPBL'},
+    R:{n:'ルーキーリーグ',par:43,min:39,g:55,org:'MiLB',top:'MINOR'}, A1:{n:'1A',par:47,min:43,g:110,org:'MiLB',top:'MINOR'}, A2:{n:'2A',par:51,min:47,g:120,org:'MiLB',top:'MINOR'}, A3:{n:'3A',par:56,min:52,g:130,org:'MiLB',top:'MINOR'}, MLB:{n:'メジャーリーグ',par:63,min:58,g:162,org:'MLB',top:'MLB'}
   });
   Object.assign(PATHS,{NPB:['NPB_DEV','NPB2','NPB1'],KBO:['KBO2','KBO1'],CPBL:['CPBL2','CPBL1'],MiLB:['R','A1','A2','A3','MLB'],MLB:['R','A1','A2','A3','MLB'],IND:['IND'],CORP:['CORP']});
   if(typeof LG_N==='object')Object.assign(LG_N,{NPB:'NPB',KBO:'KBO',CPBL:'CPBL',MLB:'MLB',MINOR:'マイナー／二軍',IND:'独立',CORP:'社会人'});
