@@ -28,5 +28,5 @@ const traitList=values=>{const ul=document.createElement('ul');ul.className='ui-
 export function renderTraits(container,model){
   container.replaceChildren();
   if(!model.active.length&&!model.removed.length){const section=document.createElement('section');section.className='ui-panel';const p=document.createElement('p');p.className='ui-empty';p.textContent='現在表示できる特性はありません。';section.appendChild(p);container.appendChild(section);return;}
-  [['保有特性',model.active],['消失特性',model.removed]].forEach(([title,values])=>{const section=document.createElement('section');section.className='ui-panel';const h=document.createElement('h2');h.textContent=title;section.appendChild(h);if(values.length)section.appendChild(traitList(values));else{const p=document.createElement('p');p.className='ui-empty';p.textContent='記録なし';section.appendChild(p);}container.appendChild(section);});
+  [['保有特性',model.active],['失った特性',model.removed]].forEach(([title,values])=>{const section=document.createElement('section');section.className='ui-panel';const h=document.createElement('h2');h.textContent=title;section.appendChild(h);if(values.length)section.appendChild(traitList(values));else{const p=document.createElement('p');p.className='ui-empty';p.textContent=title==='失った特性'?'失った特性はありません。':'記録なし';section.appendChild(p);}container.appendChild(section);});
 }

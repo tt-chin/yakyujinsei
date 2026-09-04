@@ -6,8 +6,8 @@ const decision={salaryYear:2028,previousSalary:38_000_000,finalSalary:46_000_000
 const contract={schemaVersion:3,contractType:'LONG',startYear:2028,endYear:2029,guaranteedTotal:92_000_000,paidTotal:46_000_000,remainingValue:46_000_000,incentive:{annualMax:3_220_000},offerBreakdown:{marketSalary:40_000_000,injuryMultiplier:.82,positionMultiplier:1.15,contractTypeMultiplier:.95,teamDemandMultiplier:1.05,competitionMultiplier:1.025,finalAnnualSalary:46_000_000},annualSchedule:[{year:2028,amount:46_000_000,paid:true},{year:2029,amount:46_000_000,paid:false}],segments:[{type:'LONG',startYear:2028,endYear:2029,annualSalary:46_000_000}]};
 const html=salaryDetailMarkup(decision,{fmtMoney,currentSalary:46_000_000,isProfessional:true,contract});
 assert.match(html,/4,600万円/);assert.match(html,/\+800万円/);assert.match(html,/\+21\.1%/);assert.match(html,/2027.*60% = 3\.15/s);assert.match(html,/今季の実績が市場評価を押し上げました/);
-assert.match(html,/9,200万円/);assert.match(html,/支払済/);assert.match(html,/予定/);assert.match(html,/契約セグメント/);
-assert.match(html,/出来高/);assert.match(html,/FAオファー内訳/);assert.match(html,/球団需要/);assert.match(html,/競合補正/);
+assert.match(html,/9,200万円/);assert.match(html,/支払済み/);assert.match(html,/予定/);assert.match(html,/契約期間別内訳/);assert.match(html,/年度別年俸/);
+assert.match(html,/出来高/);assert.match(html,/FAオファー内訳/);assert.match(html,/球団の需要度/);assert.match(html,/競合補正/);
 assert.match(html,/MLB年俸調停対象（在籍4年）/);assert.match(html,/大きな故障/);assert.match(html,/×0\.82/);assert.match(html,/前年の75%/);assert.match(html,/年俸調停結果/);
 assert.match(salaryDetailMarkup(null,{fmtMoney,currentSalary:0,isProfessional:false}),/プロ契約はまだありません/);
 

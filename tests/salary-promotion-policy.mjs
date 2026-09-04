@@ -90,7 +90,7 @@ const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
 assert.doesNotMatch(game, /次年度年俸：オフシーズン確定後/);
 assert.match(game, /今季支給年俸：<b class="hl">\$\{fmtMoney\(paid\)\}<\/b>｜出来高：/);
 assert.match(game, /card\('info','来季年俸決定',`所属先の確定に伴い、来季の年俸は/);
-assert.match(game, /\$\{preventDecrease\?'昇格後の最低保障を確認':'降格後も現契約を維持'\}し、来季の年俸は/);
+assert.match(game, /\$\{preventDecrease\?'昇格後の最低保証を確認':'降格後も現契約を維持'\}し、来季の年俸は/);
 assert.doesNotMatch(game, /次年度年俸：\$\{fmtMoney\(S\.currentSalary\)\}/);
 assert.match(game, /const fromLv=S\.lv;\s*S\.lv=to; applyPromotionSalary\(fromLv,to\);/);
 assert.match(game, /Object\.values\(PATHS\)\.some\(path=>path\.includes\(fromLv\)&&path\.includes\(toLv\)\)/);
