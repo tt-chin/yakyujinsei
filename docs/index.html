@@ -19,6 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./styles/base.css">
+<link rel="stylesheet" href="./styles/ui-navigation.css">
 <link rel="stylesheet" href="./styles/jp-theme.css">
 </head>
   <body>
@@ -55,9 +56,29 @@
       <span class="lamp" id="lp2"><i></i>シーズン終了</span>
     </div>
   </header>
-  <main id="log"></main>
-  <button id="act-toggle" style="display:none">⌄ 選択肢を閉じる</button>
-  <footer id="act" style="display:none"></footer>
+  <nav id="main-nav" aria-label="メインメニュー" style="display:none">
+    <button type="button" data-main-view="home" aria-current="page">ホーム</button>
+    <button type="button" data-main-view="action">育成・行動<span class="nav-pending" hidden>選択待ち</span></button>
+    <button type="button" data-main-view="record">記録</button>
+    <button type="button" data-main-view="player">選手詳細</button>
+  </nav>
+  <div id="view-host">
+    <section id="view-home" class="main-view" data-main-panel="home"><main id="log"></main></section>
+    <section id="view-action" class="main-view" data-main-panel="action" hidden>
+      <button id="act-toggle" style="display:none">⌄ 選択肢を閉じる</button>
+      <footer id="act" style="display:none"></footer>
+    </section>
+    <section id="view-record" class="main-view" data-main-panel="record" hidden><div id="record-summary"></div></section>
+    <section id="view-player" class="main-view" data-main-panel="player" hidden>
+      <div id="detail-tabs" role="tablist" aria-label="選手詳細">
+        <button type="button" role="tab" data-detail-tab="achievements" aria-selected="true">実績</button>
+        <button type="button" role="tab" data-detail-tab="contract" aria-selected="false">契約・収入</button>
+        <button type="button" role="tab" data-detail-tab="traits" aria-selected="false">特性</button>
+        <button type="button" role="tab" data-detail-tab="yearly" aria-selected="false">年度別</button>
+      </div>
+      <div id="detail-content" role="tabpanel" tabindex="0"></div>
+    </section>
+  </div>
 </div>
 <section id="salary-detail-panel" class="salary-detail-panel" role="dialog" aria-modal="true" aria-labelledby="salary-detail-title" hidden>
   <div class="salary-detail-dialog"><button id="salary-detail-close" class="salary-detail-close" aria-label="閉じる">×</button><h2 id="salary-detail-title" tabindex="-1">年俸の内訳</h2><div id="salary-detail-body"></div></div>

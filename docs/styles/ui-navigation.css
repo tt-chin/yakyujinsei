@@ -1,0 +1,12 @@
+#main-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:8px 10px;background:var(--bg);border-bottom:1px solid var(--edge)}
+#main-nav button,#detail-tabs button{min-width:0;border:1px solid var(--edge);border-radius:8px;background:var(--panel);color:var(--dim);font:700 12px var(--sans);padding:8px 3px;cursor:pointer;overflow-wrap:anywhere}
+#main-nav button[aria-current="page"],#detail-tabs button[aria-selected="true"]{background:var(--panel2);border-color:var(--amber);color:var(--amber);box-shadow:inset 0 -2px 0 var(--amber)}
+.nav-pending{display:block;color:var(--bad);font-size:9px;line-height:1.1;margin-top:1px}.nav-pending[hidden]{display:none}
+#view-host{display:flex;flex:1;min-height:0;flex-direction:column}.main-view{flex:1;min-width:0}.main-view[hidden]{display:none!important}
+#view-home{display:flex;flex-direction:column}#view-action{display:flex;flex-direction:column;justify-content:flex-end}
+#view-record,#view-player{padding:12px 14px 24px}.ui-panel{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px 14px;margin-bottom:10px;overflow-wrap:anywhere}
+.ui-panel h2{font-size:15px;color:var(--amber);margin-bottom:8px}.ui-panel h3{font-size:12px;color:var(--dim);margin:10px 0 4px}.ui-data-list{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}.ui-data-list dt{color:var(--dim)}.ui-data-list dd{text-align:right;font-family:var(--mono)}
+.ui-empty{color:var(--dim);font-size:13px}.ui-list{padding-left:20px}.ui-list li+li{margin-top:4px}
+#detail-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-bottom:10px}#detail-content:focus{outline:none}
+.ui-yearly-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.ui-yearly-table{width:max-content;min-width:100%;border-collapse:collapse;font-size:12px}.ui-yearly-table th,.ui-yearly-table td{padding:5px;border-bottom:1px solid var(--edge);white-space:nowrap;text-align:left}.ui-yearly-table td:last-child{white-space:normal;min-width:180px}
+@media(max-width:360px){#main-nav button,#detail-tabs button{font-size:10.5px;padding:7px 2px}#main-nav{padding-inline:6px}.nav-pending{font-size:8px}}
