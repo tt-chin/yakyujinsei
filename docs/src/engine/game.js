@@ -642,8 +642,7 @@ function actToggleSync(){
 }
 function escapeDiagnosticHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 let resultViewDepth=0;
-function scrollAction(){try{requestAnimationFrame(()=>$('act').scrollIntoView({block:'start'}));}catch(_){}
-}
+function scrollAction(){scrollBottom();}
 function runWithResultView(action){const before=$('log').querySelectorAll('.card').length;resultViewDepth++;try{return action();}finally{resultViewDepth--;if($('log').querySelectorAll('.card').length>before)scrollBottom();else if(!resultViewDepth)scrollAction();}}
 function choose(title,opts){
   actClear(); const a=$('act'), generation=++choiceGeneration, token=createChoiceActionToken(generation);

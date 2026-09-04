@@ -12,7 +12,9 @@ const css=fs.readFileSync(new URL('../docs/styles/ui-navigation.css',import.meta
 for(const id of ['board','log','act-toggle','act'])assert.equal((html.match(new RegExp(`id="${id}"`,'g'))||[]).length,1,`${id} must be unique`);
 for(const view of ['home','ability','record','player'])assert.match(html,new RegExp(`data-main-panel="${view}"`));
 assert.doesNotMatch(html,/data-main-(?:view|panel)="action"|view-action|育成・行動/);
-assert.ok(html.indexOf('id="act-toggle"')<html.indexOf('id="act"')&&html.indexOf('id="act"')<html.indexOf('id="log"'),'home DOM order must be act-toggle, act, log');
+assert.ok(html.indexOf('id="log"')<html.indexOf('id="act-toggle"')&&html.indexOf('id="act-toggle"')<html.indexOf('id="act"'),'home DOM order must be log, act-toggle, act');
+assert.match(css,/#view-home #log\{flex:1\}/);
+assert.match(game,/function scrollAction\(\)\{scrollBottom\(\);\}/);
 for(const tab of ['achievements','contract','traits','yearly'])assert.match(html,new RegExp(`data-detail-tab="${tab}"`));
 assert.match(html,/styles\/ui-navigation\.css/);
 assert.match(game,/const navigation=initNavigation/);
