@@ -1,7 +1,7 @@
 import { renderRecord } from './record-view.js';
 import { renderPlayerDetail } from './player-detail.js';
 
-const uiState={activeMainView:'home',activeDetailTab:'achievements',actionPending:false};
+const uiState={activeMainView:'home',activeDetailTab:'achievements',actionPending:false,actionExecuting:false};
 let controller=null;
 
 export function initNavigation({documentRef=document,onOpenRecord,onOpenPlayer,onOpenSalaryDetail}){
@@ -13,7 +13,7 @@ export function initNavigation({documentRef=document,onOpenRecord,onOpenPlayer,o
   const selectMain=view=>{uiState.activeMainView=view;panels.forEach(panel=>{panel.hidden=panel.dataset.mainPanel!==view;});mainButtons.forEach(button=>{if(button.dataset.mainView===view)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});if(view==='record')renderRecord(documentRef.getElementById('record-summary'),onOpenRecord());if(view==='player')selectDetail(uiState.activeDetailTab);};
   mainButtons.forEach(button=>button.addEventListener('click',()=>selectMain(button.dataset.mainView)));
   tabs.forEach(button=>button.addEventListener('click',()=>selectDetail(button.dataset.detailTab)));
-  controller={show(){syncBoardHeight();nav.style.display='grid';selectMain('home');},reset(){uiState.activeMainView='home';uiState.activeDetailTab='achievements';setPending(false);selectMain('home');},showAction(){setPending(true);selectMain('action');},clearAction(){setPending(false);},selectMain,state:uiState};
+  controller={show(){syncBoardHeight();nav.style.display='grid';selectMain('home');},reset(){uiState.activeMainView='home';uiState.activeDetailTab='achievements';uiState.actionExecuting=false;setPending(false);selectMain('home');},beginAction(){uiState.actionExecuting=true;},completeAction(){uiState.actionExecuting=false;selectMain('home');},showAction(){setPending(true);if(!uiState.actionExecuting)selectMain('action');},clearAction(){setPending(false);},selectMain,state:uiState};
   return controller;
 }
 

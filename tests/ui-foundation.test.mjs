@@ -24,4 +24,10 @@ assert.match(css,/#main-nav\{position:sticky;top:var\(--board-height,0px\);z-ind
 assert.match(navigation,/ResizeObserver\(syncBoardHeight\)/);
 assert.match(game,/createIncentiveTerms\(\{org:S\.org,annualSalary:annual\}\)/);
 assert.match(game,/candidate=\{\.\.\.base,contractMult:\.9\*injury,annualSalary:annual\}/);
+assert.match(navigation,/actionExecuting:false/);
+assert.match(navigation,/beginAction\(\)\{uiState\.actionExecuting=true;\}/);
+assert.match(navigation,/completeAction\(\)\{uiState\.actionExecuting=false;selectMain\('home'\);\}/);
+assert.match(navigation,/showAction\(\)\{setPending\(true\);if\(!uiState\.actionExecuting\)selectMain\('action'\);\}/);
+assert.match(game,/b\.onclick=\(\)=>runWithResultView\(\(\)=>runChoiceAction/);
+assert.match(game,/c\.onclick=\(\)=>runWithResultView\(\(\)=>\{ actClear\(\); allocDone/);
 console.log('UI foundation static checks passed');
