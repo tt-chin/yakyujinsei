@@ -6,6 +6,7 @@ const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url)
 const navigation=fs.readFileSync(new URL('../docs/src/ui/navigation.js',import.meta.url),'utf8');
 const record=fs.readFileSync(new URL('../docs/src/ui/record-view.js',import.meta.url),'utf8');
 const player=fs.readFileSync(new URL('../docs/src/ui/player-detail.js',import.meta.url),'utf8');
+const css=fs.readFileSync(new URL('../docs/styles/ui-navigation.css',import.meta.url),'utf8');
 
 for(const id of ['board','log','act-toggle','act'])assert.equal((html.match(new RegExp(`id="${id}"`,'g'))||[]).length,1,`${id} must be unique`);
 for(const view of ['home','action','record','player'])assert.match(html,new RegExp(`data-main-panel="${view}"`));
@@ -19,4 +20,8 @@ for(const source of [navigation,record,player]){
 }
 assert.doesNotMatch(navigation,/\b(?:localStorage|sessionStorage|indexedDB)\b/);
 assert.doesNotMatch(game,/uiState\s*:/);
+assert.match(css,/#main-nav\{position:sticky;top:var\(--board-height,0px\);z-index:19/);
+assert.match(navigation,/ResizeObserver\(syncBoardHeight\)/);
+assert.match(game,/createIncentiveTerms\(\{org:S\.org,annualSalary:annual\}\)/);
+assert.match(game,/candidate=\{\.\.\.base,contractMult:\.9\*injury,annualSalary:annual\}/);
 console.log('UI foundation static checks passed');
