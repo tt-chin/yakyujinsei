@@ -1562,7 +1562,7 @@ function phaseEnd(){
 let applyPromotionSalary=()=>{};
 let applyDemotionSalary=()=>{};
 let markClubInitiatedRenewal=()=>{};
-let salaryDForContract=d=>d;
+let salaryDForContract=d=>d, salaryCandidate;
 let recordSalaryEvaluation=()=>{};
 let recordIndependentSalaryEvaluation=()=>{};
 let appendContractExtension=()=>{};
@@ -2734,7 +2734,7 @@ $('btn-start').onclick=()=>{
     return result.components.length?{...result,source:'SALARY_EVALUATION_HISTORY'}:{marketRating:Number(S.lastD)||0,components:[],source:'LEGACY_RATING_FALLBACK'};
   };
   const currentMarketRating=()=>currentMarketResult().marketRating;
-  const salaryCandidate=({sourceLevel=S.lv,targetLevel=S.lv,rating=currentMarketRating(),contractMult=1,positionMult=dpMult()}={})=>{
+  salaryCandidate=({sourceLevel=S.lv,targetLevel=S.lv,rating=currentMarketRating(),contractMult=1,positionMult=dpMult()}={})=>{
     const convertedRating=convertRatingBetweenLevels(rating,sourceLevel,targetLevel,LV);
     const baseSalary=salaryFor(targetLevel,convertedRating);
     return{sourceLevel,targetLevel,sourceRating:rating,convertedRating,baseSalary,contractMult,positionMult,annualSalary:roundToTenThousandYen(baseSalary*contractMult*positionMult)};

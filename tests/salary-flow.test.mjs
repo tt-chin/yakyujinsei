@@ -20,6 +20,9 @@ assert.match(game, /stage==='IND'.*salaryCandidate\(\{sourceLevel:'IND',targetLe
 assert.match(game, /S\.ct=null;if\(S\.lastSalaryPaidYear===S\.year\)/);
 
 assert.match(game, /convertRatingBetweenLevels\(rating,sourceLevel,targetLevel,LV\)/);
+assert.match(game, /let salaryDForContract=d=>d, salaryCandidate;/);
+assert.match(game, /salaryCandidate=\(\{sourceLevel=S\.lv,targetLevel=S\.lv/);
+assert.doesNotMatch(game, /const salaryCandidate=/);
 assert.match(game, /salaryCandidate\(\{sourceLevel:fromLv,targetLevel:toLv/);
 assert.match(game, /applyDemotionSalary\(fromLv,targetLevel\)/);
 assert.match(game, /applyDemotionSalary=function\(fromLv,toLv\)\{const renewalRequired=contractNeedsRenewal\(S\.ct\);applyLevelSalary\(fromLv,toLv,false\);if\(renewalRequired\)markClubInitiatedRenewal\(1\);\}/);
