@@ -23,4 +23,4 @@ const alloc=game.slice(game.indexOf('function allocUI'),game.indexOf('function n
 assert.doesNotMatch(alloc,/\b(?:R|ri|pick|chance)\s*\(/);
 assert.match(game,/base\+'\?seed='\+encodeURIComponent\(SEED\)/);
 assert.doesNotMatch(game,/[?&](?:rv|rules)=/);
-console.log('v1.6.0 six-seed RNG and seed-only URL checks passed.');
+console.log('v1.6.1 six-seed RNG and seed-only URL checks passed.');

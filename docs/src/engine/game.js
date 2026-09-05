@@ -19,7 +19,6 @@ import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { formatRehabStatus } from '../ui/condition-view-model.js';
-import { actualAbilitySpend, pointsRequiredToReach80 } from './ability-allocation-policy.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
 import { canPlayHighSchoolFall, canPlaySenbatsu, nextSenbatsuEligibleYear, qualificationResult, qualifiesForChampionship, qualifiesForCorporateJapan, qualifiesForUniversityJingu, tournamentResult } from './domestic-tournament-policy.js';
 
@@ -682,32 +681,32 @@ function allocUI(mode,label,done){
   const sessionStart={abilities:{...S.ab},carry:{...(S.carry||{})},pool,diceIndex:idx,touchedKeys:copyTouched()};
   const top=$('al-top'),rows=$('al-rows'),btm=$('al-btm');
   function remaining(){ return dice?dice.length-idx:pool; }
-  function render(focusTarget){
+  function render(focusKey){
     if(dice){ top.innerHTML='<div id="dice">'+dice.map((v,i)=>`<div class="die ${i<idx?'used':''} ${i===idx?'active':''} ${v===6?'six':''}">${v}</div>`).join('')+'</div>'; }
     else top.innerHTML=`<div class="pool" aria-live="polite">残り配分ポイント：${pool}</div>`;
     rows.innerHTML='';
     keys.forEach(k=>{ const v=S.ab[k],cap=v>=80;
-      const r=document.createElement('div'); r.className='abrow'+(cap?' capped':'');r.dataset.abilityKey=k;
+      const available=!cap&&remaining()>0;
+      const r=document.createElement('div'); r.className='abrow'+(cap?' capped':'');r.dataset.abilityKey=k;r.setAttribute('role','button');r.setAttribute('aria-label',dice?`${ABL[k]}に現在のサイコロを割り当てる`:`${ABL[k]}に1ポイント配分`);r.setAttribute('aria-disabled',String(!available));r.tabIndex=available?0:-1;
       const pk=(S.pot&&S.pot[k])||62, cst=abCost(k), cr=(S.carry&&S.carry[k])||0;
       const info=document.createElement('div');info.className='abrow-info';info.innerHTML=`<span class="nm">${ABL[k]}</span><span class="bar"><i style="width:${v/80*100}%"></i><em style="left:${pk/80*100}%"></em></span><span class="val" style="line-height:1.1">${v}<small style="opacity:.5">/${pk}</small><span class="progress">${cr}/${cst}</span></span>`;r.appendChild(info);
-      const allocate=(requested,action)=>{const before={abilityKey:k,beforeAbility:S.ab[k],beforeCarry:(S.carry&&S.carry[k])||0,beforePool:pool,beforeDiceIndex:idx,beforeTouched:copyTouched()};const requestedPoints=dice?dice[idx]:requested;const spend=dice?requestedPoints:actualAbilitySpend(requestedPoints,pool,pointsRequiredToReach80({current:S.ab[k],potential:pk,carry:before.beforeCarry,isPitcher:S.pos==='P'}));if(spend<=0)return;const got=addAb(k,spend);touchedKeys[k]=(touchedKeys[k]||0)+spend;hist.push({...before,spent:spend,gained:got});if(dice)idx++;else pool-=spend;render(action?{key:k,action}:null);board(0);};
-      if(dice){if(!cap&&remaining()>0)r.onclick=()=>allocate(dice[idx]);}
-      else{const actions=document.createElement('div');actions.className='abrow-actions';[[1,'+1','1ポイント'],[5,'+5','5ポイント'],[pool,'MAX','残り全ポイント']].forEach(([spend,text,aria])=>{const button=document.createElement('button');button.type='button';button.dataset.allocAction=text;button.textContent=text;button.setAttribute('aria-label',`${ABL[k]}に${aria}配分`);button.disabled=cap||pool===0;button.onclick=()=>allocate(spend,text);actions.appendChild(button);});r.appendChild(actions);}
+      const allocate=()=>{if(!available)return;const before={abilityKey:k,beforeAbility:S.ab[k],beforeCarry:(S.carry&&S.carry[k])||0,beforePool:pool,beforeDiceIndex:idx,beforeTouched:copyTouched()};const spend=dice?dice[idx]:1;if(spend<=0)return;const got=addAb(k,spend);touchedKeys[k]=(touchedKeys[k]||0)+spend;hist.push({...before,spent:spend,gained:got});if(dice)idx++;else pool--;render(k);board(0);};
+      if(available){r.onclick=allocate;r.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();allocate();}};}
       rows.appendChild(r); });
     btm.innerHTML='';
     /* 復原鈕固定占める位：なし可復原時 disabled 而非消失、防止版面跳動作誤觸。 */
     const u=document.createElement('button'); u.className='btn'; u.style.textAlign='center';
     u.textContent='↩ 元に戻す'; u.disabled=!hist.length;
     u.style.opacity=hist.length?'1':'0.35'; u.style.cursor=hist.length?'pointer':'default';
-    if(hist.length)u.onclick=()=>{const entry=hist.pop();S.ab[entry.abilityKey]=entry.beforeAbility;if(!S.carry)S.carry={};S.carry[entry.abilityKey]=entry.beforeCarry;pool=entry.beforePool;idx=entry.beforeDiceIndex;restoreTouched(entry.beforeTouched);render(dice?null:{key:entry.abilityKey,action:'+1'});board(0);};
+    if(hist.length)u.onclick=()=>{const entry=hist.pop();S.ab[entry.abilityKey]=entry.beforeAbility;if(!S.carry)S.carry={};S.carry[entry.abilityKey]=entry.beforeCarry;pool=entry.beforePool;idx=entry.beforeDiceIndex;restoreTouched(entry.beforeTouched);render(entry.abilityKey);board(0);};
     btm.appendChild(u);
-    if(!dice){const reset=document.createElement('button');reset.type='button';reset.className='btn warn';reset.textContent='すべてリセット';reset.disabled=!hist.length;reset.onclick=()=>{Object.assign(S.ab,sessionStart.abilities);S.carry={...sessionStart.carry};pool=sessionStart.pool;idx=sessionStart.diceIndex;restoreTouched(sessionStart.touchedKeys);hist=[];render();board(0);};btm.appendChild(reset);}
+    const reset=document.createElement('button');reset.type='button';reset.className='btn warn';reset.textContent='すべてリセット';reset.disabled=!hist.length;reset.onclick=()=>{Object.assign(S.ab,sessionStart.abilities);S.carry={...sessionStart.carry};pool=sessionStart.pool;idx=sessionStart.diceIndex;restoreTouched(sessionStart.touchedKeys);hist=[];render();board(0);};btm.appendChild(reset);
     const allCap=keys.every(k=>S.ab[k]>=80);
     if(remaining()===0||allCap){ const c=document.createElement('button'); c.className='btn main';
       c.textContent=(remaining()>0&&allCap)?'能力が上限に達しました。残ったサイコロを捨てます ▸':'確定 ▸';
       c.onclick=()=>runWithResultView(()=>{ actClear(); allocDone(touchedKeys,dice?true:false); done(); }); btm.appendChild(c); }
     actToggleSync();
-    if(focusTarget){const target=a.querySelector(`[data-ability-key="${focusTarget.key}"] [data-alloc-action="${focusTarget.action}"]`);(target&&!target.disabled?target:a.querySelector('.abrow-actions button:not(:disabled), #al-btm button:not(:disabled)'))?.focus();}
+    if(focusKey){const target=a.querySelector(`[data-ability-key="${focusKey}"]`);(target?.getAttribute('aria-disabled')==='false'?target:a.querySelector('.abrow[aria-disabled="false"], #al-btm button:not(:disabled)'))?.focus();}
   }
   render();
 }
