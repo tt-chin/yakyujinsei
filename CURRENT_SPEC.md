@@ -143,10 +143,11 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 - schemaVersion不一致・壊れたJSONは全既定値へ、未知の値は該当項目だけ既定値へ戻す。ストレージ取得・保存の例外は捕捉し、タブ内で設定を継続する。保存失敗時だけ設定画面内に「この端末には設定を保存できませんでした。」と表示する。
 - 開始画面のseed欄下とゲーム中ボード右端から同一ダイアログを開く。選択を即時適用・保存し、閉じても維持する。「初期設定に戻す」は確認なしで既定値へ戻す。フォーカスを閉じ込め、Escapeで閉じて起点ボタンへ戻す。
 - `src/ui/preferences.js`が設定値・検証・保存・ダイアログを所有する。main.jsで設定適用後にengineを読み込む。themes.cssが色変数を所有し、jp-theme.cssは定義を持たない互換入口。base.css／ui-navigation.cssは意味別トークンを参照し、preferences.cssが文字倍率・密度・設定UIを所有する。
+- 非同期起動中は開始ボタンをdisabledとし、engine初期化後にmain.jsから有効化する。読み込み中のクリックを未登録handlerへ送らない。
 - htmlのdata-theme／data-font-size／data-densityだけを切り替える。S、URL、RNG、キャリア記録へ保存しない。ゲームの描画・選択・board処理を再実行せず、現在タブ・操作DOM・listener・配分途中状態を保持する。
 - `getDisplayPreferences().theme`が後続画像テーマ機能用の公開インターフェース。変更通知は`yakyujinsei:displaychange`（detailは設定のコピー）。v1.7.0ではCanvasのimageColor・画像レイアウトを変更しない。
 - standardは従来の主要配色を保持する。対比度基準のため緑色提示を#216c3dへ、操作境界を#ad717dへ調整した。全テーマの主要文字4.5:1、操作境界・focus3:1以上を自動検証する。
-- 検証：設定単体24組合せ・保存例外、PC／モバイルサイズ320/375/390/430/560/1280、Chrome／Edge、Tab／Shift+Tab／Escape、選択DOM・配分listener保持。固定操作の投手3seed・野手3seedをv1.6.2と全生涯比較し、状態・ログ・選択肢・引退・RNG次数に差異0。実機iOS Safari／Android Chromeは未確認。
+- 検証：設定単体24組合せ・保存例外、PC／モバイルサイズ320/375/390/430/560/1280、Chrome／Edge、Tab／Shift+Tab／Escape、選択DOM・配分listener保持。固定操作の投手3seed・野手3seedをv1.6.2と全生涯比較し、バージョン番号を除くゲーム状態・ログ・選択肢・引退・RNG消費回数に差異0。実機iOS Safari／Android Chromeは未確認。
 
 ## 9. 運用と更新
 

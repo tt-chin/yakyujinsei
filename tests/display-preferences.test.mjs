@@ -16,6 +16,10 @@ assert.deepEqual(readDisplayPreferences({getItem(){throw new Error('blocked');}}
 assert.equal(saveDisplayPreferences({setItem(){throw new Error('quota');}},DEFAULT_PREFERENCES),false);
 assert.equal(saveDisplayPreferences(undefined,DEFAULT_PREFERENCES),false);
 const source=readFileSync(new URL('../docs/src/ui/preferences.js',import.meta.url),'utf8');
+const main=readFileSync(new URL('../docs/src/main.js',import.meta.url),'utf8');
+const html=readFileSync(new URL('../docs/index.html',import.meta.url),'utf8');
+assert.match(html,/id="btn-start" disabled/);
+assert.match(main,/await import\('\.\/engine\/game\.js'\);\s*document\.getElementById\('btn-start'\)\.disabled=false/);
 assert.doesNotMatch(source,/\b(?:R|ri|pick|chance|board)\s*\(|engine\/game|Math\.random|location|URLSearchParams|\bS\./);
 const css=readFileSync(new URL('../docs/styles/themes.css',import.meta.url),'utf8');
 const luminance=hex=>{let h=hex.slice(1);if(h.length===3)h=[...h].map(c=>c+c).join('');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);};

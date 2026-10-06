@@ -96,6 +96,16 @@ try{
   }
   await context.close();
 
+  const loading=await browser.newContext(),lp=await loading.newPage();wire(lp);
+  let releaseEngine;
+  const engineGate=new Promise(resolve=>{releaseEngine=resolve;});
+  await lp.route('**/src/engine/game.js',async route=>{await engineGate;await route.continue();});
+  const loaded=lp.goto(`${target}/?seed=loading-test`);
+  await lp.locator('#display-preferences').waitFor({state:'attached'});
+  assert.equal(await lp.locator('#btn-start').isDisabled(),true,'start is gated until engine handlers exist');
+  await lp.locator('#in-name').fill('読込中の入力');await lp.locator('[data-open-preferences]').first().click();await lp.locator('[name="theme"][value="night"]').check();await lp.keyboard.press('Escape');
+  releaseEngine();await loaded;await lp.locator('#btn-start').click();await lp.locator('#board-preferences').waitFor({state:'visible'});assert.equal(await lp.locator('html').getAttribute('data-theme'),'night');assert.ok((await lp.locator('#bd-name').innerText()).includes('読込中の入力'));await loading.close();
+
   const blocked=await browser.newContext();await blocked.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new Error('storage disabled');}});});
   const bp=await blocked.newPage();wire(bp);await bp.goto(`${target}/?seed=storage-test`);await bp.locator('[data-open-preferences]').first().click();await bp.locator('[name="theme"][value="night"]').check();assert.equal(await bp.locator('#preferences-save-status').innerText(),'この端末には設定を保存できませんでした。');await bp.keyboard.press('Escape');await bp.locator('#btn-start').click();await bp.locator('#board').waitFor({state:'visible'});await blocked.close();
   const touch=await browser.newContext({viewport:{width:320,height:568},isMobile:true,hasTouch:true}),tp=await touch.newPage();wire(tp);
