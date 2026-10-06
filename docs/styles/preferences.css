@@ -8,7 +8,7 @@
 [style*="font-size:18px"]{font-size:calc(18px * var(--font-scale))!important}
 button,[role="button"],.preference-options label{min-height:44px}
 #btn-restart,#board-preferences{min-width:44px;min-height:44px;margin-left:0;flex:none}
-#board-preferences{background:var(--panel);border:1px solid var(--control-edge);color:var(--amber);border-radius:8px;font-size:calc(20px * var(--font-scale));cursor:pointer}
+#board-preferences{margin-left:auto;background:var(--panel);border:1px solid var(--control-edge);color:var(--amber);border-radius:8px;font-size:calc(20px * var(--font-scale));cursor:pointer}
 #bd-top{align-items:center;gap:8px;flex-wrap:wrap}
 #bd-name{min-width:0;flex:1 1 100px}
 #bd-team{min-width:0;flex:1 1 100px;white-space:normal;overflow-wrap:anywhere}
