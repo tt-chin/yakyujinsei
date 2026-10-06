@@ -1,8 +1,10 @@
-# 現行規格（公開コード v1.6.2 照合版）
+# 現行規格（dev v1.7.0／正式公開基準 v1.6.2）
 
-整理日：2026-10-06。文書改訂：4。現行仕様の唯一の正本。製品バージョンを変更する文書ではない。
+更新日：2026-10-07。文書改訂：5。現行仕様の唯一の正本。v1.7.0はdevで実装し、正式公開は別途承認待ち。
 
 ローカルゲームコードの照合基準は`04034d0d3ff26e43bd1d8a43719a34e361b5c51f`、`docs/src/config.js`のVERSIONは1.6.2。以後のdev文書整理はゲームコードを変更していない。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
+
+v1.7.0ではconfig VERSIONを1.7.0へ更新し、表示設定だけを追加した。engine/game.jsとゲームデータは上記基準から変更していない。正式公開mainは変更しない。
 
 ## 1. 適用範囲と検証状況
 
@@ -132,7 +134,21 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 
 「年度別年俸」は全契約年度を1行ずつ表示し、支払済み・保証総額・残年数・未払い保証額を契約配列と一致させる。
 
-## 8. 運用と更新
+## 8. 表示設定（v1.7.0）
+
+- テーマ：standard＝スタンダード、night＝ナイター、classic＝クラシック、scoreboard＝スコアボード。
+- 文字サイズ：small＝小さめ（0.90）、medium＝標準（1.00）、large＝大きめ（1.15）。各テキストの基準サイズへ一度だけ倍率を掛ける。
+- 表示密度：standard＝標準、compact＝コンパクト。余白・間隔だけを縮め、イベント、成功率、リスク、年俸、条件、能力、警告、seedを省略しない。タップ領域は44px以上。狭い画面の操作領域は内部スクロールで本文を完全に隠さない。
+- 保存キーは`yakyujinsei.display.v1`。保存形式は`{schemaVersion:1,theme:'standard',fontSize:'medium',density:'standard'}`。既定値はstandard／medium／standard。
+- schemaVersion不一致・壊れたJSONは全既定値へ、未知の値は該当項目だけ既定値へ戻す。ストレージ取得・保存の例外は捕捉し、タブ内で設定を継続する。保存失敗時だけ設定画面内に「この端末には設定を保存できませんでした。」と表示する。
+- 開始画面のseed欄下とゲーム中ボード右端から同一ダイアログを開く。選択を即時適用・保存し、閉じても維持する。「初期設定に戻す」は確認なしで既定値へ戻す。フォーカスを閉じ込め、Escapeで閉じて起点ボタンへ戻す。
+- `src/ui/preferences.js`が設定値・検証・保存・ダイアログを所有する。main.jsで設定適用後にengineを読み込む。themes.cssが色変数を所有し、jp-theme.cssは定義を持たない互換入口。base.css／ui-navigation.cssは意味別トークンを参照し、preferences.cssが文字倍率・密度・設定UIを所有する。
+- htmlのdata-theme／data-font-size／data-densityだけを切り替える。S、URL、RNG、キャリア記録へ保存しない。ゲームの描画・選択・board処理を再実行せず、現在タブ・操作DOM・listener・配分途中状態を保持する。
+- `getDisplayPreferences().theme`が後続画像テーマ機能用の公開インターフェース。変更通知は`yakyujinsei:displaychange`（detailは設定のコピー）。v1.7.0ではCanvasのimageColor・画像レイアウトを変更しない。
+- standardは従来の主要配色を保持する。対比度基準のため緑色提示を#216c3dへ、操作境界を#ad717dへ調整した。全テーマの主要文字4.5:1、操作境界・focus3:1以上を自動検証する。
+- 検証：設定単体24組合せ・保存例外、PC／モバイルサイズ320/375/390/430/560/1280、Chrome／Edge、Tab／Shift+Tab／Escape、選択DOM・配分listener保持。固定操作の投手3seed・野手3seedをv1.6.2と全生涯比較し、状態・ログ・選択肢・引退・RNG次数に差異0。実機iOS Safari／Android Chromeは未確認。
+
+## 9. 運用と更新
 
 作業・公開規則はAGENTS.mdに一本化。dev実装→Preview→ユーザー承認→main→同期の順で行う。古い「mainへ直接push」は履歴扱い。
 正式履歴はCHANGELOG.mdに一本化。設計整理だけでは製品VERSIONを上げない。未実装・未確認項目はBACKLOG.mdで管理し、承認された実装が完了した後だけ本書へ反映する。

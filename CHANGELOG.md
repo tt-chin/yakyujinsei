@@ -2,6 +2,17 @@
 
 各正式版已完成內容的唯一正本。現行仕様は[CURRENT_SPEC.md](CURRENT_SPEC.md)、未完了事項は[BACKLOG.md](BACKLOG.md)。旧VERSION_HISTORYの正式版記録を本書へ統合し、原文は[封存](docs/archive/local/VERSION_HISTORY.md)へ保存した。過去の完了記録は今回の再検証完了を意味しない。
 
+## 1.7.0 - 2026-10-07（dev／正式公開承認待ち）
+
+- 4種類の画面テーマ（スタンダード／ナイター／クラシック／スコアボード）を追加。
+- 文字サイズを小さめ／標準／大きめから選択可能にし、情報を省略せず余白だけを縮めるコンパクト表示を追加。
+- 開始前とゲーム中から共通の表示設定ダイアログを開き、即時適用・端末保存・初期設定復帰を可能にした。
+- 保存不能・破損・未知の値を安全に扱い、Tabフォーカス管理・Escape・44px操作領域・窄幅内部スクロールに対応。
+- CSS色・文字倍率・余白の所有を整理し、ゲーム状態S・seed-only URL・RNGと表示設定を分離。引退画像の配色は従来どおり。
+- 21単体／既存テスト、モジュール構成、4政策テスト、24設定×6視窗のChrome／Edge検証、六seed全生涯比較を実施。ゲーム結果・RNG差異0、Console／JS・CSS 404は0。
+- RNG消費：yakyo-test-001 141、jp3-pitcher-02 502、jp3-pitcher-03 778、jp3-catcher-01 98、jp3-infielder-01 517、jp3-outfielder-01 375。設定切替の消費は0。
+- 未確認：実機iOS Safari／Android Chrome。mainへの反映・本番同期は未実施（承認待ち）。
+
 ## 未リリース：文書整理 - 2026-10-06
 
 - 作業規則、現行仕様、完了履歴、未完了項目をAGENTS／CURRENT_SPEC／CHANGELOG／BACKLOGの4入口へ統一。

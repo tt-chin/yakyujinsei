@@ -13,7 +13,7 @@ const [html, config, data, game, main, baseCss, themeCss] = await Promise.all([
   read('docs/src/engine/game.js'),
   read('docs/src/main.js'),
   read('docs/styles/base.css'),
-  read('docs/styles/jp-theme.css'),
+  read('docs/styles/themes.css'),
 ]);
 
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);
@@ -25,10 +25,10 @@ assert.doesNotMatch(html, /<style>/);
 assert.equal((html.match(/<script/g) || []).length, 1);
 assert.match(html, /href="https:\/\/x\.com\/dog_cat_150"[^>]*>犬猫（@dog_cat_150）<\/a>/);
 
-assert.match(main, /import '\.\/engine\/game\.js';/);
+assert.match(main, /initializeDisplayPreferences\(\);[\s\S]*await import\('\.\/engine\/game\.js'\)/);
 assert.match(game, /import \{ VERSION \} from '\.\.\/config\.js';/);
 assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
-assert.match(config, /VERSION = '1\.6\.2'/);
+assert.match(config, /VERSION = '1\.7\.0'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(game, /version:VERSION/);
 assert.match(game, /fillText\(VERSION,W-PAD,H-40\)/);
@@ -48,10 +48,9 @@ assert.match(game, /history\.replaceState\(null,'',`\?seed=\$\{encodeURIComponen
 assert.equal((data.match(/"teamId"/g) || []).length, 90);
 assert.equal((data.match(/"schoolId"/g) || []).length, 75);
 assert.equal((data.match(/"eventKey"/g) || []).length, 2);
-assert.match(themeCss, /日本版ライトレッドテーマ/);
-assert.match(themeCss, /\.btn small\{color:#6f303d\}/);
-assert.match(themeCss, /\.btn\.main small\{color:#fff4f5\}/);
-assert.match(baseCss, /--bg:#fff8f8/);
+assert.match(themeCss, /--button-detail:#6f303d/);
+assert.match(themeCss, /--primary-button-detail:#fff4f5/);
+assert.match(themeCss, /--bg:#fff8f8/);
 assert.match(game, /const imageColor=\{bg:'#fff8f8'/);
 assert.ok(baseCss.length > 8_000);
 
@@ -87,4 +86,4 @@ assert.deepEqual(actual, [
 ]);
 assert.equal(rngState, 2095430971);
 
-console.log('Version 1.6.2 modularization static and RNG checks passed.');
+console.log('Version 1.7.0 modularization static and RNG checks passed.');

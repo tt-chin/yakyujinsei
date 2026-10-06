@@ -1,0 +1,38 @@
+:root{--font-scale:1;--space-scale:1;--log-padding:14px;--card-padding-y:12px;--card-padding-x:14px;--card-gap:10px;--choice-gap:8px;--panel-scale:1;--nav-scale:1}
+:root[data-font-size="small"]{--font-scale:.90}
+:root[data-font-size="large"]{--font-scale:1.15}
+:root[data-density="compact"]{--space-scale:.75;--log-padding:9px;--card-padding-y:8px;--card-padding-x:10px;--card-gap:6px;--choice-gap:5px;--panel-scale:.8;--nav-scale:.85}
+/* Inline legacy text sizes are presentation only; leave engine source unchanged. */
+[style*="font-size:11px"]{font-size:calc(11px * var(--font-scale))!important}
+[style*="font-size:12px"]{font-size:calc(12px * var(--font-scale))!important}
+[style*="font-size:18px"]{font-size:calc(18px * var(--font-scale))!important}
+button,[role="button"],.preference-options label{min-height:44px}
+#btn-restart,#board-preferences{min-width:44px;min-height:44px;margin-left:0;flex:none}
+#board-preferences{background:var(--panel);border:1px solid var(--control-edge);color:var(--amber);border-radius:8px;font-size:calc(20px * var(--font-scale));cursor:pointer}
+#bd-top{align-items:center;gap:8px;flex-wrap:wrap}
+#bd-name{min-width:0;flex:1 1 100px}
+#bd-team{min-width:0;flex:1 1 100px;white-space:normal;overflow-wrap:anywhere}
+#bd-tj:empty{display:none}
+.bd-cell{min-width:0;overflow-wrap:anywhere}
+#lamps{gap:8px;flex-wrap:wrap}
+.abrow .nm{width:calc(74px * var(--font-scale))}
+.abrow .val{width:calc(58px * var(--font-scale))}
+#act .row2 .btn{min-width:0;overflow-wrap:anywhere}
+#act{max-height:calc(100dvh - var(--display-sticky-height,180px) - 48px);overflow-y:auto}
+#dice{gap:calc(8px * var(--space-scale))}
+#btn-restart,#act-toggle,.salary-detail-close,.salary-detail-link,.abrow{border-color:var(--control-edge)}
+.salary-detail-dialog dl,.ui-data-list{min-width:0}
+.salary-detail-dialog dd,.ui-data-list dd{min-width:0;overflow-wrap:anywhere;max-width:100%}
+.contract-schedule>div{grid-template-columns:minmax(0,1fr) minmax(0,auto) 52px;overflow-wrap:anywhere}
+body.display-preferences-open{overflow:hidden}
+#display-preferences{position:fixed;inset:0;margin:auto;width:min(520px,calc(100% - 24px));max-height:calc(100dvh - 24px);overflow:auto;padding:20px;border:1px solid var(--control-edge);border-radius:14px;background:var(--panel);color:var(--chalk);box-shadow:0 16px 48px var(--shadow-color);font:inherit}
+#display-preferences::backdrop{background:var(--overlay-bg)}
+#display-preferences h2{font-size:calc(20px * var(--font-scale));color:var(--amber);margin-bottom:16px}
+#display-preferences fieldset{border:0;margin:14px 0;min-width:0}
+#display-preferences legend{font-weight:700;color:var(--dim);margin-bottom:6px}
+.preference-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.preference-options label{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--control-edge);border-radius:8px;background:var(--panel2);cursor:pointer;font-size:calc(14px * var(--font-scale));overflow-wrap:anywhere}
+.preference-options input{accent-color:var(--amber);flex:none;width:18px;height:18px}
+.preferences-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.preferences-actions button{flex:1;padding:8px;border:1px solid var(--control-edge);border-radius:8px;background:var(--panel2);color:var(--chalk);font:700 calc(14px * var(--font-scale)) var(--sans);cursor:pointer}
+#preferences-save-status{font-size:calc(13px * var(--font-scale));color:var(--bad);overflow-wrap:anywhere}
