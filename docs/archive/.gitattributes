@@ -1,0 +1,3 @@
+# Preserve original archive bytes; do not normalize historical line endings.
+local/** -text
+imported/** -text
