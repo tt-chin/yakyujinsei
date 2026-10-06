@@ -24,7 +24,7 @@
 - 本書：横断的な設計基準、競合の解消方針。
 - HISTORY_INDEX.md：出典と歴史的な差分。正式リリース履歴ではない。
 - TODO.md：実装照合、未完了候補、未決事項。
-- `history/`は本workspaceに存在しない。旧索引の保存済み記載をバックアップの証拠にしない。実在する原文と整理結果は`HISTORY_INDEX.md`の最新追記を参照する。
+- 原文39件は提供ZIP `yakyujinsei_specs_consolidated.zip` の `consolidated/history/` に存在することを確認済み（2026-10-06）。本workspaceには未展開。出典と整理結果は`HISTORY_INDEX.md`の最新追記を参照する。
 
 数値表、イベント一覧、球団Master、詳細API、テストfixtureは原文から失わない。本書に省略された原文をすべて無効にするわけではない。
 

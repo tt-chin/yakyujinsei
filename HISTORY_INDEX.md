@@ -4,7 +4,9 @@
 
 ## 本workspaceでの整理結果（2026-10-06）
 
-以下の旧「原文台帳」は別整理時の出典記録であり、本workspaceの実在一覧ではない。`history/`は存在せず、そこへのリンクは未取得資料の参照先を示すだけで、保存済み・復元可能とは扱わない。
+以下の「原文台帳」の39件は、提供ZIP `yakyujinsei_specs_consolidated.zip` の `consolidated/history/` に存在することを確認済み。本workspaceには未展開のため、history/への相対リンクは展開前には開けない。ZIP内原文は歴史資料であり、現行AGENTSや設計書を上書きしない。
+
+SHA-256照合では、根目録の`MY_BASEBALL_DAYS_MIGRATION_SPEC.md`と`YAKYOLIFE_159_MIGRATION_SPEC.md`はZIP内同名原文と完全一致。`MIGRATION_MASTER_SPEC.md`、`MIGRATION_IMPLEMENTATION_SCHEDULE.md`、`V1.6.0_ABILITY_ALLOCATION_AND_JAPANESE_COPY_SPEC.md`、AGENTS、VERSION_HISTORY、詳細設計書はZIP内同名原文と一致しないため、同名だけを理由に削除・上書きしない。原文保管の確認と、設計書への内容統合完了は別に判定する。
 
 - 削除：`V1.5.0_HOME_ABILITY_UI_REVISION_SPEC.md`、`V1.5.1_RECORD_CONDITION_FIX_SPEC.md`、`V1.5.2_INFORMATION_ARCHITECTURE_REVISION_SPEC.md`。現行仕様は`YaKyoLife_詳細設計書.md`第3章、25.9〜25.11および追加25.11.1へ統合。旧4領域・上部選択肢・下位階級へのtop追加は後続仕様へ置換済みで、復活させない。関連検証は既存UI・記録分類・情報構造テストと第24章を使用する。
 - 保留：`MIGRATION_MASTER_SPEC.md`、`MIGRATION_IMPLEMENTATION_SCHEDULE.md`、`YAKYOLIFE_159_MIGRATION_SPEC.md`、`MY_BASEBALL_DAYS_MIGRATION_SPEC.md`。将来機能の詳細・候補・検収条件が残り、CURRENT_SPEC/TODOの概要だけでは全内容の移管を確認できない。
@@ -18,7 +20,7 @@
 ## 使い方
 
 現行の設計基準は[CURRENT_SPEC.md](CURRENT_SPEC.md)、着手候補は[TODO.md](TODO.md)を参照する。
-原文をhistory/へ収録したという旧整理時の記載は本workspaceでは確認できない。実在と削除状況は上の最新整理結果を優先する。
+原文は提供ZIP内のconsolidated/history/へ収録されている。実在と削除状況は上の最新整理結果を優先する。
 歴史文書にある「直接mainへpush」「版号を指定値にする」等は当時の指示であり、現在の作業権限や最新開発規則を上書きしない。
 この索引は全数値・APIを再記述しない。詳細が必要なら表の原文を読む。
 
