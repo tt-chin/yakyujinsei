@@ -20,9 +20,9 @@ export function salaryDetailMarkup(decision, { fmtMoney, currentSalary = 0, isPr
     `<h3>最終決定理由</h3><ul>${decision.reasonCodes.map(code => `<li>${escapeHtml(salaryReasonLabel(code))}</li>`).join('')}</ul>${contractMarkup}`;
 }
 
-export function createSalaryDetailController({ trigger, panel, closeButton, title, body, getDecision, getCurrentSalary, getContract = () => null, isProfessional, fmtMoney, documentRef = document }) {
+export function createSalaryDetailController({ trigger, panel, closeButton, title, body, getDecision, getCurrentSalary, getContract = () => null, getIncome = () => null, isProfessional, fmtMoney, documentRef = document }) {
   let opener = null;
-  const open = () => { opener = documentRef.activeElement; body.innerHTML = salaryDetailMarkup(getDecision(), { fmtMoney, currentSalary:getCurrentSalary(), contract:getContract(), isProfessional:isProfessional() }); panel.hidden = false; documentRef.body.classList.add('salary-detail-open'); (closeButton || title).focus(); };
+  const open = () => { opener = documentRef.activeElement; const income=getIncome();body.innerHTML = salaryDetailMarkup(getDecision(), { fmtMoney, currentSalary:getCurrentSalary(), contract:getContract(), isProfessional:isProfessional() })+(income?`<h3>スポンサー・所得内訳</h3><dl><dt>今季スポンサー収入</dt><dd>${escapeHtml(fmtMoney(income.yearOutside))}</dd><dt>スポンサー収入累計</dt><dd>${escapeHtml(fmtMoney(income.outside))}</dd><dt>社会人給与累計</dt><dd>${escapeHtml(fmtMoney(income.corp))}</dd><dt>生涯総収入（スポンサー収入を含む）</dt><dd>${escapeHtml(fmtMoney(income.total))}</dd></dl>`:''); panel.hidden = false; documentRef.body.classList.add('salary-detail-open'); (closeButton || title).focus(); };
   const close = () => { panel.hidden = true; documentRef.body.classList.remove('salary-detail-open'); opener?.focus?.(); };
   trigger.addEventListener('click', open);
   trigger.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });

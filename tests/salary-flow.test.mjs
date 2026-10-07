@@ -39,8 +39,9 @@ assert.equal((game.match(/baseSalary\*contractMult\*positionMult/g) || []).lengt
 assert.doesNotMatch(evaluationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 assert.equal((game.match(/\bR\(/g) || []).length, 35);
 assert.equal((game.match(/\bri\(/g) || []).length, 77);
-assert.equal((game.match(/\bchance\(/g) || []).length, 60);
-assert.equal((game.match(/\bpick\(/g) || []).length, 25);
+// Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
+assert.equal((game.match(/\bchance\(/g) || []).length, 57);
+assert.equal((game.match(/\bpick\(/g) || []).length, 23);
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(game, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\)\.annualSalary/);

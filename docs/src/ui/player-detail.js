@@ -12,7 +12,7 @@ export function renderCareer(container, model, tab) {
   }
   if(tab==='contract'){
     const section=panel('契約・収入'); const dl=document.createElement('dl'); dl.className='ui-data-list';
-    [['現契約',model.contract.description],['契約残年数',model.contract.remainingYears],['保証総額',model.contract.guaranteedTotal],['年度別年俸',model.contract.schedule],['生涯総収入',model.contract.careerEarnings]].forEach(([label,val])=>{const dt=document.createElement('dt');dt.textContent=label;const dd=document.createElement('dd');if(Array.isArray(val)){const lines=document.createElement('div');lines.className='contract-yearly-salaries';val.forEach(text=>{const line=document.createElement('span');line.textContent=text;lines.appendChild(line);});dd.appendChild(lines);}else dd.textContent=val;dl.append(dt,dd);});
+    [['現契約',model.contract.description],['契約残年数',model.contract.remainingYears],['保証総額',model.contract.guaranteedTotal],['年度別年俸',model.contract.schedule],['今季スポンサー収入',model.contract.yearOutsideIncome],['スポンサー収入累計',model.contract.outsideIncome],['社会人給与累計',model.contract.corpIncome],['生涯総収入',model.contract.careerEarnings]].filter(([,val])=>val!==undefined).forEach(([label,val])=>{const dt=document.createElement('dt');dt.textContent=label;const dd=document.createElement('dd');if(Array.isArray(val)){const lines=document.createElement('div');lines.className='contract-yearly-salaries';val.forEach(text=>{const line=document.createElement('span');line.textContent=text;lines.appendChild(line);});dd.appendChild(lines);}else dd.textContent=val;dl.append(dt,dd);});
     section.appendChild(dl);container.appendChild(section);
     const history=panel('契約・年俸決定履歴');history.appendChild(list(model.contract.history));container.appendChild(history);return;
   }

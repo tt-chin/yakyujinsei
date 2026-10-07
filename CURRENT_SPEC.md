@@ -1,10 +1,10 @@
-# 現行規格（dev v1.7.0／正式公開基準 v1.6.2）
+# 現行規格（dev v1.8.0／main v1.7.0）
 
-更新日：2026-10-07。文書改訂：5。現行仕様の唯一の正本。v1.7.0はdevで実装し、正式公開は別途承認待ち。
+更新日：2026-10-07。文書改訂：6。現行仕様の唯一の正本。v1.8.0はdevで実装し、正式公開は別途承認待ち。mainのv1.7.0はユーザー承認後93ad2c7へ更新済み。
 
-ローカルゲームコードの照合基準は`04034d0d3ff26e43bd1d8a43719a34e361b5c51f`、`docs/src/config.js`のVERSIONは1.6.2。以後のdev文書整理はゲームコードを変更していない。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
+今回の変更前コードはmain/devとも`93ad2c7345a7469f9bbf333be913725b6069e6bd`（v1.7.0）。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
 
-v1.7.0ではconfig VERSIONを1.7.0へ更新し、表示設定だけを追加した。engine/game.jsとゲームデータは上記基準から変更していない。正式公開mainは変更しない。
+v1.7.0は表示設定のみ。v1.8.0は承認済み92枚イベントと所得・成績・特性接続を追加。今回mainは変更しない。過去のv1.6.2照合記録は歴史的な検証範囲として以下に保持する。
 
 ## 1. 適用範囲と検証状況
 
@@ -154,3 +154,19 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 作業・公開規則はAGENTS.mdに一本化。dev実装→Preview→ユーザー承認→main→同期の順で行う。古い「mainへ直接push」は履歴扱い。
 正式履歴はCHANGELOG.mdに一本化。設計整理だけでは製品VERSIONを上げない。未実装・未確認項目はBACKLOG.mdで管理し、承認された実装が完了した後だけ本書へ反映する。
 各機能を完了へ移す際、コードSHA、テスト、Preview/本番の区別を記録する。設計書の記載だけで実装済み判定しない。
+
+## 10. 92枚イベント（v1.8.0）
+
+- データ正本はdocs/src/data/event-cards-jp.js。提供された完全データ改訂3のJSONから機械抽出し、全ID・日本語文案・資格・数値planを保持する。schema=yakyujinsei.event-catalog.v2、policy=CN157_CLASSIFIED_JP_LOCALIZED。
+- training43／encounter35／endorsement14。stage・lv・org・role・maxAgeはAND、配列内はOR。未知状態を許可せず、対象poolはID順。既存pickで直接抽選し、PRO3／HS・U・CORP・IND2、重複可。空poolは他所属へfallbackしない。
+- 選択順bold/norm/safe。成功率はgenius/late/clutchのいずれかで基礎70、それ以外50、thief−10。safe+20（最大95）、normはfavorite+5（最大95）、bold−15とclutch+geniusの+5。
+- HS/U/CORPのencounterはtrainingとして処理。clutchTier0/1/2を分類planへ一度だけ適用する。結果文・実能力差・carry差・正負成績点・成功入金・指定失敗故障加算を表示する。表示・再表示はRNG消費0。
+- イベント専用能力経路：投手非staの基本costは50未満1／58未満2／66未満4／その他7。投手sta・野手は64未満1／72未満2／その他3。cur>=potなら投手×4／野手×3。carryを蓄積し80まで成長、80超過だけ成績点へ。負数は能力を直接減らし1～80、負効果から成績点は生成しない。一般訓練・恋愛の旧costは維持。
+- 出現IDはyear:eventSequence:cardID。処理済み結果を保持し、同一出現はrng・能力・累計・記帳・続行を再実行しない。同カードの別抽選は別出現。traitsを解決前に固定し、今回の特性解放は今回入金へ遡及しない。
+- スポンサー円基準はincomePolicy、safe×.5／norm×1／bold×1.5、既存adking×1.1、最後に万円単位で四捨五入（正額最低1万円）。HS/U基準0。careerOutsideIncome/yearOutsideIncome/careerEarningsへ各一度だけ加算し、ledgerを保持。currentSalary・ct・社会人給与を変更せず、総所得へ再加算しない。
+- PROのpendStat×seasonFactorを既存simSeason・基礎上限後、effort/onetool前へ反映。正負とも対応し、最終stを集計・賞・salary評価で共有。非零点年度のみ両処理後の上限・率・イニング整合性を校正し、p=0年度は従来成績を完全維持する（ユーザー確認済み）。
+- HS/U/CORP/INDでは年度formを一度固定し、大会power/資格入力だけに加える。overall・能力点算式・追加RNGは変更せず、INDの個人成績は生成しない。全休・完了・年度進行でpendStatを消去し、年度開始はyearOutsideIncomeだけリセット。生涯所得とledgerは保持。
+- 広告王はendorsement bold成功5回、愛将は25歳未満norm成功10回、強心臓は25歳未満bold成功7回、自律の鬼は25歳未満safe成功15回・caught0・snack<5。cancerは社交bold失敗>10またはscum（franchise/intlace除外）、distractは既存恋愛／夜食条件。旧全bold失敗条件との二重判定はしない。
+- 愛将は投手perfFの下限.85、野手の通常起用係数下限.85、守備資格閾値−3を既存若手補正へ加算。その後に稼働率・乱数を適用し、実試合数85%保障とは扱わない。広告王はスポンサーのみ1.1倍。名称・説明を選手／引退／共有画像で統一。
+- 同一新版・seed・選択列の再現性を保証する。旧版seed結果と必要なRNG消費の変化は今回明示承認済み。RNGアルゴリズム・seed-only URL・通常給与契約の算式は変更しない。
+- 仕様出典：[実装仕様](YAKYUJINSEI_EVENT_SYSTEM_IMPLEMENTATION_SPEC.md)、[完全カード資料](YAKYUJINSEI_JP_EVENT_92_COMPLETE_DATA.md)。本節は実装済み規則、出典には全92件の文案・条件・数値表と受入条件を保持する。

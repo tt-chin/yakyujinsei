@@ -28,7 +28,7 @@ assert.match(html, /href="https:\/\/x\.com\/dog_cat_150"[^>]*>犬猫（@dog_cat_
 assert.match(main, /initializeDisplayPreferences\(\);[\s\S]*await import\('\.\/engine\/game\.js'\)/);
 assert.match(game, /import \{ VERSION \} from '\.\.\/config\.js';/);
 assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
-assert.match(config, /VERSION = '1\.7\.0'/);
+assert.match(config, /VERSION = '1\.8\.0'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(game, /version:VERSION/);
 assert.match(game, /fillText\(VERSION,W-PAD,H-40\)/);
@@ -54,7 +54,7 @@ assert.match(themeCss, /--bg:#fff8f8/);
 assert.match(game, /const imageColor=\{bg:'#fff8f8'/);
 assert.ok(baseCss.length > 8_000);
 
-assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 4);
+assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 3);
 assert.doesNotMatch(game, /cur>=66\?7:cur>=58\?4:cur>=55\?2:1/);
 
 function fnv1a32(value) {
@@ -86,4 +86,4 @@ assert.deepEqual(actual, [
 ]);
 assert.equal(rngState, 2095430971);
 
-console.log('Version 1.7.0 modularization static and RNG checks passed.');
+console.log('Version 1.8.0 modularization static and RNG checks passed.');
