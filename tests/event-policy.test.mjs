@@ -7,7 +7,11 @@ import {applyEventSeason,normalizeEventSeason} from '../docs/src/engine/event-se
 assert.equal(validateEventCatalog(),true);
 const md=fs.readFileSync(new URL('../YAKYUJINSEI_JP_EVENT_92_COMPLETE_DATA.md',import.meta.url),'utf8');
 const original=JSON.parse(md.match(/```json\s*([\s\S]*?)```/)[1]);
-assert.deepEqual(d.events,original.events);
+const copyData=JSON.parse(fs.readFileSync(new URL('../YAKYUJINSEI_JP_EVENT_92_COPY.json',import.meta.url),'utf8'));
+const withoutText=e=>{const v=structuredClone(e);delete v.n;delete v.intro;for(const m of ['bold','norm','safe'])for(const f of ['label','good','bad'])delete v.choices[m][f];return v;};
+assert.equal(copyData.events.length,92);assert.equal(new Set(copyData.events.map(e=>e.id)).size,92);
+assert.deepEqual(d.events.map(withoutText),original.events.map(withoutText),'non-copy fields preserved');
+for(const e of d.events){const c=copyData.events.find(x=>x.id===e.id);assert.equal(e.key,c.key);assert.equal(e.n,c.n);assert.equal(e.intro,c.intro);for(const m of ['bold','norm','safe'])for(const f of ['label','good','bad'])assert.equal(e.choices[m][f],c.choices[m][f]);}
 let plans=0,injuries=0;
 for(const e of d.events){
   const text=md.match(new RegExp('### '+String(e.id).padStart(3,'0')+'\\.[\\s\\S]*?(?=\\n### |\\n## 10\\.|$)'))[0];
@@ -17,7 +21,7 @@ for(const e of d.events){
   }
   assert.ok(text.includes('`'+e.eligibility.role+'`'),`${e.id}/role`);
   for(const m of ['bold','norm','safe']){
-    for(const f of ['label','good','bad'])assert.ok(text.includes(e.choices[m][f]),`${e.id}/${m}/${f}`);
+    for(const f of ['label','good','bad'])assert.ok(text.includes(original.events.find(x=>x.id===e.id).choices[m][f]),`${e.id}/${m}/${f} historical source`);
     const riskLine=text.split('\n').find(l=>l.startsWith('| '+m+' |'));
     assert.ok(riskLine.endsWith('＋'+eventInjury(e,m,false,{})+'ポイント |'),`${e.id}/${m} independent prose injury mask`);
     for(let tier=0;tier<3;tier++)for(const good of [true,false]){assert.deepEqual(eventPlan(e.category,m,tier,good),e.effectPlans[m][tier][good?'success':'failure']);plans++;}

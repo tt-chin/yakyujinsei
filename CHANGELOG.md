@@ -2,6 +2,14 @@
 
 各正式版已完成內容的唯一正本。現行仕様は[CURRENT_SPEC.md](CURRENT_SPEC.md)、未完了事項は[BACKLOG.md](BACKLOG.md)。旧VERSION_HISTORYの正式版記録を本書へ統合し、原文は[封存](docs/archive/local/VERSION_HISTORY.md)へ保存した。過去の完了記録は今回の再検証完了を意味しない。
 
+## 1.8.2 - 2026-10-07（dev／正式公開承認待ち）
+
+- 提供されたYAKYUJINSEI_JP_EVENT_92_COPY.jsonに従い、全92枚のn・intro・choices.label/good/bad（1,012欄位）をIDで更新。
+- 承認済みの明らかな誤字を文案JSONと配信データの両方で訂正（完壁、全全力、胸胸熱、繪馬、室内非難、姿勢を指す体制、控控えめ、気分轉換、意志疎通）。ネット用語・語調を保持。
+- 条件・数値・分類・並び・ID/key・実行ロジック・RNG・seed-only URLは変更しない。旧完全データの文案は履歴として保持し、テストで旧ルールと新文案を別々に照合する。
+- 25テスト、552ブラウザ成敗分岐、PC／320／390px、六seed合計1,656イベント解決の状態・効果・RNG比較に合格。非文案データと実行コードの差異0、Console／JS・CSS 404は0。
+- 未確認：今回の全生涯再比較、実機iOS Safari／Android Chrome。main・本番公開は変更しない。
+
 ## 1.8.1 - 2026-10-07（dev／正式公開承認待ち）
 
 - NPB通常・育成ドラフト契約に生成済み契約金signingBonusを記録。既存の生涯収入・契約金累計への加算は変更せず二重計上を防止。

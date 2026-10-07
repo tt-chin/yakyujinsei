@@ -1,6 +1,6 @@
-# 現行規格（dev v1.8.1／main v1.7.0）
+# 現行規格（dev v1.8.2／main v1.7.0）
 
-更新日：2026-10-07。文書改訂：7。現行仕様の唯一の正本。v1.8.1はdevで実装し、正式公開は別途承認待ち。mainのv1.7.0はユーザー承認後93ad2c7へ更新済み。
+更新日：2026-10-07。文書改訂：8。現行仕様の唯一の正本。v1.8.2はdevで実装し、正式公開は別途承認待ち。mainのv1.7.0はユーザー承認後93ad2c7へ更新済み。
 
 契約金表示修正前のdevは`7acb456e4a0ed48b5541579fc4d42215ee3e4ce8`（v1.8.0）、mainは`93ad2c7345a7469f9bbf333be913725b6069e6bd`（v1.7.0）。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
 
@@ -167,7 +167,7 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 
 ## 10. 92枚イベント（v1.8.0）
 
-- データ正本はdocs/src/data/event-cards-jp.js。提供された完全データ改訂3のJSONから機械抽出し、全ID・日本語文案・資格・数値planを保持する。schema=yakyujinsei.event-catalog.v2、policy=CN157_CLASSIFIED_JP_LOCALIZED。
+- データ正本はdocs/src/data/event-cards-jp.js。資格・分類・数値planは完全データ改訂3を保持する。v1.8.2の文案正本は[YAKYUJINSEI_JP_EVENT_92_COPY.json](YAKYUJINSEI_JP_EVENT_92_COPY.json)（copyRevision 2と承認済み誤字訂正）。IDでn・intro・choicesのlabel/good/badだけを更新し、92枚・1,012文案欄位を照合する。完全データ文書の旧文案は履歴資料として保持し、現行文案へ優先しない。schema=yakyujinsei.event-catalog.v2、policy=CN157_CLASSIFIED_JP_LOCALIZED。
 - training43／encounter35／endorsement14。stage・lv・org・role・maxAgeはAND、配列内はOR。未知状態を許可せず、対象poolはID順。既存pickで直接抽選し、PRO3／HS・U・CORP・IND2、重複可。空poolは他所属へfallbackしない。
 - 選択順bold/norm/safe。成功率はgenius/late/clutchのいずれかで基礎70、それ以外50、thief−10。safe+20（最大95）、normはfavorite+5（最大95）、bold−15とclutch+geniusの+5。
 - HS/U/CORPのencounterはtrainingとして処理。clutchTier0/1/2を分類planへ一度だけ適用する。結果文・実能力差・carry差・正負成績点・成功入金・指定失敗故障加算を表示する。表示・再表示はRNG消費0。
