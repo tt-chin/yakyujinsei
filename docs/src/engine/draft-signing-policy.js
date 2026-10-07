@@ -1,3 +1,5 @@
+import { createSigningBonusTerms, applySigningPayment } from './signing-bonus-policy.js';
+
 export function draftSigningTerms(type,round){
   const development=type==='DEVELOPMENT';
   return{level:development?'NPB_DEV':'NPB2',contractType:development?'DEVELOPMENT':'CONTROL',rookieSalary:development?3_000_000:Number(round)<=2?16_000_000:12_000_000};
@@ -9,9 +11,12 @@ export function assertSignedDraftState(state,{teamId,level,contractType,rookieSa
 }
 
 export function acceptDraftSelection({state,type,round,teamId,bonus,sign}){
+  if(state.draftRights?.status==='SIGNED')return 'signed';
   const terms=draftSigningTerms(type,round);
   sign(terms);
-  state.draftRights.status='SIGNED';state.careerSigningBonus=(Number(state.careerSigningBonus)||0)+bonus;state.careerEarnings=(Number(state.careerEarnings)||0)+bonus;
+  const payment=createSigningBonusTerms({route:'NPB_DRAFT',draftType:type,bonus});
+  if(state.ct.signingPaymentStatus==='PENDING')Object.assign(state.ct,{signingBonus:payment.signingBonus,signingBonusType:payment.signingBonusType,developmentStipend:payment.developmentStipend});
+  applySigningPayment(state,state.ct);state.draftRights.status='SIGNED';
   assertSignedDraftState(state,{teamId,...terms});
   return'signed';
 }

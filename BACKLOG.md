@@ -2,7 +2,7 @@
 
 整理日：2026-10-06。文書改訂：4。未完了事項の唯一の正本。現行仕様は[CURRENT_SPEC.md](CURRENT_SPEC.md)、完了内容は[CHANGELOG.md](CHANGELOG.md)を参照する。
 
-過去の照合基準はv1.6.2。mainはv1.7.0（93ad2c7）、devは92枚イベントと契約金表示修正・92枚文案更新のv1.8.2（2026-10-07）。正式公開はユーザー承認待ち。旧設計とZIP原文は[封存索引](docs/archive/README.md)へ移管済み。移動は内容の全量統合・実動検収の完了を意味しない。
+過去の照合基準はv1.6.2。mainはv1.7.0（93ad2c7）、devは契約金・跨聯盟年俸市場を承認済み規則へ更新したv1.9.0（2026-10-08）。正式公開はユーザー承認待ち。実装済みの全球契約仕様はCURRENT_SPEC第11節、完了履歴はCHANGELOG1.9.0へ移管。旧設計とZIP原文は[封存索引](docs/archive/README.md)へ移管済み。移動は内容の全量統合・実動検収の完了を意味しない。
 状態：未確認／仕様待ち／未実装／原始碼已確認・実動未検証／検収完了／非採用。設計日や版号だけで完了にしない。
 
 ## 最優先：正本の確定
@@ -44,6 +44,9 @@ UI-03/04/05の実装とmain反映は完了し、CURRENT_SPEC §8とCHANGELOG 1.7
 原文：[1.7設計](docs/archive/imported/history/V1.7.0_THEME_AND_DISPLAY_SETTINGS_SPEC.md)、[1.8草案](docs/archive/imported/history/V1.8.0_SHARE_IMAGE_THEME_LINK_SPEC.md)。詳細色盤・接続API・非同期再生成・検収条件は承認時に照合する。
 
 ## 将来候補（P2）
+
+- [ ] CONTRACT-LEGACY-01 到達不能な旧makeOffers／pickOfferUI／旧市場定義の整理。1.9.0はactive bindingの更新のみで旧定義を無断削除しない。専用範囲・承認・固定seed回帰を決めてから整理する。
+- [ ] CONTRACT-ASIA-01 KBO亞洲名額・球団全体外國人預算の追加は非実装。現行FOREIGN_STANDARDと混同せず、専用路線／枠管理の承認が必要。
 
 | ID | 候補版（予約ではない） | 機能 | 未決・受入条件 |
 |---|---|---|---|

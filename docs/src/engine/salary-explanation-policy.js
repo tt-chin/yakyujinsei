@@ -62,6 +62,13 @@ export function appendSalaryDecision(history = [], decision) {
 }
 
 const LABELS = {
+  CROSS_LEAGUE_MARKET_ADJUSTMENT:'移籍先リーグの市場基準で調整しました',
+  PREVIOUS_SALARY_ANCHOR:'移籍前の契約年俸を基準額へ反映しました',
+  PREVIOUS_SALARY_UNAVAILABLE:'確認できる移籍前の年俸がないため市場基準を使用しました',
+  CROSS_LEAGUE_RAISE_CAP:'跨リーグ移籍の上昇率上限を適用しました',
+  LEAGUE_REGULATORY_CAP:'リーグ制度または市場の上限を適用しました',
+  MLB_INTL_RESTRICTED:'米国国際契約の制限対象として扱いました',
+  FOREIGN_PRO_EXEMPT:'年齢・認可一軍年資により外国プロ例外を適用しました',
   LEAGUE_MINIMUM_APPLIED:'リーグ最低年俸が適用されました',
   STRONG_PERFORMANCE:'今季の実績が市場評価を押し上げました', POOR_PERFORMANCE:'今季の実績が市場評価を押し下げました',
   FULL_WORKLOAD:'十分な出場量が評価されました', LIMITED_WORKLOAD:'出場量が限られたため評価が下がりました',

@@ -21,7 +21,7 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));const local=`http://127.0.0
 const browser=await chromium.launch({channel:arg('browser')||'chrome',headless:true});
 const errors=[],artifacts=path.join(os.tmpdir(),'yakyujinsei-event-e2e');await mkdir(artifacts,{recursive:true});
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push(r.status()+' '+r.url());});};
-const start=async(p,url,pos='P')=>{await p.goto(url);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#in-name').fill('イベント検証');await p.locator('#btn-start').click();};
+const start=async(p,url,pos='P')=>{await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#in-name').fill('イベント検証');await p.locator('#btn-start').click();};
 let failure;
 try{
   if(!arg('preview')){

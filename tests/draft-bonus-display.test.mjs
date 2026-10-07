@@ -9,7 +9,7 @@ const base={contractId:'D',org:'NPB',teamId:'TEAM',signedYear:2028,startYear:202
 for(const type of ['ROSTER','DEVELOPMENT']){
   const s={draftRights:{status:'NEGOTIATING'},careerSigningBonus:0,careerEarnings:0,careerBaseSalary:0};
   acceptDraftSelection({state:s,type,round:5,teamId:'TEAM',bonus:base.signingBonus,sign:t=>Object.assign(s,{stage:'PRO',org:'NPB',lv:t.level,orgTeamId:'TEAM',currentSalary:t.rookieSalary,ct:createContract({...base,annualSalary:t.rookieSalary,contractType:t.contractType})})});
-  assert.equal(s.ct.signingBonus,32_160_000);assert.equal(s.careerEarnings,32_160_000);assert.equal(s.careerSigningBonus,32_160_000);assert.equal(s.careerBaseSalary,0);
+  assert.equal(s.ct.signingBonus,type==='DEVELOPMENT'?0:32_160_000);assert.equal(s.careerEarnings,type==='DEVELOPMENT'?2_900_000:32_160_000);assert.equal(s.careerSigningBonus,type==='DEVELOPMENT'?0:32_160_000);assert.equal(s.careerBaseSalary,0);
 }
 const ct=createContract(base),snapshot=JSON.stringify(ct);
 let html=salaryDetailMarkup(null,{fmtMoney,contract:ct,isProfessional:true,currentSalary:ct.annualSalary});
@@ -29,5 +29,5 @@ for(const org of ['NPB','MLB','KBO','CPBL']){const normal=createContract({...bas
 const element=()=>({hidden:true,innerHTML:'',addEventListener(){},focus(){}}),body=element(),income={signing:32_160_000,base:12_000_000,incentive:840_000,buyout:2_000_000,outside:3_000_000,yearOutside:100_000,corp:4_000_000,total:54_000_000},saved=JSON.stringify(income);
 const controller=createSalaryDetailController({trigger:element(),panel:element(),closeButton:element(),title:element(),body,getDecision:()=>null,getCurrentSalary:()=>12_000_000,getContract:()=>ct,getIncome:()=>income,isProfessional:()=>true,fmtMoney,documentRef:{activeElement:null,body:{classList:{add(){},remove(){}}},addEventListener(){}}});
 controller.open();controller.open();assert.equal(JSON.stringify(income),saved);assert.match(body.innerHTML,/<h3>所得内訳<\/h3>/);for(const label of ['契約金累計','固定年俸累計','出来高累計','買い取り累計','スポンサー収入累計','社会人給与累計'])assert.ok(body.innerHTML.includes(label));assert.ok(body.innerHTML.includes('生涯総収入</dt><dd>5,400万円'));
-const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');assert.match(game,/signingBonus:bonus,startYear:S.year\+1/);assert.match(game,/signingBonus:options.signingBonus\?\?0/);assert.doesNotMatch(game,/careerEarnings[^;\n]*ct.signingBonus/);
+const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');assert.match(game,/signingBonus:bonus,signingTerms,startYear:S.year\+1/);assert.match(game,/bonus=options.signingBonus\?\?terms\?\.signingBonus\?\?0/);assert.doesNotMatch(game,/careerEarnings[^;\n]*ct.signingBonus/);
 console.log('Draft bonus display: income once, paid/schedule, legacy, extension/transfer/buyout and read-only UI passed.');

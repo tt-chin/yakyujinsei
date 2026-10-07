@@ -28,31 +28,32 @@ assert.match(game, /applyDemotionSalary\(fromLv,targetLevel\)/);
 assert.match(game, /applyDemotionSalary=function\(fromLv,toLv\)\{const renewalRequired=contractNeedsRenewal\(S\.ct\);applyLevelSalary\(fromLv,toLv,false\);if\(renewalRequired\)markClubInitiatedRenewal\(1\);\}/);
 assert.match(game, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\)\)markClubInitiatedRenewal\(1\);advance\(\);return;\}/);
 assert.match(game, /const sourceLevel=S\.lv,sourceStage=S\.stage,sourceOrg=S\.org/);
-assert.match(game, /sourceLevel:sourceStage==='PRO'&&LV\[sourceLevel\]\?sourceLevel:lv/);
+assert.match(game, /sourceLevel:LV\[sourceLevel\]\?sourceLevel:lv/);
 assert.match(game, /rating:sourceStage==='PRO'\?currentMarketRating\(\):0/);
 assert.match(game, /recordSalaryEvaluation\(st\)/);
 assert.match(game, /if\(S\.stage==='IND'\)recordIndependentSalaryEvaluation\(results\)/);
 assert.match(game, /LEGACY_RATING_FALLBACK/);
 assert.match(evaluationPolicy, /LEGACY_NO_INDIVIDUAL_STATS/);
 assert.doesNotMatch(game, /Math\.floor\(Number\(d\)\|\|0\)/);
-assert.equal((game.match(/baseSalary\*contractMult\*positionMult/g) || []).length, 1, '守備位置倍率は候補年俸へ一度だけ適用');
+assert.equal((game.match(/baseSalary\*\(cross\?1:contractMult\)\*positionMult/g) || []).length, 1, '守備位置倍率は候補年俸へ一度だけ適用');
 assert.doesNotMatch(evaluationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 assert.equal((game.match(/\bR\(/g) || []).length, 35);
-assert.equal((game.match(/\bri\(/g) || []).length, 77);
+// Six round-specific bonus sites are consolidated; each draft still consumes one ri.
+assert.equal((game.match(/\bri\(/g) || []).length, 74);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 assert.equal((game.match(/\bchance\(/g) || []).length, 57);
 assert.equal((game.match(/\bpick\(/g) || []).length, 23);
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
-assert.match(game, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\)\.annualSalary/);
-assert.match(game, /signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN',\{annualSalary\}\)/);
+assert.match(game, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);
+assert.match(game, /signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN',\{annualSalary,candidate\}\)/);
 assert.doesNotMatch(game, /annualSalary=salaryCandidate\([^\n]*\b(?:R|ri|chance|pick)\s*\(/);
 
 // 降格時と戦力外後の海外候補でも、表示時の計算はRNGを呼ばず、表示額をsignToへ渡す。
 assert.match(game, /sourceLevel:S\.lv,targetLevel:'CPBL1',contractMult:1/);
 assert.match(game, /sourceLevel:S\.lv,targetLevel:lv,contractMult:1/);
 assert.match(game, /signTo\('CPBL','CPBL1'[^\n]*\{annualSalary\}/);
-assert.match(game, /signTo\(org,lv,rec\.teamId,1,1,'RELEASE_RECONTRACT',\{annualSalary\}\)/);
+assert.match(game, /signTo\(org,lv,rec\.teamId,1,1,'RELEASE_RECONTRACT',\{annualSalary,candidate\}\)/);
 
 assert.match(game, /S\.ct=fixedContract/);
 assert.match(game, /createContract\(/);

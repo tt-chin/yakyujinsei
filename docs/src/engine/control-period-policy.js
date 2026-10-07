@@ -20,9 +20,9 @@ export function calculateControlOffer({marketSalary,previousSalary,marketRating,
     ? [0.20,0.35,0.60][Math.min(2,Math.floor(years))]
     : clamp(0.91+rating*.045+Math.min(years,6)*.045,.80,1.45);
   const candidate=(Number(marketSalary)||0)*clubMult;
-  const protectedBeforeMinimum=applyForcedCutProtection(candidate,previousSalary),minimum=Number(levelMinimum)||0;
+  const floorRate=org==='NPB'&&previousSalary>100_000_000?.60:.75,protectedBeforeMinimum=applyForcedCutProtection(candidate,previousSalary,floorRate),minimum=Number(levelMinimum)||0;
   const protectedSalary=Math.max(protectedBeforeMinimum,minimum),floorApplied=minimum>protectedBeforeMinimum;
-  return{org,serviceYears:years,marketRating:rating,marketSalary:Number(marketSalary)||0,clubMult,candidate,previousSalary:Number(previousSalary)||0,floorRate:.75,levelMinimum:minimum,protectedBeforeMinimum,protectedSalary,floorApplied};
+  return{org,serviceYears:years,marketRating:rating,marketSalary:Number(marketSalary)||0,clubMult,candidate,previousSalary:Number(previousSalary)||0,floorRate,levelMinimum:minimum,protectedBeforeMinimum,protectedSalary,floorApplied};
 }
 
 export function migrateServiceTime(state={}){
