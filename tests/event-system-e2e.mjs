@@ -55,7 +55,7 @@ try{
     // Keep a stale button and dispatch twice: the generation lock must execute only once.
     await p.evaluate(()=>{const b=document.querySelector('#act button');b.click();b.click();});assert.equal(await p.locator('[data-event-occurrence-id]').count(),1);
     await p.locator('[data-main-view="career"]').click();await p.locator('[data-career-tab="contract"]').click();assert.match(await p.locator('#career-content').innerText(),/スポンサー収入累計/);
-    await p.locator('#salary-detail-trigger').click();assert.match(await p.locator('#salary-detail-body').innerText(),/スポンサー・所得内訳/);await p.locator('#salary-detail-close').click();
+    await p.locator('#salary-detail-trigger').click();assert.match(await p.locator('#salary-detail-body').innerText(),/所得内訳/);await p.locator('#salary-detail-close').click();
     await p.locator('[data-main-view="player"]').click();await p.locator('[data-player-tab="traits"]').click();await ctx.close();
   }console.log('PC/320px/390px event + stale double click + income navigation passed');
   if(!arg('preview')&&!process.argv.includes('--quick'))for(const [seed,pos] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-catcher-01','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']]){
