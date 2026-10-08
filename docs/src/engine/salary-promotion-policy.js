@@ -84,7 +84,7 @@ export function migrateLegacySalaryState(state) {
     salaryEvaluationHistory: Array.isArray(state.salaryEvaluationHistory) ? state.salaryEvaluationHistory.slice(-3) : [],
     lastSalaryEvaluation: Object.hasOwn(state, 'lastSalaryEvaluation') ? state.lastSalaryEvaluation : null,
     lastSalaryDecision: Object.hasOwn(state, 'lastSalaryDecision') ? state.lastSalaryDecision : null,
-    salaryDecisionHistory: Array.isArray(state.salaryDecisionHistory) ? state.salaryDecisionHistory.slice(-10) : [],
+    salaryDecisionHistory: Array.isArray(state.salaryDecisionHistory) ? state.salaryDecisionHistory.slice() : [],
     contractSequence: Math.max(0, Math.round(Number(state.contractSequence) || 0)),
   };
   if (state.ct) {

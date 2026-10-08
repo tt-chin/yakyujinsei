@@ -12,6 +12,14 @@ const ordinaryCut=buildSalaryDecision({...base,previousSalary:20_000_000,finalSa
 assert.equal(buildSalaryDecision({...base,previousSalary:0}).changeRate,null);
 assert.equal(new Set(deriveSalaryReasonCodes({...base,positionMultiplier:1.2,contractMultiplier:1.2})).size,deriveSalaryReasonCodes({...base,positionMultiplier:1.2,contractMultiplier:1.2}).length);
 assert.equal(salaryReasonLabel('UNKNOWN_CODE'),'その他の契約条件');
-let history=[];for(let i=0;i<12;i++)history=appendSalaryDecision(history,buildSalaryDecision({...base,salaryYear:2020+i,decisionYear:2019+i,decisionType:'RENEWAL'}));
-assert.equal(history.length,10);history=appendSalaryDecision(history,buildSalaryDecision({...base,salaryYear:2031,decisionYear:2030,decisionType:'RENEWAL',finalSalary:99}));assert.equal(history.length,10);assert.equal(history.at(-1).finalSalary,99);
+let history=[];for(let i=24;i>=0;i--)history=appendSalaryDecision(history,buildSalaryDecision({...base,salaryYear:2029+i,decisionYear:2028+i,decisionType:'RENEWAL'}));
+assert.equal(history.length,25);assert.equal(history[0].salaryYear,2029);
+assert.deepEqual(history.map(item=>item.salaryYear),Array.from({length:25},(_,i)=>2029+i));
+const snapshot=structuredClone(history);
+history=appendSalaryDecision(history,buildSalaryDecision({...base,salaryYear:2035,decisionYear:2034,decisionType:'RENEWAL',finalSalary:99}));
+assert.equal(history.length,25);assert.equal(history.find(item=>item.salaryYear===2035).finalSalary,99);
+history=appendSalaryDecision(history,buildSalaryDecision({...base,salaryYear:2035,decisionYear:2034,decisionType:'PROMOTION'}));
+assert.equal(history.length,26);assert.deepEqual(history.filter(item=>item.salaryYear===2035).map(item=>item.decisionType),['RENEWAL','PROMOTION']);
+assert.deepEqual(snapshot[0],history[0]);assert.equal(snapshot.find(item=>item.salaryYear===2035).finalSalary,base.finalSalary);
+assert.equal(appendSalaryDecision(undefined,raised).length,1);
 console.log('salary explanation policy tests passed');

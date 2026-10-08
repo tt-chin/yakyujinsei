@@ -95,4 +95,17 @@ assert.equal(migrated.lastSalaryDecision, null);
 assert.deepEqual(migrated.salaryDecisionHistory, []);
 assert.equal(migrated.lastSalaryEvaluation, null);
 
+const fullHistory=Array.from({length:25},(_,i)=>({salaryYear:2029+i,decisionType:'RENEWAL',finalSalary:12_000_000+i*10_000}));
+const oldState={year:2054,salaryDecisionHistory:fullHistory,careerEarnings:123456789,stats:{NPB:{G:999}},log:[{y:2029,line:'保存済み成績'}]};
+const fullMigration=migrateLegacySalaryState(oldState);
+assert.deepEqual(fullMigration.salaryDecisionHistory,fullHistory);
+assert.notEqual(fullMigration.salaryDecisionHistory,fullHistory);
+assert.equal(fullMigration.salaryDecisionHistory[0].salaryYear,2029);
+assert.equal(fullMigration.careerEarnings,oldState.careerEarnings);
+assert.deepEqual(fullMigration.stats,oldState.stats);assert.deepEqual(fullMigration.log,oldState.log);
+assert.deepEqual(migrateLegacySalaryState(fullMigration).salaryDecisionHistory,fullHistory);
+const truncated=fullHistory.slice(-10);
+assert.deepEqual(migrateLegacySalaryState({...oldState,salaryDecisionHistory:truncated}).salaryDecisionHistory,truncated);
+for(const missing of [undefined,null,{}])assert.deepEqual(migrateLegacySalaryState({salaryDecisionHistory:missing}).salaryDecisionHistory,[]);
+
 console.log('Salary policy migration checks passed.');

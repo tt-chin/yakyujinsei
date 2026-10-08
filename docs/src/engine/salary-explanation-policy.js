@@ -57,8 +57,7 @@ export function buildSalaryDecision(input = {}) {
 
 export function appendSalaryDecision(history = [], decision) {
   return [...history.filter(item => !(item.salaryYear === decision.salaryYear && item.decisionType === decision.decisionType)), decision]
-    .sort((a, b) => a.salaryYear - b.salaryYear)
-    .slice(-10);
+    .sort((a, b) => a.salaryYear - b.salaryYear);
 }
 
 const LABELS = {
