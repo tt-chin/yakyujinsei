@@ -1,6 +1,6 @@
-# 現行規格（dev／main v1.9.1）
+# 現行規格（dev v1.10.0／main v1.9.1）
 
-更新日：2026-10-08。文書改訂：11。現行仕様の唯一の正本。ユーザーの正式公開承認後、検証済みdevの517831c（v1.9.1）をmainへ反映した。既存Publish website Workflow 37790403870と公開先Pages deployment 37790429449は成功。yakyujinsei.comのVERSION 1.9.1と主要プログラムの配信一致を確認済み。新契約金・年俸市場の承認値は第11節。
+更新日：2026-10-09。文書改訂：12。現行仕様の唯一の正本。dev v1.10.0は特性名称統一・追加6件と承認済み条件修正（第12節）、正式公開承認待ち。main／本番はv1.9.1を維持。ユーザーの正式公開承認後、検証済みdevの517831c（v1.9.1）をmainへ反映した。既存Publish website Workflow 37790403870と公開先Pages deployment 37790429449は成功。yakyujinsei.comのVERSION 1.9.1と主要プログラムの配信一致を確認済み。新契約金・年俸市場の承認値は第11節。
 
 契約金表示修正前のdevは`7acb456e4a0ed48b5541579fc4d42215ee3e4ce8`（v1.8.0）、mainは`93ad2c7345a7469f9bbf333be913725b6069e6bd`（v1.7.0）。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
 
@@ -179,15 +179,15 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 
 - データ正本はdocs/src/data/event-cards-jp.js。資格・分類・数値planは完全データ改訂3を保持する。v1.8.2の文案正本は[YAKYUJINSEI_JP_EVENT_92_COPY.json](YAKYUJINSEI_JP_EVENT_92_COPY.json)（copyRevision 2と承認済み誤字訂正）。IDでn・intro・choicesのlabel/good/badだけを更新し、92枚・1,012文案欄位を照合する。完全データ文書の旧文案は履歴資料として保持し、現行文案へ優先しない。schema=yakyujinsei.event-catalog.v2、policy=CN157_CLASSIFIED_JP_LOCALIZED。
 - training43／encounter35／endorsement14。stage・lv・org・role・maxAgeはAND、配列内はOR。未知状態を許可せず、対象poolはID順。既存pickで直接抽選し、PRO3／HS・U・CORP・IND2、重複可。空poolは他所属へfallbackしない。
-- 選択順bold/norm/safe。成功率はgenius/late/clutchのいずれかで基礎70、それ以外50、thief−10。safe+20（最大95）、normはfavorite+5（最大95）、bold−15とclutch+geniusの+5。
+- 選択順bold/norm/safe。成功率はgenius/late/clutchのいずれかで基礎70、それ以外50、thief−10。safe+20（最大95）、normはfavorite+5（最大95）、bold−15とclutch+geniusの+5。v1.10.0ではlatepractice取得済みの場合にsafeだけさらに−5ポイント（第12節）。
 - HS/U/CORPのencounterはtrainingとして処理。clutchTier0/1/2を分類planへ一度だけ適用する。結果文・実能力差・carry差・正負成績点・成功入金・指定失敗故障加算を表示する。表示・再表示はRNG消費0。
 - イベント専用能力経路：投手非staの基本costは50未満1／58未満2／66未満4／その他7。投手sta・野手は64未満1／72未満2／その他3。cur>=potなら投手×4／野手×3。carryを蓄積し80まで成長、80超過だけ成績点へ。負数は能力を直接減らし1～80、負効果から成績点は生成しない。一般訓練・恋愛の旧costは維持。
 - 出現IDはyear:eventSequence:cardID。処理済み結果を保持し、同一出現はrng・能力・累計・記帳・続行を再実行しない。同カードの別抽選は別出現。traitsを解決前に固定し、今回の特性解放は今回入金へ遡及しない。
 - スポンサー円基準はincomePolicy、safe×.5／norm×1／bold×1.5、既存adking×1.1、最後に万円単位で四捨五入（正額最低1万円）。HS/U基準0。careerOutsideIncome/yearOutsideIncome/careerEarningsへ各一度だけ加算し、ledgerを保持。currentSalary・ct・社会人給与を変更せず、総所得へ再加算しない。
 - PROのpendStat×seasonFactorを既存simSeason・基礎上限後、effort/onetool前へ反映。正負とも対応し、最終stを集計・賞・salary評価で共有。非零点年度のみ両処理後の上限・率・イニング整合性を校正し、p=0年度は従来成績を完全維持する（ユーザー確認済み）。
 - HS/U/CORP/INDでは年度formを一度固定し、大会power/資格入力だけに加える。overall・能力点算式・追加RNGは変更せず、INDの個人成績は生成しない。全休・完了・年度進行でpendStatを消去し、年度開始はyearOutsideIncomeだけリセット。生涯所得とledgerは保持。
-- 広告王はendorsement bold成功5回、愛将は25歳未満norm成功10回、強心臓は25歳未満bold成功7回、自律の鬼は25歳未満safe成功15回・caught0・snack<5。cancerは社交bold失敗>10またはscum（franchise/intlace除外）、distractは既存恋愛／夜食条件。旧全bold失敗条件との二重判定はしない。
-- 愛将は投手perfFの下限.85、野手の通常起用係数下限.85、守備資格閾値−3を既存若手補正へ加算。その後に稼働率・乱数を適用し、実試合数85%保障とは扱わない。広告王はスポンサーのみ1.1倍。名称・説明を選手／引退／共有画像で統一。
+- 広告王はendorsement bold成功5回、監督のお気に入りは25歳未満norm成功10回、強心臓は25歳未満bold成功7回、自律の鬼は25歳未満safe成功15回・caught0・snack<5。cancerは社交bold失敗>10またはscum（franchise/intlace除外）、distractは既存恋愛／夜食条件。旧全bold失敗条件との二重判定はしない。
+- 監督のお気に入りは投手perfFの下限.85、野手の通常起用係数下限.85、守備資格閾値−3を既存若手補正へ加算。その後に稼働率・乱数を適用し、実試合数85%保障とは扱わない。広告王はスポンサーのみ1.1倍。名称・説明を選手／引退／共有画像で統一。
 - 同一新版・seed・選択列の再現性を保証する。旧版seed結果と必要なRNG消費の変化は今回明示承認済み。RNGアルゴリズム・seed-only URL・通常給与契約の算式は変更しない。
 - 仕様出典：[実装仕様](YAKYUJINSEI_EVENT_SYSTEM_IMPLEMENTATION_SPEC.md)、[完全カード資料](YAKYUJINSEI_JP_EVENT_92_COMPLETE_DATA.md)。本節は実装済み規則、出典には全92件の文案・条件・数値表と受入条件を保持する。
 
@@ -332,3 +332,20 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 - 旧makeOffers／pickOfferUI／旧crossOffers・faMarketの到達不能な定義は削除しない。active overrideとは区別し、大規模整理は別タスク。
 - 非追加：生涯保存／讀取、亞洲名額路線・球団予算、KBO/CPBL posting、option後の追加posting費、即時匯率、新RNG、候補数／抽選球団／並び変更。
 - 未確認：実機iOS Safari／Android Chrome、受限ルートを選んだ全生涯の旧版一致（仕様上要求しない）。dev Previewとmain／本番を分離する。
+
+## 12. 特性名称統一と承認済み追加（2026-10-09）
+
+使用者が[38特性原文](CODEX_TRAIT_JP_38_COMPLETE_MASTER_SPEC_UPDATED.md)の確認事項7件を承認。本節の決定が原文の未確定名称・阪神実名・全階層年資・全38件取得要求に優先する。38個のID／表示名を定義し、既存29件のコードを保持して追加6件の取得・効果を接続した。35件全てを実プレイで取得達成したという意味ではない。未実装3件はBACKLOGで管理し、取得可能と表示しない。
+
+- 名称の正本は`trait-policy.js`のTRAIT_LABELS／traitLabel。選手特性・引退・共有画像で共用し、リーグ名＋歴史に残る名選手、リーグ名＋渡り鳥、球団愛称＋ミスター、リーグ別打撃三冠を保持。旧removedの文字列は表示時に変換し、保存済み配列を破壊的変換しない。
+- 29件の既存効果・取得条件・RNGを維持する例外は以下2件のみ。confidanteは交際成立3回以上、現在未婚（love.st）、本人とexes内の子ども合計0、未取得。離婚後でも現在未婚・子0なら従来経路で取得可能。exes欠落は安全に扱う。goldclothは`NPB_CL_HAN`「阪神ストライプス」一軍（NPB1）通算10季。他球団・二軍・育成は不算入、再加入時は合算。所属がNPB1の全休季も一軍在籍として数え、同年・同球団の重複処理を防ぐ。
+- 一軍球団年資をfirstTeamYearsByTeam／firstTeamSeasonsに別集計し、既存teamTally・FA／海外豁免年資を変更しない。旧混合teamTallyから一軍年資を推測しない。旧条件で取得済みのgoldclothは保持する。キャリア保存／読込機能を追加しない。
+- oldghost「ベテランの意地」：35歳以上で年間MVP、未取得・未使用。oldGhostPendingを設定し、翌季phasePreの既存衰退だけ半減（四捨五入、最低1）、pendingを消してusedを立てる。自律の鬼による2年遅延を適用した基礎衰退が対象。翌季が全休でもその季で一度消費。捕手専用の追加衰退変更は移植しない。
+- miraclegen「奇跡の世代」：高校の地方・秋季・選抜・甲子園で実際に優勝した年度／大会の異なる記録を通算4件。準優勝・大学大会・資格戦は数えない。称号のみ。
+- strongpitch「若き剛腕」／stronghit「若きスラッガー」：24歳未満でNPBまたはMLB年間MVPを獲得。投手／野手を分け、称号のみ。24歳、KBO／CPBL、MVPなしは対象外。
+- latepractice「練習遅刻常習犯」：原始categoryがtrainingの安全選択失敗をcntTrainingSafeFailへ累計、20回で取得。学生／社会人のencounter→training効果変換は計数対象にしない。以後すべてのイベントのsafe成功率−5ポイント、norm／boldは不変。20回目は解決前の特性snapshotで判定し、次の選択から減率。年次リセットしない。処理済みeventOccurrenceIDの再実行・再表示で加算しない。
+- hitterTC「打撃三冠王」：同年同リーグの既存首位打者・本塁打王・打点王を全取得した場合、年間MVPを保証。元の個別賞・MVP抽選を元の順序／回数で行った後に保証し、追加乱数・MVP重複を生じない。tripleCrownHistory.hitterTCにyear／bucket／leagueを保持し、同年同リーグの重複記録を防ぐ。後年・別リーグの取得も記録する。
+- 新規9件の名称は全て承認済み。championmaker「優勝請負人」、pitcherTC「投手三冠王」、nitenichi「二天一流」は名称／IDのみ予約し、自然取得・効果・架空実績を追加しない。前提制度の理由はBACKLOGを参照する。
+- 共有画像は既存920px論理幅・2倍出力・配色・内容・ファイル名・seed-only URLを維持。実際の特性タグ幅で改行数を計算して高さへ反映し、38件検証fixtureでも下端の収入とseed／VERSIONを裁切・重畳しない。UI閲覧・画像生成はRNG0。
+- 新しい特性が作用したケースだけ承認済みの結果差を許可する。打撃三冠のMVPが既存表彰・給与評価・出来高へ反映される自然な差、oldghost翌季の能力差、latepractice取得後のイベント成否差を無関係な回帰差と混同しない。給与・成績・契約公式は変更しない。
+- 検証：trait-policy.test.mjsの境界・重複・旧欄位／ラベル・実awards旧版chance列比較、六固定seed全生涯の1.9.1比較、38件のPC／320／390px表示・引退・共有画像、552イベント成否分岐。実機iOS Safari／Android Chromeおよび保留3件の取得／効果は未検証。

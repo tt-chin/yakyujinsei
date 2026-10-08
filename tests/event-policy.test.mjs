@@ -22,7 +22,7 @@ for(const e of d.events){
   assert.ok(text.includes('`'+e.eligibility.role+'`'),`${e.id}/role`);
   for(const m of ['bold','norm','safe']){
     for(const f of ['label','good','bad'])assert.ok(text.includes(original.events.find(x=>x.id===e.id).choices[m][f]),`${e.id}/${m}/${f} historical source`);
-    const riskLine=text.split('\n').find(l=>l.startsWith('| '+m+' |'));
+    const riskLine=text.split('\n').find(l=>l.startsWith('| '+m+' |')).trimEnd();
     assert.ok(riskLine.endsWith('＋'+eventInjury(e,m,false,{})+'ポイント |'),`${e.id}/${m} independent prose injury mask`);
     for(let tier=0;tier<3;tier++)for(const good of [true,false]){assert.deepEqual(eventPlan(e.category,m,tier,good),e.effectPlans[m][tier][good?'success':'failure']);plans++;}
     for(const good of [true,false])for(const clutch of [true,false]){const expected=!good&&e.injuryFailureModes.includes(m)?(m==='bold'?(clutch?12:16):m==='norm'?12:8):0;assert.equal(eventInjury(e,m,good,{clutch}),expected);injuries++;}

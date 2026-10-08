@@ -4,7 +4,7 @@ const nonNegative = v => Number.isSafeInteger(v)&&v>=0?v:0;
 export function ensureEventState(s) {
   s.eventSchemaVersion??=1;s.pendStat??=0;s.eventSequence=nonNegative(s.eventSequence);
   s.processedEventIDs??={};s.pendingEvent??=null;s.incomeLedger??=[];s.eventSeasonContext??=null;
-  for(const key of ['careerOutsideIncome','yearOutsideIncome','cntNormWin','cntEndorseBoldWin','cntSocialBoldFail'])s[key]=nonNegative(s[key]);
+  for(const key of ['careerOutsideIncome','yearOutsideIncome','cntNormWin','cntEndorseBoldWin','cntSocialBoldFail','cntTrainingSafeFail'])s[key]=nonNegative(s[key]);
   s.traits??={};s.traits.favorite??=false;s.traits.adking??=false;
   return s;
 }
@@ -31,7 +31,7 @@ export function applyEvent(s,card,mode,{chance,pick,abilityKeys,occurrenceID=s.p
   const unlocked=eventTraitUnlocks(work);unlocked.forEach(k=>{work.traits[k]=true;});
   const result={eventOccurrenceID:occurrenceID,cardID:card.id,mode,success,category,tier,target,abilityDelta:ability?.abilityDelta||0,statDelta:plan.stat,overflowStat:ability?.overflowStat||0,injuryAdded,incomeYen,year:s.year,ability,unlocked,snapshot};
   work.processedEventIDs[occurrenceID]=result;work.pendingEvent=null;
-  for(const k of ['traits','ab','carry','incomeLedger','processedEventIDs','pendingEvent','pendStat','tmpInj','careerOutsideIncome','yearOutsideIncome','careerEarnings','cntSave','cntSaveWin','cntNormWin','cntBoldWin','cntBoldFail','cntEndorseBoldWin','cntSocialBoldFail','cntSnack'])if(k in work)s[k]=work[k];
+  for(const k of ['traits','ab','carry','incomeLedger','processedEventIDs','pendingEvent','pendStat','tmpInj','careerOutsideIncome','yearOutsideIncome','careerEarnings','cntSave','cntSaveWin','cntNormWin','cntBoldWin','cntBoldFail','cntEndorseBoldWin','cntSocialBoldFail','cntSnack','cntTrainingSafeFail'])if(k in work)s[k]=work[k];
   return {applied:true,result};
 }
 export function beginEventSeason(s) {

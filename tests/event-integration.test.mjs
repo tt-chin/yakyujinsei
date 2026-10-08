@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import * as domestic from '../docs/src/engine/domestic-tournament-policy.js';
+import {TRAIT_LABELS,TRAIT_TEXT,highSchoolChampionCount} from '../docs/src/engine/trait-policy.js';
 import {ensureEventState,beginEventSeason,consumeEventSeason} from '../docs/src/engine/event-state-policy.js';
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const sim=game.slice(game.indexOf('function simSeason('),game.indexOf('/* シーズン状態は10%'));
@@ -26,7 +27,7 @@ assert.match(game,/if\(eventPoints!==0\)Object\.assign\(st,normalizeEventSeason\
 assert.match(game,/ensureEventState\(state\);return state/);
 assert.match(game,/resetEventYear\(S\); startYear\(\)/);
 assert.match(game,/consumeEventSeason\(S\);card\('bad'/);
-assert.match(game,/favorite:'愛将',adking:'広告王'/);
+assert.equal(TRAIT_LABELS.favorite,'監督のお気に入り');
 assert.match(game,/eventPoints!==0[\s\S]*applyEventSeason[\s\S]*recordSalaryEvaluation\(st\)/);
 const eventDisplay=game.slice(game.indexOf('function eventChoiceSummary'),game.indexOf('function drawEvents'));
 assert.doesNotMatch(eventDisplay,/\b(?:R|ri|pick|chance)\s*\(/);
@@ -34,7 +35,7 @@ assert.match(fs.readFileSync(new URL('../docs/src/engine/event-policy.js',import
 const amateur=game.slice(game.indexOf('  function cupOnce('),game.indexOf('  function intlEvents('));
 for(const stage of ['HS','U','CORP','IND'])for(const rest of [false,true]){
   let rng=0,next=0,indResults=null;const state=ensureEventState({year:2030,age:20,stage,stageYr:1,schoolTier:'S',schoolId:'TEST',senbatsuEligibleYear:null,seasonFactor:rest?0:1,pendStat:-2,traits:{},ab:{},pool:0,honors:[],log:[],domesticCompletedKeys:{},domesticTournamentLog:[]});
-  const ctx=vm.createContext({...domestic,S:state,DATA:{universities:[{schoolId:'TEST',jinguRoute:'DIRECT'}]},ensureEventState,beginEventSeason,consumeEventSeason,ovr:()=>50,ri:()=>{rng++;return 0;},card:()=>{},nextStep:()=>{next++;},maybeIntl:done=>done(),recordIndependentSalaryEvaluation:r=>{indResults=r;}});
+  const ctx=vm.createContext({...domestic,S:state,DATA:{universities:[{schoolId:'TEST',jinguRoute:'DIRECT'}]},TRAIT_TEXT,highSchoolChampionCount,displayTrait:k=>TRAIT_LABELS[k],traitCard:k=>{state.traits[k]=true;},ensureEventState,beginEventSeason,consumeEventSeason,ovr:()=>50,ri:()=>{rng++;return 0;},card:()=>{},nextStep:()=>{next++;},maybeIntl:done=>done(),recordIndependentSalaryEvaluation:r=>{indResults=r;}});
   vm.runInContext(amateur,ctx);vm.runInContext('amateurSeason()',ctx);
   assert.equal(state.pendStat,0,stage+' annual point consumption');assert.equal(state.eventSeasonContext.consumed,true);assert.equal(next,1);
   if(rest){assert.equal(rng,0);assert.equal(state.log[0].line,'全休');}

@@ -12,7 +12,7 @@ export function eventEligible(card, s) {
 }
 export function eventOdds(t = {}) {
   const base = (t.genius || t.late || t.clutch ? 70 : 50) - (t.thief ? 10 : 0);
-  return {safe:Math.min(95,base+20), norm:Math.min(95,base+(t.favorite?5:0)), bold:base-15+(t.clutch&&t.genius?5:0)};
+  return {safe:Math.min(95,base+20)-(t.latepractice?5:0), norm:Math.min(95,base+(t.favorite?5:0)), bold:base-15+(t.clutch&&t.genius?5:0)};
 }
 export const eventTier = t => t.clutch ? (t.genius ? 2 : 1) : 0;
 export const effectiveCategory = (card, stage) => card.category === 'encounter' && ['HS','U','CORP'].includes(stage) ? 'training' : card.category;
@@ -50,6 +50,7 @@ export function eventAddAbility({pos,key,cur,pot,carry=0,points}) {
 export function eventCounters(s,card,mode,success,category) {
   const out={};const add=k=>{out[k]=(s[k]||0)+1;};
   if(mode==='safe'){add('cntSave');if(success)add('cntSaveWin');}
+  if(card.category==='training'&&mode==='safe'&&!success)add('cntTrainingSafeFail');
   if(mode==='norm'&&success)add('cntNormWin');
   if(mode==='bold'){add(success?'cntBoldWin':'cntBoldFail');if(success&&category==='endorsement')add('cntEndorseBoldWin');if(!success&&category!=='training')add('cntSocialBoldFail');}
   if(!success&&mode!=='safe'&&card.counterTags.includes('snackRisk'))add('cntSnack');
@@ -58,6 +59,7 @@ export function eventCounters(s,card,mode,success,category) {
 export function eventTraitUnlocks(s) {
   const t=s.traits||{},l=s.love||{},young=s.age<25,out=[];
   if(!t.adking&&s.cntEndorseBoldWin>=5)out.push('adking');
+  if(!t.latepractice&&s.cntTrainingSafeFail>=20)out.push('latepractice');
   if(!t.favorite&&young&&s.cntNormWin>=10)out.push('favorite');
   if(!t.clutch&&young&&s.cntBoldWin>=7)out.push('clutch');
   if(!t.disc&&young&&s.cntSaveWin>=15&&(l.caught||0)===0&&s.cntSnack<5)out.push('disc');
@@ -66,6 +68,7 @@ export function eventTraitUnlocks(s) {
   return out;
 }
 export const EVENT_TRAIT_TEXT = {
+  latepractice:'訓練イベントの安全選択で累計20回失敗。以後、全イベントの安全選択の成功率が5ポイント低下。',
   favorite:'通常の起用係数に下限0.85、守備資格の閾値−3、通常選択の成功率+5ポイント。故障後の実試合数を保障する効果ではありません。',
   adking:'スポンサー収入が1.1倍。年俸・契約金には影響しません。',
   clutch:'勝負選択の成功率55%（天才と併有で60%）。分類別の成功・失敗効果を改善し、指定された勝負失敗の故障加算は12ポイント。',
