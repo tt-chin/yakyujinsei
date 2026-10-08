@@ -2,13 +2,15 @@
 
 各正式版已完成內容的唯一正本。現行仕様は[CURRENT_SPEC.md](CURRENT_SPEC.md)、未完了事項は[BACKLOG.md](BACKLOG.md)。旧VERSION_HISTORYの正式版記録を本書へ統合し、原文は[封存](docs/archive/local/VERSION_HISTORY.md)へ保存した。過去の完了記録は今回の再検証完了を意味しない。
 
-## 1.9.1 - 2026-10-08（dev／正式公開承認待ち）
+## 1.9.1 - 2026-10-08（正式公開済み）
 
 - PATCH：契約・年俸決定履歴が最後の10件しか残らない不具合を修正。appendSalaryDecisionと旧状態migrationの切り捨てを廃止し、生涯の全決定を保存・表示する。
 - 給与適用年度の昇順、同年度・同決定種類の置換、同年度の異なる種類の保持を維持。契約継続年度へ架空の決定を追加しない。薪資計算・契約条件・所得・年度成績・RNG・seed-only URLは変更しない。
 - 26単体／静的テスト、モジュール／JavaScript検査、25件追加と旧状態移行、PC／320／390pxの全行表示／通常ページスクロール／空履歴／旧履歴／契約継続を検証。Console／JS・CSS404は0。
 - v1.9.0（ad5b778）と投手／野手の全生涯を比較し、履歴と版号を除く全状態が一致。yakyo-test-001/P：541操作・RNG652、jp3-infielder-01/IF：556操作・RNG557。成績・収入・契約も差異0。
-- 已截断の旧履歴は完全な可信バックアップがなく自動復元不能。現存資料を保持し、金額を推測・捏造しない。実機iOS Safari／Android Chromeは未確認。main・本番は変更しない。
+- 已截断の旧履歴は完全な可信バックアップがなく自動復元不能。現存資料を保持し、金額を推測・捏造しない。実機iOS Safari／Android Chromeは未確認。実装段階ではmain・本番を変更せず、以下の正式公開承認後に反映した。
+- ユーザー承認後、検証済みdev 517831cをmainへfast-forward／pushし、v1.8.0～1.9.1の変更を正式公開。既存同期[Publish website](https://github.com/tt-chin/yakyujinsei/actions/runs/37790403870)と公開先[Pages deployment](https://github.com/tt-chin/yakyujinsei-site/actions/runs/37790429449)は成功。公開先commitは5602a7c。
+- https://yakyujinsei.com のVERSION 1.9.1とgame／履歴／契約金／市場policyの配信一致を確認。配信設定・Workflow・ゲーム内容は今回変更しない。公開状態の文書更新による追加版号は付けない。
 
 ## 1.9.0 - 2026-10-08（dev／正式公開承認待ち）
 
