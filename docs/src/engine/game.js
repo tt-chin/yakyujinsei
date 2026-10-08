@@ -325,7 +325,7 @@ function tjBigInjury(cont){
 function afterGamble(kind,cont){
   if(kind==='inject'){ S.tjSuccess++;
     if(S.tjSuccess>=2&&!S.traits.rubber){ S.traits.rubber=true;
-      card('gold','隠し特性解放：ゴムゴムの腕','二度の肘危機を注射だけで乗り切り、一度も手術を受けなかった――靱帯はゴムのようにしなやかだ。<b class="hl">TJゲージ上限と注射成功率が2倍</b>。'); board(1); } }
+      card('gold','隠し特性解放：ゴムゴムの腕','二度の肘危機を注射だけで乗り切り、一度も手術を受けなかった――靱帯はゴムのようにしなやかだ。<b class="hl">TJゲージ上限が50から100に、注射成功率が55%から85%に上昇</b>。'); board(1); } }
   else if(kind==='surgery'){ S.tjSuccess=0; /* 手術時に連続記録をリセット。 */
     if(S.traits.rubber){ removeTrait('rubber','ゴムゴムの腕');
       card('bad','ゴムゴムの腕、ついに限界','ついに手術室へ――ゴムゴムの腕と呼ばれた腕にも限界はあった。<b class="dn">ゴムゴムの腕失効</b>。'); board(1); } }

@@ -49,7 +49,7 @@ export function highSchoolChampionCount(s) {
 export function declineForSeason(s,base) {
   const active=Boolean(s.oldGhostPending&&!s.oldGhostUsed);
   if(active){s.oldGhostPending=false;s.oldGhostUsed=true;}
-  return active?Math.max(1,Math.round(base*.5)):base;
+  return active&&base>0?Math.max(1,Math.round(base*.5)):base;
 }
 export function awardTraitUnlocks(s,bucket,league) {
   const unlocked=[],t=s.traits,h=s.honors,prefix=`${s.year} ${league}`;

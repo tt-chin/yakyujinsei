@@ -7,17 +7,18 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import {TRAIT_LABELS,TRAIT_TEXT,removedTraitLabel} from '../docs/src/engine/trait-policy.js';
-const root=fileURLToPath(new URL('../',import.meta.url)),baseline='9fcb24a';
+const root=fileURLToPath(new URL('../',import.meta.url)),baseline='f6b5c9b';
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').slice(1).join('=');
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const hook=`window.__traitTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),gold:()=>checkGoldclothSeason(),award:v=>{Object.assign(S,v);awards(v.bucket||'NPB',v.st);},retire:()=>endGame('特性表示の検証'),share:()=>{const out=document.createElement('div');document.body.appendChild(out);const texts=[],bounds=[],original=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(text);bounds.push({text,x:args[0],y:args[1],width:this.measureText(text).width,height:this.canvas.height/2});return original.call(this,text,...args);};try{shareImage([],out);return {png:out.querySelector('img').src,texts,bounds};}finally{CanvasRenderingContext2D.prototype.fillText=original;}},pre:()=>{allocUI=()=>{};phasePre();},amateur:()=>{nextStep=()=>{};maybeIntl=next=>next();amateurSeason();}};`;
 const oldHook=`window.__traitTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0})};`;
+const reviewHook=`window.__traitTest.rubber=()=>afterGamble('inject',()=>{});`;
 const cache=new Map(),errors=[];
 const server=createServer(async(req,res)=>{try{
   const url=new URL(req.url,'http://localhost'),old=url.pathname.startsWith('/baseline/'),rel=decodeURIComponent(url.pathname).replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('Invalid path');
   if(old&&!cache.has(rel))cache.set(rel,execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20*1024*1024}));
   let content=old?cache.get(rel):await readFile(path.join(root,'docs',rel));
-  if(rel==='src/engine/game.js'){content=content.toString().replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;');const at=content.lastIndexOf('})();');content=content.slice(0,at)+(old?oldHook:hook)+content.slice(at);}
+  if(rel==='src/engine/game.js'){content=content.toString().replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;');const at=content.lastIndexOf('})();');content=content.slice(0,at)+(old?oldHook:hook+reviewHook)+content.slice(at);}
   res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
 }catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const local=`http://127.0.0.1:${server.address().port}`;
@@ -25,7 +26,7 @@ const browser=await chromium.launch({channel:'chrome',headless:true}),shots=path
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push(r.status()+' '+r.url());});};
 const start=async(p,url,pos='P')=>{await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();};
 const action=()=>{const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];if(!b)throw Error('No career action');return b;};
-const extra=new Set(['oldghost','miraclegen','strongpitch','stronghit','championmaker','latepractice','pitcherTC','hitterTC','nitenichi','oldGhostPending','oldGhostUsed','firstTeamSeasons','firstTeamYearsByTeam','tripleCrownHistory','cntTrainingSafeFail','version']);
+const extra=new Set(['version']);
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).filter(([key])=>!extra.has(key)).map(([key,v])=>[key,key==='removed'?v.map(x=>removedTraitLabel(x)):canonical(v)])):value;
 let failure;
 try{
@@ -40,15 +41,23 @@ try{
     }
     assert.equal(runs[1].length,runs[0].length,seed+' action count');
     for(let i=0;i<runs[0].length;i++)assert.deepEqual(canonical(runs[1][i]),canonical(runs[0][i]),`${seed} step ${i}: non-approved game or RNG difference`);
-    const last=runs[1].at(-1);assert.ok(last.state.done);console.log(`${seed}/${pos}: ${runs[1].length} actions, RNG ${last.calls}, non-trait state/statistics/contracts/income/choices equal to 1.9.1; new traits ${Object.keys(TRAIT_LABELS).filter(k=>extra.has(k)&&last.state.traits[k]).join(',')||'none'}`);
+    const last=runs[1].at(-1);assert.ok(last.state.done);console.log(`${seed}/${pos}: ${runs[1].length} actions, RNG ${last.calls}, all state/statistics/contracts/income/choices equal to 1.10.0 (excluding VERSION)`);
   }
   for(const width of [1280,320,390]){
     const ctx=await browser.newContext({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500}),p=await ctx.newPage();wire(p);await start(p,(arg('preview')||local)+'/?seed=trait-ui');
     if(arg('preview')){
+      for(const rel of ['src/config.js','src/engine/game.js','src/engine/trait-policy.js']){
+        const deployed=await p.evaluate(async rel=>{const r=await fetch('./'+rel,{cache:'no-store'});if(!r.ok)throw Error(rel+' HTTP '+r.status);return r.text();},rel);
+        assert.equal(deployed.replace(/\r\n/g,'\n'),(await readFile(path.join(root,'docs',rel),'utf8')).replace(/\r\n/g,'\n'),rel+' Preview differs from tested source');
+      }
+      const declines=await p.evaluate(async()=>{const {declineForSeason}=await import('./src/engine/trait-policy.js');return [0,1,3,5].map(base=>declineForSeason({oldGhostPending:true},base));});assert.deepEqual(declines,[0,1,2,3]);
       await p.locator('[data-main-view="player"]').click();await p.locator('[data-player-tab="traits"]').click();
       // Synthetic renderer fixture only; reserved traits are not acquired in the game.
       await p.evaluate(async()=>{const {TRAIT_LABELS,traitLabel}=await import('./src/engine/trait-policy.js'),{renderTraits}=await import('./src/ui/ability-view.js');renderTraits(document.querySelector('#player-content'),{active:Object.keys(TRAIT_LABELS).map(k=>traitLabel(k,{mrTeamName:'阪神ストライプス',legendLeague:'NPB',rainbowLg:'メジャーリーグ'})),removed:[]});});
     }else{
+      await p.evaluate(()=>{window.__traitTest.set({tjSuccess:1,traits:{}});window.__traitTest.rubber();});
+      const rubber=p.locator('#log .card').filter({hasText:'隠し特性解放：ゴムゴムの腕'});assert.match(await rubber.innerText(),/上限が50から100に、注射成功率が55%から85%に上昇/);assert.doesNotMatch(await rubber.innerText(),/2倍/);await rubber.scrollIntoViewIfNeeded();assert.ok(await rubber.isVisible());assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+      await p.screenshot({path:path.join(shots,'rubber-'+width+'.png')});
       await p.evaluate(labels=>window.__traitTest.set({traits:Object.fromEntries(Object.keys(labels).map(k=>[k,true])),mrTeamName:'阪神ストライプス',legendLeague:'NPB',rainbowLg:'メジャーリーグ',removed:['ムードメーカー','ラバーアーム'],tripleCrownHistory:{hitterTC:[{year:2030,bucket:'NPB',league:'NPB'}]}}),TRAIT_LABELS);
       const before=await p.evaluate(()=>window.__traitTest.get());await p.locator('[data-main-view="player"]').click();await p.locator('[data-player-tab="traits"]').click();assert.deepEqual(await p.evaluate(()=>window.__traitTest.get()),before,'trait viewing is read-only/RNG=0');
       assert.equal(await p.locator('#player-content .ui-list').first().locator('li').count(),38);

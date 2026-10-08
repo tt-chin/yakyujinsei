@@ -42,6 +42,8 @@ s.orgTeamId='NPB_CL_HAN';for(let i=0;i<4;i++){s.year=2056+i;policy.recordFirstTe
 assert.equal(policy.goldclothEligible(s),false);s.year=2060;policy.recordFirstTeamSeason(s);assert.equal(policy.goldclothEligible(s),true);
 s.traits.goldcloth=true;assert.equal(policy.goldclothEligible(s),false);
 assert.equal(policy.goldclothEligible({traits:{},teamTally:{NPB:{NPB_CL_HAN:10},CPBL:{CPBL_TAICHUNG_MAMMOTHS:10}}}),false,'mixed old tenure is not evidence');
+const legacyGold={year:2045,lv:'NPB1',orgTeamId:'NPB_CL_HAN',traits:{goldcloth:true},teamTally:{NPB:{NPB_CL_HAN:12}}};
+policy.recordFirstTeamSeason(legacyGold);assert.equal(legacyGold.traits.goldcloth,true);assert.equal(legacyGold.firstTeamYearsByTeam.NPB_CL_HAN,1,'only newly observed first-team season counts');
 
 const wins=['HS_SUMMER_LOCAL','HS_FALL','HS_SENBATSU','HS_KOSHIEN'].map((key,i)=>({key,year:2026+i,result:'優勝'}));
 assert.equal(policy.highSchoolChampionCount({domesticTournamentLog:wins.slice(0,3)}),3);
@@ -54,6 +56,10 @@ for(const [age,pos,bucket,expected] of [[23,'P','NPB',['strongpitch']],[23,'IF',
 s=awardState(35);s.oldGhostUsed=true;assert.deepEqual(policy.awardTraitUnlocks(s,'NPB','NPB'),[]);
 s=awardState(35);s.honors=[];assert.deepEqual(policy.awardTraitUnlocks(s,'NPB','NPB'),[]);
 assert.equal(policy.declineForSeason({oldGhostPending:true},2),1,'disc-adjusted first-stage decline');
+for(const [base,expected] of [[0,0],[1,1],[2,1],[3,2],[5,3],[7,4]]){
+  const v={oldGhostPending:true,oldGhostUsed:false};assert.equal(policy.declineForSeason(v,base),expected);assert.equal(v.oldGhostPending,false);assert.equal(v.oldGhostUsed,true);assert.equal(policy.declineForSeason(v,base),base,'benefit is consumed once even with zero decline');
+  assert.equal(policy.declineForSeason({},base),base);assert.equal(policy.declineForSeason({oldGhostPending:true,oldGhostUsed:true},base),base);
+}
 s=awardState(35);policy.awardTraitUnlocks(s,'NPB','NPB');assert.equal(s.oldGhostPending,true);assert.equal(policy.declineForSeason(s,7),4);assert.equal(s.oldGhostPending,false);assert.equal(s.oldGhostUsed,true);assert.equal(policy.declineForSeason(s,8),8);assert.equal(policy.declineForSeason({},5),5);
 s={age:23,pos:'IF',year:2033,traits:{},honors:['2033 NPB首位打者','2033 NPB本塁打王','2033 NPB打点王']};
 assert.deepEqual(policy.awardTraitUnlocks(s,'NPB','NPB'),['hitterTC','stronghit']);assert.equal(s.honors.filter(h=>h==='2033 NPB年間MVP').length,1);
@@ -61,6 +67,15 @@ assert.deepEqual(policy.awardTraitUnlocks(s,'NPB','NPB'),[]);assert.equal(s.trip
 s.year=2034;s.honors.push('2034 KBO首位打者','2034 KBO本塁打王','2034 KBO打点王');assert.deepEqual(policy.awardTraitUnlocks(s,'KBO','KBO'),['hitterTC']);assert.equal(s.tripleCrownHistory.hitterTC.length,2);assert.deepEqual(policy.awardTraitUnlocks(s,'KBO','KBO'),[]);
 s.year=2035;s.honors.push('2035 NPB首位打者','2035 NPB本塁打王','2035 NPB打点王');assert.deepEqual(policy.awardTraitUnlocks(s,'NPB','NPB'),[]);assert.equal(s.tripleCrownHistory.hitterTC.length,3);
 for(const honors of [['2033 NPB首位打者','2033 NPB本塁打王','2034 NPB打点王'],['2033 NPB首位打者','2033 NPB本塁打王','2033 KBO打点王']]){const v={age:24,pos:'IF',year:2033,traits:{},honors};assert.deepEqual(policy.awardTraitUnlocks(v,'NPB','NPB'),[]);}
+for(const [bucket,league] of [['NPB','NPB'],['KBO','KBO'],['CPBL','台湾プロ野球'],['MLB','メジャーリーグ']]){
+  const titles=['首位打者','本塁打王','打点王'],honors=titles.map(t=>'2033 '+league+t),v={age:30,pos:'IF',year:2033,traits:{},honors:[...honors,...honors]};
+  assert.deepEqual(policy.awardTraitUnlocks(v,bucket,league),['hitterTC']);assert.deepEqual(policy.awardTraitUnlocks(v,bucket,league),[]);
+  assert.deepEqual(v.tripleCrownHistory.hitterTC,[{year:2033,bucket,league}]);
+  for(const title of ['年間MVP','打撃三冠王'])assert.equal(v.honors.filter(h=>h==='2033 '+league+title).length,1);
+  for(const wrong of ['2034 '+league+'打点王','2033 別リーグ打点王','2033 '+league+'打点王（旧名称）','2033 '+league+'打点タイトル']){
+    const invalid={age:30,pos:'IF',year:2033,traits:{},honors:[...honors.slice(0,2),wrong]};assert.deepEqual(policy.awardTraitUnlocks(invalid,bucket,league),[],'unrecognized year/league/title must not imply a crown');assert.equal(invalid.tripleCrownHistory,undefined);
+  }
+}
 
 assert.equal(eventCounters({}, {category:'encounter',counterTags:[]},'safe',false,'training').cntTrainingSafeFail,undefined);
 assert.equal(eventCounters({}, {category:'training',counterTags:[]},'safe',true,'training').cntTrainingSafeFail,undefined);
@@ -77,6 +92,12 @@ beginEvent(s,card);applyEvent(s,card,'safe',options);assert.equal(odds[1],65);
 
 // Run the actual awards binding against the pre-change source: original chance calls must remain in place.
 const current=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
+const rubberCards=[],rubberState={tjSuccess:1,traits:{},ab:{}};
+const rubberContext=vm.createContext({S:rubberState,card:(...args)=>rubberCards.push(args),board:()=>{},removeTrait:()=>{},checkConfidante:()=>{}});
+vm.runInContext(current.slice(current.indexOf('function afterGamble('),current.indexOf('function pitcherRole(')),rubberContext);
+vm.runInContext("afterGamble('inject',()=>{})",rubberContext);
+assert.equal(rubberState.traits.rubber,true);assert.match(rubberCards[0][2],/上限が50から100に、注射成功率が55%から85%に上昇/);assert.doesNotMatch(rubberCards[0][2],/2倍/);
+assert.match(current,/const succP=S\.traits\.rubber\?85:55/);assert.match(current,/return S\.traits\.rubber\?100:50/);
 const oldGame=execFileSync('git',['show','9fcb24a:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:3e6});
 const awards=source=>source.slice(source.indexOf('function awards('),source.indexOf('function maybeIntl('));
 for(const pos of ['P','IF']){
@@ -84,6 +105,17 @@ for(const pos of ['P','IF']){
     vm.runInContext(awards(source),ctx);vm.runInContext("awards('NPB',{d:7,PA:600,avg:.38,HR:45,RBI:140,SB:0,H:200,BB:20,IP:180,era:2,SO:220,DEF:0})",ctx);return {chances,state};});
   assert.deepEqual(runs[1].chances,runs[0].chances);
   if(pos==='IF'){assert.equal(runs[0].state.honors.includes('2030 NPB年間MVP'),false);assert.equal(runs[1].state.honors.includes('2030 NPB年間MVP'),true);assert.equal(runs[1].state.traits.hitterTC,true);}
+}
+// Exercise the actual award-name producers in all four leagues against v1.10.0.
+const preReviewGame=execFileSync('git',['show','f6b5c9b:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:3e6});
+for(const [bucket,league,lv] of [['NPB','NPB','NPB1'],['KBO','KBO','KBO1'],['CPBL','台湾プロ野球','CPBL1'],['MLB','メジャーリーグ','MLB']]){
+  const runs=[preReviewGame,current].map(source=>{
+    const chances=[],state={year:2033,age:30,pos:'IF',lv,seasonFactor:1,traits:{},honors:[],stats:{[bucket]:{yr:2,AS:0}},dpos:'DH'};
+    const ctx=vm.createContext({...policy,S:state,LV:{[lv]:{top:true,g:143}},clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),chance:p=>{chances.push(p);return p===100;},isSP:()=>false,card:()=>{},removeTrait:()=>{},displayTrait:k=>policy.traitLabel(k,state)});
+    vm.runInContext(awards(source),ctx);vm.runInContext(`awards('${bucket}',{d:7,PA:650,avg:.5,HR:80,RBI:200,SB:0,H:325,BB:100,DEF:0})`,ctx);return {chances,state};
+  });
+  assert.deepEqual(runs[1],runs[0],bucket+' actual awards state and RNG unchanged');
+  assert.equal(runs[1].state.traits.hitterTC,true);assert.equal(runs[1].state.honors.filter(h=>h==='2033 '+league+'年間MVP').length,1);
 }
 assert.doesNotMatch(fs.readFileSync(new URL('../docs/src/engine/trait-policy.js',import.meta.url),'utf8'),/\b(?:R|ri|pick|chance|random)\s*\(/);
 console.log('38 labels, deferred IDs, child/marriage guards, first-team cumulative tenure, HS wins, MVP/age/triple-crown boundaries, one-use decline, safe failure/idempotency and original awards RNG calls passed.');
