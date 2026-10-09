@@ -2,7 +2,8 @@ import { VERSION } from '../config.js';
 import { TRAIT_LABELS, TRAIT_TEXT, traitLabel, removedTraitLabel, confidanteEligible, recordFirstTeamSeason, goldclothEligible, highSchoolChampionCount, declineForSeason, awardTraitUnlocks } from './trait-policy.js';
 import { EVENT_CATALOG } from '../data/event-cards-jp.js';
 import { EVENT_MODES, eventEligible, eventOdds, effectiveCategory, eventTier, eventPlan, eventInjury, eventIncome, eventTraitUnlocks, EVENT_TRAIT_TEXT, validateEventCatalog } from './event-policy.js';
-import { ensureEventState, beginEvent, applyEvent, beginEventSeason, consumeEventSeason, resetEventYear } from './event-state-policy.js';
+import { ensureEventState, beginEvent, eventDrawPool, applyEvent, beginEventSeason, consumeEventSeason, resetEventYear } from './event-state-policy.js';
+import { createSeedShareController, replayURL, copyShareText } from '../ui/seed-share.js';
 import { applyEventSeason, normalizeEventSeason } from './event-season-policy.js';
 import { JP_DATA } from '../data/jp-data.js';
 import { MARKET_BASELINES } from '../data/salary-market-data.js';
@@ -841,8 +842,8 @@ function eventChoiceSummary(ev,mode){
 function drawEvents(n,done){
   if(n<=0){done();return;}
   choose('',[{t:'イベントカードを引く（残り'+n+'枚）',main:true,f:()=>{
-    const pool=EVENTS.filter(e=>eventEligible(e,S));
-    if(!pool.length){card('info','イベント','対象のイベントがない');done();return;}
+    const pool=eventDrawPool(S,EVENTS);
+    if(!pool.length){card('info','イベント','今年まだ引いていない対象のイベントカードがないため、次へ進みます。');done();return;}
     const ev=pick(pool),pending=beginEvent(S,ev);
     const after=()=>{board(1);drawEvents(n-1,done);};
     choose('イベント｜'+ev.n+'――'+ev.intro,EVENT_MODES.map(mode=>({t:ev.choices[mode].label,warn:mode==='bold',main:mode==='norm',s:eventChoiceSummary(ev,mode),f:()=>resolveEvent(ev,mode,after,pending.eventOccurrenceID)})));
@@ -1031,8 +1032,11 @@ function statBonus(pts,out){ /* 能力上限到達後は報酬を当該シーズ
 }
 function renderEventResult(ev,result){
   const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const out=[],a=result.ability;
-  if(a){out.push(ABL[result.target]+'：'+(a.abilityDelta>0?'+':'')+a.abilityDelta);out.push('育成点繰越 '+a.carryBefore+' → '+a.carryAfter);if(a.abilityDelta===0&&result.success)out.push('育成点は繰越へ蓄積され、次の1段階に必要なコストには届きませんでした。');}
+  const out=[({bold:'勝負',norm:'通常',safe:'安全'}[result.mode])+(result.success?'成功':'失敗')],a=result.ability;
+  const points=result.abilityPoints??eventPlan(result.category,result.mode,result.tier,result.success).ability;
+  if(points>0)out.push('獲得育成点 +'+points);
+  else if(points<0)out.push('適用育成点 '+points);
+  if(a){out.push((a.abilityDelta<0?'能力低下：':'')+ABL[result.target]+'：'+(a.abilityDelta>0?'+':'')+a.abilityDelta);out.push('育成点繰越 '+a.carryBefore+' → '+a.carryAfter);if(a.abilityDelta===0&&result.success&&!result.overflowStat)out.push('育成点は繰越へ蓄積され、次の1段階に必要なコストには届きませんでした。');}
   if(result.statDelta)out.push('今季成績点'+(result.statDelta>0?'+':'')+result.statDelta);
   if(result.overflowStat)out.push('能力80の超過分：今季成績点+'+result.overflowStat);
   if(result.injuryAdded)out.push('今季の故障リスク加算+'+result.injuryAdded+'ポイント（故障確定ではありません）');
@@ -2272,16 +2276,9 @@ function endGame(reason){
     });
   });
   urlBtn.addEventListener('click',async()=>{
-    const base=location.href.split('#')[0].split('?')[0];
-    const url=base+'?seed='+encodeURIComponent(SEED);
+    const url=replayURL(S.seed||SEED,location.href);
     urlBtn.disabled=true;urlBtn.textContent='⏳ コピー中…';
-    let copied=false;
-    try{if(window.isSecureContext&&navigator.clipboard&&navigator.clipboard.writeText){copied=await Promise.race([navigator.clipboard.writeText(url).then(()=>true).catch(()=>false),new Promise(resolve=>setTimeout(()=>resolve(false),1200))]);}}
-    catch(err){console.warn('Clipboard API unavailable',err);}
-    if(!copied){
-      const ta=document.createElement('textarea');ta.value=url;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
-      try{copied=document.execCommand('copy');}catch(err){}ta.remove();
-    }
+    const copied=await copyShareText(url);
     if(copied){urlBtn.textContent='✅ コピーしました';shareOut.innerHTML='<div class="statline" role="status">リプレイURLをコピーしました。</div>';}
     else{urlBtn.textContent='URLを選択してコピー';shareOut.innerHTML='<label class="statline" style="display:block">下のURLを長押し／選択してコピーしてください。<input value="'+url.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" readonly style="width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:var(--panel);border:1px solid var(--edge);border-radius:6px"></label>';const input=shareOut.querySelector('input');input.focus();input.select();}
     urlBtn.disabled=false;setTimeout(()=>{urlBtn.textContent='🔗 リプレイURLをコピー';},1800);
@@ -3000,6 +2997,7 @@ $('btn-start').onclick=()=>{
 
   function startJapanese(){let params=new URLSearchParams(location.search);let sv=normalizeSeed($('seed-show').value||params.get('seed'));if(!sv)sv=generateSeed();SEED=sv;const pos=document.querySelector('#seg-pos button.on')?.dataset.v||'P';const nm=normalizePlayerName($('in-name').value,SEED,pos);S={rngState:0};seedInit(SEED);S=newState(nm,pos);history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}`);$('start').style.display='none';$('board').style.display='';$('act').style.display='';navigation.reset();navigation.show();card('info','選手誕生',`${S.year}年春、${POSN[S.pos]} <b class="hl">${escapeHTML(S.name)}</b>は<b class="hl">${escapeHTML(S.team)}</b>野球部に入部した。ここから、すべての選択が野球人生を変える。`);startYear();}
   const appVersion=$('app-version');if(appVersion)appVersion.textContent='v'+VERSION;
+  createSeedShareController({trigger:$('board-share'),getSeed:()=>S?.seed||$('seed-show').value||SEED});
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});
   const navigation=initNavigation({onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
   $('btn-start').onclick=startJapanese;

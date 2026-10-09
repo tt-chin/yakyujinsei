@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import {TRAIT_LABELS,TRAIT_TEXT,removedTraitLabel} from '../docs/src/engine/trait-policy.js';
-const root=fileURLToPath(new URL('../',import.meta.url)),baseline='f6b5c9b';
+const root=fileURLToPath(new URL('../',import.meta.url)),baseline='2375d46';
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').slice(1).join('=');
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const hook=`window.__traitTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),gold:()=>checkGoldclothSeason(),award:v=>{Object.assign(S,v);awards(v.bucket||'NPB',v.st);},retire:()=>endGame('特性表示の検証'),share:()=>{const out=document.createElement('div');document.body.appendChild(out);const texts=[],bounds=[],original=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(text);bounds.push({text,x:args[0],y:args[1],width:this.measureText(text).width,height:this.canvas.height/2});return original.call(this,text,...args);};try{shareImage([],out);return {png:out.querySelector('img').src,texts,bounds};}finally{CanvasRenderingContext2D.prototype.fillText=original;}},pre:()=>{allocUI=()=>{};phasePre();},amateur:()=>{nextStep=()=>{};maybeIntl=next=>next();amateurSeason();}};`;
@@ -28,20 +28,28 @@ const start=async(p,url,pos='P')=>{await p.goto(url);await p.waitForFunction(()=
 const action=()=>{const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];if(!b)throw Error('No career action');return b;};
 const extra=new Set(['version']);
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).filter(([key])=>!extra.has(key)).map(([key,v])=>[key,key==='removed'?v.map(x=>removedTraitLabel(x)):canonical(v)])):value;
+const beforeDrawMetadata=value=>Array.isArray(value)?value.map(beforeDrawMetadata):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).filter(([key])=>!['eventDrawYear','eventDrawnCardIDs','abilityPoints'].includes(key)).map(([key,v])=>[key,beforeDrawMetadata(v)])):value;
 let failure;
 try{
   if(!arg('preview')&&!process.argv.includes('--ui-only'))for(const [seed,pos] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-catcher-01','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']]){
     const runs=[];
-    for(const old of [true,false]){
+    for(const old of [true,false,false]){
       const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos);const records=[];
       for(let i=0;i<2500;i++){
         const r=await p.evaluate(`(()=>{const h=window.__traitTest.get();if(h.state.done)return{record:h,done:true};const b=(${action.toString()})();h.action=b.innerText;b.click();return{record:h,done:false};})()`);records.push(r.record);if(r.done)break;if(i===2499)throw Error('Career did not complete');
       }
       runs.push(records);await p.close();
     }
-    assert.equal(runs[1].length,runs[0].length,seed+' action count');
-    for(let i=0;i<runs[0].length;i++)assert.deepEqual(canonical(runs[1][i]),canonical(runs[0][i]),`${seed} step ${i}: non-approved game or RNG difference`);
-    const last=runs[1].at(-1);assert.ok(last.state.done);console.log(`${seed}/${pos}: ${runs[1].length} actions, RNG ${last.calls}, all state/statistics/contracts/income/choices equal to 1.10.0 (excluding VERSION)`);
+    assert.deepEqual(runs[2],runs[1],seed+' new annual draw rule is not reproducible');
+    let firstDifference=null;
+    for(let i=0;i<Math.min(runs[0].length,runs[1].length);i++){
+      const old=beforeDrawMetadata(canonical(runs[0][i])),now=beforeDrawMetadata(canonical(runs[1][i]));
+      if(JSON.stringify(old)!==JSON.stringify(now)){
+        assert.ok(old.state.pendingEvent&&now.state.pendingEvent,'first difference must be an event draw');assert.equal(old.state.year,now.state.year);assert.notEqual(old.state.pendingEvent.cardID,now.state.pendingEvent.cardID,'unrelated first difference');assert.ok(runs[1][i].state.eventDrawnCardIDs.length>=2);firstDifference={step:i,year:now.state.year,oldCard:old.state.pendingEvent.cardID,newCard:now.state.pendingEvent.cardID};break;
+      }
+    }
+    for(const record of runs[1])assert.equal(new Set(record.state.eventDrawnCardIDs).size,record.state.eventDrawnCardIDs.length,'duplicate annual draw');
+    const last=runs[1].at(-1),oldLast=runs[0].at(-1);assert.ok(last.state.done);assert.ok(oldLast.state.done);console.log(`${seed}/${pos}: old ${runs[0].length} actions/RNG ${oldLast.calls} -> new ${runs[1].length} actions/RNG ${last.calls}; two exact new runs, first approved draw difference ${JSON.stringify(firstDifference)}`);
   }
   for(const width of [1280,320,390]){
     const ctx=await browser.newContext({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500}),p=await ctx.newPage();wire(p);await start(p,(arg('preview')||local)+'/?seed=trait-ui');

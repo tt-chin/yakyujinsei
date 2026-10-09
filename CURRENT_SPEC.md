@@ -1,6 +1,6 @@
-# 現行規格（dev v1.10.1／main v1.9.1）
+# 現行規格（dev v1.10.2／main v1.9.1）
 
-更新日：2026-10-09。文書改訂：13。現行仕様の唯一の正本。dev v1.10.1は特性名称統一・追加6件と承認済み条件修正に対する文案・ゼロ衰退境界修正（第12節）、正式公開承認待ち。main／本番はv1.9.1を維持。ユーザーの正式公開承認後、検証済みdevの517831c（v1.9.1）をmainへ反映した。既存Publish website Workflow 37790403870と公開先Pages deployment 37790429449は成功。yakyujinsei.comのVERSION 1.9.1と主要プログラムの配信一致を確認済み。新契約金・年俸市場の承認値は第11節。
+更新日：2026-10-09。文書改訂：14。現行仕様の唯一の正本。dev v1.10.2は年度内イベント去重・結果点数区分・途中Seed共有（第13節）、正式公開承認待ち。main／本番はv1.9.1を維持。ユーザーの正式公開承認後、検証済みdevの517831c（v1.9.1）をmainへ反映した。既存Publish website Workflow 37790403870と公開先Pages deployment 37790429449は成功。yakyujinsei.comのVERSION 1.9.1と主要プログラムの配信一致を確認済み。新契約金・年俸市場の承認値は第11節。
 
 契約金表示修正前のdevは`7acb456e4a0ed48b5541579fc4d42215ee3e4ce8`（v1.8.0）、mainは`93ad2c7345a7469f9bbf333be913725b6069e6bd`（v1.7.0）。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
 
@@ -178,11 +178,11 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 ## 10. 92枚イベント（v1.8.0）
 
 - データ正本はdocs/src/data/event-cards-jp.js。資格・分類・数値planは完全データ改訂3を保持する。v1.8.2の文案正本は[YAKYUJINSEI_JP_EVENT_92_COPY.json](YAKYUJINSEI_JP_EVENT_92_COPY.json)（copyRevision 2と承認済み誤字訂正）。IDでn・intro・choicesのlabel/good/badだけを更新し、92枚・1,012文案欄位を照合する。完全データ文書の旧文案は履歴資料として保持し、現行文案へ優先しない。schema=yakyujinsei.event-catalog.v2、policy=CN157_CLASSIFIED_JP_LOCALIZED。
-- training43／encounter35／endorsement14。stage・lv・org・role・maxAgeはAND、配列内はOR。未知状態を許可せず、対象poolはID順。既存pickで直接抽選し、PRO3／HS・U・CORP・IND2、重複可。空poolは他所属へfallbackしない。
+- training43／encounter35／endorsement14。stage・lv・org・role・maxAgeはAND、配列内はOR。未知状態を許可せず、対象poolはID順。既存pickで直接抽選し、PRO3／HS・U・CORP・IND2を要求枚数とする。v1.10.2以後は同年同card.idを除外し、候補が尽きれば残りを埋めず次へ進む（第13節）。空poolは他所属へfallbackしない。
 - 選択順bold/norm/safe。成功率はgenius/late/clutchのいずれかで基礎70、それ以外50、thief−10。safe+20（最大95）、normはfavorite+5（最大95）、bold−15とclutch+geniusの+5。v1.10.0ではlatepractice取得済みの場合にsafeだけさらに−5ポイント（第12節）。
 - HS/U/CORPのencounterはtrainingとして処理。clutchTier0/1/2を分類planへ一度だけ適用する。結果文・実能力差・carry差・正負成績点・成功入金・指定失敗故障加算を表示する。表示・再表示はRNG消費0。
 - イベント専用能力経路：投手非staの基本costは50未満1／58未満2／66未満4／その他7。投手sta・野手は64未満1／72未満2／その他3。cur>=potなら投手×4／野手×3。carryを蓄積し80まで成長、80超過だけ成績点へ。負数は能力を直接減らし1～80、負効果から成績点は生成しない。一般訓練・恋愛の旧costは維持。
-- 出現IDはyear:eventSequence:cardID。処理済み結果を保持し、同一出現はrng・能力・累計・記帳・続行を再実行しない。同カードの別抽選は別出現。traitsを解決前に固定し、今回の特性解放は今回入金へ遡及しない。
+- 出現IDはyear:eventSequence:cardID。処理済み結果を保持し、同一出現はrng・能力・累計・記帳・続行を再実行しない。同カードの翌年抽選は別出現。同じ未解決カードのbeginEvent再呼出しは同じpendingを返す。traitsを解決前に固定し、今回の特性解放は今回入金へ遡及しない。
 - スポンサー円基準はincomePolicy、safe×.5／norm×1／bold×1.5、既存adking×1.1、最後に万円単位で四捨五入（正額最低1万円）。HS/U基準0。careerOutsideIncome/yearOutsideIncome/careerEarningsへ各一度だけ加算し、ledgerを保持。currentSalary・ct・社会人給与を変更せず、総所得へ再加算しない。
 - PROのpendStat×seasonFactorを既存simSeason・基礎上限後、effort/onetool前へ反映。正負とも対応し、最終stを集計・賞・salary評価で共有。非零点年度のみ両処理後の上限・率・イニング整合性を校正し、p=0年度は従来成績を完全維持する（ユーザー確認済み）。
 - HS/U/CORP/INDでは年度formを一度固定し、大会power/資格入力だけに加える。overall・能力点算式・追加RNGは変更せず、INDの個人成績は生成しない。全休・完了・年度進行でpendStatを消去し、年度開始はyearOutsideIncomeだけリセット。生涯所得とledgerは保持。
@@ -351,3 +351,15 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 - 新しい特性が作用したケースだけ承認済みの結果差を許可する。打撃三冠のMVPが既存表彰・給与評価・出来高へ反映される自然な差、oldghost翌季の能力差、latepractice取得後のイベント成否差を無関係な回帰差と混同しない。給与・成績・契約公式は変更しない。
 - 検証：trait-policy.test.mjsの境界・重複・旧欄位／ラベル・実awards旧版chance列比較、六固定seed全生涯の1.9.1比較、38件のPC／320／390px表示・引退・共有画像、552イベント成否分岐。実機iOS Safari／Android Chromeおよび保留3件の取得／効果は未検証。
 - v1.10.1検証：27単体／静的、36 JS構文、モジュール／4補助policy、552イベント成否分岐。NPB／KBO／台湾プロ野球／メジャーリーグの実awards状態とchance列はf6b5c9bと一致。同年重複、年度・リーグ・未知賞名不一致、旧goldcloth保持・混合年資非補算、oldghost基礎0／1／2／3／5／7と一度消費を確認。六固定seed全生涯の全状態（版号以外）・成績・所得・契約・選択・RNGが1.10.0と一致、RNG652／810／894／400／557／534。本機PC／320／390pxのrubber文案、特性・引退・共有画像、閲覧RNG0、Console／JS・CSS404は0。実機確認は未実施。
+
+## 13. 年度内イベント去重・結果点数・途中Seed共有（v1.10.2）
+
+- CODEX_EVENT_1_10_2_FIX_SPECの事前確認4件を使用者が承認。生涯保存／読込は追加せず、年度抽選情報は本局S内だけに保持する。候補除外・候補尽きによる旧seed結果／RNG消費差を明示承認。交流→訓練は実効分類で表示。途中共有は新機能を含むが、使用者の明示指定により1.10.2を採用し、通常のMINOR分類の今回限りの例外とする。
+- eventDrawYearとeventDrawnCardIDsで同一年の固定card.idを管理。条件を満たすID順の候補から既出IDだけを除外し、既存pickを一度使う。beginEventで表示前にIDを記録。成功／失敗／難易度に関係なく翌年まで再抽選しない。高校／大学／社会人／独立／プロで共通。年度変更で集合を初期化し、同年度のresetEventYearでは消さない。欠落・非配列は安全に初期化。
+- 空候補は「今年まだ引いていない対象のイベントカードがないため、次へ進みます。」と示して継続を一度呼ぶ。再抽選・重複補充・追加RNGを行わない。processedEventIDsによる二重決算防止を維持。Sのメモリ内複製の整合性はテストするが、保存・リロード継続機能の検収とは称さない。リロードは現行どおり開始画面に戻り、seedのみでは途中状態を復元しない。
+- 決算結果のabilityPointsに確定plan.abilityを保持。難易度＋成否、正の獲得育成点／負の適用点、実能力差、育成点繰越の前後を分離。旧結果に値がなければ純粋eventPlanで補う。HS／U／CORPのencounter→trainingを維持し、PRO交流の成績点やスポンサーの実効果を架空育成点にしない。スポンサーが実際に能力点を与える場合だけその点数を表示。成績点・収入・故障加算・能力80の超過分は維持。
+- 固定ヘッダーに共有アイコンを追加。やり直しと表示設定を保持し、既存flex-wrapで狭幅時は折り返す。seed-share.jsの独立dialogは現在のSeed、Seedをコピー、リプレイURLをコピー、閉じる、選択・版号による結果差の注記を持つ。S.seedを正とし、開始前は入力欄／SEEDへfallback。テーマの色変数と文字倍率を使用し、44pxタップ領域、フォーカス循環、Escape、起点へのフォーカス／スクロール復元を提供。
+- URLは現在のorigin／pathnameを保持、queryとfragmentを既存引退共有と同様に除去し、?seed=encodeURIComponent(seed)だけを生成。固定ドメイン、rv／rules、S・選択・RNG・履歴を混入しない。コピーは利用者操作時だけ。Clipboard API→既存execCommand方式→常時選択可能なinputの手動コピー。成功／失敗statusを表示し、引退URLコピーと処理を共用。引退画像・既存共有ボタンを保持。共有／表示／コピーはS／RNGを書き換えない。
+- 検証：28単体／静的、37 JS構文、モジュールと補助4policy。1656件（92カード×3難易度×2成否×3特性tier）の同イベント条件で1.10.1と効果・決算・RNGが一致。PC／320／390pxの共有、特殊Seedと別タブの開始画面、Clipboard成功／未対応／拒否、長名称・大文字・44px・フォーカス・回転、12stage/phase、三枚実抽選、候補尽きRNG0、結果分類、設定とやり直し取消、引退画像とURLを確認。Console／JS・CSS404は0。
+- 六seed全生涯を新版2回で完全一致。初差分は全て候補除外後のcard.id。旧→新（操作／RNG）：yakyo-test-001/P 541/652→543/652、jp3-pitcher-02/P 541/810→535/879、jp3-pitcher-03/P 512/894→535/899、jp3-catcher-01/C 375/400→388/422、jp3-infielder-01/IF 556/557→544/549、jp3-outfielder-01/OF 565/534→566/533。最初の抽選差まで新增メタデータと版号以外は一致。以後の成績・特性・契約・所得・消費変化は異なるイベント系列の自然な結果で、旧版完全一致とは扱わない。
+- 未確認：実機iPhone Safari／Android Chrome、既存event-system-e2eの552ブラウザ分岐の本輪再実行（授権拒否）。単体1656ケースと新しい対象E2Eは実施済み。main／本番の反映は別承認が必要。

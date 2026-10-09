@@ -21,6 +21,6 @@ const expected={
 for(const [seed,[state,head,tail]] of Object.entries(expected))assert.deepEqual(sample(seed),{state,head,tail});
 const alloc=game.slice(game.indexOf('function allocUI'),game.indexOf('function nextStep'));
 assert.doesNotMatch(alloc,/\b(?:R|ri|pick|chance)\s*\(/);
-assert.match(game,/base\+'\?seed='\+encodeURIComponent\(SEED\)/);
+assert.match(game,/replayURL\(S.seed\|\|SEED,location.href\)/);
 assert.doesNotMatch(game,/[?&](?:rv|rules)=/);
 console.log('v1.6.2 six-seed RNG and seed-only URL checks passed.');

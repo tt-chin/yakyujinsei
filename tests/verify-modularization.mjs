@@ -28,7 +28,7 @@ assert.match(html, /href="https:\/\/x\.com\/dog_cat_150"[^>]*>犬猫（@dog_cat_
 assert.match(main, /initializeDisplayPreferences\(\);[\s\S]*await import\('\.\/engine\/game\.js'\)/);
 assert.match(game, /import \{ VERSION \} from '\.\.\/config\.js';/);
 assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
-assert.match(config, /VERSION = '1\.10\.1'/);
+assert.match(config, /VERSION = '1\.10\.2'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(game, /version:VERSION/);
 assert.match(game, /fillText\(VERSION,W-PAD,H-40\)/);
@@ -42,7 +42,7 @@ const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}`;
 assert.doesNotMatch(forbidden, /UNSUPPORTED_REPLAY_VERSION/);
 assert.doesNotMatch(forbidden, /[?&]rv=/);
 assert.doesNotMatch(forbidden, /[?&]rules=/);
-assert.match(game, /base\+'\?seed='\+encodeURIComponent\(SEED\)/);
+assert.match(game, /replayURL\(S.seed\|\|SEED,location.href\)/);
 assert.match(game, /history\.replaceState\(null,'',`\?seed=\$\{encodeURIComponent\(SEED\)\}`\)/);
 
 assert.equal((data.match(/"teamId"/g) || []).length, 90);
@@ -86,4 +86,4 @@ assert.deepEqual(actual, [
 ]);
 assert.equal(rngState, 2095430971);
 
-console.log('Version 1.10.1 modularization static and RNG checks passed.');
+console.log('Version 1.10.2 modularization static and RNG checks passed.');

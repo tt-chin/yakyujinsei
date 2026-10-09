@@ -4,14 +4,23 @@ const nonNegative = v => Number.isSafeInteger(v)&&v>=0?v:0;
 export function ensureEventState(s) {
   s.eventSchemaVersion??=1;s.pendStat??=0;s.eventSequence=nonNegative(s.eventSequence);
   s.processedEventIDs??={};s.pendingEvent??=null;s.incomeLedger??=[];s.eventSeasonContext??=null;
+  if(s.eventDrawYear!==s.year){s.eventDrawYear=s.year;s.eventDrawnCardIDs=[];}
+  if(!Array.isArray(s.eventDrawnCardIDs))s.eventDrawnCardIDs=[];
   for(const key of ['careerOutsideIncome','yearOutsideIncome','cntNormWin','cntEndorseBoldWin','cntSocialBoldFail','cntTrainingSafeFail'])s[key]=nonNegative(s[key]);
   s.traits??={};s.traits.favorite??=false;s.traits.adking??=false;
   return s;
 }
 export function beginEvent(s,card) {
-  ensureEventState(s);s.eventSequence++;
+  ensureEventState(s);
+  if(s.pendingEvent?.year===s.year&&s.pendingEvent.cardID===card.id)return s.pendingEvent;
+  if(!s.eventDrawnCardIDs.includes(card.id))s.eventDrawnCardIDs.push(card.id);
+  s.eventSequence++;
   s.pendingEvent={eventOccurrenceID:`${s.year}:${s.eventSequence}:${card.id}`,cardID:card.id,year:s.year,eventSequence:s.eventSequence,snapshot:{traits:{...s.traits},stage:s.stage,lv:s.lv,org:s.org,pos:s.pos,age:s.age}};
   return s.pendingEvent;
+}
+export function eventDrawPool(s,cards) {
+  ensureEventState(s);
+  return cards.filter(card=>eventEligible(card,s)&&!s.eventDrawnCardIDs.includes(card.id));
 }
 // RNG is supplied by the existing engine. Commit precedes DOM work and continuation.
 export function applyEvent(s,card,mode,{chance,pick,abilityKeys,occurrenceID=s.pendingEvent?.eventOccurrenceID}) {
@@ -29,7 +38,7 @@ export function applyEvent(s,card,mode,{chance,pick,abilityKeys,occurrenceID=s.p
   work.pendStat=(work.pendStat||0)+plan.stat+(ability?.overflowStat||0);work.tmpInj=(work.tmpInj||0)+injuryAdded;
   if(incomeYen>0){for(const k of ['careerOutsideIncome','yearOutsideIncome','careerEarnings']){const total=(work[k]||0)+incomeYen;if(!Number.isSafeInteger(total))throw new Error('EVENT_INCOME_OVERFLOW');work[k]=total;}work.incomeLedger.push({transactionId:occurrenceID,year:s.year,eventSequence:pending.eventSequence,eventKey:card.key,mode,amountYen:incomeYen,source:'EVENT_OUTSIDE_INCOME'});}
   const unlocked=eventTraitUnlocks(work);unlocked.forEach(k=>{work.traits[k]=true;});
-  const result={eventOccurrenceID:occurrenceID,cardID:card.id,mode,success,category,tier,target,abilityDelta:ability?.abilityDelta||0,statDelta:plan.stat,overflowStat:ability?.overflowStat||0,injuryAdded,incomeYen,year:s.year,ability,unlocked,snapshot};
+  const result={eventOccurrenceID:occurrenceID,cardID:card.id,mode,success,category,tier,target,abilityPoints:plan.ability,abilityDelta:ability?.abilityDelta||0,statDelta:plan.stat,overflowStat:ability?.overflowStat||0,injuryAdded,incomeYen,year:s.year,ability,unlocked,snapshot};
   work.processedEventIDs[occurrenceID]=result;work.pendingEvent=null;
   for(const k of ['traits','ab','carry','incomeLedger','processedEventIDs','pendingEvent','pendStat','tmpInj','careerOutsideIncome','yearOutsideIncome','careerEarnings','cntSave','cntSaveWin','cntNormWin','cntBoldWin','cntBoldFail','cntEndorseBoldWin','cntSocialBoldFail','cntSnack','cntTrainingSafeFail'])if(k in work)s[k]=work[k];
   return {applied:true,result};
