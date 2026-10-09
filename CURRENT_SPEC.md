@@ -1,6 +1,6 @@
-# 現行規格（dev v1.10.2／main v1.9.1）
+# 現行規格（v1.10.2／正式公開承認済み）
 
-更新日：2026-10-09。文書改訂：14。現行仕様の唯一の正本。dev v1.10.2は年度内イベント去重・結果点数区分・途中Seed共有（第13節）、正式公開承認待ち。main／本番はv1.9.1を維持。ユーザーの正式公開承認後、検証済みdevの517831c（v1.9.1）をmainへ反映した。既存Publish website Workflow 37790403870と公開先Pages deployment 37790429449は成功。yakyujinsei.comのVERSION 1.9.1と主要プログラムの配信一致を確認済み。新契約金・年俸市場の承認値は第11節。
+更新日：2026-10-09。文書改訂：15。現行仕様の唯一の正本。v1.10.2は年度内イベント去重・結果点数区分・途中Seed共有（第13節）。使用者がiPhone Safari実機5項目すべてPASSと正式公開承認を報告。検証済みゲームcommit 81762159aacf6f39a4b107b8b158dc99e6efffc7を含むdevをmainへ反映し、既存Publish website Workflowで公開する。v1.9.1の過去公開証拠はCHANGELOGへ保持。新契約金・年俸市場の承認値は第11節。
 
 契約金表示修正前のdevは`7acb456e4a0ed48b5541579fc4d42215ee3e4ce8`（v1.8.0）、mainは`93ad2c7345a7469f9bbf333be913725b6069e6bd`（v1.7.0）。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
 
@@ -362,4 +362,4 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 - URLは現在のorigin／pathnameを保持、queryとfragmentを既存引退共有と同様に除去し、?seed=encodeURIComponent(seed)だけを生成。固定ドメイン、rv／rules、S・選択・RNG・履歴を混入しない。コピーは利用者操作時だけ。Clipboard API→既存execCommand方式→常時選択可能なinputの手動コピー。成功／失敗statusを表示し、引退URLコピーと処理を共用。引退画像・既存共有ボタンを保持。共有／表示／コピーはS／RNGを書き換えない。
 - 検証：28単体／静的、37 JS構文、モジュールと補助4policy。1656件（92カード×3難易度×2成否×3特性tier）の同イベント条件で1.10.1と効果・決算・RNGが一致。PC／320／390pxの共有、特殊Seedと別タブの開始画面、Clipboard成功／未対応／拒否、長名称・大文字・44px・フォーカス・回転、12stage/phase、三枚実抽選、候補尽きRNG0、結果分類、設定とやり直し取消、引退画像とURLを確認。Console／JS・CSS404は0。
 - 六seed全生涯を新版2回で完全一致。初差分は全て候補除外後のcard.id。旧→新（操作／RNG）：yakyo-test-001/P 541/652→543/652、jp3-pitcher-02/P 541/810→535/879、jp3-pitcher-03/P 512/894→535/899、jp3-catcher-01/C 375/400→388/422、jp3-infielder-01/IF 556/557→544/549、jp3-outfielder-01/OF 565/534→566/533。最初の抽選差まで新增メタデータと版号以外は一致。以後の成績・特性・契約・所得・消費変化は異なるイベント系列の自然な結果で、旧版完全一致とは扱わない。
-- 未確認：実機iPhone Safari／Android Chrome、既存event-system-e2eの552ブラウザ分岐の本輪再実行（授権拒否）。単体1656ケースと新しい対象E2Eは実施済み。main／本番の反映は別承認が必要。
+- 最終検収で552ブラウザ分岐、六seed新版2回、ローカル／PreviewのPC／320／390pxを再実行して合格。Preview実進行の同年去重・跨年再出現・勝負育成点・実Clipboardを確認。使用者によるiPhone Safari実機5項目は全PASS、正式公開承認済み。Android Chrome実機は未確認。

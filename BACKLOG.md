@@ -30,7 +30,7 @@
 
 ## 後続UI（P1）
 
-- [ ] EVT-1102-DEVICE 途中Seed共有と年度イベント去重の実機iPhone Safari／Android Chrome検証。PC／320／390pxの対象E2Eと単体1656条件、六seed新版2回の全生涯再現は合格。既存552ブラウザ分岐の本輪再実行は授権拒否のため未実施。保存／読込は追加・検証対象にしない。実装仕様はCURRENT_SPEC第13節。
+- [ ] EVT-1102-ANDROID 途中Seed共有と年度イベント去重のAndroid Chrome実機検証のみ未確認。PC／320／390px、Preview実進行、単体1656条件、552ブラウザ分岐、六seed新版2回は合格。iPhone Safari実機5項目全PASSは使用者確認済み、正式公開承認済み。保存／読込は対象外。実装仕様はCURRENT_SPEC第13節。
 
 | ID | 対象 | 前提・検収 |
 |---|---|---|
