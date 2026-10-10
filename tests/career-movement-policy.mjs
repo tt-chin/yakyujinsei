@@ -68,7 +68,8 @@ assert.match(game, /t:`NPBへ復帰：\$\{rec\.name\}`/);
 assert.match(game, /\['KBO','CPBL','MiLB','MLB'\]\.includes\(S\.org\)/);
 assert.match(game, /lv=o>=53\?'NPB1':'NPB2',candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);
 assert.match(game, /s:`\$\{LV\[lv\]\.n\}契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
-assert.match(game, /buyoutRemaining\(\);signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN',\{annualSalary,candidate\}\);finish\(\)/);
+assert.match(game, /contractNeedsRenewal\(S\.ct\)/);
+assert.match(game, /complete\(\(\)=>\{signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN',\{annualSalary,candidate\}\)/);
 assert.match(game, /t:'現在の球団に残留',main:true,f:finish/);
 
 // v1.4.5追加回帰: NPB降格時のCPBLオファーは、移籍前階層から計算した表示年俸を契約へ引き継ぐ。

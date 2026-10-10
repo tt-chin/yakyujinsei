@@ -1,6 +1,6 @@
-# 現行規格（main／dev v1.10.2／正式公開済み）
+# 現行規格（dev v1.10.3／main v1.10.2）
 
-更新日：2026-10-09。文書改訂：15。現行仕様の唯一の正本。v1.10.2は年度内イベント去重・結果点数区分・途中Seed共有（第13節）。使用者がiPhone Safari実機5項目すべてPASSと正式公開承認を報告。検証済みゲームcommit 81762159aacf6f39a4b107b8b158dc99e6efffc7を含むdevをmainへ反映し、既存Publish website Workflowで公開する。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
+更新日：2026-10-10。文書改訂：16。現行仕様の唯一の正本。dev v1.10.3は海外契約に応じた通常NPB復帰オファーの制限と摘要／メインナビ修正（第14節）。main／本番はv1.10.2を維持。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
 
 正式反映421e036、[既存同期37918106040](https://github.com/tt-chin/yakyujinsei/actions/runs/37918106040)と[公開先Pages deployment37918120055](https://github.com/tt-chin/yakyujinsei-site/actions/runs/37918120055)は成功。公開先commitはc3b5d2534e2449d5dace220cf11b953b6299f952。正式URLはhttps://yakyujinsei.com。正式配信ファイルの今回の直接比対は実行授権未取得のため未確認。CHANGELOGには更新・修正内容だけを記録する。
 
@@ -365,3 +365,14 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 - 検証：28単体／静的、37 JS構文、モジュールと補助4policy。1656件（92カード×3難易度×2成否×3特性tier）の同イベント条件で1.10.1と効果・決算・RNGが一致。PC／320／390pxの共有、特殊Seedと別タブの開始画面、Clipboard成功／未対応／拒否、長名称・大文字・44px・フォーカス・回転、12stage/phase、三枚実抽選、候補尽きRNG0、結果分類、設定とやり直し取消、引退画像とURLを確認。Console／JS・CSS404は0。
 - 六seed全生涯を新版2回で完全一致。初差分は全て候補除外後のcard.id。旧→新（操作／RNG）：yakyo-test-001/P 541/652→543/652、jp3-pitcher-02/P 541/810→535/879、jp3-pitcher-03/P 512/894→535/899、jp3-catcher-01/C 375/400→388/422、jp3-infielder-01/IF 556/557→544/549、jp3-outfielder-01/OF 565/534→566/533。最初の抽選差まで新增メタデータと版号以外は一致。以後の成績・特性・契約・所得・消費変化は異なるイベント系列の自然な結果で、旧版完全一致とは扱わない。
 - 最終検収で552ブラウザ分岐、六seed新版2回、ローカル／PreviewのPC／320／390pxを再実行して合格。Preview実進行の同年去重・跨年再出現・勝負育成点・実Clipboardを確認。使用者によるiPhone Safari実機5項目は全PASS、正式公開承認済み。Android Chrome実機は未確認。
+
+## 14. NPB復帰オファー・摘要・メインナビ（dev v1.10.3）
+
+- NPB_RETURN_UI_FIX_SPECに基づくPATCH。使用者は対象NPB抽選省略による後続RNG／seed差を了承し、文書のpush禁止ではなくAGENTSのdev push／Previewフローを指定。main／本番反映は別承認。
+- 当年支払後の海外契約をcontractNeedsRenewalで判定。通常のKBO／CPBL／MiLB／MLBからのNPB復帰は満了済み契約のみ、総合47以上・53以上でNPB一軍という既存条件を維持。翌年契約が残る場合や延長合意／拒否後の現契約継続は表示せずadvanceへ進み、NPB球団を抽選しない。
+- 海外の満了契約は自動更新分岐でもS.ctを消さず、進路確定まで保持する。markClubInitiatedRenewalは既存どおり更新条件の予約のみ。残留時のadvanceでfinalizePendingOffseasonSalaryを一度だけ実行し、復帰受諾時は表示済みcandidate／annualSalaryをsignToへ渡して予約を解除。満了契約の買い取りは呼ばない。FA市場・降格・戦力外・ベテラン自主帰国・国内進路を変更しない。
+- 復帰候補はSの同一性・年度・契約オブジェクトをキーに局所文脈へ保持。同じ画面の再表示では同じ候補とcallbackを使用し、完了ガードで二重進行・契約締結を防止。次年度／別ゲームには古い候補を適用しない。Sへの新しい永続フラグは追加しない。
+- 摘要は「年俸（万）」、数値は従来どおり万円。ARIA名称は「年俸、単位は万円。年俸の内訳を見る」。単位を分断せず、詳細・オファー・所得・共有画像は既存の万円表記を維持。
+- main-navの上下paddingはcalc(4px * var(--nav-scale))、ボタン最低44px・標準行約53px。3列、色／フォーカス、player-tabs／career-tabsを維持。navigationはborder-boxを観測し、paddingだけ変わる密度変更でもboard-heightを再同期。既存のpreferences実測sticky-heightと併用する。
+- ローカル検証：29単体ファイルのうち27は通常実行、2件は使用者による既存資料削除のためGit 73d5a58の同一資料をメモリ内で供給して合格（削除は復元していない）。24契約ゲート単体、22実movement／更新／FA／降格／戦力外／自主帰国情境、10旧新版同入力で年俸一致・継続海外抽選1→0・満了／NPB抽選不変。投手2／捕手／内野手4seedの全生涯は旧新版一致、新版2回も完全一致。操作／RNGは543/652、535/879、388/422、544/549。対象seedは通常海外復帰抑制を非発動、意図差は別fixtureで確認。
+- PC1280／320／375／390／430px×24テーマ／文字／密度、縦横、摘要、詳細Enter、44px、実測固定位置、巨大年俸の横はみ出しなしを確認。552イベント分岐・共有回帰も合格、Console／JS・CSS404は0。実機iPhone Safari／Android Chromeの1.10.3確認は未実施。1.10.2実機PASSを本修正の実機検証へ読み替えない。

@@ -1596,9 +1596,9 @@ function movement(){
     if(LV[S.lv].top){
       if(S.faElig){ faFlow(o); return; }
       /* プロ5年目までは球団が保有権を行使して短期更新し、年俸は所属階級の基準額を下回らない。 */
-      const renewalYears=1;S.ct=null;markClubInitiatedRenewal(renewalYears);
+      const renewalYears=1;if(S.org==='NPB')S.ct=null;markClubInitiatedRenewal(renewalYears);
       card('info','チーム契約更新',`まだ球団保有期間（在籍${S.svc}/5年）。球団が契約更新権を行使し、<b class="hl">${renewalYears}年</b>契約を提示。年俸は所属レベル基準となる。`); board(1);
-    } else { const renewalYears=1;S.ct=null;markClubInitiatedRenewal(renewalYears); } /* トップ階級以外。 */
+    } else { const renewalYears=1;if(S.org==='NPB')S.ct=null;markClubInitiatedRenewal(renewalYears); } /* 海外の満了契約は進路確定まで保持する。 */
   }
   crossOffers(o);
 }
@@ -2800,7 +2800,7 @@ $('btn-start').onclick=()=>{
   };
 
   stageLabel = function(){if(S.stage==='HS')return '高校'+S.stageYr+'年';if(S.stage==='U')return '大学'+S.stageYr+'年';if(S.stage==='CORP')return '社会人'+(S.corpYears+1)+'年目';if(S.stage==='IND')return '独立リーグ'+(S.indYears+1)+'年目';return LV[S.lv]?.n||S.stage;};
-  board = function(phase){LEGACY.board(phase);$('bd-name').firstChild.textContent=S.name;$('bd-sal').textContent=Math.round((S.currentSalary||0)/10000).toLocaleString();const lbl=$('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='現在年俸（万円）';};
+  board = function(phase){LEGACY.board(phase);$('bd-name').firstChild.textContent=S.name;$('bd-sal').textContent=Math.round((S.currentSalary||0)/10000).toLocaleString();const lbl=$('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='年俸（万）';};
 
   function setSchool(kind){const a=kind==='U'?DATA.universities:DATA.highSchools,r=pickRecord(a);S.schoolId=r.schoolId;S.schoolTier=r.tier;S.team=r.name;S.lv=kind;S.org='AMATEUR';}
   function setAmateur(stage){S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=pickRecord(listByOrg(stage)).teamId;S.team=teamRec(S.orgTeamId).name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;}
@@ -2905,6 +2905,7 @@ $('btn-start').onclick=()=>{
     const rec=pickRecord(listByOrg(org)),candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:lv,contractMult:1});lv=candidate.targetLevel;const annual=candidate.annualSalary;
     return{t:`${label}：${rec.name}`,s:`${LV[lv].n}｜年俸${fmtMoney(annual)}${candidate.signingTerms.signingBonus>0?'｜契約金'+fmtMoney(candidate.signingTerms.signingBonus):''}`,f:()=>{buyoutRemaining();signTo(org,lv,rec.teamId,ri(1,3),1.3,'OVERSEAS',{contractType:'OVERSEAS_FA'});finish();}};
   }
+  let npbReturnOfferContext=null;
   crossOffers = function(o){
     const finish=()=>advance(),opts=[];
     let offerType='transfer';
@@ -2914,10 +2915,20 @@ $('btn-start').onclick=()=>{
       const c=overseasOffer('CPBL','CPBL1','台湾プロ野球への海外移籍',o,0,finish);
       const m=overseasOffer('MiLB','MLB','MLBへの海外移籍',o,2,finish);
       if(k)opts.push(k);if(c)opts.push(c);if(m)opts.push(m);
-    }else if(['KBO','CPBL','MiLB','MLB'].includes(S.org)&&o>=47){
+    }else if(['KBO','CPBL','MiLB','MLB'].includes(S.org)&&o>=47&&contractNeedsRenewal(S.ct)){
+      // Keep the expired contract until selection; continuing/extended contracts never draw a team.
+      if(npbReturnOfferContext?.state===S&&npbReturnOfferContext.year===S.year&&npbReturnOfferContext.contract===S.ct){
+        if(!npbReturnOfferContext.completed)choose(npbReturnOfferContext.title,npbReturnOfferContext.options);
+        return;
+      }
       offerType=crossOfferType(S.org,'NPB');
+      const context={state:S,year:S.year,contract:S.ct,completed:false};
+      const complete=action=>{if(context.completed)return;context.completed=true;action?.();finish();};
       const rec=pickRecord(listByOrg('NPB')),lv=o>=53?'NPB1':'NPB2',candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:lv,contractMult:1}),annualSalary=candidate.annualSalary;
-      opts.push({t:`NPBへ復帰：${rec.name}`,s:`${LV[lv].n}契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('NPB',lv,rec.teamId,ri(1,3),1,'RETURN',{annualSalary,candidate});finish();}});
+      opts.push({t:`NPBへ復帰：${rec.name}`,s:`${LV[lv].n}契約｜年俸${fmtMoney(annualSalary)}`,f:()=>complete(()=>{signTo('NPB',lv,rec.teamId,ri(1,3),1,'RETURN',{annualSalary,candidate});})});
+      opts.push({t:'現在の球団に残留',main:true,f:()=>complete()});
+      npbReturnOfferContext=context;context.title=crossOfferTitle(offerType);context.options=opts;
+      choose(context.title,opts);return;
     }
     if(!opts.length){finish();return;}
     opts.splice(4);opts.push({t:'現在の球団に残留',main:true,f:finish});choose(crossOfferTitle(offerType),opts);
