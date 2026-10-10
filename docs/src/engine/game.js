@@ -1640,8 +1640,13 @@ function handleDemotion(o,path,idx){
       /* 海外組織で降格時、アジア球団も同時にオファー。 */
       const alts=[];
       if(S.org==='MiLB'){
-        if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP())))alts.push({t:'NPB一軍への移籍',s:'NPB移籍契約',f:()=>{buyoutRemaining();signTo('NPB','NPB1');advance();}});
-        else if(o>=LV.NPB2.min&&chance(50))alts.push({t:'日本の二軍（支配下）へ移籍',f:()=>{buyoutRemaining();signTo('NPB','NPB2');advance();}});
+        if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP()))){
+          const candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:'NPB1',contractMult:1}),annualSalary=candidate.annualSalary;
+          alts.push({t:'NPB一軍への移籍',s:`NPB移籍契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('NPB','NPB1',undefined,undefined,undefined,undefined,{annualSalary,candidate});advance();}});
+        }else if(o>=LV.NPB2.min&&chance(50)){
+          const candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:'NPB2',contractMult:1}),annualSalary=candidate.annualSalary;
+          alts.push({t:'日本の二軍（支配下）へ移籍',s:`NPB二軍（支配下）契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('NPB','NPB2',undefined,undefined,undefined,undefined,{annualSalary,candidate});advance();}});
+        }
       }else if(S.org==='NPB'&&o>=LV.CPBL1.min&&chance(70)){
         const annualSalary=salaryCandidate({sourceLevel:S.lv,targetLevel:'CPBL1',contractMult:1}).annualSalary;
         alts.push({t:'台湾プロ野球からのオファーを受ける',s:`台湾プロ野球一軍契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('CPBL','CPBL1',undefined,undefined,undefined,undefined,{annualSalary});advance();}});

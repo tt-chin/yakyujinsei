@@ -1,6 +1,6 @@
-# 現行規格（dev v1.11.3／main v1.10.2）
+# 現行規格（dev v1.11.4／main v1.10.2）
 
-更新日：2026-10-10。文書改訂：20。現行仕様の唯一の正本。dev v1.11.3はKBO候補の最低年俸とpackage上限の適用順序を修正（第11.6節）。v1.11.2の初回投票入選の特性リーグ帰属（第12節）、v1.11.1のReplay URL原生共有と引退画像の四主題連動（第16節）、職業球団優勝と国際大会の鬼（第15節）、海外契約に応じた通常NPB復帰オファー制限と摘要／メインナビ修正（第14節）を維持。main／本番はv1.10.2を維持。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
+更新日：2026-10-11。文書改訂：21。現行仕様の唯一の正本。dev v1.11.4はMiLB降格時のNPB移籍候補の年俸表示と提示スナップショットの受渡しを修正（第11.9節）。v1.11.3のKBO候補の最低年俸とpackage上限の適用順序（第11.6節）、v1.11.2の初回投票入選の特性リーグ帰属（第12節）、v1.11.1のReplay URL原生共有と引退画像の四主題連動（第16節）、職業球団優勝と国際大会の鬼（第15節）、海外契約に応じた通常NPB復帰オファー制限と摘要／メインナビ修正（第14節）を維持。main／本番はv1.10.2を維持。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
 
 正式反映421e036、[既存同期37918106040](https://github.com/tt-chin/yakyujinsei/actions/runs/37918106040)と[公開先Pages deployment37918120055](https://github.com/tt-chin/yakyujinsei-site/actions/runs/37918120055)は成功。公開先commitはc3b5d2534e2449d5dace220cf11b953b6299f952。正式URLはhttps://yakyujinsei.com。正式配信ファイルの今回の直接比対は実行授権未取得のため未確認。CHANGELOGには更新・修正内容だけを記録する。
 
@@ -325,6 +325,7 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 ### 11.9 実装・検証・対象外
 
 - active salaryCandidate、signTo、NPBドラフト、HS初回MiLB契約、overseasOffer、NPB復帰、降格候補、faMarket、outOfOrgへ接続。提示スナップショットと契約／currentSalary／決定履歴を一致させる。
+- MiLB降格時のNPB一軍・二軍候補も、移籍前のS.lvをsourceLevel、実際のNPB階層をtargetLevel、従来の契約倍率1を使ってsalaryCandidateで計算し、年俸を表示する。受諾時に同じannualSalary／candidateをsignToへ渡す。既存の移籍条件・chance順・球団抽選タイミング・候補順・契約年数・降格受入処理を維持し、表示でRNGを消費しない。
 - KBO単年更新・FA・延長にもpackage上限を反映。既存7%出来高、保証年表、契約年数を保持する。
 - 市場詳細は移籍元／先評価・市場額・路線倍率・anchor・上昇／制度上限・最終額と理由を表示する。
 - 26単体／静的テスト、モジュール構成、career movement／国内大会／殿堂／salary promotionの補助テスト。25ルート組合せ、金額／資格／floor／package／posting／旧状態／二重払いを確認。
