@@ -10,7 +10,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').slice(1).join('=');
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const hook=`
-window.__eventTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),draft:()=>{const saved=R;R=()=>{saved();return .5;};try{runDraft(false,()=>{});}finally{R=saved;}}};`;
+window.__eventTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),retire:()=>endGame('E2E retirement stop fixture'),draft:()=>{const saved=R;R=()=>{saved();return .5;};try{runDraft(false,()=>{});}finally{R=saved;}}};`;
 const server=createServer(async(req,res)=>{
   try{const u=new URL(req.url,'http://localhost'),baseline=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname).replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');
     let content=baseline?execFileSync('git',['show',`7acb456:docs/${rel}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',rel));
@@ -23,10 +23,25 @@ const browser=await chromium.launch({channel:arg('browser')||'chrome',headless:t
 const errors=[],artifacts=path.join(os.tmpdir(),'yakyujinsei-event-e2e');await mkdir(artifacts,{recursive:true});
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push(r.status()+' '+r.url());});};
 const start=async(p,url,pos='P')=>{await p.goto(url);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#in-name').fill('イベント検証');await p.locator('#btn-start').click();};
+// Preview has no state hook: the share controls are created only by endGame.
+// Stop before selecting any action, including the retirement restart button.
+const draftStep=()=>{const log=document.querySelector('#log');if(log.innerText.includes('新人年俸'))return 'signed';if(document.querySelector('#sh-img'))return 'retired';const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];if(!b)throw Error('No draft choice');b.click();return 'advanced';};
+// Regression: retirement must preserve DOM/listeners and consume no action.
+for(const signed of [false,true]){let clicks=0;const saved=globalThis.document;try{globalThis.document={querySelector:selector=>selector==='#log'?{innerText:signed?'新人年俸':'引退する'}:selector==='#sh-img'?{}:{querySelectorAll:()=>[{disabled:false,innerText:'最初からやり直す',click:()=>clicks++}]}};assert.equal(draftStep(),signed?'signed':'retired');assert.equal(clicks,0,'terminal draft step must not click restart');}finally{if(saved===undefined)delete globalThis.document;else globalThis.document=saved;}}
 let failure;
 try{
   for(const width of [1280,320,390]){
     const ctx=await browser.newContext({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500}),p=await ctx.newPage();wire(p);await start(p,target+'/?seed=bonus-ui');if(width===320)await p.evaluate(()=>document.documentElement.dataset.theme='night');
+    if(process.argv.includes('--retirement-only')){
+      assert.ok(!arg('preview'),'retirement fixture requires local state hook');
+      await p.evaluate(()=>window.__eventTest.retire());
+      const before=await p.evaluate(()=>({snapshot:window.__eventTest.get(),act:document.querySelector('#act').innerHTML,url:location.href}));
+      assert.equal(before.snapshot.state.done,true);
+      assert.equal(await p.evaluate(draftStep),'retired');
+      assert.deepEqual(await p.evaluate(()=>({snapshot:window.__eventTest.get(),act:document.querySelector('#act').innerHTML,url:location.href})),before,'retirement stop must preserve state/RNG/DOM/URL');
+      console.log(`PASS ${width}px retirement stop: no action/restart, state/RNG/DOM/URL unchanged`);
+      await ctx.close();continue;
+    }
     if(!arg('preview'))for(const development of [false,true]){
       await p.evaluate(dev=>{const h=window.__eventTest;h.set({age:35,traits:{},ab:{vel:dev?39:48,ctl:dev?39:48,brk:dev?39:48,sta:dev?39:48},careerEarnings:0,careerSigningBonus:0,careerBaseSalary:0,careerIncentive:0,careerBuyout:0,careerOutsideIncome:0,yearOutsideIncome:0,corpIncome:0});h.draft(dev);},development);
       await p.locator('#act button').filter({hasText:'指名を受けて入団'}).click();
@@ -36,13 +51,13 @@ try{
     }
     if(arg('preview')){
       for(let step=0;step<700;step++){
-        const found=await p.evaluate(()=>{if(document.querySelector('#log').innerText.includes('新人年俸'))return true;const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];if(!b)throw Error('No draft choice');b.click();return false;});if(found)break;if(step===699)throw Error('No draft signing');
+        const outcome=await p.evaluate(draftStep);if(outcome==='signed')break;if(outcome==='retired')throw Error('Career retired normally before draft signing (seed bonus-ui); no restart clicked');if(step===699)throw Error('No draft signing');
       }
       await p.locator('#salary-detail-trigger').click();const t=await p.locator('#salary-detail-body').innerText();for(const label of ['契約金','契約金累計','保証年俸総額','未払い年俸','所得内訳','買い取り累計'])assert.ok(t.includes(label));assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.screenshot({path:path.join(artifacts,'preview-draft-'+width+'.png')});await p.locator('#salary-detail-close').click();
     }
     await ctx.close();
-  }console.log('PC/320/390px draft + development, income detail and display RNG checks passed');
-  if(!arg('preview')&&!process.argv.includes('--quick'))for(const [seed,pos] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-catcher-01','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']]){
+  }if(!process.argv.includes('--retirement-only'))console.log('PC/320/390px draft + development, income detail and display RNG checks passed');
+  if(!arg('preview')&&!process.argv.includes('--quick')&&!process.argv.includes('--retirement-only'))for(const [seed,pos] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-catcher-01','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']]){
     const histories=[];
     for(let run=0;run<2;run++){
       const ctx=await browser.newContext(),p=await ctx.newPage();wire(p);await start(p,local+(run===0?'/baseline/':'/')+'?seed='+seed,pos);const records=[];

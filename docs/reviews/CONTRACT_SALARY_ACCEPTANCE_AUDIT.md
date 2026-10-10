@@ -215,6 +215,17 @@ PASS：提示額＝正式年俸＝決定記錄＝下一年年表，按同年度�
 
 仍保留第8節有限样本／未穷举的覆蓋邊界；四聯賽HOF／4000人生與legacy全面可達性分析不是本輪補驗範圍。本次没有新FAIL，無需遊戲修復或版本升級。
 
+## 11. draft-income測試退休停止修正（2026-10-11）
+
+依使用者另行要求，僅修改`tests/draft-income-e2e.mjs`的測試流程，不改遊戲／VERSION／CHANGELOG。修正前相同Preview `bonus-ui`／P路線在正常退休後繼續點擊重新開始，實際重現`Execution context was destroyed`。Preview分支沒有像本機完整生涯分支那樣檢查`S.done`；Preview沒有測試state hook，因此改以原生`endGame`建立的`#sh-img`判斷已退休，在選取／點擊任何按鈕之前停止。入團仍優先判斷`新人年俸`；退休前未入團必須回報明確失敗，不能將沒有完成的選秀驗證當成PASS。
+
+- 新增兩個終止判斷fixture：未入團退休、已有入團紀錄退休，均不得點擊restart。
+- 新增`--retirement-only`原生退休回歸入口：1280／320／390px三案PASS，確認`S.done=true`，停止判斷前後完整S、RNG、DOM及URL相同；Console／JS・CSS404 0，exit0。只在本機test hook呼叫原生endGame，沒有修改配信遊戲。
+- 修正後重跑相同Preview路線：明確回報`Career retired normally before draft signing (seed bonus-ui); no restart clicked`，exit1。原導航錯誤已消失，但此路線仍未到達入團，**不宣稱整份draft-income E2E通過**。
+- 本機`--quick`實際執行仍有獨立舊fixture問題：所得斷言`2900000 !== 0`，exit1。本次未修改金額預期、現行支度金／契約金規則，也未跑完整六seed歷史v1.8.0比較；後續應另核對這些舊測試與已批准的新政策。不將這些問題視為本次退休停止修復失敗或已修復。
+
+指令使用既有`--playwright=<PLAYWRIGHT_MODULE>`；沒有新增依賴。語法與`git diff --check`通過。此節補記使用者後續指定的測試修正，不改寫第10節當時僅文書更新的事實。
+
 ## 附錄：逐案實際結果
 
 每列引用第3節对应ID的完整输入、原生操作步骤与共同预期。金额为**円**；本表截点为受諾／下一年度开始後、原生支付检查之前（promotion取next；career取退休最终状态）。paid为该截点年表实际值，不是下一年已经入帐。最新決定列是「适用年度／金額」，可与当年金额不同。空值以—表示不存在，不补造。所有列随后按各组要求执行付款／重入／UI或完整生涯断言后才判PASS；原始before／after在对应JSON。
