@@ -36,13 +36,13 @@
 | ID | 対象 | 前提・検収 |
 |---|---|---|
 | UI-17-DEVICE | 表示設定・イベントの実機検証 | 表示設定・v1.8以降のイベントもユーザー承認後にv1.9.1として正式公開済み。iOS Safari／Android Chrome実機は未確認 |
-| SHARE-01 | 1.8画像配色連動 | 1.7 API確定後。4色盤、同一画像共有、連続変更の古い完了排除、standard回帰 |
+| SHARE-111-DEVICE | 1.11.1原生共有の実機確認 | iPhone Safari／Android Chromeで両入口のOS共有・取消・画像共有、PC／携帯保存を確認。実装・自動検証はCURRENT_SPEC第16節 |
 
 COPY-01は別途検証待ち：[過去の文言監査](docs/archive/local/docs/JAPANESE_COPY_AUDIT_V1.6.0.md)は存在するが、到達可能な全文言の再監査は未実施。文書存在だけで完了扱いにしない。
 
 UI-03/04/05の実装とmain反映は完了し、CURRENT_SPEC §8とCHANGELOG 1.7.0へ移管済み。実機確認は上記UI-17-DEVICEで分離する。OS自動追従・独自色・音量・キャリア保存は対象外。92枚イベントの採用部分はCURRENT_SPEC §10、CHANGELOG 1.8.0へ反映済み。旧候補版号は再利用を保証しない。
 
-1.8は原文でも草案。接続仕様確定前に実装開始しない。1.7完了後にテーマAPI/イベント/import確認。PNG配色だけ連動し、統計、座標、920px論理幅、2倍出力、ファイル名、seed-only URLは維持。プレビュー/保存/共有は同じ生成画像とする提案。
+SHARE-01の四主題画像連動は1.11.1で承認仕様として実装しCURRENT_SPEC第16節へ移管。原生URL共有と自動画像更新を含む実機確認のみSHARE-111-DEVICEへ分離する。旧1.8草案は参考用のまま保持する。
 
 原文：[1.7設計](docs/archive/imported/history/V1.7.0_THEME_AND_DISPLAY_SETTINGS_SPEC.md)、[1.8草案](docs/archive/imported/history/V1.8.0_SHARE_IMAGE_THEME_LINK_SPEC.md)。詳細色盤・接続API・非同期再生成・検収条件は承認時に照合する。
 

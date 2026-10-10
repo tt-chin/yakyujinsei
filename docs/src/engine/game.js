@@ -3,7 +3,9 @@ import { TRAIT_LABELS, TRAIT_TEXT, traitLabel, removedTraitLabel, confidanteElig
 import { EVENT_CATALOG } from '../data/event-cards-jp.js';
 import { EVENT_MODES, eventEligible, eventOdds, effectiveCategory, eventTier, eventPlan, eventInjury, eventIncome, eventTraitUnlocks, EVENT_TRAIT_TEXT, validateEventCatalog } from './event-policy.js';
 import { ensureEventState, beginEvent, eventDrawPool, applyEvent, beginEventSeason, consumeEventSeason, resetEventYear } from './event-state-policy.js';
-import { createSeedShareController, replayURL, copyShareText } from '../ui/seed-share.js';
+import { createSeedShareController, replayURL, shareReplayURL } from '../ui/seed-share.js';
+import { getDisplayPreferences } from '../ui/preferences.js';
+import { getSharePalette, shareTagPalette } from '../ui/share-theme.js';
 import { applyEventSeason, normalizeEventSeason } from './event-season-policy.js';
 import { JP_DATA } from '../data/jp-data.js';
 import { MARKET_BASELINES } from '../data/salary-market-data.js';
@@ -2266,8 +2268,8 @@ function endGame(reason){
   sh.innerHTML=`<div class="title">この野球人生を共有</div>
     <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn main" id="sh-img" style="flex:1">📸 キャリア画像を作成</button>
-      <button class="btn" id="sh-url" style="flex:1">🔗 リプレイURLをコピー</button>
-    </div><div id="sh-out" style="margin-top:8px"></div>`;
+      <button class="btn" id="sh-url" style="flex:1">🔗 リプレイURLを共有</button>
+    </div><div id="sh-url-status" role="status" aria-live="polite"></div><div id="sh-out" style="margin-top:8px"></div>`;
   $('log').appendChild(sh);
   const imgBtn=sh.querySelector('#sh-img'),urlBtn=sh.querySelector('#sh-url'),shareOut=sh.querySelector('#sh-out');
   imgBtn.type=urlBtn.type='button';
@@ -2279,12 +2281,13 @@ function endGame(reason){
     });
   });
   urlBtn.addEventListener('click',async()=>{
+    if(urlBtn.disabled)return;
     const url=replayURL(S.seed||SEED,location.href);
-    urlBtn.disabled=true;urlBtn.textContent='⏳ コピー中…';
-    const copied=await copyShareText(url);
-    if(copied){urlBtn.textContent='✅ コピーしました';shareOut.innerHTML='<div class="statline" role="status">リプレイURLをコピーしました。</div>';}
-    else{urlBtn.textContent='URLを選択してコピー';shareOut.innerHTML='<label class="statline" style="display:block">下のURLを長押し／選択してコピーしてください。<input value="'+url.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" readonly style="width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:var(--panel);border:1px solid var(--edge);border-radius:6px"></label>';const input=shareOut.querySelector('input');input.focus();input.select();}
-    urlBtn.disabled=false;setTimeout(()=>{urlBtn.textContent='🔗 リプレイURLをコピー';},1800);
+    const status=sh.querySelector('#sh-url-status');status.replaceChildren();urlBtn.disabled=true;
+    try{
+      const result=await shareReplayURL(url);status.textContent=result.message;
+      if(result.manual){const input=document.createElement('input');input.value=url;input.readOnly=true;input.setAttribute('aria-label','リプレイURL');input.style.cssText='width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:var(--panel);border:1px solid var(--edge);border-radius:6px';status.appendChild(input);input.focus();input.select();}
+    }finally{urlBtn.disabled=false;}
   });
   choose('',[
     {t:'⚾ 新しい野球人生を始める（新規シード）',main:true,f:()=>{location.href=location.pathname;}},
@@ -2296,6 +2299,14 @@ function endGame(reason){
   }catch(e){} },250);
 }
 /* 結算圖（Canvas 產生 PNG、可長按儲存または自動下載）。 */
+const shareImagePreviews=new Map();
+window.addEventListener('yakyujinsei:displaychange',()=>{
+  const theme=getDisplayPreferences().theme;
+  for(const [out,preview] of shareImagePreviews){
+    if(!out.isConnected){shareImagePreviews.delete(out);continue;}
+    if(preview.theme!==theme)shareImage(preview.evals,out);
+  }
+});
 function shareImage(evals,out){
   const isP=S.pos==='P';
   const tiers=evals.map(t=>t.replace(/<[^>]+>/g,''));
@@ -2412,7 +2423,7 @@ function shareImage(evals,out){
   H+=120; // Four income rows plus space for the seed/version footer.
   cv.width=W*scale; cv.height=H*scale;
   c.scale(scale,scale);
-  const imageColor={bg:'#fff8f8',panel:'#ffffff',edge:'#c9828e',text:'#3a1017',dim:'#875d64',accent:'#a71930',soft:'#6f4048',bad:'#c62828'};
+  const theme=getDisplayPreferences().theme,imageColor=getSharePalette(theme);
   c.fillStyle=imageColor.bg; c.fillRect(0,0,W,H);
   c.strokeStyle=imageColor.edge; c.lineWidth=3; c.strokeRect(10,10,W-20,H-20);
   c.textBaseline='top';
@@ -2435,12 +2446,13 @@ function shareImage(evals,out){
     return {bg:'#fbe9ec',bd:'#c95b6c',fg:'#7f1d2d'};                      /* 赤系の標準特性。 */
   }
   function drawTags(items){ items.forEach(function(o){ const t=o.label, col=tagColor(o);
+    const readable=shareTagPalette(col,theme);
     c.font='12px sans-serif'; const w=c.measureText(t).width+16;
     if(tagx+w>W-PAD&&tagx>PAD){tagx=PAD;y+=26;}
     c.fillStyle=col.bg; c.strokeStyle=col.bd; c.lineWidth=1;
     c.fillRect(tagx,y,w,20); c.strokeRect(tagx,y,w,20);
-    c.fillStyle=col.fg; c.fillText(t,tagx+8,y+3);
-    if(o.rem){ c.strokeStyle='#81757a'; c.beginPath(); c.moveTo(tagx+4,y+10); c.lineTo(tagx+w-4,y+10); c.stroke(); }
+    c.fillStyle=readable.fg; c.fillText(t,tagx+8,y+3);
+    if(o.rem){ c.strokeStyle=readable.fg; c.beginPath(); c.moveTo(tagx+4,y+10); c.lineTo(tagx+w-4,y+10); c.stroke(); }
     tagx+=w+8;
   }); }
   var tagx=PAD;
@@ -2565,6 +2577,8 @@ function shareImage(evals,out){
   c.textAlign='right'; c.fillText(VERSION,W-PAD,H-40); c.textAlign='left';
 
   const url=cv.toDataURL('image/png');
+  for(const previous of shareImagePreviews.keys())if(!previous.isConnected)shareImagePreviews.delete(previous);
+  shareImagePreviews.set(out,{evals,theme});
   const fileName='野球人生リザルト_'+S.name+'.png';
   out.innerHTML=`<img src="${url}" style="width:100%;border-radius:8px" alt="引退リザルト画像">
     <div style="display:flex;gap:8px;margin-top:8px">
