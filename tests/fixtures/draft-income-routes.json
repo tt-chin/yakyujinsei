@@ -1,0 +1,2154 @@
+{
+  "version": "1.11.4",
+  "baseline": "35c40a26aef244908725d2d083f6a622640da0cb",
+  "routes": [
+    {
+      "level": "NPB_DEV",
+      "history": [
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "ability:vel",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:新グラブで本格投げ込み",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（4点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "ability:brk",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:vel",
+          "count": 1
+        },
+        {
+          "action": "ability:brk",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:配球パターンを深掘り討論",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（4点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "ability:vel",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "ability:brk",
+          "count": 1
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:新グラブで本格投げ込み",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:球速マシマシでいく",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:vel",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ",
+          "count": 1
+        },
+        {
+          "action": "choice:指名を受けて入団",
+          "count": 1
+        }
+      ],
+      "position": "P",
+      "strategy": "lowest-value-stable-DOM",
+      "outcome": "signed",
+      "rng": 902583495,
+      "year": 2029,
+      "actions": 53,
+      "income": {
+        "careerSigningBonus": 0,
+        "careerBaseSalary": 0,
+        "careerEarnings": 2900000,
+        "careerDevelopmentStipend": 2900000
+      },
+      "seed": "bonus-ui",
+      "id": "natural-1280-bonus-ui-0",
+      "calls": 61
+    },
+    {
+      "level": "NPB2",
+      "history": [
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "ability:brk",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:球速マシマシでいく",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:自己ベスト更新狙う",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（4点）",
+          "count": 1
+        },
+        {
+          "action": "ability:vel",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ5個）",
+          "count": 1
+        },
+        {
+          "action": "ability:vel",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "ability:vel",
+          "count": 1
+        },
+        {
+          "action": "ability:brk",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:新グラブで本格投げ込み",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:球速マシマシでいく",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（8点）",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 2
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "ability:brk",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "ability:brk",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 1
+        },
+        {
+          "action": "ability:ctl",
+          "count": 1
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:自己ベスト更新狙う",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（5点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 5
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ",
+          "count": 1
+        },
+        {
+          "action": "choice:指名を受けて入団",
+          "count": 1
+        }
+      ],
+      "position": "P",
+      "strategy": "lowest-value-stable-DOM",
+      "outcome": "signed",
+      "rng": 1345690636,
+      "year": 2029,
+      "actions": 61,
+      "income": {
+        "careerSigningBonus": 44070000,
+        "careerBaseSalary": 0,
+        "careerEarnings": 44070000,
+        "careerDevelopmentStipend": 0
+      },
+      "seed": "jp3-infielder-01",
+      "id": "natural-1280-jp3-infielder-01-0",
+      "calls": 58
+    },
+    {
+      "level": "CORP",
+      "history": [
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:新グラブで本格投げ込み",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（4点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:配球パターンを深掘り討論",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（4点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:新グラブで本格投げ込み",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:球速マシマシでいく",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ",
+          "count": 1
+        },
+        {
+          "action": "choice:大学へ進学",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ5個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 5
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:配球パターンを深掘り討論",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:お互いの変化球の握りを伝授",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:お互いの変化球の握りを伝授",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ5個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 5
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:フォーム再構築する",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:量と時間を決めて夜食参戦",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:生活リズムを根本から改革",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ5個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 5
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:量と時間を決めて夜食参戦",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:仕事も練習も効率化する",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ6個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 6
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:配球パターンを深掘り討論",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:自分の見解を論理的に熱弁",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:フォーム再構築する",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:自己ベスト更新狙う",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ再挑戦",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:プレゼン企画のリーダーやる",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:生活リズムを根本から改革",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ5個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 5
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:フォーム再構築する",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:プランを具体的に提示",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:フォーム再構築する",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ再挑戦",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ6個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 6
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:配球パターンを深掘り討論",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:フォーム再構築する",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ5個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 5
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:自己ベスト更新狙う",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ6個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 6
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:配球パターンを深掘り討論",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:負荷と休養のスケジュール再構築",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ再挑戦",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:プランを具体的に提示",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:新グラブで本格投げ込み",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:体の使い方をガッツリ教わる",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（3点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ5個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 5
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:プレゼン企画のリーダーやる",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:フォーム再構築する",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ再挑戦",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:チームメイトに見せて自慢する",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:量と時間を決めて夜食参戦",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:チームメイトに見せて自慢する",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:お互いの変化球の握りを伝授",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:自分の課題を積極的に見せる",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:仕事も練習も効率化する",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ再挑戦",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ5個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 5
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:コメ欄の有益アドバイスだけ抽出",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:配球パターンを深掘り討論",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:仕事も練習も効率化する",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:量と時間を決めて夜食参戦",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:自分の見解を論理的に熱弁",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:全員のリクエスト募ってプレイリスト作成",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ再挑戦",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:お互いの変化球の握りを伝授",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:チームメイトに見せて自慢する",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:プランを具体的に提示",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:自分の見解を論理的に熱弁",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:量と時間を決めて夜食参戦",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:お互いの変化球の握りを伝授",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ再挑戦",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ3個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 3
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:負荷と休養のスケジュール再構築",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:証拠スクショ集めて広報へ報告",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:お互いの変化球の握りを伝授",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:コメ欄の有益アドバイスだけ抽出",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:コメ欄の有益アドバイスだけ抽出",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:負荷と休養のスケジュール再構築",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:NPBドラフトへ再挑戦",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球へ",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ トレーニング成果を割り振る（サイコロ4個）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 4
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り2枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:プランを具体的に提示",
+          "count": 1
+        },
+        {
+          "action": "choice:イベントカードを引く（残り1枚）",
+          "count": 1
+        },
+        {
+          "action": "choice:量と時間を決めて夜食参戦",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ シーズン半ばの健康診断",
+          "count": 1
+        },
+        {
+          "action": "choice:▸ 今季の成績を見る",
+          "count": 1
+        },
+        {
+          "action": "choice:能力点を分配（2点）",
+          "count": 1
+        },
+        {
+          "action": "ability:sta",
+          "count": 2
+        },
+        {
+          "action": "choice:確定 ▸",
+          "count": 1
+        },
+        {
+          "action": "choice:社会人野球を続ける",
+          "count": 1
+        }
+      ],
+      "position": "P",
+      "strategy": "first-row",
+      "outcome": "retired",
+      "rng": -94415960,
+      "year": 2058,
+      "actions": 564,
+      "income": {
+        "careerSigningBonus": 0,
+        "careerBaseSalary": 0,
+        "careerEarnings": 105150000,
+        "careerDevelopmentStipend": 0
+      },
+      "seed": "bonus-ui",
+      "id": "negative-1280",
+      "calls": 506
+    }
+  ]
+}

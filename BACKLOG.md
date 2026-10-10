@@ -86,6 +86,7 @@
 ## 今回の驗收で追加確認した技術的な制約
 
 - 33個 `.test.mjs` と5個standaloneはPASS。ただしE2Eは部分実施で、`event-system`、`draft-income`、`display-preferences`、`salary-history`、`trait-system` の5入口を未実施。`retirement-hof-pilot` 再採樣と分析／報告生成器も未実行。`full` 完了とは扱わない。
+- 上記は初回監査の履歴。後続のdraft-income専項で、旧first-row戦略の未入団退職と育成支度金を欠いた所得断言を調査・テスト修正。本機quick、Preview正式／育成入団、三尺寸負面退職、retirement-onlyと関連契約テストの限定結果は[専項報告](docs/reviews/DRAFT_INCOME_E2E_FIX_AUDIT.md)を参照。他の未実施入口を完了扱いにせず、ゲーム／政策／VERSIONは変更しない。
 - HOF固定seedで `yakyo-test-001/P`（RNG 652）と `jp3-infielder-01/IF`（RNG 549）は旧基準と現行の最終S／選択履歴／RNG一致。ただし**選択戦略が違うため**当時のbalanced KBO FAILを否定しない。v1.11.3の別回帰でbalancedも修復・正常退休まで確認した。
 - 原生共有はmockでの成功／取消／失敗、四主題PNGがPASS。OS共有UI・実機ダウンロードは未驗收。
 - Codexの監査報告は証拠資料であり、各タスクを終える際は**最新HEADで再検証**する。

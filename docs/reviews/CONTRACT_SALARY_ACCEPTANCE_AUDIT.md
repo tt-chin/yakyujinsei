@@ -217,6 +217,8 @@ PASS：提示額＝正式年俸＝決定記錄＝下一年年表，按同年度�
 
 ## 11. draft-income測試退休停止修正（2026-10-11）
 
+後續：本節當時保留的兩個失敗已有獨立調查與測試設計修正，最新證據見[DRAFT_INCOME_E2E_FIX_AUDIT.md](DRAFT_INCOME_E2E_FIX_AUDIT.md)。以下保留當時結果，不改寫成當時已通過。
+
 依使用者另行要求，僅修改`tests/draft-income-e2e.mjs`的測試流程，不改遊戲／VERSION／CHANGELOG。修正前相同Preview `bonus-ui`／P路線在正常退休後繼續點擊重新開始，實際重現`Execution context was destroyed`。Preview分支沒有像本機完整生涯分支那樣檢查`S.done`；Preview沒有測試state hook，因此改以原生`endGame`建立的`#sh-img`判斷已退休，在選取／點擊任何按鈕之前停止。入團仍優先判斷`新人年俸`；退休前未入團必須回報明確失敗，不能將沒有完成的選秀驗證當成PASS。
 
 - 新增兩個終止判斷fixture：未入團退休、已有入團紀錄退休，均不得點擊restart。
