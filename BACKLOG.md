@@ -14,7 +14,7 @@
 
 ## 今回の驗收で完了と判定した項目（証拠付き）
 
-- [x] **BUG-KBO-RENEWAL-FLOOR**【PASS／v1.11.3修復】KBO候選在倍率適用後先補至既定階層最低年俸，再驗證原package上限；不改政策／倍率／保障年表。`jp3-infielder-01`／IF／`--balanced` 的2049年首次輸入為736萬円、最低800萬円、上限21597.6萬円（非真正衝突），修復後2050年正常退休。失敗前390操作的狀態／選擇／RNG完全一致；投手／野手各一組完整生涯比較一致。新增10組最小回歸及PC／320／390px續約・連打・原生付款去重驗證通過。詳見[修復報告](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md)。本項為驗收後另行授權修復；下述v1.11.2報告與件數仍是歷史快照，不改寫為全項PASS。
+- [x] **BUG-KBO-RENEWAL-FLOOR**【PASS／v1.11.3修復】KBO候選在倍率適用後先補至既定階層最低年俸，再驗證原package上限；不改政策／倍率／保障年表。`jp3-infielder-01`／IF／`--balanced` 的2049年首次輸入為736萬円、最低800萬円、上限21597.6萬円（非真正衝突），修復後2050年正常退休。失敗前390操作的狀態／選擇／RNG完全一致；投手／野手各一組完整生涯比較一致。新增10組最小回歸及PC／320／390px續約・連打・原生付款去重驗證通過；Preview 47資產與修復SHA一致並通過相同完整E2E。詳見[修復報告](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md)。本項為驗收後另行授權修復；上述v1.11.2報告與件數仍是歷史快照，不改寫為全項PASS。
 - [x] **BUG-HOF-FIRST-BALLOT-LEAGUE**【PASS／v1.11.2】`retireScene` は `firstBallotLeagues` から `legendLeague` を決定。31ケース、CPBL8600／MLB11000境界、本機／Preview HOF E2E通過。**自然跨聯盟初年度入選率は未調査**であり、HOF-NATURAL-SAMPLE-01に残す。
 - [x] **TEST-COVERAGE-01**【PASS／調査範囲】54ファイルの入口／依存／未実行対象を分類。これは100%コードカバレッジや全E2E完了を意味しない。`fixed-seed-regression.json` は未参照の可能性があるが、外部用途未確認のため削除禁止。
 - [x] **AUD-01B**【PASS／指定スナップショット】`origin/main` と公開source repoの108ファイルblob一致、正式URLで108/108期待ファイルのHTTP内容一致。Preview 47 tracked HTML/JS/CSSも受驗devと一致。CDN全ノード・追加URL・将来配信を保証しない。
@@ -23,7 +23,7 @@
 
 - [ ] **BUG-ACT-01**【BLOCKED／原操作歴不足】「今季の成績を見る」無反応。過去報告 seed `k55l221a`（投手）、`oscuxs1w`。使用者から修正済みとの報告あり。Codexは原2seedの操作歴不足で再現未実施（`k55l221a/P`、`oscuxs1w`位置不明）。**未修正と断定せず**最新ブラウザ／モバイルで選択履歴を含めて再検証し、通過すれば完了証拠を記録して閉じる。
 - [ ] **BUG-ACT-02**【IMPLEMENTED_UNVERIFIED】指名入団直後の選択消失。choice 世代ロック、nested action、旧 DOM、例外復旧、契約生成を確認。Preview三尺寸の入団・収入表示と別ルート全生涯はPASS。ただし指名直後の次DOM/listener専用断言と原報告の選択歴が不足。過去修正済みの可能性があるため重複実装禁止。
-- [ ] **BUG-ACT-03**【IMPLEMENTED_UNVERIFIED】通常・満了・降格・リハビリ全休を通じ、職業選手が有効契約なしで次年度へ進まないことを検証。22個のmovement／契約fixtureはPASS。リハビリ全休×満了×降格×リーグのbrowserマトリクス未完了、KBO自然更新は別途FAIL。v1.4.2–1.4.4 の修正履歴を尊重し、再発を確認しない限り再実装しない。
+- [ ] **BUG-ACT-03**【IMPLEMENTED_UNVERIFIED】通常・満了・降格・リハビリ全休を通じ、職業選手が有効契約なしで次年度へ進まないことを検証。22個のmovement／契約fixtureはPASS。リハビリ全休×満了×降格×リーグのbrowserマトリクス未完了。別件KBO自然更新のFAILはv1.11.3で修復・驗證済みだが、本項の全マトリクスPASSとはしない。v1.4.2–1.4.4 の修正履歴を尊重し、再発を確認しない限り再実装しない。
 - [ ] **BUG-SAL-01**【IMPLEMENTED_UNVERIFIED】NPB復帰・海外提示額／締結額／次年度年俸・履歴の整合。v1.4.5 と v1.10.3 に実装履歴あり。4海外システムからNPB復帰時の提示額／契約／次年度年表はPASS。KBO2・CPBL2・MiLB各階層の降格／戦力外提示・受諾・次年支払までのbrowser確認は未完了。実装漏れと断定せず回帰検証。
 
 ## P1：テスト基盤と正本照合（次の開発に先行）
@@ -76,8 +76,8 @@
 
 ## 推奨実施順序（仕様変更は各タスクで承認）
 
-1. **P0 KBO**：初回例外の入力スナップショット→最小native回帰→原因確定→承認後に独立修正。BUG-ACT-01/02の元選択履歴を収集。修正と大規模重構を同時に行わない。
-2. **P1 TEST-RUNNER-01 → TEST-CI-01**：54ファイルを入口別に登録し `quick/full/audit/list`、PASS/FAIL/SKIP、Git基準・Playwright依存を明示。未実施5 E2E、fullモードを追加実行。KBO既知FAILは黙って除外しない。
+1. **P0 既存重大不具合の再確認**：KBO初回入力分析・独立修復はv1.11.3で完了。BUG-ACT-01/02の元選択履歴を収集。修正と大規模重構を同時に行わない。
+2. **P1 TEST-RUNNER-01 → TEST-CI-01**：54ファイルの歴史盤點にv1.11.3追加KBO回帰2入口も加えて登録し `quick/full/audit/list`、PASS/FAIL/SKIP、Git基準・Playwright依存を明示。未実施5 E2E、fullモードを追加実行。KBOの最小回帰と自然均衡生涯も維持する。
 3. **P1 契約／能力回帰**：全休×満了×降格、海外各階層の契約表示・次年度支払、Undo carryキー／combo／late、指名直後DOMの専用テストを補強。
 4. **P1 AUD-02／AUD-04／AUD-05 と REFACTOR-AUDIT-01**：全S読書・AST呼出・RNG消費・旧コード到達性を読み取り専用で補完。小規模重構はテスト基盤が安定してから。
 5. **P1 HOF-NATURAL-SAMPLE-01**：四聯盟と投手SP/MR/CLの有効な自然到達サンプルを拡充。得られたデータに基づき仕様判断し、無断で係数を変更しない。
@@ -86,7 +86,7 @@
 ## 今回の驗收で追加確認した技術的な制約
 
 - 33個 `.test.mjs` と5個standaloneはPASS。ただしE2Eは部分実施で、`event-system`、`draft-income`、`display-preferences`、`salary-history`、`trait-system` の5入口を未実施。`retirement-hof-pilot` 再採樣と分析／報告生成器も未実行。`full` 完了とは扱わない。
-- HOF固定seedで `yakyo-test-001/P`（RNG 652）と `jp3-infielder-01/IF`（RNG 549）は旧基準と現行の最終S／選択履歴／RNG一致。ただし**選択戦略が違うため** balanced のKBO FAILを否定しない。
+- HOF固定seedで `yakyo-test-001/P`（RNG 652）と `jp3-infielder-01/IF`（RNG 549）は旧基準と現行の最終S／選択履歴／RNG一致。ただし**選択戦略が違うため**当時のbalanced KBO FAILを否定しない。v1.11.3の別回帰でbalancedも修復・正常退休まで確認した。
 - 原生共有はmockでの成功／取消／失敗、四主題PNGがPASS。OS共有UI・実機ダウンロードは未驗收。
 - Codexの監査報告は証拠資料であり、各タスクを終える際は**最新HEADで再検証**する。
 

@@ -86,6 +86,8 @@
 - `docs/src/engine/cross-league-market-policy.js`：僅`applyKboForeignPackageCap`的一行計算與兩行註解；候選先max既有levelMinimum，再使用原cap、7%及萬元捨入驗證。`salaryCandidate`和`fixedContract`已共用此helper，不另改呼叫路線。
 - `tests/kbo-renewal-floor.test.mjs`：新增快速10組回歸，包含原生候選、簽約、movement及續約確定函式。
 - `tests/kbo-renewal-e2e.mjs`：新增首次失敗／完整自然生涯／固定seed／跨尺寸／原生付款去重驗證。觀察器與人工fixture只在測試server／route注入。
+  遠端初次執行在全部斷言完成後發生收尾未退出；只停止當次專用Node，補上15秒收尾上限。嚴格收尾模式重跑同樣全部遊戲斷言通過，但回報BROWSER_CLOSE_TIMEOUT／exit 1，不把該CLI結果列為PASS。診斷日誌確認Chrome原生程序已exitCode=0、卡在Playwright暫存目錄清理；quick診斷則正常清理並exit 0。Edge亦出現相同暫存清理超時。
+  最後區分功能與環境收尾：只有公開API `browser.isConnected() === false`（已斷線）時，暫存清理超時才獨立記BROWSER_CLEANUP_WARNING；仍連線的瀏覽器或任何遊戲斷言失敗仍exit 1。不清除原failure、不修改遊戲預期或縮減完整生涯比較。此警告不是遊戲測試PASS以外的環境全面正常保證。
 - `tests/npb-return-ui.test.mjs`、`tests/championship-intl.test.mjs`：歷史全檔案相等檢查僅明確允許此次確切三行KBO差分，其餘仍與原Git baseline逐字一致。未改遊戲預期值、未整批換baseline；新的最小回歸對原版仍FAIL。
 - `tests/verify-modularization.mjs`：隨版本更新其既有明確版號斷言及輸出為1.11.3；RNG預期值與其他檢查不改。升版後曾因仍斷言1.11.2而FAIL，與遊戲行為無關；同步版號後重新執行全部入口。
 - `docs/src/config.js`、`CHANGELOG.md`、`CURRENT_SPEC.md`：更新1.11.3及最低額套用順序。CHANGELOG只記實際修復，不記測試／部署狀態。
@@ -113,8 +115,8 @@
 
 - `node tests/kbo-renewal-floor.test.mjs --baseline=f3efb0ad80984422b5a42d9f86c04127f9404952`：預期FAIL；前兩組PASS，第三組以原KBO_PACKAGE_FLOOR_CAP_CONFLICT失敗。
 - `node tests/kbo-renewal-floor.test.mjs`：10組PASS。
-- 所有34個`tests/*.test.mjs`＋既有5個standalone（career-movement-policy、domestic-tournament-policy、hall-of-fame-policy、salary-promotion-policy、verify-modularization）：39入口PASS／0FAIL／0SKIP，9.986秒。
-- 全部`docs/src/**/*.js`、`tests/*.mjs`的`node --check`：95檔PASS／0FAIL，11.350秒。`git diff --check` PASS。
+- 所有34個`tests/*.test.mjs`＋既有5個standalone（career-movement-policy、domestic-tournament-policy、hall-of-fame-policy、salary-promotion-policy、verify-modularization）：升版前39入口PASS／0FAIL／0SKIP，9.986秒；版號斷言同步後39入口PASS／0FAIL／0SKIP，8.044秒。
+- 全部`docs/src/**/*.js`、`tests/*.mjs`的`node --check`：95檔PASS／0FAIL，升版後9.811秒。`git diff --check` PASS。
 - `node tests/kbo-renewal-e2e.mjs --playwright=<PLAYWRIGHT_MODULE_PATH>`：原版第一次失敗、修復均衡全生涯兩次、未受影響P／IF各舊新版一組、PC1280／320／390px原生合約・連打・年度付款，共10組PASS，22.104秒；原版錯誤單獨記錄，不混入新版Console計數。新版Console／JS・CSS404皆0。
 - `node tests/npb-return-e2e.mjs --quick --playwright=<PLAYWRIGHT_MODULE_PATH>`：22個原生movement／契約／更新／延長／FA／降格／復歸fixture PASS；1280／320／375／390／430px各24種設定、幾何與橫豎切換PASS；Console／JS・CSS404皆0。
 - `node tests/championship-intl-e2e.mjs --ui-only --playwright=<PLAYWRIGHT_MODULE_PATH>`：1280／320／360／390px原生季末・四聯盟・付款去重・國際特性・退休・PNG PASS；Console／JS・CSS404皆0。未重跑此舊測試的所有六seed／十二策略完整矩陣，不假定全面PASS。
@@ -129,8 +131,14 @@
 
 ## 5. Preview與殘餘範圍
 
-dev push後，以同一E2E的`--preview=https://dev.yakyujinsei.pages.dev --quick`驗證部署。測試先逐一比對47個tracked HTML／JS／CSS與當地HEAD相同才執行；不以頁面顯示版號就假定最新。
+修復commit：`8a7dcfcf3816e719b25f8a98c63880f345c741fc`，已push至origin/dev。Cloudflare Pages該SHA check completed／success，deployment ID：`349ff890-b205-4f23-8bcc-8d60665f9b27`。
 
-Preview實測結果待部署後補記；在完成前不將Preview列為PASS。修復本身本機驗收PASS。
+2026-10-11在`https://dev.yakyujinsei.pages.dev`執行同一完整E2E：`node tests/kbo-renewal-e2e.mjs --preview=https://dev.yakyujinsei.pages.dev --playwright=<PLAYWRIGHT_MODULE_PATH>`（不加quick）。先逐一比對47個tracked HTML／JS／CSS與上述SHA相同才執行，不以版號就假定最新。
 
-風險／未處理：真正floor／cap政策衝突仍按既有錯誤拒絕，需要另行批准才能改平衡；Safari／Android實機未驗；其他BACKLOG項目與全量退休樣本未在本次處理。無推測遷移既有契約或新增存檔功能。自然均衡重現生涯正常退休，未發現額外独立阻塞。
+Preview功能斷言：47／47資產一致；原版首次失敗對照、新版均衡全生涯兩次、P／IF完整生涯對照、PC1280／320／390px原生滿期・降格・更新・連打・付款去重，共10組PASS。首輪功能耗時32.070秒；Chrome診斷31.971秒、Edge155.0.4283.45重跑34.471秒，後兩輪嚴格收尾為FAIL（僅暫存清理），不混稱完整CLI PASS。404操作／RNG677／2050退休、390筆前綴全狀態及RNG一致、P652／IF549完全一致；Console／JS・CSS404皆0。截圖停用動畫以避免卡片入場過渡遮淡畫面，僅測試截圖設定，配信內容未改。
+
+最終測試程式在Chrome155.0.8059.39完整重跑：上述10組功能斷言PASS、31.827秒，exit 0；收尾独立WARN 1（browser已斷線、暫存清理超時）。沒有遊戲FAIL或SKIP，不把收尾WARN說成清理PASS。
+
+本機與Preview的本次遊戲修復驗收PASS；本報告補記、BACKLOG相關舊FAIL引用同步不再改遊戲檔案。其最後dev SHA由交付訊息提供。
+
+風險／未處理：真正floor／cap政策衝突仍按既有錯誤拒絕，需要另行批准才能改平衡；Windows的Playwright暫存profile清理偶發超時，已獨立記錄，不保證暫存目錄皆立即清除；Safari／Android實機未驗；其他BACKLOG項目與全量退休樣本未在本次處理。無推測遷移既有契約或新增存檔功能。自然均衡重現生涯正常退休，未發現額外独立阻塞。

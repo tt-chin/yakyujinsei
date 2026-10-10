@@ -30,7 +30,9 @@ function instrument(source){
 const cache=new Map(),server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),old=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname).replace(/^\/(baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');if(old&&!cache.has(rel))cache.set(rel,execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20e6}));let body=old?cache.get(rel):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(body);}catch(error){res.statusCode=404;res.end(String(error));}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const local=`http://127.0.0.1:${server.address().port}`,target=arg('preview')||local,output=path.join(os.tmpdir(),'yakyujinsei-kbo-renewal');await mkdir(output,{recursive:true});
-const browser=await chromium.launch({channel:'chrome',headless:true}),started=Date.now(),errors=[];
+const channel=arg('channel')||'chrome';
+const browser=await chromium.launch({channel,headless:true}),started=Date.now(),errors=[];
+console.log('Browser '+channel+' '+browser.version());
 const wire=(p,list=errors)=>{p.on('pageerror',e=>list.push(e.message));p.on('console',m=>{if(m.type()==='error')list.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))list.push(r.status()+' '+r.url());});};
 async function start(p,url,pos){await p.goto(url);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();}
 // Exactly the championship-intl-e2e --balanced strategy; no state/RNG forcing.
@@ -67,8 +69,20 @@ try{
   assert.deepEqual(await p.evaluate(()=>window.__kboTest.get()),paid,'native season payment/progression/RNG once');
   assert.equal(await p.evaluate(()=>window.__fixtureMoves),1);
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  await p.screenshot({path:path.join(output,(arg('preview')?'preview-':'local-')+width+'.png')});
+  await p.screenshot({path:path.join(output,(arg('preview')?'preview-':'local-')+width+'.png'),animations:'disabled'});
   await p.close();console.log(width+'px expiry/demotion/renewal/double-click/native-payment-once/RNG PASS');
  }
  assert.deepEqual(errors,[]);console.log('Console/JS-CSS404 0; seconds '+(Date.now()-started)/1000+'; evidence '+output);
-}catch(error){failure=error;console.error(error.message);}finally{server.closeAllConnections();server.close();await browser.close();process.exit(failure?1:0);}
+}catch(error){failure=error;console.error(error.message);}finally{
+ server.closeAllConnections();server.close();
+ let timer;
+ try{await Promise.race([browser.close(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('BROWSER_CLOSE_TIMEOUT')),15_000);})]);}
+ catch(error){
+  // Browser.close also awaits profile cleanup. A disconnected browser is already
+  // closed; report slow Windows temporary-file cleanup separately from game checks.
+  if(error.message==='BROWSER_CLOSE_TIMEOUT'&&!browser.isConnected())console.warn('BROWSER_CLEANUP_WARNING: browser disconnected; temporary-profile cleanup timed out');
+  else{failure??=error;console.error(error.message);}
+ }
+ finally{clearTimeout(timer);}
+ process.exit(failure?1:0);
+}
