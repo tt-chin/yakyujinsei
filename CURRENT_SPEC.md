@@ -1,6 +1,8 @@
-# 現行規格（v1.10.2／正式公開承認済み）
+# 現行規格（main／dev v1.10.2／正式公開済み）
 
-更新日：2026-10-09。文書改訂：15。現行仕様の唯一の正本。v1.10.2は年度内イベント去重・結果点数区分・途中Seed共有（第13節）。使用者がiPhone Safari実機5項目すべてPASSと正式公開承認を報告。検証済みゲームcommit 81762159aacf6f39a4b107b8b158dc99e6efffc7を含むdevをmainへ反映し、既存Publish website Workflowで公開する。v1.9.1の過去公開証拠はCHANGELOGへ保持。新契約金・年俸市場の承認値は第11節。
+更新日：2026-10-09。文書改訂：15。現行仕様の唯一の正本。v1.10.2は年度内イベント去重・結果点数区分・途中Seed共有（第13節）。使用者がiPhone Safari実機5項目すべてPASSと正式公開承認を報告。検証済みゲームcommit 81762159aacf6f39a4b107b8b158dc99e6efffc7を含むdevをmainへ反映し、既存Publish website Workflowで公開する。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
+
+正式反映421e036、[既存同期37918106040](https://github.com/tt-chin/yakyujinsei/actions/runs/37918106040)と[公開先Pages deployment37918120055](https://github.com/tt-chin/yakyujinsei-site/actions/runs/37918120055)は成功。公開先commitはc3b5d2534e2449d5dace220cf11b953b6299f952。正式URLはhttps://yakyujinsei.com。正式配信ファイルの今回の直接比対は実行授権未取得のため未確認。CHANGELOGには更新・修正内容だけを記録する。
 
 契約金表示修正前のdevは`7acb456e4a0ed48b5541579fc4d42215ee3e4ce8`（v1.8.0）、mainは`93ad2c7345a7469f9bbf333be913725b6069e6bd`（v1.7.0）。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
 
