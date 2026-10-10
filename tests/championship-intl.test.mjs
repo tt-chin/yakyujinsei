@@ -53,5 +53,15 @@ test('C09 actual active phaseEnd: champion, maintenance, salary/incentive/progre
   c.phaseEnd();const saved=JSON.stringify(s);c.phaseEnd();assert.equal(JSON.stringify(s),saved);assert.deepEqual([draws,moved,cards],[1,1,2]);assert.equal(s.careerBaseSalary,100000000);assert.equal(s.careerEarnings,100000111);assert.deepEqual([s.tradeRefuse,s.tradeHeat],[1,3]);
 });
 test('snapshot placement and franchise hookup use unchanged actual path',()=>{assert.ok(game.indexOf('  captureSeasonChampionship(S);')>game.indexOf('  recordSalaryEvaluation(st);'));assert.ok(game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('  tjGamble(()=>demotionAudit'));const source=game.slice(game.indexOf('function movement(){'),game.indexOf('function advance()'));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});
-test('out-of-scope data and rules unchanged from latest dev',()=>{for(const file of ['src/data/event-cards-jp.js','src/data/jp-data.js','src/data/salary-market-data.js','src/engine/market-policy.js','src/engine/cross-league-market-policy.js','src/engine/contract-policy.js','src/engine/event-policy.js','src/engine/event-state-policy.js','src/engine/incentive-policy.js'])assert.equal(readFileSync(new URL('../docs/'+file,import.meta.url),'utf8').replace(/\r\n/g,'\n'),execFileSync('git',['show','004cd26:docs/'+file],{encoding:'utf8',maxBuffer:20000000}).replace(/\r\n/g,'\n'),file);});
+test('out-of-scope data and rules unchanged except approved KBO floor fix',()=>{
+  for(const file of ['src/data/event-cards-jp.js','src/data/jp-data.js','src/data/salary-market-data.js','src/engine/market-policy.js','src/engine/cross-league-market-policy.js','src/engine/contract-policy.js','src/engine/event-policy.js','src/engine/event-state-policy.js','src/engine/incentive-policy.js']){
+    let current=readFileSync(new URL('../docs/'+file,import.meta.url),'utf8').replace(/\r\n/g,'\n');
+    if(file.endsWith('/cross-league-market-policy.js')){
+      const approved='  // Apply the existing level floor after salary multipliers, before the package cap.\n  // A candidate below the floor is not itself a floor/cap policy conflict.\n  let salary=Math.min(round(Math.max(Number(annualSalary)||0,levelMinimum)),floor(available/(1+incentiveRate)));';
+      assert.equal(current.split(approved).length,2,'exactly one approved KBO fix');
+      current=current.replace(approved,'  let salary=Math.min(round(annualSalary),floor(available/(1+incentiveRate)));');
+    }
+    assert.equal(current,execFileSync('git',['show','004cd26:docs/'+file],{encoding:'utf8',maxBuffer:20000000}).replace(/\r\n/g,'\n'),file);
+  }
+});
 console.log(`${cases} championship/international/migration/active integration checks PASS`);

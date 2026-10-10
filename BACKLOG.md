@@ -1,87 +1,101 @@
 # 待辦清單 / 実装・照合バックログ
 
-整理日：2026-10-06。文書改訂：4。未完了事項の唯一の正本。現行仕様は[CURRENT_SPEC.md](CURRENT_SPEC.md)、完了内容は[CHANGELOG.md](CHANGELOG.md)を参照する。
+整理日：2026-10-10。文書改訂：6（Codex実動驗收反映、使用者手動置換用）。未完了事項の唯一の正本。現行仕様：[CURRENT_SPEC.md](CURRENT_SPEC.md)、完了履歴：[CHANGELOG.md](CHANGELOG.md)、開発規則：[AGENTS.md](AGENTS.md)。
 
-過去の照合基準はv1.6.2。main／devはv1.10.2（2026-10-09）。ユーザーのiPhone Safari実機5項目PASSと正式公開承認後、devをmainへ反映し、既存同期37918106040と公開先Pages deployment37918120055の成功を確認。正式サイト配信ファイルの今回の直接比対は実行授権が得られず未確認。実装済みの全球契約仕様はCURRENT_SPEC第11節、履歴保存仕様は第6節、特性仕様は第12節、イベント去重／途中共有は第13節、完了履歴はCHANGELOGへ移管。旧設計とZIP原文は[封存索引](docs/archive/README.md)へ移管済み。移動は内容の全量統合・実動検収の完了を意味しない。
-状態：未確認／仕様待ち／未実装／原始碼已確認・実動未検証／検収完了／非採用。設計日や版号だけで完了にしない。
+## 0. 調査基準と状態の定義
 
-## 最優先：正本の確定
+- 対象：`tt-chin/yakyujinsei` `dev`、**受驗 HEAD `a4aa83c48a48a1567bf3b14ceea6e4c76c87b76b`**、VERSION **`1.11.2`**。`main` は `421e036bb206a11828a696a4f8b0d3909385441f`、VERSION `1.10.2`。受驗時の基準であり、後続変更時は再取得する。
+- 一次驗收證據：`docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md`（2026-10-10、Codex報告。使用者提供の同名調査報告を根拠とする）。`CURRENT_SPEC.md`、`CHANGELOG.md`、`AGENTS.md` を併用。**本BACKLOG更新ではテストを独立再実行していない**。
+- Codex調査の38 ID判定：PASS 3、FAIL 1、IMPLEMENTED_UNVERIFIED 10、NOT_IMPLEMENTED 14、BLOCKED 4、DESIGN_PENDING 6。**PASSは当該驗收範囲に限定**。非実装候補・承認保留・実機未検証を混同しない。
+- 検証環境：Windows／Node 24.15.0／Playwright Chrome 155、ローカルとPreview。320/390pxはモバイル模擬でありiOS Safari・Android Chrome実機ではない。
+- `tests/` は**54ファイル**（33 `.test.mjs`、5 standalone、11 E2E、5 support／分析／fixture）。本次33+5入口 PASS、E2E一部のみ実施、KBO自然進行 FAIL。全E2E・4,000生涯・全機種のPASSとはしない。
+- 状態：`FAIL（再現済み）`／`BLOCKED`／`IMPLEMENTED_UNVERIFIED`／`NOT_IMPLEMENTED`／`DESIGN_PENDING`／`PASS（範囲限定）`。未完了は `[ ]`、報告の範囲内で完了した調査のみ `[x]` とし、完成機能の全面保証を意味しない。
+- 本ファイルは**文書の更新案**。ゲーム、テスト、VERSION、CHANGELOG、`main`、本番は変更しない。実際のリポジトリへの反映は使用者が手動で行う。
 
-- [ ] AUD-01B 公開ソースおよび本番配信との全量一致を確認する。v1.9.1の同期／配信とVERSION・主要プログラムは確認済み。公開ソース／全配信ファイルの全量照合は未完了。
-- [ ] AUD-02 CURRENT_SPEC各節をコード・既存テストへ対応付ける。実装済み・差異・未確認の一覧を作る。仕様との差異を自動的に「修正対象」としない。
-- [ ] AUD-03B Undo/全リセットの実動、carry/touchedKeys/残点/骰子位置復元、確定特性への影響をブラウザで検証する。
-- [ ] AUD-04 封存した詳細設計書の全数値表・イベント一覧・APIと現行コードを照合し、有効な詳細をCURRENT_SPECへ移管する。旧台湾版監査や後続変更に置換された仕様を戻さない。
-- [ ] AUD-05 封存したAGENTS各版の差分を確認する。VERSION_HISTORY三コピーは同一SHA-256を確認済み。旧規則を現行AGENTSへ無条件適用しない。
+## 今回の驗收で完了と判定した項目（証拠付き）
 
-完了証拠：対象branch/SHA、該当関数・テスト、未確認事項。原始碼確認済み項目は新規実装待ちから除外するが、検収完了とは扱わない。
+- [x] **BUG-KBO-RENEWAL-FLOOR**【PASS／v1.11.3修復】KBO候選在倍率適用後先補至既定階層最低年俸，再驗證原package上限；不改政策／倍率／保障年表。`jp3-infielder-01`／IF／`--balanced` 的2049年首次輸入為736萬円、最低800萬円、上限21597.6萬円（非真正衝突），修復後2050年正常退休。失敗前390操作的狀態／選擇／RNG完全一致；投手／野手各一組完整生涯比較一致。新增10組最小回歸及PC／320／390px續約・連打・原生付款去重驗證通過。詳見[修復報告](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md)。本項為驗收後另行授權修復；下述v1.11.2報告與件數仍是歷史快照，不改寫為全項PASS。
+- [x] **BUG-HOF-FIRST-BALLOT-LEAGUE**【PASS／v1.11.2】`retireScene` は `firstBallotLeagues` から `legendLeague` を決定。31ケース、CPBL8600／MLB11000境界、本機／Preview HOF E2E通過。**自然跨聯盟初年度入選率は未調査**であり、HOF-NATURAL-SAMPLE-01に残す。
+- [x] **TEST-COVERAGE-01**【PASS／調査範囲】54ファイルの入口／依存／未実行対象を分類。これは100%コードカバレッジや全E2E完了を意味しない。`fixed-seed-regression.json` は未参照の可能性があるが、外部用途未確認のため削除禁止。
+- [x] **AUD-01B**【PASS／指定スナップショット】`origin/main` と公開source repoの108ファイルblob一致、正式URLで108/108期待ファイルのHTTP内容一致。Preview 47 tracked HTML/JS/CSSも受驗devと一致。CDN全ノード・追加URL・将来配信を保証しない。
 
-## 設計と現行コードの差異（P1）
+## P0：再現済み不具合・既存重大不具合の再確認
 
-- [ ] OVR-01 野手スタミナ5%案：未実装。fix_103 §6の要求を専用タスクとして再確認し、投手の式は変更しない。現在はround(base)−イップス補正で、提案はround(base×0.95+sta×0.05)−補正。base=60、sta=40/60/80なら59/60/61。中間丸めなし、守備式/成長コスト/基準値維持、投手・野手固定seed影響確認が必要。ゲーム結果へ影響するため、実装版号と正式履歴は最新開発版から決定し、1.0.3へ戻さない。
+- [ ] **BUG-ACT-01**【BLOCKED／原操作歴不足】「今季の成績を見る」無反応。過去報告 seed `k55l221a`（投手）、`oscuxs1w`。使用者から修正済みとの報告あり。Codexは原2seedの操作歴不足で再現未実施（`k55l221a/P`、`oscuxs1w`位置不明）。**未修正と断定せず**最新ブラウザ／モバイルで選択履歴を含めて再検証し、通過すれば完了証拠を記録して閉じる。
+- [ ] **BUG-ACT-02**【IMPLEMENTED_UNVERIFIED】指名入団直後の選択消失。choice 世代ロック、nested action、旧 DOM、例外復旧、契約生成を確認。Preview三尺寸の入団・収入表示と別ルート全生涯はPASS。ただし指名直後の次DOM/listener専用断言と原報告の選択歴が不足。過去修正済みの可能性があるため重複実装禁止。
+- [ ] **BUG-ACT-03**【IMPLEMENTED_UNVERIFIED】通常・満了・降格・リハビリ全休を通じ、職業選手が有効契約なしで次年度へ進まないことを検証。22個のmovement／契約fixtureはPASS。リハビリ全休×満了×降格×リーグのbrowserマトリクス未完了、KBO自然更新は別途FAIL。v1.4.2–1.4.4 の修正履歴を尊重し、再発を確認しない限り再実装しない。
+- [ ] **BUG-SAL-01**【IMPLEMENTED_UNVERIFIED】NPB復帰・海外提示額／締結額／次年度年俸・履歴の整合。v1.4.5 と v1.10.3 に実装履歴あり。4海外システムからNPB復帰時の提示額／契約／次年度年表はPASS。KBO2・CPBL2・MiLB各階層の降格／戦力外提示・受諾・次年支払までのbrowser確認は未完了。実装漏れと断定せず回帰検証。
 
-## 既存不具合の再確認（P0）
+## P1：テスト基盤と正本照合（次の開発に先行）
 
-- [ ] BUG-KBO-RENEWAL-FLOOR：1.10.3（004cd26）の均衡配点・jp3-infielder-01/IFで2049年、KBO2契約更新時にKBO_PACKAGE_FLOOR_CAP_CONFLICTが発生し選択が消える。旧版のブラウザ対照で再現済み。1.11.0の優勝／国際特性とは別範囲。完了条件：契約最低年俸と外国人パッケージ上限、降格・更新入力を分析し、別途承認後に契約政策／支払／RNGを検証して修正。
-- [ ] BUG-ACT-01 「今季の成績を見る」で停止する症状を実機/モバイルで再確認。seed k55l221aは投手、oscuxs1wは元報告参照。選択履歴も保存し、seedだけで同じ途中状態とみなさない。
-- [ ] BUG-ACT-02 指名入団直後の選択消失を再確認。choice世代ロック、nested action、遅延旧DOM、例外後復旧、契約の生成/継続を調べる。
-- [ ] BUG-ACT-03 通常/満了/降格/リハビリ全休を跨いで職業選手が有効契約なしにならないことを検証。1.4.2–1.4.4の履歴は過去の修正記録であり再発否定の証拠ではない。
-- [ ] BUG-SAL-01 復帰/海外オファーの提示・締結額一致、来季年俸表示の分岐を再テスト。Masterの1.4.5完了記載は保持し、未完了移植として重複実装しない。
+- [ ] **TEST-RUNNER-01**【未実装】`scripts/test.mjs` を新設し `quick`／`full`／`audit`／`list` を統一。既存テストを分類し、`.test.mjs` 以外の実行対象、fixture、support、分析専用を明示。PASS/FAIL/SKIP・耗時・exit code を表示。依存不足を PASS と扱わない。追加 npm 依存は無断導入しない。Codex が関連テスト＋quick を実行するルールを AGENTS に追加するのは専用タスクで行う。
+- [ ] **TEST-CI-01**【未実装】`.github/workflows/test.yml` を新設し `dev` push で quick、`main` 向け PR で full を実行。E2E 用ブラウザ環境・実行時間・失敗ログを検証。現存 `publish-site.yml` は `main` の `docs/**` 配信同期のみでテストなし。マージ強制停止には別途 GitHub Ruleset/Branch Protection 設定が必要。
+- [ ] - [ ] - [ ] **AUD-02**【IMPLEMENTED_UNVERIFIED／16節索引作成済み】CURRENT_SPEC 16節のコード／既存テスト索引は報告第8節に作成済み。全数値・DOM分岐・跨機能相互作用までの完全検収は未完了。実装済み・差異・未検証を区別。差異を自動修正対象としない。
+- [ ] **AUD-03B**【IMPLEMENTED_UNVERIFIED／6組browser PASS】pool3・dice[2,4,6] × PC/320/390 の6組でUndo／reset、carry／touchedKeys／残点／骰子／RNGを実測PASS。Undoで欠損carryキーが0として追加される構造差（`{sta:0}`→`{sta:0,vel:0}`）を確認。数値等価、全resetは構造一致。combo／late解放、cap80／残0、確定特性への影響と専用再現E2Eは未完了。
+- [ ] **AUD-04**【IMPLEMENTED_UNVERIFIED】封存設計の数値表・イベント・API と現行コードを照合し、現在も有効な情報だけ CURRENT_SPEC へ移管。旧仕様の自動復活禁止。
+- [ ] **AUD-05**【IMPLEMENTED_UNVERIFIED】封存 AGENTS 各版の差分確認。旧ルールの無条件適用禁止。
+- [ ] **REFACTOR-AUDIT-01**【IMPLEMENTED_UNVERIFIED／初期風險盤點済み】`game.js` 約3100行、後段同名関数override、LEGACY参照、契約／UI／S/RNGの高リスクを初期調査済み。全S欄位読書図、AST呼出図、動的可達性、RNG消費点、モジュール境界を追加調査。優先度・依存・テスト不足・段階的移行計画を作る。TEST-RUNNER と AUD-02 を踏まえ、承認前に大規模リファクタリングしない。
 
-原因未確定の項目に推測修正を指示しない。今回ゲームのデバッグ/修正は実施していない。
+## P1：退休・殿堂評価の検証と設計判断
 
-## 後続UI（P1）
+- [ ] **HOF-NATURAL-SAMPLE-01**【IMPLEMENTED_UNVERIFIED／追加サンプル待ち】v1.11.1 監査は 160 固定ケース＋20 特例＋87 境界／現状特性ケース、実ゲーム 50 完了生涯（25 seed×2戦略）。実ゲーム一軍到達 KBO/MLB がゼロで、4リーグ比較・4,000有効生涯の受入は未達。実際に到達する経路／戦略を整備し、サンプルの偏り・重複・失敗・再現性を報告。調査中にゲーム規則は変更しない。
+- [ ] **HOF-BUCKET-DECISION-01**【仕様待ち】NPB育成／二軍／一軍、CPBL二軍／一軍、KBO二軍／一軍の既存リーグ合算を殿堂評価でも維持するか、一軍限定／別ウェイトにするかを決定。MiLB は MLB に合算しない現行仕様を尊重。判断前にスコア変更禁止。
+- [ ] **HOF-PITCHER-BALANCE-01**【仕様待ち】投手の HLD・ERA・WHIP・L が基本点に直接反映されない現状、SP/MR/CL の分布を実際の到達生涯で検証。A/B/C 候補は監査上の仮説で採用済みではない。係数変更は別承認。
+- [ ] **HOF-HONOR-POLICY-01**【仕様待ち】MVP／最優秀投手賞で i≤1、部門賞・守備賞で i≤2 の保証が投票候補まで保証する仕様を維持するか判断。国際実績の NPB 限定加点、フランチャイズ全リーグ加点も含める。現状仕様をバグと断定しない。
+- [ ] **HOF-DISPLAY-ROUND-01**【DESIGN_PENDING／境界再現済み】表示丸めで閾値未達の raw score が閾値以上に見えるケース（例：7999.8→8000）について UI 誤解の有無を確認。判定は未丸め値のまま維持するか、表示注記を加えるか別途決定。
+- [ ] **HOF-VOTE-STORY-01**【DESIGN_PENDING】現行 i=0 の殿堂入りは確定的な投票演出、i=1 は候補止まり。実確率投票と誤認される表示・説明の有無を確認。確率化は未承認。
 
-- [ ] EVT-1102-ANDROID 途中Seed共有と年度イベント去重のAndroid Chrome実機検証のみ未確認。PC／320／390px、Preview実進行、単体1656条件、552ブラウザ分岐、六seed新版2回は合格。iPhone Safari実機5項目全PASSは使用者確認済み、正式公開承認済み。保存／読込は対象外。実装仕様はCURRENT_SPEC第13節。
+## P1：端末・文案の未検証
 
-| ID | 対象 | 前提・検収 |
-|---|---|---|
-| UI-17-DEVICE | 表示設定・イベントの実機検証 | 表示設定・v1.8以降のイベントもユーザー承認後にv1.9.1として正式公開済み。iOS Safari／Android Chrome実機は未確認 |
-| SHARE-111-DEVICE | 1.11.1原生共有の実機確認 | iPhone Safari／Android Chromeで両入口のOS共有・取消・画像共有、PC／携帯保存を確認。実装・自動検証はCURRENT_SPEC第16節 |
+- [ ] **EVT-1102-ANDROID**【BLOCKED／Android実機なし】年度イベント去重・途中 seed 共有を Android Chrome 実機で確認。既存 PC・iPhone の検証証拠は保持。
+- [ ] **UI-17-DEVICE**【BLOCKED／iOS・Android実機なし】表示設定・イベントの iOS Safari／Android Chrome 実機検証。既に公開済みの機能を未実装扱いしない。
+- [ ] **SHARE-111-DEVICE**【BLOCKED／原生share sheet実機なし】v1.11.1 の原生 URL 共有・取消・PNG 主題同期・画像共有／保存を iPhone Safari、Android Chrome、PC で検証。CURRENT_SPEC 第16節・CHANGELOG 1.11.1 に実装記録あり。
+- [ ] **COPY-01**【IMPLEMENTED_UNVERIFIED】全到達可能な日本語文案を再点検。過去の92イベント文案置換（v1.8.2）と区別し、誤字・自然さ・野球用語・表示箇所を検証。既存翻訳を無断で全面置換しない。
 
-COPY-01は別途検証待ち：[過去の文言監査](docs/archive/local/docs/JAPANESE_COPY_AUDIT_V1.6.0.md)は存在するが、到達可能な全文言の再監査は未実施。文書存在だけで完了扱いにしない。
+## P2：個別仕様の承認待ち・将来候補
 
-UI-03/04/05の実装とmain反映は完了し、CURRENT_SPEC §8とCHANGELOG 1.7.0へ移管済み。実機確認は上記UI-17-DEVICEで分離する。OS自動追従・独自色・音量・キャリア保存は対象外。92枚イベントの採用部分はCURRENT_SPEC §10、CHANGELOG 1.8.0へ反映済み。旧候補版号は再利用を保証しない。
+- [ ] **OVR-01**【仕様待ち】野手スタミナ5%案。現行 `round(base)−イップス補正` と提案 `round(base×0.95+sta×0.05)−補正` を比較し、採用するか承認を得る。投手・守備式・育成コストを変更しない。採用時は固定 seed と RNG を検証。
+- [ ] **TRAIT-PITCHER-TC**【承認済み保留】投手三冠王。単項の最多勝／最優秀防御率等の制度設計が先。最優秀投手賞で代用しない。
+- [ ] **TRAIT-NITENICHI**【承認済み保留】二天一流。未承認の二刀流制度・投手三冠制度が前提。勝手に実装しない。
+- [ ] **TRAIT-CHAMPIONMAKER**【承認済み保留】優勝請負人。累計5冠、集計範囲、職業／国際優勝率＋5ポイント、RNG 影響の設計・承認待ち。v1.11.0 の既存優勝処理とは区別。
+- [ ] **CONTRACT-LEGACY-01**【重構候補・要調査】到達不能とされる旧 `makeOffers`／`pickOfferUI`／市場定義の参照関係を検証し、安全な範囲で削除・整理するか決定。固定 seed と契約回帰なしに削除しない。
+- [ ] **CONTRACT-ASIA-01**【未実装・仕様待ち】KBO アジア枠・球団全体外国人予算。現行 FOREIGN_STANDARD とは別制度。
+- [ ] **INJ-UI-01**【候補】一般故障リスク内訳の可視化。計算と表示の単一データ源を維持。
+- [ ] **PLY-01**【候補】背番号・年度履歴。00、移籍、重複・変更規則の決定待ち。
+- [ ] **INT-01**【候補】大会別国際履歴。既存結果を再利用し、抽選を増やさない。
+- [ ] **EVT-01**【候補】イベント分類表示。抽選候補・順序は維持。
+- [ ] **UI-06**【候補】初心者向けゲーム内説明。
+- [ ] **UI-07**【候補】ゲーム内更新履歴。CHANGELOG を正本とする。
+- [ ] **PLY-02**【候補】永久欠番。背番号履歴が前提。組織・年数・成績・RNG 方針の承認待ち。
 
-SHARE-01の四主題画像連動は1.11.1で承認仕様として実装しCURRENT_SPEC第16節へ移管。原生URL共有と自動画像更新を含む実機確認のみSHARE-111-DEVICEへ分離する。旧1.8草案は参考用のまま保持する。
-
-原文：[1.7設計](docs/archive/imported/history/V1.7.0_THEME_AND_DISPLAY_SETTINGS_SPEC.md)、[1.8草案](docs/archive/imported/history/V1.8.0_SHARE_IMAGE_THEME_LINK_SPEC.md)。詳細色盤・接続API・非同期再生成・検収条件は承認時に照合する。
-
-## 将来候補（P2）
-
-### 38特性移植の承認済み保留（2026-10-09）
-
-今回の追加6件と既存29件名称統一はCURRENT_SPEC §12へ移管。以下3件は使用者の明示承認により未処理のまま保持し、38件全取得・全効果の完了とは扱わない。
-
-- [ ] TRAIT-PITCHER-TC（pitcherTC／投手三冠王）：現行日本版には最多勝・最優秀防御率の単項賞がない。最優秀投手賞を防御率タイトルと読み替えない。完了条件：別途賞の資格・閾値・確率・対象リーグ・MVPとRNG影響の承認後、同年同リーグ3冠と履歴／重複防止を実装・検証。
-- [ ] TRAIT-NITENICHI（nitenichi／二天一流）：日本版に二刀流がなく、投手三冠も保留。完了条件：別途二刀流制度を承認した後、同年同リーグの投打六冠を実現。出場だけで称号を与えず、二刀流を今回無断追加しない。
-- [ ] TRAIT-CHAMPIONMAKER（championmaker／優勝請負人）：1.11.0でNPB／MLB／CPBL／KBOの職業優勝と国際大会の鬼を接続したが、本特性の取得／効果は対象外。完了条件：累計5冠の集計対象・国際／職業優勝率+5百分点・追加RNG影響を専用範囲として承認し、履歴／重複防止と順位抽選方式を設計して実装する。旧phaseEndの給与処理は呼ばない。
-
-付随未確認：実機iOS Safari／Android Chrome。旧混合球団年資だけから阪神一軍年資は復元不能で、推測補算しない。未公開Previewとmain／本番を区別する。
-
-- [ ] CONTRACT-LEGACY-01 到達不能な旧makeOffers／pickOfferUI／旧市場定義の整理。1.9.0はactive bindingの更新のみで旧定義を無断削除しない。専用範囲・承認・固定seed回帰を決めてから整理する。
-- [ ] CONTRACT-ASIA-01 KBO亞洲名額・球団全体外國人預算の追加は非実装。現行FOREIGN_STANDARDと混同せず、専用路線／枠管理の承認が必要。
-
-| ID | 候補版（予約ではない） | 機能 | 未決・受入条件 |
-|---|---|---|---|
-| INJ-UI-01 | 1.9.0 | 一般故障リスク内訳 | 実計算と単一データ源。TJ/契約傷病市場と混同しない |
-| PLY-01 | 1.10.0 | 背番号・年度履歴 | 必須/任意、範囲、00、移籍変更、重複管理を決定。ゲームRNG不使用 |
-| INT-01 | 1.11.0 | 大会別国際履歴 | 既存大会結果を記録、追加抽選なし、辞退/拒否は出場数に加算しない |
-| EVT-01/UI-06/UI-07 | 1.12.0 | 分類・初心者説明・ゲーム内履歴 | 抽選配列不変。CHANGELOGを基準に表示 |
-| PLY-02 | 1.13.0 | 永久欠番 | 背番号履歴が前提。組織/年数/成績/不祥事/RNG採否は専用承認 |
-
-出典：[旧Master](docs/archive/local/MIGRATION_MASTER_SPEC.md) §§6–9。候補版は旧計画のラベルであり、現行版からの連番を保証しない。
+上記の過去「候補版」1.9.0～1.13.0 は実装予約でも現行版号でもない。採用時は最新正式版を基準に別途版号を決める。
 
 ## 非採用・自動復活禁止
 
-キャリア途中保存、旧エンジン切替、rv/rules URL、参考作品の給与システム丸ごと移植、未承認の二刀流、音声/サーバー生成。
-1.5.2の3メニューを旧4メニューへ戻す、1.7の具体設定をMasterの旧テーマ/PCモードへ戻す、給与評価を初期fix_103へ戻すことも禁止。
+キャリア途中保存・復元、旧エンジン切替、`rv/rules` URL、参考作品の給与システム丸ごと移植、未承認の二刀流、音声／サーバー生成。1.5.2 の3メニューを旧4メニューへ戻さない。旧テーマ／PCモード・旧給与評価へ戻さない。分析上の HOF A/B/C 候補を自動採用しない。
+
+## 推奨実施順序（仕様変更は各タスクで承認）
+
+1. **P0 KBO**：初回例外の入力スナップショット→最小native回帰→原因確定→承認後に独立修正。BUG-ACT-01/02の元選択履歴を収集。修正と大規模重構を同時に行わない。
+2. **P1 TEST-RUNNER-01 → TEST-CI-01**：54ファイルを入口別に登録し `quick/full/audit/list`、PASS/FAIL/SKIP、Git基準・Playwright依存を明示。未実施5 E2E、fullモードを追加実行。KBO既知FAILは黙って除外しない。
+3. **P1 契約／能力回帰**：全休×満了×降格、海外各階層の契約表示・次年度支払、Undo carryキー／combo／late、指名直後DOMの専用テストを補強。
+4. **P1 AUD-02／AUD-04／AUD-05 と REFACTOR-AUDIT-01**：全S読書・AST呼出・RNG消費・旧コード到達性を読み取り専用で補完。小規模重構はテスト基盤が安定してから。
+5. **P1 HOF-NATURAL-SAMPLE-01**：四聯盟と投手SP/MR/CLの有効な自然到達サンプルを拡充。得られたデータに基づき仕様判断し、無断で係数を変更しない。
+6. **P1 実機／文案、P2 新機能**：実機は使用者等の端末で最終驗收。dev→Preview→使用者承認→mainを維持。
+
+## 今回の驗收で追加確認した技術的な制約
+
+- 33個 `.test.mjs` と5個standaloneはPASS。ただしE2Eは部分実施で、`event-system`、`draft-income`、`display-preferences`、`salary-history`、`trait-system` の5入口を未実施。`retirement-hof-pilot` 再採樣と分析／報告生成器も未実行。`full` 完了とは扱わない。
+- HOF固定seedで `yakyo-test-001/P`（RNG 652）と `jp3-infielder-01/IF`（RNG 549）は旧基準と現行の最終S／選択履歴／RNG一致。ただし**選択戦略が違うため** balanced のKBO FAILを否定しない。
+- 原生共有はmockでの成功／取消／失敗、四主題PNGがPASS。OS共有UI・実機ダウンロードは未驗收。
+- Codexの監査報告は証拠資料であり、各タスクを終える際は**最新HEADで再検証**する。
 
 ## 各タスク共通の完了条件
 
-1. 最新コードと仕様の差分確認、対象/対象外の固定。
-2. 投手・野手、固定seedと選択履歴、RNG消費比較。表示のみでは結果不変。
-3. PC/モバイル、Console/404、例外時の操作継続、未確定選択の保持。
-4. 実装・既存回帰テストの結果と未実施項目を記録。
-5. ゲーム変更時だけ適切なVERSIONとCHANGELOGを同時更新。
-6. dev/Previewと承認後main/本番を分け、無断push・本番反映しない。
-7. 完了の証拠を残した後、CURRENT_SPECと本清單を更新する。
+1. 最新 `dev` SHA・VERSION、対象／対象外、仕様とコードの差分を記録。
+2. 原因と再現手順を先に確定。既存実装を重複実装しない。
+3. 投手／野手、固定 seed＋選択履歴、RNG 呼出順・消費数を比較。表示のみの変更では人生結果を変えない。
+4. 該当単体／統合／E2E と PC／モバイルの結果、未実行項目、失敗原因を報告。テストを実行せず PASS と書かない。
+5. ゲーム本体変更時のみ VERSION と CHANGELOG を同一タスクで更新。ドキュメント／テストだけなら原則バージョン据え置き。
+6. `dev` の検証と `main`／本番反映を区別し、明示承認なしに `main` を変更しない。
+7. 完了証拠（SHA、関連コード／テスト、再現手順、検証結果）を残し、CURRENT_SPEC と BACKLOG を同期する。

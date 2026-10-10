@@ -52,7 +52,9 @@ export function applyKboForeignPackageCap({annualSalary,signingBonus=0,incentive
   const packageCap=isRenewal?Math.min(300_000_000,Math.max(150_000_000,previousPackage*1.2)):150_000_000;
   const fixed=signingBonus+postingFee,available=packageCap-fixed;
   if(available<0)throw Error('KBO_PACKAGE_FIXED_COST_EXCEEDS_CAP');
-  let salary=Math.min(round(annualSalary),floor(available/(1+incentiveRate)));
+  // Apply the existing level floor after salary multipliers, before the package cap.
+  // A candidate below the floor is not itself a floor/cap policy conflict.
+  let salary=Math.min(round(Math.max(Number(annualSalary)||0,levelMinimum)),floor(available/(1+incentiveRate)));
   if(salary<levelMinimum)throw Error('KBO_PACKAGE_FLOOR_CAP_CONFLICT');
   while(salary+round(salary*incentiveRate)+fixed>packageCap)salary-=10000;
   if(salary<levelMinimum)throw Error('KBO_PACKAGE_FLOOR_CAP_CONFLICT');

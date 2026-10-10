@@ -22,8 +22,16 @@ for(const [org,level] of [['MLB','MLB'],['MiLB','A3'],['KBO','KBO1'],['CPBL','CP
 }
 const html=readFileSync(new URL('../docs/index.html',import.meta.url),'utf8'),css=readFileSync(new URL('../docs/styles/ui-navigation.css',import.meta.url),'utf8');
 assert.match(html,/<span>年俸（万）<\/span>/);assert.match(html,/aria-label="年俸、単位は万円/);assert.match(css,/padding:calc\(4px \* var\(--nav-scale\)\)/);
-// Market parameters, algorithms and special movement routes are byte-for-byte unchanged.
-for(const file of ['docs/src/engine/cross-league-market-policy.js','docs/src/engine/contract-policy.js'])assert.equal(readFileSync(new URL('../'+file,import.meta.url),'utf8').replace(/\r\n/g,'\n'),execFileSync('git',['show','73d5a58:'+file],{encoding:'utf8'}).replace(/\r\n/g,'\n'));
+// Preserve the historical baseline except the explicitly tested KBO floor-before-cap fix.
+for(const file of ['docs/src/engine/cross-league-market-policy.js','docs/src/engine/contract-policy.js']){
+  let current=readFileSync(new URL('../'+file,import.meta.url),'utf8').replace(/\r\n/g,'\n');
+  if(file.endsWith('/cross-league-market-policy.js')){
+    const approved='  // Apply the existing level floor after salary multipliers, before the package cap.\n  // A candidate below the floor is not itself a floor/cap policy conflict.\n  let salary=Math.min(round(Math.max(Number(annualSalary)||0,levelMinimum)),floor(available/(1+incentiveRate)));';
+    assert.equal(current.split(approved).length,2,'exactly one approved KBO fix');
+    current=current.replace(approved,'  let salary=Math.min(round(annualSalary),floor(available/(1+incentiveRate)));');
+  }
+  assert.equal(current,execFileSync('git',['show','73d5a58:'+file],{encoding:'utf8'}).replace(/\r\n/g,'\n'),file);
+}
 const oldGame=execFileSync('git',['show','73d5a58:docs/src/engine/game.js'],{encoding:'utf8'}).replace(/\r\n/g,'\n'),now=game.replace(/\r\n/g,'\n');
 for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision'],['function handleDemotion','/* 再契約'],['function buyoutRemaining','function handleDemotion'],["  if(S.stage==='PRO'&&S.age>=36","/* シーズン中。 */"]]){assert.ok(now.includes(start));const finish=end==='/* 再契約'? 'function outOfOrg':end;assert.ok(now.includes(finish));assert.equal(now.slice(now.indexOf(start),now.indexOf(finish,now.indexOf(start))),oldGame.slice(oldGame.indexOf(start),oldGame.indexOf(finish,oldGame.indexOf(start))),start+' unchanged');}
 console.log(`${cases} NPB return contract gates/cache/single completion/salary handoff and unchanged market/contract policies passed.`);
