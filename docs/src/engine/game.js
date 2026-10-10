@@ -2068,7 +2068,7 @@ function retireScene(tiers){
   }
   card('gold','引退の日',txt);
   /* 名人堂票選(可多リーグ並存)。 */
-  const hofs=[]; let firstBallot=false; const hofLeagues=[];
+  const hofs=[]; let firstBallot=false; const hofLeagues=[]; const firstBallotLeagues=[];
   const HOF_CFG={CPBL:{n:'台湾プロ野球殿堂',wait:5,total:132,lg:'台湾プロ野球'},KBO:{n:'韓国野球殿堂',wait:5,total:250,lg:'KBO'},NPB:{n:'日本野球殿堂',wait:5,total:326,lg:'NPB'},MLB:{n:'アメリカ野球殿堂',wait:5,total:389,lg:'メジャーリーグ'}};
   ['CPBL','KBO','NPB','MLB'].forEach(b=>{ const t=tiers[b]; if(!t)return;
     const cfg=HOF_CFG[b];
@@ -2078,7 +2078,7 @@ function retireScene(tiers){
       const fbMult={CPBL:1.15,KBO:1.15,NPB:1.12,MLB:1.2}[b]||1.2;
       const firstNow = t.sc>=th*fbMult;
       const ballotYr = firstNow?1:ri(2,6);
-      if(firstNow){ firstBallot=true; }
+      if(firstNow){ firstBallot=true; firstBallotLeagues.push(cfg.lg); }
       hofLeagues.push(cfg.lg);
       const pct=Math.min(99.1,75+ (t.sc-th)/th*40 + R()*6 - (ballotYr-1)*4);
       const votes=Math.round(cfg.total*Math.max(75,pct)/100);
@@ -2090,7 +2090,7 @@ function retireScene(tiers){
       hofs.push(`${tries}年連続で${cfg.n}の候補となり、最高得票率は${pct.toFixed(1)}%。しかし最後まで75%の壁を越えられなかった。`);
     } });
   if(firstBallot&&!S.traits.legend){ S.traits.legend=true;
-    S.legendLeague=hofLeagues[0]||''; }
+    S.legendLeague=firstBallotLeagues[0]; }
   if(hofs.length)card('gold','殿堂入り投票',hofs.join('<br><br>'));
   if(S.traits.legend){ card('gold','隠し特性解放：'+(S.legendLeague||'')+'歴史に残る名選手',
     `初回投票で殿堂入り――ただ名を連ねただけではない。あなたは<b class="hl">一つの時代を築いた</b>。その名は${S.legendLeague||'野球界'}の歴史に刻まれる。`); }
