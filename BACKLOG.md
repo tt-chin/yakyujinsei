@@ -5,12 +5,12 @@
 ## 0. 調査基準と状態の定義
 
 - 対象：`tt-chin/yakyujinsei` `dev`、**受驗 HEAD `a4aa83c48a48a1567bf3b14ceea6e4c76c87b76b`**、VERSION **`1.11.2`**。`main` は `421e036bb206a11828a696a4f8b0d3909385441f`、VERSION `1.10.2`。受驗時の基準であり、後続変更時は再取得する。
-- 一次驗收證據：`docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md`（2026-10-10、Codex報告。使用者提供の同名調査報告を根拠とする）。`CURRENT_SPEC.md`、`CHANGELOG.md`、`AGENTS.md` を併用。**本BACKLOG更新ではテストを独立再実行していない**。
+- 改訂6の一次驗收證據：`docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md`（2026-10-10、Codex報告。使用者提供の同名調査報告を根拠とする）。`CURRENT_SPEC.md`、`CHANGELOG.md`、`AGENTS.md` を併用。**改訂6の文書整理ではテストを独立再実行していない**。後続のKBO修復と第3段階の実行結果は各専項報告で管理し、旧調査件数へ混ぜない。
 - Codex調査の38 ID判定：PASS 3、FAIL 1、IMPLEMENTED_UNVERIFIED 10、NOT_IMPLEMENTED 14、BLOCKED 4、DESIGN_PENDING 6。**PASSは当該驗收範囲に限定**。非実装候補・承認保留・実機未検証を混同しない。
 - 検証環境：Windows／Node 24.15.0／Playwright Chrome 155、ローカルとPreview。320/390pxはモバイル模擬でありiOS Safari・Android Chrome実機ではない。
 - `tests/` は**54ファイル**（33 `.test.mjs`、5 standalone、11 E2E、5 support／分析／fixture）。本次33+5入口 PASS、E2E一部のみ実施、KBO自然進行 FAIL。全E2E・4,000生涯・全機種のPASSとはしない。
 - 状態：`FAIL（再現済み）`／`BLOCKED`／`IMPLEMENTED_UNVERIFIED`／`NOT_IMPLEMENTED`／`DESIGN_PENDING`／`PASS（範囲限定）`。未完了は `[ ]`、報告の範囲内で完了した調査のみ `[x]` とし、完成機能の全面保証を意味しない。
-- 本ファイルは**文書の更新案**。ゲーム、テスト、VERSION、CHANGELOG、`main`、本番は変更しない。実際のリポジトリへの反映は使用者が手動で行う。
+- 改訂6は使用者の手動置換用の文書更新案だった。後続の承認済みKBO修復と第3段階では、devの実装・テスト・正本更新に伴い本書の該当項目だけを更新する。`main`／本番は変更しない。
 
 ## 今回の驗收で完了と判定した項目（証拠付き）
 
