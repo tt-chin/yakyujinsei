@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
 import {EVENT_CATALOG as d} from '../docs/src/data/event-cards-jp.js';
 import {validateEventCatalog,eventPlan,eventInjury,eventOdds,eventEligible,eventAddAbility,eventIncome,effectiveCategory,eventTraitUnlocks} from '../docs/src/engine/event-policy.js';
 import {ensureEventState,beginEvent,applyEvent,beginEventSeason,consumeEventSeason,resetEventYear} from '../docs/src/engine/event-state-policy.js';
 import {applyEventSeason,normalizeEventSeason} from '../docs/src/engine/event-season-policy.js';
 assert.equal(validateEventCatalog(),true);
-const md=fs.readFileSync(new URL('../YAKYUJINSEI_JP_EVENT_92_COMPLETE_DATA.md',import.meta.url),'utf8');
+// Trusted pre-cleanup fixtures, without restoring obsolete design files.
+const fixture=name=>{const url=new URL('../'+name,import.meta.url);return fs.existsSync(url)?fs.readFileSync(url,'utf8'):execFileSync('git',['show','73d5a58:'+name],{encoding:'utf8',maxBuffer:4*1024*1024});};
+const md=fixture('YAKYUJINSEI_JP_EVENT_92_COMPLETE_DATA.md');
 const original=JSON.parse(md.match(/```json\s*([\s\S]*?)```/)[1]);
-const copyData=JSON.parse(fs.readFileSync(new URL('../YAKYUJINSEI_JP_EVENT_92_COPY.json',import.meta.url),'utf8'));
+const copyData=JSON.parse(fixture('YAKYUJINSEI_JP_EVENT_92_COPY.json'));
 const withoutText=e=>{const v=structuredClone(e);delete v.n;delete v.intro;for(const m of ['bold','norm','safe'])for(const f of ['label','good','bad'])delete v.choices[m][f];return v;};
 assert.equal(copyData.events.length,92);assert.equal(new Set(copyData.events.map(e=>e.id)).size,92);
 assert.deepEqual(d.events.map(withoutText),original.events.map(withoutText),'non-copy fields preserved');

@@ -1,6 +1,6 @@
-# 現行規格（dev v1.10.3／main v1.10.2）
+# 現行規格（dev v1.11.0／main v1.10.2）
 
-更新日：2026-10-10。文書改訂：16。現行仕様の唯一の正本。dev v1.10.3は海外契約に応じた通常NPB復帰オファーの制限と摘要／メインナビ修正（第14節）。main／本番はv1.10.2を維持。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
+更新日：2026-10-10。文書改訂：17。現行仕様の唯一の正本。dev v1.11.0は職業球団優勝と国際大会の鬼を接続（第15節）。1.10.3の海外契約に応じた通常NPB復帰オファー制限と摘要／メインナビ修正（第14節）を維持。main／本番はv1.10.2を維持。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
 
 正式反映421e036、[既存同期37918106040](https://github.com/tt-chin/yakyujinsei/actions/runs/37918106040)と[公開先Pages deployment37918120055](https://github.com/tt-chin/yakyujinsei-site/actions/runs/37918120055)は成功。公開先commitはc3b5d2534e2449d5dace220cf11b953b6299f952。正式URLはhttps://yakyujinsei.com。正式配信ファイルの今回の直接比対は実行授権未取得のため未確認。CHANGELOGには更新・修正内容だけを記録する。
 
@@ -376,3 +376,54 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 - main-navの上下paddingはcalc(4px * var(--nav-scale))、ボタン最低44px・標準行約53px。3列、色／フォーカス、player-tabs／career-tabsを維持。navigationはborder-boxを観測し、paddingだけ変わる密度変更でもboard-heightを再同期。既存のpreferences実測sticky-heightと併用する。
 - ローカル検証：29単体ファイルのうち27は通常実行、2件は使用者による既存資料削除のためGit 73d5a58の同一資料をメモリ内で供給して合格（削除は復元していない）。24契約ゲート単体、22実movement／更新／FA／降格／戦力外／自主帰国情境、10旧新版同入力で年俸一致・継続海外抽選1→0・満了／NPB抽選不変。投手2／捕手／内野手4seedの全生涯は旧新版一致、新版2回も完全一致。操作／RNGは543/652、535/879、388/422、544/549。対象seedは通常海外復帰抑制を非発動、意図差は別fixtureで確認。
 - PC1280／320／375／390／430px×24テーマ／文字／密度、縦横、摘要、詳細Enter、44px、実測固定位置、巨大年俸の横はみ出しなしを確認。552イベント分岐・共有回帰も合格、Console／JS・CSS404は0。実機iPhone Safari／Android Chromeの1.10.3確認は未実施。1.10.2実機PASSを本修正の実機検証へ読み替えない。
+
+## 15. 職業球団優勝・国際大会の鬼（1.11.0）
+
+### 15.1 範囲・承認
+
+- YAKYUJINSEI_V1.9.1_CHAMPIONSHIP_INTL_FIX_SPECの有効仕様を本節へ移管。旧公開基準5602a7cではなく、dev 004cd26（1.10.3）を実装前の比較基準とする。使用者はMINOR 1.11.0、対象年度の追加優勝抽選による後続seed差、季末の拒否／不満減算を承認。dev push／PreviewはAGENTSに従い、main／本番は別承認。
+- championship-policy.js／international-trait-policy.jsはDOM・グローバルRNGを参照せず、既存RNGと球団Master照会を注入する。到達不能な旧phaseEnd／maybeIntlは削除せず、旧給与処理を委譲しない。
+- 92イベントの文案・条件・数値、能力値と成績生成、年俸モデル、FA、国際日程／召集条件／順位確率、共有画像のテーマ、seed-only URLは変更しない。全球団の合計100%優勝分布、国際MVP、逐大会成績UI、intlBest、二刀流、保存機能、優勝賞金／育成点は追加しない。優勝請負人の累計5冠／機率+5百分点は引き続き別案件。
+
+### 15.2 優勝対象と機率
+
+- プレイヤー所属球団について年1回、PRO・有効な当年度スナップショット・対応リーグの既存球団ID・seasonFactor>0を条件に抽選する。NPB1＝NPB「日本一」基準8%／下限2%／上限15%、MLB＝MLB「ワールドシリーズチャンピオン」3.5%／2%／9%、CPBL1＝CPBL「台湾シリーズ優勝」15%／2%／26%、KBO1＝KBO「韓国シリーズ優勝」10%／2%／20%。KBO値は今回採用したゲーム内平衡値で、実在統計ではない。
+- 米国旧内部org=MiLBでもlevel=MLBかつMLB球団MasterならMLBとして扱う。R／A1／A2／A3、二軍、育成、HS／U／CORP／IND、全休は対象外・優勝RNG0。
+- 機率＝clamp(リーグ基準＋ratingD×0.5,下限,上限)×強心臓1.25（なし1）×tradeRefuse>0なら0.75（なし1）、最後に0～100へclamp。途中／最後の整数丸めなし。R()*100<機率で1回。NPB D4＋強心臓＝12.5%、CPBL極大D＋両補正＝24.375%。球団名ハッシュのteamChampRateは使用しない。旧FAの固定「優勝確率」表示は現行市場に接続されておらず、現行FA表示は変更しない。
+
+### 15.3 快照・結算・既存特性
+
+- 実際のproSeasonで成績／個人タイトル／給与評価を確定した後、TJ・降格監査・トレード・POST代表処理より前にseasonChampContextを保存する。year、stage、level、org、teamId、seasonFactor、有限lastD（無効なら0）、clutchの真偽、tradeRefuseの非負整数を値コピー。同年度は上書きせず、翌年度のみ置換。全休でproSeasonへ来ない年は作成しない。途中移籍で成績分割しても快照時の1球団のみ。
+- 現行phaseEndで正規化→優勝確定→季末減算→既存給与／出来高→能力点配分→movementの順。個人成績、受賞、給与評価を再実行しない。球団優勝は既存出来高のFULL対象へ追加しない。スポンサー収入も再支給しない。
+- championshipResultsは年度辞書。year／league／level／teamId／eligible／chancePercent／won／title／honorText、対象外reasonを記録。勝敗とも保存、既存年度レコードがあればRNG・honors・称号を再更新しない。欠落快照MISSING_SEASON_CONTEXT、対象外階級INELIGIBLE_LEVEL、全休NO_APPEARANCE、球団／org不正INVALID_TEAM_OR_ORG。
+- 当年度wonChampは勝敗を反映。優勝時だけ完全一致`${year} ${title}`をhonorsへ1回追加し、快照球団ID＝現在orgTeamIdならchampThisTeam／champTeamを更新。Aで成績確定後Bへ移籍した場合はAの年度優勝を記録するがBの優勝経験にしない。落選年でも同球団の過去優勝経験は消さず、転籍時の既存リセットは維持。
+- 同一球団在籍6→7年目のmovementは当季優勝を参照でき、既存franchise条件（7年以上＋同球団優勝）を維持。新しい取得条件を追加しない。
+- seasonEndMaintenanceYearで年1回、優勝抽選後のtradeRefuseを1、tradeHeatを5減算（非負整数、最低0）。季末関数の同ゲーム／年度再入を防ぎ、給与・進路の重複実行を抑制する。カードはリーグ別タイトルとエスケープした快照球団名を表示し、キャリア／引退評価／画像は既存honors経路を使う。
+
+### 15.4 国際出場・特性
+
+- WBC＝総合58以上・NPB1／MLB／KBO1／CPBL1、プレミア12＝55以上・NPB1／KBO1／CPBL1。公式日程Master、将来4年周期推定、PRE／POST、負傷／リハビリ見送りと辞退は既存のまま。順位pick（優勝、準優勝、ベスト4、ベスト8）は同じ呼出位置と確率。旧強制召集／5年ロックは復活させない。
+- intlCountは承認・実際に出場結算した大会だけ+1。intlFinalCountは優勝／準優勝だけ+1、ベスト4／8は0。3大会以上＋決勝2回以上で、intlace未取得なら解放。3大会目がベスト8でも取得できる。intlTop4は旧「決勝数」の互換読取り専用。
+- 出場ボタンの処理開始時にhadIntlaceを固定。通常順位点は7／5／3／1、取得済みなら7／5／3／2（加算+2ではなく最低2）。injNextへ通常+10／取得済み+0を加算し、既存の他原因リスクを消さない。解放した大会は通常点・通常疲労、次回から効果。PRE疲労は当季の次健康判定、POST疲労は既存の次判定へ渡す。
+- intlCompletedKeysは出場／辞退／見送りを含む完了辞書。intlTraitResultsはeventKeyごとの出場結果（eventKey、year、rank、hadIntlace、basePoints、awardedPoints、injuryAdded、finalReached、unlockedIntlace）。ボタン再入・完了キーで再抽選／再支給／再進行を防ぐ。PREとPOSTの異なるキーは別結算。
+- 入力検証→既存順序の順位／個人成績計算（Sではなく成績コピー）→回数／点／疲労／称号判定→結果と状態を一括コミット→カード→継続1回。描画失敗後は準備済み／保存済み結果を再利用し、成功済みカードを重複描画しない。旧の点・回数加算は現行関数に残さない。結果は実際の支給点と疲労を表示。
+- 解放タイトル「隠し特性解放：国際大会の鬼」。本文「日本代表として3大会以上に出場し、2度の決勝進出を達成。次回の代表出場から、大会による故障リスクの加算がなくなり、獲得する能力ポイントが最低2点になる。」
+- 常設説明「国際大会による故障リスク加算なし。大会の能力ポイントは最低2点。獲得した大会では適用されず、次回出場から有効。」をTRAIT_TEXT.intlaceに集約し、選手・引退・共有画像へ反映。EVENT_TRAIT_TEXTへ追加せず、イベント解放規則へ表示用キーを混入しない。
+
+### 15.5 初期化・互換性
+
+- 新規状態にはchampionshipResults={}、seasonChampContext=null、seasonEndMaintenanceYear=null、intlFinalCount=0、intlTraitResults={}、両移行版番号1を追加。旧状態の正規化は欠落時だけ初期化し、年度辞書は毎年消さない。現在はキャリア永続保存／読込みなし。表示設定だけのlocalStorageをキャリア保存と扱わず、新規保存は追加しない。
+- 旧当年度のlastSalaryPaidYearまたは契約schedule.paidが結算済みなら、未記録年度をMIGRATED_ALREADY_SETTLEDとして抽選しない。完全一致の当年優勝honorがあればその事実を保持（再追記なし）、球団は推測しない。季末減算も遡及しない。既存champTeamはMasterで有効なIDだけ保持。
+- 旧未結算の快照は、当年ログにteamId／level／org／seasonFactor／ratingD／clutch／tradeRefuseが確実に保存されている場合だけ復元。現行の旧ログは表示球団名と成績中心で、そこから当時階級／球団や補正を推測しない。不明ならMISSING_SEASON_CONTEXTで翌年から通常判定。
+- 有効なintlFinalCountは保持。欠落／異常値ならmax(旧intlTop4の非負整数,確実な決勝記録数)、加算しない。honorsは年度＋大会名＋優勝／準優勝の完全一致、同年同大会を去重。ベスト4・MVP付き・球団優勝・文章中の優勝は決勝として拾わない。構造化intlTraitResultsがあればhonor文字列より優先。
+- 異常型出場回数は0を基準とし、完全一致の出場honor／構造化実績の下限へだけ補正。intlCompletedKeysの件数から出場数を作らない。旧取得済みintlaceは維持し、確実な過去実績が条件達成なら無通知で反映。過去能力点、故障リスク、成績、優勝を再計算／遡及しない。
+
+### 15.6 検証条件・制限
+
+- C01～C10：4リーグ式／境界／倍率、対象外RNG0、勝敗両方の冪等性、6→7年franchise、快照後降格／移籍、年俸／出来高／スポンサー二重支給なし、既結算旧状態・不明球団を検証する。
+- I01～I10：3大会／2決勝の解放、3回目ベスト8、次回最低2点、順位点7／5／3／2、既存injNext=17を保持、同キーのRNG／成績／報酬／通知／進行1回、辞退／未達／傷病0、同年PRE／POST、旧honors去重／MVP除外、完了辞書からの出場推測禁止を検証する。
+- R01～R03：同seed・同選択の新版2回を状態・RNGまで比較。追加優勝抽選と承認した減算が発動する以前は旧版と一致し、以後の自然な後続差を旧版完全一致と称しない。92／276／552イベント条件・効果、国内大会・契約／給与・FA・引退の既存回帰を維持する。
+- PCと320／360／390pxで高校から職業・季末への実進行、制御fixtureの優勝とキャリア一致、franchise、代表解放／次大会、辞退／傷病、連打防止、特性説明／引退／PNG、横はみ出しとConsole／JS・CSS404を確認する。fixtureはテスト用server／routeでだけ注入し配信コードへ確定優勝を残さない。実機iOS Safari／Android Chromeは別検証であり、Chromiumモバイル相当を実機PASSとしない。
+- 既存1.10.3で均衡配点のjp3-infielder-01/IFは2049年KBO2更新時にKBO_PACKAGE_FLOOR_CAP_CONFLICTが再現。優勝修正前の対照で発生しており、年俸政策の範囲外としてBACKLOG BUG-KBO-RENEWAL-FLOORへ分離。該当海外移籍経路の全生涯PASSとは扱わず、留隊策略で野手の優勝を含む全生涯比較を別途行う。
+- ローカル結果：30単体suite、追加96ケース、83 JS／MJS構文、モジュールと国内大会／進路／殿堂／給与policy合格。24組の国際出場（投手SP／MR／野手、4順位、特性有無）は旧版と成績・RNG消費一致、既存特性ありのBest8点数だけ承認仕様の1→2。552イベント分岐、1656効果／RNG、Seed共有、22契約・市場・降格経路、5幅×24表示設定も合格。PC1280／320／360／390pxで現行proSeason／phaseEnd／processIntlPhase、franchise、支払、連打、代表結果／解放／次回効果、辞退／傷病、引退・PNGを確認。Console／JS・CSS404は0。
+- 一般策略6seedは旧新版の操作／RNGが全て一致：yakyo-test-001/P 543/652、jp3-pitcher-02/P 535/879、jp3-pitcher-03/P 535/899、jp3-catcher-01/C 388/422、jp3-infielder-01/IF 544/549、jp3-outfielder-01/OF 566/533。全て優勝対象球季なし。均衡策略の旧→新：同3投手339/674→520/860（対象15季）、546/852→374/738（12季）、388/759→540/976（15季）、捕手315/547→315/547（0季）。均衡＋留隊の内野520/762→388/639（11季）、外野389/674→404/714（12季）。対象65季、初差分は承認範囲。12策略の新版各2回（旧対照を含め36生涯）は状態／RNGを完全再現。対象球季のhonorsは優勝だけ各1件。

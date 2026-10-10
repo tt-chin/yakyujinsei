@@ -6,7 +6,9 @@ import {beginEvent,applyEvent,ensureEventState} from '../docs/src/engine/event-s
 const root=new URL('../',import.meta.url),baseline='a7fe2e8';
 const oldSource=execFileSync('git',['show',baseline+':docs/src/data/event-cards-jp.js'],{encoding:'utf8',maxBuffer:4*1024*1024});
 const {EVENT_CATALOG:old}=await import('data:text/javascript;base64,'+Buffer.from(oldSource).toString('base64'));
-const copy=JSON.parse(fs.readFileSync(new URL('YAKYUJINSEI_JP_EVENT_92_COPY.json',root),'utf8'));
+// Documentation cleanup removed the source fixture; keep the approved Git copy.
+const fixture=new URL('YAKYUJINSEI_JP_EVENT_92_COPY.json',root);
+const copy=JSON.parse(fs.existsSync(fixture)?fs.readFileSync(fixture,'utf8'):execFileSync('git',['show','73d5a58:YAKYUJINSEI_JP_EVENT_92_COPY.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
 const strip=e=>{const c=structuredClone(e);delete c.n;delete c.intro;for(const mode of ['bold','norm','safe'])for(const k of ['label','good','bad'])delete c.choices[mode][k];return c;};
 assert.deepEqual(EVENT_CATALOG.events.map(strip),old.events.map(strip));
 assert.deepEqual({...EVENT_CATALOG,events:null},{...old,events:null});

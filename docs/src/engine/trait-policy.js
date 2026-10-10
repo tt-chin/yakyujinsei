@@ -5,6 +5,7 @@ export const TRAIT_LABELS = Object.freeze({
 });
 export const DEFERRED_TRAITS = Object.freeze(['championmaker','pitcherTC','nitenichi']);
 export const TRAIT_TEXT = Object.freeze({
+  intlace:'国際大会による故障リスク加算なし。大会の能力ポイントは最低2点。獲得した大会では適用されず、次回出場から有効。',
   oldghost:'35歳以上で年間MVPを獲得。翌季の衰えを半減（端数は四捨五入、最低1）。生涯一度だけ。',
   miraclegen:'高校時代の地方・秋季・選抜・甲子園で通算4回優勝。能力への追加効果はありません。',
   strongpitch:'24歳未満でNPBまたはメジャーリーグの年間MVPを獲得した投手。記念称号です。',
