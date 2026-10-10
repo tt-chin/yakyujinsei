@@ -176,10 +176,10 @@ PASS：提示額＝正式年俸＝決定記錄＝下一年年表，按同年度�
 
 ## 8. 未驗證範圍與風險
 
-- iPhone Safari／Android Chrome実機、所有seed／年龄／球队投标组合：未驗，不能由Chromium模擬宣布全面PASS。自然P/IF样本没有MLB/CPBL完整职业段，这两联赛有原生契约fixture、FA／伤病／升降格／付款与UI检验，但不是自然率的样本证明。
+- iPhone Safari／Android Chrome實機：本輪後續由使用者確認驗收OK，來源與限制見第10節，不以Chromium模擬冒充實機。所有seed／年龄／球队投标组合沒有穷举。自然P/IF样本没有MLB/CPBL完整职业段，这两联赛有原生契约fixture、FA／伤病／升降格／付款与UI检验，但不是自然率的样本证明。
 - 原始ACT-01／02操作歴、四联赛HOF自然率及4000人生平衡调查：不是本轮范围；不重新打开使用者确认的阶段，也不改既有分析或规则。
 - 全部FA无投标／全特性／所有故障组合、legacy可达性全面分析：没有穷举。旧函数保留，仍须未来明确重构授权。
-- GitHub Cloudflare deployment API查询授权被拒绝，未取得deployment ID。**实际配信47资产已确认与受验提交内容相同**，不是只看VERSION；未宣称CDN全节点。
+- 初輪GitHub Cloudflare deployment API查询授权被拒绝；後續已補驗成功並取得deployment ID，詳見第10節。**实际配信47资产已确认与受验提交内容相同**，不是只看VERSION；未宣称CDN全节点。
 - 浏览器临时profile清理警告如第5节；游戏错误和HTTP404均0。
 - 本輪没有需要改薪资政策／最低额／倍率／package cap的問題，未提出未核准政策补丁。
 
@@ -200,6 +200,20 @@ PASS：提示額＝正式年俸＝決定記錄＝下一年年表，按同年度�
 - 本报告。没有覆盖开始时的使用者修改（开始时clean）。
 
 代码已提交并push到origin/dev。固定Preview：<https://dev.yakyujinsei.pages.dev>。最终文书/fixture整理提交不改配信游戏资产；最终SHA由交付消息附上。main保持上述SHA，**不合并、不正式发布**。
+
+## 10. 未驗證項目補驗（2026-10-11）
+
+本次僅補驗及更新報告，不修改遊戲、測試、VERSION、CHANGELOG或main。基準為dev／origin/dev `d1889ea4edb49e9a94f92e55ce294025b5a2a5c4`，VERSION 1.11.4；fetch後main仍為`421e036bb206a11828a696a4f8b0d3909385441f`。
+
+- **PASS：Cloudflare部署狀態。** GitHub `commits/d1889ea/check-runs` 返回Cloudflare Pages `completed/success`，deployment ID `a4923fca-17ff-4b89-971a-e56e65de46e6`。兩個下列Preview入口各自再次核對47個配信資產與dev提交一致。
+- **PASS：Preview報告可取得且內容正確。** `Invoke-WebRequest` 讀取 `/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md` 返回HTTP 200，UTF-8解碼並正規化CRLF後與當時dev報告全文完全相同。這是修改本補驗節之前的d1889ea報告；更新後另確認新提交配信，不將舊內容核對當作新內容證據。
+- **PASS：最新1.11.4 KBO專項。** `node tests/kbo-renewal-e2e.mjs --quick --preview=https://dev.yakyujinsei.pages.dev --playwright=<PLAYWRIGHT_MODULE>`，19.841秒，exit0。舊基準仍如預期重現2049錯誤；現行IF balanced完整生涯404次操作、RNG677、2050退休，390步共同前綴狀態／操作／RNG一致，重跑一致。1280／320／390px的到期、降格、續約、連打及原生支付一次全部PASS；Console／JS・CSS404 0。這次實際補跑專用入口，解除第5節記錄的「最終版額外命令未執行」限制，未重新全面調查第一階段。
+- **PASS：最新1.11.4 ACT-01／02相關回歸。** `node tests/bug-act-01-02-e2e.mjs --fixtures-only --preview=https://dev.yakyujinsei.pages.dev --playwright=<PLAYWRIGHT_MODULE>`，41.986秒。24個入團fixture（HS／U／CORP／IND×P／IF×1280／320／390px）及3個真實pointer結果／下一步案例PASS，0 FAIL；契約、結果、下一選項、listener、連點防重入通過。Console／JS・CSS404 0。這次不是前輪未啟動的batch，也不宣稱重新取得歷史ACT原始操作路線。
+- **PASS（使用者實機驗收回報）：iPhone Safari／Android Chrome。** 使用者在針對這兩項的詢問中回覆「實機驗收結果 OK」。本機`adb devices -l`無連接裝置，也無iPhone遠端實機環境；因此此項依使用者實機確認記錄，並非代理親自執行或Chromium模擬。未提供裝置型號、OS／瀏覽器版本、逐步記錄或截圖，不虛構這些資訊。
+
+自動化環境：Windows／Node 24.15.0／Chrome 155.0.8059.39／既有Playwright，固定Preview URL。輸出證據分別在既有`yakyujinsei-kbo-renewal`及`yakyujinsei-act-audit/preview`暫存資料夾；本節命令無新依賴。先前381案矩陣、39個非瀏覽器入口及97份語法檢查結果保留，不冒稱本次全部重新執行。
+
+仍保留第8節有限样本／未穷举的覆蓋邊界；四聯賽HOF／4000人生與legacy全面可達性分析不是本輪補驗範圍。本次没有新FAIL，無需遊戲修復或版本升級。
 
 ## 附錄：逐案實際結果
 
