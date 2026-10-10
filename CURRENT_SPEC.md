@@ -1,8 +1,8 @@
-# 現行規格（dev v1.11.4／main v1.10.2）
+# 現行規格（dev／main v1.11.4）
 
-更新日：2026-10-11。文書改訂：21。現行仕様の唯一の正本。dev v1.11.4はMiLB降格時のNPB移籍候補の年俸表示と提示スナップショットの受渡しを修正（第11.9節）。v1.11.3のKBO候補の最低年俸とpackage上限の適用順序（第11.6節）、v1.11.2の初回投票入選の特性リーグ帰属（第12節）、v1.11.1のReplay URL原生共有と引退画像の四主題連動（第16節）、職業球団優勝と国際大会の鬼（第15節）、海外契約に応じた通常NPB復帰オファー制限と摘要／メインナビ修正（第14節）を維持。main／本番はv1.10.2を維持。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
+更新日：2026-10-11。文書改訂：22。現行仕様の唯一の正本。dev v1.11.4はMiLB降格時のNPB移籍候補の年俸表示と提示スナップショットの受渡しを修正（第11.9節）。v1.11.3のKBO候補の最低年俸とpackage上限の適用順序（第11.6節）、v1.11.2の初回投票入選の特性リーグ帰属（第12節）、v1.11.1のReplay URL原生共有と引退画像の四主題連動（第16節）、職業球団優勝と国際大会の鬼（第15節）、海外契約に応じた通常NPB復帰オファー制限と摘要／メインナビ修正（第14節）を維持。main／本番は使用者の2026-10-11正式公開承認によりv1.11.4へ更新。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
 
-正式反映421e036、[既存同期37918106040](https://github.com/tt-chin/yakyujinsei/actions/runs/37918106040)と[公開先Pages deployment37918120055](https://github.com/tt-chin/yakyujinsei-site/actions/runs/37918120055)は成功。公開先commitはc3b5d2534e2449d5dace220cf11b953b6299f952。正式URLはhttps://yakyujinsei.com。正式配信ファイルの今回の直接比対は実行授権未取得のため未確認。CHANGELOGには更新・修正内容だけを記録する。
+2026-10-11、使用者の正式公開承認により検証済みdev `99430bb37be182d57b3da58ce6b31414e0367b0c` をmainへ反映。[既存同期38094206660](https://github.com/tt-chin/yakyujinsei/actions/runs/38094206660)と[公開先Pages deployment38094215332](https://github.com/tt-chin/yakyujinsei-site/actions/runs/38094215332)は成功。公開先commitは`dc7cbd372927753fe6da6c9ae77acfa92f18de24`。正式URLはhttps://yakyujinsei.com。index.html／src/config.js／src/engine/game.jsはHTTP200・配信内容一致を確認（全ファイル／CDN全ノードの照合とはしない）。CHANGELOGには更新・修正内容だけを記録する。
 
 契約金表示修正前のdevは`7acb456e4a0ed48b5541579fc4d42215ee3e4ce8`（v1.8.0）、mainは`93ad2c7345a7469f9bbf333be913725b6069e6bd`（v1.7.0）。作業規則は[AGENTS.md](AGENTS.md)、正式履歴は[CHANGELOG.md](CHANGELOG.md)、未完了事項は[BACKLOG.md](BACKLOG.md)へ分離する。
 
