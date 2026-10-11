@@ -1,21 +1,21 @@
 # BACKLOG — 野球人生（日文版）
 
-> 更新：2026-10-11｜第六階段受驗來源：`tt-chin/yakyujinsei` 的 `origin/dev` 分支 `90bcdde17aaece1ff3463a69177aaa6d3d50a672`｜遊戲版本：`1.11.4`
-> 本次保留前五階段編排、結案及歷史數據，補充能力／交易測試與來源引用修復；不改遊戲規格、版本或歷史判定。交付提交SHA見Git履歷，受驗SHA不與文件自引用混淆。
+> 更新：2026-10-12｜第七階段受驗程式：`origin/dev` 的 `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`｜遊戲版本：`1.11.5`（main／本番仍為1.11.4）
+> 保留第一至第六階段歷史證據。程式SHA是實際通過Full／Preview的來源，不與後續純文件提交混淆；文件提交SHA見Git履歷及最終回覆。
 
 ## 1. 最新進度總覽
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
-| 已完成 | **11** | 有對應驗收紀錄，範圍以各報告為準 |
-| 未完成 | **32** | 包含待驗證、受阻、設計待決、保留及候補 |
+| 已完成 | **16** | 有對應驗收紀錄，範圍以各報告為準 |
+| 未完成 | **27** | 包含待驗證、受阻、設計待決、保留及候補 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **3** | 實機或原生分享環境不足 |
-| IMPLEMENTED_UNVERIFIED | **7** | 已有實作或初步調查，尚未完成驗收 |
+| IMPLEMENTED_UNVERIFIED | **6** | 已有實作或初步調查，尚未完成驗收 |
 | DESIGN_PENDING | **6** | 尚待決定是否或如何調整規格 |
-| 其他候補／保留／混合 | **16** | 含3個CONFIRMED_RISK修復待辦；不等於已核准開發 |
+| 其他候補／保留／混合 | **12** | 不等於已核准開發 |
 
-以上依本文件唯一的正式 checkbox 工作 ID 重新計算：**11 + 32 = 43**。階段表、說明、歷史快照不重複計數。第六階段quick45入口PASS；能力／交易專項89案PASS、5案FAIL（CONFIRMED_RISK，非自然UI已重現Bug），引用修復PASS；**不稱全驗收通過**。第五階段84規格群組數保留在原報告，不是最新BACKLOG完成數。
+以上依唯一的正式 checkbox 工作 ID 重新計算：**16 + 27 = 43**。第七階段原五個風險FAIL解除，能力89／交易5／補充17／契約381案PASS，Linux Quick45／Full59入口PASS，Preview546案PASS。原carry缺key與0的結構差異保持。歷史階段數字不重算，不當成最新完成數；不宣稱自然UI已重現故障或全規格皆驗收。
 
 ### 1.1 開發階段完成履歷
 
@@ -26,21 +26,22 @@
 | 第三階段 | 行動／契約與年俸回歸 | `BUG-ACT-03`、`BUG-SAL-01` | **完成** | [CONTRACT_SALARY_ACCEPTANCE_AUDIT.md](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md) |
 | 第四階段 | 統一測試 Runner 與 Linux CI | `TEST-RUNNER-01`、`TEST-CI-01` | **完成** | [TEST_INFRA_ACCEPTANCE.md](docs/reviews/TEST_INFRA_ACCEPTANCE.md) |
 | 第五階段 | 現行規格與程式架構稽核 | `AUD-02`、`REFACTOR-AUDIT-01` | **調查與路線文件完成；完整驗收／動態可達性證據仍未完成** | [稽核](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)／[分批路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md) |
-| 第六階段 | 能力配分、狀態一致性及引用補強 | `AUD-03B`、`STATE-TRANSACTION-AUDIT-01`、`SPEC-SOURCE-LINK-01` | **調查與引用修復完成；5個風險斷言FAIL，修復待批准** | [第六階段驗收](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md) |
+| 第六階段 | 能力配分、狀態一致性及引用補強 | `AUD-03B`、`STATE-TRANSACTION-AUDIT-01`、`SPEC-SOURCE-LINK-01` | **調查與引用修復完成；5個風險斷言FAIL，當時修復待批准** | [第六階段驗收](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md) |
+| 第七階段 | 能力配分與交易安全最小修復 | 三項安全修復、`AUD-03B`、`STATE-TRANSACTION-AUDIT-01` | **批准範圍修復與驗收完成；非全S交易rollback** | [第七階段驗收](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md) |
 
 上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
 ### 1.2 目前開發基準與限制
 
-- **最新受驗的 `origin/dev` HEAD：** `90bcdde17aaece1ff3463a69177aaa6d3d50a672`（第六階段開始時fetch基準）。
-- **遊戲 VERSION：** `1.11.4`。第六階段只補測試／文件與CURRENT_SPEC五個引用；沒有修改CHANGELOG／遊戲程式。full/audit新增的安全專項保留非零失敗，不因quick通過隱藏風險。
+- **最新受驗程式 SHA：** `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`。開始時dev基準`0425e74350303086a688de6504a4aa3609543a4d`；CI PR合成提交與程式樹相同。後續純文件HEAD不冒充此Full程式SHA。
+- **遊戲 VERSION：** dev `1.11.5`；main／正式網站仍為`1.11.4`。只修復核准的能力callback、CORP重入與signTo簽約／描畫重試；正常S／選擇歷史／年表／RNG維持1.11.4基準。
 - ACT-01 已按「現行功能」標準結案，但原始完整操作歷史不足，**沒有精確重現歷史故障路線，也沒有證明當年的根本原因**。
 - ACT-02 的指名後第一選項、listener、單次執行及下一年度推進已通過指定矩陣；不宣稱所有未知路線均驗證。
 - 320px／390px 是瀏覽器手機尺寸模擬，不能替代 iOS Safari／Android Chrome 實機。
 - GitHub Actions 已能執行測試；**Branch Protection／Ruleset 強制合併檢查尚未設定**。
 - 未經使用者明確批准，不得修改 `main`、正式網站、遊戲平衡、RNG、年俸／契約政策或殿堂係數。
 
-## 2. 已完成工作（11 項）
+## 2. 已完成工作（16 項）
 
 ### 2.1 第一至第四階段
 
@@ -59,19 +60,23 @@
 - [x] **AUD-01B** — 指定快照的正式／Preview 資產一致性比對完成；不保證所有 CDN 節點或未來部署。[歷史稽核](docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md)
 - [x] **SPEC-SOURCE-LINK-01** — 2026-10-11。CURRENT_SPEC五個已刪原文的失效引用改為刪除前固定Git來源；4個現存本地link及5個歷史blob驗證PASS，其他文字／數值不變，不恢復舊文件或政策。[第六階段證據](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md)
 
-## 3. 未完成工作（32 項）
+### 2.3 第七階段（2026-10-12；受驗程式13abcf5）
 
-### 3.1 P1 — 規格與回歸驗證（9 項）
+- [x] **AUD-03B** — 能力89案與補充session矩陣、PC／320／390、Undo／reset、鍵盤、carry／combo／late均通過。保留原carry結構差異；不宣稱所有Seed／實機皆驗收。 [證據](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md)
+- [x] **STATE-TRANSACTION-AUDIT-01** — 原生CORP重入、明示簽約fault injection原5案與補充失敗／下一年度付款通過。指定風險修復完成，不代表全面交易安全或自然UI故障重現。 [證據](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md)
+- [x] **ALLOC-STALE-CALLBACK-01** — 同S／世代／DOM／未完session guard使過期行、Undo、reset、確定無作用；pool不負數、done只一次，正常觸控／鍵盤與RNG不變。 [證據](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md)
+- [x] **STATE-CORP-REENTRY-01** — 同S／年度成功決算不重付；付款前與付款後描畫故障再試不誤標成功、不重付；下一年度及原生事件收入通過。 [證據](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md)
+- [x] **STATE-SIGN-ATOMICITY-01** — 契約驗證成功後提交所屬／連番；付款後描畫重試保留contractId與5000萬契約金，次年度600萬年俸只付一次。明示fault injection，不宣稱自然路線已重現。 [證據](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md)
 
-- [ ] **AUD-03B** — `IMPLEMENTED_UNVERIFIED`。第六階段能力專項89案：87 PASS／2 FAIL。P/IF×pool3/dice[2,4,6]×三尺寸、成本／cap80／0點、Undo/reset、鍵盤、combo／late及carry解鎖等價已驗；缺key→0僅結構差異，未觀察遊戲異常。保存的過期行／確定callback可多配分／多完成，列CONFIRMED_RISK，關鍵FAIL未解除，**不結案、不自行改遊戲**。[證據](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md)
+## 3. 未完成工作（27 項）
+
+### 3.1 P1 — 規格與回歸驗證（4 項）
+
+
 - [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。第五階段完成16章／84規格群組對照：MATCH49、MISMATCH3、UNVERIFIED27、DESIGN_PENDING1、OBSOLETE4；quick44 PASS。完整數值邊界、全DOM／跨功能互動及實機仍缺，**調查完成不等於全規格驗收完成**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。發現差異僅記錄，不修改遊戲。
 - [ ] **REFACTOR-AUDIT-01** — `IMPLEMENTED_UNVERIFIED`。第五階段已建主要S讀寫地圖、40模組AST索引（991函式節點／4193呼叫節點）、196 RNG語法點、32頂層覆寫群組、LEGACY委派與[分批路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)。動態scope／所有callback可達性未完全證明，保持未完成；**沒有批准大規模重構或刪除舊碼**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。
 - [ ] **AUD-04** — `IMPLEMENTED_UNVERIFIED`。對照封存設計的數值表、事件、API 與現行程式，只把仍有效的資料移入 CURRENT_SPEC；禁止自動恢復舊規格。
 - [ ] **AUD-05** — `IMPLEMENTED_UNVERIFIED`。比較封存 AGENTS 各版與現行規則，舊規則不得無條件重新套用。
-- [ ] **STATE-TRANSACTION-AUDIT-01** — `調查完成・關鍵驗收FAIL`。第六階段5案：2 PASS／3 FAIL。原生CORP已完成球季同年重入會重付；簽約入口fault留下部分所屬，付款後card fault恢復重試會新建ID再付契約金。全為CONFIRMED_RISK，正常UI自然可達性未證明；修復分成下列ID，保持未完成。[證據](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md)
-- [ ] **ALLOC-STALE-CALLBACK-01** — `CONFIRMED_RISK`。保存已切離的能力行／確定onclick，pool0→−1／done1→2；正常pointer、tap、keyboard未見重複。擬加局部session完成／世代與即時剩餘量guard；須批准後實作，不改RNG、成本、骰序。[提案與失敗證據](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md)
-- [ ] **STATE-CORP-REENTRY-01** — `CONFIRMED_RISK`。有效原生社會人球季後直接phaseEnd兩次，企業收入420萬→840萬，log維持1、R不增加。正常choice舊callback已阻擋；擬加同S／year結算防護，須批准後實作。[提案與失敗證據](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md)
-- [ ] **STATE-SIGN-ATOMICITY-01** — `CONFIRMED_RISK`。合法簽約fixture明示fault injection：fixedContract失敗前先改所屬；付款後描畫失敗重試新contractId、契約金5000萬→1億。不是自然路線已確認Bug。擬prepare/commit契約並重用已完成結果；須批准後實作。[提案與失敗證據](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md)
 
 ### 3.2 P1 — 退休與殿堂研究、決策（6 項）
 
@@ -112,8 +117,8 @@
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
-1. **3個CONFIRMED_RISK修正提案**：由使用者決定是否批准能力callback、CORP重入、簽約prepare/commit局部防護，再重跑原失敗案；未批准不改遊戲。
-2. **AUD-03B／STATE-TRANSACTION-AUDIT-01**：風險修復後再依結案門檻確認；AUD-02殘餘及REFACTOR動態可達性按[第五階段路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)補證據，**不自動開始第七階段或實作重構**。引用工作已結案。
+1. **使用者審查第七階段Preview**：本輪完成後停止，未批准不合併main、不開始第八階段。
+2. **AUD-02／REFACTOR-AUDIT-01**：按[第五階段路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)補規格／動態可達性證據；本輪不批准重構或刪除LEGACY。
 3. **AUD-04 ＋ AUD-05**：整理封存文件與現行正本之間尚未核對的部分。
 4. **HOF-NATURAL-SAMPLE-01**：補足自然到達四聯盟的研究樣本，之後再討論殿堂規則決策。
 5. **實機與文案驗收**：在可取得實機時執行；P2 功能候補逐案另行批准。
@@ -148,7 +153,8 @@
 - [Draft 收入測試修正](docs/reviews/DRAFT_INCOME_E2E_FIX_AUDIT.md)：測試 fixture／斷言與已批准付款政策對齊，未修改遊戲規則。
 - [統一 Runner／Linux CI](docs/reviews/TEST_INFRA_ACCEPTANCE.md)：測試基礎驗收，遊戲 VERSION 未變。
 - [ACT-01／02 最終驗收](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)：現行功能結案，歷史原路線限制保留。
-- [第六階段能力／交易補強](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md)：正常回歸通過，5個安全風險斷言失敗，3個修復ID待批准；引用修復完成。
+- [第六階段能力／交易補強](docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md)：歷史結果：正常回歸通過，5個安全風險斷言失敗，當時3個修復ID待批准；引用修復完成。
+- [第七階段安全修復](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md)：三項風險最小修復與指定驗收完成，v1.11.5；原FAIL與歷史報告保持可追溯。
 - [第五階段規格／架構調查](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)／[重構路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)：1.11.4，quick44 PASS，P0風險0／P1五項／P2兩項／P3一項；風險數不是已重現Bug數。全規格／動態可達性未結案。
 
 ### 5.3 不得混淆的既有技術限制
@@ -185,4 +191,4 @@
 
 ---
 
-**文件性質：** 保留已提交的 `1dacc55` 使用者重編版，補記第五階段實際調查、證據及兩項新工作。不覆寫歷史報告、不修改正式規格、VERSION、CHANGELOG或遊戲程式。
+**文件性質：** 保留已提交的 `1dacc55` 使用者重編版與前六階段紀錄，補記第七階段修復、驗收及結案；不覆寫歷史報告，不把待決規格當成實作授權。
