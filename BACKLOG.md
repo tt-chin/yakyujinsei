@@ -1,6 +1,6 @@
 # 待辦清單 / 実装・照合バックログ
 
-整理日：2026-10-11。文書改訂：7（第3段階契約・年俸驗收反映）。未完了事項の唯一の正本。現行仕様：[CURRENT_SPEC.md](CURRENT_SPEC.md)、完了履歴：[CHANGELOG.md](CHANGELOG.md)、開発規則：[AGENTS.md](AGENTS.md)。
+整理日：2026-10-11。文書改訂：8（統一Runner・Linux CI驗收反映）。未完了事項の唯一の正本。現行仕様：[CURRENT_SPEC.md](CURRENT_SPEC.md)、完了履歴：[CHANGELOG.md](CHANGELOG.md)、開発規則：[AGENTS.md](AGENTS.md)。
 
 ## 0. 調査基準と状態の定義
 
@@ -14,6 +14,8 @@
 
 ## 今回の驗收で完了と判定した項目（証拠付き）
 
+- [x] **TEST-RUNNER-01**【PASS／テスト基盤】61個の現行testsファイルを分類し、`scripts/test.mjs list/quick/full/audit`、個別実行、時間／exit／ログ、FAIL／BLOCKED非零、外部依存・Git基準、明示的証拠再利用を実装。本機quick44／full55入口PASS、audit56 PASS＋10 SKIP（55重用＋1実跑）。人為exit17と依存不足を負面実測。4,000生涯・実機・旧oracle・報告再生成は自動完了扱いにしない。[驗收報告](docs/reviews/TEST_INFRA_ACCEPTANCE.md)。VERSION 1.11.4据え置き。
+- [x] **TEST-CI-01**【PASS／Linux実行】dev push quick、main向PR full、手動quick/full/auditのテスト専用workflowを新設。固定Node／Playwright、Chromium依存、失敗ログartifact、timeout／concurrencyを設定。初回workflow context不正を調査修正後、Ubuntu 24.04で[quick](https://github.com/tt-chin/yakyujinsei/actions/runs/38132643250)／[Draft PR full](https://github.com/tt-chin/yakyujinsei/actions/runs/38132662335)／[手動audit](https://github.com/tt-chin/yakyujinsei/actions/runs/38132971169)全てsuccess。既存publish-site.yml・main・本番設定は不変。合併強制停止のRuleset設定は別承認事項で未実施。
 - [x] **BUG-KBO-RENEWAL-FLOOR**【PASS／v1.11.3修復】KBO候選在倍率適用後先補至既定階層最低年俸，再驗證原package上限；不改政策／倍率／保障年表。`jp3-infielder-01`／IF／`--balanced` 的2049年首次輸入為736萬円、最低800萬円、上限21597.6萬円（非真正衝突），修復後2050年正常退休。失敗前390操作的狀態／選擇／RNG完全一致；投手／野手各一組完整生涯比較一致。新增10組最小回歸及PC／320／390px續約・連打・原生付款去重驗證通過；Preview 47資產與修復SHA一致並通過相同完整E2E。詳見[修復報告](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md)。本項為驗收後另行授權修復；上述v1.11.2報告與件數仍是歷史快照，不改寫為全項PASS。
 - [x] **BUG-HOF-FIRST-BALLOT-LEAGUE**【PASS／v1.11.2】`retireScene` は `firstBallotLeagues` から `legendLeague` を決定。31ケース、CPBL8600／MLB11000境界、本機／Preview HOF E2E通過。**自然跨聯盟初年度入選率は未調査**であり、HOF-NATURAL-SAMPLE-01に残す。
 - [x] **TEST-COVERAGE-01**【PASS／調査範囲】54ファイルの入口／依存／未実行対象を分類。これは100%コードカバレッジや全E2E完了を意味しない。`fixed-seed-regression.json` は未参照の可能性があるが、外部用途未確認のため削除禁止。
@@ -28,8 +30,6 @@
 
 ## P1：テスト基盤と正本照合（次の開発に先行）
 
-- [ ] **TEST-RUNNER-01**【未実装】`scripts/test.mjs` を新設し `quick`／`full`／`audit`／`list` を統一。既存テストを分類し、`.test.mjs` 以外の実行対象、fixture、support、分析専用を明示。PASS/FAIL/SKIP・耗時・exit code を表示。依存不足を PASS と扱わない。追加 npm 依存は無断導入しない。Codex が関連テスト＋quick を実行するルールを AGENTS に追加するのは専用タスクで行う。
-- [ ] **TEST-CI-01**【未実装】`.github/workflows/test.yml` を新設し `dev` push で quick、`main` 向け PR で full を実行。E2E 用ブラウザ環境・実行時間・失敗ログを検証。現存 `publish-site.yml` は `main` の `docs/**` 配信同期のみでテストなし。マージ強制停止には別途 GitHub Ruleset/Branch Protection 設定が必要。
 - [ ] - [ ] - [ ] **AUD-02**【IMPLEMENTED_UNVERIFIED／16節索引作成済み】CURRENT_SPEC 16節のコード／既存テスト索引は報告第8節に作成済み。全数値・DOM分岐・跨機能相互作用までの完全検収は未完了。実装済み・差異・未検証を区別。差異を自動修正対象としない。
 - [ ] **AUD-03B**【IMPLEMENTED_UNVERIFIED／6組browser PASS】pool3・dice[2,4,6] × PC/320/390 の6組でUndo／reset、carry／touchedKeys／残点／骰子／RNGを実測PASS。Undoで欠損carryキーが0として追加される構造差（`{sta:0}`→`{sta:0,vel:0}`）を確認。数値等価、全resetは構造一致。combo／late解放、cap80／残0、確定特性への影響と専用再現E2Eは未完了。
 - [ ] **AUD-04**【IMPLEMENTED_UNVERIFIED】封存設計の数値表・イベント・API と現行コードを照合し、現在も有効な情報だけ CURRENT_SPEC へ移管。旧仕様の自動復活禁止。
@@ -77,7 +77,7 @@
 ## 推奨実施順序（仕様変更は各タスクで承認）
 
 1. **P0 既存重大不具合の再確認**：KBO初回入力分析・独立修復はv1.11.3で完了。BUG-ACT-01/02の元選択履歴を収集。修正と大規模重構を同時に行わない。
-2. **P1 TEST-RUNNER-01 → TEST-CI-01**：54ファイルの歴史盤點にv1.11.3追加KBO回帰2入口も加えて登録し `quick/full/audit/list`、PASS/FAIL/SKIP、Git基準・Playwright依存を明示。未実施5 E2E、fullモードを追加実行。KBOの最小回帰と自然均衡生涯も維持する。
+2. **P1 テスト基盤を維持**：TEST-RUNNER-01／TEST-CI-01は専項驗收済み。現行61ファイルの登録・quick/full/auditとLinux CIを維持し、新入口を未分類のまま放置しない。旧oracleの適用版・負面証拠を保持し、次の能力／跨機能回帰へ進む。
 3. **P1 契約／能力回帰**：全休×満了×降格、海外各階層の契約表示・次年度支払、Undo carryキー／combo／late、指名直後DOMの専用テストを補強。
 4. **P1 AUD-02／AUD-04／AUD-05 と REFACTOR-AUDIT-01**：全S読書・AST呼出・RNG消費・旧コード到達性を読み取り専用で補完。小規模重構はテスト基盤が安定してから。
 5. **P1 HOF-NATURAL-SAMPLE-01**：四聯盟と投手SP/MR/CLの有効な自然到達サンプルを拡充。得られたデータに基づき仕様判断し、無断で係数を変更しない。
@@ -87,6 +87,7 @@
 
 - 33個 `.test.mjs` と5個standaloneはPASS。ただしE2Eは部分実施で、`event-system`、`draft-income`、`display-preferences`、`salary-history`、`trait-system` の5入口を未実施。`retirement-hof-pilot` 再採樣と分析／報告生成器も未実行。`full` 完了とは扱わない。
 - 上記は初回監査の履歴。後続のdraft-income専項で、旧first-row戦略の未入団退職と育成支度金を欠いた所得断言を調査・テスト修正。本機quick、Preview正式／育成入団、三尺寸負面退職、retirement-onlyと関連契約テストの限定結果は[専項報告](docs/reviews/DRAFT_INCOME_E2E_FIX_AUDIT.md)を参照。他の未実施入口を完了扱いにせず、ゲーム／政策／VERSIONは変更しない。
+- 第4段階で現行61ファイルを再盤點し全full予定入口を実行。旧版との全量S比較3件は初期欄位差でFAILのまま保存し、現行規格のfixture／UIと最新正式基準の生涯比較を分けて驗收。最新の実行範囲・件数は[基盤驗收報告](docs/reviews/TEST_INFRA_ACCEPTANCE.md)を参照し、上記54ファイルの旧監査スナップショットは書き換えない。
 - HOF固定seedで `yakyo-test-001/P`（RNG 652）と `jp3-infielder-01/IF`（RNG 549）は旧基準と現行の最終S／選択履歴／RNG一致。ただし**選択戦略が違うため**当時のbalanced KBO FAILを否定しない。v1.11.3の別回帰でbalancedも修復・正常退休まで確認した。
 - 原生共有はmockでの成功／取消／失敗、四主題PNGがPASS。OS共有UI・実機ダウンロードは未驗收。
 - Codexの監査報告は証拠資料であり、各タスクを終える際は**最新HEADで再検証**する。
