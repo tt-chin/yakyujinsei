@@ -36,7 +36,7 @@ const server=createServer(async(req,res)=>{try{let rel=decodeURIComponent(new UR
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const target=arg('preview')||`http://127.0.0.1:${server.address().port}`;
 const output=path.join(os.tmpdir(),'yakyujinsei-contract-salary',baseline?'baseline':arg('preview')?'preview':'local',arg('only')||'all');await mkdir(output,{recursive:true});
-const browser=await chromium.launch({channel:'chrome',headless:true}),errors=[],records=[],started=Date.now();let fatal;
+const browser=await chromium.launch({channel:process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||'chrome',headless:true}),errors=[],records=[],started=Date.now();let fatal;
 const levels=['NPB1','NPB2','NPB_DEV','MLB','KBO1','KBO2','CPBL1','CPBL2','A3','A2','A1','R'];
 // Use the approved display units (億/万円), not an invented all-万円 formatter.
 const money=n=>{const yen=Math.max(0,Math.round(Number(n)||0)),oku=Math.floor(yen/100000000),man=Math.floor((yen%100000000)/10000);return(oku?oku+'億':'')+(man?man.toLocaleString()+'万円':oku?'円':'0円');};

@@ -30,7 +30,7 @@ function instrument(source){
 const cache=new Map(),server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),old=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname).replace(/^\/(baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');if(old&&!cache.has(rel))cache.set(rel,execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20e6}));let body=old?cache.get(rel):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(body);}catch(error){res.statusCode=404;res.end(String(error));}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const local=`http://127.0.0.1:${server.address().port}`,target=arg('preview')||local,output=path.join(os.tmpdir(),'yakyujinsei-kbo-renewal');await mkdir(output,{recursive:true});
-const channel=arg('channel')||'chrome';
+const channel=arg('browser')||arg('channel')||'chrome';
 const browser=await chromium.launch({channel,headless:true}),started=Date.now(),errors=[];
 console.log('Browser '+channel+' '+browser.version());
 const wire=(p,list=errors)=>{p.on('pageerror',e=>list.push(e.message));p.on('console',m=>{if(m.type()==='error')list.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))list.push(r.status()+' '+r.url());});};

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {findFirstDifference} from './support/first-difference.mjs';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -22,7 +23,7 @@ const server=createServer(async(req,res)=>{try{
   res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
 }catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const local=`http://127.0.0.1:${server.address().port}`;
-const browser=await chromium.launch({channel:'chrome',headless:true}),shots=path.join(os.tmpdir(),'yakyujinsei-traits');await mkdir(shots,{recursive:true});
+const browser=await chromium.launch({channel:process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||'chrome',headless:true}),shots=path.join(os.tmpdir(),'yakyujinsei-traits');await mkdir(shots,{recursive:true});
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push(r.status()+' '+r.url());});};
 const start=async(p,url,pos='P')=>{await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();};
 const action=()=>{const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];if(!b)throw Error('No career action');return b;};
@@ -45,6 +46,7 @@ try{
     for(let i=0;i<Math.min(runs[0].length,runs[1].length);i++){
       const old=beforeDrawMetadata(canonical(runs[0][i])),now=beforeDrawMetadata(canonical(runs[1][i]));
       if(JSON.stringify(old)!==JSON.stringify(now)){
+        console.error('HISTORICAL_FIRST_DIFFERENCE '+JSON.stringify({baseline,seed,pos,step:i,year:now.state.year,oldCalls:old.calls,newCalls:now.calls,difference:findFirstDifference(old,now)}));
         assert.ok(old.state.pendingEvent&&now.state.pendingEvent,'first difference must be an event draw');assert.equal(old.state.year,now.state.year);assert.notEqual(old.state.pendingEvent.cardID,now.state.pendingEvent.cardID,'unrelated first difference');assert.ok(runs[1][i].state.eventDrawnCardIDs.length>=2);firstDifference={step:i,year:now.state.year,oldCard:old.state.pendingEvent.cardID,newCard:now.state.pendingEvent.cardID};break;
       }
     }

@@ -1,0 +1,59 @@
+name: Tests
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Test profile
+        type: choice
+        required: true
+        default: quick
+        options: [quick, full, audit]
+permissions:
+  contents: read
+concurrency:
+  group: tests-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      TEST_MODE: ${{ github.event_name == 'pull_request' && 'full' || inputs.mode || 'quick' }}
+      PLAYWRIGHT_MODULE: ${{ runner.temp }}/test-tools/node_modules/playwright
+      TEST_BROWSER: chromium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - name: Install test-only Playwright
+        shell: bash
+        run: |
+          mkdir -p test-results/ci-bootstrap
+          npm install --prefix "$RUNNER_TEMP/test-tools" --no-save --no-package-lock --ignore-scripts playwright@1.62.1 2>&1 | tee test-results/ci-bootstrap/playwright-install.log
+          node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium 2>&1 | tee test-results/ci-bootstrap/chromium-install.log
+      - name: Validate workflow
+        run: node scripts/check-workflow.mjs
+      - name: Run test profile
+        run: node scripts/test.mjs "$TEST_MODE" --output=test-results/ci
+      - name: Save logs and evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-${{ github.event_name }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            test-results/*/*.log
+            test-results/*/summary.json
+            test-results/*/tmp/yakyujinsei-*/**
+            test-results/*/tmp/yakyujinsei-*.json
+            test-results/*/tmp/runner-contract-*/**

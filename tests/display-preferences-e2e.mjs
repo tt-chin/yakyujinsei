@@ -110,14 +110,20 @@ try{
   const bp=await blocked.newPage();wire(bp);await bp.goto(`${target}/?seed=storage-test`);await bp.locator('[data-open-preferences]').first().click();await bp.locator('[name="theme"][value="night"]').check();assert.equal(await bp.locator('#preferences-save-status').innerText(),'この端末には設定を保存できませんでした。');await bp.keyboard.press('Escape');await bp.locator('#btn-start').click();await bp.locator('#board').waitFor({state:'visible'});await blocked.close();
   const touch=await browser.newContext({viewport:{width:320,height:568},isMobile:true,hasTouch:true}),tp=await touch.newPage();wire(tp);
   await tp.goto(`${target}/?seed=touch-test`);await tp.locator('[data-open-preferences]').first().tap();await tp.locator('[name="theme"][value="scoreboard"]').tap();await tp.locator('[name="fontSize"][value="large"]').tap();await tp.locator('[name="density"][value="compact"]').tap();await tp.locator('#preferences-close').tap();await tp.locator('#btn-start').tap();await tp.locator('#board-preferences').tap();await tp.locator('#preferences-close').tap();assert.ok((await fits(tp)).width<=320);
-  assert.ok(await tp.evaluate(()=>Math.abs(document.querySelector('#board-preferences').getBoundingClientRect().right-document.querySelector('#board').getBoundingClientRect().right+14)<1),'settings stays at right edge after wrapping');
+  // v1.10.2 added share AFTER settings. Verify the approved wrapped controls,
+  // not the obsolete v1.7 assumption that settings is the last header button.
+  const header=await tp.evaluate(()=>{const content=document.querySelector('#bd-top').getBoundingClientRect();return {left:content.left,right:content.right,buttons:['btn-restart','board-preferences','board-share'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};})};});
+  for(const box of header.buttons)assert.ok(box.width>=44&&box.height>=44&&box.left>=header.left-1&&box.right<=header.right+1,box.id+' visible touch target');
+  for(let i=0;i<header.buttons.length;i++)for(let j=i+1;j<header.buttons.length;j++){const a=header.buttons[i],b=header.buttons[j];assert.ok(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top,'wrapped header buttons overlap');}
+  assert.ok(Math.abs(header.buttons.at(-1).right-header.right)<1,'share is at the approved right edge');
+  console.log('Current wrapped header geometry: '+JSON.stringify(header));
   await tp.screenshot({path:path.join(artifacts,`touch-${channel}-320.png`)});await touch.close();
   }
 
   if(!preview&&!process.argv.includes('--skip-careers')){
     const cases=[['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-catcher-01','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']];
     const onlySeed=process.argv.find(v=>v.startsWith('--only-seed='))?.slice(12);
-    for(const [seed,pos] of cases.filter(([seed])=>!onlySeed||onlySeed===seed)){
+    for(const [seed,pos] of cases.filter(([seed])=>!onlySeed||onlySeed.split(',').includes(seed))){
       const snapshots=[];
       for(const variant of ['baseline','candidate']){
         const ctx=await browser.newContext({viewport:{width:390,height:844}}),p=await ctx.newPage();wire(p);

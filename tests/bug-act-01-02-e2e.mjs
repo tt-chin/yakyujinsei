@@ -19,7 +19,7 @@ const server=createServer(async(req,res)=>{try{const rel=decodeURIComponent(new 
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const target=arg('preview')||`http://127.0.0.1:${server.address().port}`;
 const output=path.join(os.tmpdir(),'yakyujinsei-act-audit',arg('diagnostic-seed')?'diagnostic':arg('preview')?'preview':'local');await mkdir(output,{recursive:true});
-const browser=await chromium.launch({channel:'chrome',headless:true});
+const browser=await chromium.launch({channel:process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||'chrome',headless:true});
 const errors=[],results=[],started=Date.now();let failure;
 async function page(width,seed,pos){
  const p=await browser.newPage({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500});

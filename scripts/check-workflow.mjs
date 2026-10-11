@@ -1,0 +1,25 @@
+// Uses the YAML parser already bundled with the approved pinned Playwright.
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
+import path from 'node:path';
+const req=createRequire(import.meta.url);
+const modulePath=process.argv.find(a=>a.startsWith('--playwright='))?.slice(13)||process.env.PLAYWRIGHT_MODULE||'playwright';
+const pwRequire=createRequire(req.resolve(modulePath));
+const core=path.dirname(pwRequire.resolve('playwright-core'));
+const {yaml}=req(path.join(core,'lib/utilsBundle.js'));
+const workflow=yaml.parse(readFileSync(new URL('../.github/workflows/test.yml',import.meta.url),'utf8'),{uniqueKeys:true});
+assert.deepEqual(workflow.on.push.branches,['dev']);
+assert.deepEqual(workflow.on.pull_request.branches,['main']);
+assert.deepEqual(workflow.on.workflow_dispatch.inputs.mode.options,['quick','full','audit']);
+assert.equal(workflow.permissions.contents,'read');
+assert.equal(workflow.concurrency['cancel-in-progress'],true);
+const job=workflow.jobs.tests;
+assert.equal(job['runs-on'],'ubuntu-24.04');assert.equal(job['timeout-minutes'],60);
+assert.ok(job.steps.some(s=>s.with?.['node-version']==='24.15.0'));
+assert.ok(job.steps.some(s=>s.with?.['fetch-depth']===0));
+assert.ok(job.steps.some(s=>s.run?.includes('playwright@1.62.1')&&s.run.includes('--with-deps chromium')));
+assert.ok(job.steps.some(s=>s.run?.includes('scripts/test.mjs')));
+assert.ok(job.steps.some(s=>s.if==='always()'&&s.uses?.startsWith('actions/upload-artifact@')));
+assert.ok(!job.steps.some(s=>/git push|rsync|DEPLOY_REPO_TOKEN/.test(s.run||'')));
+console.log('PASS workflow YAML parse: dev quick, main PR full, dispatch choices, pinned tools, full history, read-only permissions, artifacts, no deployment');

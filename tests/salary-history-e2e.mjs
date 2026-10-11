@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {findFirstDifference} from './support/first-difference.mjs';
 import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -28,7 +29,7 @@ const server=createServer(async(req,res)=>{try{
 }catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const local=`http://127.0.0.1:${server.address().port}`;
-const browser=await chromium.launch({channel:'chrome',headless:true});
+const browser=await chromium.launch({channel:process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||'chrome',headless:true});
 const shots=path.join(os.tmpdir(),'yakyujinsei-salary-history');await mkdir(shots,{recursive:true});
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push(r.status()+' '+r.url());});};
 const start=async(p,url,pos='P')=>{await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();};
@@ -69,13 +70,14 @@ try{
     if(!process.argv.includes('--ui-only'))for(const [seed,pos] of [['yakyo-test-001','P'],['jp3-infielder-01','IF']]){
       const runs=[];
       for(const old of [true,false]){
-        const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos);const records=[];
+        const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos);const records=[];let firstRecord;
         for(let i=0;i<2500;i++){
           const r=await p.evaluate(`(()=>{const h=window.__salaryHistoryTest.get(),state=h.state;delete state.salaryDecisionHistory;delete state.version;const record={state,rng:h.rng,calls:h.calls};if(state.done)return{record,done:true};const b=(${action.toString()})();record.action=b.innerText;b.click();return{record,done:false};})()`);
-          records.push(createHash('sha256').update(JSON.stringify(r.record)).digest('hex'));if(r.done)break;if(i===2499)throw Error('Career not completed');
+          if(i===0)firstRecord=r.record;records.push(createHash('sha256').update(JSON.stringify(r.record)).digest('hex'));if(r.done)break;if(i===2499)throw Error('Career not completed');
         }
-        const final=await p.evaluate(()=>window.__salaryHistoryTest.get());runs.push({records,final});await p.close();
+        const final=await p.evaluate(()=>window.__salaryHistoryTest.get());runs.push({records,final,firstRecord});await p.close();
       }
+      if(JSON.stringify(runs[0].records)!==JSON.stringify(runs[1].records))console.error('HISTORICAL_FIRST_DIFFERENCE '+JSON.stringify({baseline,seed,pos,step:runs[0].records.findIndex((r,i)=>r!==runs[1].records[i]),initialDifference:findFirstDifference(runs[0].firstRecord,runs[1].firstRecord)}));
       assert.deepEqual(runs[0].records,runs[1].records,seed+': non-history state/financial/RNG difference');
       const full=runs[1].final.state.salaryDecisionHistory,old=runs[0].final.state.salaryDecisionHistory;
       assert.deepEqual(full.slice(-10),old);if(full.length)assert.equal(full[0].salaryYear,2029);

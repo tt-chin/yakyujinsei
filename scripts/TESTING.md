@@ -1,0 +1,46 @@
+# 統一測試入口
+
+`node scripts/test.mjs list` 列出所有 tests 檔案、分類、依賴、概算秒數、旗標與模式。新增未分類檔案會報錯，不會悄悄略過。
+
+```sh
+node scripts/test.mjs quick
+node scripts/test.mjs full
+node scripts/test.mjs audit
+node scripts/test.mjs full --only=contract-salary-e2e
+```
+
+quick 執行全部快速原生／單元入口、JS 語法、KBO quick、ACT 入團／listener fixtures、draft-income quick。full 不重複 quick 入口，而是擴大相同入口的測試範圍，並執行其餘瀏覽器、投手／野手生涯和 RNG 比較。audit 包含 full，加兩條 P／IF 自然生涯研究及重播；人工項目明列 SKIP。
+
+六個既有功能 E2E 以 `--ui-only`／`--quick` 執行完整的原生功能 fixture／UI／候選 RNG 矩陣；不在每項重新跑相同的舊版生涯比較。完整生涯由 ACT、contract、draft、display、event 的專門入口覆蓋，保留各自不同的契約／收入／UI重繪／事件斷言。需要重查原歷史生涯時可明確使用 `--legacy-careers --only=<id>`；不刪除或改寫舊斷言。
+
+display 的常規 full 執行全部設定／尺寸／DOM 保持矩陣，加 P／IF 各一條每17操作切換設定的完整生涯。其餘4條不重複，原六條完整設定生涯仍可用 `--legacy-careers --only=display-preferences-e2e` 執行。
+
+## 依賴與可再現基準
+
+Node.js 24.15.0、Git 完整歷史；瀏覽器入口另需已安裝的 Playwright 1.62.1 及 Chrome 或 Chromium。不會自動安裝套件。
+
+以 `PLAYWRIGHT_MODULE` 指定外部模組，`TEST_BROWSER=chromium` 選擇 Chromium；亦可用 `--playwright=<模組位置>`、`--browser=chrome|chromium`。預設維持現有測試的 Chrome，不加入個人路徑。已授權 CI 在 `$RUNNER_TEMP` 安裝固定版 Playwright 與 Chromium 系統依賴，不是遊戲依賴。
+
+現行一致性比較預設 `--baseline=origin/main`，在開始時解析為完整 SHA 並保存。離線 clone 可明確指定 `--baseline=<已取得的 commit>`。不得將未取得基準或未安裝瀏覽器視為 PASS。Git checkout 必須保留歷史；GitHub Actions 使用 fetch-depth 0。
+
+歷史基準不是一律過時：KBO 的 f3efb0a 和首輪殿堂的 925987d 是舊 Bug 證據；文案、NPB 回歸、事件等入口也有歷史控制組。list 列出原引用，summary 記錄解析 SHA。不要將這些負面基準換成 HEAD，也不要為測試變綠改遊戲／斷言。
+
+## 輸出與結果
+
+預設寫入忽略的 `test-results/<時間>-<模式>/`。每個入口一個 `.log`，`summary.json` 保存指令、exit code、秒數、環境、HEAD、基準、來源 fingerprint。原 E2E 的 JSON／截圖在同目錄 tmp 中，方便 CI 上傳。
+
+PASS 僅表示入口实际執行 exit 0；FAIL 包含非零 exit／逾時；BLOCKED 表示必要依賴不足；SKIP 是明示非自動項目。FAIL／BLOCKED 令整體 exit 非零；一次失敗仍繼續其餘預定入口。統計是入口數，不是假稱所有唯一斷言／遊戲分支數。
+
+`--output=<路徑>` 指定輸出；`--only=<id,...>` 可獨立執行列出的入口（不受模式預設篩選限制）。`--self-test-failure` 在既定測試後新增 exit 17 的故意失敗；只供 Runner 驗收，不能當一般成功測試。
+
+明示 `--reuse=<summary.json>` 可於 audit 重用同次 full 已實際 PASS 的入口，避免重跑：必須來源 fingerprint、解析基準 SHA、Node／平台／瀏覽器、完整命令與日誌 SHA-256 全相同。報告保留原日誌、原耗時及 `reusedFrom`，另外列 executed／reused；不冒充重新執行。來源不符直接非零；FAIL／BLOCKED 不重用。CI 不使用快取驗收。
+
+## 明確不自動執行
+
+- retirement-hof-analysis／report 會改寫歷史報告，需確認輸入與寫入目標後才獨立執行。
+- support 和 JSON 不是測試入口；fixed-seed-regression.json 是歷史摘要，不能代替實測。
+- 4,000 生涯需要另外批准採樣策略、涵蓋各聯盟及估時；目前 pilot 最多 50 個預設組合，不是假稱 4,000 樣本。手動例：`node tests/retirement-hof-pilot.mjs --playwright=<module> --browser=chromium --limit=50 --output=<JSON>`。
+- 實機原生 share sheet、iPhone／Android 不由 Chromium 手機尺寸模擬替代。
+- CI 的遊戲程式取自 loopback（現有 UI 另請求 Google Fonts CDN）。Preview E2E 另用既有入口 `--preview=<URL>`，且先確認最新配信內容；不可拿可變 URL 的舊版本充當 commit 驗收。外部字型／網路故障不得冒充遊戲斷言通過。
+
+CI 環境依 [Playwright 官方 CI 指南](https://playwright.dev/docs/ci) 安裝 Chromium；測試 workflow 不包含部署或正式 repo 寫入權限。

@@ -29,7 +29,7 @@ window.__hofAudit={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:wi
 }};`;
 const instrument=s=>s.replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;')+hook;
 const server=createServer(async(req,res)=>{try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\//,'')||'index.html';if(rel.includes('..'))throw Error('path');let body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css':rel.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});
-await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`,browser=await chromium.launch({channel:'chrome',headless:true});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`,browser=await chromium.launch({channel:process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||'chrome',headless:true});
 const cases=Array.from({length:25},(_,i)=>({seed:`hof111-pilot-${String(i+1).padStart(2,'0')}`,pos:['P','P','C','IF','OF'][i%5]})).flatMap(c=>['ordered-overseas','balanced-stay'].map(strategy=>({...c,strategy}))).filter(c=>(!arg('seeds')||arg('seeds').split(',').includes(c.seed))&&(!arg('strategy')||c.strategy===arg('strategy'))).slice(0,Number(arg('limit')||50));
 const started=Date.now(),results=[];let next=0;
 async function run(input){
