@@ -4,6 +4,8 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'stage6-ability-e2e': {seconds:120,reason:'Includes open stale-callback safety assertions. Known CONFIRMED_RISK probes fail until an approved game fix; do not weaken expectations.'},
+  'stage6-state-transaction-e2e': {seconds:40,reason:'Native CORP reentry and explicit signing fault injection. Open transaction safety assertions fail; not proof of a naturally reachable UI bug.'},
   'bug-act-01-02-e2e': {quick:['--fixtures-only'], seconds:500},
   'kbo-renewal-e2e': {quick:['--quick'], seconds:40},
   'draft-income-e2e': {quick:['--quick'], comparison:'baseline', seconds:350},
@@ -20,6 +22,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/stage6-browser.mjs': ['support','Test-only native browser fixture and state/RNG/DOM trace; imported by Stage 6 probes.'],
   'support/first-difference.mjs': ['support','Read-only first-difference diagnostic, imported by historical E2E controls.'],
   'retirement-hof-test-support.mjs': ['support','Imported VM fixtures; not an executable test.'],
   'retirement-hof-analysis.mjs': ['analysis','Requires approved captured pilot/vote input; rewrites historical report data. Run explicitly outside automatic profiles.'],

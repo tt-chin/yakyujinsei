@@ -154,7 +154,7 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 - 年俸詳細は正額の契約金・育成支度金・postingFeeを別ラベルで表示する。支払完了でannualSalaryが0の場合、保存済み年度表の最終年度額を表示し、状態を変更しない。
 - 所得内訳は契約金・育成支度金・固定年俸・出来高・買い取り・スポンサー・社会人給与の累計と、生涯総収入careerEarningsを読み取り表示する。合算の再計算・再記帳はしない。今季スポンサー収入も維持する。
 - 年俸詳細・キャリア・FA報価・FA成立・延長の表示は「保証年俸総額」へ統一し、「未払い保証額」は「未払い年俸」とする。ドラフト成立カードには新人年俸も併記する。
-- 出典：[契約金表示修正指示](FIX_DRAFT_SIGNING_BONUS_INCOME_DISPLAY.md)と第11節。v1.9.0では承認済みの金額・市場政策を更新するが、追加RNG・seed-only URL変更・テーマ変更・引退画像のレイアウト変更は行わない。
+- 出典：[契約金表示修正指示](https://github.com/tt-chin/yakyujinsei/blob/6a31b27d11ce125ff3cc4104b3c0ad3fda785b29/FIX_DRAFT_SIGNING_BONUS_INCOME_DISPLAY.md)と第11節。v1.9.0では承認済みの金額・市場政策を更新するが、追加RNG・seed-only URL変更・テーマ変更・引退画像のレイアウト変更は行わない。
 
 ## 8. 表示設定（v1.7.0）
 
@@ -179,7 +179,7 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 
 ## 10. 92枚イベント（v1.8.0）
 
-- データ正本はdocs/src/data/event-cards-jp.js。資格・分類・数値planは完全データ改訂3を保持する。v1.8.2の文案正本は[YAKYUJINSEI_JP_EVENT_92_COPY.json](YAKYUJINSEI_JP_EVENT_92_COPY.json)（copyRevision 2と承認済み誤字訂正）。IDでn・intro・choicesのlabel/good/badだけを更新し、92枚・1,012文案欄位を照合する。完全データ文書の旧文案は履歴資料として保持し、現行文案へ優先しない。schema=yakyujinsei.event-catalog.v2、policy=CN157_CLASSIFIED_JP_LOCALIZED。
+- データ正本はdocs/src/data/event-cards-jp.js。資格・分類・数値planは完全データ改訂3を保持する。v1.8.2の文案正本は[YAKYUJINSEI_JP_EVENT_92_COPY.json](https://github.com/tt-chin/yakyujinsei/blob/6a31b27d11ce125ff3cc4104b3c0ad3fda785b29/YAKYUJINSEI_JP_EVENT_92_COPY.json)（copyRevision 2と承認済み誤字訂正）。IDでn・intro・choicesのlabel/good/badだけを更新し、92枚・1,012文案欄位を照合する。完全データ文書の旧文案は履歴資料として保持し、現行文案へ優先しない。schema=yakyujinsei.event-catalog.v2、policy=CN157_CLASSIFIED_JP_LOCALIZED。
 - training43／encounter35／endorsement14。stage・lv・org・role・maxAgeはAND、配列内はOR。未知状態を許可せず、対象poolはID順。既存pickで直接抽選し、PRO3／HS・U・CORP・IND2を要求枚数とする。v1.10.2以後は同年同card.idを除外し、候補が尽きれば残りを埋めず次へ進む（第13節）。空poolは他所属へfallbackしない。
 - 選択順bold/norm/safe。成功率はgenius/late/clutchのいずれかで基礎70、それ以外50、thief−10。safe+20（最大95）、normはfavorite+5（最大95）、bold−15とclutch+geniusの+5。v1.10.0ではlatepractice取得済みの場合にsafeだけさらに−5ポイント（第12節）。
 - HS/U/CORPのencounterはtrainingとして処理。clutchTier0/1/2を分類planへ一度だけ適用する。結果文・実能力差・carry差・正負成績点・成功入金・指定失敗故障加算を表示する。表示・再表示はRNG消費0。
@@ -191,7 +191,7 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 - 広告王はendorsement bold成功5回、監督のお気に入りは25歳未満norm成功10回、強心臓は25歳未満bold成功7回、自律の鬼は25歳未満safe成功15回・caught0・snack<5。cancerは社交bold失敗>10またはscum（franchise/intlace除外）、distractは既存恋愛／夜食条件。旧全bold失敗条件との二重判定はしない。
 - 監督のお気に入りは投手perfFの下限.85、野手の通常起用係数下限.85、守備資格閾値−3を既存若手補正へ加算。その後に稼働率・乱数を適用し、実試合数85%保障とは扱わない。広告王はスポンサーのみ1.1倍。名称・説明を選手／引退／共有画像で統一。
 - 同一新版・seed・選択列の再現性を保証する。旧版seed結果と必要なRNG消費の変化は今回明示承認済み。RNGアルゴリズム・seed-only URL・通常給与契約の算式は変更しない。
-- 仕様出典：[実装仕様](YAKYUJINSEI_EVENT_SYSTEM_IMPLEMENTATION_SPEC.md)、[完全カード資料](YAKYUJINSEI_JP_EVENT_92_COMPLETE_DATA.md)。本節は実装済み規則、出典には全92件の文案・条件・数値表と受入条件を保持する。
+- 仕様出典：[実装仕様](https://github.com/tt-chin/yakyujinsei/blob/6a31b27d11ce125ff3cc4104b3c0ad3fda785b29/YAKYUJINSEI_EVENT_SYSTEM_IMPLEMENTATION_SPEC.md)、[完全カード資料](https://github.com/tt-chin/yakyujinsei/blob/6a31b27d11ce125ff3cc4104b3c0ad3fda785b29/YAKYUJINSEI_JP_EVENT_92_COMPLETE_DATA.md)。本節は実装済み規則、出典には全92件の文案・条件・数値表と受入条件を保持する。
 
 ## 11. 全球契約金・年俸市場（v1.9.0）
 
@@ -339,7 +339,7 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 
 ## 12. 特性名称統一と承認済み追加（2026-10-09）
 
-使用者が[38特性原文](CODEX_TRAIT_JP_38_COMPLETE_MASTER_SPEC_UPDATED.md)の確認事項7件を承認。本節の決定が原文の未確定名称・阪神実名・全階層年資・全38件取得要求に優先する。38個のID／表示名を定義し、既存29件のコードを保持して追加6件の取得・効果を接続した。35件全てを実プレイで取得達成したという意味ではない。未実装3件はBACKLOGで管理し、取得可能と表示しない。
+使用者が[38特性原文](https://github.com/tt-chin/yakyujinsei/blob/6a31b27d11ce125ff3cc4104b3c0ad3fda785b29/CODEX_TRAIT_JP_38_COMPLETE_MASTER_SPEC_UPDATED.md)の確認事項7件を承認。本節の決定が原文の未確定名称・阪神実名・全階層年資・全38件取得要求に優先する。38個のID／表示名を定義し、既存29件のコードを保持して追加6件の取得・効果を接続した。35件全てを実プレイで取得達成したという意味ではない。未実装3件はBACKLOGで管理し、取得可能と表示しない。
 
 - 名称の正本は`trait-policy.js`のTRAIT_LABELS／traitLabel。選手特性・引退・共有画像で共用し、リーグ名＋歴史に残る名選手、リーグ名＋渡り鳥、球団愛称＋ミスター、リーグ別打撃三冠を保持。旧removedの文字列は表示時に変換し、保存済み配列を破壊的変換しない。
 - v1.11.2：「歴史に残る名選手」の新規取得時、`legendLeague`は実際に初回投票入選したリーグだけをCPBL→KBO→NPB→MLBの順に記録した先頭とする。後年入選したリーグを代替に使わず、初回入選なしでは付与しない。既存legend=trueの帰属は上書き・移行しない。特性カード・選手表示・結果画像は既存の表示処理を再利用する。
