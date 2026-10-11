@@ -44,3 +44,11 @@ PASS 僅表示入口实际執行 exit 0；FAIL 包含非零 exit／逾時；BLOC
 - CI 的遊戲程式取自 loopback（現有 UI 另請求 Google Fonts CDN）。Preview E2E 另用既有入口 `--preview=<URL>`，且先確認最新配信內容；不可拿可變 URL 的舊版本充當 commit 驗收。外部字型／網路故障不得冒充遊戲斷言通過。
 
 CI 環境依 [Playwright 官方 CI 指南](https://playwright.dev/docs/ci) 安裝 Chromium；測試 workflow 不包含部署或正式 repo 寫入權限。
+
+## CI 證據補記與觸發
+
+dev push 僅在所有變更均為 `BACKLOG.md` 或 `docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md` 時排除 Tests workflow。此精確白名單只供驗收證據、CI Run ID／結果與統計補記；路徑規則不判斷文字內容，若變更驗收準則或其他實質內容，應手動執行對應測試，不得藉此省略必要驗證。新增報告不自動列入白名單。
+
+遊戲、測試、fixture、Runner、workflow、AGENTS.md、CURRENT_SPEC.md 及其他未排除檔案的單獨或混合變更仍觸發 CI。main PR 的 full 與手動 quick／full／audit 不使用路徑排除，避免必要檢查因文件 PR 而永久 Pending。Cloudflare Preview 與正式發布 workflow 不受此設定控制。
+
+最終報告須區分實際測試通過的完整程式 SHA／CI Run URL／模式／結果，以及後續純文件 Commit SHA／變更檔案／未重跑 CI 的事實。不能把前者的 PASS 當成後者已執行測試。Runner fingerprint 仍包含 docs 下的報告；本次不放寬 `--reuse` 的一致性檢查。

@@ -10,7 +10,21 @@ const core=path.dirname(pwRequire.resolve('playwright-core'));
 const {yaml}=req(path.join(core,'lib/utilsBundle.js'));
 const workflow=yaml.parse(readFileSync(new URL('../.github/workflows/test.yml',import.meta.url),'utf8'),{uniqueKeys:true});
 assert.deepEqual(workflow.on.push.branches,['dev']);
+const evidenceOnly=['BACKLOG.md','docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md'];
+assert.deepEqual(workflow.on.push['paths-ignore'],evidenceOnly);
+assert.equal(workflow.on.push.paths,undefined);
 assert.deepEqual(workflow.on.pull_request.branches,['main']);
+assert.equal(workflow.on.pull_request.paths,undefined);
+assert.equal(workflow.on.pull_request['paths-ignore'],undefined,'PR required checks must not be path-filtered');
+assert.equal(workflow.on.workflow_dispatch.paths,undefined);
+assert.equal(workflow.on.workflow_dispatch['paths-ignore'],undefined);
+// Exact-path model of the approved filter, not an emulation of GitHub's diff service.
+const shouldRunPush=files=>files.some(file=>!evidenceOnly.includes(file));
+assert.equal(shouldRunPush(evidenceOnly),false,'Only evidence updates skip dev CI');
+for(const file of ['AGENTS.md','CURRENT_SPEC.md','docs/src/engine/game.js','tests/event-policy.test.mjs','tests/support/stage6-browser.mjs','scripts/test.mjs','.github/workflows/test.yml','docs/archive/README.md','docs/reviews/OTHER_REPORT.md']){
+ assert.equal(shouldRunPush([file]),true,file+' must trigger CI');
+ assert.equal(shouldRunPush([...evidenceOnly,file]),true,'Mixed changes must trigger CI: '+file);
+}
 assert.deepEqual(workflow.on.workflow_dispatch.inputs.mode.options,['quick','full','audit']);
 assert.equal(workflow.permissions.contents,'read');
 assert.equal(workflow.concurrency['cancel-in-progress'],true);
@@ -25,3 +39,4 @@ assert.ok(job.steps.some(s=>s.run?.includes('scripts/test.mjs')));
 assert.ok(job.steps.some(s=>s.if==='always()'&&s.uses?.startsWith('actions/upload-artifact@')));
 assert.ok(!job.steps.some(s=>/git push|rsync|DEPLOY_REPO_TOKEN/.test(s.run||'')));
 console.log('PASS workflow YAML parse: dev quick, main PR full, dispatch choices, pinned tools, full history, read-only permissions, artifacts, no deployment');
+console.log('PASS exact dev evidence allowlist and mixed-change checks; PR and dispatch remain unfiltered (GitHub event execution verified separately)');

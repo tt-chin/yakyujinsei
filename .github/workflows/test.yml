@@ -2,6 +2,10 @@ name: Tests
 on:
   push:
     branches: [dev]
+    # Exact evidence-only allowlist; never apply this filter to pull_request.
+    paths-ignore:
+      - BACKLOG.md
+      - docs/reviews/STAGE6_ACCEPTANCE_AUDIT.md
   pull_request:
     branches: [main]
   workflow_dispatch:
