@@ -34,7 +34,8 @@ assert.match(navigation,/const uiState=\{activeMainView:'home',activePlayerTab:'
 assert.doesNotMatch(navigation,/['"]action['"]|actionPending|actionExecuting|showAction|beginAction|completeAction/);
 assert.match(navigation,/if\(view==='player'\)selectPlayer/);
 assert.match(game,/b\.onclick=\(\)=>runWithResultView\(\(\)=>runChoiceAction/);
-assert.match(game,/c\.onclick=\(\)=>runWithResultView\(\(\)=>\{ actClear\(\); allocDone/);
+assert.match(game,/c\.onclick=\(\)=>\{if\(!live\(c\)\|\|!\(remaining\(\)===0\|\|keys\.every\(k=>S\.ab\[k\]>=80\)\)\)return;completed=true;return runWithResultView\(\(\)=>\{ actClear\(\); allocDone\(touchedKeys,dice\?true:false\); done\(\); \}\);\}/);
+assert.match(game,/const live=element=>!completed&&S===state&&choiceGeneration===generation&&element\.isConnected&&a\.contains\(element\)/);
 assert.match(game,/before=\$\('log'\)\.querySelectorAll\('\.card'\)\.length/);
 assert.match(game,/onOpenPlayer:buildPlayerViewModel/);
 assert.match(game,/abilities:POS_AB\[S\.pos\]\.map/);

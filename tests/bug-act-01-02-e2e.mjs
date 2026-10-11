@@ -11,8 +11,10 @@ const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 function instrument(source){
- assert.ok(source.includes('action:o.f,'),'choice observer anchor');
- source=source.replace('function R(){','function R(){window.__calls=(window.__calls||0)+1;').replace('R = function(){','R = function(){window.__calls=(window.__calls||0)+1;').replace('function card(cls,title,html){','function card(cls,title,html){window.__cardCalls=(window.__cardCalls||0)+1;(window.__cardHTML??=[]).push({cls,title,html});').replace('action:o.f,','action:()=>{window.__actionCalls=(window.__actionCalls||0)+1;return o.f();},');
+ const actionAnchor=source.includes('action:()=>invokeChoiceAction(o.f),')?'action:()=>invokeChoiceAction(o.f),':'action:o.f,';
+ assert.ok(source.includes(actionAnchor),'choice observer anchor');
+ const invoke=actionAnchor==='action:o.f,'?'o.f()':'invokeChoiceAction(o.f)';
+ source=source.replace('function R(){','function R(){window.__calls=(window.__calls||0)+1;').replace('R = function(){','R = function(){window.__calls=(window.__calls||0)+1;').replace('function card(cls,title,html){','function card(cls,title,html){window.__cardCalls=(window.__cardCalls||0)+1;(window.__cardHTML??=[]).push({cls,title,html});').replace(actionAnchor,`action:()=>{window.__actionCalls=(window.__actionCalls||0)+1;return ${invoke};},`);
  const at=source.lastIndexOf('})();');assert.ok(at>0);
  return source.slice(0,at)+`const auditSignTo=signTo;signTo=function(...args){const calls=window.__calls||0,rng=_s;try{return auditSignTo(...args);}finally{window.__signAudit={beforeCalls:calls,afterCalls:window.__calls||0,beforeRng:rng,afterRng:_s};}};window.__actAudit={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__calls||0,actions:window.__actionCalls||0,sign:window.__signAudit||null,generation:choiceGeneration,token:activeChoiceToken?.generation,running:activeChoiceToken?.running,dom:document.querySelector('#act').outerHTML,cards:window.__cardCalls||0}),draft:(from,development=false)=>{actClear();S=newState('入団検証',S.pos);Object.assign(S,{age:from==='HS'?18:22,year:2032,stage:from,lv:from,stageYr:from==='HS'?3:4,entryRoute:from,seasonFactor:1});Object.keys(S.ab).forEach(k=>S.ab[k]=development?(from==='HS'?31:39):60);enterDraftPath(from);}};`+source.slice(at);
 }

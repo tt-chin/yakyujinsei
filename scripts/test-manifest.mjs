@@ -4,8 +4,9 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
-  'stage6-ability-e2e': {seconds:120,reason:'Includes open stale-callback safety assertions. Known CONFIRMED_RISK probes fail until an approved game fix; do not weaken expectations.'},
-  'stage6-state-transaction-e2e': {seconds:40,reason:'Native CORP reentry and explicit signing fault injection. Open transaction safety assertions fail; not proof of a naturally reachable UI bug.'},
+  'stage6-ability-e2e': {seconds:120,reason:'Original allocation matrix and stale-callback safety assertions; expectations preserved.'},
+  'stage6-state-transaction-e2e': {seconds:40,reason:'Native CORP reentry and explicit signing fault injection; not proof of a naturally reachable UI bug.'},
+  'stage7-safety-e2e': {seconds:90,reason:'Current-session callbacks, CORP settlement faults/year boundary, signing redraw retry and next-year payment.'},
   'bug-act-01-02-e2e': {quick:['--fixtures-only'], seconds:500},
   'kbo-renewal-e2e': {quick:['--quick'], seconds:40},
   'draft-income-e2e': {quick:['--quick'], comparison:'baseline', seconds:350},
