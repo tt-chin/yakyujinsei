@@ -123,3 +123,8 @@ node scripts/test.mjs quick --only=syntax,spec-source-links.test,test-runner.tes
 - 該SHA的Cloudflare Pages check SUCCESS，deployment `0918dc6d-bbbc-476c-b11a-4344c8f7cb0c`。[dev Preview](https://dev.yakyujinsei.pages.dev)的index.html、src/config.js、src/engine/game.js及reviews/STAGE6_ACCEPTANCE_AUDIT.md皆HTTP200、LF正規化後內容與該提交一致。這是部署／內容比對，不冒稱另跑Preview整套遊戲E2E。
 - 此後只補本文的CI／Preview證據與精確耗時，未變測試或遊戲；文件補記提交的SHA由Git及最終交付訊息提供。main／origin/main仍為`e886e84ca08c6c185406cac9d6f3c4376277061a`，不部署正式網站。
 - 下一步建議先由使用者決定是否批准3個局部防護修正，再對相同失敗案與既有回歸驗收。**停止於本階段，不自動開始第七階段／重構。**
+
+### CI 證據補記（觸發效率改善後）
+
+- 後續CI設定／檢查工具修改的實際受測SHA：`f85d0ee1cf1264dd7a9850eaaf3fe1e209f2e85c`。[CI 38147408119](https://github.com/tt-chin/yakyujinsei/actions/runs/38147408119)成功，quick 45 PASS／0 FAIL／0 SKIP／0 BLOCKED，208.967秒；精確白名單／混合變更檢查通過。遊戲與第六階段安全專項未修改，上述風險FAIL仍有效，quick成功不代表風險已修復。
+- dev push只排除BACKLOG.md與本報告的純證據補記；PR及手動觸發不排除。本次僅補此CI證據，後續純文件提交的完整SHA由最終交付提供，不宣稱該文件提交重新通過CI。實際跳過與Preview結果另在交付確認，避免循環追加提交。
