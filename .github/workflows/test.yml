@@ -23,7 +23,6 @@ jobs:
     timeout-minutes: 60
     env:
       TEST_MODE: ${{ github.event_name == 'pull_request' && 'full' || inputs.mode || 'quick' }}
-      PLAYWRIGHT_MODULE: ${{ runner.temp }}/test-tools/node_modules/playwright
       TEST_BROWSER: chromium
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -38,6 +37,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p test-results/ci-bootstrap
+          export PLAYWRIGHT_MODULE="$RUNNER_TEMP/test-tools/node_modules/playwright"
+          echo "PLAYWRIGHT_MODULE=$PLAYWRIGHT_MODULE" >> "$GITHUB_ENV"
           npm install --prefix "$RUNNER_TEMP/test-tools" --no-save --no-package-lock --ignore-scripts playwright@1.62.1 2>&1 | tee test-results/ci-bootstrap/playwright-install.log
           node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium 2>&1 | tee test-results/ci-bootstrap/chromium-install.log
       - name: Validate workflow

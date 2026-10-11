@@ -15,6 +15,8 @@ assert.deepEqual(workflow.on.workflow_dispatch.inputs.mode.options,['quick','ful
 assert.equal(workflow.permissions.contents,'read');
 assert.equal(workflow.concurrency['cancel-in-progress'],true);
 const job=workflow.jobs.tests;
+assert.ok(!JSON.stringify(job.env).includes('runner.'),'runner context is unavailable in jobs.<job_id>.env');
+assert.ok(job.steps.some(s=>s.run?.includes('PLAYWRIGHT_MODULE=')&&s.run.includes('$GITHUB_ENV')));
 assert.equal(job['runs-on'],'ubuntu-24.04');assert.equal(job['timeout-minutes'],60);
 assert.ok(job.steps.some(s=>s.with?.['node-version']==='24.15.0'));
 assert.ok(job.steps.some(s=>s.with?.['fetch-depth']===0));
