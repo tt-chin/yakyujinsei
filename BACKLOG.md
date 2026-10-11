@@ -35,6 +35,7 @@
 ### 1.2 目前開發基準與限制
 
 - **最新受驗程式 SHA：** `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`。開始時dev基準`0425e74350303086a688de6504a4aa3609543a4d`；CI PR合成提交與程式樹相同。後續純文件HEAD不冒充此Full程式SHA。
+- **第八階段文件與Quick受驗SHA：** `b38146e69288346a120db5b2d079ce0a7983aaae`；從`a5ed616418e1eb3611c6f714b5f2cf75161ba550`開始調查，遊戲程式樹不變。CI Run 38183631042成功；本次證據補記僅改BACKLOG，文件Commit另見Git／最終回報。
 - **遊戲 VERSION：** dev `1.11.5`；main／正式網站仍為`1.11.4`。只修復核准的能力callback、CORP重入與signTo簽約／描畫重試；正常S／選擇歷史／年表／RNG維持1.11.4基準。
 - ACT-01 已按「現行功能」標準結案，但原始完整操作歷史不足，**沒有精確重現歷史故障路線，也沒有證明當年的根本原因**。
 - ACT-02 的指名後第一選項、listener、單次執行及下一年度推進已通過指定矩陣；不宣稱所有未知路線均驗證。
@@ -135,6 +136,7 @@
 - 第四階段 Linux 證據：[Quick](https://github.com/tt-chin/yakyujinsei/actions/runs/38132643250)／[Full](https://github.com/tt-chin/yakyujinsei/actions/runs/38132662335)／[Audit](https://github.com/tt-chin/yakyujinsei/actions/runs/38132971169)。
 - Audit 的 10 項 SKIP 包含人工／研究／實機／Cloudflare 等，不得視為 PASS。4,000 生涯研究尚未完成。
 - ACT 最終驗收：Quick 44 PASS、ACT 專用 Full 入口 PASS（48 入團 fixture、6 pointer 案例、16 次完整生涯）、Preview 54 組 PASS；詳見[報告](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)。
+- 第八階段：本機Quick 45 PASS／0 FAIL／0 SKIP／0 BLOCKED，318.730秒；[Linux Quick Run 38183631042](https://github.com/tt-chin/yakyujinsei/actions/runs/38183631042)同為45 PASS／0 FAIL／0 SKIP／0 BLOCKED，160.208秒，受驗SHA `b38146e69288346a120db5b2d079ce0a7983aaae`。未執行Linux Full。Cloudflare Preview check success，deployment `c4015011-799f-45e4-99bf-2cb5ea4736f4`；[固定Preview](https://dev.yakyujinsei.pages.dev)47個HTML／JS／CSS與dev逐檔一致（僅正規化換行），0資產失敗；本轮未重跑全Preview E2E，不將部署比對當成實機驗收。
 
 ## 5. 歷史快照與證據索引
 
