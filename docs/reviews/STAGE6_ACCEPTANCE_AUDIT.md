@@ -103,7 +103,7 @@ node scripts/test.mjs quick --only=syntax,spec-source-links.test,test-runner.tes
 ```
 
 - list：65個tests檔／59個自動入口（含syntax）；4個新增tests檔中的support不直接執行。沒有沿用舊61個數量。
-- quick：45 PASS／0 FAIL／0 SKIP／0 BLOCKED，exit0，224.245秒；ACT fixture102.680秒、Draft quick85.940秒、KBO15.260秒。此輪quick後僅補強測試fixture／報告；最終構文／link／Runner另重驗，提交後CI再驗最終quick。
+- quick：45 PASS／0 FAIL／0 SKIP／0 BLOCKED，exit0，224.245秒；ACT fixture102.678秒、Draft quick85.942秒、KBO15.261秒。此輪quick後僅補強測試fixture／報告；最終構文／link／Runner另重驗，提交後CI再驗最終quick。
 - 能力專項：89案，87 PASS／2 FAIL；交易專項5案，2 PASS／3 FAIL。兩個入口都exit1，Runner統計0 PASS／2 FAIL／0 SKIP／0 BLOCKED，75.246秒；保留FAIL不包裝為「風險測試PASS」。full/audit登錄這兩個入口，**目前完整profile會因上述未修安全斷言非零**；quick通過不替代它們，不默默排除。
 - 既有contract-salary-e2e：381 PASS／0 FAIL，exit0；內部測試70.651秒，Runner（包含browser preflight／清理）102.855秒；Console/pageerror／JS/CSS404=0。
 - 固定生涯：`yakyo-test-001/P` first-row策略542操作、RNG652、2058退休；`jp3-infielder-01/IF` balanced策略404操作、RNG677、2050退休。與完整解析的origin/main SHA逐步S摘要／選擇／RNG state及calls比較一致，新版重跑也一致；這是現行策略，不拿其他歷史操作數覆寫預期。
@@ -119,5 +119,7 @@ node scripts/test.mjs quick --only=syntax,spec-source-links.test,test-runner.tes
 - SPEC-SOURCE-LINK-01移至已完成，2026-10-11及本報告連結；AUD-03B／STATE-TRANSACTION-AUDIT-01仍未完成，明確區分正常PASS與安全FAIL。
 - 新增上述3個風險修復ID，保持前五階段歷史與結案，不改寫旧报告數字；第六階段標記調查完成／驗收未全通過。
 - 由正式checkbox重新計算：**11完成／32未完成，43唯一ID**；未完成主要status BLOCKED3、IMPLEMENTED_UNVERIFIED7、DESIGN_PENDING6、其他16。P0未完成0；P1規格／回歸9、殿堂6、實機／文案4；P2保留6、候補7。新風險待批准，不算已完成修復。
-- GitHub Actions／Cloudflare Preview提交後另確認並補可追溯結果。CI quick PASS不代表兩個安全專項PASS；不部署正式網站。
+- 測試／文件主提交：`2e8d4404047225469519aa4d36e2449fb9f3de2e`，已push至origin/dev。[Linux CI 38145495448](https://github.com/tt-chin/yakyujinsei/actions/runs/38145495448)實際SUCCESS；Ubuntu24.04／Node24.15.0／Playwright1.62.1／Chromium151.0.7922.34，quick **45 PASS／0 FAIL／0 SKIP／0 BLOCKED，148.585秒、exit0**；workflow檢查及日誌artifact上傳成功。兩個安全專項屬full/audit、不在quick，本輪未於Linux重跑安全專項，不能把CI成功當它們PASS。
+- 該SHA的Cloudflare Pages check SUCCESS，deployment `0918dc6d-bbbc-476c-b11a-4344c8f7cb0c`。[dev Preview](https://dev.yakyujinsei.pages.dev)的index.html、src/config.js、src/engine/game.js及reviews/STAGE6_ACCEPTANCE_AUDIT.md皆HTTP200、LF正規化後內容與該提交一致。這是部署／內容比對，不冒稱另跑Preview整套遊戲E2E。
+- 此後只補本文的CI／Preview證據與精確耗時，未變測試或遊戲；文件補記提交的SHA由Git及最終交付訊息提供。main／origin/main仍為`e886e84ca08c6c185406cac9d6f3c4376277061a`，不部署正式網站。
 - 下一步建議先由使用者決定是否批准3個局部防護修正，再對相同失敗案與既有回歸驗收。**停止於本階段，不自動開始第七階段／重構。**
