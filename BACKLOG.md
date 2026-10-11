@@ -1,123 +1,179 @@
-# 待辦清單 / 実装・照合バックログ
+# BACKLOG — 野球人生（日文版）
 
-整理日：2026-10-11。文書改訂：9（ACT-01／02最終驗收・最新状態索引）。未完了事項の唯一の正本。現行仕様：[CURRENT_SPEC.md](CURRENT_SPEC.md)、完了履歴：[CHANGELOG.md](CHANGELOG.md)、開発規則：[AGENTS.md](AGENTS.md)。
+> 文件整理版：2026-10-11｜來源：`tt-chin/yakyujinsei` 的 `dev` 分支 `aa602b3e39655dc30d1fb6b67099e1ca07a1d0a5`｜遊戲版本：`1.11.4`  
+> **本檔為依照現行 BACKLOG.md 改寫的替換草案，尚未提交 GitHub。** 只整理分類、階段索引與說明，不代表重新執行測試或變更既有判定。
 
-## 最新驗收狀態
+## 1. 最新進度總覽
 
-基準：最新 `origin/dev`（本次 fetch 時）**`dee5c07d010a87bc941bb6bce3e78f307a13a066`**、VERSION **1.11.4**、驗收日期 **2026-10-11**。[ACT 最終驗收報告](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)。受驗工作樹另含本次測試補強；交付提交只改測試及文件，不改遊戲。`origin/main` 為 `e886e84ca08c6c185406cac9d6f3c4376277061a`，本次未修改。
+| 指標 | 數量 | 說明 |
+|---|---:|---|
+| 已完成 | **10** | 有對應驗收紀錄，範圍以各報告為準 |
+| 未完成 | **28** | 包含待驗證、受阻、設計待決、保留及候補 |
+| P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
+| BLOCKED | **3** | 實機或原生分享環境不足 |
+| IMPLEMENTED_UNVERIFIED | **7** | 已有實作或初步調查，尚未完成驗收 |
+| DESIGN_PENDING | **6** | 尚待決定是否或如何調整規格 |
+| 其他候補／保留／混合 | **12** | 不等於已核准開發 |
 
-以下按本文件目前正式 checkbox ID 重新計數，索引中的 ID 不重複計算。原段落已結案的 ACT-03／SAL-01轉列完成項；合計 **38 ID＝已完成10＋未完成28**，不是沿用 v1.11.2 的分類統計。未完成分類互斥，其他項保留原標籤，不在本輪擅自改變狀態。
+以上依本文件唯一的正式 checkbox 工作 ID 計算：**10 + 28 = 38**。階段表、說明、歷史快照不重複計數。
 
-- **已完成10**：TEST-RUNNER-01、TEST-CI-01、BUG-KBO-RENEWAL-FLOOR、BUG-HOF-FIRST-BALLOT-LEAGUE、TEST-COVERAGE-01、AUD-01B、BUG-ACT-03、BUG-SAL-01、BUG-ACT-01、BUG-ACT-02。個別驗收日期、範圍與報告連結見下方完成清單。
-- **未完成28**：下述3＋7＋6＋12；P0 未完成 **0**。不代表全部遊戲情境已驗證。
-- **BLOCKED 3**：EVT-1102-ANDROID、UI-17-DEVICE、SHARE-111-DEVICE（實機／原生分享環境不足）。
-- **IMPLEMENTED_UNVERIFIED 7**：AUD-02、AUD-03B、AUD-04、AUD-05、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01。
-- **DESIGN_PENDING 6**：HOF-BUCKET-DECISION-01、HOF-PITCHER-BALANCE-01、HOF-HONOR-POLICY-01、HOF-DISPLAY-ROUND-01、HOF-VOTE-STORY-01、OVR-01。此統計將原標籤「仕様待ち」歸入設計待決，不改現行規則。
-- **其他候補／保留／混合狀態12**：TRAIT-PITCHER-TC、TRAIT-NITENICHI、TRAIT-CHAMPIONMAKER（承認済み保留）；CONTRACT-LEGACY-01（重構候補・要調査）；CONTRACT-ASIA-01（未実装・仕様待ち）；INJ-UI-01、PLY-01、INT-01、EVT-01、UI-06、UI-07、PLY-02（候補）。
+### 1.1 開發階段完成履歷
 
-本輪 BUG-ACT-01 為「現行功能驗收 PASS」；**原始完整操作歷史未取得，原故障路線未精確重現、根因未證明**。依本次明示結案標準移出未完成清單，限制永久保留於報告。BUG-ACT-02 的指名後第一選項 DOM、可見／可點擊、listener、單次執行、下一年度推進均通過。下一階段優先 AUD-03B 與 AUD-02／重構風險調查；實機項維持 BLOCKED，殿堂政策等待決策。
+| 階段 | 主題 | 對應 ID | 結果 | 驗收報告 |
+|---|---|---|---|---|
+| 第一階段 | KBO 續約年俸下限修復 | `BUG-KBO-RENEWAL-FLOOR` | **完成** | [KBO_RENEWAL_FLOOR_FIX.md](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md) |
+| 第二階段 | 成績按鈕、指名入團後選項 | `BUG-ACT-01`、`BUG-ACT-02` | **完成（現行功能驗收）** | [ACT_01_02_FINAL_ACCEPTANCE.md](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md) |
+| 第三階段 | 行動／契約與年俸回歸 | `BUG-ACT-03`、`BUG-SAL-01` | **完成** | [CONTRACT_SALARY_ACCEPTANCE_AUDIT.md](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md) |
+| 第四階段 | 統一測試 Runner 與 Linux CI | `TEST-RUNNER-01`、`TEST-CI-01` | **完成** | [TEST_INFRA_ACCEPTANCE.md](docs/reviews/TEST_INFRA_ACCEPTANCE.md) |
 
-## 歷史快照：v1.11.2 調査基準と状態の定義（原第0章）
+上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
-本節數字及原判定只屬 2026-10-10 的歷史快照，不是最新進度；保留原報告數據，不回寫為本次結果。
+### 1.2 目前開發基準與限制
 
-- 対象：`tt-chin/yakyujinsei` `dev`、**受驗 HEAD `a4aa83c48a48a1567bf3b14ceea6e4c76c87b76b`**、VERSION **`1.11.2`**。`main` は `421e036bb206a11828a696a4f8b0d3909385441f`、VERSION `1.10.2`。受驗時の基準であり、後続変更時は再取得する。
-- 改訂6の一次驗收證據：`docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md`（2026-10-10、Codex報告。使用者提供の同名調査報告を根拠とする）。`CURRENT_SPEC.md`、`CHANGELOG.md`、`AGENTS.md` を併用。**改訂6の文書整理ではテストを独立再実行していない**。後続のKBO修復と第3段階の実行結果は各専項報告で管理し、旧調査件数へ混ぜない。
-- Codex調査の38 ID判定：PASS 3、FAIL 1、IMPLEMENTED_UNVERIFIED 10、NOT_IMPLEMENTED 14、BLOCKED 4、DESIGN_PENDING 6。**PASSは当該驗收範囲に限定**。非実装候補・承認保留・実機未検証を混同しない。
-- 検証環境：Windows／Node 24.15.0／Playwright Chrome 155、ローカルとPreview。320/390pxはモバイル模擬でありiOS Safari・Android Chrome実機ではない。
-- `tests/` は**54ファイル**（33 `.test.mjs`、5 standalone、11 E2E、5 support／分析／fixture）。本次33+5入口 PASS、E2E一部のみ実施、KBO自然進行 FAIL。全E2E・4,000生涯・全機種のPASSとはしない。
-- 状態：`FAIL（再現済み）`／`BLOCKED`／`IMPLEMENTED_UNVERIFIED`／`NOT_IMPLEMENTED`／`DESIGN_PENDING`／`PASS（範囲限定）`。未完了は `[ ]`、報告の範囲内で完了した調査のみ `[x]` とし、完成機能の全面保証を意味しない。
-- 改訂6は使用者の手動置換用の文書更新案だった。後続の承認済みKBO修復と第3段階では、devの実装・テスト・正本更新に伴い本書の該当項目だけを更新する。`main`／本番は変更しない。
+- **最新讀取的 `dev` HEAD：** `aa602b3e39655dc30d1fb6b67099e1ca07a1d0a5`。
+- **遊戲 VERSION：** `1.11.4`。本次只改寫文件，無需升版。
+- ACT-01 已按「現行功能」標準結案，但原始完整操作歷史不足，**沒有精確重現歷史故障路線，也沒有證明當年的根本原因**。
+- ACT-02 的指名後第一選項、listener、單次執行及下一年度推進已通過指定矩陣；不宣稱所有未知路線均驗證。
+- 320px／390px 是瀏覽器手機尺寸模擬，不能替代 iOS Safari／Android Chrome 實機。
+- GitHub Actions 已能執行測試；**Branch Protection／Ruleset 強制合併檢查尚未設定**。
+- 未經使用者明確批准，不得修改 `main`、正式網站、遊戲平衡、RNG、年俸／契約政策或殿堂係數。
 
-## 今回の驗收で完了と判定した項目（証拠付き）
+## 2. 已完成工作（10／10）
 
-各項為其報告範圍內的結案，不表示本輪重新驗收全部功能。TEST-RUNNER-01／TEST-CI-01驗收日2026-10-11，基準 `dee5c07d010a87bc941bb6bce3e78f307a13a066`，見[基盤報告](docs/reviews/TEST_INFRA_ACCEPTANCE.md)。KBO／HOF／TEST-COVERAGE／AUD-01B驗收日2026-10-10；KBO依專項報告，其餘三項依[歷史審查報告](docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md)。
+### 2.1 第一至第四階段
 
-- [x] **TEST-RUNNER-01**【PASS／テスト基盤】61個の現行testsファイルを分類し、`scripts/test.mjs list/quick/full/audit`、個別実行、時間／exit／ログ、FAIL／BLOCKED非零、外部依存・Git基準、明示的証拠再利用を実装。本機quick44／full55入口PASS、audit56 PASS＋10 SKIP（55重用＋1実跑）。人為exit17と依存不足を負面実測。4,000生涯・実機・旧oracle・報告再生成は自動完了扱いにしない。[驗收報告](docs/reviews/TEST_INFRA_ACCEPTANCE.md)。VERSION 1.11.4据え置き。
-- [x] **TEST-CI-01**【PASS／Linux実行】dev push quick、main向PR full、手動quick/full/auditのテスト専用workflowを新設。固定Node／Playwright、Chromium依存、失敗ログartifact、timeout／concurrencyを設定。初回workflow context不正を調査修正後、Ubuntu 24.04で[quick](https://github.com/tt-chin/yakyujinsei/actions/runs/38132643250)／[Draft PR full](https://github.com/tt-chin/yakyujinsei/actions/runs/38132662335)／[手動audit](https://github.com/tt-chin/yakyujinsei/actions/runs/38132971169)全てsuccess。既存publish-site.yml・main・本番設定は不変。合併強制停止のRuleset設定は別承認事項で未実施。
-- [x] **BUG-KBO-RENEWAL-FLOOR**【PASS／v1.11.3修復】KBO候選在倍率適用後先補至既定階層最低年俸，再驗證原package上限；不改政策／倍率／保障年表。`jp3-infielder-01`／IF／`--balanced` 的2049年首次輸入為736萬円、最低800萬円、上限21597.6萬円（非真正衝突），修復後2050年正常退休。失敗前390操作的狀態／選擇／RNG完全一致；投手／野手各一組完整生涯比較一致。新增10組最小回歸及PC／320／390px續約・連打・原生付款去重驗證通過；Preview 47資產與修復SHA一致並通過相同完整E2E。詳見[修復報告](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md)。本項為驗收後另行授權修復；上述v1.11.2報告與件數仍是歷史快照，不改寫為全項PASS。
-- [x] **BUG-HOF-FIRST-BALLOT-LEAGUE**【PASS／v1.11.2】`retireScene` は `firstBallotLeagues` から `legendLeague` を決定。31ケース、CPBL8600／MLB11000境界、本機／Preview HOF E2E通過。**自然跨聯盟初年度入選率は未調査**であり、HOF-NATURAL-SAMPLE-01に残す。
-- [x] **TEST-COVERAGE-01**【PASS／調査範囲】54ファイルの入口／依存／未実行対象を分類。これは100%コードカバレッジや全E2E完了を意味しない。`fixed-seed-regression.json` は未参照の可能性があるが、外部用途未確認のため削除禁止。
-- [x] **AUD-01B**【PASS／指定スナップショット】`origin/main` と公開source repoの108ファイルblob一致、正式URLで108/108期待ファイルのHTTP内容一致。Preview 47 tracked HTML/JS/CSSも受驗devと一致。CDN全ノード・追加URL・将来配信を保証しない。
-- [x] **BUG-ACT-03**【PASS／既結案範圍】驗收日2026-10-11，受驗提交 `0ea291bca48295b9a534e3c09211533fc509b627`／1.11.4。原生契約境界、傷病×満了×降格、自然生涯通過；N/A及未驗證範圍見[契約・年俸報告](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md)。本輪不重做全面調查。
-- [x] **BUG-SAL-01**【PASS／v1.11.4既修復範圍】驗收日2026-10-11，同受驗提交 `0ea291bca48295b9a534e3c09211533fc509b627`。MiLB降格NPB候選年俸表示修復、候選受諾／次年度支付等通過；詳見[契約・年俸報告](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md)。不保證全部seed／實機。
-- [x] **BUG-ACT-01**【PASS／現行功能最終驗收】驗收日2026-10-11，基準 `dee5c07d010a87bc941bb6bce3e78f307a13a066`／1.11.4。投手／野手、PC／320／390px、成績結果／返回／下一操作、快速重複輸入、完整生涯及S／RNG比較通過。**原始路線未精確重現，不能宣稱已證明歷史根因**。結案證據：[最終報告](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)。
-- [x] **BUG-ACT-02**【PASS／指名後第一操作最終驗收】驗收日2026-10-11，同基準 `dee5c07d010a87bc941bb6bce3e78f307a13a066`／1.11.4。P／IF×HS／U／CORP／IND×正式／育成×三尺寸48組；第一選項實際pointer、listener保持、一次執行、拒絕失效callback、契約／付款去重、2034年推進及Preview通過。結案證據：[最終報告](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)。不宣稱所有未知歷史路線已重現。
+- [x] **BUG-KBO-RENEWAL-FLOOR** — KBO 候選年俸下限與 package 上限順序修復；v1.11.3，相關固定 Seed、自然生涯、PC／手機模擬與 Preview 通過。[證據](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md)
+- [x] **BUG-ACT-01** — 「今季の成績を見る」現行操作路線、投手／野手、返回、重複點擊、後續操作及 S／RNG 回歸通過；**原始路線未精確重現**。2026-10-11。[證據](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)
+- [x] **BUG-ACT-02** — P／IF × HS／U／CORP／IND × 正式／育成 × 三尺寸，共 48 組入團驗收；第一選項 DOM、listener、付款去重及下一年度推進通過。2026-10-11。[證據](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)
+- [x] **BUG-ACT-03** — 原生行動／契約邊界、傷病×滿期×降格、自然生涯等已在第三階段驗收。v1.11.4；未驗證範圍以報告為準。[證據](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md)
+- [x] **BUG-SAL-01** — MiLB 降格後 NPB 候選年俸顯示、候選接受與次年支付等驗收；v1.11.4，不保證所有 Seed／實機。[證據](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md)
+- [x] **TEST-RUNNER-01** — `scripts/test.mjs` 的 `list/quick/full/audit`、61 個測試相關檔案分類、FAIL／BLOCKED 非零、證據與重用檢查。2026-10-11。[證據](docs/reviews/TEST_INFRA_ACCEPTANCE.md)
+- [x] **TEST-CI-01** — `dev` push quick、對 `main` PR full、手動 quick/full/audit；Linux 實際 Quick 44／44、Full 55／55、Audit 56／56 自動入口通過，Audit 另有 10 SKIP。2026-10-11。[證據](docs/reviews/TEST_INFRA_ACCEPTANCE.md)
 
-## P0：再現済み不具合・既存重大不具合の再確認
+### 2.2 其他已完成項目
 
-本次 ACT-01／02依明示結案條件通過，已移至完成清單；本欄未完成0項。ACT-03／SAL-01為前階段已結案項，現改列可計數完成項，不改寫其歷史驗收範圍。原操作歷史不足等限制保留於新舊報告，不刪除歷史證據。
+- [x] **BUG-HOF-FIRST-BALLOT-LEAGUE** — 殿堂首輪聯盟判定錯置修復；31 案例及指定邊界通過，**自然跨聯盟入選率仍待研究**。v1.11.2。[歷史稽核](docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md)
+- [x] **TEST-COVERAGE-01** — 當時 54 個測試檔案的入口／依賴盤點已完成；**不是 100% 程式覆蓋率**。後續第四階段已更新為 61 個檔案。[歷史稽核](docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md)
+- [x] **AUD-01B** — 指定快照的正式／Preview 資產一致性比對完成；不保證所有 CDN 節點或未來部署。[歷史稽核](docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md)
 
-## P1：テスト基盤と正本照合（次の開発に先行）
+## 3. 未完成工作（28 項）
 
-- [ ] **AUD-02**【IMPLEMENTED_UNVERIFIED／16節索引作成済み】CURRENT_SPEC 16節のコード／既存テスト索引は報告第8節に作成済み。全数値・DOM分岐・跨機能相互作用までの完全検収は未完了。実装済み・差異・未検証を区別。差異を自動修正対象としない。
-- [ ] **AUD-03B**【IMPLEMENTED_UNVERIFIED／6組browser PASS】pool3・dice[2,4,6] × PC/320/390 の6組でUndo／reset、carry／touchedKeys／残点／骰子／RNGを実測PASS。Undoで欠損carryキーが0として追加される構造差（`{sta:0}`→`{sta:0,vel:0}`）を確認。数値等価、全resetは構造一致。combo／late解放、cap80／残0、確定特性への影響と専用再現E2Eは未完了。
-- [ ] **AUD-04**【IMPLEMENTED_UNVERIFIED】封存設計の数値表・イベント・API と現行コードを照合し、現在も有効な情報だけ CURRENT_SPEC へ移管。旧仕様の自動復活禁止。
-- [ ] **AUD-05**【IMPLEMENTED_UNVERIFIED】封存 AGENTS 各版の差分確認。旧ルールの無条件適用禁止。
-- [ ] **REFACTOR-AUDIT-01**【IMPLEMENTED_UNVERIFIED／初期風險盤點済み】`game.js` 約3100行、後段同名関数override、LEGACY参照、契約／UI／S/RNGの高リスクを初期調査済み。全S欄位読書図、AST呼出図、動的可達性、RNG消費点、モジュール境界を追加調査。優先度・依存・テスト不足・段階的移行計画を作る。TEST-RUNNER と AUD-02 を踏まえ、承認前に大規模リファクタリングしない。
+### 3.1 P1 — 規格與回歸驗證（5 項）
 
-## P1：退休・殿堂評価の検証と設計判断
+- [ ] **AUD-03B** — `IMPLEMENTED_UNVERIFIED`。能力分配 Undo／reset 的 pool3、dice[2,4,6] × PC／320／390 六組已通過。Undo 可能把缺少的 carry key 補成 0（如 `{sta:0}` → `{sta:0,vel:0}`），數值等價但結構不同。尚缺 combo／late 解鎖、cap80、剩餘點數 0、確定特性影響及專用 E2E。**建議優先處理**。
+- [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。CURRENT_SPEC 16 節已有程式／測試索引，尚缺全部數值、DOM 分支與跨功能交互的完整對照；發現差異先記錄，**不得直接修正遊戲**。
+- [ ] **REFACTOR-AUDIT-01** — `IMPLEMENTED_UNVERIFIED`。`game.js` 約 3,100 行，需補全狀態 `S` 讀寫圖、AST 呼叫圖、RNG 消耗點、同名函式覆寫、LEGACY 可達性、模組邊界與分階段風險。**只調查，未批准大規模重構**。
+- [ ] **AUD-04** — `IMPLEMENTED_UNVERIFIED`。對照封存設計的數值表、事件、API 與現行程式，只把仍有效的資料移入 CURRENT_SPEC；禁止自動恢復舊規格。
+- [ ] **AUD-05** — `IMPLEMENTED_UNVERIFIED`。比較封存 AGENTS 各版與現行規則，舊規則不得無條件重新套用。
 
-- [ ] **HOF-NATURAL-SAMPLE-01**【IMPLEMENTED_UNVERIFIED／追加サンプル待ち】v1.11.1 監査は 160 固定ケース＋20 特例＋87 境界／現状特性ケース、実ゲーム 50 完了生涯（25 seed×2戦略）。実ゲーム一軍到達 KBO/MLB がゼロで、4リーグ比較・4,000有効生涯の受入は未達。実際に到達する経路／戦略を整備し、サンプルの偏り・重複・失敗・再現性を報告。調査中にゲーム規則は変更しない。
-- [ ] **HOF-BUCKET-DECISION-01**【仕様待ち】NPB育成／二軍／一軍、CPBL二軍／一軍、KBO二軍／一軍の既存リーグ合算を殿堂評価でも維持するか、一軍限定／別ウェイトにするかを決定。MiLB は MLB に合算しない現行仕様を尊重。判断前にスコア変更禁止。
-- [ ] **HOF-PITCHER-BALANCE-01**【仕様待ち】投手の HLD・ERA・WHIP・L が基本点に直接反映されない現状、SP/MR/CL の分布を実際の到達生涯で検証。A/B/C 候補は監査上の仮説で採用済みではない。係数変更は別承認。
-- [ ] **HOF-HONOR-POLICY-01**【仕様待ち】MVP／最優秀投手賞で i≤1、部門賞・守備賞で i≤2 の保証が投票候補まで保証する仕様を維持するか判断。国際実績の NPB 限定加点、フランチャイズ全リーグ加点も含める。現状仕様をバグと断定しない。
-- [ ] **HOF-DISPLAY-ROUND-01**【DESIGN_PENDING／境界再現済み】表示丸めで閾値未達の raw score が閾値以上に見えるケース（例：7999.8→8000）について UI 誤解の有無を確認。判定は未丸め値のまま維持するか、表示注記を加えるか別途決定。
-- [ ] **HOF-VOTE-STORY-01**【DESIGN_PENDING】現行 i=0 の殿堂入りは確定的な投票演出、i=1 は候補止まり。実確率投票と誤認される表示・説明の有無を確認。確率化は未承認。
+### 3.2 P1 — 退休與殿堂研究、決策（6 項）
 
-## P1：端末・文案の未検証
+- [ ] **HOF-NATURAL-SAMPLE-01** — `IMPLEMENTED_UNVERIFIED`。現有固定案例及 50 條完成生涯，但自然生涯沒有足夠到達 KBO／MLB 一軍的樣本；四聯盟比較與 4,000 有效生涯目標尚未完成。先改進研究路線與樣本品質，**不修改殿堂規則**。
+- [ ] **HOF-BUCKET-DECISION-01** — `DESIGN_PENDING`。決定 NPB／CPBL／KBO 的育成、二軍、一軍成績在殿堂評價中如何合算；MiLB 目前不併入 MLB。
+- [ ] **HOF-PITCHER-BALANCE-01** — `DESIGN_PENDING`。以自然生涯評估 SP／MR／CL 與 HLD、ERA、WHIP、L 等投手指標；A／B／C 方案仍是假說，係數未批准。
+- [ ] **HOF-HONOR-POLICY-01** — `DESIGN_PENDING`。確認 MVP、最優秀投手、部門／守備獎對殿堂投票候選的保證規則，以及國際／加盟球團加分範圍。
+- [ ] **HOF-DISPLAY-ROUND-01** — `DESIGN_PENDING`。如 raw 7999.8 顯示 8000，是否造成門檻誤解；是否補註或調整顯示需決策，未批准修改判定。
+- [ ] **HOF-VOTE-STORY-01** — `DESIGN_PENDING`。檢查 i=0 確定性殿堂演出、i=1 候選止步的說明是否容易被誤認為隨機投票；未批准概率化。
 
-- [ ] **EVT-1102-ANDROID**【BLOCKED／Android実機なし】年度イベント去重・途中 seed 共有を Android Chrome 実機で確認。既存 PC・iPhone の検証証拠は保持。
-- [ ] **UI-17-DEVICE**【BLOCKED／iOS・Android実機なし】表示設定・イベントの iOS Safari／Android Chrome 実機検証。既に公開済みの機能を未実装扱いしない。
-- [ ] **SHARE-111-DEVICE**【BLOCKED／原生share sheet実機なし】v1.11.1 の原生 URL 共有・取消・PNG 主題同期・画像共有／保存を iPhone Safari、Android Chrome、PC で検証。CURRENT_SPEC 第16節・CHANGELOG 1.11.1 に実装記録あり。
-- [ ] **COPY-01**【IMPLEMENTED_UNVERIFIED】全到達可能な日本語文案を再点検。過去の92イベント文案置換（v1.8.2）と区別し、誤字・自然さ・野球用語・表示箇所を検証。既存翻訳を無断で全面置換しない。
+### 3.3 P1 — 實機與日文文案（4 項）
 
-## P2：個別仕様の承認待ち・将来候補
+- [ ] **EVT-1102-ANDROID** — `BLOCKED`。Android Chrome 實機的年度事件去重、途中 Seed 分享驗收。
+- [ ] **UI-17-DEVICE** — `BLOCKED`。iOS Safari／Android Chrome 實機的顯示設定與事件驗收；功能已公開，**不是未實作**。
+- [ ] **SHARE-111-DEVICE** — `BLOCKED`。iPhone／Android／PC 的原生 share sheet、取消、PNG 主題、圖片分享與儲存驗收。
+- [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。重新檢查所有可到達的日文文案、野球術語與畫面位置；與 v1.8.2 的 92 事件翻譯替換分開管理，不擅自全面重翻。
 
-- [ ] **OVR-01**【仕様待ち】野手スタミナ5%案。現行 `round(base)−イップス補正` と提案 `round(base×0.95+sta×0.05)−補正` を比較し、採用するか承認を得る。投手・守備式・育成コストを変更しない。採用時は固定 seed と RNG を検証。
-- [ ] **TRAIT-PITCHER-TC**【承認済み保留】投手三冠王。単項の最多勝／最優秀防御率等の制度設計が先。最優秀投手賞で代用しない。
-- [ ] **TRAIT-NITENICHI**【承認済み保留】二天一流。未承認の二刀流制度・投手三冠制度が前提。勝手に実装しない。
-- [ ] **TRAIT-CHAMPIONMAKER**【承認済み保留】優勝請負人。累計5冠、集計範囲、職業／国際優勝率＋5ポイント、RNG 影響の設計・承認待ち。v1.11.0 の既存優勝処理とは区別。
-- [ ] **CONTRACT-LEGACY-01**【重構候補・要調査】到達不能とされる旧 `makeOffers`／`pickOfferUI`／市場定義の参照関係を検証し、安全な範囲で削除・整理するか決定。固定 seed と契約回帰なしに削除しない。
-- [ ] **CONTRACT-ASIA-01**【未実装・仕様待ち】KBO アジア枠・球団全体外国人予算。現行 FOREIGN_STANDARD とは別制度。
-- [ ] **INJ-UI-01**【候補】一般故障リスク内訳の可視化。計算と表示の単一データ源を維持。
-- [ ] **PLY-01**【候補】背番号・年度履歴。00、移籍、重複・変更規則の決定待ち。
-- [ ] **INT-01**【候補】大会別国際履歴。既存結果を再利用し、抽選を増やさない。
-- [ ] **EVT-01**【候補】イベント分類表示。抽選候補・順序は維持。
-- [ ] **UI-06**【候補】初心者向けゲーム内説明。
-- [ ] **UI-07**【候補】ゲーム内更新履歴。CHANGELOG を正本とする。
-- [ ] **PLY-02**【候補】永久欠番。背番号履歴が前提。組織・年数・成績・RNG 方針の承認待ち。
+### 3.4 P2 — 規格待決與保留（6 項）
 
-上記の過去「候補版」1.9.0～1.13.0 は実装予約でも現行版号でもない。採用時は最新正式版を基準に別途版号を決める。
+- [ ] **OVR-01** — `DESIGN_PENDING`。野手 OVR 加入 stamina 5% 的提案，先比較現行公式與提案，批准後才能修改。
+- [ ] **TRAIT-PITCHER-TC** — `承認済み保留`。投手三冠王，須先決定單項投手獎制度；不能以最優秀投手獎代替。
+- [ ] **TRAIT-NITENICHI** — `承認済み保留`。二天一流，須先有獲批准的二刀流及投手三冠制度。
+- [ ] **TRAIT-CHAMPIONMAKER** — `承認済み保留`。優勝請負人，待累計 5 冠、計算範圍、勝率加成及 RNG 政策核准。
+- [ ] **CONTRACT-LEGACY-01** — `重構候補・要調査`。確認舊 `makeOffers`／`pickOfferUI`／市場定義是否真正不可達；未驗證固定 Seed、契約回歸前不得刪除。
+- [ ] **CONTRACT-ASIA-01** — `未実装・仕様待ち`。KBO 亞洲名額及球團整體外國人預算，與現有 `FOREIGN_STANDARD` 不同。
 
-## 非採用・自動復活禁止
+### 3.5 P2 — 未來功能候補（7 項）
 
-キャリア途中保存・復元、旧エンジン切替、`rv/rules` URL、参考作品の給与システム丸ごと移植、未承認の二刀流、音声／サーバー生成。1.5.2 の3メニューを旧4メニューへ戻さない。旧テーマ／PCモード・旧給与評価へ戻さない。分析上の HOF A/B/C 候補を自動採用しない。
+- [ ] **INJ-UI-01** — 一般受傷風險細項顯示；計算與 UI 維持單一資料來源。
+- [ ] **PLY-01** — 背號與年度履歷；需先決定 00、轉隊、重複及改號規則。
+- [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。
+- [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。
+- [ ] **UI-06** — 新手遊戲內說明。
+- [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
+- [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-## 推奨実施順序（仕様変更は各タスクで承認）
+> **未完成項目核算：** 5（規格／回歸）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**28**。
 
-1. **P0 結案證據を維持**：KBO初回入力分析・独立修復はv1.11.3で完了。ACT-01／02は本次現行機能驗收で結案；原操作歷史が将来提供された場合は新証拠として調査する。元路線未精確重現の制約は報告に永久保持。修正と大規模重構を同時に行わない。
-2. **P1 テスト基盤を維持**：TEST-RUNNER-01／TEST-CI-01は専項驗收済み。現行61ファイルの登録・quick/full/auditとLinux CIを維持し、新入口を未分類のまま放置しない。旧oracleの適用版・負面証拠を保持し、次の能力／跨機能回帰へ進む。
-3. **P1 契約／能力回帰**：既存の全休×満了×降格、海外各階層契約表示・次年度支払、指名直後DOM／listener専用回帰を維持。次はAUD-03BのUndo carryキー／combo／late等の未検証範囲を補強。
-4. **P1 AUD-02／AUD-04／AUD-05 と REFACTOR-AUDIT-01**：全S読書・AST呼出・RNG消費・旧コード到達性を読み取り専用で補完。小規模重構はテスト基盤が安定してから。
-5. **P1 HOF-NATURAL-SAMPLE-01**：四聯盟と投手SP/MR/CLの有効な自然到達サンプルを拡充。得られたデータに基づき仕様判断し、無断で係数を変更しない。
-6. **P1 実機／文案、P2 新機能**：実機は使用者等の端末で最終驗收。dev→Preview→使用者承認→mainを維持。
+## 4. 建議下一階段順序（非自動開發授權）
 
-## 今回の驗收で追加確認した技術的な制約
+1. **AUD-03B**：補齊能力分配 Undo／reset、carry、combo／late、cap80 等測試，釐清結構差異是否有實際影響。
+2. **AUD-02 ＋ REFACTOR-AUDIT-01**：現行規格對照與唯讀架構風險盤點，列出必須修正／建議修正／可延後事項；**不直接重構**。
+3. **AUD-04 ＋ AUD-05**：整理封存文件與現行正本之間尚未核對的部分。
+4. **HOF-NATURAL-SAMPLE-01**：補足自然到達四聯盟的研究樣本，之後再討論殿堂規則決策。
+5. **實機與文案驗收**：在可取得實機時執行；P2 功能候補逐案另行批准。
 
-- 33個 `.test.mjs` と5個standaloneはPASS。ただしE2Eは部分実施で、`event-system`、`draft-income`、`display-preferences`、`salary-history`、`trait-system` の5入口を未実施。`retirement-hof-pilot` 再採樣と分析／報告生成器も未実行。`full` 完了とは扱わない。
-- 上記は初回監査の履歴。後続のdraft-income専項で、旧first-row戦略の未入団退職と育成支度金を欠いた所得断言を調査・テスト修正。本機quick、Preview正式／育成入団、三尺寸負面退職、retirement-onlyと関連契約テストの限定結果は[専項報告](docs/reviews/DRAFT_INCOME_E2E_FIX_AUDIT.md)を参照。他の未実施入口を完了扱いにせず、ゲーム／政策／VERSIONは変更しない。
-- 第4段階で現行61ファイルを再盤點し全full予定入口を実行。旧版との全量S比較3件は初期欄位差でFAILのまま保存し、現行規格のfixture／UIと最新正式基準の生涯比較を分けて驗收。最新の実行範囲・件数は[基盤驗收報告](docs/reviews/TEST_INFRA_ACCEPTANCE.md)を参照し、上記54ファイルの旧監査スナップショットは書き換えない。
-- HOF固定seedで `yakyo-test-001/P`（RNG 652）と `jp3-infielder-01/IF`（RNG 549）は旧基準と現行の最終S／選択履歴／RNG一致。ただし**選択戦略が違うため**当時のbalanced KBO FAILを否定しない。v1.11.3の別回帰でbalancedも修復・正常退休まで確認した。
-- 原生共有はmockでの成功／取消／失敗、四主題PNGがPASS。OS共有UI・実機ダウンロードは未驗收。
-- Codexの監査報告は証拠資料であり、各タスクを終える際は**最新HEADで再検証**する。
+### 4.1 已建立的測試基礎
 
-## 各タスク共通の完了条件
+- 統一 Runner：`node scripts/test.mjs list|quick|full|audit`。
+- GitHub Actions：`dev` push quick、對 `main` PR full、手動指定 profile。
+- 第四階段 Linux 證據：[Quick](https://github.com/tt-chin/yakyujinsei/actions/runs/38132643250)／[Full](https://github.com/tt-chin/yakyujinsei/actions/runs/38132662335)／[Audit](https://github.com/tt-chin/yakyujinsei/actions/runs/38132971169)。
+- Audit 的 10 項 SKIP 包含人工／研究／實機／Cloudflare 等，不得視為 PASS。4,000 生涯研究尚未完成。
+- ACT 最終驗收：Quick 44 PASS、ACT 專用 Full 入口 PASS（48 入團 fixture、6 pointer 案例、16 次完整生涯）、Preview 54 組 PASS；詳見[報告](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)。
 
-1. 最新 `dev` SHA・VERSION、対象／対象外、仕様とコードの差分を記録。
-2. 原因と再現手順を先に確定。既存実装を重複実装しない。
-3. 投手／野手、固定 seed＋選択履歴、RNG 呼出順・消費数を比較。表示のみの変更では人生結果を変えない。
-4. 該当単体／統合／E2E と PC／モバイルの結果、未実行項目、失敗原因を報告。テストを実行せず PASS と書かない。
-5. ゲーム本体変更時のみ VERSION と CHANGELOG を同一タスクで更新。ドキュメント／テストだけなら原則バージョン据え置き。
-6. `dev` の検証と `main`／本番反映を区別し、明示承認なしに `main` を変更しない。
-7. 完了証拠（SHA、関連コード／テスト、再現手順、検証結果）を残し、CURRENT_SPEC と BACKLOG を同期する。
+## 5. 歷史快照與證據索引
+
+### 5.1 v1.11.2 歷史稽核（2026-10-10；不可視為最新狀態）
+
+| 欄位 | 當時資料 |
+|---|---|
+| `dev` | `a4aa83c48a48a1567bf3b14ceea6e4c76c87b76b` |
+| `main` | `421e036bb206a11828a696a4f8b0d3909385441f` |
+| VERSION | `dev` 1.11.2／`main` 1.10.2 |
+| 38 ID 舊判定 | PASS 3、FAIL 1、IMPLEMENTED_UNVERIFIED 10、NOT_IMPLEMENTED 14、BLOCKED 4、DESIGN_PENDING 6 |
+| 當時測試檔案 | 54（33 `.test.mjs`、5 standalone、11 E2E、5 support／分析／fixture） |
+| 當時限制 | 部分 E2E 未執行、KBO 自然生涯 FAIL、實機／4,000 生涯未驗收 |
+
+**上述是原始歷史資料，不能用來推翻後續 KBO 修復、第三階段驗收或第四階段 Linux CI 結果。** 舊報告：[BACKLOG_ACCEPTANCE_AUDIT.md](docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md)。
+
+### 5.2 後續專項驗收
+
+- [KBO 續約修復](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md)：v1.11.3。
+- [契約／年俸驗收](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md)：v1.11.4。
+- [Draft 收入測試修正](docs/reviews/DRAFT_INCOME_E2E_FIX_AUDIT.md)：測試 fixture／斷言與已批准付款政策對齊，未修改遊戲規則。
+- [統一 Runner／Linux CI](docs/reviews/TEST_INFRA_ACCEPTANCE.md)：測試基礎驗收，遊戲 VERSION 未變。
+- [ACT-01／02 最終驗收](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)：現行功能結案，歷史原路線限制保留。
+
+### 5.3 不得混淆的既有技術限制
+
+- 舊全量 S 比較有 3 個歷史 oracle 因現行核准新增欄位而不適用，原失敗證據保留；現行回歸使用新基準的完整生涯／RNG 比較，不得把舊失敗隱藏成 PASS。
+- Draft-income 曾有測試策略造成自然未入團退休及收入斷言缺少育成支度金的問題，後續已在專項報告中以測試修正處理，不是新增遊戲薪資政策。
+- 同 Seed 若使用不同的能力配分／選擇策略，不能直接比較最終 S 或 RNG。
+- 原生分享 mock 測試通過不代表作業系統 share sheet 實機已通過。
+- Codex 報告是驗收證據；新任務仍須在最新 HEAD 重新確認相關程式與測試。
+
+## 6. 非採用／禁止自動恢復的舊功能
+
+以下不屬於待辦，也**不得因清理舊程式而重新啟用**：
+
+- 生涯途中保存／讀取與恢復。
+- 舊引擎切換、`rv`／`rules` URL 或舊版重播引擎。
+- 直接移植參考作品整套薪資制度。
+- 未批准的二刀流、語音或伺服器生成功能。
+- 把 1.5.2 的三選單恢復成舊四選單。
+- 恢復舊主題／PC 模式、舊薪資評價。
+- 未批准就套用 HOF A／B／C 假說係數。
+
+過去提案中的 1.9.0～1.13.0 版本號不是實作承諾，也不是目前正式版本；新功能採納時另依當時最新版本決定版號。
+
+## 7. 所有任務的共同驗收與交付規則
+
+1. 開始前確認最新 `origin/dev` SHA、VERSION、`AGENTS.md`、`CURRENT_SPEC.md`、`CHANGELOG.md`、本 BACKLOG 與指定報告。
+2. 先記錄現況、重現步驟、原因與驗收範圍，避免重複實作已存在的功能。
+3. 遊戲邏輯變更必須比較投手／野手固定 Seed、完整選擇歷史、狀態 `S` 與 RNG 消耗順序／次數；不得為通過測試任意改預期值或政策。
+4. 使用相關單元、整合、E2E 與 Runner quick／必要時 full；記錄 PASS／FAIL／SKIP／BLOCKED、命令、環境、日誌與未測範圍。手機模擬不等於實機。
+5. **僅遊戲本體變更**才依規則同步更新 VERSION 與 CHANGELOG；測試、文件、開發工具變更原則上不升版。
+6. 先在 `dev` 修改、測試並確認 Cloudflare Preview；**未經使用者明確同意不得合併或 push 到 `main`**，也不得修改正式發布 Workflow。
+7. 結案時更新本檔及對應驗收報告，保留 ID、受驗 SHA、結果、限制與證據；歷史快照不可覆寫為新結論。
+
+---
+
+**文件性質：** 本版是根據 2026-10-11 `dev` HEAD `aa602b3` 的 BACKLOG 重新編排，沒有修改程式碼、正式規格或歷史驗收報告；GitHub 原檔尚未更新。
