@@ -1,8 +1,25 @@
 # 待辦清單 / 実装・照合バックログ
 
-整理日：2026-10-11。文書改訂：8（統一Runner・Linux CI驗收反映）。未完了事項の唯一の正本。現行仕様：[CURRENT_SPEC.md](CURRENT_SPEC.md)、完了履歴：[CHANGELOG.md](CHANGELOG.md)、開発規則：[AGENTS.md](AGENTS.md)。
+整理日：2026-10-11。文書改訂：9（ACT-01／02最終驗收・最新状態索引）。未完了事項の唯一の正本。現行仕様：[CURRENT_SPEC.md](CURRENT_SPEC.md)、完了履歴：[CHANGELOG.md](CHANGELOG.md)、開発規則：[AGENTS.md](AGENTS.md)。
 
-## 0. 調査基準と状態の定義
+## 最新驗收狀態
+
+基準：最新 `origin/dev`（本次 fetch 時）**`dee5c07d010a87bc941bb6bce3e78f307a13a066`**、VERSION **1.11.4**、驗收日期 **2026-10-11**。[ACT 最終驗收報告](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)。受驗工作樹另含本次測試補強；交付提交只改測試及文件，不改遊戲。`origin/main` 為 `e886e84ca08c6c185406cac9d6f3c4376277061a`，本次未修改。
+
+以下按本文件目前正式 checkbox ID 重新計數，索引中的 ID 不重複計算。原段落已結案的 ACT-03／SAL-01轉列完成項；合計 **38 ID＝已完成10＋未完成28**，不是沿用 v1.11.2 的分類統計。未完成分類互斥，其他項保留原標籤，不在本輪擅自改變狀態。
+
+- **已完成10**：TEST-RUNNER-01、TEST-CI-01、BUG-KBO-RENEWAL-FLOOR、BUG-HOF-FIRST-BALLOT-LEAGUE、TEST-COVERAGE-01、AUD-01B、BUG-ACT-03、BUG-SAL-01、BUG-ACT-01、BUG-ACT-02。個別驗收日期、範圍與報告連結見下方完成清單。
+- **未完成28**：下述3＋7＋6＋12；P0 未完成 **0**。不代表全部遊戲情境已驗證。
+- **BLOCKED 3**：EVT-1102-ANDROID、UI-17-DEVICE、SHARE-111-DEVICE（實機／原生分享環境不足）。
+- **IMPLEMENTED_UNVERIFIED 7**：AUD-02、AUD-03B、AUD-04、AUD-05、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01。
+- **DESIGN_PENDING 6**：HOF-BUCKET-DECISION-01、HOF-PITCHER-BALANCE-01、HOF-HONOR-POLICY-01、HOF-DISPLAY-ROUND-01、HOF-VOTE-STORY-01、OVR-01。此統計將原標籤「仕様待ち」歸入設計待決，不改現行規則。
+- **其他候補／保留／混合狀態12**：TRAIT-PITCHER-TC、TRAIT-NITENICHI、TRAIT-CHAMPIONMAKER（承認済み保留）；CONTRACT-LEGACY-01（重構候補・要調査）；CONTRACT-ASIA-01（未実装・仕様待ち）；INJ-UI-01、PLY-01、INT-01、EVT-01、UI-06、UI-07、PLY-02（候補）。
+
+本輪 BUG-ACT-01 為「現行功能驗收 PASS」；**原始完整操作歷史未取得，原故障路線未精確重現、根因未證明**。依本次明示結案標準移出未完成清單，限制永久保留於報告。BUG-ACT-02 的指名後第一選項 DOM、可見／可點擊、listener、單次執行、下一年度推進均通過。下一階段優先 AUD-03B 與 AUD-02／重構風險調查；實機項維持 BLOCKED，殿堂政策等待決策。
+
+## 歷史快照：v1.11.2 調査基準と状態の定義（原第0章）
+
+本節數字及原判定只屬 2026-10-10 的歷史快照，不是最新進度；保留原報告數據，不回寫為本次結果。
 
 - 対象：`tt-chin/yakyujinsei` `dev`、**受驗 HEAD `a4aa83c48a48a1567bf3b14ceea6e4c76c87b76b`**、VERSION **`1.11.2`**。`main` は `421e036bb206a11828a696a4f8b0d3909385441f`、VERSION `1.10.2`。受驗時の基準であり、後続変更時は再取得する。
 - 改訂6の一次驗收證據：`docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md`（2026-10-10、Codex報告。使用者提供の同名調査報告を根拠とする）。`CURRENT_SPEC.md`、`CHANGELOG.md`、`AGENTS.md` を併用。**改訂6の文書整理ではテストを独立再実行していない**。後続のKBO修復と第3段階の実行結果は各専項報告で管理し、旧調査件数へ混ぜない。
@@ -14,23 +31,26 @@
 
 ## 今回の驗收で完了と判定した項目（証拠付き）
 
+各項為其報告範圍內的結案，不表示本輪重新驗收全部功能。TEST-RUNNER-01／TEST-CI-01驗收日2026-10-11，基準 `dee5c07d010a87bc941bb6bce3e78f307a13a066`，見[基盤報告](docs/reviews/TEST_INFRA_ACCEPTANCE.md)。KBO／HOF／TEST-COVERAGE／AUD-01B驗收日2026-10-10；KBO依專項報告，其餘三項依[歷史審查報告](docs/reviews/BACKLOG_ACCEPTANCE_AUDIT.md)。
+
 - [x] **TEST-RUNNER-01**【PASS／テスト基盤】61個の現行testsファイルを分類し、`scripts/test.mjs list/quick/full/audit`、個別実行、時間／exit／ログ、FAIL／BLOCKED非零、外部依存・Git基準、明示的証拠再利用を実装。本機quick44／full55入口PASS、audit56 PASS＋10 SKIP（55重用＋1実跑）。人為exit17と依存不足を負面実測。4,000生涯・実機・旧oracle・報告再生成は自動完了扱いにしない。[驗收報告](docs/reviews/TEST_INFRA_ACCEPTANCE.md)。VERSION 1.11.4据え置き。
 - [x] **TEST-CI-01**【PASS／Linux実行】dev push quick、main向PR full、手動quick/full/auditのテスト専用workflowを新設。固定Node／Playwright、Chromium依存、失敗ログartifact、timeout／concurrencyを設定。初回workflow context不正を調査修正後、Ubuntu 24.04で[quick](https://github.com/tt-chin/yakyujinsei/actions/runs/38132643250)／[Draft PR full](https://github.com/tt-chin/yakyujinsei/actions/runs/38132662335)／[手動audit](https://github.com/tt-chin/yakyujinsei/actions/runs/38132971169)全てsuccess。既存publish-site.yml・main・本番設定は不変。合併強制停止のRuleset設定は別承認事項で未実施。
 - [x] **BUG-KBO-RENEWAL-FLOOR**【PASS／v1.11.3修復】KBO候選在倍率適用後先補至既定階層最低年俸，再驗證原package上限；不改政策／倍率／保障年表。`jp3-infielder-01`／IF／`--balanced` 的2049年首次輸入為736萬円、最低800萬円、上限21597.6萬円（非真正衝突），修復後2050年正常退休。失敗前390操作的狀態／選擇／RNG完全一致；投手／野手各一組完整生涯比較一致。新增10組最小回歸及PC／320／390px續約・連打・原生付款去重驗證通過；Preview 47資產與修復SHA一致並通過相同完整E2E。詳見[修復報告](docs/reviews/KBO_RENEWAL_FLOOR_FIX.md)。本項為驗收後另行授權修復；上述v1.11.2報告與件數仍是歷史快照，不改寫為全項PASS。
 - [x] **BUG-HOF-FIRST-BALLOT-LEAGUE**【PASS／v1.11.2】`retireScene` は `firstBallotLeagues` から `legendLeague` を決定。31ケース、CPBL8600／MLB11000境界、本機／Preview HOF E2E通過。**自然跨聯盟初年度入選率は未調査**であり、HOF-NATURAL-SAMPLE-01に残す。
 - [x] **TEST-COVERAGE-01**【PASS／調査範囲】54ファイルの入口／依存／未実行対象を分類。これは100%コードカバレッジや全E2E完了を意味しない。`fixed-seed-regression.json` は未参照の可能性があるが、外部用途未確認のため削除禁止。
 - [x] **AUD-01B**【PASS／指定スナップショット】`origin/main` と公開source repoの108ファイルblob一致、正式URLで108/108期待ファイルのHTTP内容一致。Preview 47 tracked HTML/JS/CSSも受驗devと一致。CDN全ノード・追加URL・将来配信を保証しない。
+- [x] **BUG-ACT-03**【PASS／既結案範圍】驗收日2026-10-11，受驗提交 `0ea291bca48295b9a534e3c09211533fc509b627`／1.11.4。原生契約境界、傷病×満了×降格、自然生涯通過；N/A及未驗證範圍見[契約・年俸報告](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md)。本輪不重做全面調查。
+- [x] **BUG-SAL-01**【PASS／v1.11.4既修復範圍】驗收日2026-10-11，同受驗提交 `0ea291bca48295b9a534e3c09211533fc509b627`。MiLB降格NPB候選年俸表示修復、候選受諾／次年度支付等通過；詳見[契約・年俸報告](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md)。不保證全部seed／實機。
+- [x] **BUG-ACT-01**【PASS／現行功能最終驗收】驗收日2026-10-11，基準 `dee5c07d010a87bc941bb6bce3e78f307a13a066`／1.11.4。投手／野手、PC／320／390px、成績結果／返回／下一操作、快速重複輸入、完整生涯及S／RNG比較通過。**原始路線未精確重現，不能宣稱已證明歷史根因**。結案證據：[最終報告](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)。
+- [x] **BUG-ACT-02**【PASS／指名後第一操作最終驗收】驗收日2026-10-11，同基準 `dee5c07d010a87bc941bb6bce3e78f307a13a066`／1.11.4。P／IF×HS／U／CORP／IND×正式／育成×三尺寸48組；第一選項實際pointer、listener保持、一次執行、拒絕失效callback、契約／付款去重、2034年推進及Preview通過。結案證據：[最終報告](docs/reviews/ACT_01_02_FINAL_ACCEPTANCE.md)。不宣稱所有未知歷史路線已重現。
 
 ## P0：再現済み不具合・既存重大不具合の再確認
 
-- [ ] **BUG-ACT-01**【BLOCKED／原操作歴不足】「今季の成績を見る」無反応。過去報告 seed `k55l221a`（投手）、`oscuxs1w`。使用者から修正済みとの報告あり。Codexは原2seedの操作歴不足で再現未実施（`k55l221a/P`、`oscuxs1w`位置不明）。**未修正と断定せず**最新ブラウザ／モバイルで選択履歴を含めて再検証し、通過すれば完了証拠を記録して閉じる。
-- [ ] **BUG-ACT-02**【IMPLEMENTED_UNVERIFIED】指名入団直後の選択消失。choice 世代ロック、nested action、旧 DOM、例外復旧、契約生成を確認。Preview三尺寸の入団・収入表示と別ルート全生涯はPASS。ただし指名直後の次DOM/listener専用断言と原報告の選択歴が不足。過去修正済みの可能性があるため重複実装禁止。
-
-第3段階のBUG-ACT-03／BUG-SAL-01は、原生契約／年俸境界・傷病×満了×降格・候補受諾／次年実支払・自然生涯の驗收と、v1.11.4のMiLB降格NPB候補表示修正により本未完了欄から除去。対象・N/A・実機等の未検証範囲は[契約・年俸驗收報告](docs/reviews/CONTRACT_SALARY_ACCEPTANCE_AUDIT.md)に明記し、全seed／全端末の保証とはしない。前2段階は使用者確認済みで、本輪は関連回帰のみ。上部の旧調査基準／件数とACT-01／02の旧記録を本輪の全面再調査結果へ書き換えない。
+本次 ACT-01／02依明示結案條件通過，已移至完成清單；本欄未完成0項。ACT-03／SAL-01為前階段已結案項，現改列可計數完成項，不改寫其歷史驗收範圍。原操作歷史不足等限制保留於新舊報告，不刪除歷史證據。
 
 ## P1：テスト基盤と正本照合（次の開発に先行）
 
-- [ ] - [ ] - [ ] **AUD-02**【IMPLEMENTED_UNVERIFIED／16節索引作成済み】CURRENT_SPEC 16節のコード／既存テスト索引は報告第8節に作成済み。全数値・DOM分岐・跨機能相互作用までの完全検収は未完了。実装済み・差異・未検証を区別。差異を自動修正対象としない。
+- [ ] **AUD-02**【IMPLEMENTED_UNVERIFIED／16節索引作成済み】CURRENT_SPEC 16節のコード／既存テスト索引は報告第8節に作成済み。全数値・DOM分岐・跨機能相互作用までの完全検収は未完了。実装済み・差異・未検証を区別。差異を自動修正対象としない。
 - [ ] **AUD-03B**【IMPLEMENTED_UNVERIFIED／6組browser PASS】pool3・dice[2,4,6] × PC/320/390 の6組でUndo／reset、carry／touchedKeys／残点／骰子／RNGを実測PASS。Undoで欠損carryキーが0として追加される構造差（`{sta:0}`→`{sta:0,vel:0}`）を確認。数値等価、全resetは構造一致。combo／late解放、cap80／残0、確定特性への影響と専用再現E2Eは未完了。
 - [ ] **AUD-04**【IMPLEMENTED_UNVERIFIED】封存設計の数値表・イベント・API と現行コードを照合し、現在も有効な情報だけ CURRENT_SPEC へ移管。旧仕様の自動復活禁止。
 - [ ] **AUD-05**【IMPLEMENTED_UNVERIFIED】封存 AGENTS 各版の差分確認。旧ルールの無条件適用禁止。
@@ -76,9 +96,9 @@
 
 ## 推奨実施順序（仕様変更は各タスクで承認）
 
-1. **P0 既存重大不具合の再確認**：KBO初回入力分析・独立修復はv1.11.3で完了。BUG-ACT-01/02の元選択履歴を収集。修正と大規模重構を同時に行わない。
+1. **P0 結案證據を維持**：KBO初回入力分析・独立修復はv1.11.3で完了。ACT-01／02は本次現行機能驗收で結案；原操作歷史が将来提供された場合は新証拠として調査する。元路線未精確重現の制約は報告に永久保持。修正と大規模重構を同時に行わない。
 2. **P1 テスト基盤を維持**：TEST-RUNNER-01／TEST-CI-01は専項驗收済み。現行61ファイルの登録・quick/full/auditとLinux CIを維持し、新入口を未分類のまま放置しない。旧oracleの適用版・負面証拠を保持し、次の能力／跨機能回帰へ進む。
-3. **P1 契約／能力回帰**：全休×満了×降格、海外各階層の契約表示・次年度支払、Undo carryキー／combo／late、指名直後DOMの専用テストを補強。
+3. **P1 契約／能力回帰**：既存の全休×満了×降格、海外各階層契約表示・次年度支払、指名直後DOM／listener専用回帰を維持。次はAUD-03BのUndo carryキー／combo／late等の未検証範囲を補強。
 4. **P1 AUD-02／AUD-04／AUD-05 と REFACTOR-AUDIT-01**：全S読書・AST呼出・RNG消費・旧コード到達性を読み取り専用で補完。小規模重構はテスト基盤が安定してから。
 5. **P1 HOF-NATURAL-SAMPLE-01**：四聯盟と投手SP/MR/CLの有効な自然到達サンプルを拡充。得られたデータに基づき仕様判断し、無断で係数を変更しない。
 6. **P1 実機／文案、P2 新機能**：実機は使用者等の端末で最終驗收。dev→Preview→使用者承認→mainを維持。
