@@ -7,15 +7,15 @@
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
-| 已完成 | **18** | 有對應驗收紀錄，範圍以各報告為準 |
-| 未完成 | **29** | 兩項本機修復待最終CI／Preview；另留smallschool語意待決 |
+| 已完成 | **20** | 有對應驗收紀錄，含本輪兩項核准修復 |
+| 未完成 | **27** | 保留smallschool語意待決及其他未驗範圍 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **3** | 實機或原生分享環境不足 |
-| IMPLEMENTED_UNVERIFIED | **6** | 含本輪兩項本機已驗證、待Linux Full／Preview修復 |
+| IMPLEMENTED_UNVERIFIED | **4** | 現行規格、動態可達性、殿堂樣本及文案待驗 |
 | DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一正式checkbox重新計算：**18 + 29 = 47**。本輪只修回國retry與grinder，原44案全PASS、額外59案（含未改造原程式P／IF對照）PASS；Local Full原55 PASS／5相容性FAIL已保留，五入口修正後重跑PASS。最終Linux Full／Preview未確認前兩ID仍未完成。smallschool依使用者批准拆為獨立待決，不推測B→3。[本輪驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。前十階段的歷史數字與报告保持，尤其原第十階段34 PASS／10 FAIL不改寫。
+以上依唯一正式checkbox重新計算：**20 + 27 = 47**。本輪只修回國retry與grinder，原44案全PASS、補充後59案（含未改造原程式P／IF對照）PASS；Local Full原55 PASS／5相容性FAIL與五入口重跑PASS均保留。最終Linux Full60 PASS、Quick45 PASS、Preview59 PASS後兩ID按核准範圍結案。smallschool獨立待決，不推測B→3。[本輪驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。前十階段的歷史數字與報告保持，原第十階段34 PASS／10 FAIL不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -30,14 +30,14 @@
 | 第七階段 | 能力配分與交易安全最小修復 | 三項安全修復、`AUD-03B`、`STATE-TRANSACTION-AUDIT-01` | **批准範圍修復與驗收完成；非全S交易rollback** | [第七階段驗收](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md) |
 | 第八階段 | 歷史規格與AGENTS指示稽核 | `AUD-04`、`AUD-05` | **調查／分類完成；完整歷史細項仍獨立待核對，不移入舊政策** | [歷史規格](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)／[AGENTS歷史](docs/reviews/STAGE8_AGENTS_HISTORY_AUDIT.md) |
 | 第九階段 | 從現行程式建立技術詳細設計 | 現行技術文件；既有三個未完稽核ID保持 | **12章與附錄／來源建檔；非全行為驗收，歷史任务縮範圍只提案** | [主設計](docs/design/CURRENT_DETAILED_DESIGN.md)／[驗收及缺口](docs/reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md) |
-| 第十階段 | U07／U03／回國例外／LEGACY | 新增兩個待修復ID；既有稽核保持 | **調查完成；正常稱號Bug1項、例外恢復風險1項，未修復** | [調查報告](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md) |
-| 第十階段修復 | 回國retry／grinder | 兩修復ID；smallschool獨立待決 | **本機修復與補驗完成，最終Linux Full／Preview待確認** | [修復驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md) |
+| 第十階段 | U07／U03／回國例外／LEGACY | 新增兩個待修復ID；既有稽核保持 | **歷史調查快照：當時正常稱號Bug1項、例外恢復風險1項未修復** | [調查報告](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md) |
+| 第十階段修復 | 回國retry／grinder | 兩修復ID；smallschool獨立待決 | **核准修復與本機／Linux Full／Preview驗收完成；非全面交易保證** | [修復驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md) |
 
 上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
 ### 1.2 目前開發基準與限制
 
-- **最新受驗程式 SHA：** `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`。開始時dev基準`0425e74350303086a688de6504a4aa3609543a4d`；CI PR合成提交與程式樹相同。後續純文件HEAD不冒充此Full程式SHA。
+- **最新受驗程式 SHA：** `b2e01509c0ea75712579f53d864ecd09f710840c`，1.11.6；Linux Full／Quick與Preview證據見末節。第七階段受驗SHA `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`及開始基準`0425e74350303086a688de6504a4aa3609543a4d`保留為歷史；後續純文件HEAD不冒充受驗程式SHA。
 - **第八階段文件與Quick受驗SHA：** `b38146e69288346a120db5b2d079ce0a7983aaae`；從`a5ed616418e1eb3611c6f714b5f2cf75161ba550`開始調查，遊戲程式樹不變。CI Run 38183631042成功；本次證據補記僅改BACKLOG，文件Commit另見Git／最終回報。
 - **第九階段調查基準：** `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`；40模組、997函式語法節點、39核心函式契約、124直接S根欄位及196RNG相關語法點重新盤點。技術文件不是新政策，動態可達性／完整S寫集仍未證明；退休舊欄位等新補驗提案見報告，不修改程式或直接結案。
 - **第九階段CI受驗文件SHA：** `e422b45bab38cc7a9632f89b2558bd296dcf0d5a`；Linux Quick Run 38187518145成功。五份技術文件與BACKLOG已提交，遊戲資產與調查基準ea951c2相同；後續純BACKLOG證據提交不冒充另一次已執行CI。
@@ -50,7 +50,7 @@
 - GitHub Actions 已能執行測試；**Branch Protection／Ruleset 強制合併檢查尚未設定**。
 - 未經使用者明確批准，不得修改 `main`、正式網站、遊戲平衡、RNG、年俸／契約政策或殿堂係數。
 
-## 2. 已完成工作（18 項）
+## 2. 已完成工作（20 項）
 
 ### 2.1 第一至第四階段
 
@@ -82,16 +82,19 @@
 - [x] **AUD-04** — 歷史文件盤點、主要數值／事件／API差異分類及來源報告完成。59筆文件：CURRENT6／SUPERSEDED38／OBSOLETE0（整份文件）／UNVERIFIED8／DESIGN_PENDING7；個別廢止條文另列。16階層／14曲線／90球團ID名稱對照一致；**不宣稱全部原文條款驗收或已移管**。未驗細項獨立保留HIST-SPEC-CLAUSE-01；依最新指令只提出CURRENT補充建議，不改正本。[證據](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
 - [x] **AUD-05** — 9份封存與7個Git根AGENTS版本（8組不同LF內容）對照完成；14政策群組中4組恢復會衝突、4組過時／缺口、6組一致，現行AGENTS不修改。舊指令不恢復。[證據](docs/reviews/STAGE8_AGENTS_HISTORY_AUDIT.md)
 
-## 3. 未完成工作（29 項）
+### 2.5 第十階段核准修復（2026-10-12；受驗程式b2e0150）
 
-### 3.1 P1 — 規格、回歸驗證與修復驗收（6 項）
+- [x] **TRAIT-INITIAL-STATE-FIX-01** — 僅按批准的grinder範圍結案：newState保存出生pot合計，正常IF463生涯取得；7個P／IF門檻／缺資料／既取得fixture及未改造修復前S／R逐步比較通過。smallschool移交獨立待決ID。Linux Full60、Preview59 PASS。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
+- [x] **STATE-NPB-RETURN-RETRY-01** — 三故障點×三尺寸9案、正常3案及連續描畫／殘留補驗通過。首次年數、已驗證contractId及付款後重畫重用，下一操作／次年支付正常。明示fault injection、回國bonus0，非自然故障根因證明或全S rollback。Linux Full60、Preview59 PASS。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
+
+## 3. 未完成工作（27 項）
+
+### 3.1 P1 — 規格、回歸驗證與待決（4 項）
 
 
 - [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。第五階段完成16章／84規格群組對照：MATCH49、MISMATCH3、UNVERIFIED27、DESIGN_PENDING1、OBSOLETE4；quick44 PASS。完整數值邊界、全DOM／跨功能互動及實機仍缺，**調查完成不等於全規格驗收完成**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。發現差異僅記錄，不修改遊戲。
 - [ ] **REFACTOR-AUDIT-01** — `IMPLEMENTED_UNVERIFIED`。第五階段已建主要S讀寫地圖、40模組AST索引（991函式節點／4193呼叫節點）、196 RNG語法點、32頂層覆寫群組、LEGACY委派與[分批路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)。動態scope／所有callback可達性未完全證明，保持未完成；**沒有批准大規模重構或刪除舊碼**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。
 - [ ] **HIST-SPEC-CLAUSE-01** — `未完成細項對照`。第八階段盤點與差異分類已完成，但兩份大詳細設計的全數值／學校tier地域／§19–22舊API與翻譯條款、參考作品分析的每條公式及更早Git修訂尚未逐條核對。建立原始固定來源→現行對應→證據台帳，與AUD-02現行功能驗收、COPY-01可到達文案驗收分開；未經批准不移入正式規格、不恢復舊規則、不刪原文。[範圍與限制](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
-- [ ] **TRAIT-INITIAL-STATE-FIX-01** — IMPLEMENTED_UNVERIFIED・本機修復完成待CI／Preview。使用者批准先修grinder：newState保存出生pot合計，正常IF463門檻取得；7個P／IF門檻／缺資料／既取得fixture與未改造修復前S／R比較通過。smallschool語意移交獨立待決ID，不在本次實作。Linux Full／Preview確認後只按grinder核准範圍結案。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
-- [ ] **STATE-NPB-RETURN-RETRY-01** — IMPLEMENTED_UNVERIFIED・本機修復完成待CI／Preview。三故障點×三尺寸9案已恢復；running／actionCompleted／completed分離、首次年數保存、驗證済contractId快照及既有付款後重畫重用。正常3案與補充連續描畫／殘留、下一年支付／listener／完整S與R均通過。明示fault injection、回國bonus0，非自然故障重現或全S rollback。Linux Full／Preview確認後結案。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
 
 - [ ] **TRAIT-SMALLSCHOOL-SEMANTICS-01** — `DESIGN_PENDING`。從原出生欄位修復範圍按本輪使用者批准分離；確認出生高校定義與schoolTier B是否對應舊hsTier3，再決定快照／相容讀取。保留既取得狀態、不得用升學後tier推測、不補造舊人生；目前不修改條件。[界線及證據](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
 
@@ -130,11 +133,11 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-> **未完成項目核算：** 6（原規格／回歸／歷史細項＋兩待驗修復＋smallschool）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**29**；47唯一ID、18完成／29未完。歷史38項及前階段快照保持原數。
+> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**27**；47唯一ID、20完成／27未完。歷史38項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
-1. **使用者審查本輪修復及決定smallschool語意**：回國與grinder已批准分開修復，等待最終驗收；B→舊tier3、出生高校範圍尚未批准，不合併main、不開始重構。海外27案只為指定fixture通過，不是全市場自然生涯驗收。
+1. **使用者審查本輪修復及決定smallschool語意**：回國與grinder已分開修復及驗收；B→舊tier3、出生高校範圍尚未批准，不合併main、不開始重構。海外27案只為指定fixture通過，不是全市場自然生涯驗收。
 2. **AUD-02／REFACTOR-AUDIT-01**：按[第五階段路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)補規格／動態可達性證據；本輪不批准重構或刪除LEGACY。
 3. **HIST-SPEC-CLAUSE-01**：原定義／未完狀態保持；第九階段只提出改為「歷史保留與按需追溯」的建議與可能失去的意圖證據，尚未批准。CURRENT_SPEC來源說明補充須先審查，不自動採納歷史政策。
 4. **HOF-NATURAL-SAMPLE-01**：補足自然到達四聯盟的研究樣本，之後再討論殿堂規則決策。
@@ -226,4 +229,10 @@
 
 ## 本輪修復提交後驗收證據
 
-程式基準ef74f27、回國提交4a54b9e、出生提交0689d35。版本1.11.6，main1.11.4不變。最終CI與Preview完成後補記；原44 PASS，額外59 PASS、71.123秒；本機Full55 PASS／5 FAIL（1450.725秒）與5入口重跑PASS（49.511秒）均保留。Quick初次44 PASS／1舊1.11.5版本斷言FAIL，同步為批准1.11.6後重跑，不改RNG期望。此節純證據更新與受驗程式提交SHA分開。
+- **受驗程式提交：** `b2e01509c0ea75712579f53d864ecd09f710840c`、1.11.6。修復前`ef74f276699d5e67234a792b21a8a3d96bb592c2`；回國提交`4a54b9e0fcfa60835dee6b463802f60e85fb8f3d`、出生提交`0689d350daf9b2c52064e8d4303ed40050fed344`。main仍`e886e84ca08c6c185406cac9d6f3c4376277061a`／1.11.4。
+- **本機結果：** 原44案全PASS；補充及未改造原程式對照共59 PASS、71.123秒。Local Full原55 PASS／5 FAIL、1450.725秒、exit1與五入口重跑5 PASS、49.511秒、exit0均保留，不改寫成全綠。Quick初次44 PASS／1舊版本斷言FAIL，同步批准1.11.6後最終45 PASS／0 FAIL／0 SKIP／0 BLOCKED、210.302秒、exit0；未修改RNG期望。log見`test-results/safety-followup-*`及[報告](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。
+- **Linux CI：** Ubuntu24.04／Node24.15.0／Playwright1.62.1／Chromium；[Quick Run 38214974512](https://github.com/tt-chin/yakyujinsei/actions/runs/38214974512)45 PASS、143.238秒；[Full Run 38215085325](https://github.com/tt-chin/yakyujinsei/actions/runs/38215085325)60 PASS、1455.477秒。兩者0 FAIL／SKIP／BLOCKED、success，head SHA均為b2e0150。Full實際PR合成提交`a43afe6e65be1b330aa74456f6a30e35f8d93f69`與b2e0150 tree同為`3aa0e2c92e5797db7b81496a371fee84309cc49f`。授權的[測試Draft PR #3](https://github.com/tt-chin/yakyujinsei/pull/3)驗證後CLOSED，mergedAt=null；沒有合併。未執行Audit／4,000研究。
+- **Preview：** b2e0150 Cloudflare check success，deployment `6d322c45-3469-48b3-87df-d6e7c5c86509`。[固定Preview](https://dev.yakyujinsei.pages.dev)47個HTML／JS／CSS HTTP200、正規化換行後與受驗dev逐檔一致。`node tests/stage10-risk-e2e.mjs --compare=ef74f276699d5e67234a792b21a8a3d96bb592c2 --preview=https://dev.yakyujinsei.pages.dev --playwright=<PW> --output=test-results/safety-followup-preview`：59 PASS／0 FAIL／0 SKIP／0 BLOCKED、94.698秒、exit0。Windows／Chrome155.0.8059.39，PC1280／320／390；30筆預期S10_FAULT錯誤、非注入Console／pageerror及資產HTTP失敗0。已disconnect的browser profile清理逾時warning保留，非遊戲錯誤；手機尺寸模擬不是實機。
+- **正常S／RNG：** 未改造舊game.js逐步對照：P yakyo-test-001，376操作／815R；IF s10-trait-38，347操作／597R；均2049退休。只正規化version、新增potSum0與done後批准修正的grinder；其他完整狀態、選擇歷史及全部R值一致。grinder自然IF取得、P不符合不取得；smallschool保持原狀且待決。
+- **Manifest及文件保護：** 僅新增baseline-initial-potential import-only/support登錄；移除該行後與修復前manifest一致，既有入口分類／args／模式不變，Quick45／Full60／Audit61。Runner、CI／發布workflow、AGENTS沒有修改。BACKLOG正式checkbox為47唯一ID、20完成／27未完；關閉兩個核准範圍修復，不結案其他待辦。
+- **後續純文件提交：** 本筆僅改BACKLOG證據及結案狀態，完整SHA見Git履歷與最終回報；不冒充已跑CI的程式SHA。沿用現有paths-ignore，避免重跑同套Quick；後續Cloudflare文件部署不冒充另一輪E2E。停止等待審查，不發布main或自動開始下一階段。
