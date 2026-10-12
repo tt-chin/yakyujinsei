@@ -7,15 +7,15 @@
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
-| 已完成 | **20** | 有對應驗收紀錄，含本輪兩項核准修復 |
-| 未完成 | **28** | 保留smallschool語意及特性顯示Full CI驗收 |
+| 已完成 | **21** | 有對應驗收紀錄，含兩項核准修復及特性顯示驗收 |
+| 未完成 | **27** | 保留smallschool語意及其他獨立待辦 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
-| BLOCKED | **4** | 三項實機／分享；特性顯示的Linux Full缺可觸發環境 |
+| BLOCKED | **3** | 三項實機／分享 |
 | IMPLEMENTED_UNVERIFIED | **4** | 現行規格、動態可達性、殿堂樣本及文案待驗 |
 | DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一正式checkbox重新計算：**20 + 28 = 48**。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。新增TRAIT-DISPLAY-UNIFY-01，特性顯示本機專項通過，Full CI無main workflow且使用者拒絕Draft PR，因此保持未完。[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
+以上依唯一正式checkbox重新計算：**21 + 27 = 48**。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。TRAIT-DISPLAY-UNIFY-01的Preview18案、Linux Quick45及Full61入口通過，按指定顯示範圍結案；實際dev手動Full可觸發、不需Draft PR。受驗SHA與CI連結見末節及[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -32,27 +32,27 @@
 | 第九階段 | 從現行程式建立技術詳細設計 | 現行技術文件；既有三個未完稽核ID保持 | **12章與附錄／來源建檔；非全行為驗收，歷史任务縮範圍只提案** | [主設計](docs/design/CURRENT_DETAILED_DESIGN.md)／[驗收及缺口](docs/reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md) |
 | 第十階段 | U07／U03／回國例外／LEGACY | 新增兩個待修復ID；既有稽核保持 | **歷史調查快照：當時正常稱號Bug1項、例外恢復風險1項未修復** | [調查報告](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md) |
 | 第十階段修復 | 回國retry／grinder | 兩修復ID；smallschool獨立待決 | **核准修復與本機／Linux Full／Preview驗收完成；非全面交易保證** | [修復驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md) |
-| 特性顯示統一 | 取得當下說明／以後名稱 | `TRAIT-DISPLAY-UNIFY-01` | **本機專項完成；Linux Full BLOCKED，未結案** | [驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md) |
+| 特性顯示統一 | 取得當下說明／以後名稱 | `TRAIT-DISPLAY-UNIFY-01` | **指定顯示範圍完成；Linux Quick45／Full61及Preview18 PASS** | [驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md) |
 
 上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
 ### 1.2 目前開發基準與限制
 
-- **最新受驗程式 SHA：** `b2e01509c0ea75712579f53d864ecd09f710840c`，1.11.6；Linux Full／Quick與Preview證據見末節。第七階段受驗SHA `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`及開始基準`0425e74350303086a688de6504a4aa3609543a4d`保留為歷史；後續純文件HEAD不冒充受驗程式SHA。
+- **最新受驗程式 SHA：** `6020df03ca507c456233005d22bfe36c3d21f306`，1.11.7；本機／Preview已驗證，Linux Quick45及Full61入口均PASS，見末節。此前Linux Full受驗SHA `b2e01509c0ea75712579f53d864ecd09f710840c`、1.11.6及第七階段SHA `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`保留為歷史；後續純文件HEAD不冒充受驗程式SHA。
 - **第八階段文件與Quick受驗SHA：** `b38146e69288346a120db5b2d079ce0a7983aaae`；從`a5ed616418e1eb3611c6f714b5f2cf75161ba550`開始調查，遊戲程式樹不變。CI Run 38183631042成功；本次證據補記僅改BACKLOG，文件Commit另見Git／最終回報。
 - **第九階段調查基準：** `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`；40模組、997函式語法節點、39核心函式契約、124直接S根欄位及196RNG相關語法點重新盤點。技術文件不是新政策，動態可達性／完整S寫集仍未證明；退休舊欄位等新補驗提案見報告，不修改程式或直接結案。
 - **第九階段CI受驗文件SHA：** `e422b45bab38cc7a9632f89b2558bd296dcf0d5a`；Linux Quick Run 38187518145成功。五份技術文件與BACKLOG已提交，遊戲資產與調查基準ea951c2相同；後續純BACKLOG證據提交不冒充另一次已執行CI。
 - **第十階段調查基準：** `fc879dc73cb8a3886d2812a42443c6192d1f6191`；新測試只登錄Full／Audit，不加入Quick；Quick45／Full60／Audit61入口。指定調查入口exit1（34 PASS／10 FAIL），因此目前不能宣稱新Full／Audit全綠；遊戲樹與基準相同。
-- **遊戲 VERSION：** dev `1.11.5`；main／正式網站仍為`1.11.4`。只修復核准的能力callback、CORP重入與signTo簽約／描畫重試；正常S／選擇歷史／年表／RNG維持1.11.4基準。
-- **目前dev VERSION：** 1.11.6，只再修本輪批准兩項；上列1.11.5是歷史受驗範圍。出生potSum0與引退grinder為允許差異，其餘正常S／選擇／RNG保持。[本輪驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
-- **特性顯示dev VERSION：** 1.11.7；上列1.11.6為此前修復受驗版本。取得當下的結果說明於下一操作／導航歸檔為名稱，其他清單、退休概要／PNG只名称。提交／Quick CI／Preview與Linux Full限制見末節，不把前輪Full當成本次通過。
+- **第七階段歷史 VERSION：** dev `1.11.5`；main／正式網站仍為`1.11.4`。只修復核准的能力callback、CORP重入與signTo簽約／描畫重試；正常S／選擇歷史／年表／RNG維持1.11.4基準。
+- **第十階段修復歷史 VERSION：** 1.11.6，只再修當輪批准兩項；上列1.11.5是歷史受驗範圍。出生potSum0與引退grinder為允許差異，其餘正常S／選擇／RNG保持。[當輪驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
+- **特性顯示dev VERSION：** 1.11.7；上列1.11.6為此前修復受驗版本。取得當下的結果說明於下一操作／導航歸檔為名稱，其他清單、退休概要／PNG只名称。提交／Quick CI／Preview與本次Linux Full證據見末節，不把前輪Full當成本次通過。
 - ACT-01 已按「現行功能」標準結案，但原始完整操作歷史不足，**沒有精確重現歷史故障路線，也沒有證明當年的根本原因**。
 - ACT-02 的指名後第一選項、listener、單次執行及下一年度推進已通過指定矩陣；不宣稱所有未知路線均驗證。
 - 320px／390px 是瀏覽器手機尺寸模擬，不能替代 iOS Safari／Android Chrome 實機。
 - GitHub Actions 已能執行測試；**Branch Protection／Ruleset 強制合併檢查尚未設定**。
 - 未經使用者明確批准，不得修改 `main`、正式網站、遊戲平衡、RNG、年俸／契約政策或殿堂係數。
 
-## 2. 已完成工作（20 項）
+## 2. 已完成工作（21 項）
 
 ### 2.1 第一至第四階段
 
@@ -89,9 +89,13 @@
 - [x] **TRAIT-INITIAL-STATE-FIX-01** — 僅按批准的grinder範圍結案：newState保存出生pot合計，正常IF463生涯取得；7個P／IF門檻／缺資料／既取得fixture及未改造修復前S／R逐步比較通過。smallschool移交獨立待決ID。Linux Full60、Preview59 PASS。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
 - [x] **STATE-NPB-RETURN-RETRY-01** — 三故障點×三尺寸9案、正常3案及連續描畫／殘留補驗通過。首次年數、已驗證contractId及付款後重畫重用，下一操作／次年支付正常。明示fault injection、回國bonus0，非自然故障根因證明或全S rollback。Linux Full60、Preview59 PASS。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
 
-## 3. 未完成工作（28 項）
+### 2.6 特性顯示統一（2026-10-12；受驗程式6020df0）
 
-### 3.1 P1 — 規格、回歸驗證與待決（5 項）
+- [x] **TRAIT-DISPLAY-UNIFY-01** — 全38 ID清查、取得當下原因／效果、失去／歷史名稱、退休新解鎖與概要、PNG及P／IF完整S/RNG對照通過。Linux Quick45／Full61入口及Preview18案PASS，CI受驗完整SHA與連結見末節。僅結案指定顯示範圍；未實裝3項不啟用，academy／taiwan自然取得路線未證明，smallschool語意仍獨立待決，不補造條件或宣稱所有自然取得路線已驗證。[驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)
+
+## 3. 未完成工作（27 項）
+
+### 3.1 P1 — 規格、回歸驗證與待決（4 項）
 
 
 - [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。第五階段完成16章／84規格群組對照：MATCH49、MISMATCH3、UNVERIFIED27、DESIGN_PENDING1、OBSOLETE4；quick44 PASS。完整數值邊界、全DOM／跨功能互動及實機仍缺，**調查完成不等於全規格驗收完成**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。發現差異僅記錄，不修改遊戲。
@@ -99,7 +103,6 @@
 - [ ] **HIST-SPEC-CLAUSE-01** — `未完成細項對照`。第八階段盤點與差異分類已完成，但兩份大詳細設計的全數值／學校tier地域／§19–22舊API與翻譯條款、參考作品分析的每條公式及更早Git修訂尚未逐條核對。建立原始固定來源→現行對應→證據台帳，與AUD-02現行功能驗收、COPY-01可到達文案驗收分開；未經批准不移入正式規格、不恢復舊規則、不刪原文。[範圍與限制](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
 
 - [ ] **TRAIT-SMALLSCHOOL-SEMANTICS-01** — `DESIGN_PENDING`。從原出生欄位修復範圍按本輪使用者批准分離；確認出生高校定義與schoolTier B是否對應舊hsTier3，再決定快照／相容讀取。保留既取得狀態、不得用升學後tier推測、不補造舊人生；目前不修改條件。[界線及證據](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
-- [ ] **TRAIT-DISPLAY-UNIFY-01** — `BLOCKED`（Linux Full環境；實作已本機專項驗證）。全38 ID清查與名稱renderer、取得當下原因／效果、失去／歷史名稱、退休新解鎖與概要、PNG及P／IF完整S/RNG對照已建立。未實裝3項不啟用，academy／taiwan自然取得路線及smallschool語意不擅自補造。main無test.yml，使用者拒絕Draft PR，不以本機／Quick代替Full CI；待補足指定CI證據才能結案。[驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)
 
 ### 3.2 P1 — 退休與殿堂研究、決策（6 項）
 
@@ -136,7 +139,7 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-> **未完成項目核算：** 5（原規格／回歸／歷史細項＋smallschool＋特性顯示CI）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**28**；48唯一ID、20完成／28未完。歷史38／47項及前階段快照保持原數。
+> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**27**；48唯一ID、21完成／27未完。歷史38／47項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
@@ -242,6 +245,11 @@
 
 ## 特性顯示統一驗收證據（1.11.7）
 
-基準a0b880bb7e7fe74e743daa0cb8144455c9fdded2；完整受驗提交SHA／最終Full與Quick CI／Preview結果在實際完成後補記。初輪專項跨行regex失敗保留10 PASS／4 FAIL；修正測試匹配後14 PASS、3個相關Full入口PASS（324.111秒）；Quick45 PASS、342.356秒，當時VERSION1.11.6。後續正式PATCH1.11.7與版本預期同步；不排除任何S特性或RNG差異，只排除版本metadata。
-
-main缺test.yml且拒絕Draft PR，Linux Full不能宣稱PASS。僅TASK顯示規則與文件／測試；不刪tasks/fix.md，不修改main、正式網站、Runner、CI workflow或取得／效果規則。新Full／Audit入口一項；Quick45／Full61／Audit62，69個測試相關檔案。後續純BACKLOG證據提交與受驗程式SHA分開。
+- **程式提交：** `6020df03ca507c456233005d22bfe36c3d21f306`，dev、VERSION1.11.7；基準`a0b880bb7e7fe74e743daa0cb8144455c9fdded2`／1.11.6。PATCH：既有特性説明呈現修正；版本正本docs/src/config.js與CHANGELOG同步。main確認仍`e886e84ca08c6c185406cac9d6f3c4376277061a`、1.11.4；沒有更新main或本番。
+- **本機：** 最終Quick45 PASS／0 FAIL／0 SKIP／0 BLOCKED、220.432秒、exit0。完整Full61入口實際60 PASS／1 FAIL、1586.517秒、exit1；唯一失敗為ui-foundation來源字串未包含新歸檔呼叫，同步批准介面後Runner重跑1 PASS／0 FAIL、0.321秒、exit0，遊戲完全不變。沒有冒充另外一次全綠Full。其他60入口、特性18、原生契約381、能力89、交易5與補充17、第十階段57案通過。原始log為trait-display-full-final-v3、trait-display-full-static-recheck、trait-display-quick-final。
+- **歷史中間結果：** 初輪跨行regex10 PASS／4 FAIL→14 PASS；stale UI callback四尺寸0 PASS／4 FAIL→4 PASS，舊legend相容狀態四尺寸0 PASS／4 FAIL→4 PASS，31案殿堂S/R/投票不改。早期Full文字oracle失敗及v2中止均NOT_COMPLETED，保留原log，不回改歷史數字。[詳細報告](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。
+- **Linux CI（2026-10-12確認）：** [Quick Run 38240950492](https://github.com/tt-chin/yakyujinsei/actions/runs/38240950492)由dev push建立，**45 PASS／0 FAIL／0 SKIP／0 BLOCKED、147.880秒**；[Full Run 38240992882](https://github.com/tt-chin/yakyujinsei/actions/runs/38240992882)由`gh workflow run test.yml --ref dev -f mode=full`直接建立，**61 PASS／0 FAIL／0 SKIP／0 BLOCKED、1595.017秒**。兩者status=completed、conclusion=success、headSha=`6020df03ca507c456233005d22bfe36c3d21f306`；Ubuntu24.04／Node24.15.0／Playwright1.62.1／Chromium，耗時為Runner輸出，報告為各Run artifact中的`test-results/ci/summary.json`。main缺workflow的讀取結果不能當成無法dispatch的證明；本次實際觸發成功，先前BLOCKED預判修正。使用者拒絕Draft PR，**沒有建立PR**；此前查詢被工具拒絕，現依使用者新授權確認實際結果並解除此項BLOCKED。不改workflow或main，未執行Audit／實機／4,000生涯研究。
+- **Preview：** 6020df0 Cloudflare check success、deployment `6cc7bbcd-35e6-4401-b280-948b8836f917`。[固定Preview](https://dev.yakyujinsei.pages.dev)47個HTML／JS／CSS HTTP200、正規化換行後與本機dev一致。`node tests/trait-display-e2e.mjs --preview=https://dev.yakyujinsei.pages.dev --baseline=a0b880bb7e7fe74e743daa0cb8144455c9fdded2 --playwright=<PW> --output=test-results/trait-display-preview`：**18 PASS／0 FAIL／0 Console・pageerror／0 JS-CSS404、exit0**。Windows／Node24.15.0／Playwright1.62.1／Chrome155.0.8059.39；PC1280／320／360／390，手機為模擬不是實機。browser已disconnect而profile清理逾時warning保留，非遊戲錯誤。
+- **不變性：** 未改造1.11.6 game.js逐步對照，P yakyo-test-001（530操作／1023R、2058退休）、IF s10-trait-38（331操作／577R、2048退休），全部選擇文字、前後完整JSON S摘要、最終S及R before/after/value相同，只排除VERSION。Baseline與current原始記錄在Full/Preview的career-P/IF-baseline/current.json，不排除traits、金錢、年表或其他S欄位；上述策略結果不與前輪不同策略的376／347操作混用。
+- **保護與清單：** 17個實作／測試／文書檔案提交；tasks/fix.md保留未追蹤、不刪除或提交。Runner、CI／發布workflow、AGENTS、trait/event政策、契約／殿堂政策、資料表不變。manifest只有新Full／Audit入口，移除該行即與a0b880b一致：69檔、Quick45／Full61／Audit62；48唯一checkbox、21完成／27未完，按指定顯示範圍關閉本ID，其他待辦不變。90個本地文件link通過。
+- **純文件證據提交：** 本次只更新BACKLOG的CI證據、結案狀態及統計，完整SHA見Git履歷／最終回報，與受驗程式6020df0分開。沿用既有paths-ignore，不改CI、不重跑同套Quick；後續文件Preview不冒充另一輪E2E。停止等待審查，不發布正式網站。
