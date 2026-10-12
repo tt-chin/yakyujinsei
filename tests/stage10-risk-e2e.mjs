@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {harness,instrument as stage6Instrument} from './support/stage6-browser.mjs';
+import {execFileSync} from 'node:child_process';
+import {harness,arg,instrument as stage6Instrument} from './support/stage6-browser.mjs';
 
 // Read-only HTTP-response instrumentation. Source files and production assets are unchanged.
 const oldNames=['board','movement','endGame','phasePre','phaseMid','proSeason','newState','advance','startYear','amateurSeason','salaryFor','signTo','makeOffers','pickOfferUI','faMarket','crossOffers'];
@@ -22,7 +23,8 @@ function instrument(source,trace){
       get:()=>({state:s10copy(S),initial:s10initial,rng:s10copy(s6rng),candidates:s10copy(s10candidates),created:s10copy(s10created),counts:s10copy(window.__s10Counts),trace:s10copy(window.__s10Trace),choices:$('act').innerText,queue:stepQ.map(f=>f.name),dom:window.__stage6.get().dom,listeners:window.__stage6.get().listeners,fields:{schoolTier:Object.hasOwn(S,'schoolTier'),hsTier:Object.hasOwn(S,'hsTier'),potSum0:Object.hasOwn(S,'potSum0')}}),
       search:()=>{for(let i=0;i<200;i++){SEED='s10-trait-'+i;S={rngState:0};seedInit(SEED);S=newState('検索','IF');const sum=Object.values(S.pot).reduce((a,b)=>a+b,0);if(S.schoolTier==='B'&&sum<=469)return{seed:SEED,sum,tier:S.schoolTier};}throw Error('NO_QUALIFYING_SEED');},
       injectLegacy:()=>{s10inject=true;},
-      school:()=>{setSchool('U');return{tier:S.schoolTier,hsTier:Object.hasOwn(S,'hsTier'),potSum0:Object.hasOwn(S,'potSum0')};},
+      retireBoundary:v=>{window.__stage6.fixture({pos:v.pos,stage:'CORP'});if(v.sum===null)delete S.potSum0;else S.potSum0=v.sum;for(const key of POS_AB[S.pos])S.pot[key]=v.sum===null?20:80;S.traits.smallschool=false;S.traits.grinder=!!v.already;if(v.reached){S.stage='PRO';S.lv='NPB1';S.org='NPB';S.orgTeamId=listByOrg('NPB')[0].teamId;S.stats.NPB={...blankStat(),yr:1,G:1,PA:4,AB:3,H:1,BB:1};}endGame('境界fixture');return{grinder:S.traits.grinder,smallschool:S.traits.smallschool,potSum0:S.potSum0};},
+      school:()=>{setSchool('U');return{initialSum:S.potSum0,tier:S.schoolTier,hsTier:Object.hasOwn(S,'hsTier'),potSum0:Object.hasOwn(S,'potSum0')};},
       fixture:v=>{window.__stage6.fixture({pos:'IF',stage:'CORP',ability:v.ability??68,potential:80,age:v.age??28});Object.assign(S,{stage:'PRO',org:v.org||'NPB',lv:v.level||'NPB1',year:2026+(v.age??28)-16,age:v.age??28,stageYr:6,dpos:'SS',lastD:6,pool:0,marketInjury:'HEALTHY'});S.orgTeamId=listByOrg(S.org)[0].teamId;S.team='';S.foreignFirstTeamYears={};for(let i=0;i<(v.service??6);i++)S.foreignFirstTeamYears[S.year-i-1]=S.lv;S.serviceTime={NPB:S.org==='NPB'?(v.service??6):0,MLB:0,KBO:0,CPBL:0};S.americanContractSigned=['MLB','MiLB'].includes(S.org);S.ct=createContract({contractId:S.org+':fixture:001',org:S.org,teamId:S.orgTeamId,signedYear:S.year-1,startYear:S.year,years:v.years??1,annualSalary:v.salary??20000000});S.ct=markSalaryPaid(S.ct,S.year).contract;S.currentSalary=v.salary??20000000;S.lastSalaryPaidYear=S.year;S.contractSequence=1;S.careerBaseSalary=S.currentSalary;S.careerEarnings=S.currentSalary;S.salaryEvaluationHistory=[2,1,0].map(i=>({year:S.year-i,payD:6,baseD:6,sampleStatus:'SUFFICIENT',marketInjury:'HEALTHY',level:S.lv,org:S.org}));saveSalaryDecision('RENEWAL',salaryCandidate(),S.currentSalary,S.currentSalary,{salaryYear:S.year});s10candidates=[];s10created=[];s6rng=[];window.__s10Trace=[];window.__s10Counts={};stepQ=[];seasonEndContext=null;pendingOffseasonSalary=null;actClear();board(2);},
       overseas:(org,lv)=>{const offer=overseasOffer(org,lv,'海外移籍',ovr(),2,()=>{});if(!offer)throw Error('NO_OVERSEAS_OFFER');choose('海外提示',[offer]);return{label:offer.t,sub:offer.s,candidate:s10candidates.at(-1)};},
       direct:lv=>{const org=LV[lv].org,team=listByOrg(org)[0].teamId,candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:lv,contractMult:1,transferType:'RELEASE_RECONTRACT'});const sub=LV[candidate.targetLevel].n+'契約｜年俸'+fmtMoney(candidate.annualSalary);choose('原生ヘルパー検証',[{t:'契約を受諾',s:sub,f:()=>signTo(org,candidate.targetLevel,team,1,1,'RELEASE_RECONTRACT',{candidate,annualSalary:candidate.annualSalary})}]);return{label:'契約を受諾',sub,candidate:s10candidates.at(-1)};},
@@ -35,11 +37,13 @@ function instrument(source,trace){
   return source.slice(0,at)+hook+source.slice(at);
 }
 const h=await harness('yakyujinsei-stage10'),start=Date.now();
+const compare=arg('compare')&&execFileSync('git',['rev-parse',arg('compare')+'^{commit}'],{encoding:'utf8'}).trim();
+const priorSource=compare&&execFileSync('git',['show',compare+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
 const hash=x=>createHash('sha256').update(x).digest('hex');
-async function page(width=1280,seed='stage10-fixture',trace=true,pos='IF'){
+async function page(width=1280,seed='stage10-fixture',trace=true,pos='IF',prior=false){
   const p=await h.page(width,pos,seed);
   await p.route('**/src/engine/game.js',async route=>{
-    const response=await route.fetch(),body=await response.text();
+    const response=await route.fetch(),body=prior?stage6Instrument(priorSource):await response.text();
     // Loopback already has the shared hook; a Preview fetch returns the raw asset.
     await route.fulfill({response,body:instrument(body.includes('let s6rng=[]')?body:stage6Instrument(body),trace)});
   });
@@ -47,16 +51,19 @@ async function page(width=1280,seed='stage10-fixture',trace=true,pos='IF'){
   await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
 }
 const get=p=>p.evaluate(()=>window.__stage10.get());
-async function career(p){const actions=[];for(let i=0;i<1600;i++){const step=await p.evaluate(()=>window.__stage10.step());if(step.terminal)return{actions,...await get(p)};actions.push({action:step.action,before:hash(step.before),after:hash(step.after),rng:step.rng});}throw Error('CAREER_OPERATION_LIMIT');}
+const comparable=s=>{const state=JSON.parse(JSON.stringify(s));delete state.version;delete state.potSum0;if(state.done)delete state.traits.grinder;return state;};
+async function career(p,comparison=false){const digest=s=>hash(comparison?JSON.stringify(comparable(JSON.parse(s))):s);const actions=[];for(let i=0;i<1600;i++){const step=await p.evaluate(()=>window.__stage10.step());if(step.terminal)return{actions,...await get(p)};actions.push({action:step.action,before:digest(step.before),after:digest(step.after),rng:step.rng});}throw Error('CAREER_OPERATION_LIMIT');}
 const money=s=>({earnings:s.careerEarnings,bonus:s.careerSigningBonus,base:s.careerBaseSalary,stipend:s.careerDevelopmentStipend,payments:s.signingPayments});
 let selected,natural;
 try{
   if(!process.argv.includes('--fixtures-only')){
     const search=await page();selected=await search.evaluate(()=>window.__stage10.search());await search.close();
-    await h.test('A-initial-fields',{...selected,pos:'IF'},async e=>{const p=await page(1280,selected.seed);const before=await get(p),school=await p.evaluate(()=>window.__stage10.school());e.snapshots.push(before,school);assert.equal(before.initial.schoolTier,'B');assert.equal(before.fields.hsTier,false);assert.equal(before.fields.potSum0,false);assert.equal(school.hsTier,false);assert.equal(school.potSum0,false);await p.close();});
+    await h.test('A-initial-fields',{...selected,pos:'IF'},async e=>{const p=await page(1280,selected.seed);const before=await get(p),school=await p.evaluate(()=>window.__stage10.school());e.snapshots.push(before,school);assert.equal(before.initial.schoolTier,'B');assert.equal(before.fields.hsTier,false);assert.equal(before.fields.potSum0,true);assert.equal(school.hsTier,false);assert.equal(school.potSum0,true);assert.equal(before.initial.potSum0,Object.values(before.initial.pot).reduce((a,b)=>a+b,0));assert.equal(school.initialSum,before.initial.potSum0);await p.close();});
     await h.test('A-natural-retirement',{...selected,pos:'IF',strategy:'lowest-ability/draft/main'},async e=>{const p=await page(1280,selected.seed);natural=await career(p);await h.save('A-natural-career',natural);e.snapshots.push(natural);await p.close();if(!(natural.state.stats.NPB||natural.state.stats.MLB)){e.status='BLOCKED';e.classification='No qualifying top-league natural route';return;}e.classification='Natural qualified retirement';assert.equal(natural.state.traits.grinder,true,'Original potential qualifies but retirement should award grinder');});
     await h.test('A-injected-old-fields',{...selected,pos:'IF',faultInjection:'B->3 is a test assumption, not approved policy'},async e=>{const p=await page(1280,selected.seed);await p.evaluate(()=>window.__stage10.injectLegacy());const result=await career(p);e.snapshots.push(result);await h.save('A-injected-career',result);await p.close();if(!(result.state.stats.NPB||result.state.stats.MLB)){e.status='BLOCKED';return;}assert.deepEqual(result.actions.slice(0,-1),natural.actions.slice(0,-1));assert.deepEqual(result.rng,natural.rng);assert.equal(result.state.traits.grinder,true);assert.equal(result.state.traits.smallschool,true);});
     for(const [seed,pos] of [['yakyo-test-001','P'],[selected.seed,'IF']])await h.test('D-passive-trace-'+pos,{seed,pos},async e=>{const traced=await page(1280,seed,true,pos),control=await page(1280,seed,false,pos);const a=await career(traced),b=await career(control);await h.save('D-'+pos+'-traced',a);await h.save('D-'+pos+'-control',b);assert.deepEqual(a.actions,b.actions);assert.deepEqual(a.state,b.state);assert.deepEqual(a.rng,b.rng);assert.ok(a.counts['legacy.board']>0);assert.ok(a.counts['legacy.endGame']>0);e.snapshots.push({counts:a.counts,actions:a.actions.length,rng:a.rng.length,notObserved:oldNames.filter(n=>!a.counts['legacy.'+n])});e.classification='Route-limited reachability; not a global dead-code proof';await traced.close();await control.close();});
+    if(compare)for(const [seed,pos]of [['yakyo-test-001','P'],[selected.seed,'IF']])await h.test('E-original-comparison-'+pos,{seed,pos,compare},async e=>{const current=await page(1280,seed,true,pos),prior=await page(1280,seed,true,pos,true),a=await career(current,true),b=await career(prior,true);assert.deepEqual(a.actions,b.actions);assert.deepEqual(comparable(a.state),comparable(b.state));assert.deepEqual(a.rng,b.rng);assert.equal(a.initial.potSum0,Object.values(b.initial.pot).reduce((s,v)=>s+v,0));if(pos==='IF'){assert.equal(b.state.traits.grinder,false);assert.equal(a.state.traits.grinder,true);assert.equal(a.state.traits.smallschool,false);}await h.save('E-'+pos+'-current',a);await h.save('E-'+pos+'-original',b);e.snapshots.push({actions:a.actions.length,rng:a.rng.length,initial:a.initial.potSum0,before:b.state.traits.grinder,after:a.state.traits.grinder});await current.close();await prior.close();});
+    const boundary=await page();for(const [pos,sum,reached,already,expected]of [['P',237,true,false,true],['P',238,true,false,false],['IF',469,true,false,true],['IF',470,true,false,false],['IF',463,false,false,false],['IF',null,true,false,false],['P',238,true,true,true]])await h.test('F-grinder-'+pos+'-'+sum+'-'+reached+'-'+already,{pos,sum,reached,already,fixture:true},async e=>{const r=await boundary.evaluate(v=>window.__stage10.retireBoundary(v),{pos,sum,reached,already});e.snapshots.push(r);assert.equal(r.grinder,expected);assert.equal(r.smallschool,false);});await boundary.close();
   }
   const routes=[{id:'restricted-MLB',targetOrg:'MiLB',target:'MLB',age:22,service:0},{id:'exempt-MLB',targetOrg:'MiLB',target:'MLB',age:28,service:6},{id:'active-contract-MLB',targetOrg:'MiLB',target:'MLB',age:28,service:6,years:3},{id:'KBO',targetOrg:'KBO',target:'KBO1'},{id:'CPBL',targetOrg:'CPBL',target:'CPBL1'},...['R','A1','A2','A3'].map(target=>({id:'release-'+target,target,direct:true}))];
   for(const width of [1280,320,390]){
@@ -88,8 +95,20 @@ try{
       else {assert.deepEqual(retry.state,returnControl.state,'Retry must commit exactly the normal transaction');assert.deepEqual(retry.rng,returnControl.rng,'Retry must reuse the first year draw');}
       if(fault==='after-create')assert.equal(retry.state.ct.contractId,first.created[0].contractId,'Reuse the validated contract, not a second ID');
       await p.evaluate(()=>window.__stage10.oldClick());assert.deepEqual((await get(p)).state,retry.state);
+      await p.locator('#act button').first().click();
+      if(!await p.locator('#act .abrow').count()){const review=await get(p);assert.match(review.choices,/守備位置会議/);e.snapshots.push({positionReview:review});await p.locator('#act button').first().click();}
+      assert.ok(await p.locator('#act .abrow').count(),'Next training listener must work after the existing position review');assert.deepEqual((await get(p)).rng,retry.rng);
       await p.evaluate(()=>window.__stage6.payNext());const paid=await get(p);assert.equal(paid.state.careerBaseSalary-retry.state.careerBaseSalary,retry.state.ct.annualSchedule[0].amount);
       await p.evaluate(()=>window.__stage6.payNext());const repeated=await get(p);assert.deepEqual(money(repeated.state),money(paid.state));assert.deepEqual(repeated.rng,paid.rng);e.snapshots.push({paid,repeated});
+    });
+    await h.test('G-repeat-render-'+width,{width,faultInjection:true},async e=>{
+      await p.evaluate(()=>window.__stage10.fixture({org:'CPBL',level:'CPBL1',ability:54,salary:12000000}));await p.evaluate(()=>window.__stage10.returnOffer());
+      const attempts=[];for(let i=0;i<2;i++){await p.evaluate(()=>window.__stage10.fault('after-payment'));await p.locator('#act button').first().click();attempts.push(await get(p));}
+      assert.deepEqual(attempts[0].state,attempts[1].state);assert.deepEqual(attempts[0].rng,attempts[1].rng);
+      await p.locator('#act button').first().click();const result=await get(p);assert.equal(result.state.year,2039);assert.equal(result.state.contractSequence,2);assert.equal(result.state.ct.contractId,attempts[0].state.ct.contractId);assert.deepEqual(money(result.state),money(attempts[0].state));e.snapshots.push({attempts,result});
+    });
+    await h.test('G-stay-'+width,{width,fixture:true},async e=>{
+      await p.evaluate(()=>window.__stage10.fixture({org:'CPBL',level:'CPBL1',ability:54,salary:12000000}));await p.evaluate(()=>window.__stage10.returnOffer());await p.locator('#act button').filter({hasText:'現在の球団に残留'}).click();const result=await get(p);assert.equal(result.state.year,2039);assert.equal(result.state.org,'CPBL');assert.ok(result.choices.trim());assert.equal(result.rng.length,6,'No contract-year draw on stay');e.snapshots.push(result);
     });await p.close();
   }
 }catch(error){
