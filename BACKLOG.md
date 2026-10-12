@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 更新：2026-10-12｜第九階段基準：`origin/dev` 的 `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`｜遊戲版本：`1.11.5`（main／本番仍為1.11.4）
+> 更新：2026-10-12｜第十階段基準：`origin/dev` 的 `fc879dc73cb8a3886d2812a42443c6192d1f6191`｜遊戲版本：`1.11.5`（main／本番仍為1.11.4）
 > 保留第一至第八階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`，本輪遊戲樹未變；後續純文件提交SHA見Git履歷及最終回覆。
 
 ## 1. 最新進度總覽
@@ -8,14 +8,15 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **18** | 有對應驗收紀錄，範圍以各報告為準 |
-| 未完成 | **26** | 包含待驗證、受阻、設計待決、保留及候補 |
+| 未完成 | **28** | 包含待驗證、受阻、設計待決、保留及候補 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **3** | 實機或原生分享環境不足 |
 | IMPLEMENTED_UNVERIFIED | **4** | 已有實作或初步調查，尚未完成驗收 |
 | DESIGN_PENDING | **6** | 尚待決定是否或如何調整規格 |
+| CONFIRMED_BUG／CONFIRMED_RISK | **2** | 正常退休稱號失效1項、明示NPB回國例外恢復風險1項；尚未批准修復 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一的正式 checkbox 工作 ID 重新計算：**18 + 26 = 44**。第八階段AUD-04／05完成指定調查與分類，59筆歷史規格來源、16筆AGENTS來源已建台帳，Quick45 PASS；未逐條核對的歷史原文保留為HIST-SPEC-CLAUSE-01，不宣稱全內容統合或全規格驗收。第七階段原五個風險FAIL解除，能力89／交易5／補充17／契約381案PASS，Linux Quick45／Full59入口PASS，Preview546案PASS。原carry缺key與0的結構差異保持；歷史階段數字不重算。
+以上依唯一的正式 checkbox 工作 ID 重新計算：**18 + 28 = 46**。第十階段四項調查完成，新增1個正常可重現Bug及1個fault injection風險；新調查44案34 PASS／10 FAIL，既有Quick45 PASS。不修改遊戲、不把風險改成PASS；[證據及限制](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md)。第八階段AUD-04／05完成指定調查與分類，59筆歷史規格來源、16筆AGENTS來源已建台帳；未逐條核對的歷史原文保留為HIST-SPEC-CLAUSE-01，不宣稱全內容統合或全規格驗收。第七階段原五個風險FAIL解除，能力89／交易5／補充17／契約381案PASS，當時Linux Quick45／Full59入口PASS，Preview546案PASS。原carry缺key與0的結構差異保持；歷史階段數字不重算，當時Full PASS不冒充新調查入口已通過。
 
 ### 1.1 開發階段完成履歷
 
@@ -30,6 +31,7 @@
 | 第七階段 | 能力配分與交易安全最小修復 | 三項安全修復、`AUD-03B`、`STATE-TRANSACTION-AUDIT-01` | **批准範圍修復與驗收完成；非全S交易rollback** | [第七階段驗收](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md) |
 | 第八階段 | 歷史規格與AGENTS指示稽核 | `AUD-04`、`AUD-05` | **調查／分類完成；完整歷史細項仍獨立待核對，不移入舊政策** | [歷史規格](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)／[AGENTS歷史](docs/reviews/STAGE8_AGENTS_HISTORY_AUDIT.md) |
 | 第九階段 | 從現行程式建立技術詳細設計 | 現行技術文件；既有三個未完稽核ID保持 | **12章與附錄／來源建檔；非全行為驗收，歷史任务縮範圍只提案** | [主設計](docs/design/CURRENT_DETAILED_DESIGN.md)／[驗收及缺口](docs/reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md) |
+| 第十階段 | U07／U03／回國例外／LEGACY | 新增兩個待修復ID；既有稽核保持 | **調查完成；正常稱號Bug1項、例外恢復風險1項，未修復** | [調查報告](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md) |
 
 上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
@@ -39,6 +41,7 @@
 - **第八階段文件與Quick受驗SHA：** `b38146e69288346a120db5b2d079ce0a7983aaae`；從`a5ed616418e1eb3611c6f714b5f2cf75161ba550`開始調查，遊戲程式樹不變。CI Run 38183631042成功；本次證據補記僅改BACKLOG，文件Commit另見Git／最終回報。
 - **第九階段調查基準：** `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`；40模組、997函式語法節點、39核心函式契約、124直接S根欄位及196RNG相關語法點重新盤點。技術文件不是新政策，動態可達性／完整S寫集仍未證明；退休舊欄位等新補驗提案見報告，不修改程式或直接結案。
 - **第九階段CI受驗文件SHA：** `e422b45bab38cc7a9632f89b2558bd296dcf0d5a`；Linux Quick Run 38187518145成功。五份技術文件與BACKLOG已提交，遊戲資產與調查基準ea951c2相同；後續純BACKLOG證據提交不冒充另一次已執行CI。
+- **第十階段調查基準：** `fc879dc73cb8a3886d2812a42443c6192d1f6191`；新測試只登錄Full／Audit，不加入Quick；Quick45／Full60／Audit61入口。指定調查入口exit1（34 PASS／10 FAIL），因此目前不能宣稱新Full／Audit全綠；遊戲樹與基準相同。
 - **遊戲 VERSION：** dev `1.11.5`；main／正式網站仍為`1.11.4`。只修復核准的能力callback、CORP重入與signTo簽約／描畫重試；正常S／選擇歷史／年表／RNG維持1.11.4基準。
 - ACT-01 已按「現行功能」標準結案，但原始完整操作歷史不足，**沒有精確重現歷史故障路線，也沒有證明當年的根本原因**。
 - ACT-02 的指名後第一選項、listener、單次執行及下一年度推進已通過指定矩陣；不宣稱所有未知路線均驗證。
@@ -78,14 +81,16 @@
 - [x] **AUD-04** — 歷史文件盤點、主要數值／事件／API差異分類及來源報告完成。59筆文件：CURRENT6／SUPERSEDED38／OBSOLETE0（整份文件）／UNVERIFIED8／DESIGN_PENDING7；個別廢止條文另列。16階層／14曲線／90球團ID名稱對照一致；**不宣稱全部原文條款驗收或已移管**。未驗細項獨立保留HIST-SPEC-CLAUSE-01；依最新指令只提出CURRENT補充建議，不改正本。[證據](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
 - [x] **AUD-05** — 9份封存與7個Git根AGENTS版本（8組不同LF內容）對照完成；14政策群組中4組恢復會衝突、4組過時／缺口、6組一致，現行AGENTS不修改。舊指令不恢復。[證據](docs/reviews/STAGE8_AGENTS_HISTORY_AUDIT.md)
 
-## 3. 未完成工作（26 項）
+## 3. 未完成工作（28 項）
 
-### 3.1 P1 — 規格與回歸驗證（3 項）
+### 3.1 P1 — 規格、回歸驗證與待批准修復（5 項）
 
 
 - [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。第五階段完成16章／84規格群組對照：MATCH49、MISMATCH3、UNVERIFIED27、DESIGN_PENDING1、OBSOLETE4；quick44 PASS。完整數值邊界、全DOM／跨功能互動及實機仍缺，**調查完成不等於全規格驗收完成**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。發現差異僅記錄，不修改遊戲。
 - [ ] **REFACTOR-AUDIT-01** — `IMPLEMENTED_UNVERIFIED`。第五階段已建主要S讀寫地圖、40模組AST索引（991函式節點／4193呼叫節點）、196 RNG語法點、32頂層覆寫群組、LEGACY委派與[分批路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)。動態scope／所有callback可達性未完全證明，保持未完成；**沒有批准大規模重構或刪除舊碼**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。
 - [ ] **HIST-SPEC-CLAUSE-01** — `未完成細項對照`。第八階段盤點與差異分類已完成，但兩份大詳細設計的全數值／學校tier地域／§19–22舊API與翻譯條款、參考作品分析的每條公式及更早Git修訂尚未逐條核對。建立原始固定來源→現行對應→證據台帳，與AUD-02現行功能驗收、COPY-01可到達文案驗收分開；未經批准不移入正式規格、不恢復舊規則、不刪原文。[範圍與限制](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
+- [ ] **TRAIT-INITIAL-STATE-FIX-01** — `CONFIRMED_BUG・待批准修復`。IF／s10-trait-38正常生涯，出生潜在463≤469、NPB20季、2049退休，grinder仍false；現行newState缺potSum0，被委派退休函式讀缺值999。注入可信出生合計取得稱號，RNG597不變；schoolTier B→舊hsTier3及出生高校語意仍待批准，不以退休潜在或升學後tier補造。完了條件：核准最小初始欄位修復、P／IF門檻、升學／潜在變動、既取得狀態及S／R回歸通過。[第十階段A](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md)
+- [ ] **STATE-NPB-RETURN-RETRY-01** — `CONFIRMED_RISK・待批准修復`。原生滿期CPBL1→NPB候選在簽約前／契約建立後／付款handler後描畫三種明示fault injection，三尺寸9案重試後仍2038、選項清空；completed在action前永久設true。正常3案PASS；未證明自然觸發，不宣稱重付現金（回國契約金0）。完了條件：核准latch與首次年數快照最小恢復、失敗／已付重畫retry、下一年支付、單次ID／推進及正常S／R比較通過，不全面rollback S或R。[第十階段C](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md)
 
 ### 3.2 P1 — 退休與殿堂研究、決策（6 項）
 
@@ -122,11 +127,11 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-> **未完成項目核算：** 3（規格／回歸／歷史細項）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**26**。正式checkbox ID各只出現一次，歷史38項保持原數；同步修正前輪遺留的9＋6＋4＋6＋7＝32摘要算式。
+> **未完成項目核算：** 5（規格／回歸／歷史細項／新待修復）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**28**。正式checkbox ID各只出現一次，歷史38項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
-1. **使用者審查第九階段文件**：本輪完成後停止，未批准不合併main、不開始第十階段。先審查退休稱號舊key及海外候選資料流補驗、低風險read-only model候選，不能直接修遊戲。
+1. **使用者審查第十階段結果並批准最小修復**：優先NPB回國retry風險，再確認初始稱號欄位與出生tier語意；沒有授權不修遊戲、不合併main、不開始重構。海外27案只為指定fixture通過，不是全市場自然生涯驗收。
 2. **AUD-02／REFACTOR-AUDIT-01**：按[第五階段路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)補規格／動態可達性證據；本輪不批准重構或刪除LEGACY。
 3. **HIST-SPEC-CLAUSE-01**：原定義／未完狀態保持；第九階段只提出改為「歷史保留與按需追溯」的建議與可能失去的意圖證據，尚未批准。CURRENT_SPEC來源說明補充須先審查，不自動採納歷史政策。
 4. **HOF-NATURAL-SAMPLE-01**：補足自然到達四聯盟的研究樣本，之後再討論殿堂規則決策。
@@ -168,6 +173,7 @@
 - [第七階段安全修復](docs/reviews/STAGE7_SAFETY_FIX_ACCEPTANCE.md)：三項風險最小修復與指定驗收完成，v1.11.5；原FAIL與歷史報告保持可追溯。
 - [第八階段歷史規格](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)／[AGENTS歷史](docs/reviews/STAGE8_AGENTS_HISTORY_AUDIT.md)：調查及分類結案，歷史全細項未驗範圍保留獨立待辦；VERSION／CHANGELOG不變。
 - [第九階段驗收](docs/reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md)：新增[現行詳細設計入口](docs/design/CURRENT_DETAILED_DESIGN.md)及S/RNG、模組函式、流程/UI附錄；SPEC_MISMATCH文件引用與7組UNVERIFIED缺口保留。AUD-02／REFACTOR-AUDIT-01／HIST-SPEC-CLAUSE-01未完，不因文件建檔結案；新工作ID僅建議，正式checkbox仍18完成／26未完／44唯一。
+- [第十階段調查](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md)：A正常稱號1 FAIL、B27 PASS、C正常3 PASS／故障9 FAIL、D兩路線trace對照PASS；未改遊戲。新增兩個未完修復ID，原稽核及LEGACY清理仍未完。
 - [第五階段規格／架構調查](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)／[重構路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)：1.11.4，quick44 PASS，P0風險0／P1五項／P2兩項／P3一項；風險數不是已重現Bug數。全規格／動態可達性未結案。
 
 ### 5.3 不得混淆的既有技術限制
@@ -204,4 +210,8 @@
 
 ---
 
-**文件性質：** 保留已提交的 `1dacc55` 使用者重編版與第一至第八階段紀錄，補記第九階段現行技術設計及未驗限制；不覆寫歷史報告，不把待決規格當成實作授權。
+**文件性質：** 保留已提交的 `1dacc55` 使用者重編版與第一至第九階段紀錄，補記第十階段四項調查及待批准修復；不覆寫歷史報告，不把待決規格當成實作授權。
+
+## 第十階段提交後證據
+
+本機Quick45 PASS（258.247秒）、指定調查入口34 PASS／10 FAIL（Runner60.187秒、exit1）；詳細命令及逐案log位置見第十階段報告。提交後Linux Quick與Cloudflare部署證據在完成實際檢查後補記；不預先標PASS、不把純BACKLOG補記提交SHA冒充受驗測試SHA。

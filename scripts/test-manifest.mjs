@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'stage10-risk-e2e': {seconds:240,reason:'Pre-refactor investigation: natural trait routes, overseas salary flow, explicit return faults and passive LEGACY traces. Desired-behaviour failures remain FAIL; no Quick profile.'},
   'stage6-ability-e2e': {seconds:120,reason:'Original allocation matrix and stale-callback safety assertions; expectations preserved.'},
   'stage6-state-transaction-e2e': {seconds:40,reason:'Native CORP reentry and explicit signing fault injection; not proof of a naturally reachable UI bug.'},
   'stage7-safety-e2e': {seconds:90,reason:'Current-session callbacks, CORP settlement faults/year boundary, signing redraw retry and next-year payment.'},
