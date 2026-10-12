@@ -74,6 +74,7 @@ try{
       assert.equal((signed.state.careerBuyout||0)-(before.state.careerBuyout||0),buyout);
       await p.evaluate(y=>window.__stage6.fixtureYear(y),signed.state.year+1);await p.evaluate(()=>window.__stage6.payNext());const paid=await get(p);assert.equal(paid.state.careerBaseSalary-signed.state.careerBaseSalary,expected);await p.evaluate(()=>window.__stage6.payNext());const repeat=await get(p);assert.deepEqual(money(repeat.state),money(paid.state));e.snapshots.push({paid,repeat});
     });
+    let returnControl;
     for(const fault of ['none','before-sign','after-create','after-payment'])await h.test('C-'+width+'-'+fault,{width,source:'CPBL1',faultInjection:fault!=='none',fault},async e=>{
       await p.evaluate(()=>window.__stage10.fixture({org:'CPBL',level:'CPBL1',ability:54,salary:12000000}));await p.evaluate(()=>window.__stage10.returnOffer());await p.evaluate(()=>window.__stage10.remember());const before=await get(p);assert.match(before.choices,/NPB/);
       if(fault!=='none')await p.evaluate(v=>window.__stage10.fault(v),fault);await p.locator('#act button').first().click();const first=await get(p);
@@ -82,6 +83,13 @@ try{
       if(fault==='none'){assert.deepEqual(retry.state,first.state);assert.deepEqual(retry.rng,first.rng);}
       if(fault==='after-payment'){assert.equal(retry.state.ct.contractId,first.state.ct.contractId);assert.deepEqual(money(retry.state),money(first.state));}
       assert.equal(retry.state.year,before.state.year+1,'Return must advance once after successful retry');assert.ok(retry.choices.trim(),'Next operation must remain available');assert.equal(retry.state.ct.org,'NPB');
+      assert.equal(retry.state.contractSequence,before.state.contractSequence+1);
+      if(fault==='none')returnControl=retry;
+      else {assert.deepEqual(retry.state,returnControl.state,'Retry must commit exactly the normal transaction');assert.deepEqual(retry.rng,returnControl.rng,'Retry must reuse the first year draw');}
+      if(fault==='after-create')assert.equal(retry.state.ct.contractId,first.created[0].contractId,'Reuse the validated contract, not a second ID');
+      await p.evaluate(()=>window.__stage10.oldClick());assert.deepEqual((await get(p)).state,retry.state);
+      await p.evaluate(()=>window.__stage6.payNext());const paid=await get(p);assert.equal(paid.state.careerBaseSalary-retry.state.careerBaseSalary,retry.state.ct.annualSchedule[0].amount);
+      await p.evaluate(()=>window.__stage6.payNext());const repeated=await get(p);assert.deepEqual(money(repeated.state),money(paid.state));assert.deepEqual(repeated.rng,paid.rng);e.snapshots.push({paid,repeated});
     });await p.close();
   }
 }catch(error){
