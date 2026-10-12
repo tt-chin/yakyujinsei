@@ -1,0 +1,2011 @@
+{
+  "commit": "6a998330f9d9f3a29630984ebc150fcaa19ea280",
+  "version": "1.11.8",
+  "environment": {
+    "node": "v24.15.0",
+    "browser": "155.0.8059.39",
+    "platform": "win32"
+  },
+  "seconds": 75.083,
+  "completed": 100,
+  "failures": 0,
+  "errors": [],
+  "resources": [],
+  "replay": [
+    {
+      "seed": "pitcher-tc-1118-001",
+      "strategy": "ordered-overseas",
+      "completed": true,
+      "state": "4254aeb5e3445b5adce35e0ba7400304db62810d15122324dba29eef2c7b029a",
+      "actions": "eecfdca2b32e0fb1af3f6f5354c762055f15ec1811e8b42d5dbb7497503acb30",
+      "calls": 611
+    },
+    {
+      "seed": "pitcher-tc-1118-002",
+      "strategy": "balanced-stay",
+      "completed": true,
+      "state": "1643e507a64cf5d92b21e3e72b4a4b5fd43f7325991e014f4ea54583792a9349",
+      "actions": "2052786991b954009f90acc6e5b8d94678884b4edf79b91d47d66892bc83fd3c",
+      "calls": 872
+    }
+  ],
+  "checks": {
+    "duplicates": 0,
+    "finalLogMismatch": 0,
+    "invalidStats": 0,
+    "unknownRoles": 0
+  },
+  "strategies": {
+    "ordered-overseas": {
+      "careers": 50,
+      "professional": 3
+    },
+    "balanced-stay": {
+      "careers": 50,
+      "professional": 50
+    }
+  },
+  "schemes": {
+    "A": {
+      "era": [
+        3.5,
+        2.5
+      ],
+      "W": {
+        "CPBL": [
+          8,
+          13
+        ],
+        "KBO": [
+          10,
+          15
+        ],
+        "NPB": [
+          10,
+          15
+        ],
+        "MLB": [
+          12,
+          17
+        ]
+      },
+      "IP": {
+        "CPBL": 100,
+        "KBO": 120,
+        "NPB": 120,
+        "MLB": 140
+      }
+    },
+    "B": {
+      "era": [
+        3.2,
+        2.2
+      ],
+      "W": {
+        "CPBL": [
+          10,
+          15
+        ],
+        "KBO": [
+          12,
+          17
+        ],
+        "NPB": [
+          12,
+          17
+        ],
+        "MLB": [
+          14,
+          19
+        ]
+      },
+      "IP": {
+        "CPBL": 120,
+        "KBO": 144,
+        "NPB": 143,
+        "MLB": 162
+      }
+    },
+    "C": {
+      "era": [
+        2.8,
+        1.8
+      ],
+      "W": {
+        "CPBL": [
+          12,
+          17
+        ],
+        "KBO": [
+          14,
+          19
+        ],
+        "NPB": [
+          14,
+          19
+        ],
+        "MLB": [
+          16,
+          21
+        ]
+      },
+      "IP": {
+        "CPBL": 120,
+        "KBO": 144,
+        "NPB": 143,
+        "MLB": 162
+      }
+    }
+  },
+  "groups": [
+    {
+      "league": "CPBL",
+      "role": "SP",
+      "seasons": 46,
+      "recorded": 46,
+      "fullRest": 0,
+      "careers": 9,
+      "seeds": [
+        "pitcher-tc-1118-010",
+        "pitcher-tc-1118-012",
+        "pitcher-tc-1118-041",
+        "pitcher-tc-1118-056",
+        "pitcher-tc-1118-074",
+        "pitcher-tc-1118-077",
+        "pitcher-tc-1118-078",
+        "pitcher-tc-1118-079",
+        "pitcher-tc-1118-086"
+      ],
+      "distributions": {
+        "W": {
+          "mean": 7.021739130434782,
+          "median": 7,
+          "p75": 10,
+          "p90": 11.5,
+          "p95": 12,
+          "max": 14,
+          "min": 0
+        },
+        "era": {
+          "mean": 3.801180487686655,
+          "median": 3.4275829142066714,
+          "p75": 4.178468899521531,
+          "p90": 5.4107142857142865,
+          "p95": 6.201311475409836,
+          "max": 8.546762589928058,
+          "min": 2.187341772151899
+        },
+        "IP": {
+          "mean": 95.4804347826087,
+          "median": 99.35,
+          "p75": 124.375,
+          "p90": 134.78333333333333,
+          "p95": 140.45833333333334,
+          "max": 158,
+          "min": 10.2
+        },
+        "SO": {
+          "mean": 76.45652173913044,
+          "median": 73,
+          "p75": 106.25,
+          "p90": 128.5,
+          "p95": 137.5,
+          "max": 168,
+          "min": 7
+        }
+      },
+      "currentSO": {
+        "basic": 0.08695652173913043,
+        "guarantee": 0,
+        "actual": 0.06521739130434782
+      },
+      "plans": {
+        "A": {
+          "minIP": 0.4782608695652174,
+          "Wbasic": 0.45652173913043476,
+          "Wguarantee": 0.043478260869565216,
+          "ERAbasic": 0.32608695652173914,
+          "ERAguarantee": 0.06521739130434782,
+          "expected": {
+            "W": 0.22826086956521746,
+            "ERA": 0.21565217391304348,
+            "SO": 0.04043478260869565,
+            "joint": 0.026199999999999998
+          }
+        },
+        "B": {
+          "minIP": 0.32608695652173914,
+          "Wbasic": 0.2826086956521739,
+          "Wguarantee": 0,
+          "ERAbasic": 0.21739130434782608,
+          "ERAguarantee": 0.021739130434782608,
+          "expected": {
+            "W": 0.1126086956521739,
+            "ERA": 0.11826086956521738,
+            "SO": 0.04043478260869565,
+            "joint": 0.012621826086956523
+          }
+        },
+        "C": {
+          "minIP": 0.32608695652173914,
+          "Wbasic": 0.10869565217391304,
+          "Wguarantee": 0,
+          "ERAbasic": 0.08695652173913043,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0.03782608695652174,
+            "ERA": 0.0441304347826087,
+            "SO": 0.04043478260869565,
+            "joint": 0.004109130434782609
+          }
+        }
+      }
+    },
+    {
+      "league": "CPBL",
+      "role": "MR",
+      "seasons": 51,
+      "recorded": 51,
+      "fullRest": 0,
+      "careers": 17,
+      "seeds": [
+        "pitcher-tc-1118-002",
+        "pitcher-tc-1118-008",
+        "pitcher-tc-1118-010",
+        "pitcher-tc-1118-012",
+        "pitcher-tc-1118-014",
+        "pitcher-tc-1118-018",
+        "pitcher-tc-1118-022",
+        "pitcher-tc-1118-040",
+        "pitcher-tc-1118-052",
+        "pitcher-tc-1118-056",
+        "pitcher-tc-1118-058",
+        "pitcher-tc-1118-066",
+        "pitcher-tc-1118-074",
+        "pitcher-tc-1118-076",
+        "pitcher-tc-1118-078",
+        "pitcher-tc-1118-086",
+        "pitcher-tc-1118-088"
+      ],
+      "distributions": {
+        "W": {
+          "mean": 1.411764705882353,
+          "median": 1,
+          "p75": 2,
+          "p90": 3,
+          "p95": 3,
+          "max": 4,
+          "min": 0
+        },
+        "era": {
+          "mean": 5.12137125765901,
+          "median": 4.821428571428571,
+          "p75": 5.705244122965642,
+          "p90": 6.54,
+          "p95": 7.2097264437689965,
+          "max": 9.428571428571429,
+          "min": 3.4
+        },
+        "IP": {
+          "mean": 31.55555555555555,
+          "median": 34.6,
+          "p75": 44.05,
+          "p90": 54,
+          "p95": 55.16666666666667,
+          "max": 60.333333333333336,
+          "min": 2.1
+        },
+        "SO": {
+          "mean": 19.294117647058822,
+          "median": 13,
+          "p75": 36,
+          "p90": 48,
+          "p95": 50.5,
+          "max": 58,
+          "min": 0
+        }
+      },
+      "currentSO": {
+        "basic": 0,
+        "guarantee": 0,
+        "actual": 0
+      },
+      "plans": {
+        "A": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        },
+        "B": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        },
+        "C": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        }
+      }
+    },
+    {
+      "league": "CPBL",
+      "role": "CL",
+      "seasons": 11,
+      "recorded": 11,
+      "fullRest": 0,
+      "careers": 7,
+      "seeds": [
+        "pitcher-tc-1118-002",
+        "pitcher-tc-1118-010",
+        "pitcher-tc-1118-018",
+        "pitcher-tc-1118-056",
+        "pitcher-tc-1118-074",
+        "pitcher-tc-1118-078",
+        "pitcher-tc-1118-088"
+      ],
+      "distributions": {
+        "W": {
+          "mean": 1.3636363636363635,
+          "median": 2,
+          "p75": 2.5,
+          "p90": 3,
+          "p95": 3,
+          "max": 3,
+          "min": 0
+        },
+        "era": {
+          "mean": 4.564125853002141,
+          "median": 4.5,
+          "p75": 5.013091268066271,
+          "p90": 5.42713567839196,
+          "p95": 5.606424982053123,
+          "max": 5.785714285714286,
+          "min": 3.5183467530536774
+        },
+        "IP": {
+          "mean": 32.22727272727272,
+          "median": 31.5,
+          "p75": 52.1,
+          "p90": 58.333333333333336,
+          "p95": 62.33333333333333,
+          "max": 66.33333333333333,
+          "min": 5.3
+        },
+        "SO": {
+          "mean": 24.636363636363637,
+          "median": 24,
+          "p75": 43.5,
+          "p90": 56,
+          "p95": 61,
+          "max": 66,
+          "min": 0
+        }
+      },
+      "currentSO": {
+        "basic": 0,
+        "guarantee": 0,
+        "actual": 0
+      },
+      "plans": {
+        "A": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        },
+        "B": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        },
+        "C": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        }
+      }
+    },
+    {
+      "league": "KBO",
+      "role": "SP",
+      "seasons": 0,
+      "recorded": 0,
+      "fullRest": 0,
+      "careers": 0,
+      "seeds": []
+    },
+    {
+      "league": "KBO",
+      "role": "MR",
+      "seasons": 0,
+      "recorded": 0,
+      "fullRest": 0,
+      "careers": 0,
+      "seeds": []
+    },
+    {
+      "league": "KBO",
+      "role": "CL",
+      "seasons": 0,
+      "recorded": 0,
+      "fullRest": 0,
+      "careers": 0,
+      "seeds": []
+    },
+    {
+      "league": "NPB",
+      "role": "SP",
+      "seasons": 413,
+      "recorded": 413,
+      "fullRest": 0,
+      "careers": 43,
+      "seeds": [
+        "pitcher-tc-1118-002",
+        "pitcher-tc-1118-004",
+        "pitcher-tc-1118-006",
+        "pitcher-tc-1118-008",
+        "pitcher-tc-1118-012",
+        "pitcher-tc-1118-014",
+        "pitcher-tc-1118-016",
+        "pitcher-tc-1118-018",
+        "pitcher-tc-1118-020",
+        "pitcher-tc-1118-022",
+        "pitcher-tc-1118-024",
+        "pitcher-tc-1118-026",
+        "pitcher-tc-1118-028",
+        "pitcher-tc-1118-030",
+        "pitcher-tc-1118-032",
+        "pitcher-tc-1118-034",
+        "pitcher-tc-1118-036",
+        "pitcher-tc-1118-040",
+        "pitcher-tc-1118-042",
+        "pitcher-tc-1118-044",
+        "pitcher-tc-1118-046",
+        "pitcher-tc-1118-048",
+        "pitcher-tc-1118-050",
+        "pitcher-tc-1118-052",
+        "pitcher-tc-1118-054",
+        "pitcher-tc-1118-058",
+        "pitcher-tc-1118-060",
+        "pitcher-tc-1118-062",
+        "pitcher-tc-1118-064",
+        "pitcher-tc-1118-066",
+        "pitcher-tc-1118-068",
+        "pitcher-tc-1118-070",
+        "pitcher-tc-1118-072",
+        "pitcher-tc-1118-080",
+        "pitcher-tc-1118-082",
+        "pitcher-tc-1118-084",
+        "pitcher-tc-1118-086",
+        "pitcher-tc-1118-090",
+        "pitcher-tc-1118-092",
+        "pitcher-tc-1118-094",
+        "pitcher-tc-1118-096",
+        "pitcher-tc-1118-098",
+        "pitcher-tc-1118-100"
+      ],
+      "distributions": {
+        "W": {
+          "mean": 6.184019370460049,
+          "median": 6,
+          "p75": 8,
+          "p90": 9,
+          "p95": 10,
+          "max": 13,
+          "min": 0
+        },
+        "era": {
+          "mean": 4.554855597983606,
+          "median": 4.3988764044943816,
+          "p75": 4.901538461538462,
+          "p90": 5.710075839653305,
+          "p95": 6.457030674846624,
+          "max": 9.086538461538462,
+          "min": 2.8457583547557843
+        },
+        "IP": {
+          "mean": 88.63171912832928,
+          "median": 94,
+          "p75": 109.9,
+          "p90": 119.08,
+          "p95": 125.13333333333333,
+          "max": 145.66666666666666,
+          "min": 4.8
+        },
+        "SO": {
+          "mean": 66.52300242130751,
+          "median": 67,
+          "p75": 89,
+          "p90": 106,
+          "p95": 118.39999999999998,
+          "max": 147,
+          "min": 2
+        }
+      },
+      "currentSO": {
+        "basic": 0,
+        "guarantee": 0,
+        "actual": 0
+      },
+      "plans": {
+        "A": {
+          "minIP": 0.09443099273607748,
+          "Wbasic": 0.08958837772397095,
+          "Wguarantee": 0,
+          "ERAbasic": 0.03389830508474576,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0.03133171912832932,
+            "ERA": 0.015375302663438258,
+            "SO": 0,
+            "joint": 0
+          }
+        },
+        "B": {
+          "minIP": 0.004842615012106538,
+          "Wbasic": 0.01694915254237288,
+          "Wguarantee": 0,
+          "ERAbasic": 0.002421307506053269,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0.0052784503631961265,
+            "ERA": 0.0008958837772397094,
+            "SO": 0,
+            "joint": 0
+          }
+        },
+        "C": {
+          "minIP": 0.004842615012106538,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        }
+      }
+    },
+    {
+      "league": "NPB",
+      "role": "MR",
+      "seasons": 76,
+      "recorded": 76,
+      "fullRest": 0,
+      "careers": 38,
+      "seeds": [
+        "pitcher-tc-1118-004",
+        "pitcher-tc-1118-006",
+        "pitcher-tc-1118-008",
+        "pitcher-tc-1118-014",
+        "pitcher-tc-1118-018",
+        "pitcher-tc-1118-020",
+        "pitcher-tc-1118-024",
+        "pitcher-tc-1118-026",
+        "pitcher-tc-1118-028",
+        "pitcher-tc-1118-030",
+        "pitcher-tc-1118-032",
+        "pitcher-tc-1118-034",
+        "pitcher-tc-1118-036",
+        "pitcher-tc-1118-038",
+        "pitcher-tc-1118-042",
+        "pitcher-tc-1118-044",
+        "pitcher-tc-1118-046",
+        "pitcher-tc-1118-050",
+        "pitcher-tc-1118-052",
+        "pitcher-tc-1118-054",
+        "pitcher-tc-1118-058",
+        "pitcher-tc-1118-060",
+        "pitcher-tc-1118-062",
+        "pitcher-tc-1118-064",
+        "pitcher-tc-1118-066",
+        "pitcher-tc-1118-068",
+        "pitcher-tc-1118-070",
+        "pitcher-tc-1118-072",
+        "pitcher-tc-1118-076",
+        "pitcher-tc-1118-078",
+        "pitcher-tc-1118-080",
+        "pitcher-tc-1118-082",
+        "pitcher-tc-1118-084",
+        "pitcher-tc-1118-090",
+        "pitcher-tc-1118-092",
+        "pitcher-tc-1118-094",
+        "pitcher-tc-1118-096",
+        "pitcher-tc-1118-098"
+      ],
+      "distributions": {
+        "W": {
+          "mean": 1,
+          "median": 1,
+          "p75": 2,
+          "p90": 2,
+          "p95": 2,
+          "max": 2,
+          "min": 0
+        },
+        "era": {
+          "mean": 6.370333257239662,
+          "median": 5.821453418506103,
+          "p75": 6.860769230769231,
+          "p90": 9.440934065934066,
+          "p95": 9.850316742081446,
+          "max": 11.31,
+          "min": 3.9650349650349654
+        },
+        "IP": {
+          "mean": 29.690350877192987,
+          "median": 27.3,
+          "p75": 38.724999999999994,
+          "p90": 54,
+          "p95": 56.166666666666664,
+          "max": 64,
+          "min": 2.1
+        },
+        "SO": {
+          "mean": 18.06578947368421,
+          "median": 12.5,
+          "p75": 29.5,
+          "p90": 48,
+          "p95": 58,
+          "max": 71,
+          "min": 0
+        }
+      },
+      "currentSO": {
+        "basic": 0,
+        "guarantee": 0,
+        "actual": 0
+      },
+      "plans": {
+        "A": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        },
+        "B": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        },
+        "C": {
+          "minIP": 0,
+          "Wbasic": 0,
+          "Wguarantee": 0,
+          "ERAbasic": 0,
+          "ERAguarantee": 0,
+          "expected": {
+            "W": 0,
+            "ERA": 0,
+            "SO": 0,
+            "joint": 0
+          }
+        }
+      }
+    },
+    {
+      "league": "NPB",
+      "role": "CL",
+      "seasons": 0,
+      "recorded": 0,
+      "fullRest": 0,
+      "careers": 0,
+      "seeds": []
+    },
+    {
+      "league": "MLB",
+      "role": "SP",
+      "seasons": 0,
+      "recorded": 0,
+      "fullRest": 0,
+      "careers": 0,
+      "seeds": []
+    },
+    {
+      "league": "MLB",
+      "role": "MR",
+      "seasons": 0,
+      "recorded": 0,
+      "fullRest": 0,
+      "careers": 0,
+      "seeds": []
+    },
+    {
+      "league": "MLB",
+      "role": "CL",
+      "seasons": 0,
+      "recorded": 0,
+      "fullRest": 0,
+      "careers": 0,
+      "seeds": []
+    }
+  ],
+  "careerEstimates": {
+    "A": {
+      "expectedPlayersPer100": 1.1153,
+      "possibleCareers": 2,
+      "probabilities": [
+        {
+          "seed": "pitcher-tc-1118-001",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-002",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-003",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-004",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-005",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-006",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-007",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-008",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-009",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-010",
+          "probability": 0.5254
+        },
+        {
+          "seed": "pitcher-tc-1118-011",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-012",
+          "probability": 0.5899
+        },
+        {
+          "seed": "pitcher-tc-1118-013",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-014",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-015",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-016",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-017",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-018",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-019",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-020",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-021",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-022",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-023",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-024",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-025",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-026",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-027",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-028",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-029",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-030",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-031",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-032",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-033",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-034",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-035",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-036",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-037",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-038",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-039",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-040",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-041",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-042",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-043",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-044",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-045",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-046",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-047",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-048",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-049",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-050",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-051",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-052",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-053",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-054",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-055",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-056",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-057",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-058",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-059",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-060",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-061",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-062",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-063",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-064",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-065",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-066",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-067",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-068",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-069",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-070",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-071",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-072",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-073",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-074",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-075",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-076",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-077",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-078",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-079",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-080",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-081",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-082",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-083",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-084",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-085",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-086",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-087",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-088",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-089",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-090",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-091",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-092",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-093",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-094",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-095",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-096",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-097",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-098",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-099",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-100",
+          "probability": 0
+        }
+      ]
+    },
+    "B": {
+      "expectedPlayersPer100": 0.5495884999999999,
+      "possibleCareers": 2,
+      "probabilities": [
+        {
+          "seed": "pitcher-tc-1118-001",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-002",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-003",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-004",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-005",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-006",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-007",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-008",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-009",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-010",
+          "probability": 0.214704
+        },
+        {
+          "seed": "pitcher-tc-1118-011",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-012",
+          "probability": 0.3348844999999999
+        },
+        {
+          "seed": "pitcher-tc-1118-013",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-014",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-015",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-016",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-017",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-018",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-019",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-020",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-021",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-022",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-023",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-024",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-025",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-026",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-027",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-028",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-029",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-030",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-031",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-032",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-033",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-034",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-035",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-036",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-037",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-038",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-039",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-040",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-041",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-042",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-043",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-044",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-045",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-046",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-047",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-048",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-049",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-050",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-051",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-052",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-053",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-054",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-055",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-056",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-057",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-058",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-059",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-060",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-061",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-062",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-063",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-064",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-065",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-066",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-067",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-068",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-069",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-070",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-071",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-072",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-073",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-074",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-075",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-076",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-077",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-078",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-079",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-080",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-081",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-082",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-083",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-084",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-085",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-086",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-087",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-088",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-089",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-090",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-091",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-092",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-093",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-094",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-095",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-096",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-097",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-098",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-099",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-100",
+          "probability": 0
+        }
+      ]
+    },
+    "C": {
+      "expectedPlayersPer100": 0.18218458399999993,
+      "possibleCareers": 1,
+      "probabilities": [
+        {
+          "seed": "pitcher-tc-1118-001",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-002",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-003",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-004",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-005",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-006",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-007",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-008",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-009",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-010",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-011",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-012",
+          "probability": 0.18218458399999993
+        },
+        {
+          "seed": "pitcher-tc-1118-013",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-014",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-015",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-016",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-017",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-018",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-019",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-020",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-021",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-022",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-023",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-024",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-025",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-026",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-027",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-028",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-029",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-030",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-031",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-032",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-033",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-034",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-035",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-036",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-037",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-038",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-039",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-040",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-041",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-042",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-043",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-044",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-045",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-046",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-047",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-048",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-049",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-050",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-051",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-052",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-053",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-054",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-055",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-056",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-057",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-058",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-059",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-060",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-061",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-062",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-063",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-064",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-065",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-066",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-067",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-068",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-069",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-070",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-071",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-072",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-073",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-074",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-075",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-076",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-077",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-078",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-079",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-080",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-081",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-082",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-083",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-084",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-085",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-086",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-087",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-088",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-089",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-090",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-091",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-092",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-093",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-094",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-095",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-096",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-097",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-098",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-099",
+          "probability": 0
+        },
+        {
+          "seed": "pitcher-tc-1118-100",
+          "probability": 0
+        }
+      ]
+    }
+  },
+  "professionalCareers": 53,
+  "tradeSeasons": 0
+}
