@@ -1,21 +1,21 @@
 # BACKLOG — 野球人生（日文版）
 
-> 更新：2026-10-13｜dev工作版1.11.9；全力投球修復基準`20920dddd72ab8c91b0e2c71d560492663cd5aec`，本機最終Full／CI／Preview驗證中。下方1.11.8的CI／Preview結果為歷史證據，不冒充1.11.9驗收。main／本番仍為1.11.4。
+> 更新：2026-10-13｜dev 1.11.9全力投球修復驗收完成。受驗程式`a1658c994713fd1fb8f66857dab33df0ff6548fd`，Linux Quick47／Full65入口及Preview29案PASS；基準`20920dddd72ab8c91b0e2c71d560492663cd5aec`。下方舊版結果保留為歷史證據；main／本番仍為1.11.4。
 > 保留第一至第十階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`；本輪另批准回國retry與grinder最小修復，歷史數據不冒充此版結果。提交與CI／Preview證據見最末節。
 
 ## 1. 最新進度總覽
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
-| 已完成 | **21** | 有對應驗收紀錄，含兩項核准修復及特性顯示驗收 |
-| 未完成 | **28** | 含全力投球修復驗收中及既有待辦 |
+| 已完成 | **22** | 有對應驗收紀錄，新增全力投球最小修復結案 |
+| 未完成 | **27** | 既有待辦保持，不擴大結案範圍 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **3** | 三項實機／分享 |
-| IMPLEMENTED_UNVERIFIED | **5** | 加入全力投球最終驗收，其他四項保留 |
+| IMPLEMENTED_UNVERIFIED | **4** | 全力投球驗收完成，其他四項保留 |
 | DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一正式checkbox重新計算：**21 + 28 = 49**。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。TRAIT-DISPLAY-UNIFY-01的Preview18案、Linux Quick45及Full61入口通過，按指定顯示範圍結案；實際dev手動Full可觸發、不需Draft PR。受驗SHA與CI連結見末節及[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
+以上依唯一正式checkbox重新計算：**22 + 27 = 49**。全力投球1.11.9的Linux Quick47／Full65及Preview29案實際通過，詳見末節。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。TRAIT-DISPLAY-UNIFY-01的Preview18案、Linux Quick45及Full61入口通過，按指定顯示範圍結案；實際dev手動Full可觸發、不需Draft PR。受驗SHA與CI連結見末節及[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -34,11 +34,13 @@
 | 第十階段修復 | 回國retry／grinder | 兩修復ID；smallschool獨立待決 | **核准修復與本機／Linux Full／Preview驗收完成；非全面交易保證** | [修復驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md) |
 | 特性顯示統一 | 取得當下說明／以後名稱 | `TRAIT-DISPLAY-UNIFY-01` | **指定顯示範圍完成；Linux Quick45／Full61及Preview18 PASS** | [驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md) |
 | v1.11.8本大会個人成績 | 保存既有生成結果／結果卡顯示 | `INT-01`前置（非履歷列表結案） | **本機Quick46／Full63及指定Preview43案PASS；重新部署成功** | [驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)／本檔末節 |
+| v1.11.9全力投球 | callback值最小修復 | `BUG-PITCH-EFFORT-01` | **Linux Quick47／Full65、新專項36及Preview29案PASS** | [驗收](docs/reviews/FULL_POWER_PITCHING_ACCEPTANCE.md)／本檔末節 |
 
 上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
 ### 1.2 目前開發基準與限制
 
+- **最新全力投球受驗程式：** `a1658c994713fd1fb8f66857dab33df0ff6548fd`、1.11.9。Linux Quick47／Full65入口、新專項36及Preview29案PASS；完整證據見末節。其他版本均為各自歷史受驗範圍，不沿用舊PASS冒充新版測試。
 - **上輪已提交的受驗程式 SHA：** `6020df03ca507c456233005d22bfe36c3d21f306`，1.11.7；本機／Preview已驗證，Linux Quick45及Full61入口均PASS，見末節。此前Linux Full受驗SHA `b2e01509c0ea75712579f53d864ecd09f710840c`、1.11.6及第七階段SHA `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`保留為歷史；後續純文件HEAD不冒充受驗程式SHA。
 - **國際大会顯示最新受驗程式：** `2924dd03f1bf0fecac0f1673f07c10df92546114`、1.11.8。修正前完整SHA `e602174a22d7472e1021d780388ad61adc6b11b6`＋1.11.8作業樹已實際Quick46／Full63入口PASS；新專用單体15／E2E50案、6條生涯完整S／選擇／RNG一致，僅排除version及新增personalStats。Quick CI success；同程式SHA重新部署success，固定Preview指定遠端43案PASS。遠端受驗HEAD為`6bfa070b914259664ef80ccee2cae4af5bc4d24f`，其docs/index.html／src／styles與2924dd0零差異，48配信HTML/JS/CSS與受驗來源一致。此版結果卡的Preview驗收完成，實機／Linux Full等限制保留；歷史一覧INT-01仍未完成，不擴大其他結案。[驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - **第八階段文件與Quick受驗SHA：** `b38146e69288346a120db5b2d079ce0a7983aaae`；從`a5ed616418e1eb3611c6f714b5f2cf75161ba550`開始調查，遊戲程式樹不變。CI Run 38183631042成功；本次證據補記僅改BACKLOG，文件Commit另見Git／最終回報。
@@ -54,7 +56,7 @@
 - GitHub Actions 已能執行測試；**Branch Protection／Ruleset 強制合併檢查尚未設定**。
 - 未經使用者明確批准，不得修改 `main`、正式網站、遊戲平衡、RNG、年俸／契約政策或殿堂係數。
 
-## 2. 已完成工作（21 項）
+## 2. 已完成工作（22 項）
 
 ### 2.1 第一至第四階段
 
@@ -95,12 +97,13 @@
 
 - [x] **TRAIT-DISPLAY-UNIFY-01** — 全38 ID清查、取得當下原因／效果、失去／歷史名稱、退休新解鎖與概要、PNG及P／IF完整S/RNG對照通過。Linux Quick45／Full61入口及Preview18案PASS，CI受驗完整SHA與連結見末節。僅結案指定顯示範圍；未實裝3項不啟用，academy／taiwan自然取得路線未證明，smallschool語意仍獨立待決，不補造條件或宣稱所有自然取得路線已驗證。[驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)
 
-## 3. 未完成工作（28 項）
+### 2.7 全力投球最小修復（2026-10-13；受驗程式a1658c9）
 
-### 3.1 P1 — 規格、回歸驗證與待決（5 項）
+- [x] **BUG-PITCH-EFFORT-01** — 僅修正callback的S.effort寫入值，全力投→全力投球；原生53案、Linux Quick47／Full65入口、新專項36案及Preview29案PASS。通常／省エネ投手與IF完整S／選擇／RNG保持，全力成績／TJ及後續分支差異可追溯且新版重播一致。不改公式、係數、直接R呼叫或舊fallback；歷史測試採真實通常投球控制，不增加S排除。CI／Preview及本機失敗保留見末節。[驗收](docs/reviews/FULL_POWER_PITCHING_ACCEPTANCE.md)
 
-- [ ] **BUG-PITCH-EFFORT-01** — `IMPLEMENTED_UNVERIFIED`。使用者已批准callback全力投→全力投球一行修復及可追溯的全力路線差異。原生53案、本機初回Quick47入口、最終原生瀏覽器fixture29案通過；固定版Quick／Full、CI／Preview尚待完成，不預先結案。不改公式／係數、直接R呼叫或舊值fallback；歷史全狀態比較用真實UI通常投球控制，不新增排除欄位。[驗收](docs/reviews/FULL_POWER_PITCHING_ACCEPTANCE.md)
+## 3. 未完成工作（27 項）
 
+### 3.1 P1 — 規格、回歸驗證與待決（4 項）
 
 - [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。第五階段完成16章／84規格群組對照：MATCH49、MISMATCH3、UNVERIFIED27、DESIGN_PENDING1、OBSOLETE4；quick44 PASS。完整數值邊界、全DOM／跨功能互動及實機仍缺，**調查完成不等於全規格驗收完成**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。發現差異僅記錄，不修改遊戲。
 - [ ] **REFACTOR-AUDIT-01** — `IMPLEMENTED_UNVERIFIED`。第五階段已建主要S讀寫地圖、40模組AST索引（991函式節點／4193呼叫節點）、196 RNG語法點、32頂層覆寫群組、LEGACY委派與[分批路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)。動態scope／所有callback可達性未完全證明，保持未完成；**沒有批准大規模重構或刪除舊碼**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。
@@ -143,7 +146,7 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-> **未完成項目核算：** 5（原規格／回歸／歷史細項＋smallschool＋全力驗收）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**28**；49唯一ID、21完成／28未完。歷史38／47／48項及前階段快照保持原數。
+> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**27**；49唯一ID、22完成／27未完。歷史38／47／48項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
@@ -257,6 +260,15 @@
 - **不變性：** 未改造1.11.6 game.js逐步對照，P yakyo-test-001（530操作／1023R、2058退休）、IF s10-trait-38（331操作／577R、2048退休），全部選擇文字、前後完整JSON S摘要、最終S及R before/after/value相同，只排除VERSION。Baseline與current原始記錄在Full/Preview的career-P/IF-baseline/current.json，不排除traits、金錢、年表或其他S欄位；上述策略結果不與前輪不同策略的376／347操作混用。
 - **保護與清單：** 17個實作／測試／文書檔案提交；tasks/fix.md保留未追蹤、不刪除或提交。Runner、CI／發布workflow、AGENTS、trait/event政策、契約／殿堂政策、資料表不變。manifest只有新Full／Audit入口，移除該行即與a0b880b一致：69檔、Quick45／Full61／Audit62；48唯一checkbox、21完成／27未完，按指定顯示範圍關閉本ID，其他待辦不變。90個本地文件link通過。
 - **純文件證據提交：** 本次只更新BACKLOG的CI證據、結案狀態及統計，完整SHA見Git履歷／最終回報，與受驗程式6020df0分開。沿用既有paths-ignore，不改CI、不重跑同套Quick；後續文件Preview不冒充另一輪E2E。停止等待審查，不發布正式網站。
+
+## 全力投球最小修復驗收證據（1.11.9）
+
+- **受驗程式與版本：** `a1658c994713fd1fb8f66857dab33df0ff6548fd`，dev、1.11.8→1.11.9 PATCH。比較基準`20920dddd72ab8c91b0e2c71d560492663cd5aec`；game.js唯一行為修改是全力callback的`S.effort='全力投'`→`'全力投球'`，使既有成績／TJ效果生效。公式、係數、RNG呼叫及舊值fallback不變。config.js與CHANGELOG同步更新，CHANGELOG只記修復內容。main／origin/main仍`e886e84ca08c6c185406cac9d6f3c4376277061a`／1.11.4，沒有發布本番。
+- **本機證據與失敗保留：** 最終原生53 PASS；同53案在原始基準52 PASS／1 FAIL，失敗為callback值。最終本機Quick47 PASS／0 FAIL／0 SKIP／0 BLOCKED、227.416秒。Windows Full實際64 PASS／1 FAIL、3307.699秒、exit1，不能稱Full PASS：draft-income完整生涯迴圈仍選全力，歷史S一致oracle失效並在大量差異輸出階段出現Array buffer allocation failed。修正真正的操作器為通常投球、保留完整deepEqual及新增簡短差異路徑診斷後，該入口9 PASS、436.223秒。最終全套由下列確定SHA的Linux Full獨立驗證；不以部分重跑改寫原Full。歷史測試相容性未新增S排除欄位、不換舊baseline、不放寬非預期差異。[完整原因／日誌](docs/reviews/FULL_POWER_PITCHING_ACCEPTANCE.md)
+- **Linux CI：** [Quick Run 38281582865](https://github.com/tt-chin/yakyujinsei/actions/runs/38281582865)及[Full Run 38281629477](https://github.com/tt-chin/yakyujinsei/actions/runs/38281629477)均completed／success，headSha完全為a1658c994713fd1fb8f66857dab33df0ff6548fd。下載artifact實際確認Runner Quick **47 PASS／0 FAIL／0 SKIP／0 BLOCKED、146.791秒**；Full **65 PASS／0 FAIL／0 SKIP／0 BLOCKED、1991.530秒、reused=0**。Ubuntu24.04／Node24.15.0／Playwright1.62.1／Chromium151.0.7922.34。Full包括53原生、381契約、89能力、5交易、17安全及KBO／ACT／選秀／退休等既有入口；新專項36 PASS／0 FAIL／errors0。日誌與總表保存在test-results/full-power-ci-quick/ci及full-power-ci-full/ci。CI既有artifact pattern沒有包含tmp/full-power-pitching原始caseJSON；CI入口log及總表已下載，逐S／R原始記錄另保存在本機完整專項，不宣稱CI上傳了不存在的附件。不改workflow、不建立Draft PR。
+- **Preview：** 同程式SHA的Cloudflare check success，deployment `17c12e9c-2a49-4a3f-8ef6-ffd69fec6d58`。[固定Preview](https://dev.yakyujinsei.pages.dev)48個HTML／JS／CSS HTTP200，正規化LF後逐檔與受驗dev一致。`node tests/full-power-pitching-e2e.mjs --preview=https://dev.yakyujinsei.pages.dev --fixtures-only --playwright=<PW> --output=test-results/full-power-preview`實際 **29 PASS／0 FAIL／Console・pageerror0／JS-CSS4040、exit0**。Windows／Node24.15.0／Playwright1.62.1／Chrome155.0.8059.39，PC1280、320／390真實tap的手機模擬context，SP／MR／CL×三強度及rubber有無的TJ後续；MR／CL經真實留牛棚選項。不把fixtures-only稱遠端36案或遠端完整生涯。斷線browser profile清理逾時warning保留，非遊戲錯誤。
+- **固定Seed／狀態／RNG：** 本機及Linux新專項36案，含20次完整生涯執行。通常投球：yakyo-test-001/P 362操作／728R、jp3-pitcher-02/P 386／735；省エネ分別397／858、431／857；jp3-infielder-01/IF 387／639。只排除VERSION，完整S、選擇、R before/after/value與舊基準一致，新版重播亦一致。全力兩例舊362／728→新520／876、舊386／735→新530／830；第一差異2029選項callback僅effort，訓練及補正前R前綴一致，成績／TJ補正本身R0。2036首次TJ累積新超過50、舊未超過，開啟既有TJ選擇造成後續分支與R消耗差異，可追溯且屬使用者批准範圍；新版完整重播S／選擇／R完全一致。未改100條探索研究檔、門檻候選或新獎項判定。
+- **結案與文件提交區分：** BUG-PITCH-EFFORT-01按批准範圍結案，49唯一checkbox為22完成／27未完；其他狀態不變。此筆只更新BACKLOG證據與統計，純文件SHA見Git履歷／最終回報，與上述實際受驗程式SHA分開。沿用現有paths-ignore不重跑無影響的Quick／Full，後續文件Cloudflare部署不冒充另一輪E2E。未執行實機／Audit／4,000生涯或追加自然採樣，這些不是本項PASS範圍。tasks/既有未追蹤檔保留，AGENTS／Runner／CI／發布workflow未修改。停止等待使用者Preview審查，不更新main。
 
 ## 國際大会本大会個人成績顯示（1.11.8）
 
