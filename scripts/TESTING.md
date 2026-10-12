@@ -1,5 +1,11 @@
 # 統一測試入口
 
+## 全力投球callback修正
+
+`full-power-pitching.test`為Quick／Full／Audit原生函式53案（含四聯盟及MiLB適用階層）；`full-power-pitching-e2e`為Full／Audit的真實三強度callback、SP／MR／CL及1280／320／390px、TJ後續操作與完整生涯。基準20920dddd72ab8c91b0e2c71d560492663cd5aec，或明示`--baseline=<SHA>`；此專項要求game.js只存在核准的一行callback差異。可直接`--fixtures-only`做Preview矩陣，不冒充完整生涯。
+
+契約、draft-income、display、trait-display、international-personal-stats、KBO正向控制及殿堂的歷史一致生涯，修正前後都以真實UI明確選「通常投球」；只改測試操作策略，不改遊戲source／S／舊baseline，不新增狀態排除，完整S、選擇與RNG斷言保持。KBO原2049負面案例為IF，操作策略不受這個投手選項影響。原始全力路線的失敗证据保留；新專項另驗證全力的首個effort差異、首次補正前的完整R前綴、成績／TJ與新版重播。全力路線後續條件抽選可依已批准的連鎖差異改变，不稱完整舊生涯R次數不變。研究100條原始資料不覆寫。
+
 ## 国際大会の本大会成績表示
 
 `international-personal-stats.test`はQuick／Full／Auditの整形・差分・値コピー・旧結果単体（T01〜T13）。`international-personal-stats-e2e`はFull／Auditで、正式processIntlPhase、WBC／プレミア12、二重操作、T14全テーマ・大字・1280／320／360／390px、投手3／野手3の固定seed生涯を検証する。単独実行は`node scripts/test.mjs full --only=international-personal-stats-e2e`。`--fixtures-only`は明示的な専用入口直接実行に限り、生涯比較の代用ではない。

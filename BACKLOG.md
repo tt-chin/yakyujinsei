@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 更新：2026-10-12｜國際大会個人成績顯示基準：`e602174a22d7472e1021d780388ad61adc6b11b6`｜dev受驗程式：`2924dd03f1bf0fecac0f1673f07c10df92546114`／`1.11.8`（Quick CI成功；重新部署及指定Preview驗收完成，43 PASS；main／本番仍為1.11.4）
+> 更新：2026-10-13｜dev工作版1.11.9；全力投球修復基準`20920dddd72ab8c91b0e2c71d560492663cd5aec`，本機最終Full／CI／Preview驗證中。下方1.11.8的CI／Preview結果為歷史證據，不冒充1.11.9驗收。main／本番仍為1.11.4。
 > 保留第一至第十階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`；本輪另批准回國retry與grinder最小修復，歷史數據不冒充此版結果。提交與CI／Preview證據見最末節。
 
 ## 1. 最新進度總覽
@@ -8,14 +8,14 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **21** | 有對應驗收紀錄，含兩項核准修復及特性顯示驗收 |
-| 未完成 | **27** | 保留smallschool語意及其他獨立待辦 |
+| 未完成 | **28** | 含全力投球修復驗收中及既有待辦 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **3** | 三項實機／分享 |
-| IMPLEMENTED_UNVERIFIED | **4** | 現行規格、動態可達性、殿堂樣本及文案待驗 |
+| IMPLEMENTED_UNVERIFIED | **5** | 加入全力投球最終驗收，其他四項保留 |
 | DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一正式checkbox重新計算：**21 + 27 = 48**。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。TRAIT-DISPLAY-UNIFY-01的Preview18案、Linux Quick45及Full61入口通過，按指定顯示範圍結案；實際dev手動Full可觸發、不需Draft PR。受驗SHA與CI連結見末節及[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
+以上依唯一正式checkbox重新計算：**21 + 28 = 49**。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。TRAIT-DISPLAY-UNIFY-01的Preview18案、Linux Quick45及Full61入口通過，按指定顯示範圍結案；實際dev手動Full可觸發、不需Draft PR。受驗SHA與CI連結見末節及[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -95,9 +95,11 @@
 
 - [x] **TRAIT-DISPLAY-UNIFY-01** — 全38 ID清查、取得當下原因／效果、失去／歷史名稱、退休新解鎖與概要、PNG及P／IF完整S/RNG對照通過。Linux Quick45／Full61入口及Preview18案PASS，CI受驗完整SHA與連結見末節。僅結案指定顯示範圍；未實裝3項不啟用，academy／taiwan自然取得路線未證明，smallschool語意仍獨立待決，不補造條件或宣稱所有自然取得路線已驗證。[驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)
 
-## 3. 未完成工作（27 項）
+## 3. 未完成工作（28 項）
 
-### 3.1 P1 — 規格、回歸驗證與待決（4 項）
+### 3.1 P1 — 規格、回歸驗證與待決（5 項）
+
+- [ ] **BUG-PITCH-EFFORT-01** — `IMPLEMENTED_UNVERIFIED`。使用者已批准callback全力投→全力投球一行修復及可追溯的全力路線差異。原生53案、本機初回Quick47入口、最終原生瀏覽器fixture29案通過；固定版Quick／Full、CI／Preview尚待完成，不預先結案。不改公式／係數、直接R呼叫或舊值fallback；歷史全狀態比較用真實UI通常投球控制，不新增排除欄位。[驗收](docs/reviews/FULL_POWER_PITCHING_ACCEPTANCE.md)
 
 
 - [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。第五階段完成16章／84規格群組對照：MATCH49、MISMATCH3、UNVERIFIED27、DESIGN_PENDING1、OBSOLETE4；quick44 PASS。完整數值邊界、全DOM／跨功能互動及實機仍缺，**調查完成不等於全規格驗收完成**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。發現差異僅記錄，不修改遊戲。
@@ -141,7 +143,7 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**27**；48唯一ID、21完成／27未完。歷史38／47項及前階段快照保持原數。
+> **未完成項目核算：** 5（原規格／回歸／歷史細項＋smallschool＋全力驗收）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**28**；49唯一ID、21完成／28未完。歷史38／47／48項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 

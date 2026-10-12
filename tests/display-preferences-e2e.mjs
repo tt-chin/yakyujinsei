@@ -166,7 +166,7 @@ try{
             if(snapshot.state.done)return {state,done:true};
             const rows=[...action.querySelectorAll('.abrow')].filter(el=>el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('capped'));
             const buttons=[...action.querySelectorAll('button')].filter(el=>!el.disabled&&!/元に戻す|すべてリセット/.test(el.innerText));
-            const button=rows[0]||buttons.find(el=>/配分を確定|配分完了|次へ|完了/.test(el.innerText))||buttons.find(el=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(el.innerText))||buttons[0];
+            const button=buttons.find(el=>el.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(el=>/配分を確定|配分完了|次へ|完了/.test(el.innerText))||buttons.find(el=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(el.innerText))||buttons[0];
             if(!button)throw new Error('No actionable choice');
             button.click();return {state,done:false};
           },{labels:TRAIT_LABELS,texts:TRAIT_TEXT});

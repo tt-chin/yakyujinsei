@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'full-power-pitching-e2e': {seconds:900,reason:'Real pitching-plan callbacks, viewport/role matrix, normal and energy-saving P plus IF unchanged controls; approved full-power branch traces and exact replay. Includes 20 complete career runs; not a Quick entry.'},
   'international-personal-stats-e2e': {seconds:600,reason:'Tournament snapshots and result cards, T01-T14 browser matrix, six exact baseline S/RNG careers. No Quick profile.'},
   'trait-display-e2e': {seconds:180,reason:'All trait labels, acquisition-only explanation lifetime, retirement/PNG and exact pre-change P/IF S/RNG careers.'},
   'stage10-risk-e2e': {seconds:240,reason:'Pre-refactor investigation: natural trait routes, overseas salary flow, explicit return faults and passive LEGACY traces. Desired-behaviour failures remain FAIL; no Quick profile.'},
