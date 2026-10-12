@@ -34,6 +34,7 @@ import { canPlayHighSchoolFall, canPlaySenbatsu, nextSenbatsuEligibleYear, quali
 
 import { normalizeChampionshipState, captureSeasonChampionship, settleChampionship, maintainSeasonEnd } from './championship-policy.js';
 import { normalizeInternationalState, validateInternationalEntry, prepareInternationalResult, commitInternationalResult, INTLACE_UNLOCK_TEXT } from './international-trait-policy.js';
+import { internationalPersonalStats, renderInternationalPersonalStats } from '../ui/international-personal-stats.js';
 window.__YAKYO_JP_DATA__ = JP_DATA;
 
 /* シード固定対応RNG。 */
@@ -2975,12 +2976,14 @@ $('btn-start').onclick=()=>{
           if(S!==entryState||continued||(S.intlCompletedKeys[e.eventKey]&&!prepared))return;
           validateInternationalEntry(S);
           if(!prepared){
+            const beforeStats={...S.intlStat},position=S.pos,role=S.role;
             const hadIntlace=Boolean(S.traits.intlace),rank=pick(['優勝','準優勝','ベスト4','ベスト8']),stats=addIntlStats();
-            prepared=prepareInternationalResult(S,e,{rank,stats,hadIntlace});
+            const personalStats=internationalPersonalStats(beforeStats,stats,position,role);
+            prepared=prepareInternationalResult(S,e,{rank,stats,hadIntlace,personalStats});
           }
           const {result}=commitInternationalResult(S,prepared);
           if(!resultRendered){
-            card(result.rank==='優勝'?'gold':'info',e.name,`日本代表は<b class="hl">${result.rank}</b>。能力点+${result.awardedPoints}。${result.injuryAdded?'大会の疲労により次回の故障率+10%。':'大会による故障リスク加算なし。'}`);
+            card(result.rank==='優勝'?'gold':'info',e.name,`日本代表は<b class="hl">${result.rank}</b>。能力点+${result.awardedPoints}。${result.injuryAdded?'大会の疲労により次回の故障率+10%。':'大会による故障リスク加算なし。'}`+renderInternationalPersonalStats(result.personalStats,fmtIP));
             resultRendered=true;
           }
           if(result.unlockedIntlace&&!unlockRendered){card('gold','隠し特性解放：'+displayTrait('intlace'),INTLACE_UNLOCK_TEXT);unlockRendered=true;}

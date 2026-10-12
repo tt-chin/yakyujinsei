@@ -138,10 +138,13 @@ try{
           }
           const result=await p.evaluate(({labels,texts})=>{
             const snapshot=window.__displayRegression();delete snapshot.state.version;
+            for(const r of Object.values(snapshot.state.intlTraitResults||{}))delete r.personalStats;
             const action=document.querySelector('#act');
             // Compare all non-trait copy and full S/RNG. Only the approved trait
             // explanation lifetime/summary changes are normalized on a detached clone.
             const log=document.querySelector('#log').cloneNode(true);
+            // Only the approved per-event statistics block; old result copy remains compared.
+            for(const block of log.querySelectorAll('.intl-personal-stats'))block.remove();
             const lost={'ゴムゴムの腕、ついに限界':'rubber','結果で黙らせる':'cancer','一芸特化を返上':'onetool','イップス克服':'yips'};
             for(const card of log.querySelectorAll('.card')){
               const title=card.querySelector('h4')?.textContent||'',raw=title.replace(/^隠し(?:特性解放|称号|タイトル)[:：]/,'');

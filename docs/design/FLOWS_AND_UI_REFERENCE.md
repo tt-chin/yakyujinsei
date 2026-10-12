@@ -130,6 +130,7 @@ H案例企業420萬不變840萬，下一年可付；signing fault後5000萬不�
 
 intlEvents官方Master＋未來4年估日；PRE/POST依月、level與ovr、傷病gate。已完成key不入queue；DECLINED/DENIED記completed但不造出場count。
 出場：capture entryState→validate→hadIntlace/順位/個人成績on copy [R]→prepareInternationalResult→commitInternationalResult（key防重）→結果card→解鎖card→continued=true→next。
+1.11.8補足：順位抽選前にintlStat・参加時position/roleをコピーする。生成式とR順を保ち、生成後との差分personalStatsをprepared結果に添付、既存commitに一度だけ保存。カードは保存結果から本大会成績を表示し、描画retryでも再抽選しない。IP差分のみ小数1桁、表示fmtIPは既存関数。旧未保存結果を通算から逆算しない。履歴一覧なし。
 prepared/resultRendered/unlockRendered/continued是同選項閉包；render throw后保留已commit/準備好的結果，不重抽、不二次能力點/疲勞。
 當次取得intlace仍用之前快照，下一次才最低2／疲勞0；國際completed與三出場兩決賽區分。Q championship-intl；H實際流程/排行比對，實機未驗。
 

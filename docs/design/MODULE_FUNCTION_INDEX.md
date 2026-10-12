@@ -1,5 +1,7 @@
 # 現行模組與函式索引
 
+> 1.11.8：新增UI模組international-personal-stats.js的internationalPersonalStats（既存通算前後差分）與renderInternationalPersonalStats（保存值純粋整形、既存fmtIP注入）。gameのprocessIntlPhaseからprepareInternationalResultの任意personalStatsへ値コピーし、既存commit／result cardを再利用。既存addIntlStatsと旧maybeIntlは不変。以下全量索引の数値・行号は歴史快照のまま。[本大会成績検証](../reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)。
+
 > 1.11.7新增UI責務：game內traitPresentation（WeakMap）、traitResultMarkup與archiveTraitResults，只讀S、寫DOM／UI閉包；card成功append後記展示，removeTrait同步UI再取得標記。navigation增加可選onNavigate；buildTraitsViewModel／退休posT／shareImage僅名稱。以下ea951c2的數量／函式行號為歷史快照，不冒充新增函式索引已全量重算。[驗收](../reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。
 
 > 1.11.6補足：active newState保存出生pot合計；fixedContract可回傳已驗證transaction快照，signTo同S／年度重用它；crossOffers分離running／成功／completed並保存首次年數。[修復來源與測試](../reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。以下函式清單／行號仍是ea951c2固定索引，沒有重新宣稱全量動態可達性。

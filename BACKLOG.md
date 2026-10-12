@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 更新：2026-10-12｜特性顯示修復基準：`origin/dev` 的 `a0b880bb7e7fe74e743daa0cb8144455c9fdded2`｜dev：`1.11.7`（main／本番仍為1.11.4）
+> 更新：2026-10-12｜國際大会個人成績顯示基準：`origin/dev` 的 `e602174a22d7472e1021d780388ad61adc6b11b6`｜dev作業版：`1.11.8`（main／本番仍為1.11.4）
 > 保留第一至第十階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`；本輪另批准回國retry與grinder最小修復，歷史數據不冒充此版結果。提交與CI／Preview證據見最末節。
 
 ## 1. 最新進度總覽
@@ -38,7 +38,8 @@
 
 ### 1.2 目前開發基準與限制
 
-- **最新受驗程式 SHA：** `6020df03ca507c456233005d22bfe36c3d21f306`，1.11.7；本機／Preview已驗證，Linux Quick45及Full61入口均PASS，見末節。此前Linux Full受驗SHA `b2e01509c0ea75712579f53d864ecd09f710840c`、1.11.6及第七階段SHA `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`保留為歷史；後續純文件HEAD不冒充受驗程式SHA。
+- **上輪已提交的受驗程式 SHA：** `6020df03ca507c456233005d22bfe36c3d21f306`，1.11.7；本機／Preview已驗證，Linux Quick45及Full61入口均PASS，見末節。此前Linux Full受驗SHA `b2e01509c0ea75712579f53d864ecd09f710840c`、1.11.6及第七階段SHA `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`保留為歷史；後續純文件HEAD不冒充受驗程式SHA。
+- **國際大会顯示本機受驗範圍：** 修正前完整SHA `e602174a22d7472e1021d780388ad61adc6b11b6`＋1.11.8作業樹。Quick46／Full63入口均PASS；新專用單体15／E2E50案、6條生涯完整S／選擇／RNG一致，僅排除version及新增personalStats。提交後SHA／CI／Preview結果見末節。歷史一覧INT-01仍未完成，不擴大其他結案。[驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - **第八階段文件與Quick受驗SHA：** `b38146e69288346a120db5b2d079ce0a7983aaae`；從`a5ed616418e1eb3611c6f714b5f2cf75161ba550`開始調查，遊戲程式樹不變。CI Run 38183631042成功；本次證據補記僅改BACKLOG，文件Commit另見Git／最終回報。
 - **第九階段調查基準：** `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`；40模組、997函式語法節點、39核心函式契約、124直接S根欄位及196RNG相關語法點重新盤點。技術文件不是新政策，動態可達性／完整S寫集仍未證明；退休舊欄位等新補驗提案見報告，不修改程式或直接結案。
 - **第九階段CI受驗文件SHA：** `e422b45bab38cc7a9632f89b2558bd296dcf0d5a`；Linux Quick Run 38187518145成功。五份技術文件與BACKLOG已提交，遊戲資產與調查基準ea951c2相同；後續純BACKLOG證據提交不冒充另一次已執行CI。
@@ -133,7 +134,7 @@
 
 - [ ] **INJ-UI-01** — 一般受傷風險細項顯示；計算與 UI 維持單一資料來源。
 - [ ] **PLY-01** — 背號與年度履歷；需先決定 00、轉隊、重複及改號規則。
-- [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。
+- [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。
 - [ ] **UI-06** — 新手遊戲內說明。
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
@@ -253,3 +254,12 @@
 - **不變性：** 未改造1.11.6 game.js逐步對照，P yakyo-test-001（530操作／1023R、2058退休）、IF s10-trait-38（331操作／577R、2048退休），全部選擇文字、前後完整JSON S摘要、最終S及R before/after/value相同，只排除VERSION。Baseline與current原始記錄在Full/Preview的career-P/IF-baseline/current.json，不排除traits、金錢、年表或其他S欄位；上述策略結果不與前輪不同策略的376／347操作混用。
 - **保護與清單：** 17個實作／測試／文書檔案提交；tasks/fix.md保留未追蹤、不刪除或提交。Runner、CI／發布workflow、AGENTS、trait/event政策、契約／殿堂政策、資料表不變。manifest只有新Full／Audit入口，移除該行即與a0b880b一致：69檔、Quick45／Full61／Audit62；48唯一checkbox、21完成／27未完，按指定顯示範圍關閉本ID，其他待辦不變。90個本地文件link通過。
 - **純文件證據提交：** 本次只更新BACKLOG的CI證據、結案狀態及統計，完整SHA見Git履歷／最終回報，與受驗程式6020df0分開。沿用既有paths-ignore，不改CI、不重跑同套Quick；後續文件Preview不冒充另一輪E2E。停止等待審查，不發布正式網站。
+
+## 國際大会本大会個人成績顯示（1.11.8）
+
+- **基準與版本：** origin/dev=`e602174a22d7472e1021d780388ad61adc6b11b6`，1.11.7→1.11.8 PATCH。既存カードから欠落した本大会数値の表示補完のみ。config.js／CHANGELOG同時更新；main仍`e886e84ca08c6c185406cac9d6f3c4376277061a`、1.11.4，不發布本番。
+- **本機：** 初回Quick45 PASS／1 FAIL、215.852秒，KBO歷史比較因新增personalStats产生digest差異；只排除該新增欄位後最終Quick46 PASS／0 FAIL／0 SKIP／0 BLOCKED、231.030秒、exit0。Full63 PASS／0 FAIL／0 SKIP／0 BLOCKED、2547.523秒、exit0；包括381契約、89能力、5交易、17安全、18特性表示及新大会表示50案。原失敗記錄保留test-results/intl-quick-before-version；最終log為intl-quick-final／intl-full-final。
+- **新專項：** 單體15案、T01〜T14原生／ブラウザ50案PASS，PC1280／320／360／390、全4主題、實際設定dialog選large、Console/pageerror／JS-CSS404=0。ER按使用者確認，只用於保存及防御率，不另顯示自責点。遊戲生成與fmtIP本體不變，重畫與二重callback RNG0；舊欠損不從通算補造。
+- **固定seed：** 投手yakyo-test-001 362操作／728R、jp3-pitcher-02 386／735、jp3-pitcher-03 419／887；野手jp3-catcher-01 C 314／547、jp3-infielder-01 IF 387／639、jp3-outfielder-01 OF 403／714。六條都完全一致，實際WBC5／プレミア12九大会；捕手自然代表なし，C顯示另以原生fixture驗證。完整S原本、逐操作digest及R before/after/value保存在専用入口career-*-baseline/current.json。只排除版號及intlTraitResults內personalStats，不排除整個结果字典。[完整策略／驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
+- **登錄及保護：** 71測試相關檔案，Quick46／Full63／Audit64；只新增Full／Audit入口一行（概算600秒），既有分類／Runner／CI workflow／AGENTS／資料／CSS不變。INT-01仍未完，48唯一checkbox、21完成／27未完，其他未完狀態不動。未追蹤tasks/保留、不提交或刪除。切斷済browser profile清理warning保留，非遊戲Console error。
+- **提交後證據：** dev程式SHA、Quick CI與Preview將於實際完成後補記；不得將本機結果冒充Linux CI或Preview已通過。後續純BACKLOG提交與程式SHA分開。沒有建立Draft PR，不改main／正式網站；實機與4,000生涯／Audit未實施。

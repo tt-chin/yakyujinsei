@@ -27,10 +27,11 @@ export function normalizeInternationalState(s){
 export function validateInternationalEntry(s){
   if(!Number.isFinite(s.pool)||!Number.isFinite(s.injNext)||!Array.isArray(s.honors)||!s.intlStat||Object.values(s.intlStat).some(v=>!Number.isFinite(v)))throw new Error('INVALID_INTERNATIONAL_STATE');
 }
-export function prepareInternationalResult(s,e,{rank,stats,hadIntlace}){
+export function prepareInternationalResult(s,e,{rank,stats,hadIntlace,personalStats}){
   if(!Object.hasOwn(POINTS,rank)||!stats||Object.values(stats).some(v=>!Number.isFinite(v)))throw new Error('INVALID_INTERNATIONAL_RESULT');
   const basePoints=POINTS[rank],finalReached=isInternationalFinal(rank),intlCount=s.intlCount+1,intlFinalCount=s.intlFinalCount+(finalReached?1:0);
   const result={eventKey:e.eventKey,year:s.year,rank,hadIntlace,basePoints,awardedPoints:hadIntlace?Math.max(basePoints,2):basePoints,injuryAdded:hadIntlace?0:10,finalReached,unlockedIntlace:!hadIntlace&&intlCount>=3&&intlFinalCount>=2};
+  if(personalStats)result.personalStats={position:personalStats.position,role:personalStats.role??null,stats:{...personalStats.stats}};
   return {result,stats:{...stats},intlCount,intlFinalCount,honorText:`${s.year} ${e.name}${rank}`};
 }
 export function commitInternationalResult(s,prepared){

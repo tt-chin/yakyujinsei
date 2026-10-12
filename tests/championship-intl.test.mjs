@@ -5,6 +5,7 @@ import {runInNewContext} from 'node:vm';
 import {JP_DATA} from '../docs/src/data/jp-data.js';
 import * as champ from '../docs/src/engine/championship-policy.js';
 import * as intl from '../docs/src/engine/international-trait-policy.js';
+import {internationalPersonalStats,renderInternationalPersonalStats} from '../docs/src/ui/international-personal-stats.js';
 import * as contracts from '../docs/src/engine/contract-policy.js';
 import {applyIncentivePayment,createIncentiveTerms} from '../docs/src/engine/incentive-policy.js';
 import {classifyMarketInjury} from '../docs/src/engine/injury-market-policy.js';
@@ -33,7 +34,7 @@ test('structured result overrides ambiguous honor, valid final count retained',(
 // Execute the actual active international functions, not a reimplementation.
 function activeIntl(v={},source=game){
   const s=state({ab:{vel:65,ctl:65,brk:65,sta:65},pos:'P',role:'SP',rehab:0,skipMid:false,seasonFactor:1,intlDeclinedCount:0,...v});let opts,draws=0,done=0,cards=[];
-  const context={...intl,S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
+  const context={...intl,internationalPersonalStats,renderInternationalPersonalStats,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
   runInNewContext(source.slice(source.indexOf('  function intlEvents('),source.indexOf('  maybeIntl = function(done)')),context);
   return {s,context,run:phase=>context.processIntlPhase(phase,()=>done++),options:()=>opts,report:()=>({draws,done,cards})};
 }
