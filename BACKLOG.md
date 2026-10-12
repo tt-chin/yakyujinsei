@@ -214,4 +214,9 @@
 
 ## 第十階段提交後證據
 
-本機Quick45 PASS（258.247秒）、指定調查入口34 PASS／10 FAIL（Runner60.187秒、exit1）；詳細命令及逐案log位置見第十階段報告。提交後Linux Quick與Cloudflare部署證據在完成實際檢查後補記；不預先標PASS、不把純BACKLOG補記提交SHA冒充受驗測試SHA。
+- **測試／調查受驗提交：** `1020f84f938b0c1944741c207083801e38120e2d`。只新增測試、manifest一行登錄、調查報告及BACKLOG；遊戲樹、CURRENT_SPEC、AGENTS、VERSION、CHANGELOG、Runner與CI零差異。遊戲來源基準仍`fc879dc73cb8a3886d2812a42443c6192d1f6191`、1.11.5；main仍`e886e84ca08c6c185406cac9d6f3c4376277061a`。
+- **本機：** Quick45 PASS／0 FAIL／0 SKIP／0 BLOCKED，258.247秒、exit0；新調查44案34 PASS／10 FAIL／0 SKIP／0 BLOCKED。交付版log在`test-results/stage10-committable/`：入口50.230秒、Runner51.079秒、exit1。初次測試接線／cleanup問題保留`stage10-investigation`，Runner timeout960.315秒、exit1，不能視為PASS；測試工具修正過程及另一完整重跑記錄見[調查報告](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md)。
+- **Linux CI：** [Quick Run 38192410958](https://github.com/tt-chin/yakyujinsei/actions/runs/38192410958) success，受驗SHA就是`1020f84f938b0c1944741c207083801e38120e2d`，45 PASS／0 FAIL／0 SKIP／0 BLOCKED，Runner145.317秒、Workflow job約3分3秒。Ubuntu24.04／Node24.15.0／Playwright1.62.1／Chromium；没有執行Linux Full／Audit，不把Quick綠燈當成新調查已PASS。
+- **Preview：** 同SHA的Cloudflare check success，deployment `9ac674dc-2d9e-45cc-ab01-b61f9b06bd9c`。`node tests/stage10-risk-e2e.mjs --preview=https://dev.yakyujinsei.pages.dev --playwright=<PW> --output=test-results/stage10-preview`：47個HTML／JS／CSS HTTP200、正規化換行後與本地dev一致；四項動態調查34 PASS／10 FAIL／0 SKIP／0 BLOCKED、52.599秒（不含前置資產讀取）、exit1。6份完整生涯記錄（正常／注入IF、P與IF的traced／control）與本機逐操作S digest／選擇文字／RNG次數及最終完整S、全部R值完全相同。18筆錯誤均為明示fault injection，其他Console/pageerror及JS/CSS HTTP失敗0；browser已disconnect但profile清理逾時warning保留，不是遊戲錯誤。這是測試response注入驗證，非修改Preview資產／真實玩家自然例外重現，非實機驗收。
+- **Manifest保護：** 移除新登錄行後與Git舊檔位元組一致，所有舊profile逐欄相同；list正確識別新入口為Full／Audit。Quick45不變、Full59→60、Audit60→61。新入口當前保留10 FAIL，後續Full／Audit不能宣稱全綠。58個BACKLOG／本報告本地link、46唯一checkbox（18完成／28未完）驗證通過。
+- **純文件證據提交：** 本筆僅更新BACKLOG，完整SHA見此文件Git履歷與最終回報，與受驗1020f84分開。沿用既有paths-ignore，不修改CI觸發條件、不重跑相同Quick；Cloudflare仍可能對文件commit建立Preview，但不冒充另一輪E2E。停止等待使用者審查與修復授權，不自動下一階段。
