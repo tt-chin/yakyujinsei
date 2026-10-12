@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 更新：2026-10-12｜國際大会個人成績顯示基準：`origin/dev` 的 `e602174a22d7472e1021d780388ad61adc6b11b6`｜dev作業版：`1.11.8`（main／本番仍為1.11.4）
+> 更新：2026-10-12｜國際大会個人成績顯示基準：`e602174a22d7472e1021d780388ad61adc6b11b6`｜dev受驗程式：`2924dd03f1bf0fecac0f1673f07c10df92546114`／`1.11.8`（main／本番仍為1.11.4；Quick CI成功，Preview部署FAIL／遠端E2E未完成）
 > 保留第一至第十階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`；本輪另批准回國retry與grinder最小修復，歷史數據不冒充此版結果。提交與CI／Preview證據見最末節。
 
 ## 1. 最新進度總覽
@@ -39,7 +39,7 @@
 ### 1.2 目前開發基準與限制
 
 - **上輪已提交的受驗程式 SHA：** `6020df03ca507c456233005d22bfe36c3d21f306`，1.11.7；本機／Preview已驗證，Linux Quick45及Full61入口均PASS，見末節。此前Linux Full受驗SHA `b2e01509c0ea75712579f53d864ecd09f710840c`、1.11.6及第七階段SHA `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`保留為歷史；後續純文件HEAD不冒充受驗程式SHA。
-- **國際大会顯示本機受驗範圍：** 修正前完整SHA `e602174a22d7472e1021d780388ad61adc6b11b6`＋1.11.8作業樹。Quick46／Full63入口均PASS；新專用單体15／E2E50案、6條生涯完整S／選擇／RNG一致，僅排除version及新增personalStats。提交後SHA／CI／Preview結果見末節。歷史一覧INT-01仍未完成，不擴大其他結案。[驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
+- **國際大会顯示最新受驗程式：** `2924dd03f1bf0fecac0f1673f07c10df92546114`、1.11.8。修正前完整SHA `e602174a22d7472e1021d780388ad61adc6b11b6`＋1.11.8作業樹已實際Quick46／Full63入口PASS；新專用單体15／E2E50案、6條生涯完整S／選擇／RNG一致，僅排除version及新增personalStats。Quick CI success；Cloudflare Preview部署failure、遠端E2E未完成，見末節，不宣稱整體驗收完成。歷史一覧INT-01仍未完成，不擴大其他結案。[驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - **第八階段文件與Quick受驗SHA：** `b38146e69288346a120db5b2d079ce0a7983aaae`；從`a5ed616418e1eb3611c6f714b5f2cf75161ba550`開始調查，遊戲程式樹不變。CI Run 38183631042成功；本次證據補記僅改BACKLOG，文件Commit另見Git／最終回報。
 - **第九階段調查基準：** `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`；40模組、997函式語法節點、39核心函式契約、124直接S根欄位及196RNG相關語法點重新盤點。技術文件不是新政策，動態可達性／完整S寫集仍未證明；退休舊欄位等新補驗提案見報告，不修改程式或直接結案。
 - **第九階段CI受驗文件SHA：** `e422b45bab38cc7a9632f89b2558bd296dcf0d5a`；Linux Quick Run 38187518145成功。五份技術文件與BACKLOG已提交，遊戲資產與調查基準ea951c2相同；後續純BACKLOG證據提交不冒充另一次已執行CI。
@@ -262,4 +262,7 @@
 - **新專項：** 單體15案、T01〜T14原生／ブラウザ50案PASS，PC1280／320／360／390、全4主題、實際設定dialog選large、Console/pageerror／JS-CSS404=0。ER按使用者確認，只用於保存及防御率，不另顯示自責点。遊戲生成與fmtIP本體不變，重畫與二重callback RNG0；舊欠損不從通算補造。
 - **固定seed：** 投手yakyo-test-001 362操作／728R、jp3-pitcher-02 386／735、jp3-pitcher-03 419／887；野手jp3-catcher-01 C 314／547、jp3-infielder-01 IF 387／639、jp3-outfielder-01 OF 403／714。六條都完全一致，實際WBC5／プレミア12九大会；捕手自然代表なし，C顯示另以原生fixture驗證。完整S原本、逐操作digest及R before/after/value保存在専用入口career-*-baseline/current.json。只排除版號及intlTraitResults內personalStats，不排除整個结果字典。[完整策略／驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - **登錄及保護：** 71測試相關檔案，Quick46／Full63／Audit64；只新增Full／Audit入口一行（概算600秒），既有分類／Runner／CI workflow／AGENTS／資料／CSS不變。INT-01仍未完，48唯一checkbox、21完成／27未完，其他未完狀態不動。未追蹤tasks/保留、不提交或刪除。切斷済browser profile清理warning保留，非遊戲Console error。
-- **提交後證據：** dev程式SHA、Quick CI與Preview將於實際完成後補記；不得將本機結果冒充Linux CI或Preview已通過。後續純BACKLOG提交與程式SHA分開。沒有建立Draft PR，不改main／正式網站；實機與4,000生涯／Audit未實施。
+- **程式提交：** `2924dd03f1bf0fecac0f1673f07c10df92546114`已commit／push origin/dev，21檔、298新增／14刪除。只有指定實作／測試／現行文書；100個本地link及48唯一工作ID檢查通過。新入口概算更新後另跑test-runner與新單體2入口PASS、2.427秒，不冒充另一次Quick46。
+- **CI：PASS（Workflow結果）**。[Quick Run 38251079770](https://github.com/tt-chin/yakyujinsei/actions/runs/38251079770) headSha=`2924dd03f1bf0fecac0f1673f07c10df92546114`，2026-10-12依使用者新授權實際讀取status=completed、conclusion=success，tests check同為success。進一步讀取Runner log／統計的命令遭許可拒絕，因此本筆只確認Workflow成功，不把本機46 PASS／231.030秒當成Linux的實際數量／耗時。未執行Linux Full，没有建立Draft PR。
+- **Preview：FAIL（部署）／BLOCKED（遠端E2E）**。同程式SHA的[Cloudflare deployment 655049d2-c0f4-425b-ae40-f2549d8358f1](https://dash.cloudflare.com/?to=/383e1ae7fd9e9c94b48e43575172aec4/pages/view/yakyujinsei/655049d2-c0f4-425b-ae40-f2549d8358f1)，2026-10-12實際check為completed／failure。詳細output／失敗原因讀取遭許可拒絕，不能推測為遊戲Bug或任意修改部署設定。[固定Preview](https://dev.yakyujinsei.pages.dev)尚未證明配信為此程式SHA。此前已提出`node tests/international-personal-stats-e2e.mjs --playwright=<PW> --preview=https://dev.yakyujinsei.pages.dev --fixtures-only --output=test-results/intl-preview`，但未取得可用執行結果且未產生測試目錄／summary；43預定fixture／UI案、48個配信HTML/JS/CSS比對及遠端Console／404均未驗證，不標示PASS。
+- **後續文件提交：** 依使用者明示指示，將現有AGENTS.md使用者修改與本次BACKLOG證據一起提交，文件SHA另見Git履歷／最終回報，與程式2924dd0分開，不冒充已在文件SHA執行CI／E2E。不改寫AGENTS內容，也不修改CI設定；因含AGENTS，dev push依既有workflow正常觸發Quick，不適用僅BACKLOG的paths-ignore。不改遊戲、VERSION、CHANGELOG、main／正式網站；既有48唯一checkbox、21完成／27未完保持。實作與本機驗收／程式Quick CI通過，但Preview部署失敗且遠端驗收未完成；本輪僅記錄結果，不修復部署或發布本番。
