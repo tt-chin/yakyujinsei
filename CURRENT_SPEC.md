@@ -1,6 +1,8 @@
-# 現行規格（dev v1.11.5／main v1.11.4）
+# 現行規格（dev v1.11.6／main v1.11.4）
 
-更新日：2026-10-12。文書改訂：23。現行仕様の唯一の正本。dev v1.11.5は能力配分session、CORP年度決算、契約作成／描画再試行の安全性を補強（第7節）。通常S／RNGと既存政策は維持し、main／本番には未反映。dev v1.11.4はMiLB降格時のNPB移籍候補の年俸表示と提示スナップショットの受渡しを修正（第11.9節）。v1.11.3のKBO候補の最低年俸とpackage上限の適用順序（第11.6節）、v1.11.2の初回投票入選の特性リーグ帰属（第12節）、v1.11.1のReplay URL原生共有と引退画像の四主題連動（第16節）、職業球団優勝と国際大会の鬼（第15節）、海外契約に応じた通常NPB復帰オファー制限と摘要／メインナビ修正（第14節）を維持。main／本番は使用者の2026-10-11正式公開承認によりv1.11.4へ更新。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
+2026-10-12：v1.11.6はNPB復帰の契約再試行と出生時潜在合計の保存を修正するPATCH。給与・契約政策、取得門檻、RNGとseed-only URLは維持。main／本番は1.11.4のまま。過去版説明・公開証拠は履歴として保持する。
+
+更新日：2026-10-12。文書改訂：24。現行仕様の唯一の正本。dev v1.11.5は能力配分session、CORP年度決算、契約作成／描画再試行の安全性を補強（第7節）。通常S／RNGと既存政策は維持し、main／本番には未反映。dev v1.11.4はMiLB降格時のNPB移籍候補の年俸表示と提示スナップショットの受渡しを修正（第11.9節）。v1.11.3のKBO候補の最低年俸とpackage上限の適用順序（第11.6節）、v1.11.2の初回投票入選の特性リーグ帰属（第12節）、v1.11.1のReplay URL原生共有と引退画像の四主題連動（第16節）、職業球団優勝と国際大会の鬼（第15節）、海外契約に応じた通常NPB復帰オファー制限と摘要／メインナビ修正（第14節）を維持。main／本番は使用者の2026-10-11正式公開承認によりv1.11.4へ更新。v1.10.2の正式公開は使用者のiPhone Safari実機5項目PASSと承認により実施済み。v1.9.1の過去公開証拠は同期Workflow 37790403870／Pages deployment 37790429449（ともに成功）。新契約金・年俸市場の承認値は第11節。
 
 2026-10-11、使用者の正式公開承認により検証済みdev `99430bb37be182d57b3da58ce6b31414e0367b0c` をmainへ反映。[既存同期38094206660](https://github.com/tt-chin/yakyujinsei/actions/runs/38094206660)と[公開先Pages deployment38094215332](https://github.com/tt-chin/yakyujinsei-site/actions/runs/38094215332)は成功。公開先commitは`dc7cbd372927753fe6da6c9ae77acfa92f18de24`。正式URLはhttps://yakyujinsei.com。index.html／src/config.js／src/engine/game.jsはHTTP200・配信内容一致を確認（全ファイル／CDN全ノードの照合とはしない）。CHANGELOGには更新・修正内容だけを記録する。
 
@@ -137,6 +139,8 @@ NPB育成/二軍/一軍→NPB、KBO二軍/一軍→KBO、CPBL二軍/一軍→CPB
 - ad5b778（v1.9.0）との投手／野手全生涯比較：yakyo-test-001/Pは541操作・RNG652、jp3-infielder-01/IFは556操作・RNG557。履歴と版号を除く全状態、年度成績、所得累計、契約、ログ、選択文、RNGが一致。実機iOS Safari／Android Chromeは未確認。
 
 ## 7. 育成操作・文言
+
+v1.11.6：newStateで、初回トレーニング・イベント前のpotの合計をpotSum0に保存する。成長・再評価・進学で再計算しない。既存の退休reachedTop判定とP237／他守位469の門檻を維持し、未取得のgrinderだけを取得させる。既取得状態は保持する。旧状態に出生合計がない場合、現在のpotから推測して補完しない。schoolTierから旧hsTierへの映射やsmallschool条件は未承認であり、本修正では変更しない（BACKLOG TRAIT-SMALLSCHOOL-SEMANTICS-01）。
 
 取得したv1.6.2のallocUIでは、行クリックでpoolの1ポイントまたは現在のサイコロ1個を割り当てる。+5/MAX配分ボタンはない。Enter/Space操作、Undo、「すべてリセット」を持ち、pool/dice両モードで共通処理を使う。1.6.0の複数投入ボタン案を再導入しない。
 
@@ -328,6 +332,8 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 
 
 ### 11.9 実装・検証・対象外
+
+v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行中／契約処理成功／完了を分離する。年数のri(1,3)は従来どおり最初の受諾時に一度だけ呼び、再試行で再利用する。fixedContractの検証済み結果を私有transactionに保持し、作成後に例外が起きても同じcontractIdで所属・契約を確定する。付款後の契約card失敗は既存signingRenderRetryで描画のみを再試行する。成功した年度推進・過期callbackは再実行しない。transactionはSへ保存せず、全Sのclone／rollbackや合法消費RNGの巻戻しを行わない。候補数・順・価格・保障年表・支給時点は変更しない。これは指定の契約／描画例外範囲の防護であり、任意の次年度起動例外に対する全体rollbackではない。
 
 - active salaryCandidate、signTo、NPBドラフト、HS初回MiLB契約、overseasOffer、NPB復帰、降格候補、faMarket、outOfOrgへ接続。提示スナップショットと契約／currentSalary／決定履歴を一致させる。
 - MiLB降格時のNPB一軍・二軍候補も、移籍前のS.lvをsourceLevel、実際のNPB階層をtargetLevel、従来の契約倍率1を使ってsalaryCandidateで計算し、年俸を表示する。受諾時に同じannualSalary／candidateをsignToへ渡す。既存の移籍条件・chance順・球団抽選タイミング・候補順・契約年数・降格受入処理を維持し、表示でRNGを消費しない。

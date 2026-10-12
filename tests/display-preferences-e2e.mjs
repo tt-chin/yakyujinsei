@@ -20,7 +20,7 @@ const server=createServer(async(req,res)=>{
     if(relative.includes('..'))throw new Error('Unsafe path');
     let content=baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
     if(relative==='src/engine/game.js'){
-      let script=content.toString().replace('function R(){','function R(){ window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){ window.__rngCalls=(window.__rngCalls||0)+1;');
+      let script=(baseline?withApprovedBirthSnapshot(content.toString()):content.toString()).replace('function R(){','function R(){ window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){ window.__rngCalls=(window.__rngCalls||0)+1;');
       script+='\nwindow.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
       content=script;
     }
@@ -166,3 +166,4 @@ finally{
   await Promise.race([browser.close(),new Promise(resolve=>setTimeout(resolve,5000))]);
   process.exit(failure?1:0);
 }
+import {withApprovedBirthSnapshot} from './support/baseline-initial-potential.mjs';

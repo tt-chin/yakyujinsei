@@ -1,5 +1,7 @@
 # 現行詳細設計書 — 野球人生
 
+> 現行補足（2026-10-12、dev 1.11.6）：出生時potSum0保存及NPB復帰retry已按批准範圍修正。[修復驗收](../reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。以下ea951c2的AST數量／行號仍是固定來源快照，不重新冒充1.11.6統計；現行政策以CURRENT_SPEC為準。
+
 ## 文件定位、版本與導覽
 
 調查基準：dev `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`、VERSION **1.11.5**，2026-10-12。這是**現行實作的逆向說明，不是新的產品規格、版別規格或批准文件**。應如何運作以[CURRENT_SPEC](../../CURRENT_SPEC.md)為準，權限以[AGENTS](../../AGENTS.md)為準；已知缺口以[BACKLOG](../../BACKLOG.md)為準。程式有某行不等於該行已批准或已測。
@@ -45,7 +47,7 @@ ovr讀現在能力，P按42/30/18＋sta10%；野手打擊排序及守備權重�
 
 allocUI pool每行1點，dice每行当前一顆；cap80／剩0禁止。S能力/carry被修改，hist/pool/idx/touched在session。Undo單步，reset回初始snapshot清hist且重用dice；completed／S身分／世代／DOM連接guard。確定後allocDone才判集中/late；集中是非HS dice至少75%同能力三年，late門檻依原函式，不按註解「能力增8」另造條件。第七階段89＋17矩陣H驗證，Q ability-allocation多為靜態形狀。
 
-補驗缺口：舊hsTier/potSum0讀取與現行newState schema差異，見驗收U07；不把讀取舊欄位當正確設計意圖，也不直接修复稱號。
+v1.11.6補足：active newState在返回前保存出生pot合計，後來潜在再評価與setSchool不重算。grinder維持P237／其他469與原reachedTop gate。舊資料缺出生合計不從退休pot補造。hsTier／smallschool映射仍待決，沒有把B自行改為3；以下固定來源索引不代表此缺口已全面關閉。
 
 ## 5. 生涯年度推進
 

@@ -1,22 +1,21 @@
 # BACKLOG — 野球人生（日文版）
 
-> 更新：2026-10-12｜第十階段基準：`origin/dev` 的 `fc879dc73cb8a3886d2812a42443c6192d1f6191`｜遊戲版本：`1.11.5`（main／本番仍為1.11.4）
-> 保留第一至第八階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`，本輪遊戲樹未變；後續純文件提交SHA見Git履歷及最終回覆。
+> 更新：2026-10-12｜第十階段修復基準：`origin/dev` 的 `ef74f276699d5e67234a792b21a8a3d96bb592c2`｜dev：`1.11.6`（main／本番仍為1.11.4）
+> 保留第一至第十階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`；本輪另批准回國retry與grinder最小修復，歷史數據不冒充此版結果。提交與CI／Preview證據見最末節。
 
 ## 1. 最新進度總覽
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **18** | 有對應驗收紀錄，範圍以各報告為準 |
-| 未完成 | **28** | 包含待驗證、受阻、設計待決、保留及候補 |
+| 未完成 | **29** | 兩項本機修復待最終CI／Preview；另留smallschool語意待決 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **3** | 實機或原生分享環境不足 |
-| IMPLEMENTED_UNVERIFIED | **4** | 已有實作或初步調查，尚未完成驗收 |
-| DESIGN_PENDING | **6** | 尚待決定是否或如何調整規格 |
-| CONFIRMED_BUG／CONFIRMED_RISK | **2** | 正常退休稱號失效1項、明示NPB回國例外恢復風險1項；尚未批准修復 |
+| IMPLEMENTED_UNVERIFIED | **6** | 含本輪兩項本機已驗證、待Linux Full／Preview修復 |
+| DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一的正式 checkbox 工作 ID 重新計算：**18 + 28 = 46**。第十階段四項調查完成，新增1個正常可重現Bug及1個fault injection風險；新調查44案34 PASS／10 FAIL，既有Quick45 PASS。不修改遊戲、不把風險改成PASS；[證據及限制](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md)。第八階段AUD-04／05完成指定調查與分類，59筆歷史規格來源、16筆AGENTS來源已建台帳；未逐條核對的歷史原文保留為HIST-SPEC-CLAUSE-01，不宣稱全內容統合或全規格驗收。第七階段原五個風險FAIL解除，能力89／交易5／補充17／契約381案PASS，當時Linux Quick45／Full59入口PASS，Preview546案PASS。原carry缺key與0的結構差異保持；歷史階段數字不重算，當時Full PASS不冒充新調查入口已通過。
+以上依唯一正式checkbox重新計算：**18 + 29 = 47**。本輪只修回國retry與grinder，原44案全PASS、額外59案（含未改造原程式P／IF對照）PASS；Local Full原55 PASS／5相容性FAIL已保留，五入口修正後重跑PASS。最終Linux Full／Preview未確認前兩ID仍未完成。smallschool依使用者批准拆為獨立待決，不推測B→3。[本輪驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。前十階段的歷史數字與报告保持，尤其原第十階段34 PASS／10 FAIL不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -32,6 +31,7 @@
 | 第八階段 | 歷史規格與AGENTS指示稽核 | `AUD-04`、`AUD-05` | **調查／分類完成；完整歷史細項仍獨立待核對，不移入舊政策** | [歷史規格](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)／[AGENTS歷史](docs/reviews/STAGE8_AGENTS_HISTORY_AUDIT.md) |
 | 第九階段 | 從現行程式建立技術詳細設計 | 現行技術文件；既有三個未完稽核ID保持 | **12章與附錄／來源建檔；非全行為驗收，歷史任务縮範圍只提案** | [主設計](docs/design/CURRENT_DETAILED_DESIGN.md)／[驗收及缺口](docs/reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md) |
 | 第十階段 | U07／U03／回國例外／LEGACY | 新增兩個待修復ID；既有稽核保持 | **調查完成；正常稱號Bug1項、例外恢復風險1項，未修復** | [調查報告](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md) |
+| 第十階段修復 | 回國retry／grinder | 兩修復ID；smallschool獨立待決 | **本機修復與補驗完成，最終Linux Full／Preview待確認** | [修復驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md) |
 
 上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
@@ -43,6 +43,7 @@
 - **第九階段CI受驗文件SHA：** `e422b45bab38cc7a9632f89b2558bd296dcf0d5a`；Linux Quick Run 38187518145成功。五份技術文件與BACKLOG已提交，遊戲資產與調查基準ea951c2相同；後續純BACKLOG證據提交不冒充另一次已執行CI。
 - **第十階段調查基準：** `fc879dc73cb8a3886d2812a42443c6192d1f6191`；新測試只登錄Full／Audit，不加入Quick；Quick45／Full60／Audit61入口。指定調查入口exit1（34 PASS／10 FAIL），因此目前不能宣稱新Full／Audit全綠；遊戲樹與基準相同。
 - **遊戲 VERSION：** dev `1.11.5`；main／正式網站仍為`1.11.4`。只修復核准的能力callback、CORP重入與signTo簽約／描畫重試；正常S／選擇歷史／年表／RNG維持1.11.4基準。
+- **目前dev VERSION：** 1.11.6，只再修本輪批准兩項；上列1.11.5是歷史受驗範圍。出生potSum0與引退grinder為允許差異，其餘正常S／選擇／RNG保持。[本輪驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
 - ACT-01 已按「現行功能」標準結案，但原始完整操作歷史不足，**沒有精確重現歷史故障路線，也沒有證明當年的根本原因**。
 - ACT-02 的指名後第一選項、listener、單次執行及下一年度推進已通過指定矩陣；不宣稱所有未知路線均驗證。
 - 320px／390px 是瀏覽器手機尺寸模擬，不能替代 iOS Safari／Android Chrome 實機。
@@ -81,16 +82,18 @@
 - [x] **AUD-04** — 歷史文件盤點、主要數值／事件／API差異分類及來源報告完成。59筆文件：CURRENT6／SUPERSEDED38／OBSOLETE0（整份文件）／UNVERIFIED8／DESIGN_PENDING7；個別廢止條文另列。16階層／14曲線／90球團ID名稱對照一致；**不宣稱全部原文條款驗收或已移管**。未驗細項獨立保留HIST-SPEC-CLAUSE-01；依最新指令只提出CURRENT補充建議，不改正本。[證據](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
 - [x] **AUD-05** — 9份封存與7個Git根AGENTS版本（8組不同LF內容）對照完成；14政策群組中4組恢復會衝突、4組過時／缺口、6組一致，現行AGENTS不修改。舊指令不恢復。[證據](docs/reviews/STAGE8_AGENTS_HISTORY_AUDIT.md)
 
-## 3. 未完成工作（28 項）
+## 3. 未完成工作（29 項）
 
-### 3.1 P1 — 規格、回歸驗證與待批准修復（5 項）
+### 3.1 P1 — 規格、回歸驗證與修復驗收（6 項）
 
 
 - [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。第五階段完成16章／84規格群組對照：MATCH49、MISMATCH3、UNVERIFIED27、DESIGN_PENDING1、OBSOLETE4；quick44 PASS。完整數值邊界、全DOM／跨功能互動及實機仍缺，**調查完成不等於全規格驗收完成**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。發現差異僅記錄，不修改遊戲。
 - [ ] **REFACTOR-AUDIT-01** — `IMPLEMENTED_UNVERIFIED`。第五階段已建主要S讀寫地圖、40模組AST索引（991函式節點／4193呼叫節點）、196 RNG語法點、32頂層覆寫群組、LEGACY委派與[分批路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)。動態scope／所有callback可達性未完全證明，保持未完成；**沒有批准大規模重構或刪除舊碼**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。
 - [ ] **HIST-SPEC-CLAUSE-01** — `未完成細項對照`。第八階段盤點與差異分類已完成，但兩份大詳細設計的全數值／學校tier地域／§19–22舊API與翻譯條款、參考作品分析的每條公式及更早Git修訂尚未逐條核對。建立原始固定來源→現行對應→證據台帳，與AUD-02現行功能驗收、COPY-01可到達文案驗收分開；未經批准不移入正式規格、不恢復舊規則、不刪原文。[範圍與限制](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
-- [ ] **TRAIT-INITIAL-STATE-FIX-01** — `CONFIRMED_BUG・待批准修復`。IF／s10-trait-38正常生涯，出生潜在463≤469、NPB20季、2049退休，grinder仍false；現行newState缺potSum0，被委派退休函式讀缺值999。注入可信出生合計取得稱號，RNG597不變；schoolTier B→舊hsTier3及出生高校語意仍待批准，不以退休潜在或升學後tier補造。完了條件：核准最小初始欄位修復、P／IF門檻、升學／潜在變動、既取得狀態及S／R回歸通過。[第十階段A](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md)
-- [ ] **STATE-NPB-RETURN-RETRY-01** — `CONFIRMED_RISK・待批准修復`。原生滿期CPBL1→NPB候選在簽約前／契約建立後／付款handler後描畫三種明示fault injection，三尺寸9案重試後仍2038、選項清空；completed在action前永久設true。正常3案PASS；未證明自然觸發，不宣稱重付現金（回國契約金0）。完了條件：核准latch與首次年數快照最小恢復、失敗／已付重畫retry、下一年支付、單次ID／推進及正常S／R比較通過，不全面rollback S或R。[第十階段C](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md)
+- [ ] **TRAIT-INITIAL-STATE-FIX-01** — IMPLEMENTED_UNVERIFIED・本機修復完成待CI／Preview。使用者批准先修grinder：newState保存出生pot合計，正常IF463門檻取得；7個P／IF門檻／缺資料／既取得fixture與未改造修復前S／R比較通過。smallschool語意移交獨立待決ID，不在本次實作。Linux Full／Preview確認後只按grinder核准範圍結案。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
+- [ ] **STATE-NPB-RETURN-RETRY-01** — IMPLEMENTED_UNVERIFIED・本機修復完成待CI／Preview。三故障點×三尺寸9案已恢復；running／actionCompleted／completed分離、首次年數保存、驗證済contractId快照及既有付款後重畫重用。正常3案與補充連續描畫／殘留、下一年支付／listener／完整S與R均通過。明示fault injection、回國bonus0，非自然故障重現或全S rollback。Linux Full／Preview確認後結案。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
+
+- [ ] **TRAIT-SMALLSCHOOL-SEMANTICS-01** — `DESIGN_PENDING`。從原出生欄位修復範圍按本輪使用者批准分離；確認出生高校定義與schoolTier B是否對應舊hsTier3，再決定快照／相容讀取。保留既取得狀態、不得用升學後tier推測、不補造舊人生；目前不修改條件。[界線及證據](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
 
 ### 3.2 P1 — 退休與殿堂研究、決策（6 項）
 
@@ -127,11 +130,11 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-> **未完成項目核算：** 5（規格／回歸／歷史細項／新待修復）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**28**。正式checkbox ID各只出現一次，歷史38項及前階段快照保持原數。
+> **未完成項目核算：** 6（原規格／回歸／歷史細項＋兩待驗修復＋smallschool）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**29**；47唯一ID、18完成／29未完。歷史38項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
-1. **使用者審查第十階段結果並批准最小修復**：優先NPB回國retry風險，再確認初始稱號欄位與出生tier語意；沒有授權不修遊戲、不合併main、不開始重構。海外27案只為指定fixture通過，不是全市場自然生涯驗收。
+1. **使用者審查本輪修復及決定smallschool語意**：回國與grinder已批准分開修復，等待最終驗收；B→舊tier3、出生高校範圍尚未批准，不合併main、不開始重構。海外27案只為指定fixture通過，不是全市場自然生涯驗收。
 2. **AUD-02／REFACTOR-AUDIT-01**：按[第五階段路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)補規格／動態可達性證據；本輪不批准重構或刪除LEGACY。
 3. **HIST-SPEC-CLAUSE-01**：原定義／未完狀態保持；第九階段只提出改為「歷史保留與按需追溯」的建議與可能失去的意圖證據，尚未批准。CURRENT_SPEC來源說明補充須先審查，不自動採納歷史政策。
 4. **HOF-NATURAL-SAMPLE-01**：補足自然到達四聯盟的研究樣本，之後再討論殿堂規則決策。
@@ -220,3 +223,7 @@
 - **Preview：** 同SHA的Cloudflare check success，deployment `9ac674dc-2d9e-45cc-ab01-b61f9b06bd9c`。`node tests/stage10-risk-e2e.mjs --preview=https://dev.yakyujinsei.pages.dev --playwright=<PW> --output=test-results/stage10-preview`：47個HTML／JS／CSS HTTP200、正規化換行後與本地dev一致；四項動態調查34 PASS／10 FAIL／0 SKIP／0 BLOCKED、52.599秒（不含前置資產讀取）、exit1。6份完整生涯記錄（正常／注入IF、P與IF的traced／control）與本機逐操作S digest／選擇文字／RNG次數及最終完整S、全部R值完全相同。18筆錯誤均為明示fault injection，其他Console/pageerror及JS/CSS HTTP失敗0；browser已disconnect但profile清理逾時warning保留，不是遊戲錯誤。這是測試response注入驗證，非修改Preview資產／真實玩家自然例外重現，非實機驗收。
 - **Manifest保護：** 移除新登錄行後與Git舊檔位元組一致，所有舊profile逐欄相同；list正確識別新入口為Full／Audit。Quick45不變、Full59→60、Audit60→61。新入口當前保留10 FAIL，後續Full／Audit不能宣稱全綠。58個BACKLOG／本報告本地link、46唯一checkbox（18完成／28未完）驗證通過。
 - **純文件證據提交：** 本筆僅更新BACKLOG，完整SHA見此文件Git履歷與最終回報，與受驗1020f84分開。沿用既有paths-ignore，不修改CI觸發條件、不重跑相同Quick；Cloudflare仍可能對文件commit建立Preview，但不冒充另一輪E2E。停止等待使用者審查與修復授權，不自動下一階段。
+
+## 本輪修復提交後驗收證據
+
+程式基準ef74f27、回國提交4a54b9e、出生提交0689d35。版本1.11.6，main1.11.4不變。最終CI與Preview完成後補記；原44 PASS，額外59 PASS、71.123秒；本機Full55 PASS／5 FAIL（1450.725秒）與5入口重跑PASS（49.511秒）均保留。Quick初次44 PASS／1舊1.11.5版本斷言FAIL，同步為批准1.11.6後重跑，不改RNG期望。此節純證據更新與受驗程式提交SHA分開。

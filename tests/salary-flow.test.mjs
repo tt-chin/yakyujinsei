@@ -46,7 +46,7 @@ assert.equal((game.match(/\bpick\(/g) || []).length, 23);
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(game, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);
-assert.match(game, /signTo\('NPB',lv,rec\.teamId,ri\(1,3\),1,'RETURN',\{annualSalary,candidate\}\)/);
+assert.match(game, /context\.years\?\?=ri\(1,3\);signTo\('NPB',lv,rec\.teamId,context\.years,1,'RETURN',\{annualSalary,candidate,transaction:context\.transaction\}\)/);
 assert.doesNotMatch(game, /annualSalary=salaryCandidate\([^\n]*\b(?:R|ri|chance|pick)\s*\(/);
 
 // 降格時と戦力外後の海外候補でも、表示時の計算はRNGを呼ばず、表示額をsignToへ渡す。

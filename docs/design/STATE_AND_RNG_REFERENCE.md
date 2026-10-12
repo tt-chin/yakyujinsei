@@ -1,5 +1,7 @@
 # 現行S與RNG技術參考
 
+> 1.11.6現行補足：newState新增potSum0出生快照寫點（返回前、RNG0）；NPB回國context的running／actionCompleted／years／transaction是私有局部資料，不寫入S。原表格讀寫次數與行號固定於ea951c2，不當作新版本重盤點。[新驗收](../reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。
+
 ## 1. 來源與閱讀方法
 
 基準dev **ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1**，VERSION1.11.5，2026-10-12。本文件描述實作，不批准遊戲政策。G＝docs/src/engine/game.js，E＝docs/src/engine，U＝docs/src/ui。所有行號固定於基準；來源：[game.js](https://github.com/tt-chin/yakyujinsei/blob/ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1/docs/src/engine/game.js)。[主設計書](CURRENT_DETAILED_DESIGN.md)、[函式索引](MODULE_FUNCTION_INDEX.md)、[流程](FLOWS_AND_UI_REFERENCE.md)、[驗收](../reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md)。

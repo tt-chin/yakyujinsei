@@ -1,5 +1,7 @@
 # 現行模組與函式索引
 
+> 1.11.6補足：active newState保存出生pot合計；fixedContract可回傳已驗證transaction快照，signTo同S／年度重用它；crossOffers分離running／成功／completed並保存首次年數。[修復來源與測試](../reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。以下函式清單／行號仍是ea951c2固定索引，沒有重新宣稱全量動態可達性。
+
 ## 1. 基準及統計方法
 
 基準 `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`，VERSION1.11.5（2026-10-12）；[主設計書](CURRENT_DETAILED_DESIGN.md)、[S/RNG](STATE_AND_RNG_REFERENCE.md)、[流程](FLOWS_AND_UI_REFERENCE.md)、[驗收](../reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md)。

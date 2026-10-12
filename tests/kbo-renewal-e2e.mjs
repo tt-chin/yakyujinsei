@@ -39,9 +39,12 @@ async function start(p,url,pos){await p.goto(url);await p.waitForFunction(()=>!d
 function action(balanced){const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));if(balanced)rows.sort((a,b)=>{const priority=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return priority(a)-priority(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});return rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];}
 async function career(old,seed,pos,balanced){
  const p=await browser.newPage(),runErrors=[];wire(p,runErrors);
+ // Leave the balanced old-bug negative source untouched. Only unaffected
+ // positive historical careers receive the approved birth-field oracle.
+ if(old&&!balanced)await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();await route.fulfill({response,body:withApprovedBirthSnapshot(await response.text())});});
  if(!old&&arg('preview'))await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();await route.fulfill({response,body:instrument(await response.text())});});
  await start(p,(old?local+'/baseline/':target+'/')+'?seed='+seed,pos);
- const result=await p.evaluate(async({source,balanced})=>{const choose=eval('('+source+')'),records=[];for(let i=0;i<2500;i++){const before=window.__kboTest.get();delete before.state.version;const bytes=new TextEncoder().encode(JSON.stringify({state:before.state,calls:before.calls}));const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');if(before.state.done)return{records,final:before};const b=choose(balanced);if(!b)throw Error('NO_ACTION '+before.state.year+' '+before.state.lv);records.push({year:before.state.year,level:before.state.lv,action:b.innerText,calls:before.calls,rng:before.state.rngState,digest});b.click();if(window.__kboFailure)return{records,final:window.__kboTest.get()};}throw Error('Career did not complete');},{source:action.toString(),balanced});
+ const result=await p.evaluate(async({source,balanced})=>{const choose=eval('('+source+')'),records=[];for(let i=0;i<2500;i++){const before=window.__kboTest.get();delete before.state.version;delete before.state.potSum0;const bytes=new TextEncoder().encode(JSON.stringify({state:before.state,calls:before.calls}));const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');if(before.state.done)return{records,final:before};const b=choose(balanced);if(!b)throw Error('NO_ACTION '+before.state.year+' '+before.state.lv);records.push({year:before.state.year,level:before.state.lv,action:b.innerText,calls:before.calls,rng:before.state.rngState,digest});b.click();if(window.__kboFailure)return{records,final:window.__kboTest.get()};}throw Error('Career did not complete');},{source:action.toString(),balanced});
  result.errors=runErrors;assert.equal(new URL(p.url()).search,'?seed='+seed);await p.close();return result;
 }
 let failure;
@@ -86,3 +89,4 @@ try{
  finally{clearTimeout(timer);}
  process.exit(failure?1:0);
 }
+import {withApprovedBirthSnapshot} from './support/baseline-initial-potential.mjs';

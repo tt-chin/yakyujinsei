@@ -1,5 +1,7 @@
 # 現行流程與UI參考
 
+> 1.11.6更新：本頁流程補充覆蓋先前U06／U07中的批准修復；其他行號仍指ea951c2快照。實測及限制見[修復驗收](../reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)，不是全S／年度起動任意例外的rollback保證。
+
 ## 1. 基準與記號
 
 dev `ea951c2b1c5525fb1d16aa0e825403d2bc5a2be1`、1.11.5（2026-10-12）。[主設計](CURRENT_DETAILED_DESIGN.md)、[S/RNG](STATE_AND_RNG_REFERENCE.md)、[函式來源](MODULE_FUNCTION_INDEX.md)、[验收與限制](../reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md)。
@@ -109,7 +111,7 @@ draft：runDraft2839原score/round/team/bonus抽順→draftRights→acceptDraftS
 
 faFlow3012依聯盟契約stage/権利選續約、申請調停或FA；arbitration顯示R0，點申請才chance。faMarket3032依injury/候選數/需求hash排名→入選team排序後每個jitter R1→LONG/SHORT/PROOF資料→保存lastFaMarket→接受同offer。
 
-crossOffers2978：NPB1適用KBO/CPBL/US候選；海外普通NPB復帰須満期與OVR47/53 gate，不継続時不抽NPB隊。回國context綁S/year/ct，可重畫同候選與callback；completed一次性執行/advance。complete先設completed再執行action/finish，內層throw後的外層重試尚未補驗（驗收U06），不能由signTo局部付款安全外推整條流程可恢復。
+crossOffers：NPB1適用KBO/CPBL/US候選；海外普通NPB復帰仍須満期與OVR47/53 gate，不継続時不抽NPB隊。v1.11.6回國context綁S/year/ct，分離running／actionCompleted／completed；失敗不永久標完了。首次接受才ri(1,3)，結果供重試沿用；fixedContract驗證後把同contractId快照交給私有transaction，retry不再建立新ID；付款後card失敗走既有signingRenderRetry。正常完成只advance一次，舊callback不再推年。未採全S／RNG rollback，未知年度起動例外仍不是本次保証範圍。
 overseasOffer(G:2971)生成候選，但接受未直接傳同candidate，會buyout後重算；current cross路線mult忽略1.3，**靜態看到mult不同不證明年俸不同**。S.transferSalarySnapshot／previousSalary fallback作用須於fixture逐步補驗，U03仍UNVERIFIED，不「修正」價格預期。
 
 ## F09 季末、收入與CORP重入

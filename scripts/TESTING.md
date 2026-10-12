@@ -52,3 +52,8 @@ dev push 僅在所有變更均為 `BACKLOG.md` 或 `docs/reviews/STAGE6_ACCEPTAN
 遊戲、測試、fixture、Runner、workflow、AGENTS.md、CURRENT_SPEC.md 及其他未排除檔案的單獨或混合變更仍觸發 CI。main PR 的 full 與手動 quick／full／audit 不使用路徑排除，避免必要檢查因文件 PR 而永久 Pending。Cloudflare Preview 與正式發布 workflow 不受此設定控制。
 
 最終報告須區分實際測試通過的完整程式 SHA／CI Run URL／模式／結果，以及後續純文件 Commit SHA／變更檔案／未重跑 CI 的事實。不能把前者的 PASS 當成後者已執行測試。Runner fingerprint 仍包含 docs 下的報告；本次不放寬 `--reuse` 的一致性檢查。
+## 1.11.6 出生快照與歷史比較
+
+新增的support/baseline-initial-potential.mjs只對正向歷史UI比較，在基準newState返回時補入核准的出生pot合計，不覆寫既有值、不消費RNG、不用退休pot反推。display／draft／contract／HOF的正向舊版比較使用此adapter，仍保留完整S／RNG斷言。KBO原始負面程式不改：首個2049錯誤及所有數值仍驗證；前綴snapshot僅移除新增potSum0與原有version，非balanced正向歷史生涯才用adapter。925987d殿堂與f3efb0a KBO的真正負面控制來源保持。
+
+這不是「修復前完全不變」的證據。另實際執行 `node tests/stage10-risk-e2e.mjs --compare=<完整修復前SHA> --playwright=<module> --output=<directory>`，載入未改造的修復前game.js，比較逐操作S／選擇／RNG；只允許新增potSum0及引退完成後grinder的批准差異。原始／現行完整狀態都保存。57常規案＝原44＋7稱號邊界＋6重畫／殘留；加P／IF原生比較為59案。此較長入口仍Full／Audit，不加入Quick；新增support只有import分類，不是可執行測試。Runner與CI邏輯不變。
