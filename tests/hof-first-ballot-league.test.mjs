@@ -14,7 +14,8 @@ function check(id,scores,expected,existing=false,initialLeague){
  const corrected=structuredClone(old.snap);if(old.snap.state.legendLeague!==expected)corrected.state.legendLeague=expected;
  assert.deepEqual(now.snap,corrected,id+' only legendLeague may change; calls, S.rngState and hofInfo exact');
  const oldCards=old.cards.map(c=>{if(c[1].startsWith('隠し特性解放：')&&old.snap.state.legendLeague!==expected){const prev=old.snap.state.legendLeague;return c.map((value,i)=>i?value.replaceAll(prev,expected):value);}return c;});
- assert.deepEqual(now.cards,oldCards,id+' exact cards except corrected legend label');
+ const expectedCards=existing?oldCards.map(c=>c[1].startsWith('隠し特性解放：')?[c[0],c[1].replace('隠し特性解放：',''),'']:c):oldCards;
+ assert.deepEqual(now.cards,expectedCards,id+' exact vote cards; corrected league label and approved name-only existing legend');
  const expectedFirst=leagues.filter(l=>scores[l]!=null&&Math.round(scores[l])>=thresholds[l][0]*mult[l]);
  assert.deepEqual(now.snap.state.hofInfo?.filter(x=>x.yr===1).map(x=>x.lg)||[],expectedFirst.map(l=>labels[l]),id+' first ballot uses rounded t.sc and native float comparison');
  assert.equal(now.snap.state.traits.legend,existing||expectedFirst.length>0,id+' unchanged unlock');
@@ -28,4 +29,4 @@ check('F08',{CPBL:8600,MLB:8600},'existing-marker',false,'existing-marker');
 check('F09-candidate',{NPB:6000},undefined);check('F09-none',{NPB:100},undefined);
 check('F10',{MLB:11000},'NPB',true,'NPB');
 for(const l of leagues){const boundary=thresholds[l][0]*mult[l];for(const delta of [-1,0,1,-.49,.49]){const score=boundary+delta;check('F11-'+l+'-'+delta,{[l]:score},Math.round(score)>=boundary?labels[l]:undefined);}}
-console.log(count+' fixed diagnostic before/after cases PASS; only league label changes, RNG and vote cards exact.');
+console.log(count+' fixed diagnostic before/after cases PASS; league label fix and existing legend name-only UI, RNG and vote cards exact.');

@@ -259,6 +259,7 @@ function bucketOf(lv){return resolveStatBucket(LV,lv);}
 function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隠し特性解放：'+name,desc); board(0); }
 function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
+    traitPresentation.get(S)?.delete(key);
     if(!S.removed.includes(label))S.removed.push(label); } }
 /* 一芸特化：評価対象は三つの役割軸のみ——打撃(長打力/Contact)、走塁(速度)、守備(総合)。 */
 function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
@@ -612,7 +613,7 @@ function statSummary(bucket,st){if(!st)return '';if(S.pos==='P')return `登板 $
 function buildRecordViewModel(){const definitions=[['NPB',[['NPB1','NPB一軍'],['NPB2','NPB二軍'],['NPB_DEV','NPB育成']]],['KBO',[['KBO1','KBO一軍'],['KBO2','KBOフューチャース']]],['台湾プロ野球',[['CPBL1','台湾プロ野球一軍'],['CPBL2','台湾プロ野球二軍']]],['MLB',[['MLB','MLB']]],['MiLB',[['A3','3A'],['A2','2A'],['A1','1A'],['R','ルーキーリーグ']]],['独立リーグ',[['IND','独立リーグ']]],['社会人野球',[['CORP','社会人野球']]]];const byLevel=S.statsByLevel||{};const groups=definitions.map(([label,levels])=>Object.freeze({label,levels:levels.filter(([key])=>byLevel[key]).map(([key,levelLabel])=>Object.freeze({key,label:levelLabel,summary:statSummary(key,byLevel[key])}))})).filter(group=>group.levels.length);return Object.freeze({seasons:Array.isArray(S.log)?S.log.length:0,internationalCount:S.intlCount||0,groups});}
 function rehabStatusText(){return formatRehabStatus(S);}
 function buildAbilityViewModel(){const condition=[{label:'シーズン稼働率',value:`${Math.round((S.seasonFactor??1)*100)}%`},{label:'次回故障リスク加算',value:`${S.injNext||0}%`},{label:'今季一時故障リスク加算',value:`${S.tmpInj||0}%`},{label:'大きな故障（通算）',value:`${S.bigInj||0}回`},{label:'リハビリ',value:rehabStatusText()}];if(S.pos==='P')condition.push({label:'TJゲージ',value:String(S.tj||0)},{label:'トミー・ジョン手術（通算）',value:`${S.tjCount||0}回`});return Object.freeze({positionLabel:POSN[S.pos],abilities:POS_AB[S.pos].map(key=>Object.freeze({key,label:ABL[key],current:S.ab[key]||0,potential:S.pot?.[key]??62})),condition:condition.map(item=>Object.freeze(item))});}
-function buildTraitsViewModel(){return Object.freeze({active:Object.entries(S.traits||{}).filter(([,enabled])=>enabled).map(([key])=>displayTrait(key)+((EVENT_TRAIT_TEXT[key]||TRAIT_TEXT[key])?'：'+(EVENT_TRAIT_TEXT[key]||TRAIT_TEXT[key]):'')),removed:(S.removed||[]).map(item=>removedTraitLabel(item,S,teamNick))});}
+function buildTraitsViewModel(){return Object.freeze({active:Object.entries(S.traits||{}).filter(([,enabled])=>enabled).map(([key])=>displayTrait(key)),removed:(S.removed||[]).map(item=>removedTraitLabel(item,S,teamNick))});}
 function buildPlayerViewModel(){return Object.freeze({ability:buildAbilityViewModel(),traits:buildTraitsViewModel()});}
 function buildCareerViewModel(){const ct=S.ct||null,contractDescription=ct?`${ct.startYear||S.year}～${ct.endYear||S.year}年　${contractTypeLabel(ct.contractType)}`:'契約なし';const schedule=Array.isArray(ct?.annualSchedule)&&ct.annualSchedule.length?ct.annualSchedule.map(row=>`${row.year}年 ${fmtMoney(row.amount||0)}${row.paid?'（支払済み）':''}`):['—'];const history=(S.salaryDecisionHistory||[]).map(row=>`${row.salaryYear||row.decisionYear||'—'}年 ${fmtMoney(row.finalSalary||0)}`);return Object.freeze({stats:buildRecordViewModel(),achievements:[...(S.honors||[])],contract:Object.freeze({description:contractDescription,remainingYears:ct?`${ct.remainingYears||0}年`:'—',guaranteedTotal:ct?fmtMoney(ct.guaranteedTotal||0):'—',schedule,currentSalary:fmtMoney(S.currentSalary||0),signingBonus:fmtMoney(S.careerSigningBonus||0),developmentStipend:fmtMoney(S.careerDevelopmentStipend||0),postingFee:ct?.postingFee>0?fmtMoney(ct.postingFee)+'（球団への支払い・生涯収入対象外）':undefined,outsideIncome:fmtMoney(S.careerOutsideIncome||0),yearOutsideIncome:fmtMoney(S.yearOutsideIncome||0),corpIncome:fmtMoney(S.corpIncome||0),incomeLedger:(S.incomeLedger||[]).map(row=>row.year+'年 '+fmtMoney(row.amountYen)),careerEarnings:fmtMoney(S.careerEarnings||0),history}),yearly:(S.log||[]).map(row=>Object.freeze({year:row.y,age:row.age,team:row.tm,summary:row.line||''}))});}
 /* UI基盤。 */
@@ -620,8 +621,43 @@ const $=id=>document.getElementById(id);
 var _curYearBody=null; /* 當前年度的內容容器。 */
 var MAX_YEARS=8;         /* DOM 最大保持年度領域数。 */
 function logTarget(){ return _curYearBody || $('log'); }
+// DOM presentation lifetime only; no display markers in S or replay data.
+const traitPresentation=new WeakMap();
+function archiveTraitResults(){
+  $('log').querySelectorAll('[data-trait-result]').forEach(node=>{
+    node.replaceChildren();const name=document.createElement('h4');name.textContent=node.dataset.traitName;node.appendChild(name);
+    delete node.dataset.traitResult;
+  });
+}
+function traitResultMarkup(node,title,html){
+  const lost={'ゴムゴムの腕、ついに限界':'rubber','結果で黙らせる':'cancer','一芸特化を返上':'onetool','イップス克服':'yips'}[title];
+  if(lost){node.dataset.traitResult='removed:'+lost;node.dataset.traitName=displayTrait(lost);return {title,html};}
+  if(!/^隠し(?:特性解放|称号|タイトル)[:：]/.test(title||''))return {title,html};
+  const name=title.replace(/^隠し(?:特性解放|称号|タイトル)[:：]/,'');
+  const key=Object.keys(TRAIT_LABELS).find(k=>name===displayTrait(k)||name===TRAIT_LABELS[k])||(name==='神カード'?'franchise':null);
+  if(!key)return {title,html};
+  let shown=traitPresentation.get(S);if(!shown){shown=new Set(Object.keys(S.traits||{}).filter(k=>S.traits[k]));traitPresentation.set(S,shown);}
+  const label=displayTrait(key);
+  if(!S.traits?.[key]||shown.has(key))return {title:label,html:''};
+  node.dataset.traitResult=key;node.dataset.traitName=label;
+  const effect=EVENT_TRAIT_TEXT[key]||TRAIT_TEXT[key];
+  const reasons={favorite:'25歳未満で通常選択に累計10回成功。',adking:'スポンサーイベントの勝負選択に累計5回成功。',clutch:'25歳未満で勝負選択に累計7回成功。',disc:'25歳未満で安全選択に累計15回成功し、私生活の条件を達成。',distract:'私生活と間食の累計が取得条件に到達。',cancer:'対人イベントの失敗または私生活の悪評により取得。'};
+  if(reasons[key]&&html===effect)html=reasons[key]+'<br>'+html;
+  const memorial=['confidante','goldcloth','miraclegen','strongpitch','stronghit','legend','smallschool','grinder','rainbow','taiwan'];
+  const plain=String(html).replace(/<[^>]*>/g,'');
+  const completeIntlace=key==='intlace'&&/次回/.test(plain)&&/最低2点/.test(plain)&&/故障リスク/.test(plain);
+  if(effect&&!plain.includes(effect)&&!completeIntlace)html+='<br>'+effect;
+  else if(memorial.includes(key)&&!/(追加効果|記念称号)/.test(plain))html+='<br>能力への追加効果はない記念称号です。';
+  if(key==='mrteam')html+='<br>球団がトレードを拒否する、非売品の扱いになります。';
+  if(key==='onetool')html+='<br>得意分野での出場機会を追加する起用補正があります。';
+  const starts={favorite:'成功率の補正は次のイベント選択から適用されます。',clutch:'成功率・分類別効果の補正は次のイベント選択から適用されます。',latepractice:'成功率の補正は次のイベント選択から適用されます。',adking:'収入の補正は次のスポンサーイベントから適用されます。',disc:'シーズン前の衰え判定に適用されます。',distract:'サイコロの減少は次のシーズン前トレーニングから適用されます。'};
+  if(starts[key])html+='<br>'+starts[key];
+  return {title:'隠し特性解放：'+label,html};
+}
 function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
+  ({title,html}=traitResultMarkup(d,title,html));
   d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d);
+  if(d.dataset.traitResult&&!d.dataset.traitResult.startsWith('removed:'))traitPresentation.get(S).add(d.dataset.traitResult);
   scrollBottom(); }
 function divider(t){ /* dividerごとに新しい年度の折りたたみ領域を開始。 */ const log=$('log'); const blocks=log.querySelectorAll('.yr-block'); /* 終了した直前年へ展開アイコンを付けるが、collapsedは付けず開いたままにする。 */ const prev = blocks[blocks.length - 1]; if(prev){ const h = prev.querySelector('.yr-head'); if(h && prev.querySelector('.yr-body').children.length) h.classList.add('has-body'); } /* 二つ前の年度領域を見つけて折りたたむ。 */ const prevPrev = blocks[blocks.length - 2]; if(prevPrev){ prevPrev.classList.add('collapsed'); } /* 建新領域。 */ const block=document.createElement('div'); block.className='yr-block'; const head=document.createElement('div'); head.className='yr-head'; head.textContent=t; const body=document.createElement('div'); body.className='yr-body'; head.onclick=()=>block.classList.toggle('collapsed'); block.appendChild(head); block.appendChild(body); log.appendChild(block); _curYearBody=body; /* 上限超える時は最古の年度領域を削除してDOMを解放。 */ const newBlocks=log.querySelectorAll('.yr-block'); if(newBlocks.length>MAX_YEARS){ for(let i=0;i<newBlocks.length-MAX_YEARS;i++)newBlocks[i].remove(); } }
 function board(phase){
@@ -659,7 +695,7 @@ function actToggleSync(){
 function escapeDiagnosticHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 let resultViewDepth=0;
 let currentChoiceAction=null;
-function invokeChoiceAction(action){const previous=currentChoiceAction;currentChoiceAction=action;try{return action();}finally{currentChoiceAction=previous;}}
+function invokeChoiceAction(action){archiveTraitResults();const previous=currentChoiceAction;currentChoiceAction=action;try{return action();}finally{currentChoiceAction=previous;}}
 function scrollAction(){scrollBottom();}
 function runWithResultView(action){const before=$('log').querySelectorAll('.card').length;resultViewDepth++;try{return action();}finally{resultViewDepth--;if($('log').querySelectorAll('.card').length>before)scrollBottom();else if(!resultViewDepth)scrollAction();}}
 function choose(title,opts){
@@ -696,7 +732,7 @@ function allocUI(mode,label,done){
       const r=document.createElement('div'); r.className='abrow'+(cap?' capped':'');r.dataset.abilityKey=k;r.setAttribute('role','button');r.setAttribute('aria-label',dice?`${ABL[k]}に現在のサイコロを割り当てる`:`${ABL[k]}に1ポイント配分`);r.setAttribute('aria-disabled',String(!available));r.tabIndex=available?0:-1;
       const pk=(S.pot&&S.pot[k])||62, cst=abCost(k), cr=(S.carry&&S.carry[k])||0;
       const info=document.createElement('div');info.className='abrow-info';info.innerHTML=`<span class="nm">${ABL[k]}</span><span class="bar"><i style="width:${v/80*100}%"></i><em style="left:${pk/80*100}%"></em></span><span class="val" style="line-height:1.1">${v}<small style="opacity:.5">/${pk}</small><span class="progress">${cr}/${cst}</span></span>`;r.appendChild(info);
-      const allocate=()=>{if(!live(r)||S.ab[k]>=80||remaining()<=0)return;const before={abilityKey:k,beforeAbility:S.ab[k],beforeCarry:(S.carry&&S.carry[k])||0,beforePool:pool,beforeDiceIndex:idx,beforeTouched:copyTouched()};const spend=dice?dice[idx]:1;if(spend<=0)return;const got=addAb(k,spend);touchedKeys[k]=(touchedKeys[k]||0)+spend;hist.push({...before,spent:spend,gained:got});if(dice)idx++;else pool--;render(k);board(0);};
+      const allocate=()=>{if(!live(r)||S.ab[k]>=80||remaining()<=0)return;const before={abilityKey:k,beforeAbility:S.ab[k],beforeCarry:(S.carry&&S.carry[k])||0,beforePool:pool,beforeDiceIndex:idx,beforeTouched:copyTouched()};const spend=dice?dice[idx]:1;if(spend<=0)return;archiveTraitResults();const got=addAb(k,spend);touchedKeys[k]=(touchedKeys[k]||0)+spend;hist.push({...before,spent:spend,gained:got});if(dice)idx++;else pool--;render(k);board(0);};
       if(available){r.onclick=allocate;r.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();allocate();}};}
       rows.appendChild(r); });
     btm.innerHTML='';
@@ -710,7 +746,7 @@ function allocUI(mode,label,done){
     const allCap=keys.every(k=>S.ab[k]>=80);
     if(remaining()===0||allCap){ const c=document.createElement('button'); c.className='btn main';
       c.textContent=(remaining()>0&&allCap)?'能力が上限に達しました。残ったサイコロを捨てます ▸':'確定 ▸';
-      c.onclick=()=>{if(!live(c)||!(remaining()===0||keys.every(k=>S.ab[k]>=80)))return;completed=true;return runWithResultView(()=>{ actClear(); allocDone(touchedKeys,dice?true:false); done(); });}; btm.appendChild(c); }
+      c.onclick=()=>{if(!live(c)||!(remaining()===0||keys.every(k=>S.ab[k]>=80)))return;completed=true;return runWithResultView(()=>{ archiveTraitResults();actClear(); allocDone(touchedKeys,dice?true:false); done(); });}; btm.appendChild(c); }
     actToggleSync();
     if(focusKey){const target=a.querySelector(`[data-ability-key="${focusKey}"]`);(target?.getAttribute('aria-disabled')==='false'?target:a.querySelector('.abrow[aria-disabled="false"], #al-btm button:not(:disabled)'))?.focus();}
   }
@@ -1543,7 +1579,7 @@ function movement(){
     if(goldclothEligible(S)){ S.traits.goldcloth=true;
       card('gold','隠し特性解放：黄金のユニフォーム',TRAIT_TEXT.goldcloth); board(1); }
     if(!S.traits.franchise&&S.teamYears>=7&&S.champThisTeam&&S.champTeam===S.orgTeamId){ S.traits.franchise=true;
-      card('gold','隠し特性解放：神カード','この街のファンはあなたの成長を見守ってきた。放出すれば本拠地が炎上することをフロントも分かっている――<b class="hl">所属球団との再契約は年俸係数を1.2倍以上に固定し、引退評価にも加点</b>。'); }
+      card('gold','隠し特性解放：神カード','この街のファンはあなたの成長を見守ってきた。放出すれば本拠地が炎上することをフロントも分かっている――<b class="hl">所属球団との再契約の評価に補正が入り、引退評価にも加点。球団はトレードを拒否する</b>。'); }
     /* ◯◯先生：同じ支球団效力滿 15 年且成績安定。 */
     if(!S.traits.mrteam&&S.teamYears>=15&&(S.lastD||0)>=0){ S.traits.mrteam=true; S.mrTeamName=S.orgTeamId;
       const nick=teamNick(S.orgTeamId);
@@ -2045,6 +2081,7 @@ const FAN={
  4:['ねえ、これは誰ですか？ …調べてみたら、実はプロでプレーしていたことが分かりました。','野球は本当に難しいですね、第二の人生も頑張ってください','また夢を追う者が現実に負けて悲しい','掲示板にはメッセージが 3 件しかなく、そのうちの 1 件に本人が返信しました。'],
 };
 function retireScene(tiers){
+  const alreadyLegend=Boolean(S.traits.legend);
   /* tiers： {CPBL：{i、sc}、NPB：...、MLB：...} 出試合実績がある場合だけ作成。 */
   /* 代表リーグは在籍年数が最長のトップリーグ、評価階級はキャリア最高値（i最小）。 */
   let lg=LV[S.lv]?.statBucket||'MINOR', bestI=4;
@@ -2101,8 +2138,8 @@ function retireScene(tiers){
   if(firstBallot&&!S.traits.legend){ S.traits.legend=true;
     S.legendLeague=firstBallotLeagues[0]; }
   if(hofs.length)card('gold','殿堂入り投票',hofs.join('<br><br>'));
-  if(S.traits.legend){ card('gold','隠し特性解放：'+(S.legendLeague||'')+'歴史に残る名選手',
-    `初回投票で殿堂入り――ただ名を連ねただけではない。あなたは<b class="hl">一つの時代を築いた</b>。その名は${S.legendLeague||'野球界'}の歴史に刻まれる。`); }
+  if(S.traits.legend){ card('gold',(alreadyLegend?'':'隠し特性解放：')+(S.legendLeague||'')+'歴史に残る名選手',
+    alreadyLegend?'':`初回投票で殿堂入り――ただ名を連ねただけではない。あなたは<b class="hl">一つの時代を築いた</b>。その名は${S.legendLeague||'野球界'}の歴史に刻まれる。`); }
 }
 function endGame(reason){
   S.done=true; actClear();
@@ -2221,7 +2258,7 @@ function endGame(reason){
   /* 特質と薪資。 */
   const tr=[];
   const TN=traitNames();
-  const posT={pos:['favorite','adking','legend','taiwan','goldcloth','mrteam','confidante','genius','late','disc','academy','intlace','franchise','clutch','phoenix','rubber','onetool','smallschool','grinder','combo','rainbow','oldghost','miraclegen','strongpitch','stronghit','championmaker','pitcherTC','hitterTC','nitenichi'],neg:['glass','scum','yips','distract','cancer','ambience','thief','latepractice']};
+  const posT={pos:['favorite','adking','legend','taiwan','goldcloth','mrteam','confidante','genius','late','disc','academy','intlace','franchise','clutch','phoenix','rubber','onetool','smallschool','grinder','combo','rainbow','oldghost','miraclegen','strongpitch','stronghit','championmaker','pitcherTC','hitterTC','nitenichi','iron'],neg:['glass','scum','yips','distract','cancer','ambience','thief','latepractice']};
   const tagStyle=k=>{
     if(k==='legend'||k==='taiwan')return 'background:#fff7dc;border-color:#c79520;color:#795b00'; /* 歴史的選手/台湾代表への貢献：金。 */
     if(k==='goldcloth')return 'background:#fffbe0;border-color:#c5a800;color:#6f6000'; /* 黄金のユニフォーム：黄。 */
@@ -2229,7 +2266,7 @@ function endGame(reason){
     if(k==='genius')return 'background:#f3f5f8;border-color:#9aa5b5;color:#4c5868';        /* 天才：銀。 */
     return ''; /* 好影響：既定色はアンバー。 */
   };
-  posT.pos.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="${tagStyle(k)}">${TN[k]}</span>`+(k==='intlace'?`<p class="small">${TRAIT_TEXT.intlace}</p>`:'')); });
+  posT.pos.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="${tagStyle(k)}">${TN[k]}</span>`); });
   posT.neg.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="background:#fff0f0;border-color:#c0392b;color:#a71930">${TN[k]}</span>`); });
   (S.removed||[]).forEach(lbl=>tr.push(`<span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${removedTraitLabel(lbl,S,teamNick)}</span>`));
   const lv=S.love;
@@ -2283,6 +2320,7 @@ function endGame(reason){
   const imgBtn=sh.querySelector('#sh-img'),urlBtn=sh.querySelector('#sh-url'),shareOut=sh.querySelector('#sh-out');
   imgBtn.type=urlBtn.type='button';
   imgBtn.addEventListener('click',()=>{
+    archiveTraitResults();
     imgBtn.disabled=true; imgBtn.textContent='⏳ キャリア画像を作成中…';
     requestAnimationFrame(()=>{try{shareImage(evals,shareOut);imgBtn.textContent='✅ キャリア画像を作成しました';}
       catch(err){console.error(err);shareOut.innerHTML='<div class="statline" role="alert">画像を作成できませんでした。ページを再読み込みして、もう一度お試しください。</div>';imgBtn.textContent='⚠️ もう一度作成する';}
@@ -2291,6 +2329,7 @@ function endGame(reason){
   });
   urlBtn.addEventListener('click',async()=>{
     if(urlBtn.disabled)return;
+    archiveTraitResults();
     const url=replayURL(S.seed||SEED,location.href);
     const status=sh.querySelector('#sh-url-status');status.replaceChildren();urlBtn.disabled=true;
     try{
@@ -2402,15 +2441,6 @@ function shareImage(evals,out){
   honorBlocks.slice(0, rows2).forEach(b => leftH += b.length * 23);
   honorBlocks.slice(rows2).forEach(b => rightH += b.length * 23);
   const honorsTotalHeight = Math.max(leftH, rightH);
-  const eventTraitLines=[];
-  Object.keys({...EVENT_TRAIT_TEXT,intlace:TRAIT_TEXT.intlace}).filter(key=>S.traits[key]).forEach(key=>{
-    let line='';
-    for(const ch of displayTrait(key)+'：'+(EVENT_TRAIT_TEXT[key]||TRAIT_TEXT[key])){
-      if(c.measureText(line+ch).width>W-PAD*2&&line){eventTraitLines.push(line);line='';}
-      line+=ch;
-    }
-    if(line)eventTraitLines.push(line);
-  });
   /* 預估総高さ。 */
   const traitTags=keepTr.concat(remTr);
   c.font='12px sans-serif';
@@ -2419,7 +2449,6 @@ function shareImage(evals,out){
   let H=150; // header
   H+=30+tiers.length*24+14; // 評価。
   if(traitTags.length)H+=tagRows*26+4;
-  H+=eventTraitLines.length*20;
   H+=34+(leagues.length+1)*26+16; // 通算成績表。
   if(S.intlCount>0)H+=30+24+28+12; // 国際大会欄。
   H+=30+honorsTotalHeight+16; // 栄誉(二欄改行後的高さ)。
@@ -2467,7 +2496,6 @@ function shareImage(evals,out){
   var tagx=PAD;
   if(traitTags.length){ drawTags(traitTags); y+=30; }
   c.font='13px sans-serif';c.fillStyle=imageColor.text;
-  eventTraitLines.forEach(line=>{c.fillText(line,PAD,y);y+=20;});
 
   function hr(){ c.strokeStyle=imageColor.edge; c.lineWidth=1; c.beginPath(); c.moveTo(PAD,y); c.lineTo(W-PAD,y); c.stroke(); y+=12; }
   function sectionTitle(t){ c.fillStyle=imageColor.dim; c.font='bold 13px sans-serif'; c.fillText(t,PAD,y); y+=22; }
@@ -2807,6 +2835,7 @@ $('btn-start').onclick=()=>{
     for(const key of Object.keys(TRAIT_LABELS))state.traits[key]??=false;
     Object.assign(state,{oldGhostPending:false,oldGhostUsed:false,firstTeamSeasons:{},firstTeamYearsByTeam:{},tripleCrownHistory:{}});
     Object.assign(state,{championshipResults:{},seasonChampContext:null,seasonEndMaintenanceYear:null,championshipMigrationVersion:1,intlFinalCount:0,intlTraitResults:{},internationalTraitMigrationVersion:1});
+    traitPresentation.set(state,new Set(Object.keys(state.traits).filter(key=>state.traits[key])));
     ensureEventState(state);state.potSum0=Object.values(pot).reduce((sum,value)=>sum+value,0);return state;
   };
 
@@ -3110,7 +3139,7 @@ $('btn-start').onclick=()=>{
   const appVersion=$('app-version');if(appVersion)appVersion.textContent='v'+VERSION;
   createSeedShareController({trigger:$('board-share'),getSeed:()=>S?.seed||$('seed-show').value||SEED});
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});
-  const navigation=initNavigation({onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
+  const navigation=initNavigation({onNavigate:archiveTraitResults,onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
   $('btn-start').onclick=startJapanese;
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();

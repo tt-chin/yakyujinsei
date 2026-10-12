@@ -1,5 +1,7 @@
 # 現行流程與UI參考
 
+> 1.11.7：card的traitResultMarkup只對新取得呈現說明，DOM標記由archiveTraitResults於下一有效操作／導航／分享歸檔為名稱。引退新稱號卡與退休概要分開，PNG不再繪製eventTraitLines；onNavigate不修改S或操作listener。來源／四尺寸與固定Seed證據見[特性顯示驗收](../reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。以下固定歷史行號不重編。
+
 > 1.11.6更新：本頁流程補充覆蓋先前U06／U07中的批准修復；其他行號仍指ea951c2快照。實測及限制見[修復驗收](../reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)，不是全S／年度起動任意例外的rollback保證。
 
 ## 1. 基準與記號

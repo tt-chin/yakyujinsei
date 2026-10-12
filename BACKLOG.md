@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 更新：2026-10-12｜第十階段修復基準：`origin/dev` 的 `ef74f276699d5e67234a792b21a8a3d96bb592c2`｜dev：`1.11.6`（main／本番仍為1.11.4）
+> 更新：2026-10-12｜特性顯示修復基準：`origin/dev` 的 `a0b880bb7e7fe74e743daa0cb8144455c9fdded2`｜dev：`1.11.7`（main／本番仍為1.11.4）
 > 保留第一至第十階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`；本輪另批准回國retry與grinder最小修復，歷史數據不冒充此版結果。提交與CI／Preview證據見最末節。
 
 ## 1. 最新進度總覽
@@ -8,14 +8,14 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **20** | 有對應驗收紀錄，含本輪兩項核准修復 |
-| 未完成 | **27** | 保留smallschool語意待決及其他未驗範圍 |
+| 未完成 | **28** | 保留smallschool語意及特性顯示Full CI驗收 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
-| BLOCKED | **3** | 實機或原生分享環境不足 |
+| BLOCKED | **4** | 三項實機／分享；特性顯示的Linux Full缺可觸發環境 |
 | IMPLEMENTED_UNVERIFIED | **4** | 現行規格、動態可達性、殿堂樣本及文案待驗 |
 | DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一正式checkbox重新計算：**20 + 27 = 47**。本輪只修回國retry與grinder，原44案全PASS、補充後59案（含未改造原程式P／IF對照）PASS；Local Full原55 PASS／5相容性FAIL與五入口重跑PASS均保留。最終Linux Full60 PASS、Quick45 PASS、Preview59 PASS後兩ID按核准範圍結案。smallschool獨立待決，不推測B→3。[本輪驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。前十階段的歷史數字與報告保持，原第十階段34 PASS／10 FAIL不改寫。
+以上依唯一正式checkbox重新計算：**20 + 28 = 48**。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。新增TRAIT-DISPLAY-UNIFY-01，特性顯示本機專項通過，Full CI無main workflow且使用者拒絕Draft PR，因此保持未完。[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -32,6 +32,7 @@
 | 第九階段 | 從現行程式建立技術詳細設計 | 現行技術文件；既有三個未完稽核ID保持 | **12章與附錄／來源建檔；非全行為驗收，歷史任务縮範圍只提案** | [主設計](docs/design/CURRENT_DETAILED_DESIGN.md)／[驗收及缺口](docs/reviews/STAGE9_DETAILED_DESIGN_ACCEPTANCE.md) |
 | 第十階段 | U07／U03／回國例外／LEGACY | 新增兩個待修復ID；既有稽核保持 | **歷史調查快照：當時正常稱號Bug1項、例外恢復風險1項未修復** | [調查報告](docs/reviews/STAGE10_PRE_REFACTOR_RISK_INVESTIGATION.md) |
 | 第十階段修復 | 回國retry／grinder | 兩修復ID；smallschool獨立待決 | **核准修復與本機／Linux Full／Preview驗收完成；非全面交易保證** | [修復驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md) |
+| 特性顯示統一 | 取得當下說明／以後名稱 | `TRAIT-DISPLAY-UNIFY-01` | **本機專項完成；Linux Full BLOCKED，未結案** | [驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md) |
 
 上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
@@ -44,6 +45,7 @@
 - **第十階段調查基準：** `fc879dc73cb8a3886d2812a42443c6192d1f6191`；新測試只登錄Full／Audit，不加入Quick；Quick45／Full60／Audit61入口。指定調查入口exit1（34 PASS／10 FAIL），因此目前不能宣稱新Full／Audit全綠；遊戲樹與基準相同。
 - **遊戲 VERSION：** dev `1.11.5`；main／正式網站仍為`1.11.4`。只修復核准的能力callback、CORP重入與signTo簽約／描畫重試；正常S／選擇歷史／年表／RNG維持1.11.4基準。
 - **目前dev VERSION：** 1.11.6，只再修本輪批准兩項；上列1.11.5是歷史受驗範圍。出生potSum0與引退grinder為允許差異，其餘正常S／選擇／RNG保持。[本輪驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
+- **特性顯示dev VERSION：** 1.11.7；上列1.11.6為此前修復受驗版本。取得當下的結果說明於下一操作／導航歸檔為名稱，其他清單、退休概要／PNG只名称。提交／Quick CI／Preview與Linux Full限制見末節，不把前輪Full當成本次通過。
 - ACT-01 已按「現行功能」標準結案，但原始完整操作歷史不足，**沒有精確重現歷史故障路線，也沒有證明當年的根本原因**。
 - ACT-02 的指名後第一選項、listener、單次執行及下一年度推進已通過指定矩陣；不宣稱所有未知路線均驗證。
 - 320px／390px 是瀏覽器手機尺寸模擬，不能替代 iOS Safari／Android Chrome 實機。
@@ -87,9 +89,9 @@
 - [x] **TRAIT-INITIAL-STATE-FIX-01** — 僅按批准的grinder範圍結案：newState保存出生pot合計，正常IF463生涯取得；7個P／IF門檻／缺資料／既取得fixture及未改造修復前S／R逐步比較通過。smallschool移交獨立待決ID。Linux Full60、Preview59 PASS。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
 - [x] **STATE-NPB-RETURN-RETRY-01** — 三故障點×三尺寸9案、正常3案及連續描畫／殘留補驗通過。首次年數、已驗證contractId及付款後重畫重用，下一操作／次年支付正常。明示fault injection、回國bonus0，非自然故障根因證明或全S rollback。Linux Full60、Preview59 PASS。[驗收](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
 
-## 3. 未完成工作（27 項）
+## 3. 未完成工作（28 項）
 
-### 3.1 P1 — 規格、回歸驗證與待決（4 項）
+### 3.1 P1 — 規格、回歸驗證與待決（5 項）
 
 
 - [ ] **AUD-02** — `IMPLEMENTED_UNVERIFIED`。第五階段完成16章／84規格群組對照：MATCH49、MISMATCH3、UNVERIFIED27、DESIGN_PENDING1、OBSOLETE4；quick44 PASS。完整數值邊界、全DOM／跨功能互動及實機仍缺，**調查完成不等於全規格驗收完成**。[2026-10-11證據](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)。發現差異僅記錄，不修改遊戲。
@@ -97,6 +99,7 @@
 - [ ] **HIST-SPEC-CLAUSE-01** — `未完成細項對照`。第八階段盤點與差異分類已完成，但兩份大詳細設計的全數值／學校tier地域／§19–22舊API與翻譯條款、參考作品分析的每條公式及更早Git修訂尚未逐條核對。建立原始固定來源→現行對應→證據台帳，與AUD-02現行功能驗收、COPY-01可到達文案驗收分開；未經批准不移入正式規格、不恢復舊規則、不刪原文。[範圍與限制](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
 
 - [ ] **TRAIT-SMALLSCHOOL-SEMANTICS-01** — `DESIGN_PENDING`。從原出生欄位修復範圍按本輪使用者批准分離；確認出生高校定義與schoolTier B是否對應舊hsTier3，再決定快照／相容讀取。保留既取得狀態、不得用升學後tier推測、不補造舊人生；目前不修改條件。[界線及證據](docs/reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)
+- [ ] **TRAIT-DISPLAY-UNIFY-01** — `BLOCKED`（Linux Full環境；實作已本機專項驗證）。全38 ID清查與名稱renderer、取得當下原因／效果、失去／歷史名稱、退休新解鎖與概要、PNG及P／IF完整S/RNG對照已建立。未實裝3項不啟用，academy／taiwan自然取得路線及smallschool語意不擅自補造。main無test.yml，使用者拒絕Draft PR，不以本機／Quick代替Full CI；待補足指定CI證據才能結案。[驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)
 
 ### 3.2 P1 — 退休與殿堂研究、決策（6 項）
 
@@ -133,7 +136,7 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**27**；47唯一ID、20完成／27未完。歷史38項及前階段快照保持原數。
+> **未完成項目核算：** 5（原規格／回歸／歷史細項＋smallschool＋特性顯示CI）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**28**；48唯一ID、20完成／28未完。歷史38／47項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
@@ -236,3 +239,9 @@
 - **正常S／RNG：** 未改造舊game.js逐步對照：P yakyo-test-001，376操作／815R；IF s10-trait-38，347操作／597R；均2049退休。只正規化version、新增potSum0與done後批准修正的grinder；其他完整狀態、選擇歷史及全部R值一致。grinder自然IF取得、P不符合不取得；smallschool保持原狀且待決。
 - **Manifest及文件保護：** 僅新增baseline-initial-potential import-only/support登錄；移除該行後與修復前manifest一致，既有入口分類／args／模式不變，Quick45／Full60／Audit61。Runner、CI／發布workflow、AGENTS沒有修改。BACKLOG正式checkbox為47唯一ID、20完成／27未完；關閉兩個核准範圍修復，不結案其他待辦。
 - **後續純文件提交：** 本筆僅改BACKLOG證據及結案狀態，完整SHA見Git履歷與最終回報；不冒充已跑CI的程式SHA。沿用現有paths-ignore，避免重跑同套Quick；後續Cloudflare文件部署不冒充另一輪E2E。停止等待審查，不發布main或自動開始下一階段。
+
+## 特性顯示統一驗收證據（1.11.7）
+
+基準a0b880bb7e7fe74e743daa0cb8144455c9fdded2；完整受驗提交SHA／最終Full與Quick CI／Preview結果在實際完成後補記。初輪專項跨行regex失敗保留10 PASS／4 FAIL；修正測試匹配後14 PASS、3個相關Full入口PASS（324.111秒）；Quick45 PASS、342.356秒，當時VERSION1.11.6。後續正式PATCH1.11.7與版本預期同步；不排除任何S特性或RNG差異，只排除版本metadata。
+
+main缺test.yml且拒絕Draft PR，Linux Full不能宣稱PASS。僅TASK顯示規則與文件／測試；不刪tasks/fix.md，不修改main、正式網站、Runner、CI workflow或取得／效果規則。新Full／Audit入口一項；Quick45／Full61／Audit62，69個測試相關檔案。後續純BACKLOG證據提交與受驗程式SHA分開。

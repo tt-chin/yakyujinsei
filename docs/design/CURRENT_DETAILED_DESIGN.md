@@ -1,5 +1,7 @@
 # 現行詳細設計書 — 野球人生
 
+> 1.11.7表示補足：特性取得当時のみ説明、以後は名称。gameのtraitResultMarkup／archiveTraitResultsがDOMカードとWeakMapの寿命を管理し、S／Rは変更しない。navigationのonNavigate、次の選択／配分／共有で歸檔；新choose生成だけでは歸檔しない。buildTraitsViewModel、引退プロフィール、PNGは名称のみ。旧AST／行番号は下記固定快照のまま。[特性表示驗收](../reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。
+
 > 現行補足（2026-10-12、dev 1.11.6）：出生時potSum0保存及NPB復帰retry已按批准範圍修正。[修復驗收](../reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。以下ea951c2的AST數量／行號仍是固定來源快照，不重新冒充1.11.6統計；現行政策以CURRENT_SPEC為準。
 
 ## 文件定位、版本與導覽

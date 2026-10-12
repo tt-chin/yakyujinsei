@@ -7,6 +7,7 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
+import {TRAIT_LABELS,TRAIT_TEXT} from '../docs/src/engine/trait-policy.js';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const modulePath=process.argv.find(v=>v.startsWith('--playwright='))?.slice(13);
@@ -135,17 +136,37 @@ try{
             await p.locator('#board-preferences').click();await setPreferences(p,['standard','night','classic','scoreboard'][step%4],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
             assert.deepEqual(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
-          const result=await p.evaluate(()=>{
+          const result=await p.evaluate(({labels,texts})=>{
             const snapshot=window.__displayRegression();delete snapshot.state.version;
             const action=document.querySelector('#act');
-            const state={...snapshot,text:document.querySelector('#log').innerText,choices:action.innerText};
+            // Compare all non-trait copy and full S/RNG. Only the approved trait
+            // explanation lifetime/summary changes are normalized on a detached clone.
+            const log=document.querySelector('#log').cloneNode(true);
+            const lost={'ゴムゴムの腕、ついに限界':'rubber','結果で黙らせる':'cancer','一芸特化を返上':'onetool','イップス克服':'yips'};
+            for(const card of log.querySelectorAll('.card')){
+              const title=card.querySelector('h4')?.textContent||'',raw=title.replace(/^隠し(?:特性解放|称号|タイトル)[:：]/,'');
+              const key=lost[title]||Object.keys(labels).find(k=>raw===labels[k]||['legend','mrteam','rainbow','hitterTC','pitcherTC','nitenichi'].includes(k)&&raw.endsWith(labels[k]))||(raw==='神カード'?'franchise':null);
+              if(key){card.replaceChildren(document.createTextNode(card.dataset.traitName|| (raw==='神カード'||lost[title]?labels[key]:raw)));continue;}
+              if(title==='キャリアプロフィール'){
+                for(const paragraph of card.querySelectorAll('p.small'))if(paragraph.textContent===texts.intlace)paragraph.remove();
+                const tags=[...card.querySelectorAll('.tag')];
+                if(snapshot.state.traits.iron&&!tags.some(t=>t.textContent===labels.iron)){
+                  const iron=document.createElement('span');iron.textContent=labels.iron;
+                  const negative=tags.find(t=>['glass','scum','yips','distract','cancer','ambience','thief','latepractice'].some(k=>t.textContent===labels[k]));
+                  if(negative)negative.before(document.createTextNode(' '),iron,document.createTextNode(' '));
+                  else if(tags.length)tags.at(-1).after(document.createTextNode(' '),iron);
+                  else{for(const n of card.childNodes)if(n.nodeType===Node.TEXT_NODE)n.nodeValue=n.nodeValue.replace('特性：（なし）','特性：');card.querySelector('br').before(iron);}
+                }
+              }
+            }
+            const state={...snapshot,text:log.textContent.replace(/\s+/g,''),choices:action.innerText};
             if(snapshot.state.done)return {state,done:true};
             const rows=[...action.querySelectorAll('.abrow')].filter(el=>el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('capped'));
             const buttons=[...action.querySelectorAll('button')].filter(el=>!el.disabled&&!/元に戻す|すべてリセット/.test(el.innerText));
             const button=rows[0]||buttons.find(el=>/配分を確定|配分完了|次へ|完了/.test(el.innerText))||buttons.find(el=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(el.innerText))||buttons[0];
             if(!button)throw new Error('No actionable choice');
             button.click();return {state,done:false};
-          });
+          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT});
           records.push(result.state);
           if(result.done)break;
           if(step===1999)throw new Error(`Career did not finish: ${seed}`);
