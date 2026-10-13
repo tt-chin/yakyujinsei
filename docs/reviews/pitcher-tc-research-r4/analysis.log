@@ -1,0 +1,278 @@
+{
+  "current": {
+    "attempts": 20,
+    "completed": 20,
+    "failed": 0,
+    "enteredUsSeeds": [
+      "pitcher-tc-r4-003",
+      "pitcher-tc-r4-008",
+      "pitcher-tc-r4-009",
+      "pitcher-tc-r4-010",
+      "pitcher-tc-r4-020"
+    ],
+    "mlbEffectiveSeeds": [
+      "pitcher-tc-r4-008",
+      "pitcher-tc-r4-009",
+      "pitcher-tc-r4-020"
+    ],
+    "mlbRoles": {
+      "SP": {
+        "seasons": 0,
+        "seeds": [],
+        "means": null
+      },
+      "MR": {
+        "seasons": 8,
+        "seeds": [
+          "pitcher-tc-r4-009",
+          "pitcher-tc-r4-020"
+        ],
+        "means": {
+          "W": 1.25,
+          "era": 4.8777577355815955,
+          "IP": 30.674999999999997,
+          "SO": 16.625,
+          "SV": 0.25,
+          "HLD": 10.625
+        }
+      },
+      "CL": {
+        "seasons": 3,
+        "seeds": [
+          "pitcher-tc-r4-008",
+          "pitcher-tc-r4-009",
+          "pitcher-tc-r4-020"
+        ],
+        "means": {
+          "W": 1,
+          "era": 5.3545454545454545,
+          "IP": 35.233333333333334,
+          "SO": 29,
+          "SV": 11.666666666666666,
+          "HLD": 2.6666666666666665
+        }
+      }
+    },
+    "bullpenSeeds": [
+      "pitcher-tc-r4-008",
+      "pitcher-tc-r4-009",
+      "pitcher-tc-r4-020"
+    ],
+    "optionsObserved": 8,
+    "uniqueOptionMenus": 8,
+    "contractsAcceptedOperations": 8,
+    "usEntryEvents": 5,
+    "mlbInternalPromotionEvents": 3,
+    "mlbInternalPromotionSeeds": [
+      "pitcher-tc-r4-009",
+      "pitcher-tc-r4-020"
+    ],
+    "mlbArrivalEvents": 4,
+    "stageEffectiveSeasons": {
+      "R": 8,
+      "A1": 12,
+      "A2": 20,
+      "A3": 21,
+      "MLB": 11
+    },
+    "meetingsShown": 0,
+    "meetingsSelected": 0,
+    "mlbMRtoCL": 1,
+    "mlbCLtoMR": 2,
+    "concentration": [
+      {
+        "seed": "pitcher-tc-r4-008",
+        "bullpenSeasons": 1
+      },
+      {
+        "seed": "pitcher-tc-r4-009",
+        "bullpenSeasons": 7
+      },
+      {
+        "seed": "pitcher-tc-r4-020",
+        "bullpenSeasons": 3
+      }
+    ]
+  },
+  "previous": {
+    "attempts": 10,
+    "completed": 10,
+    "failed": 0,
+    "enteredUsSeeds": [
+      "pitcher-tc-r3-037"
+    ],
+    "mlbEffectiveSeeds": [
+      "pitcher-tc-r3-037"
+    ],
+    "mlbRoles": {
+      "SP": {
+        "seasons": 0,
+        "seeds": [],
+        "means": null
+      },
+      "MR": {
+        "seasons": 4,
+        "seeds": [
+          "pitcher-tc-r3-037"
+        ],
+        "means": {
+          "W": 1,
+          "era": 5.318180693389998,
+          "IP": 27.674999999999997,
+          "SO": 21,
+          "SV": 0.75,
+          "HLD": 9
+        }
+      },
+      "CL": {
+        "seasons": 1,
+        "seeds": [
+          "pitcher-tc-r3-037"
+        ],
+        "means": {
+          "W": 2,
+          "era": 3.6885245901639343,
+          "IP": 61,
+          "SO": 65,
+          "SV": 20,
+          "HLD": 4
+        }
+      }
+    },
+    "bullpenSeeds": [
+      "pitcher-tc-r3-037"
+    ],
+    "optionsObserved": 2,
+    "uniqueOptionMenus": 2,
+    "contractsAcceptedOperations": 2,
+    "usEntryEvents": 1,
+    "mlbInternalPromotionEvents": 1,
+    "mlbInternalPromotionSeeds": [
+      "pitcher-tc-r3-037"
+    ],
+    "mlbArrivalEvents": 1,
+    "stageEffectiveSeasons": {
+      "R": 2,
+      "A1": 0,
+      "A2": 1,
+      "A3": 7,
+      "MLB": 5
+    },
+    "meetingsShown": 0,
+    "meetingsSelected": 0,
+    "mlbMRtoCL": 1,
+    "mlbCLtoMR": 1,
+    "concentration": [
+      {
+        "seed": "pitcher-tc-r3-037",
+        "bullpenSeasons": 5
+      }
+    ]
+  },
+  "combined": {
+    "attempts": 30,
+    "completed": 30,
+    "failed": 0,
+    "enteredUsSeeds": [
+      "pitcher-tc-r3-037",
+      "pitcher-tc-r4-003",
+      "pitcher-tc-r4-008",
+      "pitcher-tc-r4-009",
+      "pitcher-tc-r4-010",
+      "pitcher-tc-r4-020"
+    ],
+    "mlbEffectiveSeeds": [
+      "pitcher-tc-r3-037",
+      "pitcher-tc-r4-008",
+      "pitcher-tc-r4-009",
+      "pitcher-tc-r4-020"
+    ],
+    "mlbRoles": {
+      "SP": {
+        "seasons": 0,
+        "seeds": [],
+        "means": null
+      },
+      "MR": {
+        "seasons": 12,
+        "seeds": [
+          "pitcher-tc-r3-037",
+          "pitcher-tc-r4-009",
+          "pitcher-tc-r4-020"
+        ],
+        "means": {
+          "W": 1.1666666666666667,
+          "era": 5.024565388184397,
+          "IP": 29.674999999999997,
+          "SO": 18.083333333333332,
+          "SV": 0.4166666666666667,
+          "HLD": 10.083333333333334
+        }
+      },
+      "CL": {
+        "seasons": 4,
+        "seeds": [
+          "pitcher-tc-r3-037",
+          "pitcher-tc-r4-008",
+          "pitcher-tc-r4-009",
+          "pitcher-tc-r4-020"
+        ],
+        "means": {
+          "W": 1.25,
+          "era": 4.938040238450075,
+          "IP": 41.675,
+          "SO": 38,
+          "SV": 13.75,
+          "HLD": 3
+        }
+      }
+    },
+    "bullpenSeeds": [
+      "pitcher-tc-r3-037",
+      "pitcher-tc-r4-008",
+      "pitcher-tc-r4-009",
+      "pitcher-tc-r4-020"
+    ],
+    "optionsObserved": 10,
+    "uniqueOptionMenus": 10,
+    "contractsAcceptedOperations": 10,
+    "usEntryEvents": 6,
+    "mlbInternalPromotionEvents": 4,
+    "mlbInternalPromotionSeeds": [
+      "pitcher-tc-r3-037",
+      "pitcher-tc-r4-009",
+      "pitcher-tc-r4-020"
+    ],
+    "mlbArrivalEvents": 5,
+    "stageEffectiveSeasons": {
+      "R": 10,
+      "A1": 12,
+      "A2": 21,
+      "A3": 28,
+      "MLB": 16
+    },
+    "meetingsShown": 0,
+    "meetingsSelected": 0,
+    "mlbMRtoCL": 2,
+    "mlbCLtoMR": 3,
+    "concentration": [
+      {
+        "seed": "pitcher-tc-r3-037",
+        "bullpenSeasons": 5
+      },
+      {
+        "seed": "pitcher-tc-r4-008",
+        "bullpenSeasons": 1
+      },
+      {
+        "seed": "pitcher-tc-r4-009",
+        "bullpenSeasons": 7
+      },
+      {
+        "seed": "pitcher-tc-r4-020",
+        "bullpenSeasons": 3
+      }
+    ]
+  },
+  "seconds": 47.224999999999994
+}

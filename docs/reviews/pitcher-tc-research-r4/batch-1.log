@@ -1,0 +1,11 @@
+pitcher-tc-r4-001 USA-Bullpen true RNG 731
+pitcher-tc-r4-002 USA-Bullpen true RNG 681
+pitcher-tc-r4-003 USA-Bullpen true RNG 641
+pitcher-tc-r4-004 USA-Bullpen true RNG 743
+pitcher-tc-r4-005 USA-Bullpen true RNG 870
+pitcher-tc-r4-006 USA-Bullpen true RNG 855
+pitcher-tc-r4-007 USA-Bullpen true RNG 695
+pitcher-tc-r4-008 USA-Bullpen true RNG 883
+pitcher-tc-r4-009 USA-Bullpen true RNG 766
+pitcher-tc-r4-010 USA-Bullpen true RNG 635
+{"output":"docs/reviews/pitcher-tc-research-r4/batch-1.json","attempts":10,"completed":10,"failures":0,"seconds":23.45,"replay":[{"seed":"pitcher-tc-r4-001","completed":true,"fullState":true,"choiceHistory":true,"allRngValues":true,"allActionWindows":true,"calls":731}]}

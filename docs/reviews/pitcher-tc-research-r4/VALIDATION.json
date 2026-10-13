@@ -1,0 +1,10 @@
+{
+  "files": 61,
+  "traceFiles": 42,
+  "largestBytes": 4440965,
+  "localLinks": 7,
+  "restoredCareers": 20,
+  "immutablePreRunTools": "PASS",
+  "protectedFileVerification": "PASS:384 files (separate prepare --verify)",
+  "replayBatches": 2
+}
