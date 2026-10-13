@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {schoolCompetitionBonus} from '../docs/src/engine/school-policy.js';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import * as domestic from '../docs/src/engine/domestic-tournament-policy.js';
@@ -35,7 +36,7 @@ assert.match(fs.readFileSync(new URL('../docs/src/engine/event-policy.js',import
 const amateur=game.slice(game.indexOf('  function cupOnce('),game.indexOf('  function intlEvents('));
 for(const stage of ['HS','U','CORP','IND'])for(const rest of [false,true]){
   let rng=0,next=0,indResults=null;const state=ensureEventState({year:2030,age:20,stage,stageYr:1,schoolTier:'S',schoolId:'TEST',senbatsuEligibleYear:null,seasonFactor:rest?0:1,pendStat:-2,traits:{},ab:{},pool:0,honors:[],log:[],domesticCompletedKeys:{},domesticTournamentLog:[]});
-  const ctx=vm.createContext({...domestic,S:state,DATA:{universities:[{schoolId:'TEST',jinguRoute:'DIRECT'}]},TRAIT_TEXT,highSchoolChampionCount,displayTrait:k=>TRAIT_LABELS[k],traitCard:k=>{state.traits[k]=true;},ensureEventState,beginEventSeason,consumeEventSeason,ovr:()=>50,ri:()=>{rng++;return 0;},card:()=>{},nextStep:()=>{next++;},maybeIntl:done=>done(),recordIndependentSalaryEvaluation:r=>{indResults=r;}});
+  const ctx=vm.createContext({...domestic,schoolCompetitionBonus,S:state,DATA:{universities:[{schoolId:'TEST',jinguRoute:'DIRECT'}]},TRAIT_TEXT,highSchoolChampionCount,displayTrait:k=>TRAIT_LABELS[k],traitCard:k=>{state.traits[k]=true;},ensureEventState,beginEventSeason,consumeEventSeason,ovr:()=>50,ri:()=>{rng++;return 0;},card:()=>{},nextStep:()=>{next++;},maybeIntl:done=>done(),recordIndependentSalaryEvaluation:r=>{indResults=r;}});
   vm.runInContext(amateur,ctx);vm.runInContext('amateurSeason()',ctx);
   assert.equal(state.pendStat,0,stage+' annual point consumption');assert.equal(state.eventSeasonContext.consumed,true);assert.equal(next,1);
   if(rest){assert.equal(rng,0);assert.equal(state.log[0].line,'全休');}

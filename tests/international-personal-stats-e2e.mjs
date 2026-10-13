@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';
+import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'e602174a22d7472e1021d780388ad61adc6b11b6')+'^{commit}'],{encoding:'utf8'}).trim();
-const prior=execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
+const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
 const h=await harness('international-personal-stats');
 const hook=`window.__intlDisplay={
  fixture:v=>{window.__stage6.fixture({pos:v.pos||'P',ability:64,potential:80});Object.assign(S,{stage:'PRO',org:'NPB',lv:'NPB1',year:2035,role:'SP',rehab:0,seasonFactor:1,skipMid:false,...v});$('log').replaceChildren();_curYearBody=null;window.__intlContinued=0;},

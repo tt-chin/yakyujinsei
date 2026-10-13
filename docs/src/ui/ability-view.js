@@ -14,9 +14,10 @@ export function renderAbility(container,model){
   container.replaceChildren();
   const abilities=document.createElement('section');abilities.className='ui-panel';
   const abilityHeading=document.createElement('h2');abilityHeading.textContent=`${model.positionLabel}能力`;
-  const guide=document.createElement('p');guide.className='ui-ability-guide';guide.textContent='現在値 / 潜在能力上限';
+  const guide=document.createElement('p');guide.className='ui-ability-guide';guide.textContent='現在値 / 潜在能力';
+  const growthGuide=document.createElement('p');growthGuide.className='ui-ability-guide';growthGuide.textContent='潜在能力を超えると、成長に必要なポイントが増えます。能力値の上限は80です。';
   const list=document.createElement('dl');list.className='ui-data-list ui-ability-list';
-  model.abilities.forEach(item=>addAbilityRow(list,item));abilities.append(abilityHeading,guide,list);container.appendChild(abilities);
+  model.abilities.forEach(item=>addAbilityRow(list,item));abilities.append(abilityHeading,guide,growthGuide,list);container.appendChild(abilities);
 
   const condition=document.createElement('section');condition.className='ui-panel';
   const conditionHeading=document.createElement('h2');conditionHeading.textContent='コンディション';

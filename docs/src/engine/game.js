@@ -1,4 +1,5 @@
 import { VERSION } from '../config.js';
+import { highSchoolTier, schoolCompetitionBonus, installBirthHighSchool, smallSchoolEligibility } from './school-policy.js';
 import { TRAIT_LABELS, TRAIT_TEXT, traitLabel, removedTraitLabel, confidanteEligible, recordFirstTeamSeason, goldclothEligible, highSchoolChampionCount, declineForSeason, awardTraitUnlocks } from './trait-policy.js';
 import { EVENT_CATALOG } from '../data/event-cards-jp.js';
 import { EVENT_MODES, eventEligible, eventOdds, effectiveCategory, eventTier, eventPlan, eventInjury, eventIncome, eventTraitUnlocks, EVENT_TRAIT_TEXT, validateEventCatalog } from './event-policy.js';
@@ -815,7 +816,7 @@ function phasePre(){
       card('gold','隠し特性解放：天才','22歳までに最高値を5回出した！ 今後、すべてのトレーニングダイスが<b class="hl">永久に4以上</b>となり、イベントカードの成功率が <b class="hl">70%</b>に上昇。'+(bl.length?`才能が覚醒し、潜在能力が再評価された：${bl.join('、')}。`:'')+'才能は隠せない。');
       board(1);
     } }
-    choose('',[{t:`▸ トレーニング成果を割り振る（サイコロ${dice.length}個）`,main:true,f:()=>dposReview(()=>allocUI({dice},'トレーニング成果を割り振る（サイコロをタップして適用｜スカウト評価：'+(S.pos==='P'?'60/70/75':'70/75')+' 以上は成長効率が低下）',()=>nextStep()))}]);
+    choose('',[{t:`▸ トレーニング成果を割り振る（サイコロ${dice.length}個）`,main:true,f:()=>dposReview(()=>allocUI({dice},'能力の項目を選んで、サイコロを割り当てます。能力値が高くなるほど、成長に必要なポイントが増えます。潜在能力を超える場合は、さらにポイントが必要です。能力値の上限は80です。',()=>nextStep()))}]);
   };
   /* 投手の開幕前：投球強度(持久力+TJ ゲージ)。 */
   const preAsk=afterAsk;
@@ -1032,7 +1033,7 @@ function loveCaughtDating(next){
   board(1);
   card('bad','浮気発覚',`ドライブレコーダーの画面が流出し、タイムラインも綺麗に揃っていました。<b class="dn">${ABL[kk]} ${g}</b>。${extra}`);
   choose(`3日間の既読スルー後、${L.partner}がようやく会うことを承諾した`,[
-    {t:'謝罪してもう一度チャンスを彼女に懇願する',s:'関係を保存することに成功｜失敗＝再び能力を失って別れる',f:()=>{
+    {t:'謝罪してもう一度チャンスを彼女に懇願する',s:'成功＝関係を続ける｜失敗＝能力がさらに低下して別れる',f:()=>{
       if(chance(40)){
         card('info','どん底を越えて',`彼女は泣きながら怒りをぶつけ、最後に「これが最後」と言った。関係は続いたが、信頼の亀裂は消えない。`); next(); }
       else{ const k2=pick(POS_AB[S.pos]); const g2=addAb(k2,-2);
@@ -2156,7 +2157,7 @@ function endGame(reason){
   const reachedTop = (tiersByLg.CPBL&&tiersByLg.CPBL.i===0) || !!S.stats.NPB || !!S.stats.MLB;
   if(reachedTop){
     /* 小學校之光：T3 弱旅出身。 */
-    if(!S.traits.smallschool && S.hsTier===3){ S.traits.smallschool=true;
+    if(!S.traits.smallschool && smallSchoolEligibility(S.birthHighSchool,JP_DATA.highSchools,VERSION)==='ELIGIBLE'){ S.traits.smallschool=true;
       card('gold','隠し特性解放：弱小校の星',`無名の弱小校から、ついに最高峰の舞台へ。出身校が選手の限界を決めるわけじゃない――自らのキャリアで証明した。`); }
     /* 努力仔：初始能力上限合計偏低(投手≤237/野手≤469)。 */
     const grindTh = S.pos==='P'?237:469;
@@ -2324,7 +2325,7 @@ function endGame(reason){
     archiveTraitResults();
     imgBtn.disabled=true; imgBtn.textContent='⏳ キャリア画像を作成中…';
     requestAnimationFrame(()=>{try{shareImage(evals,shareOut);imgBtn.textContent='✅ キャリア画像を作成しました';}
-      catch(err){console.error(err);shareOut.innerHTML='<div class="statline" role="alert">画像を作成できませんでした。ページを再読み込みして、もう一度お試しください。</div>';imgBtn.textContent='⚠️ もう一度作成する';}
+      catch(err){console.error(err);shareOut.innerHTML='<div class="statline" role="alert">画像を作成できませんでした。「もう一度作成する」から再試行してください。</div>';imgBtn.textContent='⚠️ もう一度作成する';}
       finally{imgBtn.disabled=false;}
     });
   });
@@ -2827,7 +2828,7 @@ $('btn-start').onclick=()=>{
     const ab={};POS_AB[pos].forEach(k=>ab[k]=ri(20,32));if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);}else{ab.con+=ri(0,6);ab.pow+=ri(0,4);}
     const pot={},sh=POS_AB[pos].slice();for(let i=sh.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[sh[i],sh[j]]=[sh[j],sh[i]];}
     sh.forEach((k,i)=>pot[k]=pos==='P'?(i===0?ri(70,80):i===1?ri(58,68):i===2?ri(50,60):ri(44,54)):(i===0?ri(72,80):i===1?ri(64,74):i===2?ri(56,68):ri(46,62)));
-    const tierRoll=Math.floor(R()*100),tier=tierRoll<30?'S':tierRoll<80?'A':'B',schools=DATA.highSchools.filter(x=>x.tier===tier),school=pickRecord(schools.length?schools:DATA.highSchools);
+    const tierRoll=Math.floor(R()*100),tier=highSchoolTier(tierRoll),schools=DATA.highSchools.filter(x=>x.tier===tier),school=pickRecord(schools.length?schools:DATA.highSchools);
     const state={name,pos,role:null,seed:SEED,version:VERSION,rngState:S.rngState,age:16,year:2026,stage:'HS',stageYr:1,lv:'HS',org:'AMATEUR',pot,ab,team:school.name,schoolId:school.schoolId,schoolTier:tier,senbatsuEligibleYear:null,entryRoute:'HS',orgTeamId:null,teamTally:{NPB:{},KBO:{},CPBL:{},MLB:{},IND:{},CORP:{}},
       traits:{genius:false,glass:false,iron:false,scum:false,late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,taiwan:false},removed:[],cntSave:0,cntSaveWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,samePick:0,samePickKey:null,teamYears:0,six:0,bigInj:0,ironStreak:0,npbYears:0,npbDevYears:0,corpYears:0,indYears:0,injNext:0,tmpInj:0,rehab:0,currentSalary:0,careerEarnings:0,careerBaseSalary:0,careerSigningBonus:0,careerDevelopmentStipend:0,signingPayments:{},foreignFirstTeamYears:{},americanContractSigned:false,careerIncentive:0,careerBuyout:0,corpIncome:0,yearlyIncentivePaid:{},lastFaMarket:null,lastSalaryPaidYear:null,salaryEvaluationHistory:[],lastSalaryEvaluation:null,lastSalaryDecision:null,salaryDecisionHistory:[],contractSequence:0,serviceTime:{NPB:0,MLB:0,KBO:0,CPBL:0},serviceTimeAccruedYear:null,marketInjury:'HEALTHY',lastArbitration:null,_salaryV130Migrated:true,_salaryV140Migrated:true,pool:0,seasonFactor:1,stats:{NPB:null,KBO:null,CPBL:null,MLB:null,MINOR:null,IND:null,CORP:null},statsByLevel:{NPB1:null,NPB2:null,NPB_DEV:null,KBO1:null,KBO2:null,CPBL1:null,CPBL2:null,MLB:null,A3:null,A2:null,A1:null,R:null,IND:null,CORP:null},honors:[],intlCount:0,intlCompletedKeys:{},intlLastEventKey:null,intlDispatchStatus:null,intlDeclinedCount:0,intlStat:{G:0,PA:0,AB:0,H:0,HR:0,RBI:0,IP:0,SO:0,ER:0,W:0,SV:0},intlBest:null,dpos:null,dposYears:{},roleYears:{},tradeRefuse:0,champThisTeam:false,svc:0,svcOrg:null,faElig:false,npbRosterDays:0,npbFaSeasons:0,faType:null,faUsed:false,faMarketKey:null,tradeHeat:0,complainCount:0,demotionRefused:false,tj:0,tjCount:0,effort:'普通投',tjSuccess:0,love:{st:'single',partner:null,kids:0,caught:0,affairs:0,exes:[],dyrs:0,datedTimes:0},log:[],ct:null,draftRights:null,domesticTournamentLog:[],domesticTournamentStats:{},domesticCompletedKeys:{},done:false};
     Object.defineProperty(state,'salary',{get(){return this.careerEarnings;},set(v){this.careerEarnings=v;},enumerable:false});
@@ -2837,6 +2838,7 @@ $('btn-start').onclick=()=>{
     Object.assign(state,{oldGhostPending:false,oldGhostUsed:false,firstTeamSeasons:{},firstTeamYearsByTeam:{},tripleCrownHistory:{}});
     Object.assign(state,{championshipResults:{},seasonChampContext:null,seasonEndMaintenanceYear:null,championshipMigrationVersion:1,intlFinalCount:0,intlTraitResults:{},internationalTraitMigrationVersion:1});
     traitPresentation.set(state,new Set(Object.keys(state.traits).filter(key=>state.traits[key])));
+    installBirthHighSchool(state,school,VERSION);
     ensureEventState(state);state.potSum0=Object.values(pot).reduce((sum,value)=>sum+value,0);return state;
   };
 
@@ -2899,7 +2901,7 @@ $('btn-start').onclick=()=>{
 
   function cupOnce(key,name,klass,{pointMode='STANDARD'}={}){
     const doneKey=key+':'+S.year;if(S.domesticCompletedKeys[doneKey])return null;
-    const bonus=S.schoolTier==='S'?6:S.schoolTier==='A'?2:-2,overall=ovr(),power=overall+beginEventSeason(S).form+bonus+ri(-8,8),national=klass.startsWith('NATIONAL');
+    const bonus=schoolCompetitionBonus(S.stage,S.schoolTier),overall=ovr(),power=overall+beginEventSeason(S).form+bonus+ri(-8,8),national=klass.startsWith('NATIONAL');
     const result=tournamentResult({power,national,overall,pointMode});
     S.pool+=result.points;S.domesticCompletedKeys[doneKey]=true;
     S.domesticTournamentLog.push({year:S.year,key,result:result.result,deemedGames:result.deemedGames,points:result.points,amaD:result.amaD,injury:false});
@@ -2909,7 +2911,7 @@ $('btn-start').onclick=()=>{
   }
   function qualifierOnce(key,name){
     const doneKey=key+':'+S.year;if(S.domesticCompletedKeys[doneKey])return null;
-    const bonus=S.schoolTier==='S'?6:S.schoolTier==='A'?2:-2,result=qualificationResult(ovr()+beginEventSeason(S).form+bonus+ri(-8,8));
+    const bonus=schoolCompetitionBonus(S.stage,S.schoolTier),result=qualificationResult(ovr()+beginEventSeason(S).form+bonus+ri(-8,8));
     S.domesticCompletedKeys[doneKey]=true;
     S.domesticTournamentLog.push({year:S.year,key,result:result.result,deemedGames:result.deemedGames,points:0,amaD:0,injury:false});
     return {...result,html:`${name}：<b class="hl">${result.result}</b>（能力点なし）`};
@@ -3138,7 +3140,7 @@ $('btn-start').onclick=()=>{
     });
   },0);};
 
-  function startJapanese(){let params=new URLSearchParams(location.search);let sv=normalizeSeed($('seed-show').value||params.get('seed'));if(!sv)sv=generateSeed();SEED=sv;const pos=document.querySelector('#seg-pos button.on')?.dataset.v||'P';const nm=normalizePlayerName($('in-name').value,SEED,pos);S={rngState:0};seedInit(SEED);S=newState(nm,pos);history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}`);$('start').style.display='none';$('board').style.display='';$('act').style.display='';navigation.reset();navigation.show();card('info','選手誕生',`${S.year}年春、${POSN[S.pos]} <b class="hl">${escapeHTML(S.name)}</b>は<b class="hl">${escapeHTML(S.team)}</b>野球部に入部した。ここから、すべての選択が野球人生を変える。`);startYear();}
+  function startJapanese(){let params=new URLSearchParams(location.search);let sv=normalizeSeed($('seed-show').value||params.get('seed'));if(!sv)sv=generateSeed();SEED=sv;const pos=document.querySelector('#seg-pos button.on')?.dataset.v||'P';const nm=normalizePlayerName($('in-name').value,SEED,pos);S={rngState:0};seedInit(SEED);S=newState(nm,pos);history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}`);$('start').style.display='none';$('board').style.display='';$('act').style.display='';navigation.reset();navigation.show();card('info','選手誕生',`${S.year}年春、${POSN[S.pos]} <b class="hl">${escapeHTML(S.name)}</b>は<b class="hl">${escapeHTML(S.team)}</b>${S.schoolTier==='C'?'（C級・弱小校）':''}野球部に入部した。ここから、すべての選択が野球人生を変える。`);startYear();}
   const appVersion=$('app-version');if(appVersion)appVersion.textContent='v'+VERSION;
   createSeedShareController({trigger:$('board-share'),getSeed:()=>S?.seed||$('seed-show').value||SEED});
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});

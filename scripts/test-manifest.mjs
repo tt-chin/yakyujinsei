@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'smallschool-c-e2e': {seconds:600,reason:'C-school native initialization, immutable birth snapshots, retirement fixtures, three viewports and raw cross-version P/IF traces with exact new-version replay.'},
   'full-power-pitching-e2e': {seconds:900,reason:'Real pitching-plan callbacks, viewport/role matrix, normal and energy-saving P plus IF unchanged controls; approved full-power branch traces and exact replay. Includes 20 complete career runs; not a Quick entry.'},
   'international-personal-stats-e2e': {seconds:600,reason:'Tournament snapshots and result cards, T01-T14 browser matrix, six exact baseline S/RNG careers. No Quick profile.'},
   'trait-display-e2e': {seconds:180,reason:'All trait labels, acquisition-only explanation lifetime, retirement/PNG and exact pre-change P/IF S/RNG careers.'},
@@ -27,6 +28,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/approved-school-oracle.mjs': ['support','Explicit approved C-school/COPY positive-control overlay; never an old-bug negative oracle. Raw old/new traces remain separate.'],
   'support/baseline-initial-potential.mjs': ['support','Approved birth-potential adapter for positive historical UI comparisons; unadapted fixed-seed S/R proof stays separate. Not executable.'],
   'support/stage6-browser.mjs': ['support','Test-only native browser fixture and state/RNG/DOM trace; imported by Stage 6 probes.'],
   'support/first-difference.mjs': ['support','Read-only first-difference diagnostic, imported by historical E2E controls.'],

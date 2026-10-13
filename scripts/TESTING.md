@@ -1,8 +1,14 @@
 # 統一測試入口
 
+## C級高校工作樹驗證
+
+school-policy.test為Quick/Full單元與原生初始化fixture：舊50校、60唯一ID、25/45/20/10邊界、C限定HS−4、不可變出生快照及三態資格。smallschool-c-e2e為Full/Audit：三尺寸、C／各gate明示fixture、升學／移籍、退休列表PNG及P/IF原始跨版完整trace＋同版重播。`--fixtures-only=true`只跑fixture；`--cases=<前綴>`局部重跑，不當完整入口PASS。
+
+support/approved-school-oracle僅給歷史正向控制套用已批准高校／COPY差異，不能稱原始舊版重播／存檔遷移，也不能用於舊Bug負面基準。smallschool-c-e2e的原始舊game仍未改造。KBO負面digest只排除新增birthHighSchool metadata，其舊故障來源、金額／契約／RNG斷言保持。Master整檔不變舊斷言改為確認只append指定10校、其餘資料完整相等。
+
 ## 全力投球callback修正
 
-`full-power-pitching.test`為Quick／Full／Audit原生函式53案（含四聯盟及MiLB適用階層）；`full-power-pitching-e2e`為Full／Audit的真實三強度callback、SP／MR／CL及1280／320／390px、TJ後續操作與完整生涯。基準20920dddd72ab8c91b0e2c71d560492663cd5aec，或明示`--baseline=<SHA>`；此專項要求game.js只存在核准的一行callback差異。可直接`--fixtures-only`做Preview矩陣，不冒充完整生涯。
+`full-power-pitching.test`為Quick／Full／Audit原生函式53案（含四聯盟及MiLB適用階層）；`full-power-pitching-e2e`為Full／Audit的真實三強度callback、SP／MR／CL及1280／320／390px、TJ後續操作與完整生涯。基準20920dddd72ab8c91b0e2c71d560492663cd5aec，或明示`--baseline=<SHA>`；套用上節明示的C／COPY正向控制差分後，逐一比較proSeason／tjAccrue／tjCap／phasePre，只允許核准的一行投球callback差異，不再要求整個game.js與加入C前逐字相等。完整S／R斷言保留。可直接`--fixtures-only`做Preview矩陣，不冒充完整生涯。
 
 契約、draft-income、display、trait-display、international-personal-stats、KBO正向控制及殿堂的歷史一致生涯，修正前後都以真實UI明確選「通常投球」；只改測試操作策略，不改遊戲source／S／舊baseline，不新增狀態排除，完整S、選擇與RNG斷言保持。KBO原2049負面案例為IF，操作策略不受這個投手選項影響。原始全力路線的失敗证据保留；新專項另驗證全力的首個effort差異、首次補正前的完整R前綴、成績／TJ與新版重播。全力路線後續條件抽選可依已批准的連鎖差異改变，不稱完整舊生涯R次數不變。研究100條原始資料不覆寫。
 

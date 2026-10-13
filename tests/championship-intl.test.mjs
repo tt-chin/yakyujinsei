@@ -57,6 +57,15 @@ test('snapshot placement and franchise hookup use unchanged actual path',()=>{as
 test('out-of-scope data and rules unchanged except approved KBO floor fix',()=>{
   for(const file of ['src/data/event-cards-jp.js','src/data/jp-data.js','src/data/salary-market-data.js','src/engine/market-policy.js','src/engine/cross-league-market-policy.js','src/engine/contract-policy.js','src/engine/event-policy.js','src/engine/event-state-policy.js','src/engine/incentive-policy.js']){
     let current=readFileSync(new URL('../docs/'+file,import.meta.url),'utf8').replace(/\r\n/g,'\n');
+    if(file==='src/data/jp-data.js'){
+      const data=JSON.parse(current.slice(current.indexOf('=')+1).trim().replace(/;$/,''));
+      assert.equal(data.highSchools.length,60);
+      assert.deepEqual(data.highSchools.slice(50).map(s=>s.schoolId),Array.from({length:10},(_,i)=>'HS_'+String(51+i).padStart(3,'0')));
+      data.highSchools=data.highSchools.slice(0,50);
+      const baselineData=execFileSync('git',['show','004cd26:docs/'+file],{encoding:'utf8',maxBuffer:20000000});
+      assert.deepEqual(data,JSON.parse(baselineData.slice(baselineData.indexOf('=')+1).trim().replace(/;$/,'')),file+' old data preserved');
+      continue;
+    }
     if(file.endsWith('/cross-league-market-policy.js')){
       const approved='  // Apply the existing level floor after salary multipliers, before the package cap.\n  // A candidate below the floor is not itself a floor/cap policy conflict.\n  let salary=Math.min(round(Math.max(Number(annualSalary)||0,levelMinimum)),floor(available/(1+incentiveRate)));';
       assert.equal(current.split(approved).length,2,'exactly one approved KBO fix');

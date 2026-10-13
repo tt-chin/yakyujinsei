@@ -4,11 +4,13 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';
 import {normalizeEventSeason} from '../docs/src/engine/event-season-policy.js';
+import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
+import {productionFunction} from './retirement-hof-test-support.mjs';
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'20920dddd72ab8c91b0e2c71d560492663cd5aec')+'^{commit}'],{encoding:'utf8'}).trim();
-const prior=execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
+const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
 const current=await readFile(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const canonical=s=>s.replaceAll('\r\n','\n');
-assert.equal(canonical(current),canonical(prior).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();"),'only approved callback change in game.js');
+for(const fn of ['proSeason','tjAccrue','tjCap','phasePre'])assert.equal(canonical(productionFunction(fn,current)),canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();"),'pitching rules unchanged except approved callback: '+fn);
 const hook=`
 window.__effortInputs=[];window.__effortSeasons=[];window.__effortTJ=[];
 const observedAcc=accLevelStat;accLevelStat=(lv,st)=>{window.__effortSeasons.push({year:S.year,lv,role:S.role,effort:S.effort,st:JSON.parse(JSON.stringify(st)),calls:window.__stage6.get().rng.length});return observedAcc(lv,st);};

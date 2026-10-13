@@ -1,4 +1,16 @@
-# 現行規格（dev v1.11.9／main v1.11.4）
+# 現行規格（dev v1.12.0／main v1.11.9）
+
+## v1.12.0：C級高校與COPY-001～005
+
+使用者已批准在dev工作樹新增HS_051～HS_060十所C級高校，既有50所高校資料與順序不變。出生抽選S/A/B/C＝25/45/20/10%，保持tier與同tier學校兩次R。高校大会補正S+6/A+2/B−2/C−4；C−4只用於HS，大學／社會人／獨立保持既有公式。初始ab/pot與potSum0不受高校分類影響。
+
+active newState建立唯寫一次、不可替換／刪除且物件freeze的birthHighSchool（schemaVersion1、classificationSystem JP_SABC、schoolId、tier、createdVersion取現有VERSION）。此快照與可覆寫的schoolId/schoolTier分離，不增加RNG。createdVersion在1.12.0新角色為1.12.0，不是舊資料白名單。只接受已知現行版本及Master ID/tier一致的快照；缺失、非法、未知來源、LEGACY_T123為UNKNOWN，不從當前學校／seed補造。未發布工作樹1.11.9快照不自動列入可信舊版，既取得稱號仍保留。
+
+「弱小校の星」仍在退休、原reachedTop且未持有時取得，資格改讀有效JP_SABC出生C。原gate包含NPB育成／二軍bucket，不增加KBO。既取得true保持、無能力／薪資／HOF加成、不補發舊称号；grinder原potSum0與門檻不變。初始C的入部文字補C級・弱小校。跨版本高校／大会／路線／後續RNG允許有可追溯差異，同版同操作完整重播仍須一致。
+
+COPY-001～005：能力頁改「現在値 / 潜在能力」並補充超過潛在值的成長成本與80硬上限；配點說明改為能力項目選擇及正確的成本概述；退休PNG失敗提示原按鈕「もう一度作成する」重試、不要求重整；私生活選項說明成功維持關係、失敗能力再降低後分手。公式／callback／PNG流程不變，其他COPY及92事件資料不在本次範圍。
+
+使用者已批准1.12.0 MINOR與COPY、C級高校合併提交；本番及main未反映。[C級實作驗收](docs/reviews/TRAIT_SMALLSCHOOL_C_IMPLEMENTATION_ACCEPTANCE.md)／[COPY驗收](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)。以下舊版「smallschool未批准」敘述為當時修復界線，不適用本次另行正式批准的C分類。
 
 2026-10-13、文書改訂27：v1.11.9は全力投球callbackのeffort書込値だけを修正するPATCH。係数・公式・直接RNG呼出しは変更せず、既存の補正とTJ負担を有効にする。使用者は全力路線の追跡可能な成績／TJ及び後続条件分岐のRNG差異を承認。通常／省エネ／野手の対照は不変とし、主RNG追加なしと全生涯R総数不変を混同しない。実装前調査100生涯は歴史証拠として保持、再採樣や新投手タイトルは本変更に含めない。
 

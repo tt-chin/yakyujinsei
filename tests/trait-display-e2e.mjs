@@ -4,9 +4,10 @@ import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';
 import {TRAIT_LABELS,TRAIT_TEXT} from '../docs/src/engine/trait-policy.js';
 import {EVENT_TRAIT_TEXT} from '../docs/src/engine/event-policy.js';
+import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
 
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'a0b880bb7e7fe74e743daa0cb8144455c9fdded2')+'^{commit}'],{encoding:'utf8'}).trim();
-const source=execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
+const source=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
 const h=await harness('trait-display'),labels=Object.keys(TRAIT_LABELS);
 const runTest=h.test;h.test=(id,input,action)=>!arg('cases')||id.startsWith(arg('cases'))?runTest(id,input,action):Promise.resolve();
 const hook=`window.__traitDisplay={
