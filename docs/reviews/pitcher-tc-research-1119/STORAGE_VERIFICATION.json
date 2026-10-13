@@ -1,0 +1,21 @@
+{
+  "format": "action-trace.v1",
+  "results": [
+    {
+      "file": "careers.json",
+      "records": 100,
+      "originalBytes": 47634857,
+      "storedBytes": 17710083,
+      "reconstructedSha256": "60b1f115b28388f2af876cd1d5ac590eb926e0cb13170a1d83904a86313cb56f",
+      "roundTrip": "PASS"
+    },
+    {
+      "file": "baseline-traces.json",
+      "records": 100,
+      "originalBytes": 46330537,
+      "storedBytes": 17517222,
+      "reconstructedSha256": "bbeb6b10986f6f862cce7eccef163dd5ef8b3b00cad966c3e1ca8d4c669b3595",
+      "roundTrip": "PASS"
+    }
+  ]
+}

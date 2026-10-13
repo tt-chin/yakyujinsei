@@ -1,0 +1,32 @@
+// Reuse the frozen first-round driver; change only read-only observations and source selection.
+import {readFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+const original=new URL('../pitcher-tc-research/research.mjs',import.meta.url);
+const baseline=process.argv.find(x=>x.startsWith('--baseline='))?.slice(11);
+const git=(...args)=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024});
+const source=await readFile(original,'utf8');
+const replaceOnce=(s,from,to)=>{assert.equal(s.split(from).length,2,`unique research anchor: ${from}`);return s.replace(from,to);};
+const observations=String.raw`
+window.__study={rng:[],actions:[],seasons:[],tj:[],surgeries:[]};
+const studyCopy=x=>JSON.parse(JSON.stringify(x));
+const studyState=()=>({year:S.year,age:S.age,stage:S.stage,org:S.org,lv:S.lv,role:S.role,ab:studyCopy(S.ab),effort:S.effort,seasonFactor:S.seasonFactor,rehab:S.rehab,tj:S.tj,tjCount:S.tjCount,rubber:!!S.traits.rubber,pendStat:S.pendStat,calls:window.__rngCalls||0,rng:S.rngState});
+const studyR=R;R=function(){const v=studyR();window.__study.rng.push(v);return v;};
+window.__studyBeforeEffort=st=>{window.__study.seasons.push({context:studyState(),beforeEffort:studyCopy(st)});};
+window.__studyAfterEffort=st=>{const row=window.__study.seasons.at(-1);row.afterEffort=studyCopy(st);row.afterEffortCalls=window.__rngCalls||0;};
+const studyAcc=accLevelStat;accLevelStat=function(lv,st){const row=window.__study.seasons.at(-1);row.final=studyCopy(st);return studyAcc(lv,st);};
+const studyTJ=tjAccrue;tjAccrue=function(){const before=studyState();const v=studyTJ();window.__study.tj.push({before,after:studyState()});return v;};
+const studyGamble=afterGamble;afterGamble=function(kind,cont){window.__study.surgeries.push({kind,context:studyState()});return studyGamble(kind,cont);};
+const studyAction=window.__hofAudit.action;window.__hofAudit.action=function(strategy){const before=studyState(),count=window.__hofActions.length,options=[...document.querySelectorAll('#act button')].filter(e=>!e.disabled).map(e=>e.innerText);const v=studyAction(strategy);if(window.__hofActions.length>count)window.__study.actions.push({index:count,choice:window.__hofActions.at(-1).choice,options,before,after:studyState()});return v;};
+const studyGet=window.__hofAudit.get;window.__hofAudit.get=()=>({...studyGet(),study:window.__study});
+`;
+let code=source.replaceAll('import.meta.url',JSON.stringify(original.href));
+code=replaceOnce(code,"import {VERSION} from '../../../docs/src/config.js';",`import {VERSION as CURRENT_VERSION} from ${JSON.stringify(new URL('../../../docs/src/config.js',original).href)}; const VERSION=${baseline?JSON.stringify(git('show',`${baseline}:docs/src/config.js`).match(/VERSION\s*=\s*['"]([^'"]+)/)[1]):'CURRENT_VERSION'};`);
+code=replaceOnce(code,'const instrument=s=>',`const baseline=${JSON.stringify(baseline||null)}; const baselineFiles=baseline?Object.fromEntries(['src/engine/game.js','src/config.js'].map(f=>[f,execFileSync('git',['show',baseline+':docs/'+f],{encoding:'utf8',maxBuffer:8*1024*1024})])):{};\nconst originalInstrument=s=>`);
+code=replaceOnce(code,"const server=createServer",`const studyHook=${JSON.stringify(observations)};\nconst instrument=s=>originalInstrument(s).replace('/* 投球強度による成績補正。 */','window.__studyBeforeEffort(st); /* 投球強度による成績補正。 */').replace('if(S.traits.onetool&&S.seasonFactor>0)','window.__studyAfterEffort(st); if(S.traits.onetool&&S.seasonFactor>0)')+studyHook;\nconst server=createServer`);
+code=replaceOnce(code,"if(rel==='src/engine/game.js')body=instrument(body.toString());","if(baselineFiles[rel])body=Buffer.from(baselineFiles[rel]);if(rel==='src/engine/game.js')body=instrument(body.toString());");
+code=replaceOnce(code,'const result={...input,completed:','const result={...input,study:observed?.study,completed:');
+code=replaceOnce(code,"commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()","commit:execFileSync('git',['rev-parse',baseline||'HEAD'],{encoding:'utf8'}).trim(),driver:'../pitcher-tc-research/research.mjs',observationOnly:true");
+code=`import {writeStudy} from ${JSON.stringify(new URL('./storage.mjs',import.meta.url).href)};\n`+code;
+code=replaceOnce(code,'await writeFile(output,JSON.stringify(data))','writeStudy(output,data)');
+await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
