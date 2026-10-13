@@ -1,5 +1,13 @@
 # C級高校與弱小校の星實作驗收
 
+## Preview測試工具修復補記
+
+修復後Quick已實際完成48 PASS／0 FAIL／0 SKIP／0 BLOCKED，227.110秒、exit0，證據test-results/preview-hook-quick/summary.json；完整Full本次未重跑（測試route注入局部修復，產品規則／S／RNG不變）。git diff --check通過。沒有commit／push，未修改VERSION、CHANGELOG、BACKLOG或main；其他未提交資料保留。
+
+受驗產品d8f2df9024a946991f9fbf0d35b0340f5415266e／1.12.0。GitHub CI run 38366516472為Quick48 PASS、0 FAIL（不是Full）。Preview49個HTML／JS／CSS正規化換行後與產品相等；特性顯示Preview18 PASS，包含P/IF完整歷史正向對照。
+
+C專項首次Preview28 FAIL：專項route.fetch取得原始game.js，繞過共用Preview route的基礎hook，導致fixture失敗；不是產品故障證據。只在smallschool-c-e2e缺少基礎hook時呼叫instrument，本機已注入時不重複包裝RNG。修復後Preview28 PASS／0 FAIL、非預期錯誤0；本機相同28案亦PASS。原失敗證據test-results/v1120-preview-c保留，成功於v1120-preview-c-fixed及preview-hook-local。這28案為三尺寸及明示fixture，不冒稱自然生涯／實機驗收；Preview先前特性18案的自然路線另記。產品、VERSION、RNG與配信設定不改，工具修改未提交／push。Quick工具回歸另記實際完成结果。
+
 ## 後續1.12.0合併提交授權（2026-10-13）
 
 使用者已明確批准1.12.0 MINOR，以及COPY-001～005與本C實作合併提交至dev；只提交本次相關檔案，不混入D2、投手研究或tasks。VERSION／CHANGELOG／CURRENT_SPEC同步更新。出生快照在新版使用唯一VERSION＝1.12.0；未新增舊版白名單，未發布工作樹1.11.9快照為UNKNOWN、既持有稱號仍保留。下文1.11.9的Full67／Quick48及當時「版本待批准、未提交」是歷史驗收，不改寫成新版執行結果。
