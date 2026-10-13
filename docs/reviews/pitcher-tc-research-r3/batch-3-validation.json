@@ -1,0 +1,28 @@
+{
+  "batch": 3,
+  "commit": "18f9decb3a314beb9e70d74465fd1f6096f22d52",
+  "version": "1.11.9",
+  "strategy": "USA-SP",
+  "strategySha256": "448d091e7ca756c9e7cd3aa3855e4a9ae280b5d97916e27eb06994df3b864af1",
+  "completed": 10,
+  "failures": 0,
+  "integrity": "PASS",
+  "replay": "PASS",
+  "targetOptionObservations": 7,
+  "targetAcceptedOperations": 7,
+  "effectiveSeasons": {
+    "CPBL1/SP": 4,
+    "CPBL1/MR": 0,
+    "CPBL1/CL": 0,
+    "KBO1/SP": 21,
+    "KBO1/MR": 2,
+    "KBO1/CL": 0,
+    "NPB1/SP": 10,
+    "NPB1/MR": 0,
+    "NPB1/CL": 0,
+    "MLB/SP": 14,
+    "MLB/MR": 0,
+    "MLB/CL": 0
+  },
+  "seconds": 27.161
+}

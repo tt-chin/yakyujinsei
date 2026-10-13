@@ -1,0 +1,11 @@
+pitcher-tc-r3-001 KBO-SP true RNG 99
+pitcher-tc-r3-002 KBO-SP true RNG 755
+pitcher-tc-r3-003 KBO-SP true RNG 189
+pitcher-tc-r3-004 KBO-SP true RNG 1040
+pitcher-tc-r3-005 KBO-SP true RNG 860
+pitcher-tc-r3-006 KBO-SP true RNG 786
+pitcher-tc-r3-007 KBO-SP true RNG 196
+pitcher-tc-r3-008 KBO-SP true RNG 751
+pitcher-tc-r3-009 KBO-SP true RNG 940
+pitcher-tc-r3-010 KBO-SP true RNG 823
+{"output":"docs/reviews/pitcher-tc-research-r3/batch-1.json","attempts":10,"completed":10,"failures":0,"seconds":22.663,"replay":[{"seed":"pitcher-tc-r3-001","completed":true,"fullState":true,"choiceHistory":true,"allRngValues":true,"allActionWindows":true,"calls":99}]}

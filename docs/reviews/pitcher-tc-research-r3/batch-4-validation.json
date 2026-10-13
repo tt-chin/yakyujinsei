@@ -1,0 +1,28 @@
+{
+  "batch": 4,
+  "commit": "18f9decb3a314beb9e70d74465fd1f6096f22d52",
+  "version": "1.11.9",
+  "strategy": "USA-Bullpen",
+  "strategySha256": "448d091e7ca756c9e7cd3aa3855e4a9ae280b5d97916e27eb06994df3b864af1",
+  "completed": 10,
+  "failures": 0,
+  "integrity": "PASS",
+  "replay": "PASS",
+  "targetOptionObservations": 2,
+  "targetAcceptedOperations": 2,
+  "effectiveSeasons": {
+    "CPBL1/SP": 0,
+    "CPBL1/MR": 12,
+    "CPBL1/CL": 12,
+    "KBO1/SP": 0,
+    "KBO1/MR": 17,
+    "KBO1/CL": 36,
+    "NPB1/SP": 0,
+    "NPB1/MR": 10,
+    "NPB1/CL": 10,
+    "MLB/SP": 0,
+    "MLB/MR": 4,
+    "MLB/CL": 1
+  },
+  "seconds": 27.261
+}

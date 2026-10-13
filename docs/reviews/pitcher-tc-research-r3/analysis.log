@@ -1,0 +1,640 @@
+{
+  "completed": 40,
+  "failures": 0,
+  "groups": [
+    {
+      "level": "CPBL1",
+      "role": "SP",
+      "seasons": 10,
+      "seeds": [
+        "pitcher-tc-r3-002",
+        "pitcher-tc-r3-005",
+        "pitcher-tc-r3-008",
+        "pitcher-tc-r3-023",
+        "pitcher-tc-r3-026",
+        "pitcher-tc-r3-027"
+      ],
+      "mean": {
+        "W": 8.7,
+        "era": 3.1027935047032584,
+        "IP": 116.37333333333333,
+        "SO": 101.4
+      }
+    },
+    {
+      "level": "CPBL1",
+      "role": "MR",
+      "seasons": 14,
+      "seeds": [
+        "pitcher-tc-r3-018",
+        "pitcher-tc-r3-031",
+        "pitcher-tc-r3-032",
+        "pitcher-tc-r3-035",
+        "pitcher-tc-r3-038",
+        "pitcher-tc-r3-039",
+        "pitcher-tc-r3-040"
+      ],
+      "mean": {
+        "W": 2.142857142857143,
+        "era": 3.4577333544545716,
+        "IP": 38.71190476190476,
+        "SO": 33.5
+      }
+    },
+    {
+      "level": "CPBL1",
+      "role": "CL",
+      "seasons": 12,
+      "seeds": [
+        "pitcher-tc-r3-031",
+        "pitcher-tc-r3-032",
+        "pitcher-tc-r3-039"
+      ],
+      "mean": {
+        "W": 2,
+        "era": 2.73658261354495,
+        "IP": 34.966666666666676,
+        "SO": 32
+      }
+    },
+    {
+      "level": "KBO1",
+      "role": "SP",
+      "seasons": 65,
+      "seeds": [
+        "pitcher-tc-r3-004",
+        "pitcher-tc-r3-005",
+        "pitcher-tc-r3-006",
+        "pitcher-tc-r3-009",
+        "pitcher-tc-r3-021",
+        "pitcher-tc-r3-022",
+        "pitcher-tc-r3-023",
+        "pitcher-tc-r3-025",
+        "pitcher-tc-r3-026",
+        "pitcher-tc-r3-027",
+        "pitcher-tc-r3-029",
+        "pitcher-tc-r3-030"
+      ],
+      "mean": {
+        "W": 9.123076923076923,
+        "era": 3.247138638322248,
+        "IP": 120.7753846153846,
+        "SO": 108.24615384615385
+      }
+    },
+    {
+      "level": "KBO1",
+      "role": "MR",
+      "seasons": 100,
+      "seeds": [
+        "pitcher-tc-r3-012",
+        "pitcher-tc-r3-014",
+        "pitcher-tc-r3-015",
+        "pitcher-tc-r3-016",
+        "pitcher-tc-r3-017",
+        "pitcher-tc-r3-019",
+        "pitcher-tc-r3-020",
+        "pitcher-tc-r3-021",
+        "pitcher-tc-r3-032",
+        "pitcher-tc-r3-034",
+        "pitcher-tc-r3-035",
+        "pitcher-tc-r3-036",
+        "pitcher-tc-r3-038",
+        "pitcher-tc-r3-039",
+        "pitcher-tc-r3-040"
+      ],
+      "mean": {
+        "W": 2.97,
+        "era": 3.2357970300552346,
+        "IP": 46.23266666666663,
+        "SO": 45.01
+      }
+    },
+    {
+      "level": "KBO1",
+      "role": "CL",
+      "seasons": 36,
+      "seeds": [
+        "pitcher-tc-r3-031",
+        "pitcher-tc-r3-032",
+        "pitcher-tc-r3-034",
+        "pitcher-tc-r3-036",
+        "pitcher-tc-r3-038",
+        "pitcher-tc-r3-039"
+      ],
+      "mean": {
+        "W": 2.7777777777777777,
+        "era": 3.030160711226098,
+        "IP": 47.801851851851865,
+        "SO": 48.19444444444444
+      }
+    },
+    {
+      "level": "NPB1",
+      "role": "SP",
+      "seasons": 22,
+      "seeds": [
+        "pitcher-tc-r3-005",
+        "pitcher-tc-r3-008",
+        "pitcher-tc-r3-010",
+        "pitcher-tc-r3-021",
+        "pitcher-tc-r3-022",
+        "pitcher-tc-r3-023",
+        "pitcher-tc-r3-025",
+        "pitcher-tc-r3-026",
+        "pitcher-tc-r3-027",
+        "pitcher-tc-r3-029"
+      ],
+      "mean": {
+        "W": 6.045454545454546,
+        "era": 4.446528791367634,
+        "IP": 87.35757575757576,
+        "SO": 70.54545454545455
+      }
+    },
+    {
+      "level": "NPB1",
+      "role": "MR",
+      "seasons": 20,
+      "seeds": [
+        "pitcher-tc-r3-018",
+        "pitcher-tc-r3-034",
+        "pitcher-tc-r3-035",
+        "pitcher-tc-r3-038",
+        "pitcher-tc-r3-040"
+      ],
+      "mean": {
+        "W": 1.2,
+        "era": 5.448242869030369,
+        "IP": 30.018333333333334,
+        "SO": 20.45
+      }
+    },
+    {
+      "level": "NPB1",
+      "role": "CL",
+      "seasons": 10,
+      "seeds": [
+        "pitcher-tc-r3-031",
+        "pitcher-tc-r3-032",
+        "pitcher-tc-r3-034",
+        "pitcher-tc-r3-035",
+        "pitcher-tc-r3-036",
+        "pitcher-tc-r3-038",
+        "pitcher-tc-r3-039",
+        "pitcher-tc-r3-040"
+      ],
+      "mean": {
+        "W": 1.9,
+        "era": 3.5329395164905266,
+        "IP": 44.07666666666667,
+        "SO": 35
+      }
+    },
+    {
+      "level": "MLB",
+      "role": "SP",
+      "seasons": 14,
+      "seeds": [
+        "pitcher-tc-r3-022",
+        "pitcher-tc-r3-023",
+        "pitcher-tc-r3-024",
+        "pitcher-tc-r3-026",
+        "pitcher-tc-r3-029"
+      ],
+      "mean": {
+        "W": 5.357142857142857,
+        "era": 4.662780762127546,
+        "IP": 81.23809523809526,
+        "SO": 56.642857142857146
+      }
+    },
+    {
+      "level": "MLB",
+      "role": "MR",
+      "seasons": 4,
+      "seeds": [
+        "pitcher-tc-r3-037"
+      ],
+      "mean": {
+        "W": 1,
+        "era": 5.318180693389998,
+        "IP": 27.674999999999997,
+        "SO": 21
+      }
+    },
+    {
+      "level": "MLB",
+      "role": "CL",
+      "seasons": 1,
+      "seeds": [
+        "pitcher-tc-r3-037"
+      ],
+      "mean": {
+        "W": 2,
+        "era": 3.6885245901639343,
+        "IP": 61,
+        "SO": 65
+      }
+    }
+  ],
+  "groupSummary": [
+    {
+      "strategy": "KBO-SP",
+      "completed": 10,
+      "failures": 0,
+      "seconds": 22.663,
+      "replay": [
+        {
+          "seed": "pitcher-tc-r3-001",
+          "completed": true,
+          "fullState": true,
+          "choiceHistory": true,
+          "allRngValues": true,
+          "allActionWindows": true,
+          "calls": 99
+        }
+      ],
+      "effectiveSeasons": [
+        {
+          "level": "CPBL1",
+          "role": "SP",
+          "seasons": 6
+        },
+        {
+          "level": "CPBL1",
+          "role": "MR",
+          "seasons": 0
+        },
+        {
+          "level": "CPBL1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "KBO1",
+          "role": "SP",
+          "seasons": 44
+        },
+        {
+          "level": "KBO1",
+          "role": "MR",
+          "seasons": 0
+        },
+        {
+          "level": "KBO1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "NPB1",
+          "role": "SP",
+          "seasons": 12
+        },
+        {
+          "level": "NPB1",
+          "role": "MR",
+          "seasons": 0
+        },
+        {
+          "level": "NPB1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "MR",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "CL",
+          "seasons": 0
+        }
+      ]
+    },
+    {
+      "strategy": "KBO-Bullpen",
+      "completed": 10,
+      "failures": 0,
+      "seconds": 29.291,
+      "replay": [
+        {
+          "seed": "pitcher-tc-r3-011",
+          "completed": true,
+          "fullState": true,
+          "choiceHistory": true,
+          "allRngValues": true,
+          "allActionWindows": true,
+          "calls": 677
+        }
+      ],
+      "effectiveSeasons": [
+        {
+          "level": "CPBL1",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "CPBL1",
+          "role": "MR",
+          "seasons": 2
+        },
+        {
+          "level": "CPBL1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "KBO1",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "KBO1",
+          "role": "MR",
+          "seasons": 81
+        },
+        {
+          "level": "KBO1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "NPB1",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "NPB1",
+          "role": "MR",
+          "seasons": 10
+        },
+        {
+          "level": "NPB1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "MR",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "CL",
+          "seasons": 0
+        }
+      ]
+    },
+    {
+      "strategy": "USA-SP",
+      "completed": 10,
+      "failures": 0,
+      "seconds": 27.161,
+      "replay": [
+        {
+          "seed": "pitcher-tc-r3-021",
+          "completed": true,
+          "fullState": true,
+          "choiceHistory": true,
+          "allRngValues": true,
+          "allActionWindows": true,
+          "calls": 782
+        }
+      ],
+      "effectiveSeasons": [
+        {
+          "level": "CPBL1",
+          "role": "SP",
+          "seasons": 4
+        },
+        {
+          "level": "CPBL1",
+          "role": "MR",
+          "seasons": 0
+        },
+        {
+          "level": "CPBL1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "KBO1",
+          "role": "SP",
+          "seasons": 21
+        },
+        {
+          "level": "KBO1",
+          "role": "MR",
+          "seasons": 2
+        },
+        {
+          "level": "KBO1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "NPB1",
+          "role": "SP",
+          "seasons": 10
+        },
+        {
+          "level": "NPB1",
+          "role": "MR",
+          "seasons": 0
+        },
+        {
+          "level": "NPB1",
+          "role": "CL",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "SP",
+          "seasons": 14
+        },
+        {
+          "level": "MLB",
+          "role": "MR",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "CL",
+          "seasons": 0
+        }
+      ]
+    },
+    {
+      "strategy": "USA-Bullpen",
+      "completed": 10,
+      "failures": 0,
+      "seconds": 27.261,
+      "replay": [
+        {
+          "seed": "pitcher-tc-r3-031",
+          "completed": true,
+          "fullState": true,
+          "choiceHistory": true,
+          "allRngValues": true,
+          "allActionWindows": true,
+          "calls": 900
+        }
+      ],
+      "effectiveSeasons": [
+        {
+          "level": "CPBL1",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "CPBL1",
+          "role": "MR",
+          "seasons": 12
+        },
+        {
+          "level": "CPBL1",
+          "role": "CL",
+          "seasons": 12
+        },
+        {
+          "level": "KBO1",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "KBO1",
+          "role": "MR",
+          "seasons": 17
+        },
+        {
+          "level": "KBO1",
+          "role": "CL",
+          "seasons": 36
+        },
+        {
+          "level": "NPB1",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "NPB1",
+          "role": "MR",
+          "seasons": 10
+        },
+        {
+          "level": "NPB1",
+          "role": "CL",
+          "seasons": 10
+        },
+        {
+          "level": "MLB",
+          "role": "SP",
+          "seasons": 0
+        },
+        {
+          "level": "MLB",
+          "role": "MR",
+          "seasons": 4
+        },
+        {
+          "level": "MLB",
+          "role": "CL",
+          "seasons": 1
+        }
+      ]
+    }
+  ],
+  "optionTotals": {
+    "KBO1": {
+      "observations": 59,
+      "uniqueMenus": 59,
+      "chosen": 39,
+      "seeds": [
+        "pitcher-tc-r3-004",
+        "pitcher-tc-r3-005",
+        "pitcher-tc-r3-006",
+        "pitcher-tc-r3-009",
+        "pitcher-tc-r3-012",
+        "pitcher-tc-r3-014",
+        "pitcher-tc-r3-015",
+        "pitcher-tc-r3-016",
+        "pitcher-tc-r3-017",
+        "pitcher-tc-r3-019",
+        "pitcher-tc-r3-020",
+        "pitcher-tc-r3-021",
+        "pitcher-tc-r3-022",
+        "pitcher-tc-r3-023",
+        "pitcher-tc-r3-024",
+        "pitcher-tc-r3-025",
+        "pitcher-tc-r3-026",
+        "pitcher-tc-r3-027",
+        "pitcher-tc-r3-029",
+        "pitcher-tc-r3-030",
+        "pitcher-tc-r3-031",
+        "pitcher-tc-r3-032",
+        "pitcher-tc-r3-034",
+        "pitcher-tc-r3-035",
+        "pitcher-tc-r3-036",
+        "pitcher-tc-r3-038",
+        "pitcher-tc-r3-039",
+        "pitcher-tc-r3-040"
+      ]
+    },
+    "KBO2": {
+      "observations": 9,
+      "uniqueMenus": 9,
+      "chosen": 9,
+      "seeds": [
+        "pitcher-tc-r3-021",
+        "pitcher-tc-r3-022",
+        "pitcher-tc-r3-023",
+        "pitcher-tc-r3-024",
+        "pitcher-tc-r3-025",
+        "pitcher-tc-r3-026",
+        "pitcher-tc-r3-027",
+        "pitcher-tc-r3-029",
+        "pitcher-tc-r3-037"
+      ]
+    },
+    "USA": {
+      "observations": 15,
+      "uniqueMenus": 15,
+      "chosen": 9,
+      "seeds": [
+        "pitcher-tc-r3-004",
+        "pitcher-tc-r3-005",
+        "pitcher-tc-r3-009",
+        "pitcher-tc-r3-012",
+        "pitcher-tc-r3-019",
+        "pitcher-tc-r3-022",
+        "pitcher-tc-r3-023",
+        "pitcher-tc-r3-024",
+        "pitcher-tc-r3-025",
+        "pitcher-tc-r3-026",
+        "pitcher-tc-r3-027",
+        "pitcher-tc-r3-029",
+        "pitcher-tc-r3-037"
+      ]
+    },
+    "bullpen": {
+      "observations": 1,
+      "uniqueMenus": 1,
+      "chosen": 0,
+      "seeds": [
+        "pitcher-tc-r3-021"
+      ]
+    }
+  }
+}

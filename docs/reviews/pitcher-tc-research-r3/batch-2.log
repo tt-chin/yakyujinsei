@@ -1,0 +1,11 @@
+pitcher-tc-r3-011 KBO-Bullpen true RNG 677
+pitcher-tc-r3-012 KBO-Bullpen true RNG 950
+pitcher-tc-r3-013 KBO-Bullpen true RNG 604
+pitcher-tc-r3-014 KBO-Bullpen true RNG 911
+pitcher-tc-r3-015 KBO-Bullpen true RNG 841
+pitcher-tc-r3-016 KBO-Bullpen true RNG 847
+pitcher-tc-r3-017 KBO-Bullpen true RNG 682
+pitcher-tc-r3-018 KBO-Bullpen true RNG 697
+pitcher-tc-r3-019 KBO-Bullpen true RNG 924
+pitcher-tc-r3-020 KBO-Bullpen true RNG 835
+{"output":"docs/reviews/pitcher-tc-research-r3/batch-2.json","attempts":10,"completed":10,"failures":0,"seconds":29.291,"replay":[{"seed":"pitcher-tc-r3-011","completed":true,"fullState":true,"choiceHistory":true,"allRngValues":true,"allActionWindows":true,"calls":677}]}
