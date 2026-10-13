@@ -1,0 +1,4248 @@
+{
+  "mode": "VALIDATION_ONLY / ANALYSIS_ONLY / DESIGN_ONLY",
+  "branch": "dev",
+  "head": "7220ad82002801d3dea5fedae80d0fb3d7a0433f",
+  "version": "1.12.0",
+  "engineSha256": "aceb42d48b5431e3c1ea0cb999a816c0d27dcdd89dc4094b8cf67c91857869e6",
+  "node": "v24.15.0",
+  "cases": [
+    {
+      "id": "VAL-A01",
+      "evidence": "VERIFIED_RUNTIME",
+      "status": "PASS",
+      "expected": "Base 10m + HALF 350k once; year unchanged; no repeated side effects",
+      "actual": {
+        "input": {
+          "seed": "award-jp-2",
+          "year": 2035,
+          "age": 30,
+          "stageYr": 5,
+          "pos": "P",
+          "role": "SP",
+          "stage": "PRO",
+          "org": "NPB",
+          "lv": "NPB1",
+          "orgTeamId": "NPB_PL_FUK",
+          "traits": {
+            "glass": true,
+            "phoenix": false
+          },
+          "honors": [],
+          "removed": [],
+          "pool": 0,
+          "seasonFactor": 1,
+          "rehab": 0,
+          "skipMid": false,
+          "lastD": -5,
+          "lastSalaryEvaluation": {
+            "sampleStatus": "FULL",
+            "payD": 4
+          },
+          "careerEarnings": 0,
+          "careerBaseSalary": 0,
+          "careerIncentive": 0,
+          "yearlyIncentivePaid": {},
+          "yearOutsideIncome": 0,
+          "lastSalaryPaidYear": null,
+          "serviceTime": {
+            "NPB": 0
+          },
+          "npbYears": 0,
+          "stats": {
+            "NPB": {
+              "yr": 2,
+              "AS": 0
+            }
+          },
+          "log": [],
+          "ct": {
+            "schemaVersion": 3,
+            "contractId": "valid:2035",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "signedYear": 2035,
+            "startYear": 2035,
+            "endYear": 2037,
+            "years": 3,
+            "remainingYears": 3,
+            "contractType": "NORMAL",
+            "signingBonus": 0,
+            "signingBonusType": "NONE",
+            "developmentStipend": 0,
+            "postingFee": 0,
+            "postingFeeRecipient": null,
+            "signingPaymentStatus": "PENDING",
+            "annualSalary": 10000000,
+            "annualSchedule": [
+              {
+                "year": 2035,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2036,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2037,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              }
+            ],
+            "segments": [
+              {
+                "segmentId": "valid:2035:seg-1",
+                "type": "NORMAL",
+                "signedYear": 2035,
+                "startYear": 2035,
+                "endYear": 2037,
+                "annualSalary": 10000000,
+                "years": 3,
+                "guaranteedValue": 30000000
+              }
+            ],
+            "guaranteedTotal": 30000000,
+            "paidTotal": 0,
+            "signedMarketRating": 0,
+            "positionMultiplierAtSigning": 1,
+            "contractMultiplier": 1,
+            "injuryProtection": "FULL",
+            "incentive": {
+              "annualMax": 700000,
+              "rate": 0.07,
+              "fullAwardCodes": [
+                "MVP",
+                "BEST_PITCHER",
+                "SAWAMURA",
+                "TITLE",
+                "GOLD_GLOVE"
+              ],
+              "halfPayDThreshold": 3
+            },
+            "offerBreakdown": null,
+            "extOffered": false,
+            "remainingValue": 30000000
+          },
+          "seasonChampContext": {
+            "year": 2035,
+            "stage": "PRO",
+            "level": "NPB1",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "seasonFactor": 1,
+            "ratingD": -5,
+            "clutch": false,
+            "tradeRefuse": 0
+          }
+        },
+        "once": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [],
+          "events": [
+            "board",
+            "migration-boundary",
+            "movement-boundary"
+          ]
+        },
+        "twice": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [],
+          "events": [
+            "board",
+            "migration-boundary",
+            "movement-boundary"
+          ]
+        }
+      },
+      "notes": "Native championship+contract+incentive; movement/alloc/DOM are boundary doubles; services not executed."
+    },
+    {
+      "id": "VAL-A02",
+      "evidence": "VERIFIED_RUNTIME",
+      "status": "PASS",
+      "expected": "Base 10m + HALF 350k once; year unchanged; no repeated side effects",
+      "actual": {
+        "input": {
+          "seed": "award-jp-2",
+          "year": 2035,
+          "age": 30,
+          "stageYr": 5,
+          "pos": "P",
+          "role": "SP",
+          "stage": "PRO",
+          "org": "NPB",
+          "lv": "NPB1",
+          "orgTeamId": "NPB_PL_FUK",
+          "traits": {
+            "glass": true,
+            "phoenix": false
+          },
+          "honors": [],
+          "removed": [],
+          "pool": 0,
+          "seasonFactor": 1,
+          "rehab": 0,
+          "skipMid": false,
+          "lastD": -5,
+          "lastSalaryEvaluation": {
+            "sampleStatus": "FULL",
+            "payD": 4
+          },
+          "careerEarnings": 0,
+          "careerBaseSalary": 0,
+          "careerIncentive": 0,
+          "yearlyIncentivePaid": {},
+          "yearOutsideIncome": 0,
+          "lastSalaryPaidYear": null,
+          "serviceTime": {
+            "NPB": 0
+          },
+          "npbYears": 0,
+          "stats": {
+            "NPB": {
+              "yr": 2,
+              "AS": 0
+            }
+          },
+          "log": [],
+          "ct": {
+            "schemaVersion": 3,
+            "contractId": "valid:2035",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "signedYear": 2035,
+            "startYear": 2035,
+            "endYear": 2037,
+            "years": 3,
+            "remainingYears": 3,
+            "contractType": "NORMAL",
+            "signingBonus": 0,
+            "signingBonusType": "NONE",
+            "developmentStipend": 0,
+            "postingFee": 0,
+            "postingFeeRecipient": null,
+            "signingPaymentStatus": "PENDING",
+            "annualSalary": 10000000,
+            "annualSchedule": [
+              {
+                "year": 2035,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2036,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2037,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              }
+            ],
+            "segments": [
+              {
+                "segmentId": "valid:2035:seg-1",
+                "type": "NORMAL",
+                "signedYear": 2035,
+                "startYear": 2035,
+                "endYear": 2037,
+                "annualSalary": 10000000,
+                "years": 3,
+                "guaranteedValue": 30000000
+              }
+            ],
+            "guaranteedTotal": 30000000,
+            "paidTotal": 0,
+            "signedMarketRating": 0,
+            "positionMultiplierAtSigning": 1,
+            "contractMultiplier": 1,
+            "injuryProtection": "FULL",
+            "incentive": {
+              "annualMax": 700000,
+              "rate": 0.07,
+              "fullAwardCodes": [
+                "MVP",
+                "BEST_PITCHER",
+                "SAWAMURA",
+                "TITLE",
+                "GOLD_GLOVE"
+              ],
+              "halfPayDThreshold": 3
+            },
+            "offerBreakdown": null,
+            "extOffered": false,
+            "remainingValue": 30000000
+          },
+          "seasonChampContext": {
+            "year": 2035,
+            "stage": "PRO",
+            "level": "NPB1",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "seasonFactor": 1,
+            "ratingD": -5,
+            "clutch": false,
+            "tradeRefuse": 0
+          }
+        },
+        "once": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [],
+          "events": [
+            "board",
+            "migration-boundary",
+            "movement-boundary"
+          ]
+        },
+        "twice": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [],
+          "events": [
+            "board",
+            "migration-boundary",
+            "movement-boundary"
+          ]
+        }
+      },
+      "notes": "Native championship+contract+incentive; movement/alloc/DOM are boundary doubles; services not executed."
+    },
+    {
+      "id": "VAL-A03",
+      "evidence": "VERIFIED_RUNTIME",
+      "status": "PASS",
+      "expected": "Base 10m + HALF 350k once; year unchanged; no repeated side effects",
+      "actual": {
+        "input": {
+          "seed": "award-jp-2",
+          "year": 2035,
+          "age": 30,
+          "stageYr": 5,
+          "pos": "P",
+          "role": "SP",
+          "stage": "PRO",
+          "org": "NPB",
+          "lv": "NPB1",
+          "orgTeamId": "NPB_PL_FUK",
+          "traits": {
+            "glass": true,
+            "phoenix": false
+          },
+          "honors": [],
+          "removed": [],
+          "pool": 4,
+          "seasonFactor": 1,
+          "rehab": 0,
+          "skipMid": false,
+          "lastD": -5,
+          "lastSalaryEvaluation": {
+            "sampleStatus": "FULL",
+            "payD": 4
+          },
+          "careerEarnings": 0,
+          "careerBaseSalary": 0,
+          "careerIncentive": 0,
+          "yearlyIncentivePaid": {},
+          "yearOutsideIncome": 0,
+          "lastSalaryPaidYear": null,
+          "serviceTime": {
+            "NPB": 0
+          },
+          "npbYears": 0,
+          "stats": {
+            "NPB": {
+              "yr": 2,
+              "AS": 0
+            }
+          },
+          "log": [],
+          "ct": {
+            "schemaVersion": 3,
+            "contractId": "valid:2035",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "signedYear": 2035,
+            "startYear": 2035,
+            "endYear": 2037,
+            "years": 3,
+            "remainingYears": 3,
+            "contractType": "NORMAL",
+            "signingBonus": 0,
+            "signingBonusType": "NONE",
+            "developmentStipend": 0,
+            "postingFee": 0,
+            "postingFeeRecipient": null,
+            "signingPaymentStatus": "PENDING",
+            "annualSalary": 10000000,
+            "annualSchedule": [
+              {
+                "year": 2035,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2036,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2037,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              }
+            ],
+            "segments": [
+              {
+                "segmentId": "valid:2035:seg-1",
+                "type": "NORMAL",
+                "signedYear": 2035,
+                "startYear": 2035,
+                "endYear": 2037,
+                "annualSalary": 10000000,
+                "years": 3,
+                "guaranteedValue": 30000000
+              }
+            ],
+            "guaranteedTotal": 30000000,
+            "paidTotal": 0,
+            "signedMarketRating": 0,
+            "positionMultiplierAtSigning": 1,
+            "contractMultiplier": 1,
+            "injuryProtection": "FULL",
+            "incentive": {
+              "annualMax": 700000,
+              "rate": 0.07,
+              "fullAwardCodes": [
+                "MVP",
+                "BEST_PITCHER",
+                "SAWAMURA",
+                "TITLE",
+                "GOLD_GLOVE"
+              ],
+              "halfPayDThreshold": 3
+            },
+            "offerBreakdown": null,
+            "extOffered": false,
+            "remainingValue": 30000000
+          },
+          "seasonChampContext": {
+            "year": 2035,
+            "stage": "PRO",
+            "level": "NPB1",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "seasonFactor": 1,
+            "ratingD": -5,
+            "clutch": false,
+            "tradeRefuse": 0
+          }
+        },
+        "once": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [
+            {
+              "title": "",
+              "labels": [
+                "能力点を分配（4点）"
+              ]
+            }
+          ],
+          "events": [
+            "board",
+            "migration-boundary"
+          ]
+        },
+        "twice": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [
+            {
+              "title": "",
+              "labels": [
+                "能力点を分配（4点）"
+              ]
+            }
+          ],
+          "events": [
+            "board",
+            "migration-boundary"
+          ]
+        }
+      },
+      "notes": "Native championship+contract+incentive; movement/alloc/DOM are boundary doubles; services not executed."
+    },
+    {
+      "id": "VAL-A04",
+      "evidence": "VERIFIED_RUNTIME / RISK",
+      "status": "RISK",
+      "expected": "Failure retry must not re-draw or duplicate award",
+      "actual": {
+        "input": {
+          "seed": "award-jp-2",
+          "year": 2035,
+          "age": 30,
+          "stageYr": 5,
+          "pos": "P",
+          "role": "SP",
+          "stage": "PRO",
+          "org": "NPB",
+          "lv": "NPB1",
+          "orgTeamId": "NPB_PL_FUK",
+          "traits": {
+            "glass": true,
+            "phoenix": false
+          },
+          "honors": [],
+          "removed": [],
+          "pool": 7,
+          "seasonFactor": 1,
+          "rehab": 0,
+          "skipMid": false,
+          "lastD": -5,
+          "lastSalaryEvaluation": {
+            "sampleStatus": "FULL",
+            "payD": 4
+          },
+          "careerEarnings": 0,
+          "careerBaseSalary": 0,
+          "careerIncentive": 0,
+          "yearlyIncentivePaid": {},
+          "yearOutsideIncome": 0,
+          "lastSalaryPaidYear": null,
+          "serviceTime": {
+            "NPB": 0
+          },
+          "npbYears": 0,
+          "stats": {
+            "NPB": {
+              "yr": 2,
+              "AS": 0
+            }
+          },
+          "log": [],
+          "ct": {
+            "schemaVersion": 3,
+            "contractId": "valid:2035",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "signedYear": 2035,
+            "startYear": 2035,
+            "endYear": 2037,
+            "years": 3,
+            "remainingYears": 3,
+            "contractType": "NORMAL",
+            "signingBonus": 0,
+            "signingBonusType": "NONE",
+            "developmentStipend": 0,
+            "postingFee": 0,
+            "postingFeeRecipient": null,
+            "signingPaymentStatus": "PENDING",
+            "annualSalary": 10000000,
+            "annualSchedule": [
+              {
+                "year": 2035,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2036,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2037,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              }
+            ],
+            "segments": [
+              {
+                "segmentId": "valid:2035:seg-1",
+                "type": "NORMAL",
+                "signedYear": 2035,
+                "startYear": 2035,
+                "endYear": 2037,
+                "annualSalary": 10000000,
+                "years": 3,
+                "guaranteedValue": 30000000
+              }
+            ],
+            "guaranteedTotal": 30000000,
+            "paidTotal": 0,
+            "signedMarketRating": 0,
+            "positionMultiplierAtSigning": 1,
+            "contractMultiplier": 1,
+            "injuryProtection": "FULL",
+            "incentive": {
+              "annualMax": 700000,
+              "rate": 0.07,
+              "fullAwardCodes": [
+                "MVP",
+                "BEST_PITCHER",
+                "SAWAMURA",
+                "TITLE",
+                "GOLD_GLOVE"
+              ],
+              "halfPayDThreshold": 3
+            },
+            "offerBreakdown": null,
+            "extOffered": false,
+            "remainingValue": 30000000
+          }
+        },
+        "failed": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [
+              "2035 NPB年間MVP"
+            ],
+            "removed": [],
+            "pool": 7,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 0,
+            "careerBaseSalary": 0,
+            "careerIncentive": 0,
+            "yearlyIncentivePaid": {},
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": null,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 3,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 0,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 30000000
+            },
+            "rngState": 2069842137
+          },
+          "rng": [
+            0.9338148855604231,
+            0.2574546455871314
+          ],
+          "cards": [
+            {
+              "tone": "gold",
+              "title": "年間賞",
+              "body": "NPB年間MVP"
+            }
+          ],
+          "choices": [],
+          "events": []
+        },
+        "retried": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": false,
+              "phoenix": true
+            },
+            "honors": [
+              "2035 NPB年間MVP",
+              "2035 NPBオールスターゲーム",
+              "2035 NPB年間MVP"
+            ],
+            "removed": [
+              "スペランカー"
+            ],
+            "pool": 15,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 0,
+            "careerBaseSalary": 0,
+            "careerIncentive": 0,
+            "yearlyIncentivePaid": {},
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": null,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 1
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 3,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 0,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 30000000
+            },
+            "rngState": 1438006467
+          },
+          "rng": [
+            0.9338148855604231,
+            0.2574546455871314,
+            0.25175029900856316,
+            0.20713833160698414
+          ],
+          "cards": [
+            {
+              "tone": "gold",
+              "title": "年間賞",
+              "body": "NPB年間MVP"
+            },
+            {
+              "tone": "gold",
+              "title": "年間賞",
+              "body": "NPB年間MVP｜NPBオールスターゲーム｜NPB年間MVP"
+            },
+            {
+              "tone": "gold",
+              "title": "隠し特性解放：復活",
+              "body": "大けがを乗り越え、以前より強くなって帰ってきた――<b class=\"hl\">スペランカーのペナルティを解除。故障率が通常に戻り、大量の能力ポイントを獲得</b>。"
+            }
+          ],
+          "choices": [],
+          "events": []
+        }
+      },
+      "notes": "Explicit fault injection after awards card, before phoenix. Reentering raw awards, not proof normal UI reaches this retry."
+    },
+    {
+      "id": "VAL-A05",
+      "evidence": "VERIFIED_STATIC / NOT_RUN",
+      "status": "NOT_RUN",
+      "expected": "Reload recovery requires persisted career state",
+      "actual": {
+        "observed": "No career save/load; preferences localStorage only"
+      },
+      "notes": "Do not fake restored state or execute browser reload; current product starts a new seed life."
+    },
+    {
+      "id": "VAL-A06",
+      "evidence": "VERIFIED_RUNTIME / RISK",
+      "status": "RISK",
+      "expected": "Existing same-year award should not be regenerated",
+      "actual": {
+        "input": {
+          "seed": "award-jp-2",
+          "year": 2035,
+          "age": 30,
+          "stageYr": 5,
+          "pos": "P",
+          "role": "SP",
+          "stage": "PRO",
+          "org": "NPB",
+          "lv": "NPB1",
+          "orgTeamId": "NPB_PL_FUK",
+          "traits": {
+            "glass": true,
+            "phoenix": false
+          },
+          "honors": [
+            "2035 NPB最優秀投手賞"
+          ],
+          "removed": [],
+          "pool": 0,
+          "seasonFactor": 1,
+          "rehab": 0,
+          "skipMid": false,
+          "lastD": -5,
+          "lastSalaryEvaluation": {
+            "sampleStatus": "FULL",
+            "payD": 4
+          },
+          "careerEarnings": 0,
+          "careerBaseSalary": 0,
+          "careerIncentive": 0,
+          "yearlyIncentivePaid": {},
+          "yearOutsideIncome": 0,
+          "lastSalaryPaidYear": null,
+          "serviceTime": {
+            "NPB": 0
+          },
+          "npbYears": 0,
+          "stats": {
+            "NPB": {
+              "yr": 2,
+              "AS": 0
+            }
+          },
+          "log": [],
+          "ct": {
+            "schemaVersion": 3,
+            "contractId": "valid:2035",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "signedYear": 2035,
+            "startYear": 2035,
+            "endYear": 2037,
+            "years": 3,
+            "remainingYears": 3,
+            "contractType": "NORMAL",
+            "signingBonus": 0,
+            "signingBonusType": "NONE",
+            "developmentStipend": 0,
+            "postingFee": 0,
+            "postingFeeRecipient": null,
+            "signingPaymentStatus": "PENDING",
+            "annualSalary": 10000000,
+            "annualSchedule": [
+              {
+                "year": 2035,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2036,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2037,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              }
+            ],
+            "segments": [
+              {
+                "segmentId": "valid:2035:seg-1",
+                "type": "NORMAL",
+                "signedYear": 2035,
+                "startYear": 2035,
+                "endYear": 2037,
+                "annualSalary": 10000000,
+                "years": 3,
+                "guaranteedValue": 30000000
+              }
+            ],
+            "guaranteedTotal": 30000000,
+            "paidTotal": 0,
+            "signedMarketRating": 0,
+            "positionMultiplierAtSigning": 1,
+            "contractMultiplier": 1,
+            "injuryProtection": "FULL",
+            "incentive": {
+              "annualMax": 700000,
+              "rate": 0.07,
+              "fullAwardCodes": [
+                "MVP",
+                "BEST_PITCHER",
+                "SAWAMURA",
+                "TITLE",
+                "GOLD_GLOVE"
+              ],
+              "halfPayDThreshold": 3
+            },
+            "offerBreakdown": null,
+            "extOffered": false,
+            "remainingValue": 30000000
+          }
+        },
+        "result": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [
+              "2035 NPB最優秀投手賞",
+              "2035 NPB最優秀投手賞"
+            ],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 0,
+            "careerBaseSalary": 0,
+            "careerIncentive": 0,
+            "yearlyIncentivePaid": {},
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": null,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 3,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 0,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 30000000
+            },
+            "rngState": 2069842137
+          },
+          "rng": [
+            0.9338148855604231,
+            0.2574546455871314
+          ],
+          "cards": [
+            {
+              "tone": "gold",
+              "title": "年間賞",
+              "body": "NPB最優秀投手賞｜NPB最優秀投手賞"
+            }
+          ],
+          "choices": [],
+          "events": []
+        }
+      },
+      "notes": "Direct raw awards reentry; not a natural UI bug reproduction and no Japanese-name matrix rerun."
+    },
+    {
+      "id": "VAL-A07",
+      "evidence": "VERIFIED_RUNTIME / RISK",
+      "status": "RISK",
+      "expected": "After payment renderer fault, retry should continue without repayment",
+      "actual": {
+        "input": {
+          "seed": "award-jp-2",
+          "year": 2035,
+          "age": 30,
+          "stageYr": 5,
+          "pos": "P",
+          "role": "SP",
+          "stage": "PRO",
+          "org": "NPB",
+          "lv": "NPB1",
+          "orgTeamId": "NPB_PL_FUK",
+          "traits": {
+            "glass": true,
+            "phoenix": false
+          },
+          "honors": [],
+          "removed": [],
+          "pool": 0,
+          "seasonFactor": 1,
+          "rehab": 0,
+          "skipMid": false,
+          "lastD": -5,
+          "lastSalaryEvaluation": {
+            "sampleStatus": "FULL",
+            "payD": 4
+          },
+          "careerEarnings": 0,
+          "careerBaseSalary": 0,
+          "careerIncentive": 0,
+          "yearlyIncentivePaid": {},
+          "yearOutsideIncome": 0,
+          "lastSalaryPaidYear": null,
+          "serviceTime": {
+            "NPB": 0
+          },
+          "npbYears": 0,
+          "stats": {
+            "NPB": {
+              "yr": 2,
+              "AS": 0
+            }
+          },
+          "log": [],
+          "ct": {
+            "schemaVersion": 3,
+            "contractId": "valid:2035",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "signedYear": 2035,
+            "startYear": 2035,
+            "endYear": 2037,
+            "years": 3,
+            "remainingYears": 3,
+            "contractType": "NORMAL",
+            "signingBonus": 0,
+            "signingBonusType": "NONE",
+            "developmentStipend": 0,
+            "postingFee": 0,
+            "postingFeeRecipient": null,
+            "signingPaymentStatus": "PENDING",
+            "annualSalary": 10000000,
+            "annualSchedule": [
+              {
+                "year": 2035,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2036,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2037,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              }
+            ],
+            "segments": [
+              {
+                "segmentId": "valid:2035:seg-1",
+                "type": "NORMAL",
+                "signedYear": 2035,
+                "startYear": 2035,
+                "endYear": 2037,
+                "annualSalary": 10000000,
+                "years": 3,
+                "guaranteedValue": 30000000
+              }
+            ],
+            "guaranteedTotal": 30000000,
+            "paidTotal": 0,
+            "signedMarketRating": 0,
+            "positionMultiplierAtSigning": 1,
+            "contractMultiplier": 1,
+            "injuryProtection": "FULL",
+            "incentive": {
+              "annualMax": 700000,
+              "rate": 0.07,
+              "fullAwardCodes": [
+                "MVP",
+                "BEST_PITCHER",
+                "SAWAMURA",
+                "TITLE",
+                "GOLD_GLOVE"
+              ],
+              "halfPayDThreshold": 3
+            },
+            "offerBreakdown": null,
+            "extOffered": false,
+            "remainingValue": 30000000
+          },
+          "seasonChampContext": {
+            "year": 2035,
+            "stage": "PRO",
+            "level": "NPB1",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "seasonFactor": 1,
+            "ratingD": -5,
+            "clutch": false,
+            "tradeRefuse": 0
+          }
+        },
+        "failed": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [],
+          "events": [
+            "board",
+            "migration-boundary"
+          ]
+        },
+        "retry": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2035,
+            "age": 30,
+            "stageYr": 5,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [],
+          "events": [
+            "board",
+            "migration-boundary"
+          ]
+        }
+      },
+      "notes": "Valid contract + explicit card fault. PRO context prevents retry from reaching navigation; no natural UI proof."
+    },
+    {
+      "id": "VAL-A08",
+      "evidence": "VERIFIED_RUNTIME",
+      "status": "PASS",
+      "expected": "Native advance increments year/age once",
+      "actual": {
+        "input": {
+          "seed": "award-jp-2",
+          "year": 2035,
+          "age": 30,
+          "stageYr": 5,
+          "pos": "P",
+          "role": "SP",
+          "stage": "PRO",
+          "org": "NPB",
+          "lv": "NPB1",
+          "orgTeamId": "NPB_PL_FUK",
+          "traits": {
+            "glass": true,
+            "phoenix": false
+          },
+          "honors": [],
+          "removed": [],
+          "pool": 0,
+          "seasonFactor": 1,
+          "rehab": 0,
+          "skipMid": false,
+          "lastD": -5,
+          "lastSalaryEvaluation": {
+            "sampleStatus": "FULL",
+            "payD": 4
+          },
+          "careerEarnings": 0,
+          "careerBaseSalary": 0,
+          "careerIncentive": 0,
+          "yearlyIncentivePaid": {},
+          "yearOutsideIncome": 0,
+          "lastSalaryPaidYear": null,
+          "serviceTime": {
+            "NPB": 0
+          },
+          "npbYears": 0,
+          "stats": {
+            "NPB": {
+              "yr": 2,
+              "AS": 0
+            }
+          },
+          "log": [],
+          "ct": {
+            "schemaVersion": 3,
+            "contractId": "valid:2035",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "signedYear": 2035,
+            "startYear": 2035,
+            "endYear": 2037,
+            "years": 3,
+            "remainingYears": 3,
+            "contractType": "NORMAL",
+            "signingBonus": 0,
+            "signingBonusType": "NONE",
+            "developmentStipend": 0,
+            "postingFee": 0,
+            "postingFeeRecipient": null,
+            "signingPaymentStatus": "PENDING",
+            "annualSalary": 10000000,
+            "annualSchedule": [
+              {
+                "year": 2035,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2036,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              },
+              {
+                "year": 2037,
+                "amount": 10000000,
+                "segmentId": "valid:2035:seg-1",
+                "paid": false
+              }
+            ],
+            "segments": [
+              {
+                "segmentId": "valid:2035:seg-1",
+                "type": "NORMAL",
+                "signedYear": 2035,
+                "startYear": 2035,
+                "endYear": 2037,
+                "annualSalary": 10000000,
+                "years": 3,
+                "guaranteedValue": 30000000
+              }
+            ],
+            "guaranteedTotal": 30000000,
+            "paidTotal": 0,
+            "signedMarketRating": 0,
+            "positionMultiplierAtSigning": 1,
+            "contractMultiplier": 1,
+            "injuryProtection": "FULL",
+            "incentive": {
+              "annualMax": 700000,
+              "rate": 0.07,
+              "fullAwardCodes": [
+                "MVP",
+                "BEST_PITCHER",
+                "SAWAMURA",
+                "TITLE",
+                "GOLD_GLOVE"
+              ],
+              "halfPayDThreshold": 3
+            },
+            "offerBreakdown": null,
+            "extOffered": false,
+            "remainingValue": 30000000
+          },
+          "seasonChampContext": {
+            "year": 2035,
+            "stage": "PRO",
+            "level": "NPB1",
+            "org": "NPB",
+            "teamId": "NPB_PL_FUK",
+            "seasonFactor": 1,
+            "ratingD": -5,
+            "clutch": false,
+            "tradeRefuse": 0
+          }
+        },
+        "advanced": {
+          "state": {
+            "seed": "award-jp-2",
+            "year": 2036,
+            "age": 31,
+            "stageYr": 6,
+            "pos": "P",
+            "role": "SP",
+            "stage": "PRO",
+            "org": "NPB",
+            "lv": "NPB1",
+            "orgTeamId": "NPB_PL_FUK",
+            "traits": {
+              "glass": true,
+              "phoenix": false
+            },
+            "honors": [],
+            "removed": [],
+            "pool": 0,
+            "seasonFactor": 1,
+            "rehab": 0,
+            "skipMid": false,
+            "lastD": -5,
+            "lastSalaryEvaluation": {
+              "sampleStatus": "FULL",
+              "payD": 4
+            },
+            "careerEarnings": 10350000,
+            "careerBaseSalary": 10000000,
+            "careerIncentive": 350000,
+            "yearlyIncentivePaid": {
+              "2035": {
+                "contractId": "valid:2035",
+                "amount": 350000,
+                "level": "HALF"
+              }
+            },
+            "yearOutsideIncome": 0,
+            "lastSalaryPaidYear": 2035,
+            "serviceTime": {
+              "NPB": 0
+            },
+            "npbYears": 0,
+            "stats": {
+              "NPB": {
+                "yr": 2,
+                "AS": 0
+              }
+            },
+            "log": [],
+            "ct": {
+              "schemaVersion": 3,
+              "contractId": "valid:2035",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "signedYear": 2035,
+              "startYear": 2035,
+              "endYear": 2037,
+              "years": 3,
+              "remainingYears": 2,
+              "contractType": "NORMAL",
+              "signingBonus": 0,
+              "signingBonusType": "NONE",
+              "developmentStipend": 0,
+              "postingFee": 0,
+              "postingFeeRecipient": null,
+              "signingPaymentStatus": "PENDING",
+              "annualSalary": 10000000,
+              "annualSchedule": [
+                {
+                  "year": 2035,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": true
+                },
+                {
+                  "year": 2036,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                },
+                {
+                  "year": 2037,
+                  "amount": 10000000,
+                  "segmentId": "valid:2035:seg-1",
+                  "paid": false
+                }
+              ],
+              "segments": [
+                {
+                  "segmentId": "valid:2035:seg-1",
+                  "type": "NORMAL",
+                  "signedYear": 2035,
+                  "startYear": 2035,
+                  "endYear": 2037,
+                  "annualSalary": 10000000,
+                  "years": 3,
+                  "guaranteedValue": 30000000
+                }
+              ],
+              "guaranteedTotal": 30000000,
+              "paidTotal": 10000000,
+              "signedMarketRating": 0,
+              "positionMultiplierAtSigning": 1,
+              "contractMultiplier": 1,
+              "injuryProtection": "FULL",
+              "incentive": {
+                "annualMax": 700000,
+                "rate": 0.07,
+                "fullAwardCodes": [
+                  "MVP",
+                  "BEST_PITCHER",
+                  "SAWAMURA",
+                  "TITLE",
+                  "GOLD_GLOVE"
+                ],
+                "halfPayDThreshold": 3
+              },
+              "offerBreakdown": null,
+              "extOffered": false,
+              "remainingValue": 20000000
+            },
+            "seasonChampContext": {
+              "year": 2035,
+              "stage": "PRO",
+              "level": "NPB1",
+              "org": "NPB",
+              "teamId": "NPB_PL_FUK",
+              "seasonFactor": 1,
+              "ratingD": -5,
+              "clutch": false,
+              "tradeRefuse": 0
+            },
+            "rngState": 238276324,
+            "championshipResults": {
+              "2035": {
+                "year": 2035,
+                "league": "NPB",
+                "level": "NPB1",
+                "teamId": "NPB_PL_FUK",
+                "eligible": true,
+                "chancePercent": 5.5,
+                "won": false,
+                "title": "日本一",
+                "honorText": null
+              }
+            },
+            "seasonEndMaintenanceYear": 2035,
+            "champTeam": null,
+            "champThisTeam": false,
+            "championshipMigrationVersion": 1,
+            "wonChamp": false,
+            "tradeRefuse": 0,
+            "tradeHeat": 0,
+            "marketInjury": "HEALTHY",
+            "currentSalary": 10000000,
+            "eventDrawYear": 2036,
+            "eventDrawnCardIDs": []
+          },
+          "rng": [
+            0.9338148855604231
+          ],
+          "cards": [
+            {
+              "tone": "",
+              "title": "シーズン終了",
+              "body": "今季支給年俸：<b class=\"hl\">10000000</b>｜出来高：<b class=\"hl\">350000</b>（HALF）<br>スポンサー収入：0<br>今季受取総額：<b class=\"hl\">10350000</b>｜生涯収入：10350000<br><b>現契約を継続</b><br>来季年俸：<b class=\"hl\">10000000</b><br>契約残り：2年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。"
+            }
+          ],
+          "choices": [],
+          "events": [
+            "board",
+            "migration-boundary",
+            "movement-boundary",
+            "startYear-boundary"
+          ]
+        }
+      },
+      "notes": "startYear/resetEventYear are boundary doubles: annual entry trace only, not full next season or reload."
+    },
+    {
+      "id": "VAL-B01",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 1 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [
+          [
+            "[\"fixture-player-1\",2035,\"NPB\",\"P08\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ]
+        ],
+        "receipts": [],
+        "draws": 1,
+        "honors": [],
+        "pool": 7,
+        "glass": true,
+        "phoenix": false
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B02",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 2 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [
+          [
+            "[\"fixture-player-1\",2035,\"NPB\",\"P08\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ]
+        ],
+        "receipts": [],
+        "draws": 1,
+        "honors": [],
+        "pool": 7,
+        "glass": true,
+        "phoenix": false
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B03",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 3 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [
+          [
+            "[\"fixture-player-1\",2035,\"NPB\",\"P08\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ]
+        ],
+        "receipts": [
+          [
+            "phoenix:player1",
+            {
+              "schemaVersion": 1,
+              "steps": [
+                {
+                  "field": "glass",
+                  "before": true,
+                  "after": false,
+                  "done": true
+                },
+                {
+                  "field": "phoenix",
+                  "before": false,
+                  "after": true,
+                  "done": true
+                },
+                {
+                  "field": "pool",
+                  "before": 7,
+                  "after": 15,
+                  "done": true
+                }
+              ],
+              "complete": true
+            }
+          ]
+        ],
+        "draws": 1,
+        "honors": [],
+        "pool": 15,
+        "glass": false,
+        "phoenix": true
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B04",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 4 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [],
+        "receipts": [
+          [
+            "phoenix:player1",
+            {
+              "schemaVersion": 1,
+              "steps": [
+                {
+                  "field": "glass",
+                  "before": true,
+                  "after": false,
+                  "done": true
+                },
+                {
+                  "field": "phoenix",
+                  "before": false,
+                  "after": true,
+                  "done": true
+                },
+                {
+                  "field": "pool",
+                  "before": 7,
+                  "after": 15,
+                  "done": true
+                }
+              ],
+              "complete": true
+            }
+          ]
+        ],
+        "draws": 0,
+        "honors": [],
+        "pool": 15,
+        "glass": false,
+        "phoenix": true
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B05",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 5 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [
+          [
+            "[\"fixture-player-1\",2035,\"NPB\",\"P08\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ]
+        ],
+        "receipts": [],
+        "draws": 1,
+        "honors": [],
+        "pool": 7,
+        "glass": true,
+        "phoenix": false
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B06",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 6 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [
+          [
+            "[\"p1\",2035,\"NPB\",\"P01\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ],
+          [
+            "[\"p1\",2035,\"NPB\",\"P02\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ],
+          [
+            "[\"p1\",2035,\"NPB\",\"P03\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ]
+        ],
+        "receipts": [],
+        "draws": 3,
+        "honors": [],
+        "pool": 7,
+        "glass": true,
+        "phoenix": false
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B07",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 7 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [
+          [
+            "[\"fixture-player-1\",2035,\"NPB\",\"P08\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ],
+          [
+            "[\"fixture-player-1\",2036,\"NPB\",\"P08\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ]
+        ],
+        "receipts": [],
+        "draws": 2,
+        "honors": [],
+        "pool": 7,
+        "glass": true,
+        "phoenix": false
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B08",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 8 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [
+          [
+            "[\"p1\",2035,\"NPB\",\"P01\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ],
+          [
+            "[\"p1\",2035,\"KBO\",\"P01\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ],
+          [
+            "[\"p2\",2035,\"NPB\",\"P01\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ],
+          [
+            "[\"p2\",2035,\"KBO\",\"P01\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ]
+        ],
+        "receipts": [],
+        "draws": 4,
+        "honors": [],
+        "pool": 7,
+        "glass": true,
+        "phoenix": false
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B09",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 9 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [],
+        "receipts": [],
+        "draws": 0,
+        "honors": [
+          "2030 NPB最優秀投手賞"
+        ],
+        "pool": 7,
+        "glass": true,
+        "phoenix": false
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B10",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 10 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [
+          [
+            "[\"p1\",2035,\"NPB\",\"P01\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ],
+          [
+            "[\"p1\",2035,\"NPB\",\"P02\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ],
+          [
+            "[\"p1\",2035,\"NPB\",\"P03\",\"fixture-rule\"]",
+            {
+              "schemaVersion": 1,
+              "awarded": true,
+              "phase": "DECIDED"
+            }
+          ]
+        ],
+        "receipts": [],
+        "draws": 3,
+        "honors": [
+          "p1:2035:NPB:P07",
+          "p1:2035:NPB:MVP"
+        ],
+        "pool": 7,
+        "glass": true,
+        "phoenix": false
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B11",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 11 only; no claim of product transaction safety",
+      "actual": {
+        "decisions": [],
+        "receipts": [
+          [
+            "phoenix:p1",
+            {
+              "schemaVersion": 1,
+              "steps": [
+                {
+                  "field": "glass",
+                  "before": true,
+                  "after": false,
+                  "done": true
+                },
+                {
+                  "field": "phoenix",
+                  "before": false,
+                  "after": true,
+                  "done": true
+                },
+                {
+                  "field": "pool",
+                  "before": 7,
+                  "after": 15,
+                  "done": true
+                }
+              ],
+              "complete": true
+            }
+          ]
+        ],
+        "draws": 0,
+        "honors": [],
+        "pool": 15,
+        "glass": false,
+        "phoenix": true
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-B12",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "Reference model case 12 only; no claim of product transaction safety",
+      "actual": {
+        "safe": {
+          "decisions": [],
+          "receipts": [
+            [
+              "phoenix:p1",
+              {
+                "schemaVersion": 1,
+                "steps": [
+                  {
+                    "field": "glass",
+                    "before": true,
+                    "after": false,
+                    "done": true
+                  },
+                  {
+                    "field": "phoenix",
+                    "before": false,
+                    "after": true,
+                    "done": true
+                  },
+                  {
+                    "field": "pool",
+                    "before": 7,
+                    "after": 15,
+                    "done": true
+                  }
+                ],
+                "complete": true
+              }
+            ]
+          ],
+          "draws": 0,
+          "honors": [],
+          "pool": 15,
+          "glass": false,
+          "phoenix": true
+        },
+        "singleFlagCounterexample": {
+          "pool": 23,
+          "applied": false
+        },
+        "concurrentCounterexample": {
+          "decisions": [],
+          "receipts": [
+            [
+              "p",
+              {
+                "schemaVersion": 1,
+                "steps": [
+                  {
+                    "field": "glass",
+                    "before": true,
+                    "after": false,
+                    "done": true
+                  },
+                  {
+                    "field": "phoenix",
+                    "before": false,
+                    "after": true,
+                    "done": true
+                  },
+                  {
+                    "field": "pool",
+                    "before": 7,
+                    "after": 15,
+                    "done": false
+                  }
+                ]
+              }
+            ]
+          ],
+          "draws": 0,
+          "honors": [],
+          "pool": 100,
+          "glass": false,
+          "phoenix": true
+        }
+      },
+      "notes": "Typed tuple keys, fixed true decision provider (not hash), frozen per-field before/after targets. No crash persistence or arbitrary interleaving guarantee."
+    },
+    {
+      "id": "VAL-C-HASH",
+      "evidence": "VERIFIED_STATIC / DESIGN_BLOCKER",
+      "status": "DESIGN_GAP",
+      "expected": "Approved algorithm/byte input/golden vectors needed",
+      "actual": {
+        "observed": "D2 §14.3 has proposal only; no approved golden vectors"
+      },
+      "notes": "C3 fixed hashes, cross-environment/order independence and actual new draw are NOT_RUN. No new hash chosen."
+    },
+    {
+      "id": "VAL-C-MAIN",
+      "evidence": "VERIFIED_RUNTIME",
+      "status": "PASS",
+      "expected": "Same seed same native R values; chance0/100 each consume R",
+      "actual": {
+        "v1": [
+          0.9338148855604231,
+          0.2574546455871314,
+          0.25175029900856316,
+          0.20713833160698414
+        ],
+        "v2": [
+          0.9338148855604231,
+          0.2574546455871314,
+          0.25175029900856316,
+          0.20713833160698414
+        ],
+        "calls": 6,
+        "state": 806170797
+      },
+      "notes": "Current Japan overlay seed/R/chance, four draws + endpoints. No full-career test."
+    },
+    {
+      "id": "VAL-C-P01-CPBL-9",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "CPBL",
+        "W": 9,
+        "expected": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-CPBL-10",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "CPBL",
+        "W": 10,
+        "expected": 20
+      },
+      "actual": {
+        "pPercent": 20
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-CPBL-11",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "CPBL",
+        "W": 11,
+        "expected": 35
+      },
+      "actual": {
+        "pPercent": 35
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-CPBL-14",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "CPBL",
+        "W": 14,
+        "expected": 80
+      },
+      "actual": {
+        "pPercent": 80
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-CPBL-15",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "CPBL",
+        "W": 15,
+        "expected": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-CPBL-16",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "CPBL",
+        "W": 16,
+        "expected": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-KBO-11",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": 11,
+        "expected": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-KBO-12",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": 12,
+        "expected": 20
+      },
+      "actual": {
+        "pPercent": 20
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-KBO-13",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": 13,
+        "expected": 35
+      },
+      "actual": {
+        "pPercent": 35
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-KBO-16",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": 16,
+        "expected": 80
+      },
+      "actual": {
+        "pPercent": 80
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-KBO-17",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": 17,
+        "expected": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-KBO-18",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": 18,
+        "expected": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-NPB-11",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": 11,
+        "expected": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-NPB-12",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": 12,
+        "expected": 20
+      },
+      "actual": {
+        "pPercent": 20
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-NPB-13",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": 13,
+        "expected": 35
+      },
+      "actual": {
+        "pPercent": 35
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-NPB-16",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": 16,
+        "expected": 80
+      },
+      "actual": {
+        "pPercent": 80
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-NPB-17",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": 17,
+        "expected": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-NPB-18",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": 18,
+        "expected": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-MLB-13",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "MLB",
+        "W": 13,
+        "expected": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-MLB-14",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "MLB",
+        "W": 14,
+        "expected": 20
+      },
+      "actual": {
+        "pPercent": 20
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-MLB-15",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "MLB",
+        "W": 15,
+        "expected": 32.5
+      },
+      "actual": {
+        "pPercent": 32.5
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-MLB-19",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "MLB",
+        "W": 19,
+        "expected": 82.5
+      },
+      "actual": {
+        "pPercent": 82.5
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-MLB-20",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "MLB",
+        "W": 20,
+        "expected": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P01-MLB-21",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "MLB",
+        "W": 21,
+        "expected": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-01",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "11",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-02",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "12",
+        "L": "0",
+        "pPercent": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-03",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "12",
+        "L": "6",
+        "pPercent": 25
+      },
+      "actual": {
+        "pPercent": 24.999999999999982
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-04",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "12",
+        "L": "7",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-05",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "13",
+        "L": "7",
+        "pPercent": 20
+      },
+      "actual": {
+        "pPercent": 20
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-06",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "17",
+        "L": "3",
+        "pPercent": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-07",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "16",
+        "L": "3",
+        "pPercent": 77.63157894736841
+      },
+      "actual": {
+        "pPercent": 77.63157894736841
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-08",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": "9",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-09",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": "10",
+        "L": "0",
+        "pPercent": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-10",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": "10",
+        "L": "5",
+        "pPercent": 25
+      },
+      "actual": {
+        "pPercent": 24.999999999999982
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-11",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": "10",
+        "L": "2",
+        "pPercent": 75
+      },
+      "actual": {
+        "pPercent": 75
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-12",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "KBO",
+        "W": "10",
+        "L": "1",
+        "pPercent": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-13",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "0",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-14",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "-1",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-15",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "12.5",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-16",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "NaN",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-17",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "Infinity",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-18",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "12",
+        "L": "undefined",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-19",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "12",
+        "L": "-1",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-20",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "NPB",
+        "W": "12",
+        "L": "0.5",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-21",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "CPBL",
+        "W": "20",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P04-22",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "league": "MLB",
+        "W": "20",
+        "L": "0",
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P08-59.999",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "score": 59.999,
+        "pPercent": 0
+      },
+      "actual": {
+        "pPercent": 0
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P08-60",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "score": 60,
+        "pPercent": 10
+      },
+      "actual": {
+        "pPercent": 10
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P08-60.001",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "score": 60.001,
+        "pPercent": 10.0025
+      },
+      "actual": {
+        "pPercent": 10.002499999999994
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P08-94.999",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "score": 94.999,
+        "pPercent": 95
+      },
+      "actual": {
+        "pPercent": 95
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P08-95",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "score": 95,
+        "pPercent": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P08-95.001",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": {
+        "score": 95.001,
+        "pPercent": 100
+      },
+      "actual": {
+        "pPercent": 100
+      },
+      "notes": ""
+    },
+    {
+      "id": "VAL-C-P08-QUAL",
+      "evidence": "VERIFIED_MODEL",
+      "status": "PASS",
+      "expected": "W13/IP143/NPB1 SP eligibility precedes score; IP180 cap",
+      "actual": {
+        "score": 68.79545454545455,
+        "pPercent": 31.988636363636367,
+        "invalidHighScoreProbability": 0
+      },
+      "notes": "Manual 1.10.3 evidence numbers used offline; not new-product award or replay."
+    },
+    {
+      "id": "VAL-C-PRECISION",
+      "evidence": "VERIFIED_MODEL / RISK",
+      "status": "PASS",
+      "expected": "Raw ratios and unrounded score; floating endpoints not product-approved",
+      "actual": {
+        "exactBasic": 20,
+        "twelveSix": 24.999999999999982,
+        "prematureRounded": 25.100000000000005,
+        "sumUnsafe": 18014398509481982
+      },
+      "notes": "25 becomes24.999999999999982 binary64; unsafe sum policy, component comparison tolerance and cross-platform vectors still need review. No automatic epsilon approval."
+    }
+  ],
+  "counts": {
+    "PASS": 71,
+    "FAIL": 0,
+    "RISK": 3,
+    "DESIGN_GAP": 1,
+    "NOT_RUN": 1,
+    "BLOCKED": 0
+  },
+  "seconds": 0.1218873
+}

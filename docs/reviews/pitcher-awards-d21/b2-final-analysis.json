@@ -1,0 +1,585 @@
+{
+  "status": "APPROVED / DESIGN_ONLY; NOT PRODUCT IMPLEMENTATION",
+  "selectedDesign": {
+    "id": "IP180/S3/B2/G95",
+    "weights": {
+      "W": 0.25,
+      "era": 0.3,
+      "IP": 0.25,
+      "SO": 0.15,
+      "WPCT": 0.05
+    },
+    "anchors": {
+      "W": [
+        12,
+        17
+      ],
+      "era": [
+        3.2,
+        2.2
+      ],
+      "IP": [
+        143,
+        180
+      ],
+      "SO": [
+        155,
+        215
+      ],
+      "WPCT": [
+        0.65,
+        0.85
+      ]
+    },
+    "minimumScore": 60,
+    "startProbabilityPercent": 10,
+    "slopePercentagePointsPerScore": 2.5,
+    "nonGuaranteeCapPercent": 95,
+    "guaranteeScore": 95
+  },
+  "head": "0fd13c7532fd03da136c72ef64e9890858cfb81e",
+  "version": "1.11.9",
+  "toolSha256": "5c0a373898c8e7e2c91546e36d7edd28463fdf0126b1884fe07b4fccb60b94cc",
+  "precision": "Unrounded double calculation; 1e-10 assertion tolerance only, no product tolerance approval",
+  "boundary": [
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 59.999,
+      "expectedPercent": 0,
+      "actualPercent": 0,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 60,
+      "expectedPercent": 10,
+      "actualPercent": 10,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 60.001,
+      "expectedPercent": 10.0025,
+      "actualPercent": 10.002499999999994,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 65,
+      "expectedPercent": 22.5,
+      "actualPercent": 22.5,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 70,
+      "expectedPercent": 35,
+      "actualPercent": 35,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 75,
+      "expectedPercent": 47.5,
+      "actualPercent": 47.5,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 80,
+      "expectedPercent": 60,
+      "actualPercent": 60,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 85,
+      "expectedPercent": 72.5,
+      "actualPercent": 72.5,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 90,
+      "expectedPercent": 85,
+      "actualPercent": 85,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 94,
+      "expectedPercent": 95,
+      "actualPercent": 95,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 94.999,
+      "expectedPercent": 95,
+      "actualPercent": 95,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 95,
+      "expectedPercent": 100,
+      "actualPercent": 100,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 95.001,
+      "expectedPercent": 100,
+      "actualPercent": 100,
+      "status": "PASS"
+    },
+    {
+      "evidence": "SYNTHETIC_SCENARIO / MATHEMATICAL_SCORE_POINT",
+      "score": 100,
+      "expectedPercent": 100,
+      "actualPercent": 100,
+      "status": "PASS"
+    }
+  ],
+  "ipPoints": [
+    {
+      "IP": 143,
+      "component": 0
+    },
+    {
+      "IP": 150,
+      "component": 18.91891891891892
+    },
+    {
+      "IP": 160,
+      "component": 45.94594594594595
+    },
+    {
+      "IP": 170,
+      "component": 72.97297297297297
+    },
+    {
+      "IP": 180,
+      "component": 100
+    },
+    {
+      "IP": 190,
+      "component": 100
+    },
+    {
+      "IP": 200,
+      "component": 100
+    }
+  ],
+  "mobile": {
+    "evidence": "MANUAL_MOBILE_EVIDENCE / OFFLINE_ESTIMATE",
+    "input": {
+      "evidence": "MANUAL_MOBILE_EVIDENCE",
+      "version": "1.10.3",
+      "seed": "q77bi1jx",
+      "year": 2039,
+      "level": "NPB1",
+      "role": "SP",
+      "G": 26,
+      "IP": 180.1,
+      "W": 15,
+      "L": 7,
+      "SO": 165,
+      "era": 2.35,
+      "roleEvidence": "USER_CONFIRMED_2039_SP",
+      "precision": "Display-rounded ERA, decimal IP as required; not reconstructed ER/outs",
+      "limitations": [
+        "No choice history",
+        "No growth history",
+        "No RNG trace",
+        "Not v1.11.9 replay",
+        "Not a new-award acceptance test"
+      ]
+    },
+    "result": {
+      "valid": true,
+      "qualified": true,
+      "components": {
+        "W": 60,
+        "era": 85.00000000000001,
+        "IP": 100,
+        "SO": 16.666666666666664,
+        "WPCT": 15.909090909090876
+      },
+      "score": 68.79545454545455,
+      "probabilityPercent": 31.988636363636367,
+      "guaranteed": false
+    }
+  },
+  "scenarios": [
+    {
+      "id": "basic-qualified",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 20,
+          "era": 0,
+          "IP": 0,
+          "SO": 0,
+          "WPCT": 0
+        },
+        "score": 5,
+        "probabilityPercent": 0,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "ordinary-excellent",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 40,
+          "era": 50,
+          "IP": 59.45945945945946,
+          "SO": 41.66666666666667,
+          "WPCT": 24.99999999999997
+        },
+        "score": 47.36486486486486,
+        "probabilityPercent": 0,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "high-W-worse-ERA",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 10.000000000000009,
+          "IP": 100,
+          "SO": 58.333333333333336,
+          "WPCT": 91.6666666666667
+        },
+        "score": 66.33333333333333,
+        "probabilityPercent": 25.83333333333332,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "excellent-ERA-low-W",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 20,
+          "era": 100,
+          "IP": 72.97297297297297,
+          "SO": 58.333333333333336,
+          "WPCT": 0
+        },
+        "score": 61.99324324324324,
+        "probabilityPercent": 14.983108108108105,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "high-IP-ordinary-SO",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 80,
+          "era": 80.00000000000003,
+          "IP": 100,
+          "SO": 8.333333333333332,
+          "WPCT": 55.952380952380935
+        },
+        "score": 73.04761904761905,
+        "probabilityPercent": 42.61904761904763,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "high-SO-lower-IP",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 80,
+          "era": 90.00000000000003,
+          "IP": 5.405405405405405,
+          "SO": 100,
+          "WPCT": 75.00000000000003
+        },
+        "score": 67.10135135135137,
+        "probabilityPercent": 27.75337837837842,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "balanced-elite",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 100,
+        "probabilityPercent": 100,
+        "guaranteed": true
+      }
+    },
+    {
+      "id": "extreme-elite",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 100,
+        "probabilityPercent": 100,
+        "guaranteed": true
+      }
+    },
+    {
+      "id": "low-W-high-score",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": false,
+        "components": {
+          "W": 0,
+          "era": 100,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 75,
+        "probabilityPercent": 0,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "low-IP-high-score",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": false,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 0,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 75,
+        "probabilityPercent": 0,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "ERA-ineligible",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": false,
+        "components": {
+          "W": 100,
+          "era": 0,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 70,
+        "probabilityPercent": 0,
+        "guaranteed": false
+      }
+    },
+    {
+      "id": "one-weak-metric",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 90,
+          "WPCT": 100
+        },
+        "score": 98.5,
+        "probabilityPercent": 100,
+        "guaranteed": true
+      }
+    }
+  ],
+  "sourceGroups": [
+    {
+      "group": "pitcher-tc-research",
+      "n": 413,
+      "independentSeeds": 43,
+      "qualified": 0,
+      "guaranteed": 0,
+      "expectedAwards": 0,
+      "interpretation": "OFFLINE_EXPECTATION; no actual draws"
+    },
+    {
+      "group": "pitcher-tc-research-1119",
+      "n": 367,
+      "independentSeeds": 44,
+      "qualified": 0,
+      "guaranteed": 0,
+      "expectedAwards": 0,
+      "interpretation": "OFFLINE_EXPECTATION; no actual draws"
+    },
+    {
+      "group": "pitcher-tc-research-r3",
+      "n": 22,
+      "independentSeeds": 10,
+      "qualified": 0,
+      "guaranteed": 0,
+      "expectedAwards": 0,
+      "interpretation": "OFFLINE_EXPECTATION; no actual draws"
+    },
+    {
+      "group": "pitcher-tc-research-r4",
+      "n": 0,
+      "independentSeeds": 0,
+      "qualified": 0,
+      "guaranteed": 0,
+      "expectedAwards": 0,
+      "interpretation": "OFFLINE_EXPECTATION; no actual draws"
+    },
+    {
+      "group": "two-seed-CPBL",
+      "n": 0,
+      "independentSeeds": 0,
+      "qualified": 0,
+      "guaranteed": 0,
+      "expectedAwards": 0,
+      "interpretation": "OFFLINE_EXPECTATION; no actual draws"
+    },
+    {
+      "group": "two-seed-KBO",
+      "n": 0,
+      "independentSeeds": 0,
+      "qualified": 0,
+      "guaranteed": 0,
+      "expectedAwards": 0,
+      "interpretation": "OFFLINE_EXPECTATION; no actual draws"
+    },
+    {
+      "group": "two-seed-NPB",
+      "n": 22,
+      "independentSeeds": 2,
+      "qualified": 0,
+      "guaranteed": 0,
+      "expectedAwards": 0,
+      "interpretation": "OFFLINE_EXPECTATION; no actual draws"
+    },
+    {
+      "group": "two-seed-MLB",
+      "n": 4,
+      "independentSeeds": 1,
+      "qualified": 0,
+      "guaranteed": 0,
+      "expectedAwards": 0,
+      "interpretation": "OFFLINE_EXPECTATION; no actual draws"
+    }
+  ],
+  "sources": [
+    {
+      "file": "docs/reviews/pitcher-tc-research/careers.json",
+      "sha256": "fd59957083c460537faaf1a188e45d9ddc04761609a33f5082ce078dd36494b8",
+      "group": "pitcher-tc-research",
+      "commit": "6a998330f9d9f3a29630984ebc150fcaa19ea280",
+      "version": "1.11.8",
+      "careers": 100
+    },
+    {
+      "file": "docs/reviews/pitcher-tc-research-1119/careers.json",
+      "sha256": "9326971dcc0b719a9299bf972c976ce892879905f108fcdacd4a75867b14b7f4",
+      "group": "pitcher-tc-research-1119",
+      "commit": "4624753a5359acd6c63ab6957341376bd43c5c88",
+      "version": "1.11.9",
+      "careers": 100
+    },
+    {
+      "file": "docs/reviews/pitcher-tc-research-r3/careers.json",
+      "sha256": "948dd9ad9ee698e94a0c6429656cab6ae4f38f5b61e87e4b0b1145735c4a421c",
+      "group": "pitcher-tc-research-r3",
+      "commit": "18f9decb3a314beb9e70d74465fd1f6096f22d52",
+      "version": "1.11.9",
+      "careers": 40
+    },
+    {
+      "file": "docs/reviews/pitcher-tc-research-r4/careers.json",
+      "sha256": "63c4251e1367395bee96e141ef3cd195e627933caa12f44cf6caf8762207a118",
+      "group": "pitcher-tc-research-r4",
+      "commit": "e39183f8e6d51f2151669892ac336dfef601e2d3",
+      "version": "1.11.9",
+      "careers": 20
+    },
+    {
+      "file": "docs/reviews/pitcher-d2-two-seed-natural/careers-CPBL-verified.json",
+      "sha256": "8a45c9a08a4fd2573ca4805d529c868224c682cff9402ef3f899b656e3e0afd6",
+      "group": "two-seed-CPBL",
+      "commit": "0fd13c7532fd03da136c72ef64e9890858cfb81e",
+      "version": "1.11.9",
+      "careers": 2
+    },
+    {
+      "file": "docs/reviews/pitcher-d2-two-seed-natural/careers-KBO.json",
+      "sha256": "77cf99f153e6ce7c9a7e111b6887c54f37b4e0ebe0a847abf3e8d6f8674ea338",
+      "group": "two-seed-KBO",
+      "commit": "0fd13c7532fd03da136c72ef64e9890858cfb81e",
+      "version": "1.11.9",
+      "careers": 2
+    },
+    {
+      "file": "docs/reviews/pitcher-d2-two-seed-natural/careers-NPB.json",
+      "sha256": "158ded179013e316d3d29ae8456821b95c644454e9f0e8d480662ec840b2caae",
+      "group": "two-seed-NPB",
+      "commit": "0fd13c7532fd03da136c72ef64e9890858cfb81e",
+      "version": "1.11.9",
+      "careers": 2
+    },
+    {
+      "file": "docs/reviews/pitcher-d2-two-seed-natural/careers-MLB.json",
+      "sha256": "d1d142d6fca083c8923b76ee19bd8f5f70b43dffd5ce51a989e97515c52f2a51",
+      "group": "two-seed-MLB",
+      "commit": "0fd13c7532fd03da136c72ef64e9890858cfb81e",
+      "version": "1.11.9",
+      "careers": 2
+    }
+  ],
+  "tests": {
+    "PASS": 70,
+    "FAIL": 0,
+    "NOT_RUN": [
+      "Product RNG sequence compatibility",
+      "Game Quick/Full",
+      "CI/Preview",
+      "New natural careers/replays",
+      "Product award acceptance"
+    ]
+  },
+  "trackedInputsUnchanged": 623,
+  "seconds": 1.547
+}

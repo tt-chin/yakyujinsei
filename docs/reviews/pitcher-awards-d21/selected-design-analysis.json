@@ -1,0 +1,666 @@
+{
+  "selectedDesign": {
+    "id": "IP180/S3/G95",
+    "status": "APPROVED / DESIGN_ONLY",
+    "weights": {
+      "W": 0.25,
+      "era": 0.3,
+      "IP": 0.25,
+      "SO": 0.15,
+      "WPCT": 0.05
+    },
+    "anchors": {
+      "W": [
+        12,
+        17
+      ],
+      "era": [
+        3.2,
+        2.2
+      ],
+      "IP": [
+        143,
+        180
+      ],
+      "SO": [
+        155,
+        215
+      ],
+      "WPCT": [
+        0.65,
+        0.85
+      ]
+    },
+    "guaranteeScore": 95,
+    "qualification": "NPB1/SP; W>=13; IP>=143; ERA<=3.20; finite nonnegative G,W,L,ERA,IP,SO; G>0; W+L>0",
+    "pending": [
+      "basic score 55",
+      "probability curve 30+2*(score-55)",
+      "probability cap 95%",
+      "rounding / floating tolerance",
+      "product implementation authorization"
+    ],
+    "formerWeights20_30_25_20_5": "NOT SELECTED; user clarified existing S3"
+  },
+  "manual": {
+    "evidence": "MANUAL_MOBILE_EVIDENCE / OFFLINE_ESTIMATE",
+    "roleEvidence": "USER_CONFIRMED_2039_SP",
+    "input": {
+      "evidence": "MANUAL_MOBILE_EVIDENCE",
+      "version": "1.10.3",
+      "seed": "q77bi1jx",
+      "year": 2039,
+      "level": "NPB1",
+      "role": "SP",
+      "G": 26,
+      "IP": 180.1,
+      "W": 15,
+      "L": 7,
+      "SO": 165,
+      "era": 2.35,
+      "roleEvidence": "USER_CONFIRMED_2039_SP",
+      "precision": "Display-rounded ERA, decimal IP as required; not reconstructed ER/outs",
+      "limitations": [
+        "No choice history",
+        "No growth history",
+        "No RNG trace",
+        "Not v1.11.9 replay",
+        "Not a new-award acceptance test"
+      ]
+    },
+    "result": {
+      "valid": true,
+      "qualified": true,
+      "components": {
+        "W": 60,
+        "era": 85.00000000000001,
+        "IP": 100,
+        "SO": 16.666666666666664,
+        "WPCT": 15.909090909090876
+      },
+      "score": 68.79545454545455,
+      "guaranteed": false,
+      "trialProbability": 0.5759090909090909,
+      "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+    }
+  },
+  "ipPoints": [
+    {
+      "IP": 143,
+      "component": 0
+    },
+    {
+      "IP": 150,
+      "component": 18.91891891891892
+    },
+    {
+      "IP": 160,
+      "component": 45.94594594594595
+    },
+    {
+      "IP": 170,
+      "component": 72.97297297297297
+    },
+    {
+      "IP": 180,
+      "component": 100
+    },
+    {
+      "IP": 190,
+      "component": 100
+    },
+    {
+      "IP": 200,
+      "component": 100
+    }
+  ],
+  "boundary": [
+    {
+      "label": "below",
+      "input": {
+        "level": "NPB1",
+        "role": "SP",
+        "G": 30,
+        "W": 17,
+        "L": 10,
+        "era": 2.2,
+        "IP": 180,
+        "SO": 214.999
+      },
+      "expected": false,
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 99.99833333333332,
+          "WPCT": 0
+        },
+        "score": 94.99974999999999,
+        "guaranteed": false,
+        "trialProbability": 0.95,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "label": "equal",
+      "input": {
+        "level": "NPB1",
+        "role": "SP",
+        "G": 30,
+        "W": 17,
+        "L": 10,
+        "era": 2.2,
+        "IP": 180,
+        "SO": 215
+      },
+      "expected": true,
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 0
+        },
+        "score": 95,
+        "guaranteed": true,
+        "trialProbability": 1,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "label": "above",
+      "input": {
+        "level": "NPB1",
+        "role": "SP",
+        "G": 30,
+        "W": 17,
+        "L": 9,
+        "era": 2.2,
+        "IP": 180,
+        "SO": 215
+      },
+      "expected": true,
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 1.9230769230769167
+        },
+        "score": 95.09615384615384,
+        "guaranteed": true,
+        "trialProbability": 1,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "basic-qualified",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "basic-qualified",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 13,
+        "L": 7,
+        "era": 3.2,
+        "IP": 143,
+        "SO": 155,
+        "G": 28,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 20,
+          "era": 0,
+          "IP": 0,
+          "SO": 0,
+          "WPCT": 0
+        },
+        "score": 5,
+        "guaranteed": false,
+        "trialProbability": 0,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "ordinary-excellent",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "ordinary-excellent",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 14,
+        "L": 6,
+        "era": 2.7,
+        "IP": 165,
+        "SO": 180,
+        "G": 28,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 40,
+          "era": 50,
+          "IP": 59.45945945945946,
+          "SO": 41.66666666666667,
+          "WPCT": 24.99999999999997
+        },
+        "score": 47.36486486486486,
+        "guaranteed": false,
+        "trialProbability": 0,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "high-W-worse-ERA",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "high-W-worse-ERA",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 20,
+        "L": 4,
+        "era": 3.1,
+        "IP": 180,
+        "SO": 190,
+        "G": 30,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 10.000000000000009,
+          "IP": 100,
+          "SO": 58.333333333333336,
+          "WPCT": 91.6666666666667
+        },
+        "score": 66.33333333333333,
+        "guaranteed": false,
+        "trialProbability": 0.5266666666666666,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "excellent-ERA-low-W",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "excellent-ERA-low-W",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 13,
+        "L": 8,
+        "era": 1.6,
+        "IP": 170,
+        "SO": 190,
+        "G": 30,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 20,
+          "era": 100,
+          "IP": 72.97297297297297,
+          "SO": 58.333333333333336,
+          "WPCT": 0
+        },
+        "score": 61.99324324324324,
+        "guaranteed": false,
+        "trialProbability": 0.43986486486486487,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "high-IP-ordinary-SO",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "high-IP-ordinary-SO",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 16,
+        "L": 5,
+        "era": 2.4,
+        "IP": 200,
+        "SO": 160,
+        "G": 31,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 80,
+          "era": 80.00000000000003,
+          "IP": 100,
+          "SO": 8.333333333333332,
+          "WPCT": 55.952380952380935
+        },
+        "score": 73.04761904761905,
+        "guaranteed": false,
+        "trialProbability": 0.6609523809523811,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "high-SO-lower-IP",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "high-SO-lower-IP",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 16,
+        "L": 4,
+        "era": 2.3,
+        "IP": 145,
+        "SO": 250,
+        "G": 28,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 80,
+          "era": 90.00000000000003,
+          "IP": 5.405405405405405,
+          "SO": 100,
+          "WPCT": 75.00000000000003
+        },
+        "score": 67.10135135135137,
+        "guaranteed": false,
+        "trialProbability": 0.5420270270270273,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "balanced-elite",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "balanced-elite",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 18,
+        "L": 3,
+        "era": 2.1,
+        "IP": 190,
+        "SO": 220,
+        "G": 30,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 100,
+        "guaranteed": true,
+        "trialProbability": 1,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "extreme-elite",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "extreme-elite",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 22,
+        "L": 2,
+        "era": 1.5,
+        "IP": 200,
+        "SO": 280,
+        "G": 32,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 100,
+        "guaranteed": true,
+        "trialProbability": 1,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "low-W-high-score",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "low-W-high-score",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 12,
+        "L": 0,
+        "era": 1.4,
+        "IP": 200,
+        "SO": 280,
+        "G": 30,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": false,
+        "components": {
+          "W": 0,
+          "era": 100,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 75,
+        "guaranteed": false,
+        "trialProbability": 0,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "low-IP-high-score",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "low-IP-high-score",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 20,
+        "L": 2,
+        "era": 1.4,
+        "IP": 142.999,
+        "SO": 280,
+        "G": 30,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": false,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 0,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 75,
+        "guaranteed": false,
+        "trialProbability": 0,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "ERA-ineligible",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "ERA-ineligible",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 20,
+        "L": 2,
+        "era": 3.200001,
+        "IP": 200,
+        "SO": 280,
+        "G": 30,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": false,
+        "components": {
+          "W": 100,
+          "era": 0,
+          "IP": 100,
+          "SO": 100,
+          "WPCT": 100
+        },
+        "score": 70,
+        "guaranteed": false,
+        "trialProbability": 0,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    },
+    {
+      "id": "one-weak-metric",
+      "evidence": "SYNTHETIC_SCENARIO",
+      "input": {
+        "id": "one-weak-metric",
+        "evidence": "SYNTHETIC_SCENARIO",
+        "W": 20,
+        "L": 2,
+        "era": 1.4,
+        "IP": 200,
+        "SO": 209,
+        "G": 32,
+        "level": "NPB1",
+        "role": "SP"
+      },
+      "result": {
+        "valid": true,
+        "qualified": true,
+        "components": {
+          "W": 100,
+          "era": 100,
+          "IP": 100,
+          "SO": 90,
+          "WPCT": 100
+        },
+        "score": 98.5,
+        "guaranteed": true,
+        "trialProbability": 1,
+        "trialProbabilityStatus": "OFFLINE_ESTIMATE / PROPOSAL; 55, curve and cap NOT APPROVED"
+      }
+    }
+  ],
+  "sourceGroups": [
+    {
+      "group": "pitcher-tc-research",
+      "n": 413,
+      "independentSeeds": 43,
+      "qualified": 0,
+      "guaranteed": 0,
+      "trialExpectedAwards": 0,
+      "trialStatus": "PROPOSAL probability only"
+    },
+    {
+      "group": "pitcher-tc-research-1119",
+      "n": 367,
+      "independentSeeds": 44,
+      "qualified": 0,
+      "guaranteed": 0,
+      "trialExpectedAwards": 0,
+      "trialStatus": "PROPOSAL probability only"
+    },
+    {
+      "group": "pitcher-tc-research-r3",
+      "n": 22,
+      "independentSeeds": 10,
+      "qualified": 0,
+      "guaranteed": 0,
+      "trialExpectedAwards": 0,
+      "trialStatus": "PROPOSAL probability only"
+    },
+    {
+      "group": "pitcher-tc-research-r4",
+      "n": 0,
+      "independentSeeds": 0,
+      "qualified": 0,
+      "guaranteed": 0,
+      "trialExpectedAwards": 0,
+      "trialStatus": "PROPOSAL probability only"
+    },
+    {
+      "group": "two-seed-CPBL",
+      "n": 0,
+      "independentSeeds": 0,
+      "qualified": 0,
+      "guaranteed": 0,
+      "trialExpectedAwards": 0,
+      "trialStatus": "PROPOSAL probability only"
+    },
+    {
+      "group": "two-seed-KBO",
+      "n": 0,
+      "independentSeeds": 0,
+      "qualified": 0,
+      "guaranteed": 0,
+      "trialExpectedAwards": 0,
+      "trialStatus": "PROPOSAL probability only"
+    },
+    {
+      "group": "two-seed-NPB",
+      "n": 22,
+      "independentSeeds": 2,
+      "qualified": 0,
+      "guaranteed": 0,
+      "trialExpectedAwards": 0,
+      "trialStatus": "PROPOSAL probability only"
+    },
+    {
+      "group": "two-seed-MLB",
+      "n": 4,
+      "independentSeeds": 1,
+      "qualified": 0,
+      "guaranteed": 0,
+      "trialExpectedAwards": 0,
+      "trialStatus": "PROPOSAL probability only"
+    }
+  ],
+  "tests": {
+    "PASS": 57,
+    "FAIL": 0,
+    "NOT_RUN": [
+      "New natural careers/replays",
+      "Product Quick/Full",
+      "CI/Preview",
+      "Award product tests"
+    ]
+  },
+  "precision": "Raw double used for illustrative 95 comparisons; 1e-10 only for arithmetic assertion error, NOT adopted product tolerance",
+  "sourceSnapshotSha256": "ef12d10aba594cbb592057e2b4e099d459aedf7a7786452ce6020b8f6496e3e5"
+}

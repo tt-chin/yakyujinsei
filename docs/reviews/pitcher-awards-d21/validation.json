@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "localLinks": 33,
+  "documentOriginalsPreserved": 3,
+  "sourceIndexesUnchanged": 8,
+  "storedArtifactReplaysVerified": 8,
+  "offlineTests": {
+    "PASS": 274,
+    "FAIL": 0,
+    "NOT_RUN": [
+      "Game Quick/Full",
+      "New natural careers/replays",
+      "CI/Preview",
+      "New award product acceptance"
+    ]
+  },
+  "documentDifferences": [
+    {
+      "file": "PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+      "beforeSha256": "580aa9f4ef1d8a5ad3886b5aa5fd90766a25b31de47fcc497d83d861699c5fec",
+      "afterSha256": "d1ee91b103bb93938a0418971bac0729c2334198c0c02677c672d4db599c6c82",
+      "originalPreserved": true,
+      "addedLines": 42
+    },
+    {
+      "file": "PITCHER_AWARDS_D2_BALANCE_ANALYSIS.md",
+      "beforeSha256": "9051ad6b61dd2253308b1d9d65c1eb4b9da3448cf36125efd4aa008b7166d871",
+      "afterSha256": "ea068f150cc1354c2138a16affcea0754f2066af2da01e222d149a0f9e19d88d",
+      "originalPreserved": true,
+      "addedLines": 30
+    },
+    {
+      "file": "PITCHER_AWARDS_D2_DECISION_LOG.md",
+      "beforeSha256": "bd3a787c406e188ccbba83a4eb52a402721e0273a96cea47dbeca77e25116630",
+      "afterSha256": "d3b6a592b00cc93167c49c2e5c0f5db7105cf6ccdf04fa1b8e482ddf48f5d4bc",
+      "originalPreserved": true,
+      "addedLines": 22
+    }
+  ],
+  "seconds": 2.051,
+  "scope": "No product edits from these offline tools; pre-existing parallel product edits preserved",
+  "concurrentTrackedChanges": []
+}
