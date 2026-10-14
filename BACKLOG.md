@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 最新限定結案：2026-10-14｜dev 1.12.0，G1-A **PASS / ACCEPTED**（使用者批准）。受驗基準HEAD `554d54a94352b7dbc86473084a65b56bef74d3b7`＋G1-A工作樹；Windows Quick48／Full67入口、88唯一原生fixture通過，正式CI／Preview未執行。僅結案兩項日文名稱漏判，不開始G1-B，不發布。見[G1-A驗收](docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)及[可攜執行結果](docs/reviews/g1-a-validation/test-expectation-acceptance.json)。下列2026-10-13及此前版本／部署敘述保留為歷史快照。
+
 > 更新：2026-10-13｜dev 1.11.9全力投球修復驗收完成。受驗程式`a1658c994713fd1fb8f66857dab33df0ff6548fd`，Linux Quick47／Full65入口及Preview29案PASS；基準`20920dddd72ab8c91b0e2c71d560492663cd5aec`。下方舊版結果保留為歷史證據；main／本番仍為1.11.4。
 > 保留第一至第十階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`；本輪另批准回國retry與grinder最小修復，歷史數據不冒充此版結果。提交與CI／Preview證據見最末節。
 
@@ -7,7 +9,7 @@
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
-| 已完成 | **22** | 有對應驗收紀錄，新增全力投球最小修復結案 |
+| 已完成 | **24** | 新增G1-A兩項名稱漏判結案；其餘完成紀錄保持 |
 | 未完成 | **27** | 既有待辦保持，不擴大結案範圍 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **3** | 三項實機／分享 |
@@ -15,7 +17,7 @@
 | DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一正式checkbox重新計算：**22 + 27 = 49**。全力投球1.11.9的Linux Quick47／Full65及Preview29案實際通過，詳見末節。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。TRAIT-DISPLAY-UNIFY-01的Preview18案、Linux Quick45及Full61入口通過，按指定顯示範圍結案；實際dev手動Full可觸發、不需Draft PR。受驗SHA與CI連結見末節及[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
+以上依唯一正式checkbox重新計算：**24 + 27 = 51**。全力投球1.11.9的Linux Quick47／Full65及Preview29案實際通過，詳見末節。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。TRAIT-DISPLAY-UNIFY-01的Preview18案、Linux Quick45及Full61入口通過，按指定顯示範圍結案；實際dev手動Full可觸發、不需Draft PR。受驗SHA與CI連結見末節及[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -56,7 +58,7 @@
 - GitHub Actions 已能執行測試；**Branch Protection／Ruleset 強制合併檢查尚未設定**。
 - 未經使用者明確批准，不得修改 `main`、正式網站、遊戲平衡、RNG、年俸／契約政策或殿堂係數。
 
-## 2. 已完成工作（22 項）
+## 2. 已完成工作（24 項）
 
 ### 2.1 第一至第四階段
 
@@ -100,6 +102,11 @@
 ### 2.7 全力投球最小修復（2026-10-13；受驗程式a1658c9）
 
 - [x] **BUG-PITCH-EFFORT-01** — 僅修正callback的S.effort寫入值，全力投→全力投球；原生53案、Linux Quick47／Full65入口、新專項36案及Preview29案PASS。通常／省エネ投手與IF完整S／選擇／RNG保持，全力成績／TJ及後續分支差異可追溯且新版重播一致。不改公式、係數、直接R呼叫或舊fallback；歷史測試採真實通常投球控制，不增加S排除。CI／Preview及本機失敗保留見末節。[驗收](docs/reviews/FULL_POWER_PITCHING_ACCEPTANCE.md)
+
+### 2.8 G1-A 限定前置修正（2026-10-14；PASS / ACCEPTED）
+
+- [x] **BUG-AWARD-PHOENIX-JP-01** — 使用者正式接受日文最優秀投手賞／首位打者／本塁打王復活漏判修復。glass解除、phoenix一次、pool+8；GoldGlove／All-Star不新增资格；歷史名稱保持。原7漏判及88唯一原生fixture通過，兩個Full期待值修正後Windows Quick48／Full67入口PASS。保留原65／2失敗證據；僅限定G1-A，不實作新獎。[驗收](docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)
+- [x] **BUG-AWARD-DEMOTION-JP-01** — 使用者正式接受當年度日文最優秀投手賞／首位打者／ゴールデングラブ賞保護漏判修復；goodReal與公式不改，All-Star不新增保護。88原生fixture及回歸通過；B08跳過既有55%降格抽選的R1→0為已追溯短路，非額外抽選。CI／Preview／實機未執行，不能冒充全ID consumer完成。[驗收](docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)
 
 ## 3. 未完成工作（27 項）
 

@@ -3,8 +3,10 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
+import {withApprovedPhoenixControl,phoenixAwardProbe,assertApprovedPhoenixCareer} from './support/first-difference.mjs';
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'e602174a22d7472e1021d780388ad61adc6b11b6')+'^{commit}'],{encoding:'utf8'}).trim();
 const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
+const approvedPhoenixPrior=withApprovedPhoenixControl(prior);
 const h=await harness('international-personal-stats');
 const hook=`window.__intlDisplay={
  fixture:v=>{window.__stage6.fixture({pos:v.pos||'P',ability:64,potential:80});Object.assign(S,{stage:'PRO',org:'NPB',lv:'NPB1',year:2035,role:'SP',rehab:0,seasonFactor:1,skipMid:false,...v});$('log').replaceChildren();_curYearBody=null;window.__intlContinued=0;},
@@ -15,9 +17,9 @@ const hook=`window.__intlDisplay={
  redraw:key=>card('info','保存結果の再描画',window.__intlDisplay.render(key)),
  step:()=>{if(S.done)return {done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));const priority=n=>['vel','ctl','brk','con','pow','eye','spd'].includes(n.dataset.abilityKey)?0:1;rows.sort((a,b)=>priority(a)-priority(b)||S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey]);const b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows[0]||buttons.find(n=>/現在の球団に残留|宣言残留/.test(n.textContent))||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S)),action=b.textContent;b.click();return {before,after:JSON.parse(JSON.stringify(S)),action};}
 };`;
-async function page(width,pos='P',seed='intl-stats',old=false){
+async function page(width,pos='P',seed='intl-stats',old=false,approved=false){
  const p=await h.page(width,pos,seed);
- await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);const at=body.lastIndexOf('})();');await route.fulfill({response,body:body.slice(0,at)+hook+body.slice(at)});});
+ await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(approved?approvedPhoenixPrior:prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);const at=body.lastIndexOf('})();');await route.fulfill({response,body:body.slice(0,at)+hook+phoenixAwardProbe+body.slice(at)});});
  await p.reload();await p.waitForFunction(()=>window.__intlDisplay&&!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
 }
 const clean=s=>{const copy=structuredClone(s);delete copy.version;for(const r of Object.values(copy.intlTraitResults||{}))delete r.personalStats;return copy;};
@@ -48,7 +50,18 @@ try{
  if(!process.argv.includes('--fixtures-only')){
   let wbc=0,p12=0;
   for(const [seed,pos]of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-catcher-01','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']])await h.test('fixed-career-'+seed,{seed,pos,baseline,strategy:'balanced attacking abilities, stay with current team'},async e=>{
-   const runs=[];for(const old of [true,false]){const p=await page(1280,pos,seed,old),actions=[];for(let n=0;n<2000;n++){const step=await p.evaluate(()=>window.__intlDisplay.step());if(step.done)break;actions.push({action:step.action,before:digest(step.before),after:digest(step.after)});if(n===1999)throw Error('CAREER_LIMIT');}const result=await h.get(p);assert.equal(result.state.done,true);runs.push({actions,state:clean(result.state),rng:result.rng});await h.save('career-'+seed+'-'+(old?'baseline':'current'),{actions,state:result.state,rng:result.rng});if(!old){const keys=Object.keys(result.state.intlTraitResults);wbc+=keys.filter(k=>k.startsWith('WBC:')).length;p12+=keys.filter(k=>k.startsWith('P12:')).length;for(const r of Object.values(result.state.intlTraitResults))assert.ok(r.personalStats);e.snapshots.push({actions:actions.length,rng:result.rng.length,international:keys});}await p.close();}assert.deepEqual(runs[1],runs[0]);
+   const phoenixCase=seed==='jp3-infielder-01'&&pos==='IF',runs=[];
+   for(const mode of [true,false,...(phoenixCase?['approved','repeat']:[])]){
+    const old=mode===true||mode==='approved',p=await page(1280,pos,seed,old,mode==='approved'),actions=[];
+    for(let n=0;n<2000;n++){const step=await p.evaluate(()=>window.__intlDisplay.step());if(step.done)break;actions.push({action:step.action,before:digest(step.before),after:digest(step.after)});if(n===1999)throw Error('CAREER_LIMIT');}
+    const result=await h.get(p),awards=(await p.evaluate(()=>window.__phoenixAwardEvents)).map(event=>({...event,before:clean(event.before),after:clean(event.after)}));
+    assert.equal(result.state.done,true);runs.push({actions,state:clean(result.state),rng:result.rng,awards});
+    await h.save('career-'+seed+'-'+(mode==='approved'?'approved-phoenix-control':mode==='repeat'?'repeat':old?'baseline':'current'),{actions,state:result.state,rng:result.rng,awards});
+    if(!old){const keys=Object.keys(result.state.intlTraitResults);if(mode===false){wbc+=keys.filter(k=>k.startsWith('WBC:')).length;p12+=keys.filter(k=>k.startsWith('P12:')).length;}for(const r of Object.values(result.state.intlTraitResults))assert.ok(r.personalStats);e.snapshots.push({actions:actions.length,rng:result.rng.length,international:keys});}
+    await p.close();
+   }
+   if(phoenixCase)e.phoenixComparison=assertApprovedPhoenixCareer(runs[0],runs[1],runs[2],runs[3],'actions');
+   else assert.deepEqual(runs[1],runs[0]);
   });
   await h.test('fixed-career-international-coverage',{natural:true},async()=>{assert.ok(wbc>0,'natural WBC appearance required');assert.ok(p12>0,'natural Premier12 appearance required');});
  }

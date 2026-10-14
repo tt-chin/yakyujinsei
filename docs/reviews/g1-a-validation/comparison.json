@@ -1,0 +1,926 @@
+{
+  "pass": 32,
+  "fail": 0,
+  "unchanged": 25,
+  "intendedFix": 7,
+  "cases": [
+    {
+      "id": "A01",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 2,
+      "afterR": 2,
+      "beforePool": 15,
+      "afterPool": 15,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 420,
+          "mvp": 1,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 2,
+      "afterR": 2,
+      "beforePool": 15,
+      "afterPool": 15,
+      "consumers": {
+        "market": 0.25,
+        "fallback": 0,
+        "hof": {
+          "sc": 140,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "status": "PASS",
+      "classification": "INTENDED_BUG_FIX",
+      "beforeR": 2,
+      "afterR": 2,
+      "beforePool": 7,
+      "afterPool": 15,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 460,
+          "mvp": 0,
+          "aceN": 1,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "status": "PASS",
+      "classification": "INTENDED_BUG_FIX",
+      "beforeR": 2,
+      "afterR": 2,
+      "beforePool": 7,
+      "afterPool": 15,
+      "consumers": {
+        "market": 0.35,
+        "fallback": 1,
+        "hof": {
+          "sc": 160,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "status": "PASS",
+      "classification": "INTENDED_BUG_FIX",
+      "beforeR": 2,
+      "afterR": 2,
+      "beforePool": 7,
+      "afterPool": 15,
+      "consumers": {
+        "market": 0.35,
+        "fallback": 1,
+        "hof": {
+          "sc": 160,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 2,
+      "afterR": 2,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.25,
+        "fallback": 1,
+        "hof": {
+          "sc": 300,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 1,
+      "afterR": 1,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 70,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 2,
+      "afterR": 2,
+      "beforePool": 15,
+      "afterPool": 15,
+      "consumers": {
+        "market": 1,
+        "fallback": 2,
+        "hof": {
+          "sc": 560,
+          "mvp": 1,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 2,
+      "afterR": 2,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 420,
+          "mvp": 1,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B01-bad",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 420,
+          "mvp": 1,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B01-good",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 420,
+          "mvp": 1,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B01-past",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 420,
+          "mvp": 1,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B02-bad",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.25,
+        "fallback": 0,
+        "hof": {
+          "sc": 140,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B02-good",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.25,
+        "fallback": 0,
+        "hof": {
+          "sc": 140,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B02-past",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 140,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B03-bad",
+      "status": "PASS",
+      "classification": "INTENDED_BUG_FIX",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 460,
+          "mvp": 0,
+          "aceN": 1,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B03-good",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 460,
+          "mvp": 0,
+          "aceN": 1,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B03-past",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 460,
+          "mvp": 0,
+          "aceN": 1,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B04-bad",
+      "status": "PASS",
+      "classification": "INTENDED_BUG_FIX",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.35,
+        "fallback": 1,
+        "hof": {
+          "sc": 160,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B04-good",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.35,
+        "fallback": 1,
+        "hof": {
+          "sc": 160,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B04-past",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 160,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B05-bad",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.35,
+        "fallback": 1,
+        "hof": {
+          "sc": 160,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B05-good",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.35,
+        "fallback": 1,
+        "hof": {
+          "sc": 160,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B05-past",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 160,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B06-bad",
+      "status": "PASS",
+      "classification": "INTENDED_BUG_FIX",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.25,
+        "fallback": 1,
+        "hof": {
+          "sc": 300,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B06-good",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.25,
+        "fallback": 1,
+        "hof": {
+          "sc": 300,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B06-past",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 300,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 1
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B07-bad",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 70,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B07-good",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 70,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B07-past",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0,
+        "fallback": 0,
+        "hof": {
+          "sc": 70,
+          "mvp": 0,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B08-55chance",
+      "status": "PASS",
+      "classification": "INTENDED_BUG_FIX",
+      "beforeR": 1,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 460,
+          "mvp": 0,
+          "aceN": 1,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "B09-protected",
+      "status": "PASS",
+      "classification": "UNCHANGED_LEGACY",
+      "beforeR": 0,
+      "afterR": 0,
+      "beforePool": 7,
+      "afterPool": 7,
+      "consumers": {
+        "market": 0.75,
+        "fallback": 2,
+        "hof": {
+          "sc": 420,
+          "mvp": 1,
+          "aceN": 0,
+          "king": 0
+        },
+        "incentive": {
+          "level": "NONE",
+          "amount": 0,
+          "reasonCodes": [
+            "NO_INCENTIVE_TERMS"
+          ]
+        }
+      }
+    }
+  ],
+  "limits": [
+    "Native synthetic fixture comparison, not real payment or complete season recovery",
+    "Consumer functions executed directly, using unchanged honors and contracts",
+    "Only B08 intentionally skips the original 55% demotion draw; no new RNG calls"
+  ],
+  "natural": {
+    "seed": "jp3-infielder-01",
+    "position": "IF",
+    "firstDifference": 279,
+    "year": 2042,
+    "status": "PASS",
+    "classification": "INTENDED_BUG_FIX",
+    "firstAwardOnlyChangedGlassPhoenixRemovedPool": true,
+    "awardRngUnchanged": true,
+    "all637RngValuesEqual": true,
+    "before": {
+      "honors": [
+        "2042 台湾プロ野球オールスターゲーム",
+        "2042 台湾プロ野球首位打者",
+        "2042 台湾プロ野球本塁打王",
+        "2042 台湾プロ野球最高出塁率",
+        "2043 台湾プロ野球ゴールデングラブ賞",
+        "2043 WBSCプレミア12ベスト4",
+        "2044 台湾プロ野球オールスターゲーム",
+        "2045 台湾プロ野球オールスターゲーム",
+        "2046 台湾プロ野球オールスターゲーム"
+      ],
+      "earnings": 351390000,
+      "baseSalary": 301050000,
+      "signingBonus": 30430000,
+      "incentive": 6260000,
+      "year": 2050,
+      "glass": true,
+      "phoenix": false
+    },
+    "after": {
+      "honors": [
+        "2042 台湾プロ野球オールスターゲーム",
+        "2042 台湾プロ野球首位打者",
+        "2042 台湾プロ野球本塁打王",
+        "2042 台湾プロ野球最高出塁率",
+        "2043 台湾プロ野球オールスターゲーム",
+        "2043 台湾プロ野球ゴールデングラブ賞",
+        "2043 WBSCプレミア12ベスト4",
+        "2044 台湾プロ野球オールスターゲーム",
+        "2044 台湾プロ野球最高出塁率",
+        "2045 台湾シリーズ優勝"
+      ],
+      "earnings": 353010000,
+      "baseSalary": 301050000,
+      "signingBonus": 30430000,
+      "incentive": 7430000,
+      "year": 2050,
+      "glass": false,
+      "phoenix": true
+    },
+    "note": "The whole UI callback also reaches different continuation checkpoints because +8 creates allocation. Do not require all post-callback state to match; the actual awards boundary is compared exactly except the four authorized effect fields."
+  },
+  "fullControl": {
+    "diagnosticAssertions": "PASS",
+    "originalFullEntries": "FAIL / NOT_REWRITTEN",
+    "seed": "jp3-infielder-01",
+    "position": "IF",
+    "firstStep": 265,
+    "year": 2041,
+    "firstAwardOnlyFourEffectFieldsChanged": true,
+    "rngAtAward": [
+      387,
+      391,
+      387,
+      391
+    ],
+    "all639RngValuesEqual": true,
+    "bothFailedEntriesSameCurrentStateChoicesRng": true,
+    "oldPhoenix": false,
+    "newPhoenix": true,
+    "oldPool": 0,
+    "newPool": 8,
+    "classification": "INTENDED_BUG_FIX / OBSOLETE_EXACT_EQUALITY_EXPECTATION",
+    "note": "No expectation changed. Original negative diagnostic also exits 1. Updating official tests requires separate authorization; Full remains FAIL."
+  },
+  "legacyCompatibility": {
+    "cases": 8,
+    "status": "PASS",
+    "stateAndRngExact": true
+  }
+}

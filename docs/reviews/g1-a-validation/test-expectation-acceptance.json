@@ -1,0 +1,934 @@
+{
+  "status": "PASS / ACCEPTED",
+  "acceptedBy": "USER",
+  "acceptanceDate": "2026-10-14",
+  "scope": "G1-A ONLY; G1-B and P01-P08 implementation not authorized",
+  "productVersion": "1.12.0",
+  "gameSha256": "4b7d893b44d4cf943ff7c017c8bbca73474e5b5ae9bd8513455a80ae18315629",
+  "evidenceType": "ACTUALLY_EXECUTED_LOCAL_WINDOWS; NOT_CI_OR_PREVIEW",
+  "profiles": [
+    {
+      "mode": "quick",
+      "head": "554d54a94352b7dbc86473084a65b56bef74d3b7",
+      "version": "1.12.0",
+      "baseline": "7220ad82002801d3dea5fedae80d0fb3d7a0433f",
+      "sourceFingerprint": "81846539bf9eceace871ac4d13467ed55a0fffe9efa8c63d23313b51e380c9e1",
+      "node": "v24.15.0",
+      "platform": "win32",
+      "browser": {
+        "channel": "chrome",
+        "version": "155.0.8059.39",
+        "playwrightVersion": "1.62.1"
+      },
+      "counts": {
+        "PASS": 48,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "seconds": 216.561,
+      "executed": 48,
+      "reused": 0,
+      "sourceSummary": "test-results/g1-a-test-expectation-quick/summary.json",
+      "sourceSummarySha256": "535268675cef6e2216cec3cba07a1303c46d02a090ba9a02908ec82153b826b4",
+      "results": [
+        {
+          "id": "syntax",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.299,
+          "logSha256": "bcac82da3d9f649980d283612e6311cb6e58f08724e3f67074c3ff96325db8ca"
+        },
+        {
+          "id": "ability-allocation.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.091,
+          "logSha256": "743fed0bb62241666ef0c496220362f3b43f4049194d6d41dd8953277a54f758"
+        },
+        {
+          "id": "arbitration-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.094,
+          "logSha256": "d211c39424a8f2084088c3ff74ab68ed33ed87134b905c3ed4b929a0ddbde96c"
+        },
+        {
+          "id": "bug-act-01-02-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 96.784,
+          "logSha256": "19268d78319b9c8556d5ce4def8edb2ccdb9c40e869bfcab5ca718a31a0c724d"
+        },
+        {
+          "id": "career-movement-policy",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.106,
+          "logSha256": "806998f3a429677aa501529339182e719a952c1157458fea5df8f36bc771be49"
+        },
+        {
+          "id": "championship-intl.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.808,
+          "logSha256": "cb7e7c92efb73213e11aae9f0c9ba595013128e890ce60e91adab9061e37f832"
+        },
+        {
+          "id": "choice-action.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.103,
+          "logSha256": "436901970bbba3c48bc9460fd2559bf947f5e3499ec19fb6e700b9be2667ac4b"
+        },
+        {
+          "id": "contract-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.103,
+          "logSha256": "8c781dae8728071efca7f45b2d9c7d14e56ec1e6c346d242939ebd484ae2ee3e"
+        },
+        {
+          "id": "control-period-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.098,
+          "logSha256": "d72d0cc125c39db90bd5761b07f206f9632853021d75ef70690798865d61d4af"
+        },
+        {
+          "id": "display-preferences.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.112,
+          "logSha256": "dc9f99b46dfb680be261f49478b26cf2667b31c536be49a5a90aa3a7cd4dd7d2"
+        },
+        {
+          "id": "domestic-tournament-policy",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.12,
+          "logSha256": "c4fdffabe34b43a16d48bd7e31880a0f4d1a4e79d9af0eb5091d31e2fd28fd58"
+        },
+        {
+          "id": "draft-bonus-display.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.184,
+          "logSha256": "a1c54d270c2ae032fc1c31436ed224defc6eb4b0bd418a1576039b65a90d201b"
+        },
+        {
+          "id": "draft-income-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 81.208,
+          "logSha256": "03b540f90f1263040db72373169c3d2bd42019122b92d6a822a290369dab127b"
+        },
+        {
+          "id": "draft-signing-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.121,
+          "logSha256": "44168b3adb5df806c27ec912d1755e3f15557c11180effafa1f669469f11d083"
+        },
+        {
+          "id": "event-copy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.696,
+          "logSha256": "ed2cbd66cd5d9bd0b5d6b651fba3e0cfd3576f97ed747df00200418ac457294d"
+        },
+        {
+          "id": "event-fix.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.484,
+          "logSha256": "e1f4170fd3b203840d409c614875e116bcf5b90f2be8ff1a1590c6af6be9b6b8"
+        },
+        {
+          "id": "event-integration.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.124,
+          "logSha256": "72a9355ed1a692282e66f373f21dd7846996460ce8db227619b888a9999dd5ca"
+        },
+        {
+          "id": "event-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.267,
+          "logSha256": "cdf0b8e6c1f73b0efcf4fe840295a80a726804bd7dd0ec779eae80e118072bbf"
+        },
+        {
+          "id": "fa-market-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.119,
+          "logSha256": "632c31c055a46bf97ae2cb43aaffbb79d6e34afc219b0e7d3a5ce37efb5a436e"
+        },
+        {
+          "id": "fixed-seed-v160.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.086,
+          "logSha256": "cf28a14dc47d1146f3bb978c1971768ff91ef5989fc57ba2d1c84bb679da8690"
+        },
+        {
+          "id": "full-power-pitching.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.15,
+          "logSha256": "17f1eb60732c735caa0c2f0f643b946f3c0eb0b5658bf0cbdb254409c66c301c"
+        },
+        {
+          "id": "global-contract-market.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.132,
+          "logSha256": "4cd7b042541ec2634609dc64bbfa768e8f57ec1eb0d734ad81dcfb3d7d71db3f"
+        },
+        {
+          "id": "hall-of-fame-policy",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.085,
+          "logSha256": "d16fb32b611ea3e5edf00e198b0cfb07d22d9afe321bfbd4ff0d4e4a37b8d847"
+        },
+        {
+          "id": "hof-first-ballot-league.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.263,
+          "logSha256": "390c2aab557cc6504e032a62c0d142e1d0717dc467c21856039fa7647943728f"
+        },
+        {
+          "id": "incentive-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.082,
+          "logSha256": "6ab97afe896811a3e550727e58681f42186994b5a0160e79cf5a0696d2808837"
+        },
+        {
+          "id": "information-architecture.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.082,
+          "logSha256": "a321f45cb2c3afc13b069c1beda4d2aa4f5110b1217673a126f42a4e1b74dcab"
+        },
+        {
+          "id": "injury-market-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.094,
+          "logSha256": "7521fd53c8e70f7514f811f19b3af89775c59cdd0f56d5cfe5455c3a95ec1bb9"
+        },
+        {
+          "id": "international-personal-stats.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.162,
+          "logSha256": "0673b48958f384fc6dd2d0ef6059188fa86c26b28d5a86f4714ed1e18dddded9"
+        },
+        {
+          "id": "japanese-copy-contract-ui.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.101,
+          "logSha256": "f2e58a0be6950d0c456d76f2822d796bf3ea694ce6defc06fdcb8c54e91bcf8d"
+        },
+        {
+          "id": "kbo-renewal-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 15.084,
+          "logSha256": "1e0d0008d8570ba55c112772e0fbe90d19d6c5f9b0f535fb3e0699519ab9a1f2"
+        },
+        {
+          "id": "kbo-renewal-floor.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.122,
+          "logSha256": "d2d026a66528d1d3464b661a7f05f13b9b961f658fd044e215450af962b274d4"
+        },
+        {
+          "id": "npb-return-ui.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.32,
+          "logSha256": "d569048be4fb8b4a95a6bf402006650947a03c8bd385089df99c1b20318e27db"
+        },
+        {
+          "id": "record-condition-fix.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.106,
+          "logSha256": "3b4c029d0f817c5043cb3bbcc29ae159b3f872a11e7ff985c796fcef4ab39185"
+        },
+        {
+          "id": "replay-share-theme.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.108,
+          "logSha256": "6caddcffe8aeeb0dab2ef1fa0d44fad14e6f49df2a106d74f24418425d32123f"
+        },
+        {
+          "id": "retirement-hof-balance.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.019,
+          "logSha256": "8c4c1ff1ef3618a7ef0d0b45585ca43bd700eee7b5629ee49bfd71349bede953"
+        },
+        {
+          "id": "salary-detail-ui.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.134,
+          "logSha256": "bc6f60206cfea860f663825ee8682cc99fdfb267da484d7df15891e59b462ac4"
+        },
+        {
+          "id": "salary-evaluation-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.094,
+          "logSha256": "040b451a03ab1f2e27fde6d6dd980334e1882dfcf70beb671dfb014b1cc766cb"
+        },
+        {
+          "id": "salary-explanation-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.082,
+          "logSha256": "5cf1005c4cdaae552e28444d4ed214665157e4b60c6c59460370f8701432c341"
+        },
+        {
+          "id": "salary-flow.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.09,
+          "logSha256": "f51c4cd8b600f7fcdb981988a60f122f8503ec0e307416883f87b29aba275146"
+        },
+        {
+          "id": "salary-promotion-policy",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.104,
+          "logSha256": "81f082a541ee3817f27cf5ce1897aeee81ef453ad88be90b8b0c595a28d0bf01"
+        },
+        {
+          "id": "salary-promotion-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.088,
+          "logSha256": "779645e38859d7acb59e1e934e9a9487a08fe170e1c06f3c185caa0e29282f46"
+        },
+        {
+          "id": "school-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.312,
+          "logSha256": "6a24fc02987f04230d040598c7f7bedfa6694589d22d8d08a3ed49c6bb6412bf"
+        },
+        {
+          "id": "spec-source-links.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.406,
+          "logSha256": "b003fa3352f17853bc03e926dbe98148dffbe4cf94dd9c120c128f19ca55b6b6"
+        },
+        {
+          "id": "team-demand-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.098,
+          "logSha256": "2434d2a0fcf5c4691f77ed2c33a896dfa681134089a3b7c9f6d76446ae4ac29a"
+        },
+        {
+          "id": "test-runner.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.811,
+          "logSha256": "bbeabfbc2c4b17964d0ec7cf0ad27e69fe23857a4df0fb0fc3b5e70a97b80d50"
+        },
+        {
+          "id": "trait-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.525,
+          "logSha256": "c15a45fc1b51e26e1cbfe69d9bee177f842dbc454853f84303f008ce151a4e70"
+        },
+        {
+          "id": "ui-foundation.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.124,
+          "logSha256": "b05b0574d4a1ee4bf294aa8dd72505688b3ece0bfd0d08bd06a7f666c6cd2ab6"
+        },
+        {
+          "id": "verify-modularization",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.101,
+          "logSha256": "464073b571414d1dc8cd6f0a04f44627c35e8f69a02af9359414640563a72c75"
+        }
+      ]
+    },
+    {
+      "mode": "full",
+      "head": "554d54a94352b7dbc86473084a65b56bef74d3b7",
+      "version": "1.12.0",
+      "baseline": "7220ad82002801d3dea5fedae80d0fb3d7a0433f",
+      "sourceFingerprint": "81846539bf9eceace871ac4d13467ed55a0fffe9efa8c63d23313b51e380c9e1",
+      "node": "v24.15.0",
+      "platform": "win32",
+      "browser": {
+        "channel": "chrome",
+        "version": "155.0.8059.39",
+        "playwrightVersion": "1.62.1"
+      },
+      "counts": {
+        "PASS": 67,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "seconds": 3345.586,
+      "executed": 67,
+      "reused": 0,
+      "sourceSummary": "test-results/g1-a-test-expectation-full/summary.json",
+      "sourceSummarySha256": "00bf58f6c3962a0acd618280d17750c849869a1cecbf78828ebb2c627c8089f9",
+      "results": [
+        {
+          "id": "syntax",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.556,
+          "logSha256": "bcac82da3d9f649980d283612e6311cb6e58f08724e3f67074c3ff96325db8ca"
+        },
+        {
+          "id": "ability-allocation.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.112,
+          "logSha256": "743fed0bb62241666ef0c496220362f3b43f4049194d6d41dd8953277a54f758"
+        },
+        {
+          "id": "arbitration-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.107,
+          "logSha256": "d211c39424a8f2084088c3ff74ab68ed33ed87134b905c3ed4b929a0ddbde96c"
+        },
+        {
+          "id": "bug-act-01-02-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 478.199,
+          "logSha256": "73731aa1f158f0e0eb4f0e35f4d377386defbe719d95f087cdf5e2d924000c46"
+        },
+        {
+          "id": "career-movement-policy",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.24,
+          "logSha256": "806998f3a429677aa501529339182e719a952c1157458fea5df8f36bc771be49"
+        },
+        {
+          "id": "championship-intl-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.633,
+          "logSha256": "f3699dedcd852b05fd06351d3173602ac3e98821f6c36726759718a76848212e"
+        },
+        {
+          "id": "championship-intl.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.064,
+          "logSha256": "cb7e7c92efb73213e11aae9f0c9ba595013128e890ce60e91adab9061e37f832"
+        },
+        {
+          "id": "choice-action.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.138,
+          "logSha256": "436901970bbba3c48bc9460fd2559bf947f5e3499ec19fb6e700b9be2667ac4b"
+        },
+        {
+          "id": "contract-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.134,
+          "logSha256": "8c781dae8728071efca7f45b2d9c7d14e56ec1e6c346d242939ebd484ae2ee3e"
+        },
+        {
+          "id": "contract-salary-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 87.874,
+          "logSha256": "e47b4e32410e4250ebe085844784ff046f62db5be5ffe0e87473151a4fae4fa5"
+        },
+        {
+          "id": "control-period-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.148,
+          "logSha256": "d72d0cc125c39db90bd5761b07f206f9632853021d75ef70690798865d61d4af"
+        },
+        {
+          "id": "display-preferences-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 142.652,
+          "logSha256": "8ace3670b8c48f112ec9907bff0951c4fbbae3176d7ce7e4431ae84ebab84f6b"
+        },
+        {
+          "id": "display-preferences.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.12,
+          "logSha256": "dc9f99b46dfb680be261f49478b26cf2667b31c536be49a5a90aa3a7cd4dd7d2"
+        },
+        {
+          "id": "domestic-tournament-policy",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.145,
+          "logSha256": "c4fdffabe34b43a16d48bd7e31880a0f4d1a4e79d9af0eb5091d31e2fd28fd58"
+        },
+        {
+          "id": "draft-bonus-display.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.148,
+          "logSha256": "a1c54d270c2ae032fc1c31436ed224defc6eb4b0bd418a1576039b65a90d201b"
+        },
+        {
+          "id": "draft-income-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 324.281,
+          "logSha256": "bafe5bae4885c0773b2c6786cf36d72189b05a3492e8bc263b872b40f5816cbc"
+        },
+        {
+          "id": "draft-signing-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.181,
+          "logSha256": "44168b3adb5df806c27ec912d1755e3f15557c11180effafa1f669469f11d083"
+        },
+        {
+          "id": "event-copy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.718,
+          "logSha256": "ed2cbd66cd5d9bd0b5d6b651fba3e0cfd3576f97ed747df00200418ac457294d"
+        },
+        {
+          "id": "event-fix-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 12.857,
+          "logSha256": "61db414fe9627e314b8a88a9e7d9cce7d7fd5994e180247fe38bd9bdd383c17e"
+        },
+        {
+          "id": "event-fix.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.581,
+          "logSha256": "e1f4170fd3b203840d409c614875e116bcf5b90f2be8ff1a1590c6af6be9b6b8"
+        },
+        {
+          "id": "event-integration.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.163,
+          "logSha256": "72a9355ed1a692282e66f373f21dd7846996460ce8db227619b888a9999dd5ca"
+        },
+        {
+          "id": "event-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.34,
+          "logSha256": "cdf0b8e6c1f73b0efcf4fe840295a80a726804bd7dd0ec779eae80e118072bbf"
+        },
+        {
+          "id": "event-system-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 196.602,
+          "logSha256": "7a8619d64f9af2d1c851d45d7b5c6acd98699a1e12e29ff9e5e2d1097ccda611"
+        },
+        {
+          "id": "fa-market-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.237,
+          "logSha256": "632c31c055a46bf97ae2cb43aaffbb79d6e34afc219b0e7d3a5ce37efb5a436e"
+        },
+        {
+          "id": "fixed-seed-v160.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.098,
+          "logSha256": "cf28a14dc47d1146f3bb978c1971768ff91ef5989fc57ba2d1c84bb679da8690"
+        },
+        {
+          "id": "full-power-pitching-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 783.353,
+          "logSha256": "9f014bac78ba60c89422c965586c4a10d8f3ea0ff1462f2a36eeceb7841c338f"
+        },
+        {
+          "id": "full-power-pitching.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.222,
+          "logSha256": "17f1eb60732c735caa0c2f0f643b946f3c0eb0b5658bf0cbdb254409c66c301c"
+        },
+        {
+          "id": "global-contract-market-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 23.013,
+          "logSha256": "f5cb97de1e3970e9b4160dd2f5fa2d726abd88d5803553465c83404a3c71ea42"
+        },
+        {
+          "id": "global-contract-market.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.184,
+          "logSha256": "4cd7b042541ec2634609dc64bbfa768e8f57ec1eb0d734ad81dcfb3d7d71db3f"
+        },
+        {
+          "id": "hall-of-fame-policy",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.114,
+          "logSha256": "d16fb32b611ea3e5edf00e198b0cfb07d22d9afe321bfbd4ff0d4e4a37b8d847"
+        },
+        {
+          "id": "hof-first-ballot-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 24.406,
+          "logSha256": "48b64bfa8df550ccfd5b3f963f3631f91926ccc81539e49adf1b47f58d6ec25a"
+        },
+        {
+          "id": "hof-first-ballot-league.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.36,
+          "logSha256": "390c2aab557cc6504e032a62c0d142e1d0717dc467c21856039fa7647943728f"
+        },
+        {
+          "id": "incentive-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.113,
+          "logSha256": "6ab97afe896811a3e550727e58681f42186994b5a0160e79cf5a0696d2808837"
+        },
+        {
+          "id": "information-architecture.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.112,
+          "logSha256": "a321f45cb2c3afc13b069c1beda4d2aa4f5110b1217673a126f42a4e1b74dcab"
+        },
+        {
+          "id": "injury-market-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.119,
+          "logSha256": "7521fd53c8e70f7514f811f19b3af89775c59cdd0f56d5cfe5455c3a95ec1bb9"
+        },
+        {
+          "id": "international-personal-stats-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 514.204,
+          "logSha256": "641120e0deb2a0323f58a6a8559f132d8ca7eebc37c69e69ae1253bb218c08d0"
+        },
+        {
+          "id": "international-personal-stats.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.22,
+          "logSha256": "0673b48958f384fc6dd2d0ef6059188fa86c26b28d5a86f4714ed1e18dddded9"
+        },
+        {
+          "id": "japanese-copy-contract-ui.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.13,
+          "logSha256": "f2e58a0be6950d0c456d76f2822d796bf3ea694ce6defc06fdcb8c54e91bcf8d"
+        },
+        {
+          "id": "kbo-renewal-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 23.819,
+          "logSha256": "6112186f3e6c54065852e454e845398b05b55bf8d9fa0a6dd01a57ee9f3fb5c9"
+        },
+        {
+          "id": "kbo-renewal-floor.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.156,
+          "logSha256": "d2d026a66528d1d3464b661a7f05f13b9b961f658fd044e215450af962b274d4"
+        },
+        {
+          "id": "npb-return-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 33.793,
+          "logSha256": "5172de67d040ffcb5b4192d76463f5d49c4961c17bc54d12b3f0b0fc4be1fb8e"
+        },
+        {
+          "id": "npb-return-ui.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.415,
+          "logSha256": "d569048be4fb8b4a95a6bf402006650947a03c8bd385089df99c1b20318e27db"
+        },
+        {
+          "id": "record-condition-fix.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.139,
+          "logSha256": "3b4c029d0f817c5043cb3bbcc29ae159b3f872a11e7ff985c796fcef4ab39185"
+        },
+        {
+          "id": "replay-share-theme-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 30.654,
+          "logSha256": "fa67fc06ba68be193a262cc9d27e3e841ba11056e4ea557d434d7e7c328ab31d"
+        },
+        {
+          "id": "replay-share-theme.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.088,
+          "logSha256": "6caddcffe8aeeb0dab2ef1fa0d44fad14e6f49df2a106d74f24418425d32123f"
+        },
+        {
+          "id": "retirement-hof-balance.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.919,
+          "logSha256": "8c4c1ff1ef3618a7ef0d0b45585ca43bd700eee7b5629ee49bfd71349bede953"
+        },
+        {
+          "id": "salary-detail-ui.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.112,
+          "logSha256": "bc6f60206cfea860f663825ee8682cc99fdfb267da484d7df15891e59b462ac4"
+        },
+        {
+          "id": "salary-evaluation-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.102,
+          "logSha256": "040b451a03ab1f2e27fde6d6dd980334e1882dfcf70beb671dfb014b1cc766cb"
+        },
+        {
+          "id": "salary-explanation-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.083,
+          "logSha256": "5cf1005c4cdaae552e28444d4ed214665157e4b60c6c59460370f8701432c341"
+        },
+        {
+          "id": "salary-flow.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.093,
+          "logSha256": "f51c4cd8b600f7fcdb981988a60f122f8503ec0e307416883f87b29aba275146"
+        },
+        {
+          "id": "salary-history-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.106,
+          "logSha256": "4f1505227527d4589ddf62bf62f12a41ebc38e2d462d6b1d26e2dcd2c53d7d20"
+        },
+        {
+          "id": "salary-promotion-policy",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.093,
+          "logSha256": "81f082a541ee3817f27cf5ce1897aeee81ef453ad88be90b8b0c595a28d0bf01"
+        },
+        {
+          "id": "salary-promotion-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.081,
+          "logSha256": "779645e38859d7acb59e1e934e9a9487a08fe170e1c06f3c185caa0e29282f46"
+        },
+        {
+          "id": "school-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.273,
+          "logSha256": "6a24fc02987f04230d040598c7f7bedfa6694589d22d8d08a3ed49c6bb6412bf"
+        },
+        {
+          "id": "smallschool-c-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 278.488,
+          "logSha256": "0bc2f12b3b9bb87da8d134d9cda7cc59ec8cb1d24dbf41a006a8a8671b4f7046"
+        },
+        {
+          "id": "spec-source-links.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.576,
+          "logSha256": "b003fa3352f17853bc03e926dbe98148dffbe4cf94dd9c120c128f19ca55b6b6"
+        },
+        {
+          "id": "stage10-risk-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 67.67,
+          "logSha256": "58f52f0d215c95338fb49ff0aac470811ea65b091742c482f333c3d75fd3a693"
+        },
+        {
+          "id": "stage6-ability-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 64.231,
+          "logSha256": "b3649266fdc09d8096861b00580c7d389fe9032a07c113b025f25ee50bd8ae88"
+        },
+        {
+          "id": "stage6-state-transaction-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.326,
+          "logSha256": "e166c5ec6261993179d8da5430d42e490b986563f9d85cb42de3e63487873d04"
+        },
+        {
+          "id": "stage7-safety-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 21.267,
+          "logSha256": "b4b38b48036abd89c72a666842de2332699fdecae77c36fe5556968386a38840"
+        },
+        {
+          "id": "team-demand-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.11,
+          "logSha256": "2434d2a0fcf5c4691f77ed2c33a896dfa681134089a3b7c9f6d76446ae4ac29a"
+        },
+        {
+          "id": "test-runner.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.634,
+          "logSha256": "bbeabfbc2c4b17964d0ec7cf0ad27e69fe23857a4df0fb0fc3b5e70a97b80d50"
+        },
+        {
+          "id": "trait-display-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 181.819,
+          "logSha256": "668b6c7a2eba55996d856d9835b86d49669bdbbdff25db1a3996f0bd87a9f09c"
+        },
+        {
+          "id": "trait-policy.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.324,
+          "logSha256": "c15a45fc1b51e26e1cbfe69d9bee177f842dbc454853f84303f008ce151a4e70"
+        },
+        {
+          "id": "trait-system-e2e",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 8.48,
+          "logSha256": "fa5590f95dcbe2dad774b2aa3223a9b1a5042e2bb21791992a302772cc72eb7f"
+        },
+        {
+          "id": "ui-foundation.test",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.105,
+          "logSha256": "b05b0574d4a1ee4bf294aa8dd72505688b3ece0bfd0d08bd06a7f666c6cd2ab6"
+        },
+        {
+          "id": "verify-modularization",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.111,
+          "logSha256": "464073b571414d1dc8cd6f0a04f44627c35e8f69a02af9359414640563a72c75"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "suite": "full-power-pitching",
+      "id": "S03-IF-unchanged",
+      "status": "PASS",
+      "seconds": 109.345,
+      "suitePass": 36,
+      "suiteFail": 0,
+      "errors": [],
+      "cleanupWarning": "Disconnected browser profile cleanup timed out",
+      "evidence": {
+        "firstStep": 265,
+        "year": 2041,
+        "award": "NPB首位打者",
+        "poolIncrease": 8,
+        "rngCalls": 639,
+        "rawHistoricalActions": 387,
+        "currentActions": 397,
+        "fullApprovedControl": "PASS",
+        "currentReplay": "PASS"
+      },
+      "caseSha256": "a411f485603565eed91202c951f82c400fd7ab5d99ac43ec10fd4c48e240c5ae"
+    },
+    {
+      "suite": "international-personal-stats",
+      "id": "fixed-career-jp3-infielder-01",
+      "status": "PASS",
+      "seconds": 110.058,
+      "suitePass": 50,
+      "suiteFail": 0,
+      "errors": [],
+      "cleanupWarning": "Disconnected browser profile cleanup timed out",
+      "evidence": {
+        "firstStep": 265,
+        "year": 2041,
+        "award": "NPB首位打者",
+        "poolIncrease": 8,
+        "rngCalls": 639,
+        "rawHistoricalActions": 387,
+        "currentActions": 397,
+        "fullApprovedControl": "PASS",
+        "currentReplay": "PASS"
+      },
+      "caseSha256": "821e427797b468672c987a121b1cbd9495de43037c11564053b32e5c29c8aefe"
+    }
+  ],
+  "nativeFixtures": {
+    "uniqueCases": 88,
+    "PASS": 88,
+    "FAIL": 0,
+    "source": "test-results/g1-a-test-expectation-fixtures.json",
+    "sourceSha256": "f223dae693e5d852946d79a4bd979e8f012a2d8c2baf7b531c5f9c98ea173a52"
+  },
+  "assertionGuard": {
+    "positivePASS": 1,
+    "syntheticMutationRejectionPASS": 10,
+    "FAIL": 0,
+    "classification": "ASSERTION_TEST_NOT_PRODUCT_BUG"
+  },
+  "limits": [
+    "Raw logs and full S traces remain in ignored local test-results; this is a portable executed-result summary with integrity hashes, not a copy of all traces.",
+    "Historical phoenix control is an explicit scoped test overlay, not raw old-version replay.",
+    "CI, Preview, real devices and new pitcher awards NOT_RUN."
+  ]
+}

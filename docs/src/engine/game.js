@@ -1464,7 +1464,8 @@ function awards(bucket,st){
   const added=h.filter(x=>x.startsWith(String(y)));
   if(added.length){ card('gold','年間賞',added.map(x=>x.slice(5)).join('｜'));
     if(S.traits.yips){ removeTrait('yips','イップス'); card('good','イップス克服','大舞台で結果を残したことで迷いが消え、<b class="hl">イップスを克服した</b>。'); }
-    if(S.traits.glass&&!S.traits.phoenix){ const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x));
+    // Exact additions only: preserve existing legacy/out-of-scope effects without guessing new award names.
+    if(S.traits.glass&&!S.traits.phoenix){ const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x)||['台湾プロ野球','KBO','NPB','メジャーリーグ'].some(league=>['最優秀投手賞','首位打者','本塁打王'].some(title=>x===`${y} ${league}${title}`)));
       if(big){ S.traits.phoenix=true; removeTrait('glass','スペランカー');
         S.pool+=8;
         card('gold','隠し特性解放：復活','大けがを乗り越え、以前より強くなって帰ってきた――<b class="hl">スペランカーのペナルティを解除。故障率が通常に戻り、大量の能力ポイントを獲得</b>。'); } }
@@ -1600,7 +1601,8 @@ function movement(){
   if(S.org==='NPB'&&S.npbYears>=8){ minReq-=4; }
   const perf=(S.seasonFactor>=0.5)?(S.lastD||0):null; /* 傷缺季不確認成績。 */
   /* 受賞による降格保護：当該シーズンに個人タイトルを獲得(MVP/王/最優秀投手、オールスターを除く)→降格・戦力外にしない。 */
-  const wonAward = S.honors.some(x=>x.startsWith(String(S.year))&&/王|MVP|賽揚|澤村|最佳投手|金手套/.test(x)&&!/明星賽/.test(x));
+  // Separate exact protection set; Gold Glove is not a phoenix title. Old current-year cross-league scope remains.
+  const wonAward = S.honors.some(x=>x.startsWith(String(S.year))&&/王|MVP|賽揚|澤村|最佳投手|金手套/.test(x)&&!/明星賽/.test(x))||S.honors.some(x=>['台湾プロ野球','KBO','NPB','メジャーリーグ'].some(league=>['最優秀投手賞','首位打者','ゴールデングラブ賞'].some(title=>x===`${S.year} ${league}${title}`)));
   /* Fix C：実成績による降格保護。当該シーズンの実成績を使い、能力評価dは参照しない、好成績なら降格させない。 */
   let goodReal=false;
   { const st=S.lastSt;
