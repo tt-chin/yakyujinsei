@@ -1,4 +1,6 @@
-# 現行規格（dev v1.12.0／main v1.11.9）
+# 現行規格（dev v1.13.0準備中／main表記は歴史記録）
+
+> 2026-10-15 D2同期：本地dev基準 `56e72d9792529f3221c1a1ffadaf563bceebe26d`（受入時1.12.0）には、利用者が受け入れた投手個人賞D2と年度取引基盤が実装済み。現行挙動は第17節。追加承認により作業ツリーのconfigとCHANGELOGを1.13.0へ更新し、規則は変更しない。新規S.version及びbirthHighSchool.createdVersionは1.13.0；出生記録の現行版一致判定は既存方針のまま、旧記録を補完しない。[G9發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)参照。未コミット・未配信であり、CI／Preview／本番の合格を意味しない。本書の過去版別検証・main表記は当時の記録であり、現在の配信確認ではない。
 
 ## v1.12.0：C級高校與COPY-001～005
 
@@ -397,7 +399,7 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 - strongpitch「若き剛腕」／stronghit「若きスラッガー」：24歳未満でNPBまたはMLB年間MVPを獲得。投手／野手を分け、称号のみ。24歳、KBO／CPBL、MVPなしは対象外。
 - latepractice「練習遅刻常習犯」：原始categoryがtrainingの安全選択失敗をcntTrainingSafeFailへ累計、20回で取得。学生／社会人のencounter→training効果変換は計数対象にしない。以後すべてのイベントのsafe成功率−5ポイント、norm／boldは不変。20回目は解決前の特性snapshotで判定し、次の選択から減率。年次リセットしない。処理済みeventOccurrenceIDの再実行・再表示で加算しない。
 - hitterTC「打撃三冠王」：同年同リーグの既存首位打者・本塁打王・打点王を全取得した場合、年間MVPを保証。元の個別賞・MVP抽選を元の順序／回数で行った後に保証し、追加乱数・MVP重複を生じない。tripleCrownHistory.hitterTCにyear／bucket／leagueを保持し、同年同リーグの重複記録を防ぐ。後年・別リーグの取得も記録する。
-- 新規9件の名称は全て承認済み。championmaker「優勝請負人」、pitcherTC「投手三冠王」、nitenichi「二天一流」は名称／IDのみ予約し、自然取得・効果・架空実績を追加しない。前提制度の理由はBACKLOGを参照する。
+- 新規9件の名称は全て承認済み。championmaker「優勝請負人」、nitenichi「二天一流」は名称／IDのみ予約し、自然取得・効果・架空実績を追加しない。pitcherTC「投手三冠王」はD2で実装済みとなり、取得条件・MVP保証は第17節に従う。旧版の保留3件に関する検証記録は当時の結果として保持する。
 - 2026-10-09の審査後確認：rubber解放文はTJゲージ上限50→100、注射成功率55%→85%と明記し、「両方2倍」としない。成功率・上限の実効果は変更しない。阪神の旧混合年資を推測補算しない制限と取得済み状態の保持を使用者が了承。保留3特性の説明UIは追加しない。hitterTCは現行の年度＋リーグ表示名＋正式賞名の厳密一致を維持し、未知の賞名・別年度・別リーグを三冠と推測しない。
 - 共有画像は既存920px論理幅・2倍出力・standard配色・内容・ファイル名・seed-only URLを維持（1.11.1の四主題連動は第16節）。実際の特性タグ幅で改行数を計算して高さへ反映し、38件検証fixtureでも下端の収入とseed／VERSIONを裁切・重畳しない。UI閲覧・画像生成はRNG0。
 - 新しい特性が作用したケースだけ承認済みの結果差を許可する。打撃三冠のMVPが既存表彰・給与評価・出来高へ反映される自然な差、oldghost翌季の能力差、latepractice取得後のイベント成否差を無関係な回帰差と混同しない。給与・成績・契約公式は変更しない。
@@ -503,3 +505,56 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 - T01～T04：standard／night／classic／scoreboardのPNGと読みやすさ。T05／T06：保存／画像共有のbytesがプレビューと一致。T07：主題変更時の自動更新、連続変更で最後の配色、字級／密度のみ変更でPNG維持。T08：大量年表／栄誉／特性で裁切・重畳なし。R01：同seed／同選択の能力・所得・契約・成績・引退・RNGの旧新版一致。R02：PC1280／320／390px、modalの鍵盤／捲動・横溢れ・Console／JS・CSS404を確認する。
 - ローカル：31単体suite、追加18共有／URL／色盤ケースと未知キー／12タグ検査、86 JS／MJS構文、モジュール／4補助policyはPASS。PC1280／320／390pxで36入口・APIモード、四主題の生成／自動更新／ダウンロード／共有PNG一致、35年fixture、Seedコピー／焦点／連打、S／RNG不変、standardの頁尾以外の旧PNG逐像素一致、既存事件・共有E2Eを確認。Console／JS・CSS404は0。
 - dc5ac871（1.11.0）との6seed全生涯は版号のみ除外して全状態・選択・RNG一致。操作／RNGは543／652、535／879、535／899、388／422、544／549、566／533（seed順は第15節一般策略と同じ）。Preview最終確認と実機iPhone Safari／Android Chromeは別扱い。実機S01／S02およびOS画像共有は未確認としてBACKLOGに残す。
+
+<a id="d2-current-spec"></a>
+
+## 17. 投手個人賞D2・年度取引（本地dev実装、未公開）
+
+### 17.1 適用範囲と識別
+
+受入済み製品ソースはdev commit `56e72d9792529f3221c1a1ffadaf563bceebe26d`。本節は既承認D2を現行実装へ同期するものであり、新たな政策・版番号・公開承認ではない。四つのゲームリーグbucket CPBL／KBO／NPB／MLBの一軍を対象とし、二軍賞、NPC全員ランキング、HP、GS、reliefWins、二刀流や新しい成績生成は追加しない。
+
+P01=最多勝利投手賞／PITCH_WINS、P02=最優秀防御率投手賞／PITCH_ERA、P03=最多三振奪取投手賞／PITCH_STRIKEOUTS、P04=勝率第一位投手賞／PITCH_WIN_PCT、P05=最多セーブ投手賞／PITCH_SAVES、P06=最優秀中継ぎ投手賞／PITCH_RELIEF、P07=投手三冠王／PITCH_TRIPLE_CROWN、P08=沢村賞／PITCH_SAWAMURA。
+
+四リーグとも旧「最優秀投手賞」を新たに発行しない。過去の同賞はLEGACY_BEST_PITCHERとして原文・大賞待遇を保持し、P02／P08へ変換しない。P03／P05／P06の旧短名は同義の読取ビューで扱い、S.honors自体の順序・原文・重複を削除しない。未知歴史名からIDや三冠・未払効果を推測しない。各Consumer専用の厳密な旧名相容規則は、全域Registry aliasや新賞Decisionの信頼根拠にはしない。
+
+### 17.2 資格・確率
+
+確率は百分率。clampは指定下限／上限へ制限する。新P01／P04／P08は有効な投手役割・一軍level、G>0／IP>0のシーズンを先に検査する。
+
+- **P01**：SP／MR／CL。基本勝数B／保証勝数GはCPBL10／15、KBO12／17、NPB12／17、MLB14／20。Wは有限非負の安全整数。W<Bなら0、B≤W<Gなら `20+75*(W-B)/(G-B)`、W≥Gなら100。
+- **P02**：旧ERA原槽のSP限定、ERA≤3.20、IP≥リーグ基準を保持。IP基準はCPBL120／KBO144／NPB143／MLB162。ERA≤2.20かつIP≥150なら100、それ以外は `clamp(30+round((3.20-ERA)*35+(IP-基準)*.4),30,95)`。CPBLの資格120と保証追加条件150を混同しない。
+- **P03**：役割限定を追加しない。SO基本／保証はCPBL130／180、KBO156／216、NPB155／215、MLB175／240。保証未満の適格者は `clamp(25+round((SO-基本)*1.2),25,95)`、保証以上100。原資格・主R順序を保持。
+- **P04**：NPB／KBOのみ、SP／MR／CL。NPB最低12勝、KBO最低10勝。W／Lとその和は非負の安全整数、W+L>0。未丸めの `WPCT=W/(W+L)` を使い、最低勝数未満またはWPCT<.650なら0、.650≤WPCT<.850なら `20+300*(WPCT-.650)`、.850以上100。CPBL／MLBは対象外。
+- **P05**：四リーグCL、SV基本22／保証35。適格・保証未満は `clamp(28+(SV-22)*5,28,95)`、保証以上100。旧判定を保持。
+- **P06**：四リーグMR、HLD基本18／保証30。適格・保証未満は `clamp(28+(HLD-18)*4,28,95)`、保証以上100。第一段階はHLD簡略ルールであり、全W+HLDを正式HPとしない。
+
+P08はNPB一軍SPのみ。G/W/L/IP/SO/ERAが有限非負、G>0、W+L>0、W≥13／IP≥143／ERA≤3.20を満たす場合に採点する。IPは従来の十進数モデルを維持し、143は資格、180は満点位置。
+
+各componentは0～100へ線形clampする。W:12→17、ERA:3.20→2.20（低いほど高得点）、IP:143→180、SO:155→215、WPCT:.650→.850。
+`score=.25*W_SCORE+.30*ERA_SCORE+.25*IP_SCORE+.15*SO_SCORE+.05*WPCT_SCORE`。
+資格不適合またはscore<60は0、60≤score<95は `min(95,10+2.5*(score-60))`、score≥95は100。60の10%と95の100%への跳点を保持し、欠賞を許す。内部binary64の固定演算順序・未丸め値・厳密比較を使い、epsilonや表示勝率を判定へ加えない。
+
+### 17.3 三冠・MVP・各効果
+
+P07は同年度・同リーグの可信かつ完了した実得P01／P02／P03から導く。単なる数値達成、別年度／リーグの混合、コピーされたDecisionや歴史文字列から補発しない。P07自身の追加抽選はなく、pitcherTCと年度／bucket／league履歴を記録する。元のMVP抽選資格があれば原順序で一回消費し、三冠保証と一つのMVPへ合流する。元MVP槽に資格がなければ保証のために主Rを追加しない。
+
+P01～P06は部門級、P08は大賞級。P07自体に別枠の大賞HOF加点や独立賞金を追加せず、保証されたMVPは通常の待遇。P08とP02は同年独立獲得可能で、P08だけではMVPを保証しない。
+
+市場／fallback／HOFの主な既承認対応：部門は.35／1／160点、旧最優秀投手とP08は.75／2／460点、MVPは.75／2／420点。出来高は元契約の年額上限・資格を適用し、賞の数だけFULLを重ねて支払わない。同義・同年・同リーグのsemantic消費は一回とし、原honorsは改写しない。すでに支払った収入や保障契約を再計算しない。
+
+phoenixと降格保護は別資格集合。P08実得は既存のglassかつ未phoenixの場合のみglass解除・phoenix取得・pool+8を生涯一回発動し、同季MVPとも共有する。獲賞当年・該当contextのmovement保護であり、永続保護・更新保証・引退免除ではない。P01～P06へ一律に同待遇を広げず、GoldGloveにphoenix、All-Starに新たな両保護を付与しない。G1-Aで修正した日本語旧賞の資格と各Consumer固有の歴史待遇は保持する。
+
+### 17.4 RNG・Journal・年度続行
+
+新P01／P04／P08は六欄canonical identity、UTF-8長さframing、承認済みH1を用いる独立deterministic抽選であり、主Rを消費しない。P02／P03／P05／P06と元MVP等の資格短絡・順序・100%時の原主R一回を保持する。
+
+年度取引は同じSインスタンスの私有Journal／Effect Receiptと、別途厳格検査するS.awardDecisionsを使う。シリアライズ／複製したDecisionだけでlive効果を認可しない。DECIDEDとEFFECT_COMMITTED、各欄before／after、支払・render・choice・movement・advance／handoffを分け、再入で再抽選・重複付款・重複能力点・成績再生成・二重年進行を行わない。
+
+支持する回復は同頁・同Sで記録済みの同期境界。未記録の主R消費窓、矛盾するpartial状態、OOM／任意host crash、reload、未知のstartYear／phasePre部分実行は自動修復せず診断して停止する。途中自動保存、旧版エンジン、rv/rules URLを追加しない。
+
+### 17.5 証拠と未確認範囲
+
+[A受入](docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md)及び[B受入](docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md)は利用者接受済みの本地範囲。A Quick56／Full75、B Quick61／Full80はそれぞれ元の実行記録で、本節追加後の新実行ではない。G2同一製品ソースの実iPhone Safari52 PASSを保持するが、B全UIの新実機検証・Linux CI・Preview・公開確認ではない。
+
+四つのA固定策略自然生涯はBで普通S／選択／主R一致、同Bの完全Decision／Receipt重播も一致。これらの自然路線には新賞winnerがなく、新効果は真実のproducer→Decision→Receipt→Consumer受控Runtimeで検証した。自然得賞率・頂尖サンプルの平衡は未確認のまま。詳細な差異規則とG9残項は[G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)。規則の承認原典は[D2](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md)で保持し、現在の実装仕様は本節を正本とする。

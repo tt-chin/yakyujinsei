@@ -1,5 +1,15 @@
 # 投手個人獎項制度：第一階段 D2 設計書
 
+## CURRENT IMPLEMENTATION STATUS（G9文件同步，2026-10-15）
+
+使用者已接受開發A及B的指定本地驗收。A提交`efd4710c4c5c366ff3aba69c59180031c82ff18a`；B提交`56e72d9792529f3221c1a1ffadaf563bceebe26d`。A0／G2～G4及G5～G8為LOCAL_PASS / USER_ACCEPTED；AF01～AF08的批准規則、TR-B風險ID及恢復限制不變。AF09已按A／B分批明確授權並完成限定產品實作，不再整體標為NOT_AUTHORIZED／NOT_IMPLEMENTED。
+
+現行產品規格統一見[CURRENT_SPEC第17節](../../CURRENT_SPEC.md#d2-current-spec)；完整證據見[A驗收](../reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md)、[B驗收](../reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md)及[G9收尾報告](../reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)。B報告的舊「尚未接受／未提交」描述保留為受驗當時快照，不覆寫原報告或hash。
+
+G9追加授權：次版1.13.0 MINOR；僅更新config、CHANGELOG及必要文件／限定驗證，並準備精確staged清單。CI timeout／artifact方案仍待審；commit／push／merge、CI觸發、Preview或正式部署與產物刪除未授權。G9整體仍PARTIAL / PENDING_RELEASE_APPROVAL，不宣稱已正式發布。見[本輪發布準備](../reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)。
+
+**歷史標記讀法**：下方原有CURRENT、NOT_FIXED、RUNTIME_NOT_VERIFIED、NOT_IMPLEMENTED、AF09未授權及PLANNED等執行狀態，均是2026-10-13～14設計／調查時點的HISTORICAL狀態；當前實作進度以上述入口為準。數值與技術規範仍按第4.2.2、13、14.13節已批准條文執行，沒有重選模型、改寫風險ID或把歷史FAIL轉成PASS。後續未授權的研究、HP、存檔及發布仍不在產品完成範圍。
+
 > 2026-10-14 CURRENT：P08 phoenix／當年度降格保護已 APPROVED / DESIGN_ONLY / NOT_IMPLEMENTED，使用者確認沿用既有觸發條件與一次性效果；最新政策與六項技術審查見[第14節](#pitcher-awards-technical-review)。舊 BL-P08-EFFECT「是否新增」為 SUPERSEDED；hash、精度、journal/receipt設計現依AF01～AF08批准；Runtime仍RUNTIME_NOT_VERIFIED，產品實作 NOT AUTHORIZED。
 
 > CURRENT APPROVED TECHNICAL DESIGN：[第14.13節 AF01～AF08](#d2-technical-approved)。AF09 NOT_AUTHORIZED，產品NOT_IMPLEMENTED，所有新產品驗收PLANNED / NOT_RUN；舊技術候選待批描述為HISTORICAL / SUPERSEDED。

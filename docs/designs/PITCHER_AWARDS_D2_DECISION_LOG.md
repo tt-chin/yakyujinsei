@@ -1,5 +1,15 @@
 # 投手獎項 D2 決策紀錄
 
+## CURRENT：A／B本地接受與G9限定授權（2026-10-15）
+
+- 使用者已接受開發A與開發B。A本機提交`efd4710c4c5c366ff3aba69c59180031c82ff18a`；B本機提交`56e72d9792529f3221c1a1ffadaf563bceebe26d`（受驗1.12.0）；追加批准工作樹VERSION／CHANGELOG準備為1.13.0 MINOR，沒有將提交或升版等同推送或發布。
+- AF01～AF08：原設計批准不變；A0／G2～G4與G5～G8的限定原生／Runtime驗收已PASS並獲接受，非所有自然生涯、任意崩潰或新獎平衡均已驗證。兩日文名稱BUG由G1-A接受結案，其歷史REPRODUCED／NOT_FIXED記錄保留。
+- AF09：A／B產品工程已分批獲授權並完成本地接受；G9文件／來源／發布準備及1.13.0 VERSION／CHANGELOG已獲授權。Git提交／推送／合併、CI觸發、Preview／正式部署及歷史產物刪除仍須另行批准；CI timeout／artifact方案與staged清單待審。見[本輪發布準備](../reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)。不得把AF09一概寫成全未授權或全發布已授權。
+- TR-B01～TR-B04：原ID／定義不變，指定A／B本地證據已具備；恢復支持仍限同頁同S已記錄邊界。TR-B05：A／B限定授權已滿足，G9受限操作仍AUTHORIZATION_PENDING。完整映射與限制見[G9收尾報告](../reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)。
+- A01～A09、P01／P04 CURVE_B、P08 IP180／S3／B2／G95、P07實得三冠與MVP、各Consumer精確歷史相容與原始honors保全均不改。現行實作規格見[CURRENT_SPEC第17節](../../CURRENT_SPEC.md#d2-current-spec)。
+
+下方所有帶日期或舊CURRENT的決策／待批／Runtime未驗證／未實作／未授權描述均保留為HISTORICAL時點紀錄；已批准規則仍有效，執行進度由本節與A／B／G9驗收分層說明。沒有改寫舊FAIL、舊數值或重新定義既有決策ID。
+
 > CURRENT TECHNICAL FINALIZATION（2026-10-14）：AF01～AF08已批准設計，最新正式落點[主D2第14.13節](PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-technical-approved)。下方先前待批記錄保持HISTORICAL；Runtime未驗證、AF09 NOT_AUTHORIZED，兩日文BUG REPRODUCED / NOT_FIXED。
 
 > 最新補充：使用者要求將現行日文獎名漏判納入D2技術BLOCKER，新增BUG-AWARD-PHOENIX-JP-01與BUG-AWARD-DEMOTION-JP-01，見[第14.11節](PITCHER_AWARDS_PHASE1_DESIGN_D2.md#legacy-award-name-blockers)。靜態漏判已核對，但未自然Seed重現或產品修復；P08未實作風險另外分類。

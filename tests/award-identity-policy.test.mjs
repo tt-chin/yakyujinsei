@@ -139,7 +139,12 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
     if(file!=='docs/src/engine/game.js')assert.equal(acceptedA,old,file+': accepted A scope unchanged');
     const allowedB=new Set(['game.js','salary-evaluation-policy.js','salary-promotion-policy.js',
       'incentive-policy.js','hall-of-fame-policy.js','trait-policy.js','award-transaction-policy.js','season-payment-policy.js']);
-    if(!allowedB.has(path.basename(file)))assert.equal(fs.readFileSync(file,'utf8').replaceAll('\r\n','\n'),acceptedA,file+': no unrelated B wiring');
+    const current=fs.readFileSync(file,'utf8').replaceAll('\r\n','\n');
+    if(file==='docs/src/config.js'){
+      // G9 approved only the release literal; frozen B1/A snapshots remain untouched.
+      assert.match(acceptedA,/^export const VERSION = '1\.12\.0';/);
+      assert.equal(current,acceptedA.replace("'1.12.0'","'1.13.0'"),file+': G9 exact approved version change only');
+    }else if(!allowedB.has(path.basename(file)))assert.equal(current,acceptedA,file+': no unrelated B wiring');
   }
 });
 

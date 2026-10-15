@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 最新D2狀態（本次提交前快照）：2026-10-15｜dev基準HEAD `56e72d9792529f3221c1a1ffadaf563bceebe26d`／config VERSION 1.13.0。使用者已接受A／B與1.13.0限定準備驗收，並批准本次精確dev提交／推送及Linux Full啟動；截至本文件更新，Linux實際驗證尚未執行，不預寫CI／Preview／發布PASS。最新本機Quick61及collector限定47案已通過；舊B Full80仍為1.12.0歷史結果。本次採Linux CI優先，artifact完整封存不作為Full啟動前置，保存缺口另以D2-CI-ARTIFACT-01追蹤。CI測試結果、workflow結果與artifact完整性分別報告。[CI與證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)／[原G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)／[發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)。以下歷史數字與待審文字保留當時範圍，不代表目前授權或發布狀態。
+
 > 最新限定結案：2026-10-14｜dev 1.12.0，G1-A **PASS / ACCEPTED**（使用者批准）。受驗基準HEAD `554d54a94352b7dbc86473084a65b56bef74d3b7`＋G1-A工作樹；Windows Quick48／Full67入口、88唯一原生fixture通過，正式CI／Preview未執行。僅結案兩項日文名稱漏判，不開始G1-B，不發布。見[G1-A驗收](docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)及[可攜執行結果](docs/reviews/g1-a-validation/test-expectation-acceptance.json)。下列2026-10-13及此前版本／部署敘述保留為歷史快照。
 
 > 更新：2026-10-13｜dev 1.11.9全力投球修復驗收完成。受驗程式`a1658c994713fd1fb8f66857dab33df0ff6548fd`，Linux Quick47／Full65入口及Preview29案PASS；基準`20920dddd72ab8c91b0e2c71d560492663cd5aec`。下方舊版結果保留為歷史證據；main／本番仍為1.11.4。
@@ -9,15 +11,15 @@
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
-| 已完成 | **24** | 新增G1-A兩項名稱漏判結案；其餘完成紀錄保持 |
-| 未完成 | **27** | 既有待辦保持，不擴大結案範圍 |
+| 已完成 | **25** | D2投手三冠按已接受本地範圍結案；不等於正式發布 |
+| 未完成 | **28** | 原27項另加D2-CI-ARTIFACT-01；D2-G9-RELEASE保持未完成 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
-| BLOCKED | **3** | 三項實機／分享 |
+| BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
 | IMPLEMENTED_UNVERIFIED | **4** | 全力投球驗收完成，其他四項保留 |
 | DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一正式checkbox重新計算：**24 + 27 = 51**。全力投球1.11.9的Linux Quick47／Full65及Preview29案實際通過，詳見末節。回國retry與grinder的原44案及補充59案、Linux Full60／Quick45／Preview59 PASS仍為1.11.6結案證據；不冒充1.11.7的新驗收。TRAIT-DISPLAY-UNIFY-01的Preview18案、Linux Quick45及Full61入口通過，按指定顯示範圍結案；實際dev手動Full可觸發、不需Draft PR。受驗SHA與CI連結見末節及[特性顯示驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。smallschool獨立待決，不推測B→3。前十階段歷史數字與報告不改寫。
+以上依唯一正式checkbox重新計算：**25 + 28 = 53**。前輪TRAIT-PITCHER-TC已按本地接受範圍結案；本輪只同步Linux CI優先策略、保留D2-G9-RELEASE未完成並新增D2-CI-ARTIFACT-01，不改其他52個既有ID的完成狀態。全力投球1.11.9的Linux Quick47／Full65及Preview29案、1.11.6與1.11.7的測試數字仍為各版歷史證據，不冒充D2結果。啟動Linux Full仍須核對本次推送SHA與實際Run，未啟動前不標CI_IN_PROGRESS。其他smallschool／COPY等較早描述與後續專項文件的時點差異不在本輪整理，保持獨立範圍。前十階段歷史數字與報告不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -37,6 +39,8 @@
 | 特性顯示統一 | 取得當下說明／以後名稱 | `TRAIT-DISPLAY-UNIFY-01` | **指定顯示範圍完成；Linux Quick45／Full61及Preview18 PASS** | [驗收](docs/reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md) |
 | v1.11.8本大会個人成績 | 保存既有生成結果／結果卡顯示 | `INT-01`前置（非履歷列表結案） | **本機Quick46／Full63及指定Preview43案PASS；重新部署成功** | [驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)／本檔末節 |
 | v1.11.9全力投球 | callback值最小修復 | `BUG-PITCH-EFFORT-01` | **Linux Quick47／Full65、新專項36及Preview29案PASS** | [驗收](docs/reviews/FULL_POWER_PITCHING_ACCEPTANCE.md)／本檔末節 |
+
+**D2獨立Gate履歷（2026-10-15）**：A0／G2～G4與G5～G8已獲使用者接受，B本機提交56e72d9。1.13.0發布準備、120分鐘timeout及collector限定驗收已接受；本次另批精確dev提交／推送與Linux Full啟動，不等於Full結果PASS。CI／Preview／正式發布與smoke未驗收，D2-G9-RELEASE保持未完成；artifact保存缺口另列D2-CI-ARTIFACT-01，不作Full啟動阻擋。這不是前述「第九階段」技術文件調查，兩者不可混用。見[G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)與[CI證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)。
 
 上述「階段」是方便管理的索引，**不是新的任務 ID**。此外還有兩項已完成的歷史稽核／測試盤點及一項殿堂錯置修復，列於第 2 節。
 
@@ -58,7 +62,7 @@
 - GitHub Actions 已能執行測試；**Branch Protection／Ruleset 強制合併檢查尚未設定**。
 - 未經使用者明確批准，不得修改 `main`、正式網站、遊戲平衡、RNG、年俸／契約政策或殿堂係數。
 
-## 2. 已完成工作（24 項）
+## 2. 已完成工作（25 項）
 
 ### 2.1 第一至第四階段
 
@@ -108,6 +112,10 @@
 - [x] **BUG-AWARD-PHOENIX-JP-01** — 使用者正式接受日文最優秀投手賞／首位打者／本塁打王復活漏判修復。glass解除、phoenix一次、pool+8；GoldGlove／All-Star不新增资格；歷史名稱保持。原7漏判及88唯一原生fixture通過，兩個Full期待值修正後Windows Quick48／Full67入口PASS。保留原65／2失敗證據；僅限定G1-A，不實作新獎。[驗收](docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)
 - [x] **BUG-AWARD-DEMOTION-JP-01** — 使用者正式接受當年度日文最優秀投手賞／首位打者／ゴールデングラブ賞保護漏判修復；goodReal與公式不改，All-Star不新增保護。88原生fixture及回歸通過；B08跳過既有55%降格抽選的R1→0為已追溯短路，非額外抽選。CI／Preview／實機未執行，不能冒充全ID consumer完成。[驗收](docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)
 
+### 2.9 D2投手獎項本地接受（2026-10-15）
+
+- [x] **TRAIT-PITCHER-TC** — `LOCAL_PASS / USER_ACCEPTED`。正式P01～P08第一階段及可信同年同聯盟三實得P07／pitcherTC／MVP已由A與B驗收並獲使用者接受；B本機提交56e72d9792529f3221c1a1ffadaf563bceebe26d。Quick61／Full80、原生producer→Decision→Receipt→Consumer、PC／320／390及四條A策略／同B重播證據見[B驗收](docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md)。新獎自然平衡與完整B實機UI仍未驗證；版本／CI／Preview／發布由D2-G9-RELEASE獨立追蹤，不混為已發布。
+
 ## 3. 未完成工作（27 項）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（4 項）
@@ -134,10 +142,9 @@
 - [ ] **SHARE-111-DEVICE** — `BLOCKED`。iPhone／Android／PC 的原生 share sheet、取消、PNG 主題、圖片分享與儲存驗收。
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。重新檢查所有可到達的日文文案、野球術語與畫面位置；與 v1.8.2 的 92 事件翻譯替換分開管理，不擅自全面重翻。
 
-### 3.4 P2 — 規格待決與保留（6 項）
+### 3.4 P2 — 規格待決與保留（5 項）
 
 - [ ] **OVR-01** — `DESIGN_PENDING`。野手 OVR 加入 stamina 5% 的提案，先比較現行公式與提案，批准後才能修改。
-- [ ] **TRAIT-PITCHER-TC** — `承認済み保留`。投手三冠王，須先決定單項投手獎制度；不能以最優秀投手獎代替。
 - [ ] **TRAIT-NITENICHI** — `承認済み保留`。二天一流，須先有獲批准的二刀流及投手三冠制度。
 - [ ] **TRAIT-CHAMPIONMAKER** — `承認済み保留`。優勝請負人，待累計 5 冠、計算範圍、勝率加成及 RNG 政策核准。
 - [ ] **CONTRACT-LEGACY-01** — `重構候補・要調査`。確認舊 `makeOffers`／`pickOfferUI`／市場定義是否真正不可達；未驗證固定 Seed、契約回歸前不得刪除。
@@ -153,7 +160,13 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋6（待決／保留）＋7（候補）＝**27**；49唯一ID、22完成／27未完。歷史38／47／48項及前階段快照保持原數。
+### 3.6 P1 — D2發布準備與獨立CI證據待辦（2 項）
+
+- [ ] **D2-G9-RELEASE** — `RELEASE_PREPARATION / RELEASE_NOT_VERIFIED`。1.13.0 MINOR、CHANGELOG與限定準備驗收已接受；精確dev commit／push及Linux Full啟動已獲本次批准。Linux實際驗證截至本次提交前尚未執行；只有確認Run與受驗SHA後才報CI_IN_PROGRESS，不能預報PASS。CI／最新SHA Preview／使用者確認／正式發布／smoke全部完成前維持未完成；main合併、正式同步及部署仍未授權。artifact問題由D2-CI-ARTIFACT-01獨立追蹤，不阻擋先跑Full，也不因Full PASS而自動結案。來源與限制見[發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)及[CI證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)；[原G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)保留為歷史。不得清理A／B或歷史JSON。
+
+- [ ] **D2-CI-ARTIFACT-01** — `ARTIFACT_COVERAGE_BLOCKED`。CI job timeout已由60提高至120分鐘，但Linux實際驗證截至本次提交前尚未執行。bounded evidence collector限定測試47 PASS／0 FAIL，尚未接入正式CI；現有artifact glob保持，Full原始S／RNG／Decision／Receipt等證據仍有保存缺口。使用者接受先啟動Linux CI Full，完整封存另行改善；CI Full執行結果、workflow／上傳結果與artifact完整性須分開報告，保存完整性不得標PASS。結案需核准並驗證Gate→case→原件保存契約、超大JSON／64MiB上限處理、敏感路徑安全保存、缺失／損壞／超額與下載還原一致性；不得只用hash索引冒充完整可重播證據。未另行批准不接collector、不取代或擴大glob、不改Full條件或golden。[缺口與限定驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)。
+
+> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋5（待決／保留）＋7（候補）＋2（D2發布／獨立artifact待辦）＝**28**；53唯一ID、25完成／28未完。歷史38／47／48／52項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 

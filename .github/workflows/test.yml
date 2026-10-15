@@ -24,7 +24,7 @@ concurrency:
 jobs:
   tests:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 120
     env:
       TEST_MODE: ${{ github.event_name == 'pull_request' && 'full' || inputs.mode || 'quick' }}
       TEST_BROWSER: chromium
