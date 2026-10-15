@@ -1,3 +1,4 @@
+import {consumerTreatmentView} from './award-consumer-policy.js';
 export const PAY_D_MIN = 0;
 export const PAY_D_MAX = 26;
 
@@ -53,15 +54,9 @@ export function calculateHitterPerformanceAdjustment({ avg, ops, baseline, sampl
   return sampleStatus === 'PARTIAL' ? adjustment * 0.65 : adjustment;
 }
 
-export function calculateMarketAwardAdjustment(honors = [], year) {
-  const prefix = String(year) + ' ';
+export function calculateMarketAwardAdjustment(honors = [], year, awardState) {
   let bonus = 0;
-  for (const honor of new Set(honors.map(String))) {
-    if (!honor.startsWith(prefix)) continue;
-    if (/年間MVP|最優秀投手賞|沢村賞/.test(honor)) bonus += 0.75;
-    else if (/最多勝|最優秀防御率|最多奪三振|最多セーブ|最優秀中継ぎ|首位打者|本塁打王|打点王|最高出塁率|盗塁王/.test(honor)) bonus += 0.35;
-    else if (/ゴールデングラブ賞|年間最優秀守備選手|新人王/.test(honor)) bonus += 0.25;
-  }
+  for(const row of consumerTreatmentView(honors,'market',{year,state:awardState}))bonus+=row.value;
   return round2(Math.min(1.5, bonus));
 }
 
@@ -100,14 +95,14 @@ export function hasActualPerformanceData(playerType, stats) {
   return required.every(key => Object.hasOwn(stats, key) && Number.isFinite(Number(stats[key])));
 }
 
-export function buildSalaryEvaluationEntry({ year, age, level, org, role, position, playerType, baseD, stats, gamesInLevel, baseline, honors }) {
+export function buildSalaryEvaluationEntry({ year, age, level, org, role, position, playerType, baseD, stats, gamesInLevel, baseline, honors, awardState }) {
   const rateStats = calculateRateStats(playerType, stats);
   const sample = calculateSampleStatus({ playerType, role, stats, gamesInLevel });
   const workloadAdjustment = calculateWorkloadAdjustment(sample.sampleRatio);
   const performanceAdjustment = playerType === 'P'
     ? calculatePitcherPerformanceAdjustment({ era: rateStats.ERA, whip: rateStats.WHIP, baseline, sampleStatus: sample.sampleStatus })
     : calculateHitterPerformanceAdjustment({ avg: rateStats.AVG, ops: rateStats.OPS, baseline, sampleStatus: sample.sampleStatus });
-  const awardAdjustment = calculateMarketAwardAdjustment(honors, year);
+  const awardAdjustment = calculateMarketAwardAdjustment(honors, year, awardState);
   const reasons = [sample.sampleStatus + '_SAMPLE'];
   if (performanceAdjustment > 0) reasons.push(playerType === 'P' ? 'PITCHING_ABOVE_BASELINE' : 'OFFENSE_ABOVE_BASELINE');
   if (performanceAdjustment < 0) reasons.push(playerType === 'P' ? 'PITCHING_BELOW_BASELINE' : 'OFFENSE_BELOW_BASELINE');

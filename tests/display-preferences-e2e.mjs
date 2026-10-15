@@ -1,6 +1,6 @@
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
-import {historicalCareer} from '../tools/development-a/historical-comparison.mjs';
+import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
 import {createServer} from 'node:http';
 import {readFile, mkdir} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';

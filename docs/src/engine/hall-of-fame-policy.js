@@ -1,3 +1,4 @@
+import {consumerTreatmentView} from './award-consumer-policy.js';
 const LEAGUE_LABELS = {
   CPBL: '台湾プロ野球',
   KBO: 'KBO',
@@ -25,7 +26,7 @@ export const DEPARTMENT_TITLES = Object.freeze([
   '最優秀防御率',
 ]);
 
-export function honorScoreFor({ bucket, honors = [], position, intlCount = 0, franchise = false }) {
+export function honorScoreFor({ bucket, honors = [], position, intlCount = 0, franchise = false, awardState }) {
   const league = LEAGUE_LABELS[bucket];
   const championship = CHAMPIONSHIP_TITLES[bucket];
   let sc = 0;
@@ -33,31 +34,21 @@ export function honorScoreFor({ bucket, honors = [], position, intlCount = 0, fr
   let aceN = 0;
   let king = 0;
 
+  for(const row of consumerTreatmentView(honors,'hof',{league:bucket,state:awardState})){
+    if(row.value==='ALL_STAR'){sc+=position==='P'?70:40;continue;}
+    if(typeof row.value==='object'){
+      sc+=row.value.sc;mvp+=row.value.mvp;aceN+=row.value.aceN;king+=row.value.king;continue;
+    }
+    sc+=row.value;
+    if(row.value===420)mvp++;
+    else if(row.value===460)aceN++;
+    else if([160,220,300].includes(row.value))king++;
+  }
+
   honors.forEach(honor => {
     if (honor.includes(championship)) {
       sc += 90;
       return;
-    }
-    if (!honor.includes(league)) return;
-    if (honor.includes('年間MVP')) {
-      sc += 420;
-      mvp++;
-    } else if (honor.includes('最優秀投手賞')) {
-      sc += 460;
-      aceN++;
-    } else if (honor.includes('新人王')) {
-      sc += 140;
-    } else if (honor.includes('ゴールデングラブ賞')) {
-      sc += 300;
-      king++;
-    } else if (honor.includes('年間最優秀守備選手')) {
-      sc += 220;
-      king++;
-    } else if (DEPARTMENT_TITLES.some(title => honor.endsWith(title))) {
-      sc += 160;
-      king++;
-    } else if (honor.includes('オールスターゲーム')) {
-      sc += position === 'P' ? 70 : 40;
     }
   });
 

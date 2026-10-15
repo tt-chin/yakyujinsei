@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import * as transactions from '../docs/src/engine/award-transaction-policy.js';
+import {hasCurrentAwardEffect} from '../docs/src/engine/award-consumer-policy.js';
+import {getAwardDefinition} from '../docs/src/engine/award-identity-policy.js';
 import {execFileSync} from 'node:child_process';
 import * as policy from '../docs/src/engine/trait-policy.js';
 import {eventOdds,eventCounters,eventTraitUnlocks} from '../docs/src/engine/event-policy.js';
@@ -10,7 +12,7 @@ import {EVENT_CATALOG} from '../docs/src/data/event-cards-jp.js';
 import {JP_DATA} from '../docs/src/data/jp-data.js';
 
 assert.equal(Object.keys(policy.TRAIT_LABELS).length,38);
-assert.deepEqual(policy.DEFERRED_TRAITS,['championmaker','pitcherTC','nitenichi']);
+assert.deepEqual(policy.DEFERRED_TRAITS,['championmaker','nitenichi'],'G7 implements the existing pitcherTC definition');
 assert.equal(JP_DATA.teams.find(t=>t.teamId==='NPB_CL_HAN').name,'阪神ストライプス');
 const labelState={mrTeamName:'阪神ストライプス',legendLeague:'NPB',rainbowLg:'MLB',tripleCrownHistory:{hitterTC:[{league:'NPB'},{league:'NPB'},{league:'KBO'}]}};
 assert.equal(policy.traitLabel('mrteam',labelState,()=> 'ストライプス'),'ストライプスミスター');
@@ -103,12 +105,17 @@ const oldGame=execFileSync('git',['show','9fcb24a:docs/src/engine/game.js'],{enc
 const awards=source=>source.slice(source.indexOf('function awards('),source.indexOf('function maybeIntl('));
 function journalFixture(ctx,chances,state){
  Object.assign(state,{seed:'trait-award-fixture',pool:0,removed:[],rngState:0});
- Object.assign(ctx,transactions,{structuredClone,teamNick:x=>x,traitPresentation:new WeakMap(),R:()=>{state.rngState++;return .9999999999;},
+ Object.assign(ctx,transactions,{SEED:state.seed,getAwardDefinition,structuredClone,hasCurrentAwardEffect,teamNick:x=>x,traitPresentation:new WeakMap(),R:()=>{state.rngState++;return .9999999999;},
  captureAwardSlot:(...args)=>{chances.push(args[2]);return transactions.captureAwardSlot(...args);}});
 }
 function historicalResult(state,ctx){
  if(!state.awardDecisions)return state;
- for(const d of state.awardDecisions){assert(transactions.isCompletedAwardDecision(d,state));assert.equal(d.year,state.year);assert.equal(d.decisionStatus,'DECIDED');assert.equal(d.awarded,d.pPercent===100);}
+ for(const d of state.awardDecisions){
+  assert(transactions.isCompletedAwardDecision(d,state));assert.equal(d.year,state.year);assert.equal(d.decisionStatus,'DECIDED');
+  const guaranteed=d.awardId==='MVP'&&d.sources.includes('HITTER_TRIPLE_CROWN_GUARANTEE');
+  if(guaranteed)for(const id of ['BATTING_AVG','BATTING_HR','BATTING_RBI'])assert(state.awardDecisions.some(source=>source.awardId===id&&source.awarded&&source.year===d.year&&source.leagueKey===d.leagueKey),'guarantee comes from actual same-context native winners');
+  assert.equal(d.awarded,d.pPercent===100||guaranteed);
+ }
  const before=structuredClone(state),calls=state.rngState;
  vm.runInContext("awards('"+(state.lv==='MLB'?'MLB':state.lv.replace(/1$/,''))+"',"+JSON.stringify(state.awardDecisions[0].metrics)+")",ctx);
  assert.deepEqual(state,before,'same-version complete S including Decision history unchanged on reentry');assert.equal(state.rngState,calls);

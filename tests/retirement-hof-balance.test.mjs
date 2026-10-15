@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import {buildFixedCases,buildSpecialCases,measure,createProductionHarness,leagues,labels,GAME_SOURCE} from './retirement-hof-test-support.mjs';
 import {honorScoreFor} from '../docs/src/engine/hall-of-fame-policy.js';
+import {execFileSync} from 'node:child_process';
+const aHonorSource=execFileSync('git',['show','efd4710c4c5c366ff3aba69c59180031c82ff18a:docs/src/engine/hall-of-fame-policy.js'],{encoding:'utf8'});
+const {honorScoreFor:aHonorScoreFor}=await import('data:text/javascript;base64,'+Buffer.from(aHonorSource).toString('base64'));
 const cases=buildFixedCases();assert.equal(cases.length,160);let assertions=0;
 for(const c of cases){const r=measure(c),s=c.stats;assert.ok(s.W+s.L+s.SV+s.HLD<=s.G);if(c.pos!=='P')assert.ok(s.HR<=s.H&&s.H<=s.AB&&s.AB+s.BB===s.PA);assert.equal(r.base,Object.values(r.components).reduce((a,b)=>a+b,0));assert.equal(r.score,Math.round(r.raw));assert.equal(r.tier,r.pureTier);assert.equal(r.inducted,r.hofInfo.length>0);if(r.inducted)assert.ok(Number(r.hofInfo[0].pct)>=75);assert.deepEqual(measure(c),r,'fixed seed narrative replay');assertions++;}
 const special=buildSpecialCases();assert.equal(special.length,20);
@@ -10,7 +13,10 @@ for(const league of leagues){const base={id:'boundary-'+league,seed:'boundary',l
  for(let i=0;i<4;i++)for(const delta of [-1,0,1]){const result=measure({...base,stats:{...blank(),H:thresholds[i]+delta}});assert.equal(result.pureTier,delta<0?i+1:i);assertions++;}
  for(const [award,expected] of [['年間MVP',1],['最優秀投手賞',1],['首位打者',2],['ゴールデングラブ賞',2]]){const r=measure({...base,honors:['2035 '+labels[league]+award]});assert.equal(r.pureTier,4);assert.equal(r.tier,expected);assert.equal(r.candidate,expected===1);assert.equal(r.inducted,false);assertions++;}
  const franchise=measure({...base,franchise:true});assert.equal(franchise.honor.sc,200);assert.equal(measure({...base,intlCount:2,honors:['2035 ワールド・ベースボール・クラシック優勝']}).honor.sc,league==='NPB'?360:0);
- const duplicate='2035 '+labels[league]+'年間MVP';assert.equal(honorScoreFor({bucket:league,honors:[duplicate,duplicate],position:'IF'}).sc,840,'characterize duplicate input, do not silently deduplicate');
+ const duplicate='2035 '+labels[league]+'年間MVP',duplicateInput={bucket:league,honors:[duplicate,duplicate],position:'IF'};
+ assert.equal(aHonorScoreFor(duplicateInput).sc,840,'preserve A duplicate-input characterization');
+ assert.equal(honorScoreFor(duplicateInput).sc,420,'D2 AF07/AF08: same-year/league/ID counted once in derived view');
+ assert.deepEqual(duplicateInput.honors,[duplicate,duplicate],'raw historical honors never rewritten');
  const rounded=measure({...base,stats:{...blank(),H:thresholds[0]-1,SB:1}});assert.equal(rounded.score,thresholds[0]);assert.equal(rounded.tier,1,'threshold evaluated before rounding');assertions+=4;
 }
 const noHold={id:'hold',league:'NPB',pos:'P',stats:{...blank(),G:500,IP:500,SO:500,W:20,HLD:0}};assert.equal(measure(noHold).base,measure({...noHold,stats:{...noHold.stats,HLD:300,ER:1,L:150}}).base,'HLD/ERA/L not in current score');assertions++;

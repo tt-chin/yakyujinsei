@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {historicalCareer} from '../tools/development-a/historical-comparison.mjs';
+import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';

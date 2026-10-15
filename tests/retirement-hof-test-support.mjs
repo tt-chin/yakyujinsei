@@ -2,6 +2,7 @@
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {honorScoreFor} from '../docs/src/engine/hall-of-fame-policy.js';
+import {hasHistoricalDefenseAward} from '../docs/src/engine/award-consumer-policy.js';
 export const GAME_SOURCE=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 export const leagues=['CPBL','KBO','NPB','MLB'];
 export const firstLevels={CPBL:'CPBL1',KBO:'KBO1',NPB:'NPB1',MLB:'MLB'};
@@ -13,7 +14,7 @@ export function productionFunction(name,source=GAME_SOURCE){
 }
 function literal(name){return GAME_SOURCE.match(new RegExp('const '+name+'=(\\{[^;]+\\});'))?.[0]||(()=>{throw Error('Missing '+name);})();}
 export function createProductionHarness(state,seed='hof-fixed',retirementSource=GAME_SOURCE){
- const cards=[],context=vm.createContext({S:structuredClone(state),TextEncoder,honorScoreFor,window:{TEAM_MASTER:{}},card:(...args)=>cards.push(args)});
+ const cards=[],context=vm.createContext({S:structuredClone(state),TextEncoder,honorScoreFor,hasHistoricalDefenseAward,window:{TEAM_MASTER:{}},card:(...args)=>cards.push(args)});
  const declarations=literal('TIER_TH')+'\n'+literal('LG_N')+'\n'+literal('DPN')+'\nconst LV='+GAME_SOURCE.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';\n'+GAME_SOURCE.match(/Object.assign\(TIER_TH,\{[^\n]+\}\)/)[0]+';\n'+GAME_SOURCE.match(/Object.assign\(LG_N,\{[^\n]+\}\)/)[0]+';';
  const functions=['careerScore','capTeam','defShare','posLegendPhrase','honorScore','tierOf','retireScene','blankStat','addStatTotal','accStat','fnv1a32'].map(name=>productionFunction(name,name==='retireScene'?retirementSource:GAME_SOURCE)).join('\n');
  const rng=`let _s=0,seedInit,R;${GAME_SOURCE.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}\n${GAME_SOURCE.match(/R = function\(\)\{[^\n]+/)[0]}\nlet calls=0;const nativeR=R;R=()=>{calls++;return nativeR();};const ri=(a,b)=>a+Math.floor(R()*(b-a+1));`;

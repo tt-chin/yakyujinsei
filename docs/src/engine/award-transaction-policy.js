@@ -1,4 +1,6 @@
 // AF04/05: same-page, same-state transactions. No RNG rollback or persistent storage.
+import {pitcherAwardCandidate} from './pitcher-award-policy.js';
+import {decideIndependentAward} from './award-rng-policy.js';
 const states=new WeakMap(),settlements=new WeakMap(),owned=new WeakMap(),completed=new WeakMap();
 const copy=v=>v===undefined?undefined:structuredClone(v);
 const equal=(a,b)=>{
@@ -10,7 +12,7 @@ const equal=(a,b)=>{
 const error=code=>Object.assign(new Error(code),{code});
 // Evidence of an existing personal-award history is NOT evidence of an unrun draw.
 // Exact current producer strings only; team/international honors are out of scope.
-const historicalPersonal=/^(\d{4}) (?:NPB|KBO|台湾プロ野球|メジャーリーグ)(?:年間MVP|新人王|最優秀投手賞|最多セーブ|最優秀中継ぎ|最多奪三振|首位打者|本塁打王|盗塁王|打点王|最高出塁率|ゴールデングラブ賞|年間最優秀守備選手|打撃三冠王|オールスターゲーム(?:\(ファン投票選出\))?)$/;
+const historicalPersonal=/^(\d{4}) (?:NPB|KBO|台湾プロ野球|メジャーリーグ)(?:年間MVP|新人王|最優秀投手賞|最多セーブ|最優秀中継ぎ|最多奪三振|最多勝利投手賞|最優秀防御率投手賞|最多三振奪取投手賞|勝率第一位投手賞|最多セーブ投手賞|最優秀中継ぎ投手賞|投手三冠王|沢村賞|首位打者|本塁打王|盗塁王|打点王|最高出塁率|ゴールデングラブ賞|年間最優秀守備選手|打撃三冠王|オールスターゲーム(?:\(ファン投票選出\))?)$/;
 const data=token=>{const d=owned.get(token);if(!d)throw error('INVALID_AWARD_TRANSACTION');return d;};
 const currentData=token=>{const d=data(token);if(d.state.year!==d.year||d.state.seed!==d.seed)throw error('STALE_AWARD_TRANSACTION');return d;};
 const parent=(state,path)=>{
@@ -21,8 +23,8 @@ const parent=(state,path)=>{
   if(!desc&&!Object.isExtensible(p))throw error('INVALID_EFFECT_PROPERTY');
   return {p,k,present:!!desc,value:desc?.value};
 };
-const fullKey=(seed,year,league,id,rule)=>{
-  const bytes=[];for(const x of ['legacy-award-v1',seed,String(year),league,id,rule]){const b=new TextEncoder().encode(x),n=b.length;bytes.push(n>>>24&255,n>>>16&255,n>>>8&255,n&255,...b);}
+const fullKey=(seed,year,league,id,rule,domain='legacy-award-v1')=>{
+  const bytes=[];for(const x of [domain,seed,String(year),league,id,rule]){const b=new TextEncoder().encode(x),n=b.length;bytes.push(n>>>24&255,n>>>16&255,n>>>8&255,n&255,...b);}
   return bytes.map(b=>b.toString(16).padStart(2,'0')).join('');
 };
 // Receipt-only annual state transaction. It has no authority to fabricate Decisions.
@@ -44,7 +46,7 @@ export function annualAwardTransaction(state,{league,level,role,metrics}){
   if(state.awardDecisions?.some(d=>d.year===state.year&&d.leagueKey===league))throw error('UNKNOWN_HISTORY');
   if(state.honors?.some(h=>typeof h==='string'&&Number(h.match(historicalPersonal)?.[1])===state.year))throw error('UNKNOWN_HISTORY');
   token=Object.freeze({schemaVersion:1,year:state.year,leagueKey:league});
-  owned.set(token,{state,seed:state.seed,year:state.year,league,level,role,metrics:copy(metrics),slots:new Map(),receipts:new Map(),plan:null,phase:'AWARD_PREPARED'});
+  owned.set(token,{state,seed:state.seed,year:state.year,league,level,role,pos:state.pos,metrics:copy(metrics),slots:new Map(),receipts:new Map(),plan:null,phase:'AWARD_PREPARED'});
   years.set(key,token);return token;
 }
 export function preallocateAwardSlots(token,ids){const d=currentData(token);for(const id of ids)if(!d.slots.has(id))d.slots.set(id,{slotId:id,status:'PREPARED',eligible:false,pPercent:null,rngBefore:null,u:null,rngAfter:null,awarded:false});}
@@ -85,16 +87,66 @@ export function commitAwardReceipt(token,id,afterWrite){
 }
 export function awardPlan(token,create){const d=currentData(token);if(!d.plan)d.plan=create();return d.plan;}
 export function awardInputs(token,create){const d=currentData(token);if(!d.inputs)d.inputs=copy(create());return copy(d.inputs);}
+// Product numeric producers run only after the original slots. Callers cannot
+// submit an arbitrary awarded:true payload or historical honor as a P07 source.
+export function prepareD2AwardDecisions(token,initializedSeed,afterRecorded){
+  const d=currentData(token);
+  if(initializedSeed!==d.seed)throw error('INITIALIZED_SEED_CONFLICT');
+  if(d.d2)return copy(d.d2);
+  if(d.decisions)throw error('AWARD_PLAN_ALREADY_RECORDED');
+  if([...d.slots.values()].some(s=>s.status==='AMBIGUOUS'))throw error('AMBIGUOUS_RNG');
+  const decisions=[];
+  if(d.pos==='P')for(const awardId of ['PITCH_WINS','PITCH_WIN_PCT','PITCH_SAWAMURA']){
+    const candidate=pitcherAwardCandidate(awardId,{league:d.league,level:d.level,role:d.role,pos:d.pos,stats:d.metrics});
+    const draw=decideIndependentAward({seed:d.seed,year:d.year,league:d.league,awardId,ruleId:candidate.ruleId},candidate.pPercent,initializedSeed);
+    decisions.push(Object.freeze({schemaVersion:1,keySchemaVersion:1,year:d.year,leagueKey:d.league,level:d.level,role:d.role,
+      ...copy(candidate),...draw,decisionKey:draw.drawKey,metrics:copy(d.metrics),decisionStatus:'DECIDED',sources:[draw.drawSource]}));
+  }
+  const won=id=>d.slots.get(id)?.status==='RECORDED'&&d.slots.get(id).awarded;
+  const triple=d.pos==='P'&&decisions.some(x=>x.awardId==='PITCH_WINS'&&x.awarded)&&won('LEGACY_BEST_PITCHER')&&won('PITCH_STRIKEOUTS');
+  if(triple){
+    decisions.push(Object.freeze({schemaVersion:1,keySchemaVersion:1,year:d.year,leagueKey:d.league,level:d.level,role:d.role,
+      awardId:'PITCH_TRIPLE_CROWN',ruleId:'p07-derived-v1',decisionKey:fullKey(d.seed,d.year,d.league,'PITCH_TRIPLE_CROWN','p07-derived-v1','derived-award-v1'),
+      eligibility:true,metrics:copy(d.metrics),pPercent:100,u:null,hash32:null,drawSource:'DERIVED',awarded:true,
+      reasonCodes:['SAME_YEAR_LEAGUE_ACTUAL_THREE_AWARDS'],decisionStatus:'DECIDED',sources:['PITCH_WINS','PITCH_ERA','PITCH_STRIKEOUTS'],
+      sourceDecisionKeys:[decisions.find(x=>x.awardId==='PITCH_WINS').decisionKey,
+        fullKey(d.seed,d.year,d.league,'LEGACY_BEST_PITCHER','legacy-v1'),fullKey(d.seed,d.year,d.league,'PITCH_STRIKEOUTS','legacy-v1')]}));
+  }
+  const hitterTriple=d.pos!=='P'&&['BATTING_AVG','BATTING_HR','BATTING_RBI'].every(won);
+  d.d2={decisions,triple,hitterTriple};
+  if(afterRecorded)afterRecorded(copy(d.d2));
+  return copy(d.d2);
+}
 export function recordAwardDecisions(token){
   const d=currentData(token);if(!d.league)throw error('NOT_AN_AWARD_TRANSACTION');
   if(d.decisions)return copy(d.decisions);
   for(const slot of d.slots.values())if(slot.status==='PREPARED')slot.status='SKIPPED';
   if([...d.slots.values()].some(s=>s.status==='AMBIGUOUS'))throw error('AMBIGUOUS_RNG');
   d.decisions=[...d.slots.values()].filter(s=>s.status==='RECORDED').map(s=>Object.freeze({schemaVersion:1,keySchemaVersion:1,
-    year:d.year,leagueKey:d.league,level:d.level,role:d.role,awardId:s.slotId,ruleId:'legacy-v1',
+    year:d.year,leagueKey:d.league,level:d.level,role:d.role,awardId:d.d2&&s.slotId==='LEGACY_BEST_PITCHER'?'PITCH_ERA':s.slotId,ruleId:'legacy-v1',
     decisionKey:fullKey(d.seed,d.year,d.league,s.slotId,'legacy-v1'),legacySlotId:s.slotId,
     eligibility:true,metrics:copy(d.metrics),pPercent:s.pPercent,u:s.u,rngBefore:s.rngBefore,rngAfter:s.rngAfter,
     awarded:s.awarded,reasonCodes:['LEGACY_ELIGIBLE'],drawSource:'LEGACY_MAIN_RNG',decisionStatus:'DECIDED',sources:['LEGACY_MAIN_RNG']}));
+  if(d.d2){
+    const mvp=d.decisions.find(x=>x.awardId==='MVP');
+    if(mvp){
+      const index=d.decisions.indexOf(mvp),sources=[];
+      if(mvp.awarded)sources.push('LEGACY_DRAW');
+      if(d.d2.triple)sources.push('TRIPLE_CROWN_GUARANTEE');
+      if(d.d2.hitterTriple)sources.push('HITTER_TRIPLE_CROWN_GUARANTEE');
+      d.decisions[index]=Object.freeze({...mvp,legacyDrawAwarded:mvp.awarded,awarded:mvp.awarded||d.d2.triple||d.d2.hitterTriple,sources});
+    }
+    d.decisions.push(...d.d2.decisions);
+    if((d.d2.triple||d.d2.hitterTriple)&&!mvp){
+      const ruleId=d.d2.triple?'p07-mvp-guarantee-v1':'hitter-mvp-guarantee-v1';
+      const source=d.d2.triple?'TRIPLE_CROWN_GUARANTEE':'HITTER_TRIPLE_CROWN_GUARANTEE';
+      d.decisions.push(Object.freeze({schemaVersion:1,keySchemaVersion:1,
+      year:d.year,leagueKey:d.league,level:d.level,role:d.role,awardId:'MVP',ruleId,
+      decisionKey:fullKey(d.seed,d.year,d.league,'MVP',ruleId,'derived-award-v1'),eligibility:true,
+      metrics:copy(d.metrics),pPercent:100,u:null,hash32:null,drawSource:'DERIVED',awarded:true,
+      reasonCodes:[source],decisionStatus:'DECIDED',sources:[source]}));
+    }
+  }
   d.phase='DRAW_RECORDED';return copy(d.decisions);
 }
 export function completeAwardDecisions(token,afterHistoryWrite){

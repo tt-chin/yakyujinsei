@@ -1,9 +1,10 @@
+import {parseAwardHonor} from './award-identity-policy.js';
 // Display and deterministic trait decisions only. No RNG or persistence.
 export const TRAIT_LABELS = Object.freeze({
   favorite:'監督のお気に入り',adking:'広告王',genius:'天才',glass:'スペランカー',iron:'鉄人',scum:'クズ男',late:'大器晩成',disc:'自律の鬼',academy:'理論派',intlace:'国際大会の鬼',franchise:'フランチャイズプレーヤー',clutch:'強心臓',phoenix:'復活',combo:'小細工無用',onetool:'一芸特化',rubber:'ゴムゴムの腕',legend:'歴史に残る名選手',yips:'イップス',distract:'私生活多忙',cancer:'チームの癌',ambience:'問題児',goldcloth:'黄金のユニフォーム',thief:'給料泥棒',mrteam:'ミスター',confidante:'女友達止まり',smallschool:'弱小校の星',grinder:'頑張り屋',rainbow:'渡り鳥',taiwan:'侍ジャパンの魂',
   oldghost:'ベテランの意地',miraclegen:'奇跡の世代',strongpitch:'若き剛腕',stronghit:'若きスラッガー',championmaker:'優勝請負人',latepractice:'練習遅刻常習犯',pitcherTC:'投手三冠王',hitterTC:'打撃三冠王',nitenichi:'二天一流',
 });
-export const DEFERRED_TRAITS = Object.freeze(['championmaker','pitcherTC','nitenichi']);
+export const DEFERRED_TRAITS = Object.freeze(['championmaker','nitenichi']);
 export const TRAIT_TEXT = Object.freeze({
   intlace:'国際大会による故障リスク加算なし。大会の能力ポイントは最低2点。獲得した大会では適用されず、次回出場から有効。',
   oldghost:'35歳以上で年間MVPを獲得。翌季の衰えを半減（端数は四捨五入、最低1）。生涯一度だけ。',
@@ -12,6 +13,7 @@ export const TRAIT_TEXT = Object.freeze({
   stronghit:'24歳未満でNPBまたはメジャーリーグの年間MVPを獲得した野手。記念称号です。',
   latepractice:'訓練イベントの安全選択で累計20回失敗。以後、全イベントの安全選択の成功率が5ポイント低下。',
   hitterTC:'同一年度・同一リーグで首位打者、本塁打王、打点王を獲得。年間MVPが確定します。',
+  pitcherTC:'同一年度・同一リーグで最多勝利、最優秀防御率、最多三振奪取の各賞を獲得。年間MVPが確定します。',
   goldcloth:'阪神ストライプス一軍で通算10年。能力への追加効果はありません。',
   confidante:'交際成立3回以上。本人・元交際相手との子どもがなく、現在は未婚。記念称号です。',
 });
@@ -54,7 +56,9 @@ export function declineForSeason(s,base) {
 }
 export function awardTraitUnlocks(s,bucket,league) {
   const unlocked=[],t=s.traits,h=s.honors,prefix=`${s.year} ${league}`;
-  const three=s.pos!=='P'&&['首位打者','本塁打王','打点王'].every(title=>h.includes(prefix+title));
+  // Keep the existing exact canonical-name requirements, not every identity alias.
+  const canonical=(name,id)=>h.some(text=>text===prefix+name&&parseAwardHonor(text).awardId===id);
+  const three=s.pos!=='P'&&[['首位打者','BATTING_AVG'],['本塁打王','BATTING_HR'],['打点王','BATTING_RBI']].every(([name,id])=>canonical(name,id));
   if(three){
     s.tripleCrownHistory??={};s.tripleCrownHistory.hitterTC??=[];
     const history=s.tripleCrownHistory.hitterTC;
@@ -64,7 +68,7 @@ export function awardTraitUnlocks(s,bucket,league) {
     if(!h.includes(prefix+'年間MVP'))h.push(prefix+'年間MVP');
     if(!t.hitterTC||newLeague){t.hitterTC=true;unlocked.push('hitterTC');}
   }
-  if(h.includes(prefix+'年間MVP')){
+  if(canonical('年間MVP','MVP')){
     if(s.age>=35&&!t.oldghost&&!s.oldGhostUsed){t.oldghost=true;s.oldGhostPending=true;unlocked.push('oldghost');}
     const young=s.pos==='P'?'strongpitch':'stronghit';
     if(s.age<24&&['NPB','MLB'].includes(bucket)&&!t[young]){t[young]=true;unlocked.push(young);}

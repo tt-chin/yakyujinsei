@@ -119,7 +119,7 @@ check('pure queries leave frozen complete state/honors/RNG fields unchanged', ()
   for (let i = 0; i < 100; i++) buildAwardIdentityView(state.honors, {level: state.lv});
   assert.deepEqual(state, before);
 });
-check('frozen B1 product-isolation evidence retained; A does not wire identity consumers', () => {
+check('frozen B1/A product-isolation evidence retained; B consumer contracts are separately tested', () => {
   const base = '287dd1a00448add8563410659170aba0d8f2f012';
   const historical = JSON.parse(fs.readFileSync('docs/reviews/development-a/before-hashes.json', 'utf8'));
   const hash = value => createHash('sha256').update(value).digest('hex');
@@ -130,14 +130,16 @@ check('frozen B1 product-isolation evidence retained; A does not wire identity c
   const files = execFileSync('git', ['ls-tree','-r','--name-only',base,'docs/src'], {encoding:'utf8'}).trim().split('\n');
   for (const file of files) {
     const old = execFileSync('git',['show',`${base}:${file}`], {maxBuffer:20e6}).toString().replaceAll('\r\n','\n');
-    const current = fs.readFileSync(file,'utf8').replaceAll('\r\n','\n');
+    const acceptedA=execFileSync('git',['show','efd4710c4c5c366ff3aba69c59180031c82ff18a:'+file],{maxBuffer:20e6}).toString().replaceAll('\r\n','\n');
     assert([hash(old), hash(old.replaceAll('\n', '\r\n'))].includes(historical[file]),
       file + ': historical B1 source unchanged (LF/CRLF only)');
     assert.equal(old.includes('award-identity-policy'), false, file + ' B1 not wired');
-    // Current A may add Journal/checkpoints, not read-only consumer identity wiring.
-    assert(!/\b(?:parseAwardHonor|buildAwardIdentityView|buildAwardIdentityEntries)\s*\(/.test(current),
-      file + ': no premature B consumer identity wiring');
-    if(!['docs/src/engine/game.js'].includes(file)) assert.equal(current, old, file + ': A scope unchanged');
+    assert(!/\b(?:parseAwardHonor|buildAwardIdentityView|buildAwardIdentityEntries)\s*\(/.test(acceptedA),
+      file + ': accepted A retained no premature B consumer identity wiring');
+    if(file!=='docs/src/engine/game.js')assert.equal(acceptedA,old,file+': accepted A scope unchanged');
+    const allowedB=new Set(['game.js','salary-evaluation-policy.js','salary-promotion-policy.js',
+      'incentive-policy.js','hall-of-fame-policy.js','trait-policy.js','award-transaction-policy.js','season-payment-policy.js']);
+    if(!allowedB.has(path.basename(file)))assert.equal(fs.readFileSync(file,'utf8').replaceAll('\r\n','\n'),acceptedA,file+': no unrelated B wiring');
   }
 });
 

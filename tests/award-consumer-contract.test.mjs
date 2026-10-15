@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {parseAwardHonor, buildAwardIdentityView, buildAwardIdentityEntries} from '../docs/src/engine/award-identity-policy.js';
 import {calculateMarketAwardAdjustment} from '../docs/src/engine/salary-evaluation-policy.js';
 import {salaryAwardBonus} from '../docs/src/engine/salary-promotion-policy.js';
@@ -54,10 +55,13 @@ check('invalid and missing values retain original values without invented identi
     assert.notEqual(row.status,'RECOGNIZED');
   }
 });
-check('native consumer source files unchanged from pre-A worktree',()=>{
+check('accepted A consumer-isolation source evidence preserved; B wiring tested separately',()=>{
   const before=JSON.parse(fs.readFileSync('docs/reviews/development-a/before-hashes.json','utf8'));
   for(const file of ['salary-evaluation-policy','salary-promotion-policy','incentive-policy','hall-of-fame-policy','trait-policy']){
-    const path='docs/src/engine/'+file+'.js';assert.equal(createHash('sha256').update(fs.readFileSync(path)).digest('hex'),before[path]);
+    const path='docs/src/engine/'+file+'.js';
+    const accepted=execFileSync('git',['show','efd4710c4c5c366ff3aba69c59180031c82ff18a:'+path]);
+    const hash=x=>createHash('sha256').update(x).digest('hex');
+    assert([hash(accepted),hash(accepted.toString().replaceAll('\n','\r\n'))].includes(before[path]));
   }
 });
 console.log(JSON.stringify({evidence:'NATIVE_FUNCTION_FIXTURE + STATIC; not wired Runtime E2E',PASS:passed,FAIL:0}));

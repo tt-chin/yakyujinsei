@@ -1,5 +1,7 @@
 import { VERSION } from '../config.js';
-import {annualAwardTransaction,annualStateTransaction,preallocateAwardSlots,captureAwardSlot,prepareAwardReceipt,commitAwardReceipt,awardPlan,awardInputs,recordAwardDecisions,completeAwardDecisions} from './award-transaction-policy.js';
+import {hasCurrentAwardEffect,hasHistoricalDefenseAward} from './award-consumer-policy.js';
+import {annualAwardTransaction,annualStateTransaction,preallocateAwardSlots,captureAwardSlot,prepareAwardReceipt,commitAwardReceipt,awardPlan,awardInputs,prepareD2AwardDecisions,recordAwardDecisions,completeAwardDecisions} from './award-transaction-policy.js';
+import {getAwardDefinition} from './award-identity-policy.js';
 import {prepareSeasonPayment} from './season-payment-policy.js';
 import { highSchoolTier, schoolCompetitionBonus, installBirthHighSchool, smallSchoolEligibility } from './school-policy.js';
 import { TRAIT_LABELS, TRAIT_TEXT, traitLabel, removedTraitLabel, confidanteEligible, recordFirstTeamSeason, goldclothEligible, highSchoolChampionCount, declineForSeason, awardTraitUnlocks } from './trait-policy.js';
@@ -1464,7 +1466,7 @@ function collectLegacyAwardPlan(bucket,st,tx,realState){
 
   /* 3. 投手個人タイトル。 */
   if(S.pos==='P'){
-    const aw='最優秀投手賞';
+    const aw='最優秀防御率投手賞';
     if(isSP() && st.era <= th.era[0] && st.IP >= th.g){ 
       const god = st.era <= th.era[1] && st.IP >= 150;
       const p = god ? 100 : clamp(30 + Math.round((th.era[0] - st.era) * 35 + (st.IP - th.g) * 0.4), 30, 95);
@@ -1473,17 +1475,17 @@ function collectLegacyAwardPlan(bucket,st,tx,realState){
     if(S.role==='CL' && st.SV >= th.sv[0]){
       const god = st.SV >= th.sv[1];
       const p = god ? 100 : clamp(28 + (st.SV - th.sv[0]) * 5, 28, 95);
-      if(draw('PITCH_SAVES',p)) h.push(`${y} ${lgN}最多セーブ`);
+      if(draw('PITCH_SAVES',p)) h.push(`${y} ${lgN}最多セーブ投手賞`);
     }
     if(S.role==='MR' && (st.HLD||0) >= th.hld[0]){
       const god = (st.HLD||0) >= th.hld[1];
       const p = god ? 100 : clamp(28 + ((st.HLD||0) - th.hld[0]) * 4, 28, 95);
-      if(draw('PITCH_RELIEF',p)) h.push(`${y} ${lgN}最優秀中継ぎ`);
+      if(draw('PITCH_RELIEF',p)) h.push(`${y} ${lgN}最優秀中継ぎ投手賞`);
     }
     if(st.SO >= th.so[0]){
       const god = st.SO >= th.so[1];
       const p = god ? 100 : clamp(25 + Math.round((st.SO - th.so[0]) * 1.2), 25, 95);
-      if(draw('PITCH_STRIKEOUTS',p)) h.push(`${y} ${lgN}最多奪三振`);
+      if(draw('PITCH_STRIKEOUTS',p)) h.push(`${y} ${lgN}最多三振奪取投手賞`);
     }
   }
   /* 4. 野手個人タイトル。 */
@@ -1539,14 +1541,29 @@ function collectLegacyAwardPlan(bucket,st,tx,realState){
     if(draw('MVP',pMVP)) h.push(`${y} ${lgN}年間MVP`);
   }
 
-  // Preserve the original MVP draw above, even when a batting triple crown guarantees MVP.
+  // All original qualified slots have already consumed precisely their native draws.
+  // New awards are derived from this transaction's frozen input, never old strings.
+  const d2=prepareD2AwardDecisions(tx,SEED);
+  for(const decision of d2.decisions)if(decision.awarded){
+    const text=`${y} ${lgN}${getAwardDefinition(decision.awardId).displayName}`;
+    if(!h.includes(text))h.push(text);
+  }
+  if(d2.triple){
+    S.tripleCrownHistory??={};S.tripleCrownHistory.pitcherTC??=[];
+    const history=S.tripleCrownHistory.pitcherTC,newLeague=!history.some(r=>r.bucket===bucket);
+    if(!history.some(r=>r.year===y&&r.bucket===bucket))history.push({year:y,bucket,league:lgN});
+    if(!h.includes(`${y} ${lgN}年間MVP`))h.push(`${y} ${lgN}年間MVP`);
+    if(!S.traits.pitcherTC||newLeague){S.traits.pitcherTC=true;card('gold','隠し特性解放：'+displayTrait('pitcherTC'),TRAIT_TEXT.pitcherTC);}
+  }
+  const sawamura=d2.decisions.some(d=>d.awardId==='PITCH_SAWAMURA'&&d.awarded);
+  // Preserve the original MVP draw above, even when either triple crown guarantees MVP.
   for(const key of awardTraitUnlocks(S,bucket,lgN))card('gold','隠し特性解放：'+displayTrait(key),TRAIT_TEXT[key]);
   /* 6. 後続の受賞で特性を発動作。 */
   const added=h.filter(x=>x.startsWith(String(y)));
   if(added.length){ card('gold','年間賞',added.map(x=>x.slice(5)).join('｜'));
     if(S.traits.yips){ removeTrait('yips','イップス'); card('good','イップス克服','大舞台で結果を残したことで迷いが消え、<b class="hl">イップスを克服した</b>。'); }
     // Exact additions only: preserve existing legacy/out-of-scope effects without guessing new award names.
-    if(S.traits.glass&&!S.traits.phoenix){ const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x)||['台湾プロ野球','KBO','NPB','メジャーリーグ'].some(league=>['最優秀投手賞','首位打者','本塁打王'].some(title=>x===`${y} ${league}${title}`)));
+    if(S.traits.glass&&!S.traits.phoenix){ const big=hasCurrentAwardEffect(S,'phoenix',bucket)||sawamura;
       if(big){ S.traits.phoenix=true; removeTrait('glass','スペランカー');
         S.pool+=8;
         card('gold','隠し特性解放：復活','大けがを乗り越え、以前より強くなって帰ってきた――<b class="hl">スペランカーのペナルティを解除。故障率が通常に戻り、大量の能力ポイントを獲得</b>。'); } }
@@ -1690,7 +1707,7 @@ function movement(){
   const perf=(S.seasonFactor>=0.5)?(S.lastD||0):null; /* 傷缺季不確認成績。 */
   /* 受賞による降格保護：当該シーズンに個人タイトルを獲得(MVP/王/最優秀投手、オールスターを除く)→降格・戦力外にしない。 */
   // Separate exact protection set; Gold Glove is not a phoenix title. Old current-year cross-league scope remains.
-  const wonAward = S.honors.some(x=>x.startsWith(String(S.year))&&/王|MVP|賽揚|澤村|最佳投手|金手套/.test(x)&&!/明星賽/.test(x))||S.honors.some(x=>['台湾プロ野球','KBO','NPB','メジャーリーグ'].some(league=>['最優秀投手賞','首位打者','ゴールデングラブ賞'].some(title=>x===`${S.year} ${league}${title}`)));
+  const wonAward = hasCurrentAwardEffect(S,'demotion',S.org);
   /* Fix C：実成績による降格保護。当該シーズンの実成績を使い、能力評価dは参照しない、好成績なら降格させない。 */
   let goodReal=false;
   { const st=S.lastSt;
@@ -2132,7 +2149,7 @@ function defShare(bucket){ /* 守備貢献占キャリア総価値値割合 0~1�
 function posLegendPhrase(bucket){ /* に応じて守備割合とタイトル決定守備位置敘述。 */
   const share=defShare(bucket), st=S.stats[bucket];
   const dp=S.dpos||(S.pos==='C'?'C':null);
-  const hasGlove=S.honors.some(h=>h.includes('ゴールデングラブ賞')||h.includes('年間最優秀守備選手'));
+  const hasGlove=hasHistoricalDefenseAward(S.honors);
   if(S.pos==='P'||!dp||dp==='DH')return '';
   const posN=DPN[dp]||'';
   if(share>=0.34||(hasGlove&&share>=0.22))return `、${{SS:'史上最高の遊撃手の一人',CF:'守備範囲でリーグを震撼させた中堅手',C:'捕手守備の化身',_:'守備のレジェンド'}[dp]||('球界屈指の'+posN)}として`;
@@ -2140,7 +2157,7 @@ function posLegendPhrase(bucket){ /* に応じて守備割合とタイトル決�
   return '';
 }
 function honorScore(bucket){
-  return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise});
+  return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S});
 }
 function tierOf(bucket){
   const st=S.stats[bucket]; if(!st)return null;
@@ -2905,13 +2922,13 @@ $('btn-start').onclick=()=>{
     commitAwardReceipt(tx,'salary-evaluation');
   }
   recordSalaryEvaluation=function(st){
-    const common={year:S.year,age:S.age,level:S.lv,org:S.org,role:S.role,position:S.dpos,playerType:S.pos,baseD:st.baseD,stats:st,gamesInLevel:LV[S.lv]?.g,baseline:MARKET_BASELINES[S.lv],honors:S.honors};
+    const common={year:S.year,age:S.age,level:S.lv,org:S.org,role:S.role,position:S.dpos,playerType:S.pos,baseD:st.baseD,stats:st,gamesInLevel:LV[S.lv]?.g,baseline:MARKET_BASELINES[S.lv],honors:S.honors,awardState:S};
     if(hasActualPerformanceData(S.pos,st)){
       const stats=S.pos==='P'?st:{...st,SLG:slgOf(st)};
       saveSalaryEvaluation(buildSalaryEvaluationEntry({...common,stats}));
       return;
     }
-    const payD=salaryEvaluationD(Number.isFinite(st.baseD)?st.baseD:(S.lastD||0),S.honors,S.year);
+    const payD=salaryEvaluationD(Number.isFinite(st.baseD)?st.baseD:(S.lastD||0),S.honors,S.year,S);
     saveSalaryEvaluation({schemaVersion:1,year:S.year,age:S.age,level:S.lv,org:S.org,role:S.role||null,position:S.dpos||null,baseD:payD,performanceAdjustment:0,workloadAdjustment:0,awardAdjustment:0,payD,sampleStatus:'INSUFFICIENT',reasons:['LEGACY_RATING_FALLBACK'],source:'LEGACY_RATING_FALLBACK',actualPerformanceAvailable:false,workloadAvailable:false,fallbackReason:'PERFORMANCE_DATA_NOT_AVAILABLE'});
   };
   recordIndependentSalaryEvaluation=function(results){

@@ -8,7 +8,7 @@ export function prepareSeasonPayment(state){
   if(state.lastSalaryPaidYear===state.year||contract.annualSchedule.some(row=>row.year===state.year&&row.paid))throw new Error('HISTORICAL_READ_ONLY');
   const payment=markSalaryPaid(contract,state.year),paid=payment.amount;
   const projection={careerEarnings:state.careerEarnings+paid,careerIncentive:state.careerIncentive,yearlyIncentivePaid:state.yearlyIncentivePaid};
-  const incentivePayment=applyIncentivePayment(projection,{contract:payment.contract,evaluation:state.lastSalaryEvaluation,honors:state.honors,year:state.year});
+  const incentivePayment=applyIncentivePayment(projection,{contract:payment.contract,evaluation:state.lastSalaryEvaluation,honors:state.honors,year:state.year,awardState:state});
   const values={ct:payment.contract,currentSalary:payment.contract.annualSalary||paid,
     careerBaseSalary:state.careerBaseSalary+paid,careerEarnings:incentivePayment.state.careerEarnings,lastSalaryPaidYear:state.year};
   if(incentivePayment.paid){values.careerIncentive=incentivePayment.state.careerIncentive;values.yearlyIncentivePaid=incentivePayment.state.yearlyIncentivePaid;}

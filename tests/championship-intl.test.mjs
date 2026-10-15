@@ -74,6 +74,20 @@ test('out-of-scope data and rules unchanged except approved KBO floor fix',()=>{
       assert.equal(current.split(approved).length,2,'exactly one approved KBO fix');
       current=current.replace(approved,'  let salary=Math.min(round(annualSalary),floor(available/(1+incentiveRate)));');
     }
+    if(file.endsWith('/incentive-policy.js')){
+      // D2 replaces only personal-award recognition. Keep the old source as an
+      // explicit historical oracle and prove payment/terms/rounding are unchanged.
+      const old=execFileSync('git',['show','004cd26:docs/'+file],{encoding:'utf8'}).replace(/\r\n/g,'\n');
+      const oldClassifier=old.slice(old.indexOf('const awardCode='),old.indexOf('export function evaluateIncentive'));
+      const replacements=[
+        ["import {consumerTreatmentView} from './award-consumer-policy.js';\n",''],
+        ['export function evaluateIncentive({terms,evaluation,honors=[],year,awardState}){',oldClassifier+'export function evaluateIncentive({terms,evaluation,honors=[],year}){'],
+        ["const codes=consumerTreatmentView(honors,'incentive',{year,state:awardState}).map(row=>row.value);","const codes=honors.filter(h=>String(h).startsWith(String(year)+' ')).map(awardCode).filter(Boolean);"],
+        ['export function applyIncentivePayment(state,{contract,evaluation,honors,year,awardState=state}){','export function applyIncentivePayment(state,{contract,evaluation,honors,year}){'],
+        ['evaluation,honors,year,awardState}),record=','evaluation,honors,year}),record='],
+      ];
+      for(const [from,to] of replacements){assert.equal(current.split(from).length,2,'exactly one approved Consumer seam: '+from);current=current.replace(from,to);}
+    }
     assert.equal(current,execFileSync('git',['show','004cd26:docs/'+file],{encoding:'utf8',maxBuffer:20000000}).replace(/\r\n/g,'\n'),file);
   }
 });

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {historicalCareer} from '../tools/development-a/historical-comparison.mjs';
+import {assertApprovedProducerRenameCareer} from '../tools/development-b/historical-comparison.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';
@@ -62,7 +62,7 @@ try{
     await p.close();
    }
    if(phoenixCase)e.phoenixComparison=assertApprovedPhoenixCareer(runs[0],runs[1],runs[2],runs[3],'actions');
-   else assert.deepEqual(historicalCareer(runs[1]),historicalCareer(runs[0]));
+   else e.d2ProducerRenameComparison=assertApprovedProducerRenameCareer(runs[0],runs[1]);
   });
   await h.test('fixed-career-international-coverage',{natural:true},async()=>{assert.ok(wbc>0,'natural WBC appearance required');assert.ok(p12>0,'natural Premier12 appearance required');});
  }
