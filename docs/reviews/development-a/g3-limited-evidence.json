@@ -1,0 +1,437 @@
+{
+  "head": "d2ea8a3bcf38044928aab86ae56289839c45a0e4",
+  "profiles": {
+    "native-before-fix": {
+      "directory": "test-results/development-a-g3-native-before-fix",
+      "summary": {
+        "mode": "quick",
+        "started": "2026-10-14T11:46:47.749Z",
+        "head": "d2ea8a3bcf38044928aab86ae56289839c45a0e4",
+        "branch": "dev",
+        "sourceFingerprint": "99584d88121a9a891ed47068d73fdac2a497dd15f3133f325706461e7af91627",
+        "node": "v24.15.0",
+        "platform": "win32",
+        "version": "1.12.0",
+        "baselineRef": "origin/main",
+        "results": [
+          {
+            "id": "award-journal-native.test",
+            "status": "FAIL",
+            "exitCode": 1,
+            "signal": null,
+            "seconds": 0.149,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-journal-native.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-native-before-fix\\award-journal-native.test.log",
+            "logSha256": "e82b6ceedc1da28927f246706c7242bfccfcd3643a1e58c460bf67f9860e963c",
+            "timedOut": false,
+            "historicalRefs": {
+              "d2ea8a3bcf38044928aab86ae56289839c45a0e4": "d2ea8a3bcf38044928aab86ae56289839c45a0e4"
+            }
+          }
+        ],
+        "manual": [
+          {
+            "id": "legacy-career-benchmarks",
+            "reason": "Original unflagged historical careers remain individually runnable. Routine full uses focused UI/fixture flags for six overlapping feature suites; contemporary complete-state/RNG careers run in ACT, contract, draft, display and event suites, not repeated in every old feature benchmark."
+          },
+          {
+            "id": "hof-4000-careers",
+            "reason": "Explicit opt-in research only; requires reaching all league buckets and hours/days of sampling. The current 25-seed pilot is NOT a 4,000-career generator."
+          },
+          {
+            "id": "real-devices-and-share-sheet",
+            "reason": "Physical iPhone/Android and native share permissions required; Chromium widths cannot substitute."
+          },
+          {
+            "id": "cloudflare-preview",
+            "reason": "Separate explicit --preview=<URL> E2E invocation and deployment content verification; automatic CI uses loopback, not an unverified mutable URL."
+          }
+        ],
+        "baseline": "7220ad82002801d3dea5fedae80d0fb3d7a0433f",
+        "seconds": 1.462,
+        "counts": {
+          "PASS": 0,
+          "FAIL": 1,
+          "SKIP": 0,
+          "BLOCKED": 0
+        },
+        "executed": 1,
+        "reused": 0
+      },
+      "logs": [
+        {
+          "name": "award-journal-native.test.log",
+          "sha256": "e82b6ceedc1da28927f246706c7242bfccfcd3643a1e58c460bf67f9860e963c"
+        }
+      ]
+    },
+    "native-after-fix": {
+      "directory": "test-results/development-a-g3-native-after-fix",
+      "summary": {
+        "mode": "quick",
+        "started": "2026-10-14T11:46:59.391Z",
+        "head": "d2ea8a3bcf38044928aab86ae56289839c45a0e4",
+        "branch": "dev",
+        "sourceFingerprint": "c7d3fb2f17a4ed73a4e7ffefd7e02b23539acb5a357bd78b98e333908256aff1",
+        "node": "v24.15.0",
+        "platform": "win32",
+        "version": "1.12.0",
+        "baselineRef": "origin/main",
+        "results": [
+          {
+            "id": "award-journal-native.test",
+            "status": "FAIL",
+            "exitCode": 1,
+            "signal": null,
+            "seconds": 0.173,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-journal-native.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-native-after-fix\\award-journal-native.test.log",
+            "logSha256": "557c4df9c8fb3d5a5c9d85dbdb457269df0388f477d43ab1c8be11ab99300746",
+            "timedOut": false,
+            "historicalRefs": {
+              "d2ea8a3bcf38044928aab86ae56289839c45a0e4": "d2ea8a3bcf38044928aab86ae56289839c45a0e4"
+            }
+          }
+        ],
+        "manual": [
+          {
+            "id": "legacy-career-benchmarks",
+            "reason": "Original unflagged historical careers remain individually runnable. Routine full uses focused UI/fixture flags for six overlapping feature suites; contemporary complete-state/RNG careers run in ACT, contract, draft, display and event suites, not repeated in every old feature benchmark."
+          },
+          {
+            "id": "hof-4000-careers",
+            "reason": "Explicit opt-in research only; requires reaching all league buckets and hours/days of sampling. The current 25-seed pilot is NOT a 4,000-career generator."
+          },
+          {
+            "id": "real-devices-and-share-sheet",
+            "reason": "Physical iPhone/Android and native share permissions required; Chromium widths cannot substitute."
+          },
+          {
+            "id": "cloudflare-preview",
+            "reason": "Separate explicit --preview=<URL> E2E invocation and deployment content verification; automatic CI uses loopback, not an unverified mutable URL."
+          }
+        ],
+        "baseline": "7220ad82002801d3dea5fedae80d0fb3d7a0433f",
+        "seconds": 0.829,
+        "counts": {
+          "PASS": 0,
+          "FAIL": 1,
+          "SKIP": 0,
+          "BLOCKED": 0
+        },
+        "executed": 1,
+        "reused": 0
+      },
+      "logs": [
+        {
+          "name": "award-journal-native.test.log",
+          "sha256": "557c4df9c8fb3d5a5c9d85dbdb457269df0388f477d43ab1c8be11ab99300746"
+        }
+      ]
+    },
+    "native-realm-fix": {
+      "directory": "test-results/development-a-g3-native-realm-fix",
+      "summary": {
+        "mode": "quick",
+        "started": "2026-10-14T11:47:16.243Z",
+        "head": "d2ea8a3bcf38044928aab86ae56289839c45a0e4",
+        "branch": "dev",
+        "sourceFingerprint": "0c68d61b4d7835da8249fd114c1b922a5236b7707584fac062dbd93a70bebbfb",
+        "node": "v24.15.0",
+        "platform": "win32",
+        "version": "1.12.0",
+        "baselineRef": "origin/main",
+        "results": [
+          {
+            "id": "award-journal-native.test",
+            "status": "PASS",
+            "exitCode": 0,
+            "signal": null,
+            "seconds": 0.2,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-journal-native.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-native-realm-fix\\award-journal-native.test.log",
+            "logSha256": "4c8f307af34266cd05a40143ba6856e824790abee191ba26a2e8b532b4842a74",
+            "timedOut": false,
+            "historicalRefs": {
+              "d2ea8a3bcf38044928aab86ae56289839c45a0e4": "d2ea8a3bcf38044928aab86ae56289839c45a0e4"
+            }
+          }
+        ],
+        "manual": [
+          {
+            "id": "legacy-career-benchmarks",
+            "reason": "Original unflagged historical careers remain individually runnable. Routine full uses focused UI/fixture flags for six overlapping feature suites; contemporary complete-state/RNG careers run in ACT, contract, draft, display and event suites, not repeated in every old feature benchmark."
+          },
+          {
+            "id": "hof-4000-careers",
+            "reason": "Explicit opt-in research only; requires reaching all league buckets and hours/days of sampling. The current 25-seed pilot is NOT a 4,000-career generator."
+          },
+          {
+            "id": "real-devices-and-share-sheet",
+            "reason": "Physical iPhone/Android and native share permissions required; Chromium widths cannot substitute."
+          },
+          {
+            "id": "cloudflare-preview",
+            "reason": "Separate explicit --preview=<URL> E2E invocation and deployment content verification; automatic CI uses loopback, not an unverified mutable URL."
+          }
+        ],
+        "baseline": "7220ad82002801d3dea5fedae80d0fb3d7a0433f",
+        "seconds": 0.868,
+        "counts": {
+          "PASS": 1,
+          "FAIL": 0,
+          "SKIP": 0,
+          "BLOCKED": 0
+        },
+        "executed": 1,
+        "reused": 0
+      },
+      "logs": [
+        {
+          "name": "award-journal-native.test.log",
+          "sha256": "4c8f307af34266cd05a40143ba6856e824790abee191ba26a2e8b532b4842a74"
+        }
+      ]
+    },
+    "targeted-final": {
+      "directory": "test-results/development-a-g3-targeted-final",
+      "summary": {
+        "mode": "quick",
+        "started": "2026-10-14T11:49:08.451Z",
+        "head": "d2ea8a3bcf38044928aab86ae56289839c45a0e4",
+        "branch": "dev",
+        "sourceFingerprint": "0c68d61b4d7835da8249fd114c1b922a5236b7707584fac062dbd93a70bebbfb",
+        "node": "v24.15.0",
+        "platform": "win32",
+        "version": "1.12.0",
+        "baselineRef": "origin/main",
+        "results": [
+          {
+            "id": "award-consumer-contract.test",
+            "status": "PASS",
+            "exitCode": 0,
+            "signal": null,
+            "seconds": 0.104,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-consumer-contract.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-targeted-final\\award-consumer-contract.test.log",
+            "logSha256": "d4a9f268131d5f0bce863e5280a74e354625721fef9ae49281dd4231f1325606",
+            "timedOut": false,
+            "historicalRefs": {}
+          },
+          {
+            "id": "award-identity-policy.test",
+            "status": "PASS",
+            "exitCode": 0,
+            "signal": null,
+            "seconds": 2.433,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-identity-policy.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-targeted-final\\award-identity-policy.test.log",
+            "logSha256": "7d4bbb91fe89d21d6ee40d55cc1be679083f710dff50b529befd60923ec23d3c",
+            "timedOut": false,
+            "historicalRefs": {
+              "287dd1a00448add8563410659170aba0d8f2f012": "287dd1a00448add8563410659170aba0d8f2f012"
+            }
+          },
+          {
+            "id": "award-journal-native.test",
+            "status": "PASS",
+            "exitCode": 0,
+            "signal": null,
+            "seconds": 0.198,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-journal-native.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-targeted-final\\award-journal-native.test.log",
+            "logSha256": "4c8f307af34266cd05a40143ba6856e824790abee191ba26a2e8b532b4842a74",
+            "timedOut": false,
+            "historicalRefs": {
+              "d2ea8a3bcf38044928aab86ae56289839c45a0e4": "d2ea8a3bcf38044928aab86ae56289839c45a0e4"
+            }
+          },
+          {
+            "id": "award-rng-policy.test",
+            "status": "PASS",
+            "exitCode": 0,
+            "signal": null,
+            "seconds": 0.088,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-rng-policy.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-targeted-final\\award-rng-policy.test.log",
+            "logSha256": "f7330b4266485ed292732e6938caef4c0b8139cd864454d03b6dd5b3b53bc929",
+            "timedOut": false,
+            "historicalRefs": {}
+          },
+          {
+            "id": "award-transaction-policy.test",
+            "status": "PASS",
+            "exitCode": 0,
+            "signal": null,
+            "seconds": 0.084,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-transaction-policy.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-targeted-final\\award-transaction-policy.test.log",
+            "logSha256": "c7a03e94dbaf2ab67e398a6d0e795abb41c4941ae420a9d45cf9119c8da18c93",
+            "timedOut": false,
+            "historicalRefs": {}
+          }
+        ],
+        "manual": [
+          {
+            "id": "legacy-career-benchmarks",
+            "reason": "Original unflagged historical careers remain individually runnable. Routine full uses focused UI/fixture flags for six overlapping feature suites; contemporary complete-state/RNG careers run in ACT, contract, draft, display and event suites, not repeated in every old feature benchmark."
+          },
+          {
+            "id": "hof-4000-careers",
+            "reason": "Explicit opt-in research only; requires reaching all league buckets and hours/days of sampling. The current 25-seed pilot is NOT a 4,000-career generator."
+          },
+          {
+            "id": "real-devices-and-share-sheet",
+            "reason": "Physical iPhone/Android and native share permissions required; Chromium widths cannot substitute."
+          },
+          {
+            "id": "cloudflare-preview",
+            "reason": "Separate explicit --preview=<URL> E2E invocation and deployment content verification; automatic CI uses loopback, not an unverified mutable URL."
+          }
+        ],
+        "baseline": "7220ad82002801d3dea5fedae80d0fb3d7a0433f",
+        "seconds": 3.662,
+        "counts": {
+          "PASS": 5,
+          "FAIL": 0,
+          "SKIP": 0,
+          "BLOCKED": 0
+        },
+        "executed": 5,
+        "reused": 0
+      },
+      "logs": [
+        {
+          "name": "award-consumer-contract.test.log",
+          "sha256": "d4a9f268131d5f0bce863e5280a74e354625721fef9ae49281dd4231f1325606"
+        },
+        {
+          "name": "award-identity-policy.test.log",
+          "sha256": "7d4bbb91fe89d21d6ee40d55cc1be679083f710dff50b529befd60923ec23d3c"
+        },
+        {
+          "name": "award-journal-native.test.log",
+          "sha256": "4c8f307af34266cd05a40143ba6856e824790abee191ba26a2e8b532b4842a74"
+        },
+        {
+          "name": "award-rng-policy.test.log",
+          "sha256": "f7330b4266485ed292732e6938caef4c0b8139cd864454d03b6dd5b3b53bc929"
+        },
+        {
+          "name": "award-transaction-policy.test.log",
+          "sha256": "c7a03e94dbaf2ab67e398a6d0e795abb41c4941ae420a9d45cf9119c8da18c93"
+        }
+      ]
+    },
+    "strict-history-final": {
+      "directory": "test-results/development-a-g3-strict-history-final",
+      "summary": {
+        "mode": "quick",
+        "started": "2026-10-14T11:52:40.025Z",
+        "head": "d2ea8a3bcf38044928aab86ae56289839c45a0e4",
+        "branch": "dev",
+        "sourceFingerprint": "5a5680f1447092b378a9a4002c6dd6af85efc02d364cb8c7c3e7832f97fdb6fa",
+        "node": "v24.15.0",
+        "platform": "win32",
+        "version": "1.12.0",
+        "baselineRef": "origin/main",
+        "results": [
+          {
+            "id": "award-journal-native.test",
+            "status": "PASS",
+            "exitCode": 0,
+            "signal": null,
+            "seconds": 0.215,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-journal-native.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-strict-history-final\\award-journal-native.test.log",
+            "logSha256": "4c8f307af34266cd05a40143ba6856e824790abee191ba26a2e8b532b4842a74",
+            "timedOut": false,
+            "historicalRefs": {
+              "d2ea8a3bcf38044928aab86ae56289839c45a0e4": "d2ea8a3bcf38044928aab86ae56289839c45a0e4"
+            }
+          },
+          {
+            "id": "award-transaction-policy.test",
+            "status": "PASS",
+            "exitCode": 0,
+            "signal": null,
+            "seconds": 0.082,
+            "command": [
+              "C:\\Program Files\\nodejs\\node.exe",
+              "tests/award-transaction-policy.test.mjs"
+            ],
+            "log": "C:\\Users\\rtsai\\OneDrive\\文档\\ChatGPT\\野球人生\\test-results\\development-a-g3-strict-history-final\\award-transaction-policy.test.log",
+            "logSha256": "c7a03e94dbaf2ab67e398a6d0e795abb41c4941ae420a9d45cf9119c8da18c93",
+            "timedOut": false,
+            "historicalRefs": {}
+          }
+        ],
+        "manual": [
+          {
+            "id": "legacy-career-benchmarks",
+            "reason": "Original unflagged historical careers remain individually runnable. Routine full uses focused UI/fixture flags for six overlapping feature suites; contemporary complete-state/RNG careers run in ACT, contract, draft, display and event suites, not repeated in every old feature benchmark."
+          },
+          {
+            "id": "hof-4000-careers",
+            "reason": "Explicit opt-in research only; requires reaching all league buckets and hours/days of sampling. The current 25-seed pilot is NOT a 4,000-career generator."
+          },
+          {
+            "id": "real-devices-and-share-sheet",
+            "reason": "Physical iPhone/Android and native share permissions required; Chromium widths cannot substitute."
+          },
+          {
+            "id": "cloudflare-preview",
+            "reason": "Separate explicit --preview=<URL> E2E invocation and deployment content verification; automatic CI uses loopback, not an unverified mutable URL."
+          }
+        ],
+        "baseline": "7220ad82002801d3dea5fedae80d0fb3d7a0433f",
+        "seconds": 1.007,
+        "counts": {
+          "PASS": 2,
+          "FAIL": 0,
+          "SKIP": 0,
+          "BLOCKED": 0
+        },
+        "executed": 2,
+        "reused": 0
+      },
+      "logs": [
+        {
+          "name": "award-journal-native.test.log",
+          "sha256": "4c8f307af34266cd05a40143ba6856e824790abee191ba26a2e8b532b4842a74"
+        },
+        {
+          "name": "award-transaction-policy.test.log",
+          "sha256": "c7a03e94dbaf2ab67e398a6d0e795abb41c4941ae420a9d45cf9119c8da18c93"
+        }
+      ]
+    }
+  }
+}

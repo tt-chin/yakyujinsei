@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {runInNewContext} from 'node:vm';
+import {productionFunction} from './retirement-hof-test-support.mjs';
 import {JP_DATA} from '../docs/src/data/jp-data.js';
 import * as champ from '../docs/src/engine/championship-policy.js';
 import * as intl from '../docs/src/engine/international-trait-policy.js';
@@ -9,6 +10,8 @@ import {internationalPersonalStats,renderInternationalPersonalStats} from '../do
 import * as contracts from '../docs/src/engine/contract-policy.js';
 import {applyIncentivePayment,createIncentiveTerms} from '../docs/src/engine/incentive-policy.js';
 import {classifyMarketInjury} from '../docs/src/engine/injury-market-policy.js';
+import * as receipts from '../docs/src/engine/award-transaction-policy.js';
+import {prepareSeasonPayment} from '../docs/src/engine/season-payment-policy.js';
 const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const teamById=id=>JP_DATA.teams.find(t=>t.teamId===id);
 let cases=0;
@@ -46,14 +49,14 @@ test('unlock UI retry does not duplicate already rendered result',()=>{const f=a
 const oldGame=execFileSync('git',['show','004cd26:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20000000});
 for(const [pos,role,ab] of [['P','SP',{vel:65,ctl:65,brk:65}],['P','MR',{vel:65,ctl:65,brk:65}],['IF',null,{con:65,pow:65,eye:65,spd:65}]])for(const rank of [0,1,2,3])for(const intlace of [false,true])test('old/new international RNG/stats '+[pos,role,rank,intlace].join('/'),()=>{const v={pos,role,ab,traits:{intlace},injNext:17},old=activeIntl(v,oldGame),now=activeIntl(v);for(const f of [old,now]){f.context.rank=rank;f.context.isSP=()=>role==='SP';f.run('POST');f.options()[0].f();}assert.equal(now.report().draws,old.report().draws);assert.deepEqual(now.s.intlStat,old.s.intlStat);assert.equal(now.s.injNext,old.s.injNext);assert.equal(now.s.intlCount,old.s.intlCount);assert.equal(now.s.pool,old.s.pool+(intlace&&rank===3?1:0));});
 test('C09 actual active phaseEnd: champion, maintenance, salary/incentive/progression once',()=>{
-  const s=state({tradeRefuse:2,tradeHeat:8,careerEarnings:111,careerBaseSalary:0,careerIncentive:0,yearlyIncentivePaid:{},yearOutsideIncome:111});
+  const s=state({seed:'championship-native-receipt',tradeRefuse:2,tradeHeat:8,careerEarnings:111,careerBaseSalary:0,careerIncentive:0,yearlyIncentivePaid:{},yearOutsideIncome:111});
   s.ct=contracts.createContract({contractId:'champ',org:'NPB',teamId:s.orgTeamId,signedYear:2034,startYear:2035,years:2,annualSalary:100000000,incentive:createIncentiveTerms({org:'NPB',annualSalary:100000000})});
   champ.captureSeasonChampionship(s);let draws=0,moved=0,cards=0;
-  const c={...champ,...contracts,applyIncentivePayment,classifyMarketInjury,S:s,phaseEnd:null,board:()=>{},migrateSalaryV140State:()=>{},teamRec:teamById,R:()=>{draws++;return 0;},escapeHTML:x=>x,card:()=>cards++,fmtMoney:x=>String(x),movement:()=>moved++,pendingOffseasonSalary:null,choose:()=>assert.fail('no pool'),allocUI:()=>{}};
-  runInNewContext(game.slice(game.indexOf('  let seasonEndContext=null;'),game.indexOf('  movement = function()',game.indexOf('  let seasonEndContext=null;'))),c);
+  const c={...champ,...contracts,...receipts,prepareSeasonPayment,applyIncentivePayment,classifyMarketInjury,S:s,phaseEnd:null,board:()=>{},migrateSalaryV140State:()=>{},teamRec:teamById,R:()=>{draws++;return 0;},escapeHTML:x=>x,card:()=>cards++,fmtMoney:x=>String(x),movement:()=>moved++,pendingOffseasonSalary:null,choose:()=>assert.fail('no pool'),allocUI:()=>{},choiceViews:new WeakMap(),restorePendingChoice:()=>false};
+  runInNewContext(productionFunction('renderCheckpointCard',game)+'\n'+game.slice(game.indexOf('  let seasonEndContext=null;'),game.indexOf('  movement = function()',game.indexOf('  let seasonEndContext=null;'))),c);
   c.phaseEnd();const saved=JSON.stringify(s);c.phaseEnd();assert.equal(JSON.stringify(s),saved);assert.deepEqual([draws,moved,cards],[1,1,2]);assert.equal(s.careerBaseSalary,100000000);assert.equal(s.careerEarnings,100000111);assert.deepEqual([s.tradeRefuse,s.tradeHeat],[1,3]);
 });
-test('snapshot placement and franchise hookup use unchanged actual path',()=>{assert.ok(game.indexOf('  captureSeasonChampionship(S);')>game.indexOf('  recordSalaryEvaluation(st);'));assert.ok(game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('  tjGamble(()=>demotionAudit'));const source=game.slice(game.indexOf('function movement(){'),game.indexOf('function advance()'));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});
+test('snapshot placement and franchise hookup use unchanged actual path',()=>{assert.ok(game.indexOf('captureSeasonChampionship(S);')>game.indexOf('recordSalaryEvaluation(entry.st);'));assert.ok(game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('tjGamble(()=>demotionAudit'));const source=game.slice(game.indexOf('function movement(){'),game.indexOf('function advance()'));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});
 test('out-of-scope data and rules unchanged except approved KBO floor fix',()=>{
   for(const file of ['src/data/event-cards-jp.js','src/data/jp-data.js','src/data/salary-market-data.js','src/engine/market-policy.js','src/engine/cross-league-market-policy.js','src/engine/contract-policy.js','src/engine/event-policy.js','src/engine/event-state-policy.js','src/engine/incentive-policy.js']){
     let current=readFileSync(new URL('../docs/'+file,import.meta.url),'utf8').replace(/\r\n/g,'\n');

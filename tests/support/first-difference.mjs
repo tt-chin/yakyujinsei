@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {historicalCareer} from '../../tools/development-a/historical-comparison.mjs';
 // Diagnostic only: never normalizes or changes the compared state/expectations.
 export function findFirstDifference(a,b,p='$') {
   if(a===b)return null;
@@ -32,6 +33,7 @@ awards=(...args)=>{const before=JSON.parse(JSON.stringify(S)),callsBefore=window
 
 export function assertApprovedPhoenixCareer(old,now,expected,repeat,actionsKey) {
   assert.deepEqual(now,repeat,'Same current engine / seed / strategy exact replay');
+  old=historicalCareer(old);now=historicalCareer(now);expected=historicalCareer(expected);
   assert.deepEqual(now,expected,'Full native historical control with ONLY the approved phoenix effect');
   assert.deepEqual(now.rng,old.rng,'All main RNG values and before/after states unchanged');
   assert.equal(now.state.seed,'jp3-infielder-01');

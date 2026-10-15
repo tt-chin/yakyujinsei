@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {historicalCareer} from '../tools/development-a/historical-comparison.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';
@@ -74,6 +75,6 @@ try{
   await h.test('old-owned-legend-'+width,{width,fixture:true},async()=>{const p=await page(width);await p.evaluate(()=>{window.__stage6.fixture({pos:'IF'});window.__traitDisplay.clear();window.__traitDisplay.oldLegend();});assert.equal(await p.locator('[data-trait-result="legend"]').count(),0,'already owned legend must not be presented as newly acquired');assert.equal((await h.get(p)).state.legendLeague,'NPB');await p.close();});
  }
  if(arg('source')!=='baseline')for(const [pos,seed]of [['P','yakyo-test-001'],['IF','s10-trait-38']])await h.test('exact-full-career-'+pos,{pos,seed,baseline},async e=>{
-  const runs=[];for(const old of [true,false]){const p=await page(1280,pos,seed,old),actions=[];for(let n=0;n<1800;n++){const step=await p.evaluate(()=>window.__traitDisplay.step());if(step.done)break;actions.push({action:step.action,before:createHash('sha256').update(JSON.stringify(step.before)).digest('hex'),after:createHash('sha256').update(JSON.stringify(step.after)).digest('hex')});if(n===1799)throw Error('CAREER_LIMIT');}const result=await h.get(p);delete result.state.version;runs.push({actions,state:result.state,rng:result.rng});await h.save('career-'+pos+'-'+(old?'baseline':'current'),runs.at(-1));await p.close();}assert.deepEqual(runs[1],runs[0]);e.snapshots.push({actions:runs[1].actions.length,rng:runs[1].rng.length});
+  const runs=[];for(const old of [true,false]){const p=await page(1280,pos,seed,old),actions=[];for(let n=0;n<1800;n++){const step=await p.evaluate(()=>window.__traitDisplay.step());if(step.done)break;actions.push({action:step.action,before:createHash('sha256').update(JSON.stringify(step.before)).digest('hex'),after:createHash('sha256').update(JSON.stringify(step.after)).digest('hex'),beforeState:step.before,afterState:step.after});if(n===1799)throw Error('CAREER_LIMIT');}const result=await h.get(p);delete result.state.version;runs.push({actions,state:result.state,rng:result.rng});await h.save('career-'+pos+'-'+(old?'baseline':'current'),runs.at(-1));await p.close();}assert.deepEqual(historicalCareer(runs[1]),historicalCareer(runs[0]));e.snapshots.push({actions:runs[1].actions.length,rng:runs[1].rng.length});
  });
 }finally{const result=await h.finish();process.exit(result.fail||h.errors.length?1:0);}

@@ -1,0 +1,224 @@
+{
+  "suite": "G2_PRODUCT_MODULE",
+  "PASS": 52,
+  "FAIL": 0,
+  "cases": [
+    {
+      "id": "GV01",
+      "status": "PASS"
+    },
+    {
+      "id": "GV02",
+      "status": "PASS"
+    },
+    {
+      "id": "GV03",
+      "status": "PASS"
+    },
+    {
+      "id": "GV04",
+      "status": "PASS"
+    },
+    {
+      "id": "GV05",
+      "status": "PASS"
+    },
+    {
+      "id": "GV06",
+      "status": "PASS"
+    },
+    {
+      "id": "GV07",
+      "status": "PASS"
+    },
+    {
+      "id": "GV08",
+      "status": "PASS"
+    },
+    {
+      "id": "GV09",
+      "status": "PASS"
+    },
+    {
+      "id": "GV10",
+      "status": "PASS"
+    },
+    {
+      "id": "GV11",
+      "status": "PASS"
+    },
+    {
+      "id": "GV12",
+      "status": "PASS"
+    },
+    {
+      "id": "GV13",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid seed ",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid seed null",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid seed 0",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid year 0",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid year 10000",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid year NaN",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid year Infinity",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid year 1.5",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid year 2035",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid league MiLB",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid league npb",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid league ",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid awardId MVP",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid awardId __proto__",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid ruleId p01-b-v2",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid ruleId ",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid domain other",
+      "status": "PASS"
+    },
+    {
+      "id": "initialized seed mismatch",
+      "status": "PASS"
+    },
+    {
+      "id": "byte length bound",
+      "status": "PASS"
+    },
+    {
+      "id": "surrogate replacement equivalence",
+      "status": "PASS"
+    },
+    {
+      "id": "probability 0/0",
+      "status": "PASS"
+    },
+    {
+      "id": "probability 0/100",
+      "status": "PASS"
+    },
+    {
+      "id": "probability 0/10",
+      "status": "PASS"
+    },
+    {
+      "id": "probability 0.1/10",
+      "status": "PASS"
+    },
+    {
+      "id": "probability 0.5/50",
+      "status": "PASS"
+    },
+    {
+      "id": "probability 0.9999999997671694/100",
+      "status": "PASS"
+    },
+    {
+      "id": "probability 0.9999999997671694/99",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid probability -1",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid probability 101",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid probability NaN",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid probability Infinity",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid probability 50",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid u -1",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid u 1",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid u NaN",
+      "status": "PASS"
+    },
+    {
+      "id": "invalid u Infinity",
+      "status": "PASS"
+    },
+    {
+      "id": "deterministic 0",
+      "status": "PASS"
+    },
+    {
+      "id": "deterministic 100",
+      "status": "PASS"
+    },
+    {
+      "id": "reverse calculation order leaves each key unchanged",
+      "status": "PASS"
+    }
+  ],
+  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1",
+  "executedAt": "2026-10-14T10:25:38.093Z",
+  "url": "http://192.168.1.15:8088/tools/development-a/g2-safari.html",
+  "evidence": "BROWSER_PRODUCT_MODULE; actual Safari requires human platform confirmation",
+  "sourceHashes": {
+    "../../docs/src/engine/award-rng-policy.js": "UNAVAILABLE_NON_SECURE_CONTEXT",
+    "./g2-validation.js": "UNAVAILABLE_NON_SECURE_CONTEXT",
+    "./g2-vectors.json": "UNAVAILABLE_NON_SECURE_CONTEXT"
+  }
+}

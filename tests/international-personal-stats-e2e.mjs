@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {historicalCareer} from '../tools/development-a/historical-comparison.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';
@@ -53,7 +54,7 @@ try{
    const phoenixCase=seed==='jp3-infielder-01'&&pos==='IF',runs=[];
    for(const mode of [true,false,...(phoenixCase?['approved','repeat']:[])]){
     const old=mode===true||mode==='approved',p=await page(1280,pos,seed,old,mode==='approved'),actions=[];
-    for(let n=0;n<2000;n++){const step=await p.evaluate(()=>window.__intlDisplay.step());if(step.done)break;actions.push({action:step.action,before:digest(step.before),after:digest(step.after)});if(n===1999)throw Error('CAREER_LIMIT');}
+    for(let n=0;n<2000;n++){const step=await p.evaluate(()=>window.__intlDisplay.step());if(step.done)break;actions.push({action:step.action,before:digest(step.before),after:digest(step.after),beforeState:clean(step.before),afterState:clean(step.after)});if(n===1999)throw Error('CAREER_LIMIT');}
     const result=await h.get(p),awards=(await p.evaluate(()=>window.__phoenixAwardEvents)).map(event=>({...event,before:clean(event.before),after:clean(event.after)}));
     assert.equal(result.state.done,true);runs.push({actions,state:clean(result.state),rng:result.rng,awards});
     await h.save('career-'+seed+'-'+(mode==='approved'?'approved-phoenix-control':mode==='repeat'?'repeat':old?'baseline':'current'),{actions,state:result.state,rng:result.rng,awards});
@@ -61,7 +62,7 @@ try{
     await p.close();
    }
    if(phoenixCase)e.phoenixComparison=assertApprovedPhoenixCareer(runs[0],runs[1],runs[2],runs[3],'actions');
-   else assert.deepEqual(runs[1],runs[0]);
+   else assert.deepEqual(historicalCareer(runs[1]),historicalCareer(runs[0]));
   });
   await h.test('fixed-career-international-coverage',{natural:true},async()=>{assert.ok(wbc>0,'natural WBC appearance required');assert.ok(p12>0,'natural Premier12 appearance required');});
  }

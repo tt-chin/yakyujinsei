@@ -1,5 +1,6 @@
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
+import {historicalCareer} from '../tools/development-a/historical-comparison.mjs';
 import {createServer} from 'node:http';
 import {readFile, mkdir} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -176,7 +177,7 @@ try{
         }
         snapshots.push(records);await ctx.close();
       }
-      assert.deepEqual(snapshots[1],snapshots[0],`${seed} gameplay/RNG differs`);
+      assert.deepEqual(historicalCareer(snapshots[1]),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
       const last=snapshots[0].at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');console.log(`Fixed career ${seed}/${pos}: ${snapshots[0].length} actions, RNG ${last.calls}, retirement ${last.state.year}, exact match`);
     }
   }

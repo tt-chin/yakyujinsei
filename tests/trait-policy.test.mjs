@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import * as transactions from '../docs/src/engine/award-transaction-policy.js';
 import {execFileSync} from 'node:child_process';
 import * as policy from '../docs/src/engine/trait-policy.js';
 import {eventOdds,eventCounters,eventTraitUnlocks} from '../docs/src/engine/event-policy.js';
@@ -100,9 +101,23 @@ assert.equal(rubberState.traits.rubber,true);assert.match(rubberCards[0][2],/上
 assert.match(current,/const succP=S\.traits\.rubber\?85:55/);assert.match(current,/return S\.traits\.rubber\?100:50/);
 const oldGame=execFileSync('git',['show','9fcb24a:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:3e6});
 const awards=source=>source.slice(source.indexOf('function awards('),source.indexOf('function maybeIntl('));
+function journalFixture(ctx,chances,state){
+ Object.assign(state,{seed:'trait-award-fixture',pool:0,removed:[],rngState:0});
+ Object.assign(ctx,transactions,{structuredClone,teamNick:x=>x,traitPresentation:new WeakMap(),R:()=>{state.rngState++;return .9999999999;},
+ captureAwardSlot:(...args)=>{chances.push(args[2]);return transactions.captureAwardSlot(...args);}});
+}
+function historicalResult(state,ctx){
+ if(!state.awardDecisions)return state;
+ for(const d of state.awardDecisions){assert(transactions.isCompletedAwardDecision(d,state));assert.equal(d.year,state.year);assert.equal(d.decisionStatus,'DECIDED');assert.equal(d.awarded,d.pPercent===100);}
+ const before=structuredClone(state),calls=state.rngState;
+ vm.runInContext("awards('"+(state.lv==='MLB'?'MLB':state.lv.replace(/1$/,''))+"',"+JSON.stringify(state.awardDecisions[0].metrics)+")",ctx);
+ assert.deepEqual(state,before,'same-version complete S including Decision history unchanged on reentry');assert.equal(state.rngState,calls);
+ const view=structuredClone(state);delete view.awardDecisions;return view;
+}
+
 for(const pos of ['P','IF']){
-  const runs=[oldGame,current].map(source=>{const chances=[],state={year:2030,age:23,pos,role:'SP',lv:'NPB1',seasonFactor:1,orgTeamId:'NPB_CL_HAN',traits:{},honors:[],stats:{NPB:{yr:2,AS:0}},dpos:'DH'},ctx=vm.createContext({...policy,S:state,LV:{NPB1:{top:true,g:143}},clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),chance:p=>{chances.push(p);return p===100;},isSP:()=>true,card:()=>{},removeTrait:()=>{},displayTrait:k=>policy.traitLabel(k,state)});
-    vm.runInContext(awards(source),ctx);vm.runInContext("awards('NPB',{d:7,PA:600,avg:.38,HR:45,RBI:140,SB:0,H:200,BB:20,IP:180,era:2,SO:220,DEF:0})",ctx);return {chances,state};});
+  const runs=[oldGame,current].map(source=>{const chances=[],state={year:2030,age:23,pos,role:'SP',lv:'NPB1',seasonFactor:1,orgTeamId:'NPB_CL_HAN',traits:{},honors:[],stats:{NPB:{yr:2,AS:0}},dpos:'DH'},ctx=vm.createContext({...policy,S:state,LV:{NPB1:{top:true,g:143}},clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),chance:p=>{chances.push(p);state.rngState++;return p===100;},isSP:()=>true,card:()=>{},removeTrait:()=>{},displayTrait:k=>policy.traitLabel(k,state)});
+    journalFixture(ctx,chances,state);vm.runInContext(awards(source),ctx);vm.runInContext("awards('NPB',{d:7,PA:600,avg:.38,HR:45,RBI:140,SB:0,H:200,BB:20,IP:180,era:2,SO:220,DEF:0})",ctx);return {chances:chances.slice(),state:historicalResult(state,ctx)};});
   assert.deepEqual(runs[1].chances,runs[0].chances);
   if(pos==='IF'){assert.equal(runs[0].state.honors.includes('2030 NPB年間MVP'),false);assert.equal(runs[1].state.honors.includes('2030 NPB年間MVP'),true);assert.equal(runs[1].state.traits.hitterTC,true);}
 }
@@ -111,8 +126,8 @@ const preReviewGame=execFileSync('git',['show','f6b5c9b:docs/src/engine/game.js'
 for(const [bucket,league,lv] of [['NPB','NPB','NPB1'],['KBO','KBO','KBO1'],['CPBL','台湾プロ野球','CPBL1'],['MLB','メジャーリーグ','MLB']]){
   const runs=[preReviewGame,current].map(source=>{
     const chances=[],state={year:2033,age:30,pos:'IF',lv,seasonFactor:1,traits:{},honors:[],stats:{[bucket]:{yr:2,AS:0}},dpos:'DH'};
-    const ctx=vm.createContext({...policy,S:state,LV:{[lv]:{top:true,g:143}},clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),chance:p=>{chances.push(p);return p===100;},isSP:()=>false,card:()=>{},removeTrait:()=>{},displayTrait:k=>policy.traitLabel(k,state)});
-    vm.runInContext(awards(source),ctx);vm.runInContext(`awards('${bucket}',{d:7,PA:650,avg:.5,HR:80,RBI:200,SB:0,H:325,BB:100,DEF:0})`,ctx);return {chances,state};
+    const ctx=vm.createContext({...policy,S:state,LV:{[lv]:{top:true,g:143}},clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),chance:p=>{chances.push(p);state.rngState++;return p===100;},isSP:()=>false,card:()=>{},removeTrait:()=>{},displayTrait:k=>policy.traitLabel(k,state)});
+    journalFixture(ctx,chances,state);vm.runInContext(awards(source),ctx);vm.runInContext(`awards('${bucket}',{d:7,PA:650,avg:.5,HR:80,RBI:200,SB:0,H:325,BB:100,DEF:0})`,ctx);return {chances:chances.slice(),state:historicalResult(state,ctx)};
   });
   assert.deepEqual(runs[1],runs[0],bucket+' actual awards state and RNG unchanged');
   assert.equal(runs[1].state.traits.hitterTC,true);assert.equal(runs[1].state.honors.filter(h=>h==='2033 '+league+'年間MVP').length,1);

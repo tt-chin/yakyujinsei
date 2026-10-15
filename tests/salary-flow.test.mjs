@@ -30,18 +30,22 @@ assert.match(game, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\)\)markClu
 assert.match(game, /const sourceLevel=S\.lv,sourceStage=S\.stage,sourceOrg=S\.org/);
 assert.match(game, /sourceLevel:LV\[sourceLevel\]\?sourceLevel:lv/);
 assert.match(game, /rating:sourceStage==='PRO'\?currentMarketRating\(\):0/);
-assert.match(game, /recordSalaryEvaluation\(st\)/);
+assert.match(game, /recordSalaryEvaluation\(entry\.st\)/);
 assert.match(game, /if\(S\.stage==='IND'\)recordIndependentSalaryEvaluation\(results\)/);
 assert.match(game, /LEGACY_RATING_FALLBACK/);
 assert.match(evaluationPolicy, /LEGACY_NO_INDIVIDUAL_STATS/);
 assert.doesNotMatch(game, /Math\.floor\(Number\(d\)\|\|0\)/);
 assert.equal((game.match(/baseSalary\*\(cross\?1:contractMult\)\*positionMult/g) || []).length, 1, '守備位置倍率は候補年俸へ一度だけ適用');
 assert.doesNotMatch(evaluationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
-assert.equal((game.match(/\bR\(/g) || []).length, 35);
+const journalBridge='captureAwardSlot(tx,id,p,()=>R(),()=>realState.rngState)';
+assert.equal(game.split(journalBridge).length,2,'one native Journal bridge, not a new independent draw');
+assert.equal((game.replace(journalBridge,'captureAwardSlot(nativeBridge)').match(/\bR\(/g) || []).length,35,'all other native RNG call sites unchanged');
 // Six round-specific bonus sites are consolidated; each draft still consumes one ri.
 assert.equal((game.match(/\bri\(/g) || []).length, 74);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
-assert.equal((game.match(/\bchance\(/g) || []).length, 57);
+const legacyJournalSlots=[...game.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
+assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
+assert.equal((game.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,57,'existing eligible chance sites moved to one-to-one legacy slots');
 assert.equal((game.match(/\bpick\(/g) || []).length, 23);
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。

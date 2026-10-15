@@ -1,0 +1,544 @@
+{
+  "head": "d2ea8a3bcf38044928aab86ae56289839c45a0e4",
+  "version": "1.12.0",
+  "beforeEngineSha256": "4b7d893b44d4cf943ff7c017c8bbca73474e5b5ae9bd8513455a80ae18315629",
+  "browser": {
+    "results": [
+      {
+        "platform": "chromium",
+        "browserVersion": "151.0.7922.34",
+        "node": "v24.15.0",
+        "actualSafari": false,
+        "status": "PASS",
+        "errors": [],
+        "result": {
+          "suite": "G2_PRODUCT_MODULE",
+          "PASS": 52,
+          "FAIL": 0,
+          "cases": [
+            {
+              "id": "GV01",
+              "status": "PASS"
+            },
+            {
+              "id": "GV02",
+              "status": "PASS"
+            },
+            {
+              "id": "GV03",
+              "status": "PASS"
+            },
+            {
+              "id": "GV04",
+              "status": "PASS"
+            },
+            {
+              "id": "GV05",
+              "status": "PASS"
+            },
+            {
+              "id": "GV06",
+              "status": "PASS"
+            },
+            {
+              "id": "GV07",
+              "status": "PASS"
+            },
+            {
+              "id": "GV08",
+              "status": "PASS"
+            },
+            {
+              "id": "GV09",
+              "status": "PASS"
+            },
+            {
+              "id": "GV10",
+              "status": "PASS"
+            },
+            {
+              "id": "GV11",
+              "status": "PASS"
+            },
+            {
+              "id": "GV12",
+              "status": "PASS"
+            },
+            {
+              "id": "GV13",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid seed ",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid seed null",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid seed 0",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year 0",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year 10000",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year NaN",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year Infinity",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year 1.5",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year 2035",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid league MiLB",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid league npb",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid league ",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid awardId MVP",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid awardId __proto__",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid ruleId p01-b-v2",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid ruleId ",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid domain other",
+              "status": "PASS"
+            },
+            {
+              "id": "initialized seed mismatch",
+              "status": "PASS"
+            },
+            {
+              "id": "byte length bound",
+              "status": "PASS"
+            },
+            {
+              "id": "surrogate replacement equivalence",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0/0",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0/100",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0/10",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0.1/10",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0.5/50",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0.9999999997671694/100",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0.9999999997671694/99",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability -1",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability 101",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability NaN",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability Infinity",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability 50",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid u -1",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid u 1",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid u NaN",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid u Infinity",
+              "status": "PASS"
+            },
+            {
+              "id": "deterministic 0",
+              "status": "PASS"
+            },
+            {
+              "id": "deterministic 100",
+              "status": "PASS"
+            },
+            {
+              "id": "reverse calculation order leaves each key unchanged",
+              "status": "PASS"
+            }
+          ],
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+          "executedAt": "2026-10-14T10:02:41.391Z",
+          "url": "http://127.0.0.1:53930/tools/development-a/g2-safari.html",
+          "evidence": "BROWSER_PRODUCT_MODULE; actual Safari requires human platform confirmation",
+          "sourceHashes": {
+            "../../docs/src/engine/award-rng-policy.js": "2c7be9b4251772371652a61db720ad2739edc8dcf3de776f7f703208b7e8575b",
+            "./g2-validation.js": "5eb147a2ae107534381962183da9be53c67cb989d9485b307b73fc67482a970b",
+            "./g2-vectors.json": "66de2e85218860fa6bfaceddfc7825958150ca3dc3851c7384fad146e698fe79"
+          }
+        }
+      },
+      {
+        "platform": "webkit",
+        "browserVersion": "26.5",
+        "node": "v24.15.0",
+        "actualSafari": false,
+        "status": "PASS",
+        "errors": [],
+        "result": {
+          "suite": "G2_PRODUCT_MODULE",
+          "PASS": 52,
+          "FAIL": 0,
+          "cases": [
+            {
+              "id": "GV01",
+              "status": "PASS"
+            },
+            {
+              "id": "GV02",
+              "status": "PASS"
+            },
+            {
+              "id": "GV03",
+              "status": "PASS"
+            },
+            {
+              "id": "GV04",
+              "status": "PASS"
+            },
+            {
+              "id": "GV05",
+              "status": "PASS"
+            },
+            {
+              "id": "GV06",
+              "status": "PASS"
+            },
+            {
+              "id": "GV07",
+              "status": "PASS"
+            },
+            {
+              "id": "GV08",
+              "status": "PASS"
+            },
+            {
+              "id": "GV09",
+              "status": "PASS"
+            },
+            {
+              "id": "GV10",
+              "status": "PASS"
+            },
+            {
+              "id": "GV11",
+              "status": "PASS"
+            },
+            {
+              "id": "GV12",
+              "status": "PASS"
+            },
+            {
+              "id": "GV13",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid seed ",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid seed null",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid seed 0",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year 0",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year 10000",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year NaN",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year Infinity",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year 1.5",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid year 2035",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid league MiLB",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid league npb",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid league ",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid awardId MVP",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid awardId __proto__",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid ruleId p01-b-v2",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid ruleId ",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid domain other",
+              "status": "PASS"
+            },
+            {
+              "id": "initialized seed mismatch",
+              "status": "PASS"
+            },
+            {
+              "id": "byte length bound",
+              "status": "PASS"
+            },
+            {
+              "id": "surrogate replacement equivalence",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0/0",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0/100",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0/10",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0.1/10",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0.5/50",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0.9999999997671694/100",
+              "status": "PASS"
+            },
+            {
+              "id": "probability 0.9999999997671694/99",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability -1",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability 101",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability NaN",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability Infinity",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid probability 50",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid u -1",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid u 1",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid u NaN",
+              "status": "PASS"
+            },
+            {
+              "id": "invalid u Infinity",
+              "status": "PASS"
+            },
+            {
+              "id": "deterministic 0",
+              "status": "PASS"
+            },
+            {
+              "id": "deterministic 100",
+              "status": "PASS"
+            },
+            {
+              "id": "reverse calculation order leaves each key unchanged",
+              "status": "PASS"
+            }
+          ],
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Safari/605.1.15",
+          "executedAt": "2026-10-14T10:02:41.990Z",
+          "url": "http://127.0.0.1:53930/tools/development-a/g2-safari.html",
+          "evidence": "BROWSER_PRODUCT_MODULE; actual Safari requires human platform confirmation",
+          "sourceHashes": {
+            "../../docs/src/engine/award-rng-policy.js": "2c7be9b4251772371652a61db720ad2739edc8dcf3de776f7f703208b7e8575b",
+            "./g2-validation.js": "5eb147a2ae107534381962183da9be53c67cb989d9485b307b73fc67482a970b",
+            "./g2-vectors.json": "66de2e85218860fa6bfaceddfc7825958150ca3dc3851c7384fad146e698fe79"
+          }
+        }
+      }
+    ],
+    "safari": "NOT_RUN / awaiting human iPhone Safari result"
+  },
+  "a0NativeSummary": {
+    "runtimeCases": 88,
+    "harnessPASS": 88,
+    "harnessFAIL": 0,
+    "policyPASS": 88,
+    "policyFAIL": 0,
+    "BLOCKED": 0
+  },
+  "baseline": [
+    {
+      "id": "yakyo-test-001-P",
+      "input": {
+        "seed": "yakyo-test-001",
+        "pos": "P",
+        "effort": "通常投球"
+      },
+      "width": 1280,
+      "actions": 520,
+      "rngCalls": 825,
+      "stateSha256": "178e9b6304d201c22fe65d029f18b11ae67d92bb0bcfa55586fb283abdbfe328",
+      "rngSha256": "0685ee3bcce811620c46e99de3a3325b86f4778b652aaefc0601a29f15e5a651",
+      "rawSha256": "9ec2c7f3309b8974ed9cd345ba3478d8d85c4902b181facc9fb947dd8298b4c7",
+      "rawFile": "test-results/development-a-before-careers-unrestricted/yakyo-test-001-P.career.json"
+    },
+    {
+      "id": "jp3-pitcher-02-P",
+      "input": {
+        "seed": "jp3-pitcher-02",
+        "pos": "P",
+        "effort": "省エネ投球"
+      },
+      "width": 320,
+      "actions": 304,
+      "rngCalls": 606,
+      "stateSha256": "34b429c94c5474eefbdcc25d1cf4a319644d8a37e7eb3e821a18e4b948bce17f",
+      "rngSha256": "8e0a5ff3dae4436618ba1a5bcfe41908fe2d987bb093ae5ee3778b5b7b5d6a01",
+      "rawSha256": "fceaacf528c0037a90878cf1ff1dd44f9dd7781fbd53f1200e867977d835c985",
+      "rawFile": "test-results/development-a-before-careers-unrestricted/jp3-pitcher-02-P.career.json"
+    },
+    {
+      "id": "jp3-pitcher-03-P",
+      "input": {
+        "seed": "jp3-pitcher-03",
+        "pos": "P",
+        "effort": "全力投球"
+      },
+      "width": 390,
+      "actions": 335,
+      "rngCalls": 671,
+      "stateSha256": "0c91622129b367208deb6c56e578ce33d48ed926f64ac78efb166e86cd76fee7",
+      "rngSha256": "53b266a63771d317c98716880946f556a75b1672ee511fa3fd977f3a7e3b2c27",
+      "rawSha256": "0d594138c5b19f8748d9acfbc269506cd582f3b9e34b1ea5e606e6ed77b70b39",
+      "rawFile": "test-results/development-a-before-careers-unrestricted/jp3-pitcher-03-P.career.json"
+    },
+    {
+      "id": "jp3-infielder-01-IF",
+      "input": {
+        "seed": "jp3-infielder-01",
+        "pos": "IF",
+        "effort": "通常投球"
+      },
+      "width": 1280,
+      "actions": 422,
+      "rngCalls": 637,
+      "stateSha256": "591dfdbf2d7195d5e3857bd6a40a9ee51ff57d19d797adba042b384876110a51",
+      "rngSha256": "fda446c518d7b5887c598628685dbd96e7ec6ff054460f4bef229f82a15ab273",
+      "rawSha256": "b4cd8dd45cef9cee5685087f9a30a251df3b421fcc0a518e3ac237516802df32",
+      "rawFile": "test-results/development-a-before-careers-unrestricted/jp3-infielder-01-IF.career.json"
+    }
+  ]
+}

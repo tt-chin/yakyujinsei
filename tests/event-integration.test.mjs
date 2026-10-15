@@ -26,10 +26,10 @@ assert.match(game,/power=overall\+beginEventSeason\(S\)\.form\+bonus\+ri\(-8,8\)
 assert.match(game,/qualificationResult\(ovr\(\)\+beginEventSeason\(S\)\.form\+bonus\+ri\(-8,8\)\)/);
 assert.match(game,/if\(eventPoints!==0\)Object\.assign\(st,normalizeEventSeason\(st,eventOptions\)\)/);
 assert.match(game,/ensureEventState\(state\);state\.potSum0=Object\.values\(pot\)\.reduce\(\(sum,value\)=>sum\+value,0\);return state/);
-assert.match(game,/resetEventYear\(S\); startYear\(\)/);
+assert.match(game,/try\{resetEventYear\(state\);startYear\(\);handoff\.status='COMMITTED'/);
 assert.match(game,/consumeEventSeason\(S\);card\('bad'/);
 assert.equal(TRAIT_LABELS.favorite,'監督のお気に入り');
-assert.match(game,/eventPoints!==0[\s\S]*applyEventSeason[\s\S]*recordSalaryEvaluation\(st\)/);
+assert.match(game,/eventPoints!==0[\s\S]*applyEventSeason[\s\S]*recordSalaryEvaluation\(entry\.st\)/);
 const eventDisplay=game.slice(game.indexOf('function eventChoiceSummary'),game.indexOf('function drawEvents'));
 assert.doesNotMatch(eventDisplay,/\b(?:R|ri|pick|chance)\s*\(/);
 assert.match(fs.readFileSync(new URL('../docs/src/engine/event-policy.js',import.meta.url),'utf8'),/cntSocialBoldFail>10/);

@@ -1,0 +1,36 @@
+// Generate Development A evidence metadata only. Never modifies product/tests/Runner.
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+const base=process.argv.find(a=>a.startsWith('--base='))?.slice(7);assert(base);
+const output=path.resolve(base);assert(output.startsWith(path.resolve('test-results')+path.sep),'Evidence must remain in test-results');
+const read=p=>JSON.parse(fs.readFileSync(p,'utf8'));
+const sha=p=>createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+const put=(name,value)=>fs.writeFileSync(path.join(output,name),value,{flag:'wx'});
+const json=value=>JSON.stringify(value,null,2)+'\n';
+for(const f of ['entries-all.json','BASELINE_MANIFEST.json','git-status.txt','SHA256SUMS'])assert(!fs.existsSync(path.join(output,f)),'Append-only: existing evidence '+f);
+const quickPath='test-results/development-a-baseline-final-quick/summary.json',fullPath='test-results/development-a-baseline-final-full/summary.json';
+const quick=read(quickPath),full=read(fullPath),head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),branch=execFileSync('git',['branch','--show-current'],{encoding:'utf8'}).trim();
+assert.equal(branch,'dev');
+for(const s of [quick,full]){assert.equal(s.head,head);assert.equal(s.branch,branch);assert.equal(s.version,'1.12.0');assert.equal(s.counts.FAIL,0);assert.equal(s.counts.BLOCKED,0);assert.equal(s.counts.SKIP,0);assert.equal(s.reused,0);assert.equal(s.executed,s.counts.PASS);assert(s.results.every(r=>r.status==='PASS'&&r.exitCode===0));}
+const archiveLists=['entries-source-v2.json','entries-historical-failures.json','entries-final-full.json'].map(f=>read(path.join(output,f)));
+for(const list of archiveLists){assert.equal(list.originalComparison,'PASS');assert.equal(sha(path.join(output,list.archive)),list.archiveSha256);}
+const sources=Object.fromEntries(archiveLists[0].entries.filter(e=>/^docs\/(src\/|styles\/|assets\/|index.html$|\.nojekyll$)/.test(e.path)).map(e=>[e.path,e.sha256]));
+for(const [p,expected] of Object.entries(sources))assert.equal(sha(p),expected,'Frozen product changed: '+p);
+const runtimePath='test-results/development-a-baseline-runtime-portable/summary.json',careerPath='test-results/development-a-verified-careers/summary.json';
+for(const p of [runtimePath,careerPath]){const s=read(p);assert.equal(s.fail,0);assert.equal(s.errors.length,0);assert.equal(s.head,head);}
+assert.equal(read(runtimePath).pass,18);assert.equal(read(careerPath).pass,4);
+for(const row of read(runtimePath).records){const observed=read(path.join(path.dirname(runtimePath),row.id+'.json'));assert.equal(observed.engineSha256,sources['docs/src/engine/game.js']);assert.deepEqual(observed.productSources,sources);}
+const seeds=['yakyo-test-001-P','jp3-pitcher-02-P','jp3-pitcher-03-P','jp3-infielder-01-IF'];
+const careers=seeds.map(id=>{const prefix='test-results/development-a-verified-careers/'+id,r=read(prefix+'.json');assert.equal(r.status,'PASS');assert.equal(r.runtimeReplay,'PASS');assert.equal(r.engineSha256,sources['docs/src/engine/game.js']);return {id,seed:r.input.seed,position:r.input.pos,effort:r.input.effort,actions:r.actions,rngCalls:r.rngCalls,comparison:r.comparison,record:prefix+'.career.json',sha256:sha(prefix+'.career.json')};});
+const originalDiff=execFileSync('git',['diff','--binary','--unified=0','HEAD'],{encoding:'utf8',maxBuffer:20e6});assert.equal(fs.readFileSync(path.join(output,'worktree.patch'),'utf8').replace(/\r\n/g,'\n'),originalDiff.replace(/\r\n/g,'\n'),'Frozen tracked diff must still match');
+put('git-status.txt',execFileSync('git',['status','--short'],{encoding:'utf8'}));
+put('entries-all.json',json({schemaVersion:1,archives:archiveLists,excluded:'Only temporary browser profile/cache paths, not logs/JSON/screenshots or failed cases',incompleteArchive:'source-and-initial-evidence.zip is INCOMPLETE and excluded from accepted archives'}));
+const profile=s=>({counts:s.counts,seconds:s.seconds,executed:s.executed,reused:s.reused,sourceFingerprint:s.sourceFingerprint,environment:{node:s.node,platform:s.platform,browser:s.browser},baseline:s.baseline,results:s.results.map(r=>({id:r.id,status:r.status,exitCode:r.exitCode,seconds:r.seconds,command:r.command,log:r.log,logSha256:r.logSha256}))});
+const result={schemaVersion:1,classification:'DEVELOPMENT_A_VERIFIED_COMPARISON_BASELINE; pending user review, not Development B authorization',head,branch,version:full.version,validation:{complete:true,G2:'PASS: accepted Node/Chromium/WebKit plus actual iPhone Safari evidence',G3:'PASS: authorized limited product Receipt/Journal scope; new producer fixtures are not G6/G7 integration',G4:'PASS: same-page controlled fault Runtime; unsupported gaps fail closed',quick:profile(quick),full:profile(full)},productSources:sources,archives:archiveLists.map(a=>({file:a.archive,sha256:a.archiveSha256,entries:a.entryCount})),entriesManifest:{file:'entries-all.json',sha256:sha(path.join(output,'entries-all.json'))},worktree:{patch:'worktree.patch',sha256:sha(path.join(output,'worktree.patch')),format:'git diff --binary --unified=0 HEAD; full untracked product sources archived',status:'git-status.txt',statusSha256:sha(path.join(output,'git-status.txt')),preExisting:'D2 master four-line dirty change, tasks and earlier G1 review files are retained, not submitted by this task'},runtime:{summary:runtimePath,sha256:sha(runtimePath),PASS:18,FAIL:0},careers,transactionSnapshots:{file:'test-results/development-a-transaction-snapshots-final/evidence.json',sha256:sha('test-results/development-a-transaction-snapshots-final/evidence.json'),classification:'ACTUAL_PRODUCT_POLICY_SYNTHETIC_FIXTURE; not natural award producer',snapshots:8},report:{file:'docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md',sha256:sha('docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md')},developmentB:{authorized:false,fullRequired:true,baselineProjection:'No global field exclusion. Read archived A careers directly. Each proposed B difference needs approved D2 rule, first-divergence evidence and producer/Decision/Receipt/consumer trace; unchanged flows and same-version replay remain full-state strict.',allowedDifferences:'Not a blanket waiver: only explicitly authorized B award/consumer effects and traceable downstream consequences under the formal D2 rules. Historical honors, paid amounts and guaranteed contracts are not retroactively rewritten.'},limits:['No cross-reload storage or trusted private token reconstruction from JSON','No arbitrary host crash/OOM or RNG-record gap recovery','No CI/Preview/deployment performed','Windows read-only attributes plus hash verification protect accidental overwrite, not an adversarial external administrator']};
+put('BASELINE_MANIFEST.json',json(result));
+const files=fs.readdirSync(output).filter(n=>fs.statSync(path.join(output,n)).isFile()&&n!=='SHA256SUMS');
+put('SHA256SUMS',files.map(n=>sha(path.join(output,n))+'  '+n).join('\n')+'\n');
+console.log(JSON.stringify({status:'PASS',head,productFiles:Object.keys(sources).length,quick:quick.counts,full:full.counts,manifestSha256:sha(path.join(output,'BASELINE_MANIFEST.json')),checksumListSha256:sha(path.join(output,'SHA256SUMS'))}));
