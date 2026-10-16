@@ -37,6 +37,28 @@ assert.ok(job.steps.some(s=>s.with?.['fetch-depth']===0));
 assert.ok(job.steps.some(s=>s.run?.includes('playwright@1.62.1')&&s.run.includes('--with-deps chromium')));
 assert.ok(job.steps.some(s=>s.run?.includes('scripts/test.mjs')));
 assert.ok(job.steps.some(s=>s.if==='always()'&&s.uses?.startsWith('actions/upload-artifact@')));
+const plan=job.steps.find(s=>s.id==='full-plan');
+assert.equal(plan?.run,'node scripts/ci-full-batches.mjs plan');
+assert.equal(plan.if,"env.TEST_MODE == 'full'");
+const fullCondition="${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}";
+const runs=job.steps.filter(s=>/^node scripts\/ci-full-batches.mjs run /.test(s.run||''));
+assert.deepEqual(runs.map(s=>s.run),Array.from({length:8},(_,i)=>'node scripts/ci-full-batches.mjs run '+(i+1)));
+const names=[];
+for(let i=1;i<=8;i++){
+ const run=runs[i-1],at=job.steps.indexOf(run),save=job.steps[at+1];
+ assert.equal(run.if,fullCondition);assert.equal(run['continue-on-error'],undefined);
+ assert.equal(save.if,fullCondition);assert.ok(save.uses.startsWith('actions/upload-artifact@'));
+ assert.equal(save.with.name,'tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-'+i);
+ assert.equal(save.with['if-no-files-found'],'error');
+ for(const pattern of ['*.log','*.json','tmp/yakyujinsei-*/**','tmp/yakyujinsei-*.json','tmp/runner-contract-*/**'])assert.ok(save.with.path.includes('test-results/ci-full/batch-'+i+'/'+pattern));
+ assert.ok(save.with.path.includes('test-results/ci-full/plan.json'));names.push(save.with.name);
+}
+assert.equal(new Set(names).size,8);
+const aggregate=job.steps.find(s=>s.run==='node scripts/ci-full-batches.mjs aggregate');
+assert.equal(aggregate?.if,fullCondition);assert.equal(aggregate['continue-on-error'],undefined);
+assert.ok(job.steps.indexOf(aggregate)>job.steps.indexOf(runs.at(-1))+1);
+assert.equal(job.steps.find(s=>s.name==='Run test profile').if,"env.TEST_MODE != 'full'");
 assert.ok(!job.steps.some(s=>/git push|rsync|DEPLOY_REPO_TOKEN/.test(s.run||'')));
 console.log('PASS workflow YAML parse: dev quick, main PR full, dispatch choices, pinned tools, full history, read-only permissions, artifacts, no deployment');
 console.log('PASS exact dev evidence allowlist and mixed-change checks; PR and dispatch remain unfiltered (GitHub event execution verified separately)');
+console.log('PASS sequential Full 8 batches: immediate unique attempt-scoped uploads, continued failure diagnostics, strict final aggregation; quick/audit unchanged');

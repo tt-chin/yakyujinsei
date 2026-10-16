@@ -48,12 +48,164 @@ jobs:
       - name: Validate workflow
         run: node scripts/check-workflow.mjs
       - name: Run test profile
+        if: env.TEST_MODE != 'full'
         run: node scripts/test.mjs "$TEST_MODE" --output=test-results/ci
+      - name: Plan Full batches
+        id: full-plan
+        if: env.TEST_MODE == 'full'
+        run: node scripts/ci-full-batches.mjs plan
+      - name: Run Full batch 1/8
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs run 1
+      - name: Save Full batch 1 evidence
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-1
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-1/*.log
+            test-results/ci-full/batch-1/*.json
+            test-results/ci-full/batch-1/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-1/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-1/tmp/runner-contract-*/**
+      - name: Run Full batch 2/8
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs run 2
+      - name: Save Full batch 2 evidence
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-2
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-2/*.log
+            test-results/ci-full/batch-2/*.json
+            test-results/ci-full/batch-2/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-2/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-2/tmp/runner-contract-*/**
+      - name: Run Full batch 3/8
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs run 3
+      - name: Save Full batch 3 evidence
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-3
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-3/*.log
+            test-results/ci-full/batch-3/*.json
+            test-results/ci-full/batch-3/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-3/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-3/tmp/runner-contract-*/**
+      - name: Run Full batch 4/8
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs run 4
+      - name: Save Full batch 4 evidence
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-4
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-4/*.log
+            test-results/ci-full/batch-4/*.json
+            test-results/ci-full/batch-4/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-4/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-4/tmp/runner-contract-*/**
+      - name: Run Full batch 5/8
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs run 5
+      - name: Save Full batch 5 evidence
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-5
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-5/*.log
+            test-results/ci-full/batch-5/*.json
+            test-results/ci-full/batch-5/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-5/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-5/tmp/runner-contract-*/**
+      - name: Run Full batch 6/8
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs run 6
+      - name: Save Full batch 6 evidence
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-6
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-6/*.log
+            test-results/ci-full/batch-6/*.json
+            test-results/ci-full/batch-6/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-6/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-6/tmp/runner-contract-*/**
+      - name: Run Full batch 7/8
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs run 7
+      - name: Save Full batch 7 evidence
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-7
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-7/*.log
+            test-results/ci-full/batch-7/*.json
+            test-results/ci-full/batch-7/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-7/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-7/tmp/runner-contract-*/**
+      - name: Run Full batch 8/8
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs run 8
+      - name: Save Full batch 8 evidence
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-8
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-8/*.log
+            test-results/ci-full/batch-8/*.json
+            test-results/ci-full/batch-8/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-8/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-8/tmp/runner-contract-*/**
+      - name: Aggregate Full batches
+        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
+        run: node scripts/ci-full-batches.mjs aggregate
       - name: Save logs and evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: tests-${{ github.event_name }}-${{ github.run_id }}
+          name: tests-${{ github.event_name }}-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 14
           if-no-files-found: warn
           path: |
@@ -62,3 +214,6 @@ jobs:
             test-results/*/tmp/yakyujinsei-*/**
             test-results/*/tmp/yakyujinsei-*.json
             test-results/*/tmp/runner-contract-*/**
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-*/*.json
+            test-results/ci-full/batch-*/*.log
