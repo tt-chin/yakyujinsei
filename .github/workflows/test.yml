@@ -15,7 +15,7 @@ on:
         type: choice
         required: true
         default: quick
-        options: [quick, full, audit]
+        options: [quick, full, audit, linux-smoke]
 permissions:
   contents: read
 concurrency:
@@ -48,8 +48,13 @@ jobs:
       - name: Validate workflow
         run: node scripts/check-workflow.mjs
       - name: Run test profile
-        if: env.TEST_MODE != 'full'
+        if: env.TEST_MODE != 'full' && env.TEST_MODE != 'linux-smoke'
         run: node scripts/test.mjs "$TEST_MODE" --output=test-results/ci
+      - name: Linux Chromium smoke
+        if: env.TEST_MODE == 'linux-smoke'
+        run: |
+          node scripts/ci-full-batches.test.mjs
+          node scripts/linux-chromium-smoke.mjs
       - name: Plan Full batches
         id: full-plan
         if: env.TEST_MODE == 'full'
@@ -217,3 +222,4 @@ jobs:
             test-results/ci-full/plan.json
             test-results/ci-full/batch-*/*.json
             test-results/ci-full/batch-*/*.log
+            test-results/linux-smoke/**

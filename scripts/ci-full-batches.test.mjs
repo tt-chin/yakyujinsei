@@ -1,12 +1,25 @@
 // Explicit CI-tool tests; not a new game Full entry. Run directly with Node.
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {mkdtempSync,writeFileSync,readFileSync,unlinkSync,mkdirSync} from 'node:fs';
+import {mkdtempSync,writeFileSync,readFileSync,unlinkSync,mkdirSync,statSync,realpathSync,existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {fullIds,splitIds,validatePlan,runBatch,aggregate} from './ci-full-batches.mjs';
+import {fullIds,splitIds,validatePlan,runBatch,aggregate,linuxTempAlias} from './ci-full-batches.mjs';
+test('Linux socket pathname budget (107 bytes excluding NUL)',()=>{
+ const suffix='/org.chromium.Chromium.ABCDEF/SingletonSocket';
+ assert.ok(Buffer.byteLength('/tmp/yj-ABCDEF/t'+suffix)<108);
+ assert.ok(Buffer.byteLength('/home/runner/work/yakyujinsei/yakyujinsei/test-results/ci-full/batch-2/tmp'+suffix)>=108);
+});
+test('Linux aliases unique, private, evidence preserved after cleanup',{skip:process.platform!=='linux'},()=>{
+ const target=mkdtempSync(path.join(os.tmpdir(),'alias-target-'));
+ const a=linuxTempAlias(target),b=linuxTempAlias(target);
+ assert.notEqual(a.alias,b.alias);assert.equal(statSync(path.dirname(a.alias)).mode&0o777,0o700);
+ assert.equal(realpathSync(a.alias),realpathSync(target));
+ writeFileSync(path.join(a.alias,'evidence'),'keep');a.release();b.release();
+ assert.equal(existsSync(a.alias),false);assert.equal(readFileSync(path.join(target,'evidence'),'utf8'),'keep');
+});
 
 const ids=fullIds(),temp=mkdtempSync(path.join(os.tmpdir(),'ci-batches-contract-'));
 const hash=s=>createHash('sha256').update(s).digest('hex');

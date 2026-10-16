@@ -25,7 +25,7 @@ for(const file of ['AGENTS.md','CURRENT_SPEC.md','docs/src/engine/game.js','test
  assert.equal(shouldRunPush([file]),true,file+' must trigger CI');
  assert.equal(shouldRunPush([...evidenceOnly,file]),true,'Mixed changes must trigger CI: '+file);
 }
-assert.deepEqual(workflow.on.workflow_dispatch.inputs.mode.options,['quick','full','audit']);
+assert.deepEqual(workflow.on.workflow_dispatch.inputs.mode.options,['quick','full','audit','linux-smoke']);
 assert.equal(workflow.permissions.contents,'read');
 assert.equal(workflow.concurrency['cancel-in-progress'],true);
 const job=workflow.jobs.tests;
@@ -57,7 +57,8 @@ assert.equal(new Set(names).size,8);
 const aggregate=job.steps.find(s=>s.run==='node scripts/ci-full-batches.mjs aggregate');
 assert.equal(aggregate?.if,fullCondition);assert.equal(aggregate['continue-on-error'],undefined);
 assert.ok(job.steps.indexOf(aggregate)>job.steps.indexOf(runs.at(-1))+1);
-assert.equal(job.steps.find(s=>s.name==='Run test profile').if,"env.TEST_MODE != 'full'");
+assert.equal(job.steps.find(s=>s.name==='Run test profile').if,"env.TEST_MODE != 'full' && env.TEST_MODE != 'linux-smoke'");
+assert.equal(job.steps.find(s=>s.name==='Linux Chromium smoke').if,"env.TEST_MODE == 'linux-smoke'");
 assert.ok(!job.steps.some(s=>/git push|rsync|DEPLOY_REPO_TOKEN/.test(s.run||'')));
 console.log('PASS workflow YAML parse: dev quick, main PR full, dispatch choices, pinned tools, full history, read-only permissions, artifacts, no deployment');
 console.log('PASS exact dev evidence allowlist and mixed-change checks; PR and dispatch remain unfiltered (GitHub event execution verified separately)');

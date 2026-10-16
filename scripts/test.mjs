@@ -1,4 +1,4 @@
-import {mkdirSync,readFileSync,writeFileSync,createWriteStream,readdirSync} from 'node:fs';
+import {mkdirSync,readFileSync,writeFileSync,createWriteStream,readdirSync,realpathSync,lstatSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {spawn,execFileSync} from 'node:child_process';
@@ -8,7 +8,7 @@ import {inventory,manual} from './test-manifest.mjs';
 
 const rootURL=new URL('../',import.meta.url),root=fileURLToPath(rootURL);
 const mode=process.argv[2],arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
-const allowed=new Set(['only','playwright','browser','baseline','output','reuse']);
+const allowed=new Set(['only','playwright','browser','baseline','output','reuse','temp-root']);
 for(const a of process.argv.slice(3))if(!allowed.has(a.slice(2).split('=')[0])&&!['--self-test-failure','--legacy-careers'].includes(a))throw Error('Unknown option '+a);
 if(!['list','quick','full','audit'].includes(mode))throw Error('Usage: node scripts/test.mjs list|quick|full|audit [--only=id,...] [--baseline=ref] [--playwright=module] [--browser=chrome|chromium]');
 const entries=[{id:'syntax',file:'scripts/check-syntax.mjs',category:'static',modes:['quick','full','audit'],dependencies:'Node',seconds:8,browser:false,network:false},...inventory(rootURL)];
@@ -42,7 +42,9 @@ if(arg('reuse')) {
   if(JSON.stringify(reuse.browser)!==JSON.stringify(report.browser))throw Error('Cannot reuse a different browser');
   report.reuseSource=source;
 }
-const env={...process.env,TEMP:path.join(output,'tmp'),TMP:path.join(output,'tmp'),TMPDIR:path.join(output,'tmp')};
+const tempRoot=arg('temp-root')||path.join(output,'tmp');
+if(arg('temp-root')&&(process.platform!=='linux'||!lstatSync(tempRoot).isSymbolicLink()||realpathSync(tempRoot)!==realpathSync(path.join(output,'tmp'))))throw Error('temp-root must be a Linux alias of this output/tmp');
+const env={...process.env,TEMP:tempRoot,TMP:tempRoot,TMPDIR:tempRoot};
 async function execute(e,args) {
   const begin=Date.now(),logPath=path.join(output,e.id.replaceAll('/','-')+'.log'),log=createWriteStream(logPath);
   console.log(`RUN ${e.id}: node ${args.join(' ')}`);

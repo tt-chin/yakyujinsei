@@ -1,7 +1,7 @@
 // CI-only orchestration. The test Runner, profile flags and assertions stay unchanged.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {mkdirSync,readFileSync,writeFileSync,existsSync,statfsSync} from 'node:fs';
+import {mkdirSync,readFileSync,writeFileSync,existsSync,statfsSync,mkdtempSync,chmodSync,symlinkSync,unlinkSync,rmdirSync} from 'node:fs';
 import {spawnSync,execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
@@ -27,14 +27,25 @@ export function validatePlan(plan,ids){
   assert.equal(new Set(plan.batches.flat()).size,ids.length,'Duplicate entry');
   assert.ok(plan.batches.every(b=>b.length));
 }
+export function linuxTempAlias(target){
+  mkdirSync(target,{recursive:true});
+  const parent=mkdtempSync('/tmp/yj-');chmodSync(parent,0o700);
+  const alias=path.join(parent,'t');
+  try{symlinkSync(path.resolve(target),alias,'dir');}catch(e){rmdirSync(parent);throw e;}
+  return {alias,release(){unlinkSync(alias);rmdirSync(parent);}}; // Never delete the evidence target.
+}
 export function runBatch(plan,index,output,execute=spawnSync){
   const ids=plan.batches[index-1];assert.ok(ids,'Invalid batch');
   const dir=path.join(output,'batch-'+index);mkdirSync(dir,{recursive:true});
   const receiptFile=path.join(dir,'batch.json');assert.ok(!existsSync(receiptFile),'Refuse to overwrite batch evidence');
   const args=['scripts/test.mjs','full','--only='+ids.join(','),'--baseline='+plan.baseline,'--output='+dir];
+  const temp=process.platform==='linux'?linuxTempAlias(path.join(dir,'tmp')):null;
+  if(temp)args.push('--temp-root='+temp.alias);
   const receipt={head:plan.head,runId:plan.runId,runAttempt:plan.runAttempt,index,ids,planHash:hash(JSON.stringify(plan)),command:[process.execPath,...args],status:'RUNNING',started:new Date().toISOString(),environment:environment()};
   write(receiptFile,receipt);
-  const r=execute(process.execPath,args,{cwd:root,stdio:'inherit',env:process.env});
+  let r;
+  try{r=execute(process.execPath,args,{cwd:root,stdio:'inherit',env:process.env});}
+  finally{temp?.release();}
   Object.assign(receipt,{status:'COMPLETED',exitCode:r.status,signal:r.signal??null,error:r.error?.message??null,completed:new Date().toISOString()});
   write(receiptFile,receipt);
   return r.status===0&&!r.signal&&!r.error?0:1;
