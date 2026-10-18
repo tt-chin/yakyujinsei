@@ -25,7 +25,13 @@ test('zero hash falls back to 0x6D2B79F5',()=>{
 test('state is read on every call and never held',()=>{
   let S={rngState:0};const rng=new Rng(()=>S,fnv1a32);rng.seed('yakyo-test-001');
   const old=S;S={rngState:old.rngState};assert.equal(rng.next(),golden['yakyo-test-001'][1][0]);
-  assert.equal(old.rngState,golden['yakyo-test-001'][0]);assert.deepEqual(Object.keys(rng).sort(),['getState','hash']);
+  assert.equal(old.rngState,golden['yakyo-test-001'][0]);assert.deepEqual(Object.keys(rng).sort(),['getState','hash','onDraw']);
+});
+test('onDraw is notified once per next() with the drawn value, never by seed()',()=>{
+  const S={rngState:0},rng=new Rng(()=>S,fnv1a32),seen=[];rng.onDraw=v=>seen.push([v,S.rngState]);
+  rng.seed('yakyo-test-001');assert.deepEqual(seen,[]);
+  const [seeded,values,final]=golden['yakyo-test-001'];assert.equal(S.rngState,seeded);
+  assert.deepEqual(values.map(()=>rng.next()),values);assert.deepEqual(seen.map(x=>x[0]),values);assert.equal(seen.at(-1)[1],final);
 });
 test('game.js seedInit/R delegate to Rng and keep _s in sync',()=>{
   const c=vm.createContext({S:{rngState:0},Rng,TextEncoder});

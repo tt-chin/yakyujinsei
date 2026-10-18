@@ -22,9 +22,7 @@ window.__kboTest={get:()=>({state:JSON.parse(JSON.stringify(S)),calls:window.__r
  fixture:()=>{actClear();S=newState('契約検証','IF');Object.assign(S,{year:2049,age:39,stage:'PRO',org:'KBO',lv:'KBO1',orgTeamId:'KBO_GWANGJU_TIGERS',currentSalary:168210000,contractSequence:9,marketInjury:'HEALTHY',lastD:-5.75,serviceTime:{KBO:8},ab:{sta:45,con:45,pow:45,spd:45,eye:45,rng:45,fld:45,arm:45},dpos:'DH',seasonFactor:1});S.ct=createContract({contractId:'KBO-FIXTURE',org:'KBO',teamId:S.orgTeamId,signedYear:2048,startYear:2049,years:1,annualSalary:S.currentSalary,incentive:createIncentiveTerms({org:'KBO',annualSalary:S.currentSalary})});S.ct=markSalaryPaid(S.ct,2049).contract;pendingOffseasonSalary=null;window.__fixtureAdv=0;const normalAdvance=advance;advance=()=>{finalizePendingOffseasonSalary();window.__fixtureAdv++;};choose('満了年度の降格',[{t:'KBO二軍へ降格',f:()=>{const from=S.lv;S.lv='KBO2';applyDemotionSalary(from,S.lv);advance();}}]);},
  pay:()=>{S.year=2050;S.pool=0;movement=()=>{window.__fixtureMoves=(window.__fixtureMoves||0)+1;};phaseEnd();},adv:()=>window.__fixtureAdv};`;
 function instrument(source){
- source=source.replace('applyKboForeignPackageCap }','applyKboForeignPackageCap as originalApplyKboForeignPackageCap }')
-  .replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;')
-  .replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;')
+ source=instrumentRng(source.replace('applyKboForeignPackageCap }','applyKboForeignPackageCap as originalApplyKboForeignPackageCap }'),'__rngCalls')
   .replace("if(targetOrg==='KBO'){const cap=","if(targetOrg==='KBO'){window.__kboCandidate={sourceLevel,targetLevel,rating,convertedRating,baseSalary,raw,contractMult,positionMult,transferType,previousSalary,cross,injury};const cap=");
  const at=source.lastIndexOf('})();');assert.ok(at>0);return source.slice(0,at)+hook+source.slice(at);
 }
@@ -92,3 +90,4 @@ try{
  process.exit(failure?1:0);
 }
 import {withApprovedBirthSnapshot} from './support/baseline-initial-potential.mjs';
+import {instrumentRng} from './support/rng-instrument.mjs';

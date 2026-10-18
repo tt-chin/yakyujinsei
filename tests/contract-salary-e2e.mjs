@@ -32,7 +32,7 @@ window.__contractAudit={
  pay:()=>{const saved=movement;movement=()=>{window.__payMoves=(window.__payMoves||0)+1;};try{S.pool=0;phaseEnd();}finally{movement=saved;}},
  missing:()=>{S.ct=null;phaseEnd();}
 };`;
-function instrument(source){source=source.replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;');const at=source.lastIndexOf('})();');assert.ok(at>0);return source.slice(0,at)+hook+source.slice(at);}
+function instrument(source){source=instrumentRng(source,'__rngCalls');const at=source.lastIndexOf('})();');assert.ok(at>0);return source.slice(0,at)+hook+source.slice(at);}
 const oldCache=new Map();
 const server=createServer(async(req,res)=>{try{let rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1)||'index.html';const old=rel.startsWith('baseline/');if(old)rel=rel.slice(9)||'index.html';if(rel.includes('..'))throw Error('path');const ref=old?comparison:baseline,key=ref+':'+rel;if(ref&&!oldCache.has(key))oldCache.set(key,execFileSync('git',['show',ref+':docs/'+rel],{cwd:root,maxBuffer:20e6}));let body=ref?oldCache.get(key):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(old?withApprovedBirthSnapshot(body.toString()):body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -94,3 +94,4 @@ try{
  const summary={sha,baseline,target,pass:records.filter(r=>r.status==='PASS').length,fail:records.filter(r=>r.status==='FAIL').length,errors,seconds:(Date.now()-started)/1000,cases:records.map(({id,input,status,error})=>({id,input,status,error}))};await writeFile(path.join(output,'summary.json'),JSON.stringify(summary,null,2));console.log(JSON.stringify({pass:summary.pass,fail:summary.fail,consoleErrors:errors.length,seconds:summary.seconds,output}));assert.equal(summary.fail,0);assert.deepEqual(errors,[]);
 }catch(e){fatal=e;console.error(e.stack);}finally{server.closeAllConnections();server.close();let timer;try{await Promise.race([browser.close(),new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('BROWSER_CLOSE_TIMEOUT')),15000))]);}catch(e){if(e.message==='BROWSER_CLOSE_TIMEOUT'&&!browser.isConnected())console.warn('BROWSER_CLEANUP_WARNING: disconnected; profile cleanup timeout');else{fatal??=e;console.error(e.message);}}finally{clearTimeout(timer);}process.exit(fatal?1:0);}
 import {withApprovedBirthSnapshot} from './support/baseline-initial-potential.mjs';
+import {instrumentRng} from './support/rng-instrument.mjs';

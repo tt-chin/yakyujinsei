@@ -233,6 +233,7 @@ validateEventCatalog();
 const EVENTS=EVENT_CATALOG.events;
 /* ゲーム状態。 */
 let S=null, stepQ=[];
+let careerRng = null;
 function newState(name,pos,role){
   const ab={}; POS_AB[pos].forEach(k=>ab[k]=ri(20,32));
   if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);} else {ab.con+=ri(0,6);ab.pow+=ri(0,4);}
@@ -2829,7 +2830,7 @@ $('btn-start').onclick=()=>{
   function listByOrg(org){ const o=org==='MiLB'?'MLB':org;return DATA.teams.filter(t=>t.org===o&&t.active).sort((a,b)=>a.order-b.order); }
   function pickRecord(a){return a[Math.floor(R()*a.length)];}
 
-  const careerRng = new Rng(() => S, fnv1a32);
+  careerRng = new Rng(() => S, fnv1a32);
   seedInit = function(seed){ careerRng.seed(seed); _s=S.rngState|0; };
   R = function(){ const v=careerRng.next(); _s=S.rngState|0; return v; };
 
