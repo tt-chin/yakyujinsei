@@ -1,4 +1,5 @@
 import { VERSION } from '../config.js';
+import { Rng } from './rng.js';
 import {hasCurrentAwardEffect,hasHistoricalDefenseAward} from './award-consumer-policy.js';
 import {annualAwardTransaction,annualStateTransaction,preallocateAwardSlots,captureAwardSlot,prepareAwardReceipt,commitAwardReceipt,awardPlan,awardInputs,prepareD2AwardDecisions,recordAwardDecisions,completeAwardDecisions} from './award-transaction-policy.js';
 import {getAwardDefinition} from './award-identity-policy.js';
@@ -2828,8 +2829,9 @@ $('btn-start').onclick=()=>{
   function listByOrg(org){ const o=org==='MiLB'?'MLB':org;return DATA.teams.filter(t=>t.org===o&&t.active).sort((a,b)=>a.order-b.order); }
   function pickRecord(a){return a[Math.floor(R()*a.length)];}
 
-  seedInit = function(seed){ S.rngState=fnv1a32('v1:'+seed)||0x6D2B79F5; _s=S.rngState|0; };
-  R = function(){ S.rngState=(S.rngState+0x6D2B79F5)>>>0;let t=S.rngState;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);_s=S.rngState|0;return((t^(t>>>14))>>>0)/4294967296; };
+  const careerRng = new Rng(() => S, fnv1a32);
+  seedInit = function(seed){ careerRng.seed(seed); _s=S.rngState|0; };
+  R = function(){ const v=careerRng.next(); _s=S.rngState|0; return v; };
 
   teamListOf = function(org){return listByOrg(org).map(t=>t.teamId);};
   teamChampRate = function(id){ const t=teamRec(id);if(!t)return 5;const base={S:14,A:9,B:5}[t.strength]||7;return clamp(base+(fnv1a32(id+':'+S.year)%7)-3,2,24); };
