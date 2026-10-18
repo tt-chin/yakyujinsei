@@ -1,6 +1,6 @@
 # 現行規格（正式公開 v1.13.0）
 
-> 現行公開状態（2026-10-16）：正式ソース／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`、公開Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。既存Publish Workflow成功、同SHA Linux Quick61 PASS、正式サイトP／IF×1280／320／390pxの基本Smoke6組PASS。[公開検収](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)参照。Linux Fullは **NOT_ACCEPTED / DEFERRED**、artifact全原件保存は **ARTIFACT_COVERAGE_BLOCKED** のまま。公開成功をFull合格や全機能検証と解釈しない。文書入口は[現行文書ナビ](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)。
+> 現行公開状態（2026-10-16）：正式ソース／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`、公開Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。既存Publish Workflow成功、同SHA Linux Quick61 PASS、正式サイトP／IF×1280／320／390pxの基本Smoke6組PASS。[公開検収](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)参照。Linux FullはGitHub Actionsで未PASS（2026-10-18、本機Docker Linuxで`650e4dd` 80 PASS、BACKLOG CI-LINUX-FULL-01）、artifact全原件保存は **ARTIFACT_COVERAGE_BLOCKED** のまま。公開成功をFull合格や全機能検証と解釈しない。文書入口は[現行文書ナビ](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)。
 
 以下の2026-10-15準備記録及び過去版の検証状態は歴史快照であり、現在の公開状態を上書きしない。
 
