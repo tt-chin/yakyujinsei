@@ -1,6 +1,7 @@
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
 import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
+import {assertSameCareer} from './support/first-difference.mjs';
 import {createServer} from 'node:http';
 import {readFile, mkdir} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -139,7 +140,7 @@ try{
             assert.deepEqual(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
           const result=await p.evaluate(({labels,texts})=>{
-            const snapshot=window.__displayRegression();delete snapshot.state.version;
+            const snapshot=window.__displayRegression();delete snapshot.state.version;if(snapshot.state.birthHighSchool)delete snapshot.state.birthHighSchool.createdVersion;
             for(const r of Object.values(snapshot.state.intlTraitResults||{}))delete r.personalStats;
             const action=document.querySelector('#act');
             // Compare all non-trait copy and full S/RNG. Only the approved trait
@@ -178,7 +179,7 @@ try{
         }
         snapshots.push(records);await ctx.close();
       }
-      assert.deepEqual(historicalCareer(snapshots[1]),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
+      assertSameCareer(historicalCareer(snapshots[1]),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
       const last=snapshots[0].at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');console.log(`Fixed career ${seed}/${pos}: ${snapshots[0].length} actions, RNG ${last.calls}, retirement ${last.state.year}, exact match`);
     }
   }

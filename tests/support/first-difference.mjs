@@ -13,6 +13,13 @@ export function findFirstDifference(a,b,p='$') {
   return {path:p,before:a,after:b};
 }
 
+// Report the first difference before deepEqual: a full diff of two careers can exhaust memory (CI-LINUX-FULL-01).
+export function assertSameCareer(actual,expected,message) {
+  const d=findFirstDifference(actual,expected);
+  if(d)assert.fail(message+' at '+d.path+': '+JSON.stringify(d.before)?.slice(0,300)+' -> '+JSON.stringify(d.after)?.slice(0,300));
+  assert.deepEqual(actual,expected,message);
+}
+
 // G1-A positive control ONLY for the verified jp3-infielder-01 / 2041 route.
 // The raw historical run is retained. This is an explicit counterfactual native
 // control, not old-version replay, a golden replacement, or a product adapter.

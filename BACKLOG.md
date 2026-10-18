@@ -21,14 +21,14 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **26** | D2投手三冠按已接受本地範圍結案；2026-10-18另以發布範圍結案D2-G9-RELEASE（殘項拆出） |
-| 未完成 | **28** | 含D2-CI-ARTIFACT-01；2026-10-18 D2-G9-RELEASE結案、另加CI-LINUX-FULL-01 |
+| 未完成 | **29** | 含D2-CI-ARTIFACT-01；2026-10-18 D2-G9-RELEASE結案、另加CI-LINUX-FULL-01、TEST-COMPARE-BASELINE-01 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
 | IMPLEMENTED_UNVERIFIED | **4** | 全力投球驗收完成，其他四項保留 |
-| DESIGN_PENDING | **7** | 增加smallschool出生高校／舊tier映射決策 |
+| DESIGN_PENDING | **8** | 增加smallschool出生高校／舊tier映射決策；2026-10-18另加TEST-COMPARE-BASELINE-01 |
 | 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
 
-以上依唯一正式checkbox重新計算：**26 + 28 = 54**（2026-10-18：D2-G9-RELEASE以發布範圍結案、新增CI-LINUX-FULL-01；以下為前輪說明，保留原時點）。前輪TRAIT-PITCHER-TC已按本地接受範圍結案；本輪只同步Linux CI優先策略、保留D2-G9-RELEASE未完成並新增D2-CI-ARTIFACT-01，不改其他52個既有ID的完成狀態。全力投球1.11.9的Linux Quick47／Full65及Preview29案、1.11.6與1.11.7的測試數字仍為各版歷史證據，不冒充D2結果。啟動Linux Full仍須核對本次推送SHA與實際Run，未啟動前不標CI_IN_PROGRESS。其他smallschool／COPY等較早描述與後續專項文件的時點差異不在本輪整理，保持獨立範圍。前十階段歷史數字與報告不改寫。
+以上依唯一正式checkbox重新計算：**26 + 29 = 55**（2026-10-18：D2-G9-RELEASE以發布範圍結案、新增CI-LINUX-FULL-01、TEST-COMPARE-BASELINE-01；以下為前輪說明，保留原時點）。前輪TRAIT-PITCHER-TC已按本地接受範圍結案；本輪只同步Linux CI優先策略、保留D2-G9-RELEASE未完成並新增D2-CI-ARTIFACT-01，不改其他52個既有ID的完成狀態。全力投球1.11.9的Linux Quick47／Full65及Preview29案、1.11.6與1.11.7的測試數字仍為各版歷史證據，不冒充D2結果。啟動Linux Full仍須核對本次推送SHA與實際Run，未啟動前不標CI_IN_PROGRESS。其他smallschool／COPY等較早描述與後續專項文件的時點差異不在本輪整理，保持獨立範圍。前十階段歷史數字與報告不改寫。
 
 ### 1.1 開發階段完成履歷
 
@@ -169,19 +169,21 @@
 - [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 
-### 3.6 P1 — D2發布準備與獨立CI證據待辦（2 項）
+### 3.6 P1 — D2發布準備與獨立CI證據待辦（3 項）
 
 - [x] **D2-G9-RELEASE** — `RELEASED / CLOSED_WITH_SPLIT_RESIDUALS`（2026-10-18）。正式1.13.0發布與基本Smoke已完成，來源650e4dd／正式站15adf28，見[發布驗收](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)。使用者決定以發布範圍結案，殘項拆出：Linux Full與舊工具固定路徑依賴改由CI-LINUX-FULL-01追蹤（本機Docker Linux Full對650e4dd 80 PASS已獲接受為替代證據；GitHub Actions Linux Full仍未PASS、未豁免）；artifact保存由D2-CI-ARTIFACT-01；文件整理見上方索引。未將任何殘項標為PASS。
 
 > 歷史準備快照（2026-10-15，保留原時點）：`RELEASE_PREPARATION / RELEASE_NOT_VERIFIED`。1.13.0 MINOR、CHANGELOG與限定準備驗收已接受；精確dev commit／push及Linux Full啟動已獲本次批准。Linux實際驗證截至本次提交前尚未執行；只有確認Run與受驗SHA後才報CI_IN_PROGRESS，不能預報PASS。CI／最新SHA Preview／使用者確認／正式發布／smoke全部完成前維持未完成；main合併、正式同步及部署仍未授權。artifact問題由D2-CI-ARTIFACT-01獨立追蹤，不阻擋先跑Full，也不因Full PASS而自動結案。來源與限制見[發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)及[CI證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)；[原G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)保留為歷史。不得清理A／B或歷史JSON。
 
-- [ ] **CI-LINUX-FULL-01** — `LOCAL_LINUX_PASS / CI_NOT_RUN`。2026-10-18自D2-G9-RELEASE拆出。GitHub Actions的Linux Full尚未於任何1.13.0以後SHA取得PASS（最後Run38841657256為18 PASS／1中斷／61未執行、exit143，SIGTERM來源未確定）。同日本機Docker（`mcr.microsoft.com/playwright:v1.49.1-noble`：Ubuntu 24.04.1、Node 22.12.0、Playwright 1.49.1／Chromium 131）：`650e4dd` Full 80 PASS／0 FAIL；重構後`5e7a6f1` 81 PASS／1 FAIL（display-preferences-e2e時序競爭，單獨重跑5次PASS，已於01d1c38修正），兩者656個artifact的RNG計數差異0。Node／Playwright版本與CI（24.15.0／1.62.1）不同，不等於CI PASS；證據僅保存於本機未追蹤的`test-results/linux-docker-2026-10-18/`。另含舊驗證工具依賴已放棄固定路徑之殘項（不得捏造舊baseline讓其通過）。結案條件：GitHub Actions Linux Full於指定SHA取得PASS，或使用者另行豁免；artifact完整性仍由D2-CI-ARTIFACT-01追蹤。
+- [ ] **CI-LINUX-FULL-01** — `LOCAL_LINUX_PASS / CI_NOT_RUN`。2026-10-18自D2-G9-RELEASE拆出。GitHub Actions的Linux Full尚未於任何1.13.0以後SHA取得PASS（最後Run38841657256為18 PASS／1中斷／61未執行、exit143，SIGTERM來源未確定）。同日本機Docker（`mcr.microsoft.com/playwright:v1.49.1-noble`：Ubuntu 24.04.1、Node 22.12.0、Playwright 1.49.1／Chromium 131）：`650e4dd` Full 80 PASS／0 FAIL；重構後`5e7a6f1` 81 PASS／1 FAIL（display-preferences-e2e時序競爭，單獨重跑5次PASS，已於01d1c38修正），兩者656個artifact的RNG計數差異0。Node／Playwright版本與CI（24.15.0／1.62.1）不同，不等於CI PASS；證據僅保存於本機未追蹤的`test-results/linux-docker-2026-10-18/`。另含舊驗證工具依賴已放棄固定路徑之殘項（不得捏造舊baseline讓其通過）。2026-10-18補充：Run38841657256（#42，`650e4dd`）job log於`contract-salary-e2e`啟動約118秒時記錄`The runner has received a shutdown signal`後exit143，batch-2起所有步驟（含always）SKIPPED，僅batch-1 artifact（9.57KB）保留；與Run38750999932（#37，`29ae26b`）中斷於同一入口、約120秒。兩次皆以`--compare=7220ad8`（當時origin/main，1.12.0）執行。本機Docker限制2 CPU／7GB（Node 22／Playwright 1.49.1，對`c9c94cd`）：`--compare=650e4dd`時PASS（113秒，cgroup峰值3.49GB）；`--compare=7220ad8`時於career-P階段Node heap OOM（SIGABRT），放寬heap至6GB後容器達7GB遭kernel OOM kill。推定CI的runner shutdown為同一記憶體暴增所致（UNVERIFIED：CI端無記憶體證據，暴增位置未定位）。現origin/main為`650e4dd`，下次CI Full比較基準不同，未實跑不得視為PASS。重現證據保存於本機未追蹤的`test-results/ci143-contract-salary-2026-10-18/`。結案條件：GitHub Actions Linux Full於指定SHA取得PASS，或使用者另行豁免；artifact完整性仍由D2-CI-ARTIFACT-01追蹤。
 
 - [ ] **D2-CI-ARTIFACT-01** — `ARTIFACT_COVERAGE_BLOCKED`。已實際執行Linux CI、短路徑Smoke與分批上傳；第1批保存成功不能解除完整原件保存缺口。bounded collector仍未接入正式CI；原始S／RNG／Decision／Receipt的可還原保存契約、容量／敏感路徑及還原驗證未完成。[缺口](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)／[分批限制](docs/reviews/LINUX_CI_FULL_1130_STABILITY_ACCEPTANCE.md)。本項維持未完成，不重跑Full、不刪證據。
 
 > 歷史準備快照（2026-10-15，保留原時點）：`ARTIFACT_COVERAGE_BLOCKED`。CI job timeout已由60提高至120分鐘，但Linux實際驗證截至本次提交前尚未執行。bounded evidence collector限定測試47 PASS／0 FAIL，尚未接入正式CI；現有artifact glob保持，Full原始S／RNG／Decision／Receipt等證據仍有保存缺口。使用者接受先啟動Linux CI Full，完整封存另行改善；CI Full執行結果、workflow／上傳結果與artifact完整性須分開報告，保存完整性不得標PASS。結案需核准並驗證Gate→case→原件保存契約、超大JSON／64MiB上限處理、敏感路徑安全保存、缺失／損壞／超額與下載還原一致性；不得只用hash索引冒充完整可重播證據。未另行批准不接collector、不取代或擴大glob、不改Full條件或golden。[缺口與限定驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)。
 
-> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋5（待決／保留）＋7（候補）＋2（CI-LINUX-FULL-01／獨立artifact待辦）＝**28**；54唯一ID、26完成／28未完（2026-10-18：D2-G9-RELEASE結案，改計CI-LINUX-FULL-01）。歷史38／47／48／52項及前階段快照保持原數。
+- [ ] **TEST-COMPARE-BASELINE-01** — `DESIGN_PENDING`（2026-10-19縮小範圍）。以`origin/main`為比較基準的3入口（`contract-salary-e2e`、`draft-income-e2e`、`display-preferences-e2e`）在`dev`升版而`main`未跟上時，`birthHighSchool.createdVersion`版本戳記不同，自第0步不一致。**版本戳記部分已處理**：使用者批准比照既有`delete state.version`，於比對前排除該欄位（衍生結果`traits.smallschool`仍比對）；`display-preferences-e2e`亦改用共用`assertSameCareer`防止失敗時OOM。本機Docker 2 CPU／7GB驗證：3入口對`7220ad8`（1.12.0）與`650e4dd`皆PASS（`contract-salary-e2e` 381案，峰值≤3.49GB）；排除前對`7220ad8`的FAIL（含milb-demotion兩案）與`display-preferences-e2e`的OOM皆僅由此欄位造成。**剩餘待決**：有規則變更的版本於發布前跑dev Full時，跨版本比對是否須以許容差分oracle（如`assertApprovedProducerRenameCareer`）宣告差異，或明確接受該等入口FAIL；屬政策判斷，未經批准不改期望值或基準。固定基準的入口（如`hof-first-ballot-e2e`、`salary-history-e2e`）不隨`origin/main`變動，不在本項範圍。
+
+> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋5（待決／保留）＋7（候補）＋3（CI-LINUX-FULL-01／獨立artifact待辦／TEST-COMPARE-BASELINE-01）＝**29**；55唯一ID、26完成／29未完（2026-10-18：D2-G9-RELEASE結案，改計CI-LINUX-FULL-01；另加TEST-COMPARE-BASELINE-01）。歷史38／47／48／52項及前階段快照保持原數。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
