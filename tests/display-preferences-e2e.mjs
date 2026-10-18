@@ -81,6 +81,7 @@ try{
   await page.locator('#board-preferences').click();await setPreferences(page,'classic','large','compact');await page.keyboard.press('Escape');
   assert.equal(await page.locator('#act').evaluate(el=>el.innerHTML),trainingMarkup,'training DOM was rebuilt');
   await page.locator('#act .abrow[aria-disabled="false"]').first().focus();await page.keyboard.press('Enter');
+  await page.waitForFunction(markup=>document.querySelector('#act').innerHTML!==markup,trainingMarkup,{timeout:5000}).catch(e=>{if(e.name!=='TimeoutError')throw e;});
   assert.notEqual(await page.locator('#act').evaluate(el=>el.innerHTML),trainingMarkup,'retained row listener works');
   for(const theme of ['standard','night','classic','scoreboard'])for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
     await page.locator('#board-preferences').click();await setPreferences(page,theme,fontSize,density);await page.keyboard.press('Escape');
