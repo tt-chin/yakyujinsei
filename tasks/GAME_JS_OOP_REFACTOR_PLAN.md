@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / DESIGN_ONLY / NOT_AUTHORIZED**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE1_LOCAL_AUTHORIZED（2026-10-18）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -10,8 +10,8 @@
 
 | 期 | Class | 範圍摘要 | 風險 | 狀態 |
 |---|---|---|---|---|
-| 1 | `Rng` | 封裝生涯 RNG 的種子與步進演算法；`S.rngState` 仍為唯一狀態 | L3 / R3 | 本文詳列，待批准 |
-| 1b | `Rng` 觀測 hook | 測試改用正式 hook 計數，脫離原始碼字串替換 | L2（測試基建） | 概要，待另批 |
+| 1 | `Rng` | 封裝生涯 RNG 的種子與步進演算法；`S.rngState` 仍為唯一狀態 | L3 / R3 | 已批准本機實作與驗證；PR 併入 `dev` 另批 |
+| 1b | `Rng` 觀測 hook | 測試改用正式 hook 計數，脫離原始碼字串替換 | L2（測試基建） | 已列入，接第 1 期；細部計畫另批 |
 | 2 | `GameView` | `board`／`card`／`divider`／`choose`／`allocUI` 等 DOM 操作移出 | L3 | 概要 |
 | 3 | `CareerSession` | 收容 `S` 外狀態（`stepQ`、`choiceGeneration` 等）與年度流程函式 | L3 | 概要 |
 | 4 | LEGACY 覆寫逐組處理 | 32 組覆寫逐組決定合併或 `super` | L3 | 概要 |
@@ -26,13 +26,13 @@
 
 ## 1. 前置條件
 
-1. **D2／main 狀態先釐清**：`main`、`origin/main`、`origin/dev` 皆為 `650e4dd21718b4abec3876fc9ef6148714c21d4f`，但 BACKLOG `D2-G9-RELEASE` 仍記為 main 合併未授權。由使用者確認後再開始第 1 期。
-2. **作業分支為 `dev`**（AGENTS §10.1）。目前本地在 `main`；開始前切換至 `dev`（本地不存在時由 `origin/dev` 建立追蹤分支），不修改 `main`。
-3. **比較基準**：`650e4dd21718b4abec3876fc9ef6148714c21d4f`（若前置 1 的結論改變基準，以使用者指定的完整 SHA 為準）。
+1. **D2／main 狀態**（2026-10-18 更新）：`main`、`origin/main` 為 `650e4dd21718b4abec3876fc9ef6148714c21d4f`，1.13.0 已自此 SHA 正式發布。`origin/dev` 為 `046915cec84e629ce029c3658996e06c008974fd`，`650e4dd` 之後只有文件 commit（含本計畫的 PR #4），`docs/src`、`tests`、`scripts` 無變動。BACKLOG `D2-G9-RELEASE` 為 `RELEASED / RESIDUAL_GATES_DEFERRED`（Linux Full `NOT_ACCEPTED / DEFERRED`），尚未結案。殘項未結案時是否可開始第 1 期，由使用者決定。
+2. **作業分支為 `plan/game-js-oop-refactor`**：已 fast-forward 至 `origin/dev`（`046915c`）。完成後以 PR 併入 `dev`（同 PR #4 方式，符合 AGENTS §10.1），不修改 `main`。
+3. **比較基準**：`650e4dd21718b4abec3876fc9ef6148714c21d4f`（與 `046915c` 的程式碼相同；若前置 1 的結論改變基準，以使用者指定的完整 SHA 為準）。
 
 ### 1.1 與其他 BACKLOG 未完成項目的排序限制（2026-10-18 依 BACKLOG 記述判斷，未逐項讀碼）
 
-1. **D2-G9-RELEASE 先結案**：1.13.0 的 CI／Preview／smoke 綁定受驗 SHA `650e4dd`。重構不得先推上 `dev`，避免 Preview 與受驗版本分離，或 `main` 合併時夾帶重構。
+1. **D2-G9-RELEASE 殘項**：1.13.0 已發布，`main` 合併時夾帶重構的風險已不存在。殘項（Linux Full 等）若需重新驗證，須明確指定受驗 SHA `650e4dd`，不得以 `dev` HEAD 代替。殘項未結案期間，重構 PR 是否可併入 `dev` 由使用者決定。
 2. **規則變更不得與重構同一 change-set**：重構的證明前提是「差分＝無」，混入規則差分即失效。`OVR-01`、`TRAIT-SMALLSCHOOL-SEMANTICS-01`、`TRAIT-NITENICHI`、`TRAIT-CHAMPIONMAKER`、`CONTRACT-ASIA-01`、HOF 決策五項（`HOF-BUCKET-DECISION-01`、`HOF-PITCHER-BALANCE-01`、`HOF-HONOR-POLICY-01`、`HOF-DISPLAY-ROUND-01`、`HOF-VOTE-STORY-01`）只能在期與期之間各自獨立進行，並使用各自的 baseline 與許容差分。`TRAIT-CHAMPIONMAKER` 涉及 RNG 政策，若在第 1 期之後實作，應經由 `Rng`。
 3. **第 1 期與 HOF 研究不同時進行**：第 1 期修改 `tests/retirement-hof-test-support.mjs`，該檔同時是 `HOF-NATURAL-SAMPLE-01` 研究工具的函式抽取支援。
 4. **第 2 期（`GameView`）避開 UI 類項目**：`COPY-01`、P2 功能候補七項（`INJ-UI-01`、`PLY-01`、`INT-01`、`EVT-01`、`UI-06`、`UI-07`、`PLY-02`）須排在第 2 期之前或之後，不得並行。`EVT-01` 另受「不得改變抽選候選及順序」限制。實機三項（`EVT-1102-ANDROID`、`UI-17-DEVICE`、`SHARE-111-DEVICE`）若在第 2 期前完成，第 2 期後須重新驗收。
@@ -121,7 +121,7 @@ R = function(){ const v=careerRng.next(); _s=S.rngState|0; return v; };
 
 - 變更檔：`docs/src/engine/rng.js`（新）、`docs/src/engine/game.js`、`tests/award-journal-native.test.mjs`、`tests/retirement-hof-test-support.mjs`、`tests/rng.test.mjs`（新）、`scripts/test-manifest.mjs`、`scripts/TESTING.md`。
 - 實作後交 reviewer 審查 diff。
-- commit／push 至 `dev` 須另經使用者批准；Preview 確認與 `main` 反映依 AGENTS §10。
+- commit／push 及 PR 併入 `dev` 須另經使用者批准；Preview 確認與 `main` 反映依 AGENTS §10。
 - 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC。BACKLOG `REFACTOR-AUDIT-01` 是否補記由使用者決定。
 
 ### 2.7 本期範圍外
@@ -159,8 +159,8 @@ R = function(){ const v=careerRng.next(); _s=S.rngState|0; return v; };
 - 32 組逐組決定「合併為單一版本」或「`extends` + `super`」；捕獲原函式與讀取新綁定的語意差異需逐組驗證（STAGE5 稽核）。
 - 刪除舊定義前需執行期可達性證據；包含檔頭 RNG 舊定義與 `_s`（同時調整 `fixed-seed-v160`）。
 
-## 4. 待使用者決定
+## 4. 使用者決定（2026-10-18）
 
-1. 第 1 期的前置 1（D2／main 狀態）。
-2. 是否批准第 1 期依本文實作。
-3. 第 1b 期是否列入，或接受第 1 期後即停在現狀。
+1. 前置 1：D2-G9-RELEASE 殘項未結案，仍可開始第 1 期的本機實作與驗證；重構 PR 併入 `dev` 的時機另行決定。
+2. 第 1 期：批准依本文實作。commit／push／PR 仍依 §2.6 另批。
+3. 第 1b 期：列入，接在第 1 期之後；開始前另立細部計畫並取得批准。
