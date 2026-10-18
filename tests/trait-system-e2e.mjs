@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import {TRAIT_LABELS,TRAIT_TEXT,removedTraitLabel} from '../docs/src/engine/trait-policy.js';
+import {instrumentRng} from './support/rng-instrument.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),baseline='2375d46';
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').slice(1).join('=');
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
@@ -19,7 +20,7 @@ const server=createServer(async(req,res)=>{try{
   const url=new URL(req.url,'http://localhost'),old=url.pathname.startsWith('/baseline/'),rel=decodeURIComponent(url.pathname).replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('Invalid path');
   if(old&&!cache.has(rel))cache.set(rel,execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20*1024*1024}));
   let content=old?cache.get(rel):await readFile(path.join(root,'docs',rel));
-  if(rel==='src/engine/game.js'){content=content.toString().replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;');const at=content.lastIndexOf('})();');content=content.slice(0,at)+(old?oldHook:hook+reviewHook)+content.slice(at);}
+  if(rel==='src/engine/game.js'){content=instrumentRng(content.toString(),'__rngCalls');const at=content.lastIndexOf('})();');content=content.slice(0,at)+(old?oldHook:hook+reviewHook)+content.slice(at);}
   res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
 }catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const local=`http://127.0.0.1:${server.address().port}`;
