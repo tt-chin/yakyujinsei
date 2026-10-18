@@ -1,0 +1,1467 @@
+{
+  "schemaVersion": 1,
+  "scope": "DOCUMENT_AUDIT_STAGE2_ANALYSIS_ONLY",
+  "date": "2026-10-16",
+  "branch": "dev",
+  "head": "650e4dd21718b4abec3876fc9ef6148714c21d4f",
+  "version": "1.13.0",
+  "unit": "人工選定的規則／技術條款群組，非所有句子、測試assertion或正式風險ID",
+  "counts": {
+    "HISTORICAL_SUPERSEDED": 5,
+    "COMPLETE": 21,
+    "PARTIAL": 33,
+    "UNTRANSFERRED": 7
+  },
+  "evidencePolicy": "本輪僅靜態閱讀；所有PASS屬來源報告既有結果，未重跑。不存在程式即驗收完成的推論。",
+  "groups": {
+    "numeric": {
+      "code": [
+        [
+          "docs/src/engine/pitcher-award-policy.js",
+          8
+        ],
+        [
+          "docs/src/engine/game.js",
+          1436
+        ]
+      ],
+      "tests": [
+        "tests/pitcher-award-policy.test.mjs",
+        "tests/pitcher-award-integration.test.mjs"
+      ]
+    },
+    "rng": {
+      "code": [
+        [
+          "docs/src/engine/award-rng-policy.js",
+          20
+        ]
+      ],
+      "tests": [
+        "tests/award-rng-policy.test.mjs",
+        "tools/development-a/g2-vectors.json",
+        "tools/development-a/g2-validation.js"
+      ]
+    },
+    "tx": {
+      "code": [
+        [
+          "docs/src/engine/award-transaction-policy.js",
+          38
+        ],
+        [
+          "docs/src/engine/game.js",
+          1393
+        ]
+      ],
+      "tests": [
+        "tests/award-transaction-policy.test.mjs",
+        "tests/award-journal-native.test.mjs"
+      ]
+    },
+    "consumer": {
+      "code": [
+        [
+          "docs/src/engine/award-consumer-policy.js",
+          11
+        ],
+        [
+          "docs/src/engine/award-consumer-policy.js",
+          118
+        ]
+      ],
+      "tests": [
+        "tests/award-consumer-policy.test.mjs",
+        "tests/award-legacy-consumer.test.mjs",
+        "tests/award-history-b-comparison.test.mjs"
+      ]
+    },
+    "identity": {
+      "code": [
+        [
+          "docs/src/engine/award-identity-policy.js",
+          57
+        ],
+        [
+          "docs/src/engine/award-identity-policy.js",
+          104
+        ]
+      ],
+      "tests": [
+        "tests/award-identity-policy.test.mjs",
+        "tests/award-consumer-contract.test.mjs"
+      ]
+    },
+    "year": {
+      "code": [
+        [
+          "docs/src/engine/game.js",
+          2101
+        ],
+        [
+          "docs/src/engine/game.js",
+          3227
+        ],
+        [
+          "docs/src/engine/game.js",
+          3286
+        ]
+      ],
+      "tests": [
+        "tools/development-a/runtime.mjs",
+        "tests/season-payment-receipt.test.mjs",
+        "tests/salary-evaluation-receipt.test.mjs"
+      ]
+    },
+    "integration": {
+      "code": [
+        [
+          "docs/src/engine/game.js",
+          1393
+        ],
+        [
+          "docs/src/engine/award-transaction-policy.js",
+          92
+        ]
+      ],
+      "tests": [
+        "tests/pitcher-award-integration.test.mjs",
+        "tools/development-b/runtime.mjs",
+        "tools/development-b/receipt-replay.mjs"
+      ]
+    }
+  },
+  "clauses": [
+    {
+      "mappingId": "M001",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§1–3",
+        "line": 25
+      },
+      "clause": "D1→D2、A01～A09批准與真實制度／研究來源",
+      "transferStatus": "HISTORICAL_SUPERSEDED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1–17.5",
+        "line": 519,
+        "coverage": "現行對照；不建議原樣移轉"
+      },
+      "evidenceGroup": "integration",
+      "recommendation": "保留批准及研究原文；只連結當前規格，不搬入全部候選",
+      "unverifiedRisk": "官方制度研究與遊戲門檻不是同一種證據；未重新查核外部規則。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M002",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4、§14.13.4",
+        "line": 75
+      },
+      "clause": "P01～P08名稱、ID及適用一軍；舊大賞不等於P02/P08",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1",
+        "line": 519,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "identity",
+      "recommendation": "保留簡短來源引用；不能因移轉而刪除原文",
+      "unverifiedRisk": "逐一consumer待遇仍另列，不由ID推定。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M003",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.2.2",
+        "line": 139
+      },
+      "clause": "P01四聯盟B/G：10/15、12/17、12/17、14/20；B曲線20+75比例",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "正式規格作唯一數值入口；原候選標歷史",
+      "unverifiedRisk": "本輪只讀條件；不宣稱自然平衡已證實。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M004",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.1／§4.2、§5.1",
+        "line": 90
+      },
+      "clause": "P02承接原ERA/IP資格、原機率／保底及主R槽；停止新發舊賞",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1–17.2",
+        "line": 519,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "保留原槽映射技術引用",
+      "unverifiedRisk": "歷史LEGACY ID仍不可重新分類為P02。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M005",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.1／§4.2",
+        "line": 90
+      },
+      "clause": "P03最低／保底SO、原機率；正式名稱及舊名只讀alias",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1–17.2",
+        "line": 519,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "保留程式與測試連結",
+      "unverifiedRisk": "舊honors不得原地替換。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M006",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.2.2",
+        "line": 139
+      },
+      "clause": "P04 NPB12／KBO10，原始W/(W+L)，.650/.850及B曲線",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "12勝為現行；13勝分析留歷史",
+      "unverifiedRisk": "浮點比較不可改用三位小數。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M007",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.1／§4.2",
+        "line": 90
+      },
+      "clause": "P05 CL、SV22/35與原抽選公式",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "維持數值正本",
+      "unverifiedRisk": "不因部門獎身分增加保護。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M008",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.1／§4.2",
+        "line": 90
+      },
+      "clause": "P06 MR、HLD18/30與原公式；非HP、不造救援勝",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "保留HLD簡化政策",
+      "unverifiedRisk": "真實HP制度差異不是已授權新增欄位。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M009",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§13",
+        "line": 402
+      },
+      "clause": "P08 NPB1/SP有效資料、W13/IP143/ERA3.20/G>0",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "以現行規格為資格入口",
+      "unverifiedRisk": "IP為現行十進位資料模型，不另轉outs。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M010",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§13",
+        "line": 402
+      },
+      "clause": "P08 IP180、S3=25/30/25/15/5、五項clamp錨點",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "保留公式，歷史S1/S2不混入",
+      "unverifiedRisk": "未新增自然頂尖樣本。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M011",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§13",
+        "line": 402
+      },
+      "clause": "P08 B2：60起10%、斜率2.5、上限95%、score95保證",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "保留跳點及未取整計算",
+      "unverifiedRisk": "機率曲線不是自然實得率。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M012",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4／§5.1、§14.13.2",
+        "line": 174
+      },
+      "clause": "P07同年同聯盟實際P01/P02/P03；不得由成績／字串推定",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3",
+        "line": 544,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "integration",
+      "recommendation": "保留可信Decision技術引用",
+      "unverifiedRisk": "自然樣本未出新賞不等於整合fixture無效，反之亦然。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M013",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§5.1、§14.13.2",
+        "line": 174
+      },
+      "clause": "P07保證MVP但不取消原合法MVP槽；來源合併且效果一次",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3",
+        "line": 544,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "integration",
+      "recommendation": "數值語意已移轉，receipt細節另保留",
+      "unverifiedRisk": "舊槽不合資格時不得為保證再消耗主R。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M014",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§6、§14.13.4",
+        "line": 205
+      },
+      "clause": "DEPT/MAJOR/MVP市場／fallback／HOF主要權重；P07自身0",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3",
+        "line": 544,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留正式規格摘要與consumer明細引用",
+      "unverifiedRisk": "不是全consumer同一分類。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M015",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.1、§14.13.4",
+        "line": 430
+      },
+      "clause": "P08 phoenix生涯一次+8及本年NPB/SP保護，不autoMVP",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3",
+        "line": 544,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留生效條件與限制",
+      "unverifiedRisk": "真實P08自然得獎平衡仍未驗證。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M016",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§6、§14.13.4",
+        "line": 205
+      },
+      "clause": "FULL獎金沿年度cap；不逐賞累加、不重算已付收入",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3",
+        "line": 544,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "付款identity細節移轉到技術契約而非重寫政策",
+      "unverifiedRisk": "需保留contractId/year付款測試。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M017",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.2候選／§4.2.1",
+        "line": 100
+      },
+      "clause": "P01/P04 A候選及NPB13勝歷史分析",
+      "transferStatus": "HISTORICAL_SUPERSEDED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "現行對照；不建議原樣移轉"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "只留歷史比較，不作待選規格",
+      "unverifiedRisk": "不得將舊13勝樣本與新12勝衍生分析混為同組。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M018",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.3／§11／§12",
+        "line": 150
+      },
+      "clause": "IP150/IP190、G100、基本55／舊機率曲線與早期權重",
+      "transferStatus": "HISTORICAL_SUPERSEDED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "現行對照；不建議原樣移轉"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "保留模型證據，指向§13及CURRENT_SPEC",
+      "unverifiedRisk": "手機2039仍為1.10.3 MANUAL_MOBILE_EVIDENCE/OFFLINE_ESTIMATE。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M019",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.3／§14.4／§14.7",
+        "line": 459
+      },
+      "clause": "H1以前候選、Journal提案及取整候選",
+      "transferStatus": "HISTORICAL_SUPERSEDED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "現行對照；不建議原樣移轉"
+      },
+      "evidenceGroup": "tx",
+      "recommendation": "候選與AF正式技術契約分層，不整段升為現行",
+      "unverifiedRisk": "不是所有候選都已批准或已實作。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M020",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§5.1",
+        "line": 174
+      },
+      "clause": "完整年度順序：成績→舊槽→新Decision/P07/MVP→effects→salary→render",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3–17.4",
+        "line": 544,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "integration",
+      "recommendation": "移轉精確呼叫順序與原槽位置",
+      "unverifiedRisk": "CURRENT_SPEC未完整描述phaseMid與phaseEnd分工；不能重排R。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M021",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 canonical",
+        "line": 648
+      },
+      "clause": "六欄固定順序及domain／實際初始化seed／year1..9999／聯盟／award／rule",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "rng",
+      "recommendation": "補完整欄位與驗證限制，原契約保留",
+      "unverifiedRisk": "摘要不足以獨立重建canonical key。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M022",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 canonical",
+        "line": 648
+      },
+      "clause": "UTF8、4-byte unsigned BE長度前綴、1024bytes、無BOM／JSON／delimiter",
+      "transferStatus": "UNTRANSFERRED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "rng",
+      "recommendation": "移轉byte-level編碼契約及錯誤邊界",
+      "unverifiedRisk": "不同實作者可能得到不同hash。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M023",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 canonical",
+        "line": 648
+      },
+      "clause": "single-player-v1是模型語意而非第七欄；schema/rule版本分離",
+      "transferStatus": "UNTRANSFERRED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "rng",
+      "recommendation": "移轉模型與版本演進條款",
+      "unverifiedRisk": "多人相同seed獨立抽選DEFERRED，不新增功能。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M024",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 H1",
+        "line": 667
+      },
+      "clause": "FNV種子/prime、imul32、avalanche常數與shift、u=hash/2^32",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "rng",
+      "recommendation": "補精確演算法或正式技術附件連結",
+      "unverifiedRisk": "只寫H1名稱不是可重現完整契約。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M025",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 GV01～GV13",
+        "line": 711
+      },
+      "clause": "canonical hex/hash/u golden vectors與Unicode/seed/year邊界",
+      "transferStatus": "UNTRANSFERRED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4–17.5",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "rng",
+      "recommendation": "保留向量JSON及正式可驗證來源引用；不手抄13組新golden",
+      "unverifiedRisk": "本輪未執行Node／瀏覽器；Safari52是既有特定來源證據。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M026",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 precision",
+        "line": 749
+      },
+      "clause": "u*100<p、相等miss；新p0/100 hash=null與舊100%仍耗R",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2／17.4",
+        "line": 527,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "rng",
+      "recommendation": "補判定式、確定分支及drawSource細節",
+      "unverifiedRisk": "不能用新deterministic捷徑套舊槽。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M027",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 precision",
+        "line": 749
+      },
+      "clause": "binary64固定計算次序、P04原始比值、P08 decimalIP／era、無epsilon",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.2",
+        "line": 527,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "numeric",
+      "recommendation": "保留並補計算順序及1/2^32量化限制",
+      "unverifiedRisk": "顯示取整不能反饋判定；不是更改產品精度。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M028",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§5.3／§14.13.1",
+        "line": 199
+      },
+      "clause": "獨立抽選主R0；相同輸入舊槽資格／順序／結果不變",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4–17.5",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "integration",
+      "recommendation": "補A→B第一合法效果前嚴格一致及因果鏈要求",
+      "unverifiedRisk": "後續合法effects可改R分支，不能一概要求或放行整生涯一致。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M029",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 760
+      },
+      "clause": "WeakMap同S/year/frozenLeague隔離、完整key非32bit身分",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "tx",
+      "recommendation": "移轉身分隔離與碰撞防護",
+      "unverifiedRisk": "hash只是抽選值，非Decision唯一身分。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M030",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 760
+      },
+      "clause": "AnnualTx／Decision欄位、DECIDED與完成分離、S.awardDecisions原序",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "tx",
+      "recommendation": "補欄位契約；示意schema與實際inspect輸出分列",
+      "unverifiedRisk": "不能把設計示意物件當作現行S完整schema。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M031",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 760
+      },
+      "clause": "預配置槽→同步R→before/u/after記錄，無await/callback於gap",
+      "transferStatus": "UNTRANSFERRED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "tx",
+      "recommendation": "移轉原子記錄邊界與AMBIGUOUS_RNG",
+      "unverifiedRisk": "R-record gap不支援任意恢復。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M032",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 803
+      },
+      "clause": "Receipt逐write path/presence/before/after、COMMITTED與CONFLICT拒覆寫",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "tx",
+      "recommendation": "移轉逐write恢復與衝突條件",
+      "unverifiedRisk": "結構相等不足以替代現行參照／所有權檢查。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M033",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 803
+      },
+      "clause": "phoenix glass/removed/trait/pool四寫入共享life-once",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3–17.4",
+        "line": 544,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "tx",
+      "recommendation": "補效果write contract並連產品fixture",
+      "unverifiedRisk": "只有pool+8摘要不能證明中斷後不重入。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M034",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 803
+      },
+      "clause": "honors／AS／trait／history獨立effect、salary evaluation年upsert／近三季",
+      "transferStatus": "UNTRANSFERRED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3–17.4",
+        "line": 544,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "tx",
+      "recommendation": "補各effect責任與來源，不將所有consumer混同receipt",
+      "unverifiedRisk": "尚需逐consumer覆蓋表，存在測試不等於任意中斷驗收。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M035",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 803
+      },
+      "clause": "contractId/year付款與獎金guard，HOF純導出不增量receipt",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3–17.4",
+        "line": 544,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "補付款key／HOF純讀責任",
+      "unverifiedRisk": "不回溯重算既付薪資；不能誤稱全契約rollback。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M036",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 760
+      },
+      "clause": "完成權限只接受私有live proof；clone/序列化Decision不可信",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "identity",
+      "recommendation": "保留對應函式與原始技術來源",
+      "unverifiedRisk": "重載後不是持久化已完成交易證明。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M037",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3",
+        "line": 827
+      },
+      "clause": "phaseMid含awards；proSeason已生成只續讀，不重simSeason/accStat",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "補真實呼叫位置與生成防重界線",
+      "unverifiedRisk": "舊架構行號不是現行接線。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M038",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "clause": "AWARD_PREPARED：凍結合法context與可寫原槽；不明部分成績停止",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "移轉完成條件／重試／停止界線；程式phase名稱另外映射",
+      "unverifiedRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M039",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "clause": "DRAW_RECORDED：已記原槽及新Decision，只續下一槽；gap停止",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "移轉完成條件／重試／停止界線；程式phase名稱另外映射",
+      "unverifiedRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M040",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "clause": "AWARD_EFFECTS_COMMITTED：所有本期effect提交，識別partial才續",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "移轉完成條件／重試／停止界線；程式phase名稱另外映射",
+      "unverifiedRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M041",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "clause": "SEASON_PAYMENT_COMMITTED：付款成功不等年度完成，只續描畫／選項",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "移轉完成條件／重試／停止界線；程式phase名稱另外映射",
+      "unverifiedRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M042",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "clause": "RESULT_RENDERED：saved result重畫，不重新計算或建立另一有效choice",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "移轉完成條件／重試／停止界線；程式phase名稱另外映射",
+      "unverifiedRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M043",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "clause": "WAIT_ALLOCATION／WAIT_CHOICE：原pool/dice/session/listener保留；未接受不執行action",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "移轉完成條件／重試／停止界線；程式phase名稱另外映射",
+      "unverifiedRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M044",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "clause": "CHOICE_COMMITTED：action一次，未知partial停止不全面rollback",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "移轉完成條件／重試／停止界線；程式phase名稱另外映射",
+      "unverifiedRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M045",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "clause": "YEAR_HANDOFF_COMMITTED：from/target/age/stageYr計畫；target不重增；nextPre不明停止",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "移轉完成條件／重試／停止界線；程式phase名稱另外映射",
+      "unverifiedRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M046",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3",
+        "line": 827
+      },
+      "clause": "同頁同S有限恢復；reload/host crash/OOM/任意phasePre不支援",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4",
+        "line": 554,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "保留明確非目標與停止條件",
+      "unverifiedRisk": "不能把安全停止寫成完整崩潰恢復PASS。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M047",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4 registry",
+        "line": 871
+      },
+      "clause": "所有support IDs與MVP/ROOKIE/打者/GG/AS各consumer完整待遇矩陣",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "移轉完整矩陣或受控技術引用，不僅P01～P08",
+      "unverifiedRisk": "新人王、AS、守備與HR alias在consumer間不同待遇。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M048",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4",
+        "line": 902
+      },
+      "clause": "phoenix與demotion分離集合；G1-A日文漏判與國際MVP既有效果",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3",
+        "line": 544,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "補精確集合與已修案例來源",
+      "unverifiedRisk": "不擴大GG復活、AS保護或舊跨league作用。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M049",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4",
+        "line": 920
+      },
+      "clause": "精確year/league/name解析、最長prefix、AllStar附註、未知不猜",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "identity",
+      "recommendation": "補解析規則與UNKNOWN/NOT_IN_SCOPE區別",
+      "unverifiedRisk": "year<1000向量不代表歷史UI有三位年格式。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M050",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4",
+        "line": 920
+      },
+      "clause": "semantic去重不動raw honors文字／順序／重複；來源保留",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3",
+        "line": 519,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "identity",
+      "recommendation": "保留身份視圖與原文展示責任",
+      "unverifiedRisk": "不全域清理歷史字串。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M051",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4",
+        "line": 920
+      },
+      "clause": "新名displayName／舊originalText、卡片／成就／退休PNG折行及取得說明時機",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "integration",
+      "recommendation": "補UI責任並引用既有PC/手機證據",
+      "unverifiedRisk": "Chromium尺寸不是實機B完整UI驗收。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M052",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #1",
+        "line": 975
+      },
+      "clause": "可信alias來源可證才採用；中文候選不得自動全域加入",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M053",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #2",
+        "line": 975
+      },
+      "clause": "未知歷史個人賞保留原文只讀、不推效果",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M054",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #3",
+        "line": 975
+      },
+      "clause": "不補發歷史phoenix+8",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M055",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #4",
+        "line": 975
+      },
+      "clause": "不重算已支付薪資或已完成合約",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M056",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #5",
+        "line": 975
+      },
+      "clause": "不重新抽取已結算歷史賞",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M057",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #6",
+        "line": 975
+      },
+      "clause": "不全面改寫S.honors",
+      "transferStatus": "COMPLETE",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "此列規則已具體列入"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M058",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #7",
+        "line": 975
+      },
+      "clause": "國際／團隊及範圍外consumer保持原行為",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M059",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #8",
+        "line": 975
+      },
+      "clause": "不順改舊跨聯盟當年度保護",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M060",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #9",
+        "line": 975
+      },
+      "clause": "不用模糊王或MVP substring識別個人賞",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M061",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #10",
+        "line": 975
+      },
+      "clause": "UNKNOWN個人賞與NOT_IN_SCOPE分離，衝突停報",
+      "transferStatus": "UNTRANSFERRED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.1／17.3–17.4",
+        "line": 519,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留本條並移轉缺失限制；不改歷史待遇",
+      "unverifiedRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M062",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§8 T01～T50、§14.8 TR01～TR14",
+        "line": 241
+      },
+      "clause": "原始產品／技術驗收案例集與各輸入預期",
+      "transferStatus": "UNTRANSFERRED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.5",
+        "line": 562,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "integration",
+      "recommendation": "保留原ID全文及計畫；另建逐案例證據索引後才可談歸檔",
+      "unverifiedRisk": "本表為條款群組，不宣稱逐一T/TR均完成Runtime映射；此細項證據仍待核對。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M063",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.11 AN01～AN05／§14.13.5 F-ID01～12",
+        "line": 564
+      },
+      "clause": "日文漏判、歷史ID、待遇與UI原生整合驗收",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.3／17.5",
+        "line": 544,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "consumer",
+      "recommendation": "保留原FAIL與G1-A/B驗收；把BUG NOT_FIXED等定位為歷史",
+      "unverifiedRisk": "測試名稱／覆蓋不等所有歷史未知資料均安全可識別。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M064",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.5 F-A04/A06/A07、F-B01～12",
+        "line": 927
+      },
+      "clause": "Journal/Receipt原生故障、fixture與真producer驗收邊界",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4–17.5",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "tx",
+      "recommendation": "保留原故障矩陣與限定範圍，補個案證據鏈",
+      "unverifiedRisk": "G3完成fixture不能冒充G6/G7整合PASS。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M065",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.5 F-YEAR/F-GV",
+        "line": 927
+      },
+      "clause": "年度／callback／跨平台golden驗收與停止邊界",
+      "transferStatus": "PARTIAL",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.4–17.5",
+        "line": 554,
+        "coverage": "摘要或未列細節"
+      },
+      "evidenceGroup": "year",
+      "recommendation": "保留平台與故障Gate原條件",
+      "unverifiedRisk": "Safari G2是相同產品來源證據，不外推整套B手機。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    },
+    {
+      "mappingId": "M066",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.7、文件舊狀態標籤",
+        "line": 992
+      },
+      "clause": "NOT_IMPLEMENTED/NOT_AUTHORIZED/PLANNED等設計時點標籤",
+      "transferStatus": "HISTORICAL_SUPERSEDED",
+      "currentSpec": {
+        "path": "CURRENT_SPEC.md",
+        "section": "§17.5及發布索引",
+        "line": 562,
+        "coverage": "現行對照；不建議原樣移轉"
+      },
+      "evidenceGroup": "integration",
+      "recommendation": "保留歷史原標籤；另加範圍索引，不覆寫原FAIL/NOT_RUN",
+      "unverifiedRisk": "AF09舊未授權不代表本輪可實作；發布不代表LinuxFull已接受。",
+      "evidenceStatus": "STATIC_INSPECTED / HISTORICAL_REPORTED / NOT_RERUN"
+    }
+  ],
+  "retainedEvidence": [
+    "docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md",
+    "docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md",
+    "docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md",
+    "docs/reviews/development-a/BASELINE_VERIFIER_SUPPLEMENT.md"
+  ],
+  "limitations": [
+    "T/TR/AN/F群組不是逐個測試的全量Runtime再認證；需後續case→log/manifest明細核對。",
+    "未重新查核外部職棒規則、未讀全部大型JSON、未重跑基準校驗或Quick/Full。",
+    "UNTRANSFERRED表示CURRENT_SPEC未具體載明，而非來源文件可刪除或功能未實作。"
+  ]
+}

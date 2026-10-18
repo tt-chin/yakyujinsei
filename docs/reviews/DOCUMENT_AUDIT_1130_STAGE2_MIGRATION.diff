@@ -1,0 +1,247 @@
+diff --git a/AGENTS.md b/AGENTS.md
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -40,10 +40,8 @@
+ 
+ ## 6. 変更と検証
+ 
+-## 6. 変更と検証
+-
+ * 依頼範囲と影響箇所を確認し、必要最小限の変更を行う。無関係なリファクタリングやテスト拡張を混ぜない。
++* 最初に6.5のR0～R3で実行への影響範囲を分類する。製品へ接続する変更には6.1のL1～L3も適用し、両方の要求を満たす。判断理由を簡潔に記録する。
+-* 変更のリスクに応じて、6.1のL1～L3から検証レベルを選ぶ。判断理由を簡潔に記録する。
+ * 構文、import/export、相対パス、Console、404は変更箇所に応じて確認する。
+ * UI変更では対象画面のPC・モバイル表示を確認する。ブラウザ確認が不要な変更や実行不能な環境では、その理由を報告する。
+ * RNG・状態・ゲーム規則に影響する変更では、固定seedと変更前後の状態比較を行う。表示のみの変更に無条件で完全生涯比較を要求しない。
+@@ -52,6 +50,8 @@
+ 
+ ### 6.1 検証レベル
+ 
++L1～L3は製品変更の検証深度、R0～R3（6.5）は文書・未接線モジュールを含む影響範囲の分類であり、同じ番号を対応させない。文書のみはR0、未接線を証明できる独立モジュールはR1として扱う。製品に接続するL1／L2は通常R2、L3はR3に相当するが、実際の影響で判断する。要求が異なる場合は厳格な方を適用し、正式設計・Gateの追加条件を省略しない。明示指示との衝突は第8章に従って確認する。
++
+ **L1：軽量変更**
+ 
+ 対象：文言、色、余白、静的表示、単純なCSS等。状態、イベント処理、共通UI制御、RNG、ゲーム規則に影響しない変更。
+@@ -86,8 +86,8 @@
+ ### 6.2 統一テストとCI
+ 
+ * テスト入口・依存・所要時間は`<span>node scripts/test.mjs list</span>`と`<span>scripts/TESTING.md</span>`で確認する。
++* ゲーム本体・テストコードの変更では関連入口に加えて原則 `node scripts/test.mjs quick` を実行する。R0はDiff・文書／設定の整合性を検査し、ゲームテストを無条件に実行しない。R1は単体・関連fixture・依存／接線検査を必須とし、未接線・既存挙動不変を証明できる範囲ではQuick／Fullを一律必須としない。製品接線や状態への影響が判明したらR2／R3へ再分類する。正式Gateがより厳格ならその条件を満たす。
++* `node scripts/test.mjs full` はL3／R3、`<span>main</span>`へのマージ前、または具体的なリスクがある場合に実行する。「機能完成」だけでR0／R1や各L1／L2修正に毎回Fullを要求せず、影響範囲・正式Gateで決める。必要な最終Fullは省略しない。
+-* ゲーム本体・テストコードの変更では原則Quickを実行する。文書のみの変更では、関連する仕様・設定の検査を優先し、ゲームテストを無条件に実行しない。
+-* `<span>full</span>`はL3、`<span>main</span>`へのマージ前、または具体的なリスクがある場合に実行する。L1・L2の各修正コミットで毎回Fullを繰り返さない。
+ * `<span>audit</span>`は深い調査や明示された監査で使用する。4,000生涯研究、実機確認、履歴報告の再生成を通常テストに混ぜない。
+ * Fullを必要とする作業でも、実装途中は関連入口とQuickを優先し、変更を確定した段階でFullを実行する。
+ * `<span>dev</span>` pushのQuick CI、手動Full CI、`<span>main</span>`向けPRのFull CIは既存workflowに従う。AGENTS.mdの変更だけでworkflowのトリガーを変更しない。
+@@ -95,6 +95,8 @@
+ * Playwright／ブラウザは外部インストールを引数または環境変数で指定する。環境固有の絶対パスをコミットしない。
+ * 比較基準は`<span>origin/main</span>`または明示されたcommitを完全SHAへ解決する。旧Bugの負面基準を現行HEADに置換しない。
+ * FAIL／BLOCKED／SKIPは区別し、実行結果と未確認範囲を報告する。CIの成功を確認せずにCI PASSと記載しない。
++* CIはテスト専用とし、承認なしに既存の公開workflowを変更しない。workflow変更時は `node scripts/check-workflow.mjs` も実行する（必要な外部Playwrightを指定）。
++* 製品ロジック／実行構造の変更では、影響する投手・野手の固定seedと状態・乱数消費を比較する。比較の深度は6.1の影響範囲に従い、未接線R1や表示のみの変更へ完全生涯比較を無条件に要求しない。
+ 
+ ### 6.3 テスト失敗時の再実行
+ 
+@@ -116,24 +118,10 @@
+ * 既存の重要な検証記録・履歴資料を削除、改ざん、PASSへの書き換えをしない。
+ * 作業完了報告には変更ファイル、テスト結果、未確認事項を記載し、commit・Preview・本番の扱いは第10章に従う。
+ 
++* 実装後は必要な関連設計書を更新し、コードと仕様の不一致を残さない。
+-- 変更範囲と依存関係を確認し、依頼に必要な最小単位で編集する。
+-- 構文、import/export、相対パス、404、コンソールエラーを確認する。
+-- ゲームロジックまたは構造変更では、投手・野手の固定seed回帰テストを行い、乱数消費を含めて比較する。
+-- PC・モバイルで主要フローを可能な範囲で実動確認する。
+-- 未確認項目を確認済みとせず、最終報告に明記する。
+-- 実装後は必要な関連設計書を更新し、コードと仕様の不一致を残さない。
+ 
++### 6.5 風險分級測試（Risk-Based Testing）
+-### 6.1 統一テスト（Codex共通）
+ 
+-- 変更後は関連入口に加えて `node scripts/test.mjs quick` を実行する。機能完成・マージ前は `full`、深い調査は `audit` を使用する。入口と依存は `list`、詳細は `scripts/TESTING.md` で確認する。
+-- Playwright／ブラウザは外部インストールを引数または環境変数で指定し、個人PCの絶対パスをリポジトリへ埋め込まない。
+-- 比較基準は既定の `origin/main` または明示したcommitを完全SHAへ解決し、結果とともに保存する。旧Bugの負面基準は現行HEADに置換しない。
+-- FAIL／BLOCKEDをPASSと扱わず、ログ・未実行範囲を報告する。テストを通すために期待値、S、RNG、ゲーム規則を自動変更しない。
+-- 4,000生涯研究、実機、履歴報告の再生成は通常回帰へ暗黙に混ぜない。CIはテスト専用とし、既存の公開workflowを変更しない。
+-- workflow変更時は `node scripts/check-workflow.mjs` も実行する（同じ外部Playwrightを指定）。GitHubの実行結果を確認せず、ローカル合格だけでCI合格と報告しない。
+-
+-## 風險分級測試（Risk-Based Testing）
+-
+ 所有程式修改須依實際影響範圍決定測試等級：
+ 
+ - **R0：** 文件、註解等非執行修改。執行 Diff 與文件一致性檢查。
+@@ -150,6 +138,8 @@
+ 5. 正式設計或 Gate 若有更嚴格要求，以較嚴格者為準。
+ 6. 測試通過不代表取得下一階段實作、提交或部署授權。
+ 
++本章の検証要求と第10章の標準フローは、個別タスクの提出・push・公開禁止を解除しない。
++
+ ## 7. Gitと安全性
+ 
+ - `git reset --hard`、無断削除、既存変更の破棄などの破壊的操作を行わない。
+diff --git a/CURRENT_SPEC.md b/CURRENT_SPEC.md
+--- a/CURRENT_SPEC.md
++++ b/CURRENT_SPEC.md
+@@ -524,6 +524,16 @@
+ 
+ 四リーグとも旧「最優秀投手賞」を新たに発行しない。過去の同賞はLEGACY_BEST_PITCHERとして原文・大賞待遇を保持し、P02／P08へ変換しない。P03／P05／P06の旧短名は同義の読取ビューで扱い、S.honors自体の順序・原文・重複を削除しない。未知歴史名からIDや三冠・未払効果を推測しない。各Consumer専用の厳密な旧名相容規則は、全域Registry aliasや新賞Decisionの信頼根拠にはしない。
+ 
++<a id="d2-identity-history"></a>
++
++#### 17.1.1 歴史識別とConsumer互換性の境界
++
++個人賞の読取は四桁年度・既知リーグラベル・完全一致の正式名／確認済みaliasによる。現在の所属球団から過去リーグを逆算せず、候補中文aliasや「王」／MVPを含むだけの文字列から新IDを作らない。All-Starのファン投票附註は既知の完全一致形式のみ識別する。新しいcanonical keyの年度1～9999の検証範囲は、歴史honors表示が三桁年度にも対応するという意味ではない。
++
++UNKNOWNの個人賞と、明示された国際・チーム・アマチュアのNOT_IN_SCOPEを分離する。未知原文は保持し、新効果を推測しない。既存Consumerだけが認める厳密な旧形式は、そのConsumerの従来待遇のみ保持する。例えば旧「年度MVP」「守備王」「出塁王」「最多勝」の一部Consumerでの受理を、全域ID・完了Decision・P07実得源・新たな復活／保護へ昇格させない。
++
++歴史phoenix+8の補発、結算済み賞の再抽選、支払済み年俸／契約の再計算、S.honorsの全面改写は行わない。既存の国際・チーム・範囲外Consumerと旧賞の同年度跨リーグ保護は変更せず、未知個人賞の推測禁止と両立できない場合は停止・報告する。正式な細則は[D2§14.13.4](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-consumers)及び[AF08十条](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-history)。現行接点は[identity](docs/src/engine/award-identity-policy.js)と[consumer policy](docs/src/engine/award-consumer-policy.js)。
++
+ ### 17.2 資格・確率
+ 
+ 確率は百分率。clampは指定下限／上限へ制限する。新P01／P04／P08は有効な投手役割・一軍level、G>0／IP>0のシーズンを先に検査する。
+@@ -551,6 +561,16 @@
+ 
+ phoenixと降格保護は別資格集合。P08実得は既存のglassかつ未phoenixの場合のみglass解除・phoenix取得・pool+8を生涯一回発動し、同季MVPとも共有する。獲賞当年・該当contextのmovement保護であり、永続保護・更新保証・引退免除ではない。P01～P06へ一律に同待遇を広げず、GoldGloveにphoenix、All-Starに新たな両保護を付与しない。G1-Aで修正した日本語旧賞の資格と各Consumer固有の歴史待遇は保持する。
+ 
++<a id="d2-consumer-boundaries"></a>
++
++#### 17.3.1 資格集合・表示・既存待遇の保持
++
++既存の復活対象はMVP／新人王／旧最優秀投手賞／首位打者／本塁打王。既存降格保護はこれらに打点王／盗塁王／打撃三冠王／GoldGloveを含む別集合であり、最高出塁率や全ての部門賞へ一般化しない。G1-Aで補った日文名は既知リーグ接頭辞など従来の適用形式を保持する。Consumer専用の旧名形式と既存国際MVPの作用も原範囲を維持し、新P08は可信な同年度NPB1/SP実得contextに限る。復活時はglass解除、removedへの既存名記録、phoenix取得、pool+8を同じ生涯一回の効果として扱う。
++
++新人王は市場.25／HOF140で、直接FULLを保証しない。GoldGloveと年間最優秀守備選手は市場.25／fallback1、HOFはそれぞれ300／220。All-Starは市場／fallback加点や直接FULLを与えず、HOFの既存投手70／野手40を維持する。ホームラン王などの旧aliasはConsumer別の従来待遇を保持し、他のConsumerへ拡大しない。全support ID・旧名の詳細は[D2の待遇矩陣](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-consumers)と現行[Consumer実装](docs/src/engine/award-consumer-policy.js)を併読し、設計表の未確認alias候補を実装済みと扱わない。
++
++新発行は正式displayName、歴史表示はoriginalTextを用い、カード・成就・引退・PNGで原文と順序を保つ。取得時の説明とそれ以外の名称表示、折返しの既存規則を変更するためにhonorsを再構築しない。
++
+ ### 17.4 RNG・Journal・年度続行
+ 
+ 新P01／P04／P08は六欄canonical identity、UTF-8長さframing、承認済みH1を用いる独立deterministic抽選であり、主Rを消費しない。P02／P03／P05／P06と元MVP等の資格短絡・順序・100%時の原主R一回を保持する。
+@@ -559,8 +579,43 @@
+ 
+ 支持する回復は同頁・同Sで記録済みの同期境界。未記録の主R消費窓、矛盾するpartial状態、OOM／任意host crash、reload、未知のstartYear／phasePre部分実行は自動修復せず診断して停止する。途中自動保存、旧版エンジン、rv/rules URLを追加しない。
+ 
++<a id="d2-technical-contract-index"></a>
++
++#### 17.4.1 現行技術契約への参照
++
++以下は既承認の詳細契約への正確な参照であり、候補モデルや未検証の任意回復を実装済みへ昇格させない。D2内のDESIGN_ONLY／NOT_IMPLEMENTED／NOT_RUN等は原時点の記録を保つ。実装済み範囲と実行証拠は17.5及びA／B受入、公開検収を併読する。契約と製品に矛盾があれば自動的にどちらかを採用せず停止・報告する。
++
++- **RNG・精度**：[D2§14.13.1 AF01～AF03](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-rng)。六欄domain／初期化済みseed／year／league／awardId／ruleId、UTF-8の4-byte unsigned big-endian長さframing、上限、H1定数／unsigned演算、uと判定式、p=0/100の決定的分岐、GV01～GV13、schemaとrule版の分離を保持する。single-playerの語意は第七欄ではない。実装は[award-rng-policy](docs/src/engine/award-rng-policy.js)、原向量は[g2-vectors](tools/development-a/g2-vectors.json)であり、ここに別のgoldenを作らない。
++- **Decision・Journal・Receipt**：[D2§14.13.2 AF04／AF05](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-receipts)。同S／年度／凍結league、完全key、原槽preallocate→同期R→記録、完了権限、原順序、個別writeのpresence／before／after／衝突停止、honors／trait／AS／history／salary評価の責任を保持する。[現行transaction policy](docs/src/engine/award-transaction-policy.js)のlive参照・所有権確認を構造等値だけで置き換えない。設計のAnnualTx例はSの永続schemaではない。
++- **年度checkpoint**：[D2§14.13.3 AF06及び完成条件表](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-checkpoints)。AWARD_PREPARED、DRAW_RECORDED、AWARD_EFFECTS_COMMITTED、SEASON_PAYMENT_COMMITTED、RESULT_RENDERED、WAIT_ALLOCATION／WAIT_CHOICE、CHOICE_COMMITTED、YEAR_HANDOFF_COMMITTEDそれぞれの進入／完了／再試行／停止条件を保持する。これらは契約上の段階で、全てが同名の製品phase文字列とは限らない。実接点は[game](docs/src/engine/game.js)のproSeason／awards／settleProfessionalEnd／movement／advance。
++- **ID・Consumer**：[D2§14.13.4 AF07](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-consumers)。完整support registry、Consumer別待遇、復活／降格集合、完全一致解析、semantic読取ビュー、原文表示の責任を保持する。§17.1.1のConsumer-only旧名と全域IDを混同しない。
++- **故障・受入Gate**：[D2§14.13.5](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-gates)。F-A／F-B01～12／F-YEAR／F-GV／F-ID01～12と元T／TR／ANの対応を保持する。G3の完成Decision fixture＋実際Receiptによる限定PASSは、G6／G7の真producer→Decision→Receipt→Consumer統合PASSの代わりではない。全T／TRの個別log対応が再確認済みとは主張しない。
++- **歴史互換性**：[D2§14.13.6 AF08](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-history)。十条の制限は現行互換性の境界であり、未確認alias採用や歴史補発の許可ではない。
++
++<a id="d2-execution-compatibility"></a>
++
++#### 17.4.2 実行順序・再開・比較の境界
++
++awardsはphaseMidのproSeasonから呼ばれ、phaseEndで成績生成からやり直すものではない。旧賞の合法槽順序を保ち、新Decision／P07・MVP合流、個別効果、給与評価、元の後続イベント、phaseEndの支払／表示／選択へ進む。既存成績を再simSeason／accStatせず、支払済みを年度全体完了とはみなさない。
++
++記録済み槽は読取りで続行し、R消費後・記録前の不明窓はAMBIGUOUS_RNGで停止する。Receiptは証明可能なbefore／afterだけを続行し、並行した合法pool／契約変更を上書きしない。給与評価は既存の年度履歴更新、支払は元contractId／年度／出来高guardを用い、HOFは履歴から導出する評価であって重入時に加算する支払Receiptではない。
++
++支払後の表示失敗はsaved resultから再描画し、配分payload・dice順序・有効sessionを保持する。未接受choiceを新たなactionとして再実行せず、古いS／year／generation／session／取引tokenを拒否する。handoffはfromYear／targetYear／age／stageYrを区別し、yearがtargetなら再incrementしない。未知のstartYear／phasePre部分実行はNEXT_YEAR_AMBIGUOUSで停止する。詳細条件は上記AF06を正本参照とする。
++
++A→Bは最初の承認済み実効果前の既存S／選択／主Rを厳密比較し、新技術Decision／Receiptも別途厳格検査する。同じ入力の旧槽は資格・順序・回数・結果を保持する。合法な新効果後の状態／選択肢／主R分岐はproducer→Decision→Receipt→Consumer→状態差→後続Rの因果があるものだけEXPECTED_D2_CHANGEとし、不明差分はREGRESSION。全Sやhonors／salary／awardDecisionsを一括無視しない。同版Bの同条件再生は完全S／Decision／Receipt／選択／主R一致を要求する。この比較契約は将来の変更・試験実行の授権ではない。
++
+ ### 17.5 証拠と未確認範囲
+ 
+ [A受入](docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md)及び[B受入](docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md)は利用者接受済みの本地範囲。A Quick56／Full75、B Quick61／Full80はそれぞれ元の実行記録で、本節追加後の新実行ではない。G2同一製品ソースの実iPhone Safari52 PASSを保持するが、B全UIの新実機検証・Linux CI・Preview・公開確認ではない。
+ 
+ 四つのA固定策略自然生涯はBで普通S／選択／主R一致、同Bの完全Decision／Receipt重播も一致。これらの自然路線には新賞winnerがなく、新効果は真実のproducer→Decision→Receipt→Consumer受控Runtimeで検証した。自然得賞率・頂尖サンプルの平衡は未確認のまま。詳細な差異規則とG9残項は[G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)。規則の承認原典は[D2](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md)で保持し、現在の実装仕様は本節を正本とする。
++
++<a id="d2-historical-design-index"></a>
++
++### 17.6 歴史設計・取代根拠（現行数値として適用しない）
++
++- D2§1～3のD1比較・A01～A09批准・実在リーグ研究は出典履歴。現行製品の適用範囲は17.1～17.3、実装／公開範囲は17.5及び公開検収で確認する。
++- D2§4.2候補／4.2.1のA曲線・NPB13勝は[§4.2.2承認B／NPB12](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#p01-p04-approved-design)と17.2に取代された。旧13勝分析を新12勝の実測値へ書き換えない。
++- D2§4.3／11／12のIP150／IP190／G100／基本55・旧曲線は[§13のP08最終承認](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#p08-approved-design)と17.2のIP180／S3／B2／G95へ取代された。手機2039年の1.10.3ケースはOFFLINE_ESTIMATEのまま保持する。
++- D2§14.3／14.4／14.7の候補方式より[§14.13正式技術契約](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-technical-approved)を参照する。候補全文を実装済みへ一括昇格させない。
++- D2§14.13.7、Decision Log及び工程計画内のNOT_IMPLEMENTED／NOT_AUTHORIZED／PLANNED等は元時点の記録。後続A／B受入と1.13.0公開検収を別証拠として併記し、当時のFAIL／NOT_RUN／WAIVEDは変更しない。Linux Full NOT_ACCEPTED / DEFERRED、ARTIFACT_COVERAGE_BLOCKED及び未完了の証拠対応・文書整理は残る。
+diff --git a/docs/CURRENT_DOCUMENTATION.md b/docs/CURRENT_DOCUMENTATION.md
+--- a/docs/CURRENT_DOCUMENTATION.md
++++ b/docs/CURRENT_DOCUMENTATION.md
+@@ -21,6 +21,9 @@
+ 
+ ## D2必須保留的技術來源
+ 
++- [現行技術契約索引](../CURRENT_SPEC.md#d2-technical-contract-index)：產品數值以CURRENT_SPEC為正本；以下只引用D2的精確技術章節，不將整份歷史設計視為現行規格。
++- [RNG／精度／向量§14.13.1](designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-rng)、[Journal／Receipt§14.13.2](designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-receipts)、[Checkpoint§14.13.3](designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-checkpoints)。
++- [ID／Consumer§14.13.4](designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-consumers)、[故障Gate§14.13.5](designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-gates)、[歷史相容十條§14.13.6](designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-history)。原段落的設計時點標籤不改寫；Runtime完成範圍須另讀A／B證據，不能把候選或任意崩潰恢復寫成已實作。
+ - [D2主設計](designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md)：批准規則、RNG編碼／精度、身分與可信Decision、consumer及故障Gate的技術來源；舊狀態標籤按時點解讀，不自行恢復舊候選或視為新授權。
+ - [Decision Log](designs/PITCHER_AWARDS_D2_DECISION_LOG.md)：批准沿革，非取代現行規格。
+ - [工程計畫](../tasks/PITCHER_AWARDS_D2_PHASED_IMPLEMENTATION_PLAN.md)：現況索引及原Gate／回復契約。
+@@ -28,6 +31,14 @@
+ - [基準v2校驗附錄](reviews/development-a/BASELINE_VERIFIER_SUPPLEMENT.md)：A封存的實際路徑／信任錨；不能覆寫封存。
+ - [CI證據缺口](reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)：ARTIFACT_COVERAGE_BLOCKED。
+ 
++## 歷史設計與驗收證據的讀法
++
++- [歷史／取代索引](../CURRENT_SPEC.md#d2-historical-design-index)：D1比較、A曲線／NPB13、舊P08模型及技術候選保留原文，不作現行政策。Decision Log是批准沿革，不由舊AF09標籤推翻後續明確授權，也不產生新的工程授權。
++- A／B報告的本機Full75／80是各原SHA／版本證據；G2 Safari52是同來源RNG實機證據；正式站Smoke6是基本P／IF及手機尺寸模擬。三者不能相互替代或算成本輪新PASS。
++- [執行與差異契約](../CURRENT_SPEC.md#d2-execution-compatibility)要求合法差異的完整因果鏈；同版重播仍嚴格比較全部狀態。Linux Full維持NOT_ACCEPTED / DEFERRED，完整artifact保存仍BLOCKED。
++
+ ## 文件整理界線
+ 
++[整理計畫](reviews/DOCUMENT_AUDIT_1130_PLAN.md)及其JSON逐檔清單是盤點快照，不是可執行刪除白名單。D1／D2、分析JSON仍可能被工具讀取；獨有條款未證明完整移轉前一律保留。歷史報告、golden、原始FAIL、Linux Full原件及dirty／untracked內容不得因新版發布自行刪除／搬移。
++
++第二階段分析已接受，最小規格引用與AGENTS去重已獲批准；[原66條分析](reviews/DOCUMENT_AUDIT_1130_STAGE2_ANALYSIS.md)保留為修改前快照，[本次逐項處理與驗收](reviews/DOCUMENT_AUDIT_1130_STAGE2_MIGRATION.md)區分保留、補文、精確引用、歷史定位及仍待核對。文件整理尚未全面完成，BACKLOG不提前結案；第三階段刪除／移動／封存、產品修改、提交與部署均不在本次授權內。
+-[整理計畫](reviews/DOCUMENT_AUDIT_1130_PLAN.md)及其JSON逐檔清單是盤點快照，不是可執行刪除白名單。D1／D2、分析JSON仍可能被工具讀取；獨有條款未證明完整移轉前一律保留。歷史報告、golden、原始FAIL、Linux Full原件及dirty／untracked內容不得因新版發布自行刪除／搬移。第二階段規格整合與第三階段清理仍未授權。
+diff --git a/docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md b/docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md
+--- a/docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md
++++ b/docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md
+@@ -643,6 +643,8 @@
+ 
+ keyVersion是canonical編碼版本的語義名稱：本期domain=`pitcher-award-v1`、Decision.keySchemaVersion=1；Journal／Decision／Receipt.schemaVersion=1各自描述資料格式，ruleId描述獎項政策。這三者不是產品VERSION，不新增第七欄，不將批准schema的keySchemaVersion改名為另一欄位。H1選定；H2僅歷史替代，不實作。
+ 
++<a id="d2-contract-rng"></a>
++
+ #### 14.13.1 AF01～AF03：H1／編碼／精度／Golden vectors
+ 
+ ##### Canonical identity（APPROVED / DESIGN_ONLY）
+@@ -755,6 +757,8 @@
+ EXISTING_APPROVED：P01 b前0、b起20/g起100；P04 .65起20/.85起100；P08 score60起10/95起100及cap95，保留跳點。
+ PLANNED / NOT_RUN 產品精度驗收：P04 12/6可能24.999999999999982%，保留内部raw；P08 59.999/60/60.001及94.999/95/95.001；u=0、最大uint32/2^32、相等、非法資料不得進新draw；Node/Chromium/Safari exact vector，数學近似assert不得拿當資格容差。32bit概率粒度最大約1/2^32；不保證連續模型完全无離散偏差。替代BigInt有理P04、ppm整數化需另批准，不能一邊自稱無丸め一邊轉基點。
+ 
++<a id="d2-contract-receipts"></a>
++
+ #### 14.13.2 AF04／AF05：Journal／Receipt（APPROVED_WITH_LIMITS / DESIGN_ONLY）
+ 
+ ##### Identity／Decision
+@@ -824,6 +828,8 @@
+ - 降格：当前award決策派生boolean（本年度），不用永久protect旗標；movement/state侧效果另continuation receipt。P08同年保護按已批context，不扩大FA/退休免責。
+ - receipt完成后render失败只重绘saved result；任何receipt conflict不进入下一年、不强制ROLLBACK。
+ 
++<a id="d2-contract-checkpoints"></a>
++
+ #### 14.13.3 AF06：年度續行（APPROVED_WITH_LIMITS / DESIGN_ONLY）
+ 
+ VERIFIED_EXISTING：phaseMid→proSeason生成/累計→awards→salaryEvaluation→TJ/交易/國際→nextStep→phaseEnd付款→配分/movement→advance→startYear。**awards不在phaseEnd**，不能從付款重入再重跑前面的proSeason。
+@@ -866,6 +872,8 @@
+ 
+ 本期只支援同頁同S下已記抽選的效果續行、已提交效果的重畫、付款後UI失敗、未接受選項續行，以及已完成年度交接防重。不保證任意startYear／phasePre、跨頁重載、關閉瀏覽器或host crash恢復，不新增完整存檔，不擴成全引擎重構。
+ 
++<a id="d2-contract-consumers"></a>
++
+ #### 14.13.4 AF07：獎項 ID adapter（APPROVED_DESIGN / NOT_IMPLEMENTED）
+ 
+ ##### Source／consumer 與完整 registry
+@@ -924,6 +932,8 @@
+ 已paid contract/schedule/career收入不可回溯改；当期可信未完成tx才可继续未commit效果，不能因adapter突然认出过去P08/旧大赏就重算。可靠旧结算不重抽；未知是否已完成→HISTORICAL_UNKNOWN，不自动迁移待遇。
+ UI卡/成就/引退/PNG用displayName与originalText分离：新发按正式日文名，历史按原字符串；需保留原顺序/正常折行、取得说明时机，不用重建S.honors去统一语言。
+ 
++<a id="d2-contract-gates"></a>
++
+ #### 14.13.5 故障注入與回歸驗收（全部 PLANNED / NOT_RUN）
+ 
+ 分批證據邊界依[實作計畫§7／§10／§11](../../tasks/PITCHER_AWARDS_D2_PHASED_IMPLEMENTATION_PLAN.md)：G3可用已完成Decision fixture搭配實際產品Receipt邏輯驗證交易安全，必須標明fixture與實際產品呼叫路徑，不以模型Receipt冒充產品。此PASS僅涵蓋G3限定範圍；G6／G7仍須另走真實`producer → Decision → Receipt → consumer`整合驗收，不得以fixture PASS取代。AF01～AF08設計批准、Runtime未驗證與AF09未授權狀態均不變，本次不啟動工程或測試。
+@@ -972,6 +982,8 @@
+ |F-ID11|同名跨年度／league、同義P03短／正式名、不同S|consumer按語義去重；過去年不當本年；保留舊同年度跨league保護範圍，不改raw honors|
+ |F-ID12|每項registry→salary market／promotion fallback／FULL／HOF／trait／UI，PC1280／320／390|逐行對照14.13.4待遇矩陣、P07自身0且MVP一次；合同保障／已支付收入不回溯；名稱／原文／折行正確，不額外R|
+ 
++<a id="d2-contract-history"></a>
++
+ #### 14.13.6 AF08：APPROVED_CONSERVATIVE 歷史相容政策
+ 
+ 以下是目前正式限制；來源候選書的待批替代方案不再適用，但原文件保留歷史。

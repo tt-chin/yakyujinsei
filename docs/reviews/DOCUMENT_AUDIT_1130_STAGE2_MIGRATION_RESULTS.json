@@ -1,0 +1,3329 @@
+{
+  "schemaVersion": 1,
+  "mode": "DOCUMENTATION_ONLY",
+  "date": "2026-10-16",
+  "head": "650e4dd21718b4abec3876fc9ef6148714c21d4f",
+  "version": "1.13.0",
+  "input": "DOCUMENT_AUDIT_1130_STAGE2_CLAUSE_MAP.json",
+  "originalAnalysisPreserved": true,
+  "unit": "人工選定的規則／技術條款群組，非所有句子、測試assertion或正式風險ID",
+  "counts": {
+    "HISTORICAL_INDEXED": 5,
+    "RETAINED_UNCHANGED": 21,
+    "SPEC_BOUNDARY_ADDED_WITH_REFERENCE": 21,
+    "PRECISE_TECHNICAL_REFERENCE": 19
+  },
+  "countsMeaning": "66項全部有文件處理，不等於66項Runtime PASS或全部技術內文已搬移。21保留、40缺口補文/精確引用、5歷史定位。",
+  "results": [
+    {
+      "mappingId": "M001",
+      "clause": "D1→D2、A01～A09批准與真實制度／研究來源",
+      "previousTransferStatus": "HISTORICAL_SUPERSEDED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§1–3",
+        "line": 25
+      },
+      "action": "HISTORICAL_INDEXED",
+      "target": "CURRENT_SPEC.md#d2-historical-design-index",
+      "detail": "17.6保留此來源群的歷史定位與取代依據；原D2文字／數據／歷史狀態不改。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 92,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/receipt-replay.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "官方制度研究與遊戲門檻不是同一種證據；未重新查核外部規則。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M002",
+      "clause": "P01～P08名稱、ID及適用一軍；舊大賞不等於P02/P08",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4、§14.13.4",
+        "line": 75
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 104,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-consumer-contract.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "逐一consumer待遇仍另列，不由ID推定。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M003",
+      "clause": "P01四聯盟B/G：10/15、12/17、12/17、14/20；B曲線20+75比例",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.2.2",
+        "line": 139
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "本輪只讀條件；不宣稱自然平衡已證實。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M004",
+      "clause": "P02承接原ERA/IP資格、原機率／保底及主R槽；停止新發舊賞",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.1／§4.2、§5.1",
+        "line": 90
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "歷史LEGACY ID仍不可重新分類為P02。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M005",
+      "clause": "P03最低／保底SO、原機率；正式名稱及舊名只讀alias",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.1／§4.2",
+        "line": 90
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "舊honors不得原地替換。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M006",
+      "clause": "P04 NPB12／KBO10，原始W/(W+L)，.650/.850及B曲線",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.2.2",
+        "line": 139
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "浮點比較不可改用三位小數。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M007",
+      "clause": "P05 CL、SV22/35與原抽選公式",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.1／§4.2",
+        "line": 90
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不因部門獎身分增加保護。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M008",
+      "clause": "P06 MR、HLD18/30與原公式；非HP、不造救援勝",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.1／§4.2",
+        "line": 90
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "真實HP制度差異不是已授權新增欄位。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M009",
+      "clause": "P08 NPB1/SP有效資料、W13/IP143/ERA3.20/G>0",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§13",
+        "line": 402
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "IP為現行十進位資料模型，不另轉outs。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M010",
+      "clause": "P08 IP180、S3=25/30/25/15/5、五項clamp錨點",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§13",
+        "line": 402
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "未新增自然頂尖樣本。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M011",
+      "clause": "P08 B2：60起10%、斜率2.5、上限95%、score95保證",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§13",
+        "line": 402
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "機率曲線不是自然實得率。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M012",
+      "clause": "P07同年同聯盟實際P01/P02/P03；不得由成績／字串推定",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4／§5.1、§14.13.2",
+        "line": 174
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 92,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/receipt-replay.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "自然樣本未出新賞不等於整合fixture無效，反之亦然。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M013",
+      "clause": "P07保證MVP但不取消原合法MVP槽；來源合併且效果一次",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§5.1、§14.13.2",
+        "line": 174
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 92,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/receipt-replay.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "舊槽不合資格時不得為保證再消耗主R。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M014",
+      "clause": "DEPT/MAJOR/MVP市場／fallback／HOF主要權重；P07自身0",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§6、§14.13.4",
+        "line": 205
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不是全consumer同一分類。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M015",
+      "clause": "P08 phoenix生涯一次+8及本年NPB/SP保護，不autoMVP",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.1、§14.13.4",
+        "line": 430
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "真實P08自然得獎平衡仍未驗證。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M016",
+      "clause": "FULL獎金沿年度cap；不逐賞累加、不重算已付收入",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§6、§14.13.4",
+        "line": 205
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "需保留contractId/year付款測試。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M017",
+      "clause": "P01/P04 A候選及NPB13勝歷史分析",
+      "previousTransferStatus": "HISTORICAL_SUPERSEDED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.2候選／§4.2.1",
+        "line": 100
+      },
+      "action": "HISTORICAL_INDEXED",
+      "target": "CURRENT_SPEC.md#d2-historical-design-index",
+      "detail": "17.6保留此來源群的歷史定位與取代依據；原D2文字／數據／歷史狀態不改。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不得將舊13勝樣本與新12勝衍生分析混為同組。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M018",
+      "clause": "IP150/IP190、G100、基本55／舊機率曲線與早期權重",
+      "previousTransferStatus": "HISTORICAL_SUPERSEDED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§4.3／§11／§12",
+        "line": 150
+      },
+      "action": "HISTORICAL_INDEXED",
+      "target": "CURRENT_SPEC.md#d2-historical-design-index",
+      "detail": "17.6保留此來源群的歷史定位與取代依據；原D2文字／數據／歷史狀態不改。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "手機2039仍為1.10.3 MANUAL_MOBILE_EVIDENCE/OFFLINE_ESTIMATE。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M019",
+      "clause": "H1以前候選、Journal提案及取整候選",
+      "previousTransferStatus": "HISTORICAL_SUPERSEDED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.3／§14.4／§14.7",
+        "line": 459
+      },
+      "action": "HISTORICAL_INDEXED",
+      "target": "CURRENT_SPEC.md#d2-historical-design-index",
+      "detail": "17.6保留此來源群的歷史定位與取代依據；原D2文字／數據／歷史狀態不改。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-journal-native.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不是所有候選都已批准或已實作。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M020",
+      "clause": "完整年度順序：成績→舊槽→新Decision/P07/MVP→effects→salary→render",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§5.1",
+        "line": 174
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補實際年度順序；不把phaseEnd當成重新生成成績／awards入口。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 92,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/receipt-replay.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "CURRENT_SPEC未完整描述phaseMid與phaseEnd分工；不能重排R。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M021",
+      "clause": "六欄固定順序及domain／實際初始化seed／year1..9999／聯盟／award／rule",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 canonical",
+        "line": 648
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "精確引用AF01六欄canonical；列出欄位與版本責任，不複製完整編碼。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-rng-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-vectors.json",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-validation.js",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "摘要不足以獨立重建canonical key。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M022",
+      "clause": "UTF8、4-byte unsigned BE長度前綴、1024bytes、無BOM／JSON／delimiter",
+      "previousTransferStatus": "UNTRANSFERRED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 canonical",
+        "line": 648
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用UTF-8／4-byte BE framing與上限契約及原產品模組。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-rng-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-vectors.json",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-validation.js",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不同實作者可能得到不同hash。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M023",
+      "clause": "single-player-v1是模型語意而非第七欄；schema/rule版本分離",
+      "previousTransferStatus": "UNTRANSFERRED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 canonical",
+        "line": 648
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "保留single-player非第七欄、schema／rule版分離的技術引用；不新增多人功能。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-rng-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-vectors.json",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-validation.js",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "多人相同seed獨立抽選DEFERRED，不新增功能。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M024",
+      "clause": "FNV種子/prime、imul32、avalanche常數與shift、u=hash/2^32",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 H1",
+        "line": 667
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用H1常數／unsigned演算法，不另建演算法正本。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-rng-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-vectors.json",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-validation.js",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "只寫H1名稱不是可重現完整契約。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M025",
+      "clause": "canonical hex/hash/u golden vectors與Unicode/seed/year邊界",
+      "previousTransferStatus": "UNTRANSFERRED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 GV01～GV13",
+        "line": 711
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用GV01～13契約及原向量JSON；不生成或更改golden。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-rng-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-vectors.json",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-validation.js",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "本輪未執行Node／瀏覽器；Safari52是既有特定來源證據。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M026",
+      "clause": "u*100<p、相等miss；新p0/100 hash=null與舊100%仍耗R",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 precision",
+        "line": 749
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用u與判定式及新p0/100分支；原舊槽100%耗R段落保持。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-rng-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-vectors.json",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/g2-validation.js",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不能用新deterministic捷徑套舊槽。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M027",
+      "clause": "binary64固定計算次序、P04原始比值、P08 decimalIP／era、無epsilon",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.1 precision",
+        "line": 749
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用精度契約；保留17.2原binary64／raw值及無epsilon政策。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/pitcher-award-policy.js",
+          "line": 8,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1436,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "顯示取整不能反饋判定；不是更改產品精度。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M028",
+      "clause": "獨立抽選主R0；相同輸入舊槽資格／順序／結果不變",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§5.3／§14.13.1",
+        "line": 199
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補第一合法效果前嚴格一致、合法差異因果鏈、同版全量重播界線。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 92,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/receipt-replay.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "後續合法effects可改R分支，不能一概要求或放行整生涯一致。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M029",
+      "clause": "WeakMap同S/year/frozenLeague隔離、完整key非32bit身分",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 760
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用同S／year／frozen league與完整key／私有所有權契約。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-journal-native.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "hash只是抽選值，非Decision唯一身分。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M030",
+      "clause": "AnnualTx／Decision欄位、DECIDED與完成分離、S.awardDecisions原序",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 760
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用Decision欄位／原序／完成權限；明示AnnualTx示意不是持久化S schema。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-journal-native.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不能把設計示意物件當作現行S完整schema。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M031",
+      "clause": "預配置槽→同步R→before/u/after記錄，無await/callback於gap",
+      "previousTransferStatus": "UNTRANSFERRED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 760
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用原槽preallocate→同步R→記錄邊界；17.4.2列AMBIGUOUS_RNG停止。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-journal-native.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "R-record gap不支援任意恢復。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M032",
+      "clause": "Receipt逐write path/presence/before/after、COMMITTED與CONFLICT拒覆寫",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 803
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補before/after恢復及並行合法寫入不得覆寫；精確欄位依AF04/05。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-journal-native.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "結構相等不足以替代現行參照／所有權檢查。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M033",
+      "clause": "phoenix glass/removed/trait/pool四寫入共享life-once",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 803
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-consumer-boundaries",
+      "detail": "補removed及life-once四寫入語意；中斷恢復細節另引用Receipt。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-journal-native.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/hall-of-fame-policy.js",
+          "line": 29,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "只有pool+8摘要不能證明中斷後不重入。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M034",
+      "clause": "honors／AS／trait／history獨立effect、salary evaluation年upsert／近三季",
+      "previousTransferStatus": "UNTRANSFERRED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 803
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用各effect及salary evaluation責任；不宣稱任意consumer中斷均已驗收。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-journal-native.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "尚需逐consumer覆蓋表，存在測試不等於任意中斷驗收。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M035",
+      "clause": "contractId/year付款與獎金guard，HOF純導出不增量receipt",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 803
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補contractId/year付款、既有年評估及HOF導出責任。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不回溯重算既付薪資；不能誤稱全契約rollback。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M036",
+      "clause": "完成權限只接受私有live proof；clone/序列化Decision不可信",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.2",
+        "line": 760
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 104,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-consumer-contract.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "重載後不是持久化已完成交易證明。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M037",
+      "clause": "phaseMid含awards；proSeason已生成只續讀，不重simSeason/accStat",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3",
+        "line": 827
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補phaseMid/proSeason/awards與phaseEnd分工，不重simSeason/accStat。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "舊架構行號不是現行接線。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M038",
+      "clause": "AWARD_PREPARED：凍結合法context與可寫原槽；不明部分成績停止",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "精確引用AF06表的AWARD_PREPARED進入／完成／停止條件。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M039",
+      "clause": "DRAW_RECORDED：已記原槽及新Decision，只續下一槽；gap停止",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "精確引用DRAW_RECORDED表列及R-record gap停止。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M040",
+      "clause": "AWARD_EFFECTS_COMMITTED：所有本期effect提交，識別partial才續",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "精確引用AWARD_EFFECTS_COMMITTED及可證partial恢復界線。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M041",
+      "clause": "SEASON_PAYMENT_COMMITTED：付款成功不等年度完成，只續描畫／選項",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補付款不等年度完成；只續saved result／choice，並引用完整表。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M042",
+      "clause": "RESULT_RENDERED：saved result重畫，不重新計算或建立另一有效choice",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補saved result重畫，不重新結算或建立另一有效action。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M043",
+      "clause": "WAIT_ALLOCATION／WAIT_CHOICE：原pool/dice/session/listener保留；未接受不執行action",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補pool payload／dice／session保留；callback拒絕界線依AF06。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M044",
+      "clause": "CHOICE_COMMITTED：action一次，未知partial停止不全面rollback",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "精確引用CHOICE_COMMITTED完成／未知partial停止，不擴成全面rollback。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M045",
+      "clause": "YEAR_HANDOFF_COMMITTED：from/target/age/stageYr計畫；target不重增；nextPre不明停止",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3 checkpoint table",
+        "line": 854
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-execution-compatibility",
+      "detail": "補from/target/age/stageYr與NEXT_YEAR_AMBIGUOUS，並引用完整表。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "line": 18,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "line": 35,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "設計checkpoint名非保證一對一對應產品phase字串；本輪未Runtime重測。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M046",
+      "clause": "同頁同S有限恢復；reload/host crash/OOM/任意phasePre不支援",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.3",
+        "line": 827
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不能把安全停止寫成完整崩潰恢復PASS。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M047",
+      "clause": "所有support IDs與MVP/ROOKIE/打者/GG/AS各consumer完整待遇矩陣",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4 registry",
+        "line": 871
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-consumer-boundaries",
+      "detail": "補新人王／守備／AS主要差異，完整support矩陣保持技術引用。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/hall-of-fame-policy.js",
+          "line": 29,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "新人王、AS、守備與HR alias在consumer間不同待遇。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M048",
+      "clause": "phoenix與demotion分離集合；G1-A日文漏判與國際MVP既有效果",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4",
+        "line": 902
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-consumer-boundaries",
+      "detail": "補兩套精確主要集合、原國際MVP及Consumer-only舊名不擴大。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/hall-of-fame-policy.js",
+          "line": 29,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不擴大GG復活、AS保護或舊跨league作用。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M049",
+      "clause": "精確year/league/name解析、最長prefix、AllStar附註、未知不猜",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4",
+        "line": 920
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-identity-history",
+      "detail": "補四位年／已知league／exact name與附註；不推測歷史所屬。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 104,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-consumer-contract.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "year<1000向量不代表歷史UI有三位年格式。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M050",
+      "clause": "semantic去重不動raw honors文字／順序／重複；來源保留",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4",
+        "line": 920
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 104,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-consumer-contract.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "不全域清理歷史字串。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M051",
+      "clause": "新名displayName／舊originalText、卡片／成就／退休PNG折行及取得說明時機",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.4",
+        "line": 920
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-consumer-boundaries",
+      "detail": "補displayName／originalText及現有說明時機／原文順序責任，不重建honors。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 92,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/receipt-replay.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/hall-of-fame-policy.js",
+          "line": 29,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "Chromium尺寸不是實機B完整UI驗收。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M052",
+      "clause": "可信alias來源可證才採用；中文候選不得自動全域加入",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #1",
+        "line": 975
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-identity-history",
+      "detail": "補可信alias與中文候選的來源邊界；不全域增加alias。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M053",
+      "clause": "未知歷史個人賞保留原文只讀、不推效果",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #2",
+        "line": 975
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M054",
+      "clause": "不補發歷史phoenix+8",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #3",
+        "line": 975
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-identity-history",
+      "detail": "明示不補歷史phoenix+8。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M055",
+      "clause": "不重算已支付薪資或已完成合約",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #4",
+        "line": 975
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M056",
+      "clause": "不重新抽取已結算歷史賞",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #5",
+        "line": 975
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-identity-history",
+      "detail": "明示不重抽已結算歷史賞。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M057",
+      "clause": "不全面改寫S.honors",
+      "previousTransferStatus": "COMPLETE",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #6",
+        "line": 975
+      },
+      "action": "RETAINED_UNCHANGED",
+      "target": "CURRENT_SPEC.md#d2-current-spec",
+      "detail": "原正式規格內容保持，不重複新增；引用行號因插入而後移。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M058",
+      "clause": "國際／團隊及範圍外consumer保持原行為",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #7",
+        "line": 975
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-identity-history",
+      "detail": "明示國際／團隊／範圍外Consumer保持，不將全部未知交給舊regex猜賞。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M059",
+      "clause": "不順改舊跨聯盟當年度保護",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #8",
+        "line": 975
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-identity-history",
+      "detail": "明示保持舊跨league當年度保護。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M060",
+      "clause": "不用模糊王或MVP substring識別個人賞",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #9",
+        "line": 975
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-identity-history",
+      "detail": "明示不用王／MVP substring建立新個人賞身分。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M061",
+      "clause": "UNKNOWN個人賞與NOT_IN_SCOPE分離，衝突停報",
+      "previousTransferStatus": "UNTRANSFERRED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.6 AF08 #10",
+        "line": 975
+      },
+      "action": "SPEC_BOUNDARY_ADDED_WITH_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-identity-history",
+      "detail": "明示UNKNOWN與NOT_IN_SCOPE分離、相容衝突停止。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-identity-policy.js",
+          "line": 57,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-identity-policy.test.mjs",
+          "line": 1,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "consumer-local精確舊名稱層是後續批准的實作補充；不得提升為全域可信P-ID。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "唯一技術原文與歷史依賴繼續保留；不是可刪除證明"
+    },
+    {
+      "mappingId": "M062",
+      "clause": "原始產品／技術驗收案例集與各輸入預期",
+      "previousTransferStatus": "UNTRANSFERRED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§8 T01～T50、§14.8 TR01～TR14",
+        "line": 241
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用原T/TR/AN與F故障契約；逐case→log對應仍待核對，不標全部完成。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 92,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/receipt-replay.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "本表為條款群組，不宣稱逐一T/TR均完成Runtime映射；此細項證據仍待核對。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "逐案例log/manifest映射與原Gate證據仍須保留核對；不解鎖清理"
+    },
+    {
+      "mappingId": "M063",
+      "clause": "日文漏判、歷史ID、待遇與UI原生整合驗收",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.11 AN01～AN05／§14.13.5 F-ID01～12",
+        "line": 564
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用原F-ID及G1-A／A／B證據；不重寫原BUG/NOT_RUN歷史結果。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 11,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-consumer-policy.js",
+          "line": 118,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-consumer-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-legacy-consumer.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-history-b-comparison.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "測試名稱／覆蓋不等所有歷史未知資料均安全可識別。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "逐案例log/manifest映射與原Gate證據仍須保留核對；不解鎖清理"
+    },
+    {
+      "mappingId": "M064",
+      "clause": "Journal/Receipt原生故障、fixture與真producer驗收邊界",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.5 F-A04/A06/A07、F-B01～12",
+        "line": 927
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "明示G3 fixture範圍不能替代G6/G7真producer整合驗收。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/award-journal-native.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "G3完成fixture不能冒充G6/G7整合PASS。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "逐案例log/manifest映射與原Gate證據仍須保留核對；不解鎖清理"
+    },
+    {
+      "mappingId": "M065",
+      "clause": "年度／callback／跨平台golden驗收與停止邊界",
+      "previousTransferStatus": "PARTIAL",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.5 F-YEAR/F-GV",
+        "line": 927
+      },
+      "action": "PRECISE_TECHNICAL_REFERENCE",
+      "target": "CURRENT_SPEC.md#d2-technical-contract-index",
+      "detail": "引用F-YEAR/F-GV正式Gate；不新增Safari或Full PASS。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 2101,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3227,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 3286,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tools/development-a/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/season-payment-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tests/salary-evaluation-receipt.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "docs/src/engine/award-rng-policy.js",
+          "line": 20,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 38,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/award-transaction-policy.test.mjs",
+          "line": 6,
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "Safari G2是相同產品來源證據，不外推整套B手機。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "逐案例log/manifest映射與原Gate證據仍須保留核對；不解鎖清理"
+    },
+    {
+      "mappingId": "M066",
+      "clause": "NOT_IMPLEMENTED/NOT_AUTHORIZED/PLANNED等設計時點標籤",
+      "previousTransferStatus": "HISTORICAL_SUPERSEDED",
+      "original": {
+        "path": "docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md",
+        "section": "§14.13.7、文件舊狀態標籤",
+        "line": 992
+      },
+      "action": "HISTORICAL_INDEXED",
+      "target": "CURRENT_SPEC.md#d2-historical-design-index",
+      "detail": "17.6保留此來源群的歷史定位與取代依據；原D2文字／數據／歷史狀態不改。",
+      "sourceAndTests": [
+        {
+          "path": "docs/src/engine/game.js",
+          "line": 1393,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "docs/src/engine/award-transaction-policy.js",
+          "line": 92,
+          "kind": "PRODUCT_STATIC"
+        },
+        {
+          "path": "tests/pitcher-award-integration.test.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/runtime.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        },
+        {
+          "path": "tools/development-b/receipt-replay.mjs",
+          "kind": "TEST_SOURCE_NOT_RUN"
+        }
+      ],
+      "remainingRisk": "AF09舊未授權不代表本輪可實作；發布不代表LinuxFull已接受。",
+      "verification": "DOCUMENT_STATIC_ONLY; historical Runtime results not rerun",
+      "fullyMigratedClaim": false,
+      "followup": "逐案例log/manifest映射與原Gate證據仍須保留核對；不解鎖清理"
+    }
+  ]
+}
