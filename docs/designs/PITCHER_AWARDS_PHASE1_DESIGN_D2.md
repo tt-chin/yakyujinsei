@@ -1,5 +1,7 @@
 # 投手個人獎項制度：第一階段 D2 設計書
 
+> 文件定位索引（2026-10-16）：本書保留批准沿革、唯一技術條款及原Gate，不作新的產品授權。現行已公開1.13.0規則以[CURRENT_SPEC第17節](../../CURRENT_SPEC.md#d2-current-spec)為正本；[正式發布驗收](../reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)記錄650e4dd來源及15adf28正式站。Linux Full為NOT_ACCEPTED / DEFERRED，ARTIFACT_COVERAGE_BLOCKED不變。以下2026-10-15及更早的未公開／未授權／PLANNED／NOT_RUN是各次記錄的歷史狀態，不覆蓋後續批准與驗收。RNG編碼／精度、可信Decision、consumer及故障Gate的逐條規格移轉仍未完成，禁止因已實作自行刪除。本次只加定位引用，原技術內容及既存dirty四行不改。[現行導航](../CURRENT_DOCUMENTATION.md)。
+
 ## CURRENT IMPLEMENTATION STATUS（G9文件同步，2026-10-15）
 
 使用者已接受開發A及B的指定本地驗收。A提交`efd4710c4c5c366ff3aba69c59180031c82ff18a`；B提交`56e72d9792529f3221c1a1ffadaf563bceebe26d`。A0／G2～G4及G5～G8為LOCAL_PASS / USER_ACCEPTED；AF01～AF08的批准規則、TR-B風險ID及恢復限制不變。AF09已按A／B分批明確授權並完成限定產品實作，不再整體標為NOT_AUTHORIZED／NOT_IMPLEMENTED。
@@ -407,6 +409,8 @@ IP143/150/160/170/180/190/200分別0/18.9189/45.9459/72.9730/100/100/100。2039�
 
 **B2已批准**：不合格p0；合格score<60 p0；60≤score<95時 `pPercent=min(95,10+2.5×(score−60))`；score≥95 p100。基本60、起始10%、每分+2.5百分點、非保證上限95%、保證95全部APPROVED / DESIGN_ONLY。60的10%跳點與95的100%跳點為預期，不平滑化，允許從缺；總分95不是各component皆95。
 
+與[分階段實作計畫§2](../../tasks/PITCHER_AWARDS_D2_PHASED_IMPLEMENTATION_PLAN.md)一致：`min(95, 10 + 2.5 × (score − 60))`僅用於合格且`60 ≤ score < 95`；score≥95直接100%，不套用95%上限。本次只補文件一致性，不修改任何已批准參數。
+
 以未取整內部值計算score/p作設計基準。AF02已批准binary64固定順序、嚴格比較、無epsilon、不使用顯示取整值；分析assert的1e-10不是產品容差，替代整數化未納入。AF01～AF08技術定案見[第14.13節](#d2-technical-approved)；產品Runtime未驗證，AF09實作與發布未授權。P08phoenix／當年度降格保護的政策已APPROVED / DESIGN_ONLY / NOT_IMPLEMENTED，見[第14節](#pitcher-awards-technical-review)；技術設計已批准，產品接入與Runtime驗收仍未完成，不重新詢問是否新增。
 
 手機1.10.3/q77bi1jx/2039 NPB1 SP（使用者確認）G26/W15/L7/IP180.1/SO165/ERA2.35：component60/85/100/16.6667/15.9091，合格score68.7954545455，B2 p31.98863636%，不保證。標MANUAL_MOBILE_EVIDENCE / OFFLINE_ESTIMATE，ERA為顯示丸め值，沒有成長/選擇/RNG，不當新獎實得、1.11.9重播PASS或自然平衡證據。57.5909%是歷史舊曲線比較。
@@ -639,6 +643,8 @@ AN01～05不是已執行的fixture。首批必先有可失敗原生效果/有效
 
 keyVersion是canonical編碼版本的語義名稱：本期domain=`pitcher-award-v1`、Decision.keySchemaVersion=1；Journal／Decision／Receipt.schemaVersion=1各自描述資料格式，ruleId描述獎項政策。這三者不是產品VERSION，不新增第七欄，不將批准schema的keySchemaVersion改名為另一欄位。H1選定；H2僅歷史替代，不實作。
 
+<a id="d2-contract-rng"></a>
+
 #### 14.13.1 AF01～AF03：H1／編碼／精度／Golden vectors
 
 ##### Canonical identity（APPROVED / DESIGN_ONLY）
@@ -751,6 +757,8 @@ P01 W非負finite safe integer；P04 W/L同條件且W+L>0，sum也須safe intege
 EXISTING_APPROVED：P01 b前0、b起20/g起100；P04 .65起20/.85起100；P08 score60起10/95起100及cap95，保留跳點。
 PLANNED / NOT_RUN 產品精度驗收：P04 12/6可能24.999999999999982%，保留内部raw；P08 59.999/60/60.001及94.999/95/95.001；u=0、最大uint32/2^32、相等、非法資料不得進新draw；Node/Chromium/Safari exact vector，数學近似assert不得拿當資格容差。32bit概率粒度最大約1/2^32；不保證連續模型完全无離散偏差。替代BigInt有理P04、ppm整數化需另批准，不能一邊自稱無丸め一邊轉基點。
 
+<a id="d2-contract-receipts"></a>
+
 #### 14.13.2 AF04／AF05：Journal／Receipt（APPROVED_WITH_LIMITS / DESIGN_ONLY）
 
 ##### Identity／Decision
@@ -820,6 +828,8 @@ phoenix准备资格glass&&!phoenix与可信當年eligibility→四類write：gla
 - 降格：当前award決策派生boolean（本年度），不用永久protect旗標；movement/state侧效果另continuation receipt。P08同年保護按已批context，不扩大FA/退休免責。
 - receipt完成后render失败只重绘saved result；任何receipt conflict不进入下一年、不强制ROLLBACK。
 
+<a id="d2-contract-checkpoints"></a>
+
 #### 14.13.3 AF06：年度續行（APPROVED_WITH_LIMITS / DESIGN_ONLY）
 
 VERIFIED_EXISTING：phaseMid→proSeason生成/累計→awards→salaryEvaluation→TJ/交易/國際→nextStep→phaseEnd付款→配分/movement→advance→startYear。**awards不在phaseEnd**，不能從付款重入再重跑前面的proSeason。
@@ -861,6 +871,8 @@ advance限定設計：在调用原advance前写完整fromYear/targetYear/age/sta
 |YEAR_HANDOFF_COMMITTED|choice完成，from／target計畫可用|一次年度交接完成，必要下一步完成證據可辨|year已target不再increment；callback過期；不能單靠year已變推斷startYear成功|startYear／phasePre部分耗R不可辨→NEXT_YEAR_AMBIGUOUS停止|
 
 本期只支援同頁同S下已記抽選的效果續行、已提交效果的重畫、付款後UI失敗、未接受選項續行，以及已完成年度交接防重。不保證任意startYear／phasePre、跨頁重載、關閉瀏覽器或host crash恢復，不新增完整存檔，不擴成全引擎重構。
+
+<a id="d2-contract-consumers"></a>
 
 #### 14.13.4 AF07：獎項 ID adapter（APPROVED_DESIGN / NOT_IMPLEMENTED）
 
@@ -920,7 +932,11 @@ structured trusted Decision优先，确认schema/recognized ID/year/league/rule�
 已paid contract/schedule/career收入不可回溯改；当期可信未完成tx才可继续未commit效果，不能因adapter突然认出过去P08/旧大赏就重算。可靠旧结算不重抽；未知是否已完成→HISTORICAL_UNKNOWN，不自动迁移待遇。
 UI卡/成就/引退/PNG用displayName与originalText分离：新发按正式日文名，历史按原字符串；需保留原顺序/正常折行、取得说明时机，不用重建S.honors去统一语言。
 
+<a id="d2-contract-gates"></a>
+
 #### 14.13.5 故障注入與回歸驗收（全部 PLANNED / NOT_RUN）
+
+分批證據邊界依[實作計畫§7／§10／§11](../../tasks/PITCHER_AWARDS_D2_PHASED_IMPLEMENTATION_PLAN.md)：G3可用已完成Decision fixture搭配實際產品Receipt邏輯驗證交易安全，必須標明fixture與實際產品呼叫路徑，不以模型Receipt冒充產品。此PASS僅涵蓋G3限定範圍；G6／G7仍須另走真實`producer → Decision → Receipt → consumer`整合驗收，不得以fixture PASS取代。AF01～AF08設計批准、Runtime未驗證與AF09未授權狀態均不變，本次不啟動工程或測試。
 
 共同产品前置：合法原生S/contract/year、冻结输入、真实调用链/无强制改变能力；fault注入与自然路线分清。成功需逐checkpoint的S/R/receipt/实际choice/body，不只是没有throw。下面对既有证据逐案转换（K=full decision identity，E=effect identity，原R合法耗后不回滚）。
 
@@ -965,6 +981,8 @@ UI卡/成就/引退/PNG用displayName与originalText分离：新发按正式日�
 |F-ID10|NPB1/SP P08已得／未得、glass／已phoenix、同季MVP|P08獨立於legacy與P02，當年保護、共享生涯＋8一次；不autoMVP、不永久保護|
 |F-ID11|同名跨年度／league、同義P03短／正式名、不同S|consumer按語義去重；過去年不當本年；保留舊同年度跨league保護範圍，不改raw honors|
 |F-ID12|每項registry→salary market／promotion fallback／FULL／HOF／trait／UI，PC1280／320／390|逐行對照14.13.4待遇矩陣、P07自身0且MVP一次；合同保障／已支付收入不回溯；名稱／原文／折行正確，不額外R|
+
+<a id="d2-contract-history"></a>
 
 #### 14.13.6 AF08：APPROVED_CONSERVATIVE 歷史相容政策
 

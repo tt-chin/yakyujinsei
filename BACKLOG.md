@@ -1,5 +1,14 @@
 # BACKLOG — 野球人生（日文版）
 
+## 現行狀態索引（2026-10-16／1.13.0）
+
+- **正式發布及基本Smoke：SUCCESS**。來源／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`，正式Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。同SHA Quick61 PASS，正式站六組基本Smoke PASS；[發布證據](docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)。手機尺寸模擬不是實機，基本Smoke不是完整生涯。
+- **Linux Full：NOT_ACCEPTED / DEFERRED**。Run38841657256為18 PASS／1中斷／61未執行、exit143；Aggregate未執行。停止調查／修正／重跑，保留全部原件。[發布豁免及Full限制](docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md#full與殘餘風險)。
+- **D2-CI-ARTIFACT-01：ARTIFACT_COVERAGE_BLOCKED**。分批artifact／Linux最小Smoke成功不等於完整S／RNG／Decision／Receipt可還原證據保存合格；[保存缺口](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)及[分批限制](docs/reviews/LINUX_CI_FULL_1130_STABILITY_ACCEPTANCE.md)。
+- **文件整理／規格移轉：未完成**。本輪只同步入口；逐條移轉、動態引用、1,309份大型文件語義審查與清理均未完成。[整理計畫](docs/reviews/DOCUMENT_AUDIT_1130_PLAN.md)／[導航](docs/CURRENT_DOCUMENTATION.md)。不因此結案AUD-02或REFACTOR-AUDIT-01；本輪未新增或改動正式checkbox，25完成／28未完成仍須與下方殘項分開理解。
+
+下方「本次提交前快照」、舊main／未授權／未公開及歷史階段統計均保留其原時點；不得覆蓋本索引。D2-G9-RELEASE的當前剩餘範圍見該正式待辦，不把已完成正式發布誤讀為仍未授權。
+
 > 最新D2狀態（本次提交前快照）：2026-10-15｜dev基準HEAD `56e72d9792529f3221c1a1ffadaf563bceebe26d`／config VERSION 1.13.0。使用者已接受A／B與1.13.0限定準備驗收，並批准本次精確dev提交／推送及Linux Full啟動；截至本文件更新，Linux實際驗證尚未執行，不預寫CI／Preview／發布PASS。最新本機Quick61及collector限定47案已通過；舊B Full80仍為1.12.0歷史結果。本次採Linux CI優先，artifact完整封存不作為Full啟動前置，保存缺口另以D2-CI-ARTIFACT-01追蹤。CI測試結果、workflow結果與artifact完整性分別報告。[CI與證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)／[原G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)／[發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)。以下歷史數字與待審文字保留當時範圍，不代表目前授權或發布狀態。
 
 > 最新限定結案：2026-10-14｜dev 1.12.0，G1-A **PASS / ACCEPTED**（使用者批准）。受驗基準HEAD `554d54a94352b7dbc86473084a65b56bef74d3b7`＋G1-A工作樹；Windows Quick48／Full67入口、88唯一原生fixture通過，正式CI／Preview未執行。僅結案兩項日文名稱漏判，不開始G1-B，不發布。見[G1-A驗收](docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)及[可攜執行結果](docs/reviews/g1-a-validation/test-expectation-acceptance.json)。下列2026-10-13及此前版本／部署敘述保留為歷史快照。
@@ -162,9 +171,13 @@
 
 ### 3.6 P1 — D2發布準備與獨立CI證據待辦（2 項）
 
-- [ ] **D2-G9-RELEASE** — `RELEASE_PREPARATION / RELEASE_NOT_VERIFIED`。1.13.0 MINOR、CHANGELOG與限定準備驗收已接受；精確dev commit／push及Linux Full啟動已獲本次批准。Linux實際驗證截至本次提交前尚未執行；只有確認Run與受驗SHA後才報CI_IN_PROGRESS，不能預報PASS。CI／最新SHA Preview／使用者確認／正式發布／smoke全部完成前維持未完成；main合併、正式同步及部署仍未授權。artifact問題由D2-CI-ARTIFACT-01獨立追蹤，不阻擋先跑Full，也不因Full PASS而自動結案。來源與限制見[發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)及[CI證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)；[原G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)保留為歷史。不得清理A／B或歷史JSON。
+- [ ] **D2-G9-RELEASE** — `RELEASED / RESIDUAL_GATES_DEFERRED`。正式1.13.0發布與基本Smoke已完成，來源650e4dd／正式站15adf28，見[發布驗收](docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)。Linux Full仍NOT_ACCEPTED / DEFERRED；原Gate及未完成證據／文件整理未被豁免為PASS，故本項暫保持未完成，待另行審查殘項與結案範圍。不重新授權Full或部署。
 
-- [ ] **D2-CI-ARTIFACT-01** — `ARTIFACT_COVERAGE_BLOCKED`。CI job timeout已由60提高至120分鐘，但Linux實際驗證截至本次提交前尚未執行。bounded evidence collector限定測試47 PASS／0 FAIL，尚未接入正式CI；現有artifact glob保持，Full原始S／RNG／Decision／Receipt等證據仍有保存缺口。使用者接受先啟動Linux CI Full，完整封存另行改善；CI Full執行結果、workflow／上傳結果與artifact完整性須分開報告，保存完整性不得標PASS。結案需核准並驗證Gate→case→原件保存契約、超大JSON／64MiB上限處理、敏感路徑安全保存、缺失／損壞／超額與下載還原一致性；不得只用hash索引冒充完整可重播證據。未另行批准不接collector、不取代或擴大glob、不改Full條件或golden。[缺口與限定驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)。
+> 歷史準備快照（2026-10-15，保留原時點）：`RELEASE_PREPARATION / RELEASE_NOT_VERIFIED`。1.13.0 MINOR、CHANGELOG與限定準備驗收已接受；精確dev commit／push及Linux Full啟動已獲本次批准。Linux實際驗證截至本次提交前尚未執行；只有確認Run與受驗SHA後才報CI_IN_PROGRESS，不能預報PASS。CI／最新SHA Preview／使用者確認／正式發布／smoke全部完成前維持未完成；main合併、正式同步及部署仍未授權。artifact問題由D2-CI-ARTIFACT-01獨立追蹤，不阻擋先跑Full，也不因Full PASS而自動結案。來源與限制見[發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)及[CI證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)；[原G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)保留為歷史。不得清理A／B或歷史JSON。
+
+- [ ] **D2-CI-ARTIFACT-01** — `ARTIFACT_COVERAGE_BLOCKED`。已實際執行Linux CI、短路徑Smoke與分批上傳；第1批保存成功不能解除完整原件保存缺口。bounded collector仍未接入正式CI；原始S／RNG／Decision／Receipt的可還原保存契約、容量／敏感路徑及還原驗證未完成。[缺口](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)／[分批限制](docs/reviews/LINUX_CI_FULL_1130_STABILITY_ACCEPTANCE.md)。本項維持未完成，不重跑Full、不刪證據。
+
+> 歷史準備快照（2026-10-15，保留原時點）：`ARTIFACT_COVERAGE_BLOCKED`。CI job timeout已由60提高至120分鐘，但Linux實際驗證截至本次提交前尚未執行。bounded evidence collector限定測試47 PASS／0 FAIL，尚未接入正式CI；現有artifact glob保持，Full原始S／RNG／Decision／Receipt等證據仍有保存缺口。使用者接受先啟動Linux CI Full，完整封存另行改善；CI Full執行結果、workflow／上傳結果與artifact完整性須分開報告，保存完整性不得標PASS。結案需核准並驗證Gate→case→原件保存契約、超大JSON／64MiB上限處理、敏感路徑安全保存、缺失／損壞／超額與下載還原一致性；不得只用hash索引冒充完整可重播證據。未另行批准不接collector、不取代或擴大glob、不改Full條件或golden。[缺口與限定驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)。
 
 > **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋5（待決／保留）＋7（候補）＋2（D2發布／獨立artifact待辦）＝**28**；53唯一ID、25完成／28未完。歷史38／47／48／52項及前階段快照保持原數。
 

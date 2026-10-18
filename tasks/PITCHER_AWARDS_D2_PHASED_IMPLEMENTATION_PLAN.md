@@ -1,5 +1,13 @@
 # 野球人生｜投手獎項 D2 分階段實作計畫書
 
+## 現行執行索引（2026-10-16）
+
+A0／G2～G4、G5～G8的既有本地接受範圍保持；G9正式1.13.0發布與基本Smoke已完成，來源／main為 `650e4dd21718b4abec3876fc9ef6148714c21d4f`、正式Repository為 `15adf286e687ab2efc70e9e694ae024f75c3f10b`。[發布驗收](../docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)記錄同SHA Quick61及六組正式站Smoke。
+
+Linux Full **NOT_ACCEPTED / DEFERRED**，不再調查／修正／重跑；**ARTIFACT_COVERAGE_BLOCKED**獨立維持。使用者明確批准此次發布不以Full PASS為前置，不代表刪除原G8／G9 Gate或把未執行視為通過。原Gate、失敗恢復契約、批准及歷史結果全文保持；未來實作或恢復Full仍需新授權。
+
+文件移轉／整理未完成，只建立[現行導航](../docs/CURRENT_DOCUMENTATION.md)與[整理計畫](../docs/reviews/DOCUMENT_AUDIT_1130_PLAN.md)。以下2026-10-15及更早的CURRENT EXECUTION STATUS、NOT_AUTHORIZED／NOT_STARTED／未公開文字屬歷史批准快照，不作現行執行許可；不能因本索引自行啟動新工作。
+
 ## CURRENT EXECUTION STATUS（2026-10-15）
 
 原計畫與各Gate要求保留。使用者其後已明確授權並接受開發A及B：A0／G2～G4、G5～G8為LOCAL_PASS / USER_ACCEPTED；受驗B來源已本機提交`56e72d9792529f3221c1a1ffadaf563bceebe26d`，VERSION仍1.12.0。證據見[A驗收](../docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md)、[B驗收](../docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md)。以下「A／B未開始、Runtime未驗證、AF09未授權」等為原2026-10-14計畫快照，不再是目前工程狀態；原規則及驗收標準沒有降低。
