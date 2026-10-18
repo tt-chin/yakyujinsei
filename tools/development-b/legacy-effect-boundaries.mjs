@@ -7,6 +7,7 @@ import {hasCurrentAwardEffect} from '../../docs/src/engine/award-consumer-policy
 import {goldclothEligible,TRAIT_TEXT} from '../../docs/src/engine/trait-policy.js';
 import {isBelowActiveMinimum,findDemotionTarget,demotionChoiceText} from '../../docs/src/engine/career-policy.js';
 import {createContract,contractNeedsRenewal} from '../../docs/src/engine/contract-policy.js';
+import {Rng} from '../../docs/src/engine/rng.js';
 let pass=0;
 for(const title of ['最優秀投手賞','首位打者','本塁打王','ゴールデングラブ賞','年間MVP','年度MVP','新人王','守備王','出塁王','最多勝',
  '年度最佳投手','救援王','中繼王','三振王','盜壘王','打點王','ホールド王','盗み王','賽揚獎']){
@@ -24,7 +25,7 @@ function movement(src,honor,good){
   serviceTime:{NPB:0,MLB:0,KBO:0,CPBL:0},npbRosterDays:0,npbFaSeasons:0,lastD:-8,skipMid:false,teamTally:{},
   ct:createContract({contractId:'legacy-effect',org:'NPB',teamId:'fixture',signedYear:2039,startYear:2039,years:3,annualSalary:10000000}),
   lastSt:{G:20,IP:100,ER:good?30:65,H:150,BB:50,SV:0,HLD:0}};
- const c=vm.createContext({S:s,TextEncoder,hasCurrentAwardEffect,goldclothEligible,TRAIT_TEXT,isBelowActiveMinimum,findDemotionTarget,demotionChoiceText,contractNeedsRenewal,
+ const c=vm.createContext({S:s,TextEncoder,Rng,hasCurrentAwardEffect,goldclothEligible,TRAIT_TEXT,isBelowActiveMinimum,findDemotionTarget,demotionChoiceText,contractNeedsRenewal,
   traitPresentation:new WeakMap(),displayTrait:k=>k,card:(...a)=>cards.push(a),board:()=>{},choose:(title,opts)=>choices.push({title,options:opts.map(x=>({t:x.t,s:x.s}))}),
   ovr:()=>52,migrateSalaryV130State:()=>{},accrueForeignFirstTeamSeason:()=>{},contractStageFor:()=> 'CONTROL',crossOffers:()=>{},
   markClubInitiatedRenewal:()=>{},applyPromotionSalary:()=>{},retireBelowActiveMinimum:()=>assert.fail('invalid below-active fixture'),
@@ -33,7 +34,7 @@ function movement(src,honor,good){
  const functions=['movement','handleDemotion','traitCard','removeTrait','fnv1a32'].map(n=>{
   const f=productionFunction(n,src);return n==='movement'?f.replace('  if(wonAward||goodReal)',"  observe({wonAward,goodReal});\n  if(wonAward||goodReal)"):f;
  }).join('\n');
- vm.runInContext(`const LV=${levels},PATHS=${paths};const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));let _s=0,seedInit,R;
+ vm.runInContext(`const LV=${levels},PATHS=${paths};const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));let _s=0,seedInit,R;const careerRng=new Rng(()=>S,fnv1a32);
  ${src.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}
  ${src.match(/R = function\(\)\{[^\n]+/)[0]}
  const nativeR=R;R=()=>{const v=nativeR();recordR(v);return v;};const chance=p=>R()*100<p;

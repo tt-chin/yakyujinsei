@@ -11,6 +11,7 @@ import {TRAIT_LABELS} from '../../docs/src/engine/trait-policy.js';
 import {ensureEventState} from '../../docs/src/engine/event-state-policy.js';
 import * as schoolPolicy from '../../docs/src/engine/school-policy.js';
 import {independentAwardDraw} from '../../docs/src/engine/award-rng-policy.js';
+import {Rng} from '../../docs/src/engine/rng.js';
 
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const base='56e72d9792529f3221c1a1ffadaf563bceebe26d';
@@ -31,10 +32,10 @@ const begin=source.indexOf('  newState = function(name,pos)'),end=source.indexOf
 assert.ok(begin>=0&&end>begin);
 const initializer=source.slice(begin,end);
 function initialize(seed,pos,version){
-  const ctx=vm.createContext({TextEncoder,S:{rngState:0},SEED:seed,VERSION:version,DATA:JP_DATA,
+  const ctx=vm.createContext({TextEncoder,Rng,S:{rngState:0},SEED:seed,VERSION:version,DATA:JP_DATA,
     TRAIT_LABELS,traitPresentation:new WeakMap(),ensureEventState,...schoolPolicy});
   // Extract the active native initializer, RNG, seed initialization and ability keys, not a reimplementation.
-  vm.runInContext('var _s=0;var R,seedInit,newState;'+line('const POS_AB=')+line('function fnv1a32(')
+  vm.runInContext('var _s=0;var R,seedInit,newState;const careerRng=new Rng(()=>S,fnv1a32);'+line('const POS_AB=')+line('function fnv1a32(')
     +line('seedInit = function(')+line('R = function(')+line('const ri=')+line('function pickRecord(')+initializer,ctx);
   ctx.seedInit(seed);
   const nativeR=ctx.R,trace=[];
