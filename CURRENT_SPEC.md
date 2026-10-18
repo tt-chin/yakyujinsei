@@ -1,6 +1,6 @@
 # 現行規格（正式公開 v1.13.0）
 
-> 現行公開状態（2026-10-16）：正式ソース／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`、公開Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。既存Publish Workflow成功、同SHA Linux Quick61 PASS、正式サイトP／IF×1280／320／390pxの基本Smoke6組PASS。[公開検収](docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)参照。Linux Fullは **NOT_ACCEPTED / DEFERRED**、artifact全原件保存は **ARTIFACT_COVERAGE_BLOCKED** のまま。公開成功をFull合格や全機能検証と解釈しない。文書入口は[現行文書ナビ](docs/CURRENT_DOCUMENTATION.md)。
+> 現行公開状態（2026-10-16）：正式ソース／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`、公開Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。既存Publish Workflow成功、同SHA Linux Quick61 PASS、正式サイトP／IF×1280／320／390pxの基本Smoke6組PASS。[公開検収](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)参照。Linux Fullは **NOT_ACCEPTED / DEFERRED**、artifact全原件保存は **ARTIFACT_COVERAGE_BLOCKED** のまま。公開成功をFull合格や全機能検証と解釈しない。文書入口は[現行文書ナビ](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)。
 
 以下の2026-10-15準備記録及び過去版の検証状態は歴史快照であり、現在の公開状態を上書きしない。
 
@@ -514,7 +514,7 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 
 ## 17. 投手個人賞D2・年度取引（1.13.0公開済み）
 
-本節の製品規則は公開済み。以下に記載したA／B本地受入SHA・当時の未確認範囲は履歴として保持する。現行公開／Full延後の区別は冒頭及び[公開検収](docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)を参照。新たな規則・精度・回復保証は追加しない。
+本節の製品規則は公開済み。以下に記載したA／B本地受入SHA・当時の未確認範囲は履歴として保持する。現行公開／Full延後の区別は冒頭及び[公開検収](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)を参照。新たな規則・精度・回復保証は追加しない。
 
 ### 17.1 適用範囲と識別
 

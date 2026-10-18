@@ -1,6 +1,6 @@
 # 投手個人獎項制度：第一階段 D2 設計書
 
-> 文件定位索引（2026-10-16）：本書保留批准沿革、唯一技術條款及原Gate，不作新的產品授權。現行已公開1.13.0規則以[CURRENT_SPEC第17節](../../CURRENT_SPEC.md#d2-current-spec)為正本；[正式發布驗收](../reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)記錄650e4dd來源及15adf28正式站。Linux Full為NOT_ACCEPTED / DEFERRED，ARTIFACT_COVERAGE_BLOCKED不變。以下2026-10-15及更早的未公開／未授權／PLANNED／NOT_RUN是各次記錄的歷史狀態，不覆蓋後續批准與驗收。RNG編碼／精度、可信Decision、consumer及故障Gate的逐條規格移轉仍未完成，禁止因已實作自行刪除。本次只加定位引用，原技術內容及既存dirty四行不改。[現行導航](../CURRENT_DOCUMENTATION.md)。
+> 文件定位索引（2026-10-16）：本書保留批准沿革、唯一技術條款及原Gate，不作新的產品授權。現行已公開1.13.0規則以[CURRENT_SPEC第17節](../../CURRENT_SPEC.md#d2-current-spec)為正本；[正式發布驗收](../reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)記錄650e4dd來源及15adf28正式站。Linux Full為NOT_ACCEPTED / DEFERRED，ARTIFACT_COVERAGE_BLOCKED不變。以下2026-10-15及更早的未公開／未授權／PLANNED／NOT_RUN是各次記錄的歷史狀態，不覆蓋後續批准與驗收。RNG編碼／精度、可信Decision、consumer及故障Gate的逐條規格移轉仍未完成，禁止因已實作自行刪除。本次只加定位引用，原技術內容及既存dirty四行不改。[現行導航](../reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)。
 
 ## CURRENT IMPLEMENTATION STATUS（G9文件同步，2026-10-15）
 

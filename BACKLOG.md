@@ -2,10 +2,10 @@
 
 ## 現行狀態索引（2026-10-16／1.13.0）
 
-- **正式發布及基本Smoke：SUCCESS**。來源／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`，正式Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。同SHA Quick61 PASS，正式站六組基本Smoke PASS；[發布證據](docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)。手機尺寸模擬不是實機，基本Smoke不是完整生涯。
-- **Linux Full：NOT_ACCEPTED / DEFERRED**。Run38841657256為18 PASS／1中斷／61未執行、exit143；Aggregate未執行。停止調查／修正／重跑，保留全部原件。[發布豁免及Full限制](docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md#full與殘餘風險)。
+- **正式發布及基本Smoke：SUCCESS**。來源／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`，正式Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。同SHA Quick61 PASS，正式站六組基本Smoke PASS；[發布證據](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)。手機尺寸模擬不是實機，基本Smoke不是完整生涯。
+- **Linux Full：NOT_ACCEPTED / DEFERRED**。Run38841657256為18 PASS／1中斷／61未執行、exit143；Aggregate未執行。停止調查／修正／重跑，保留全部原件。[發布豁免及Full限制](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md)。
 - **D2-CI-ARTIFACT-01：ARTIFACT_COVERAGE_BLOCKED**。分批artifact／Linux最小Smoke成功不等於完整S／RNG／Decision／Receipt可還原證據保存合格；[保存缺口](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)及[分批限制](docs/reviews/LINUX_CI_FULL_1130_STABILITY_ACCEPTANCE.md)。
-- **文件整理／規格移轉：未完成**。本輪只同步入口；逐條移轉、動態引用、1,309份大型文件語義審查與清理均未完成。[整理計畫](docs/reviews/DOCUMENT_AUDIT_1130_PLAN.md)／[導航](docs/CURRENT_DOCUMENTATION.md)。不因此結案AUD-02或REFACTOR-AUDIT-01；本輪未新增或改動正式checkbox，25完成／28未完成仍須與下方殘項分開理解。
+- **文件整理／規格移轉：未完成**。本輪只同步入口；逐條移轉、動態引用、1,309份大型文件語義審查與清理均未完成。[整理計畫](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md)／[導航](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)。不因此結案AUD-02或REFACTOR-AUDIT-01；本輪未新增或改動正式checkbox，25完成／28未完成仍須與下方殘項分開理解。
 
 下方「本次提交前快照」、舊main／未授權／未公開及歷史階段統計均保留其原時點；不得覆蓋本索引。D2-G9-RELEASE的當前剩餘範圍見該正式待辦，不把已完成正式發布誤讀為仍未授權。
 
@@ -171,7 +171,7 @@
 
 ### 3.6 P1 — D2發布準備與獨立CI證據待辦（2 項）
 
-- [ ] **D2-G9-RELEASE** — `RELEASED / RESIDUAL_GATES_DEFERRED`。正式1.13.0發布與基本Smoke已完成，來源650e4dd／正式站15adf28，見[發布驗收](docs/reviews/RELEASE_1130_PRODUCTION_ACCEPTANCE.md)。Linux Full仍NOT_ACCEPTED / DEFERRED；原Gate及未完成證據／文件整理未被豁免為PASS，故本項暫保持未完成，待另行審查殘項與結案範圍。不重新授權Full或部署。
+- [ ] **D2-G9-RELEASE** — `RELEASED / RESIDUAL_GATES_DEFERRED`。正式1.13.0發布與基本Smoke已完成，來源650e4dd／正式站15adf28，見[發布驗收](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)。Linux Full仍NOT_ACCEPTED / DEFERRED；原Gate及未完成證據／文件整理未被豁免為PASS，故本項暫保持未完成，待另行審查殘項與結案範圍。不重新授權Full或部署。
 
 > 歷史準備快照（2026-10-15，保留原時點）：`RELEASE_PREPARATION / RELEASE_NOT_VERIFIED`。1.13.0 MINOR、CHANGELOG與限定準備驗收已接受；精確dev commit／push及Linux Full啟動已獲本次批准。Linux實際驗證截至本次提交前尚未執行；只有確認Run與受驗SHA後才報CI_IN_PROGRESS，不能預報PASS。CI／最新SHA Preview／使用者確認／正式發布／smoke全部完成前維持未完成；main合併、正式同步及部署仍未授權。artifact問題由D2-CI-ARTIFACT-01獨立追蹤，不阻擋先跑Full，也不因Full PASS而自動結案。來源與限制見[發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)及[CI證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)；[原G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)保留為歷史。不得清理A／B或歷史JSON。
 
