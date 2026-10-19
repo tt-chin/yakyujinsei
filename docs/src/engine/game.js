@@ -31,6 +31,7 @@ import { acceptDraftSelection, declineDraftSelection, draftSigningTerms, isDraft
 import { NPB_BONUS_RANGES, createSigningBonusTerms, calculatePostingFee, applySigningPayment } from './signing-bonus-policy.js';
 import { effectiveMarketOrg, marketTier, foreignProSeasons, accrueForeignFirstTeamSeason, getCrossLeaguePolicy, applyCrossLeagueSalary, applyKboForeignPackageCap } from './cross-league-market-policy.js';
 import { createChoiceActionToken, runChoiceAction } from '../ui/choice-action.js';
+import { GameView } from '../ui/game-view.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
 import { resolveStatBucket } from './stat-bucket.js';
@@ -56,10 +57,7 @@ const ri=(a,b)=>a+Math.floor(R()*(b-a+1));
 const pick=a=>a[Math.floor(R()*a.length)];
 const chance=p=>R()*100<p;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function scrollBottom(){ /* iOS Safari iframe内でスムーズスクロールでは白画面が起きやすいため、同期スクロールへ変更+rAF。 */
-  try{ requestAnimationFrame(function(){ window.scrollTo(0, document.body.scrollHeight); }); }
-  catch(e){ try{ window.scrollTo(0, document.body.scrollHeight); }catch(_){} }
-}
+function scrollBottom(){ gameView.scrollBottom(); }
 const N0=(sd)=> (R()+R()+R()+R()-2)/2*sd*2; /* 正規分布の近似。 */
 
 /* 静的データ。 */
@@ -631,12 +629,8 @@ var MAX_YEARS=8;         /* DOM 最大保持年度領域数。 */
 function logTarget(){ return _curYearBody || $('log'); }
 // DOM presentation lifetime only; no display markers in S or replay data.
 const traitPresentation=new WeakMap();
-function archiveTraitResults(){
-  $('log').querySelectorAll('[data-trait-result]').forEach(node=>{
-    node.replaceChildren();const name=document.createElement('h4');name.textContent=node.dataset.traitName;node.appendChild(name);
-    delete node.dataset.traitResult;
-  });
-}
+const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key)});
+function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){
   const lost={'ゴムゴムの腕、ついに限界':'rubber','結果で黙らせる':'cancer','一芸特化を返上':'onetool','イップス克服':'yips'}[title];
   if(lost){node.dataset.traitResult='removed:'+lost;node.dataset.traitName=displayTrait(lost);return {title,html};}
@@ -662,12 +656,8 @@ function traitResultMarkup(node,title,html){
   if(starts[key])html+='<br>'+starts[key];
   return {title:'隠し特性解放：'+label,html};
 }
-function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
-  ({title,html}=traitResultMarkup(d,title,html));
-  d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d);
-  if(d.dataset.traitResult&&!d.dataset.traitResult.startsWith('removed:'))traitPresentation.get(S).add(d.dataset.traitResult);
-  scrollBottom(); }
-function divider(t){ /* dividerごとに新しい年度の折りたたみ領域を開始。 */ const log=$('log'); const blocks=log.querySelectorAll('.yr-block'); /* 終了した直前年へ展開アイコンを付けるが、collapsedは付けず開いたままにする。 */ const prev = blocks[blocks.length - 1]; if(prev){ const h = prev.querySelector('.yr-head'); if(h && prev.querySelector('.yr-body').children.length) h.classList.add('has-body'); } /* 二つ前の年度領域を見つけて折りたたむ。 */ const prevPrev = blocks[blocks.length - 2]; if(prevPrev){ prevPrev.classList.add('collapsed'); } /* 建新領域。 */ const block=document.createElement('div'); block.className='yr-block'; const head=document.createElement('div'); head.className='yr-head'; head.textContent=t; const body=document.createElement('div'); body.className='yr-body'; head.onclick=()=>block.classList.toggle('collapsed'); block.appendChild(head); block.appendChild(body); log.appendChild(block); _curYearBody=body; /* 上限超える時は最古の年度領域を削除してDOMを解放。 */ const newBlocks=log.querySelectorAll('.yr-block'); if(newBlocks.length>MAX_YEARS){ for(let i=0;i<newBlocks.length-MAX_YEARS;i++)newBlocks[i].remove(); } }
+function card(cls,title,html){ gameView.card(cls,title,html); }
+function divider(t){ _curYearBody=gameView.divider(t,MAX_YEARS); }
 function board(phase){
   $('bd-name').innerHTML=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
   let t;
@@ -692,14 +682,8 @@ function board(phase){
   [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
 }
 let choiceGeneration=0, activeChoiceToken=null;
-function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove('collapsed'); a.style.pointerEvents='';
-  const t=$('act-toggle'); if(t)t.style.display='none'; }
-function actToggleSync(){
-  const a=$('act'), t=$('act-toggle'); if(!t)return;
-  const has=a.innerHTML.trim()!=='' && a.style.display!=='none';
-  t.style.display=has?'block':'none';
-  t.textContent=a.classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる';
-}
+function actClear(){ gameView.actClear(); }
+function actToggleSync(){ gameView.actToggleSync(); }
 function escapeDiagnosticHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 let resultViewDepth=0;
 let currentChoiceAction=null;

@@ -323,7 +323,7 @@ export function instrumentRng(source, counter = '__rngCalls') {
 
 - 採方案 A：暫緩第 1c 期，`ri` 等函式與 `R` 維持現狀。日後若重新評估，從方案 B 的 B1 開始，並另行批准。
 
-## 2d. 第 2 期：`GameView`（細部計畫，2026-10-18，待批准）
+## 2d. 第 2 期：`GameView`（細部計畫，2026-10-18；2d-A 已於本機實作，見 §2d.7）
 
 ### 2d.1 目標與範圍
 
@@ -435,7 +435,63 @@ export class GameView {
   4. 批准在 `tests/support/` 新增 DOM 快照比對。
   5. `game-view-dom-e2e` 列為 Full 入口（82→83），作為第 3、4 期的回歸防護；同步 `scripts/ci-full-batches.test.mjs` 與 `scripts/TESTING.md`。
   6. 三個子期合為一個 PR，各子期各自 commit；Full 於三個子期完成後執行一次（AGENTS §6.2）。
-- 待決：是否批准依本節實作（commit／push 另批）。
+- 待決：是否批准依本節實作（commit／push 另批）。→ 2026-10-19 使用者批准 2d-A，順序為：先建 harness，在未改的 HEAD 上確認差分 0 並做負控制；之後才實作。2d-B、2d-C 開始前另行批准。
+
+### 2d.7 2d-A 實施結果（2026-10-20，本機）
+
+- 比較基準：`2a11a6444c643002d1c3143fd7827b94ce4ce2eb`；允許差分：無。環境同 §2.9（macOS、Brave 153＋`--disable-features=BraveFarbling`），非 CI。
+- commit 分兩個：先 harness（`27f0fa8`：E2E、manifest、入口數 82→83、本計畫的比較基準），再重構（`GameView` 與 `game.js` 包裝）。
+- `docs/src/ui/game-view.js`：6 個方法逐字搬移，只做以下替換：
+  - `$` → `this.byId`
+  - `logTarget()` → `this.logTarget()`
+  - `traitResultMarkup` → `this.decorateCard`
+  - `traitPresentation.get(S).add` → `this.onTraitShown`
+  - `scrollBottom()` → `this.scrollBottom()`
+  - `MAX_YEARS` → 引數 `maxYears`
+  - `divider` 內的 `_curYearBody=body` → `return body`
+- `game.js`（+8／−24，CRLF 維持）：
+  - 新增 `import { GameView }`。
+  - `traitPresentation` 之後新增 `gameView`。
+  - 6 個同名包裝函式皆為單行；`card` 首行 `function card(cls,title,html){` 逐字保留。
+- `divider` 寫入時點：原本在刪除最舊年度之前寫入 `_curYearBody`，現在由包裝在 `divider` 回傳後寫入。刪除處理不讀 `_curYearBody`，只刪除最舊的區塊，不會刪到新區塊；寫入的值相同，無可觀察差異。
+- 行號變動（§1.1-5；`2a11a64` → 2d-A）：
+
+  | 函式 | 原行號 → 新行號 |
+  |---|---|
+  | `scrollBottom` | 59 → 60 |
+  | `$` | 628 → 626 |
+  | `traitPresentation` | 633 → 631 |
+  | `gameView` | 新增，632 |
+  | `archiveTraitResults` | 634 → 633 |
+  | `card` | 665 → 659 |
+  | `divider` | 670 → 660 |
+  | `board` | 671 → 661 |
+  | `actClear` | 695 → 685 |
+  | `actToggleSync` | 697 → 686 |
+  | `runWithResultView` | 724 → 708 |
+  | `choose` | 725 → 709 |
+  | `allocUI` | 739 → 723 |
+  | `LEGACY` | 2799 → 2783 |
+  | `board` 覆寫 | 2983 → 2967 |
+
+  原 698 行以後一律 −16（全檔 3337 → 3321 行）。§2d.2／§2d.3 的行號仍以 `c9c94cd`／`2a11a64` 為準，不改寫；2d-B／2d-C 以新行號為準。
+- 驗證（§2d.5 步驟 1～5）：
+
+| §2d.5 | 結果 |
+|---|---|
+| 0 harness 自我驗證（實作前） | 未改的 HEAD：8 段生涯 PASS，差分 0（147 秒）。`--negative-control`（只在候選端的年度標題加尾端空白）：如預期 FAIL，在第 0 步抓到 `$.dom.log` 差異 |
+| 1 `check-syntax` | PASS（151 檔） |
+| 2 相關單元 11 支 | PASS |
+| 3 `game-view-dom-e2e` | PASS：4 seed（P×2、IF、OF）× 1280／390，共 8 段生涯，每一步的 DOM、`S`、RNG 計數都和 `2a11a64` 相同（143.5 秒） |
+| 4 既有 UI E2E 8 支 | 8 PASS |
+| 5 Quick | 63 PASS／0 FAIL／0 SKIP／0 BLOCKED（112 秒） |
+
+- 另外：`ci-full-batches.test` 31 pass／1 skip（只在 Linux 上跑的測試）。manifest `seconds:300`，runner 逾時為 `max(180, 300×4)` = 1200 秒。
+- reviewer：
+  - 低嚴重度 1 項，不修正：建構時以值捕獲 `traitResultMarkup`、`logTarget`、`scrollBottom`；之後若重新指派這三者，`gameView` 看不到。目前沒有任何測試或程式這樣做；`card`、`divider` 等包裝本身仍可重新指派。
+  - 其餘確認無問題：沒有宣告前使用（TDZ）、`this` 綁定、`card` 執行順序、`divider`、新 E2E 不會誤判 PASS、入口數一致、Linux 大小寫。
+- 範圍外的既有小瑕疵（不修正）：`fixed-seed-v160.test.mjs:5` 的 `indexOf('function clamp')` 為 −1，切片幾乎是整個檔案；斷言 regex 仍成立。
+- 未確認：Full、GitHub Actions CI、PC／手機目視（§2d.5 步驟 6～7），依計畫於 2d-C 完成後執行。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
