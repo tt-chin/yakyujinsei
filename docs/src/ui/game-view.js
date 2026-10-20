@@ -27,4 +27,14 @@ export class GameView {
     t.style.display=has?'block':'none';
     t.textContent=a.classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる';
   }
+  renderBoard(m){ /* m は game.js の boardModel が S から作る書き込み値。 */
+    this.byId('bd-name').innerHTML=m.nameHtml;
+    this.byId('bd-team').innerHTML = m.teamHtml;
+    this.byId('bd-age').textContent=m.age; this.byId('bd-year').textContent=m.year;
+    this.byId('bd-ovr').textContent=m.ovr; if(m.clearTj){const el=this.byId('bd-tj'); if(el)el.textContent='';} this.byId('bd-sal').textContent=m.salaryText;
+    [0,1,2].forEach(i=>this.byId('lp'+i).classList.toggle('on',i===m.phase));
+  }
+  patchBoard(p){ /* game.js の board 上書き（renderBoard の後に実行）の追加書き込み。 */
+    this.byId('bd-name').firstChild.textContent=p.name;this.byId('bd-sal').textContent=p.salaryText;const lbl=this.byId('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='年俸（万）';
+  }
 }

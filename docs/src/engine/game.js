@@ -658,13 +658,15 @@ function traitResultMarkup(node,title,html){
 }
 function card(cls,title,html){ gameView.card(cls,title,html); }
 function divider(t){ _curYearBody=gameView.divider(t,MAX_YEARS); }
-function board(phase){
-  $('bd-name').innerHTML=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
+function board(phase){ gameView.renderBoard(boardModel(phase)); }
+function boardModel(phase){
+  const nameHtml=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
   let t;
   if(S.stage==='HS')t=S.team+'（高'+['一','二','三'][S.stageYr-1]+'）';
   else if(S.stage==='U')t=S.team+'（大'+['一','二','三','四'][S.stageYr-1]+'）';
   else if((S.stage==='CORP'||S.stage==='IND'))t=S.team+'（アマチュア）';
   else t=S.teamName();
+  let teamHtml;
   { const tc = (S.orgTeamId && TEAM_COLOR[S.orgTeamId]) || 'var(--amber)';
     /* 白色か判定し、白背景に白文字となるのを防ぐ。 */
     const isWhite = (tc.toLowerCase() === '#ffffff' || tc.toLowerCase() === '#fff');
@@ -676,10 +678,10 @@ function board(phase){
     
     const dot = isProColored ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isWhite ? '#cccccc' : tc};margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba(0、0、0、0.2);"></span>` : '';
     
-    $('bd-team').innerHTML = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
-  $('bd-age').textContent=S.age; $('bd-year').textContent=S.year;
-  $('bd-ovr').textContent=ovr(); if(S.pos==='P'){const el=$('bd-tj'); if(el)el.textContent='';} $('bd-sal').textContent=Math.round((S.currentSalary||0)/10000).toLocaleString();
-  [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
+    teamHtml = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
+  const age=S.age, year=S.year;
+  const ovrValue=ovr(), clearTj=S.pos==='P', salaryText=Math.round((S.currentSalary||0)/10000).toLocaleString();
+  return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase};
 }
 let choiceGeneration=0, activeChoiceToken=null;
 function actClear(){ gameView.actClear(); }
@@ -2964,7 +2966,7 @@ $('btn-start').onclick=()=>{
   };
 
   stageLabel = function(){if(S.stage==='HS')return '高校'+S.stageYr+'年';if(S.stage==='U')return '大学'+S.stageYr+'年';if(S.stage==='CORP')return '社会人'+(S.corpYears+1)+'年目';if(S.stage==='IND')return '独立リーグ'+(S.indYears+1)+'年目';return LV[S.lv]?.n||S.stage;};
-  board = function(phase){LEGACY.board(phase);$('bd-name').firstChild.textContent=S.name;$('bd-sal').textContent=Math.round((S.currentSalary||0)/10000).toLocaleString();const lbl=$('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='年俸（万）';};
+  board = function(phase){LEGACY.board(phase);gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()});};
 
   function setSchool(kind){const a=kind==='U'?DATA.universities:DATA.highSchools,r=pickRecord(a);S.schoolId=r.schoolId;S.schoolTier=r.tier;S.team=r.name;S.lv=kind;S.org='AMATEUR';}
   function setAmateur(stage){S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=pickRecord(listByOrg(stage)).teamId;S.team=teamRec(S.orgTeamId).name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;}
