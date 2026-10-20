@@ -37,4 +37,14 @@ export class GameView {
   patchBoard(p){ /* game.js の board 上書き（renderBoard の後に実行）の追加書き込み。 */
     this.byId('bd-name').firstChild.textContent=p.name;this.byId('bd-sal').textContent=p.salaryText;const lbl=this.byId('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='年俸（万）';
   }
+  renderChoices(title,opts){ /* 選択肢ボタンを作って返す。onclick と choiceViews への登録は game.js の choose が行う。 */
+    const a=this.byId('act'); a.style.pointerEvents='';
+    a.classList.remove('collapsed'); /* 新しい選択肢が表示されたら自動で展開。 */
+    if(title)a.innerHTML=`<div class="title">${title}</div>`;
+    return opts.map(o=>{ const b=document.createElement('button');
+      b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'');
+      b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
+      b.disabled=false;
+      a.appendChild(b); return b; });
+  }
 }
