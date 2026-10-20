@@ -1,4 +1,11 @@
-# 現行規格（正式公開 v1.13.0）
+# 現行規格（正式公開 v1.13.0／開発版 v1.13.1）
+
+### 開発版1.13.1：右上メニュー
+
+公開済み1.13.0とは別の未公開作業ツリー。右上は「メニュー」ボタン1個とし、表示設定／共有／開発を応援／最初からやり直すを展開する。既存の設定、Seed共有、再開確認の処理を再利用し、選手状態・RNG・所得・賞の規則は変更しない。Esc／外側クリック／フォーカス離脱で閉じ、設定／共有ダイアログからは表示中のメニューボタンへフォーカスを返す。タッチ44px、キーボードのTab・方向キー・Home／Endに対応する。
+
+支援は利用者指定のOFUSE（https://ofuse.me/dcb7f92e）を別タブで開く外部リンクのみ。日本／円／単発の任意支援で、決済はOFUSE側に委ねる。サイト内で決済情報を扱わず、能力・抽選・待遇への特典なし。開始画面に支援ボタンは置かない。遊び方・更新履歴は同ページdialogで表示し、閉じた後は元の位置へ戻る。履歴はCHANGELOGから生成する公開用データ（node scripts/update-release-notes.mjs、最新10版）を唯一の派生元とする。1180px以上では左に能力・特性、右に通算成績・契約の唯読概要を表示し、既存view modelとrendererを再利用する。1180px未満では非表示とし、選択肢・計算・RNGを変更しない。実決済・OFUSE受取設定・実機共有は本機UI検査の対象外。
+
 
 > 現行公開状態（2026-10-16）：正式ソース／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`、公開Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。既存Publish Workflow成功、同SHA Linux Quick61 PASS、正式サイトP／IF×1280／320／390pxの基本Smoke6組PASS。[公開検収](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)参照。Linux FullはGitHub Actionsで未PASS（2026-10-18、本機Docker Linuxで`650e4dd` 80 PASS、BACKLOG CI-LINUX-FULL-01）、artifact全原件保存は **ARTIFACT_COVERAGE_BLOCKED** のまま。公開成功をFull合格や全機能検証と解釈しない。文書入口は[現行文書ナビ](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)。
 

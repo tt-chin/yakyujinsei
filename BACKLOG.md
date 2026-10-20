@@ -1,34 +1,18 @@
 # BACKLOG — 野球人生（日文版）
 
-## 現行狀態索引（2026-10-16／1.13.0）
-
-- **正式發布及基本Smoke：SUCCESS**。來源／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`，正式Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。同SHA Quick61 PASS，正式站六組基本Smoke PASS；[發布證據](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)。手機尺寸模擬不是實機，基本Smoke不是完整生涯。
-- **Linux Full：LOCAL_LINUX_PASS / CI_NOT_RUN**（2026-10-18）。本機Docker Linux（Ubuntu 24.04.1、Node 22.12.0、Playwright 1.49.1／Chromium 131）對`650e4dd` Full 80 PASS／0 FAIL／0 SKIP／0 BLOCKED，使用者接受為D2發布殘項的替代證據；GitHub Actions最後Run38841657256仍為18 PASS／1中斷／61未執行、exit143，未取得CI PASS，改由CI-LINUX-FULL-01追蹤。原Run原件保留。[發布豁免及Full限制](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md)。
-- **D2-CI-ARTIFACT-01：ARTIFACT_COVERAGE_BLOCKED**。分批artifact／Linux最小Smoke成功不等於完整S／RNG／Decision／Receipt可還原證據保存合格；[保存缺口](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)及[分批限制](docs/reviews/LINUX_CI_FULL_1130_STABILITY_ACCEPTANCE.md)。
-- **文件整理／規格移轉：未完成**。本輪只同步入口；逐條移轉、動態引用、1,309份大型文件語義審查與清理均未完成。[整理計畫](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md)／[導航](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)。不因此結案AUD-02或REFACTOR-AUDIT-01；本輪未新增或改動正式checkbox，25完成／28未完成仍須與下方殘項分開理解。
-
-下方「本次提交前快照」、舊main／未授權／未公開及歷史階段統計均保留其原時點；不得覆蓋本索引。D2-G9-RELEASE的當前剩餘範圍見該正式待辦，不把已完成正式發布誤讀為仍未授權。
-
-> 最新D2狀態（本次提交前快照）：2026-10-15｜dev基準HEAD `56e72d9792529f3221c1a1ffadaf563bceebe26d`／config VERSION 1.13.0。使用者已接受A／B與1.13.0限定準備驗收，並批准本次精確dev提交／推送及Linux Full啟動；截至本文件更新，Linux實際驗證尚未執行，不預寫CI／Preview／發布PASS。最新本機Quick61及collector限定47案已通過；舊B Full80仍為1.12.0歷史結果。本次採Linux CI優先，artifact完整封存不作為Full啟動前置，保存缺口另以D2-CI-ARTIFACT-01追蹤。CI測試結果、workflow結果與artifact完整性分別報告。[CI與證據驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)／[原G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)／[發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)。以下歷史數字與待審文字保留當時範圍，不代表目前授權或發布狀態。
-
-> 最新限定結案：2026-10-14｜dev 1.12.0，G1-A **PASS / ACCEPTED**（使用者批准）。受驗基準HEAD `554d54a94352b7dbc86473084a65b56bef74d3b7`＋G1-A工作樹；Windows Quick48／Full67入口、88唯一原生fixture通過，正式CI／Preview未執行。僅結案兩項日文名稱漏判，不開始G1-B，不發布。見[G1-A驗收](docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)及[可攜執行結果](docs/reviews/g1-a-validation/test-expectation-acceptance.json)。下列2026-10-13及此前版本／部署敘述保留為歷史快照。
-
-> 更新：2026-10-13｜dev 1.11.9全力投球修復驗收完成。受驗程式`a1658c994713fd1fb8f66857dab33df0ff6548fd`，Linux Quick47／Full65入口及Preview29案PASS；基準`20920dddd72ab8c91b0e2c71d560492663cd5aec`。下方舊版結果保留為歷史證據；main／本番仍為1.11.4。
-> 保留第一至第十階段歷史證據。第七階段Full／Preview受驗程式SHA為`13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`；本輪另批准回國retry與grinder最小修復，歷史數據不冒充此版結果。提交與CI／Preview證據見最末節。
-
 ## 1. 最新進度總覽
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **26** | D2投手三冠按已接受本地範圍結案；2026-10-18另以發布範圍結案D2-G9-RELEASE（殘項拆出） |
-| 未完成 | **29** | 含D2-CI-ARTIFACT-01；2026-10-18 D2-G9-RELEASE結案、另加CI-LINUX-FULL-01、TEST-COMPARE-BASELINE-01 |
+| 未完成 | **32** | 新增選單／桌面布局／贊助3項；玩法介紹與更新履歷沿用UI-06／07 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
-| IMPLEMENTED_UNVERIFIED | **4** | 全力投球驗收完成，其他四項保留 |
-| DESIGN_PENDING | **8** | 增加smallschool出生高校／舊tier映射決策；2026-10-18另加TEST-COMPARE-BASELINE-01 |
-| 其他候補／保留／混合 | **13** | 包含歷史細項待核對，不等於已核准開發 |
+| IMPLEMENTED_UNVERIFIED | **9** | 新UI五項均已本機實作待完整驗收／審查，原4項保留 |
+| DESIGN_PENDING | **8** | UI介紹／履歷／桌面布局轉為IMPLEMENTED_UNVERIFIED，其他原狀態保留 |
+| 其他候補／保留／混合 | **11** | UI-06／07改列待設計，其餘保留原狀態 |
 
-以上依唯一正式checkbox重新計算：**26 + 29 = 55**（2026-10-18：D2-G9-RELEASE以發布範圍結案、新增CI-LINUX-FULL-01、TEST-COMPARE-BASELINE-01；以下為前輪說明，保留原時點）。前輪TRAIT-PITCHER-TC已按本地接受範圍結案；本輪只同步Linux CI優先策略、保留D2-G9-RELEASE未完成並新增D2-CI-ARTIFACT-01，不改其他52個既有ID的完成狀態。全力投球1.11.9的Linux Quick47／Full65及Preview29案、1.11.6與1.11.7的測試數字仍為各版歷史證據，不冒充D2結果。啟動Linux Full仍須核對本次推送SHA與實際Run，未啟動前不標CI_IN_PROGRESS。其他smallschool／COPY等較早描述與後續專項文件的時點差異不在本輪整理，保持獨立範圍。前十階段歷史數字與報告不改寫。
+以上依唯一正式checkbox重新計算：**26 + 32 = 58**（2026-10-18：D2-G9-RELEASE以發布範圍結案、新增CI-LINUX-FULL-01、TEST-COMPARE-BASELINE-01；以下為前輪說明，保留原時點）。前輪TRAIT-PITCHER-TC已按本地接受範圍結案；本輪只同步Linux CI優先策略、保留D2-G9-RELEASE未完成並新增D2-CI-ARTIFACT-01，不改其他52個既有ID的完成狀態。全力投球1.11.9的Linux Quick47／Full65及Preview29案、1.11.6與1.11.7的測試數字仍為各版歷史證據，不冒充D2結果。啟動Linux Full仍須核對本次推送SHA與實際Run，未啟動前不標CI_IN_PROGRESS。其他smallschool／COPY等較早描述與後續專項文件的時點差異不在本輪整理，保持獨立範圍。前十階段歷史數字與報告不改寫。 2026-10-19新增3項使用者需求；UI-06／07不重複計數。
 
 ### 1.1 開發階段完成履歷
 
@@ -159,15 +143,24 @@
 - [ ] **CONTRACT-LEGACY-01** — `重構候補・要調査`。確認舊 `makeOffers`／`pickOfferUI`／市場定義是否真正不可達；未驗證固定 Seed、契約回歸前不得刪除。
 - [ ] **CONTRACT-ASIA-01** — `未実装・仕様待ち`。KBO 亞洲名額及球團整體外國人預算，與現有 `FOREIGN_STANDARD` 不同。
 
-### 3.5 P2 — 未來功能候補（7 項）
+### 3.5 P2 — 未來功能候補（10 項）
 
 - [ ] **INJ-UI-01** — 一般受傷風險細項顯示；計算與 UI 維持單一資料來源。
 - [ ] **PLY-01** — 背號與年度履歷；需先決定 00、轉隊、重複及改號規則。
 - [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。
-- [ ] **UI-06** — 新手遊戲內說明。
-- [ ] **UI-07** — 遊戲內更新履歷；CHANGELOG 仍為唯一正式來源。
+- [ ] **UI-06** — `IMPLEMENTED_UNVERIFIED`。使用者確認同頁對話框呈現「遊戲玩法介紹」，預定由選單進入；說明開始遊戲、角色／路線、能力配分、成績／獎項與Seed分享。內容以現行正式規格為準，關閉後回原位置、不重設人生；日文內容與具體設計待確認；不重設S或消耗RNG。2026-10-19使用者優先討論需求，需求階段記錄。 2026-10-21後續授權已實作：介紹／履歷為同頁dialog，履歷由CHANGELOG衍生；桌面1180px起提供唯讀側欄，手機單欄。原生三尺寸測試PASS，相關4入口PASS、最終Quick62 PASS／1既有快照FAIL，待使用者審查；不代表已發布。
+- [ ] **UI-07** — `IMPLEMENTED_UNVERIFIED`。使用者確認同頁對話框呈現「更新履歷」，預定由選單進入；CHANGELOG.md維持唯一正式來源，不手動維護互相矛盾的第二份紀錄。公開日文摘要產生方式、版本範圍與具體呈現待設計，關閉後回原位置、不重設人生，不公開內部驗收與個人路徑。2026-10-19使用者優先討論需求，需求階段記錄。 2026-10-21後續授權已實作：介紹／履歷為同頁dialog，履歷由CHANGELOG衍生；桌面1180px起提供唯讀側欄，手機單欄。原生三尺寸測試PASS，相關4入口PASS、最終Quick62 PASS／1既有快照FAIL，待使用者審查；不代表已發布。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
+- [ ] **UI-MENU-01** — `IMPLEMENTED_UNVERIFIED`。2026-10-21使用者批准先實作選單；開發版1.13.1保留原按鈕／事件處理，整合表示設定、共有、OFUSE支持與最初からやり直す（原確認對話框不變）。支援Esc／外部點擊／焦點離開關閉、鍵盤方向與Tab、對話框關閉回到可見選單按鈕。PC／320／390px原生UI驗證通過；相關4入口PASS、修復直接3入口PASS，最終Quick62 PASS／1 FAIL（既有快照CRLF hash問題，未改快照或斷言）；不改S、RNG、遊戲規則，待本輪驗收與使用者審查，不自動發布。
+- [ ] **UI-DESKTOP-LAYOUT-01** — `IMPLEMENTED_UNVERIFIED`。手機保留目前主要畫面與流程（頂部按UI-MENU-01調整）；桌面運用左右留白顯示既有球員摘要、成績或輔助資訊。斷點、左右欄內容、平板、捲動方式待確認，不新增計算規則或重複可操作控件，保留閱讀順序與320／390px相容。與GameView第2期DOM重構不得未經協調並行，須先決定順序／比較基準。2026-10-19使用者優先需求，需求階段記錄。 2026-10-21後續授權已實作：介紹／履歷為同頁dialog，履歷由CHANGELOG衍生；桌面1180px起提供唯讀側欄，手機單欄。原生三尺寸測試PASS，相關4入口PASS、最終Quick62 PASS／1既有快照FAIL，待使用者審查；不代表已發布。
+- [ ] **SUPPORT-01** — `IMPLEMENTED_UNVERIFIED`。使用者確認日本／日圓／單次自願支持，已有OFUSE帳戶https://ofuse.me/dcb7f92e；僅選單內「♡ 開発を応援」，不放開始畫面。開發版1.13.1為別分頁外部連結（noopener／noreferrer），決済與金額交由OFUSE，遊戲待遇完全不受支持與否影響。不建立帳號／支付後端，不處理卡號；本機僅驗證連結、安全分頁與狀態不變，未實際付款或驗證收款設定，待審查。
+
+以上五項為使用者優先組；2026-10-21已完成本機UI實作與相關4入口驗證，後續快照驗證修復後完整Quick63 PASS／0 FAIL，待使用者審查。手機單欄、桌面1180px以上唯讀概要；不包含GameView重構、遊戲規則、金流後端或發布。
+
+快照驗證修復（2026-10-21，TEST_FIX_ONLY）：只修改tests/award-identity-policy.test.mjs及本紀錄，不改產品。兩份原始Git快照SHA256保持既有常數，以固定2a11a64來源核對原始bytes，工作樹只正規化CRLF→LF比較；文字、空白、末尾換行、單獨CR、非法UTF-8及Git原件竄改仍拒絕。main／navigation／config按已批准1.13.1 UI建立精確預期替換，沒有整檔豁免或擴大allowedB。限定135案PASS，新完整Quick63 PASS／0 FAIL／0 SKIP／0 BLOCKED（299.032秒）；原Quick62／1及其他FAIL保留，屬修復前歷史結果，不改寫為PASS。報告test-results/snapshot-contract-20261021-quick/summary.json；Full本輪NOT_RUN（僅測試契約修正），CI／實機／付款仍非本輪驗證。未commit／push／部署。
+
+本輪驗證（2026-10-21，HEAD 2a11a64加工作樹／1.13.1）：R2／L2；原方向鍵冒泡FAIL已修復並保留首次紀錄；首輪Quick60 PASS／3 FAIL，初始化位置及精確版號斷言修復後，最終Quick62 PASS／1 FAIL。剩餘award-identity-policy.test為未修改B1快照工作樹CRLF與原Git LF hash差異，未修改HEAD測試亦可重現；舊G9凍結來源契約對後續UI／版號調整亦須另審，不自行放寬。相關4入口與直接3入口PASS，投手／野手固定Seed主RNG652／549比較不變；原生Menu／Share fixture S／RNG不變。Full NOT_RUN（本批局部UI，無遊戲規則／RNG改動）；OFUSE實際付款、iPhone／Android原生分享NOT_RUN。原FAIL及新log留在忽略的test-results/menu-20261021-*；來源hash清單menu-20261021-source-audit.json。未commit／push／部署，待使用者審查。
 
 ### 3.6 P1 — D2發布準備與獨立CI證據待辦（3 項）
 
@@ -183,7 +176,7 @@
 
 - [ ] **TEST-COMPARE-BASELINE-01** — `DESIGN_PENDING`（2026-10-19縮小範圍）。以`origin/main`為比較基準的3入口（`contract-salary-e2e`、`draft-income-e2e`、`display-preferences-e2e`）在`dev`升版而`main`未跟上時，`birthHighSchool.createdVersion`版本戳記不同，自第0步不一致。**版本戳記部分已處理**：使用者批准比照既有`delete state.version`，於比對前排除該欄位（衍生結果`traits.smallschool`仍比對）；`display-preferences-e2e`亦改用共用`assertSameCareer`防止失敗時OOM。本機Docker 2 CPU／7GB驗證：3入口對`7220ad8`（1.12.0）與`650e4dd`皆PASS（`contract-salary-e2e` 381案，峰值≤3.49GB）；排除前對`7220ad8`的FAIL（含milb-demotion兩案）與`display-preferences-e2e`的OOM皆僅由此欄位造成。**剩餘待決**：有規則變更的版本於發布前跑dev Full時，跨版本比對是否須以許容差分oracle（如`assertApprovedProducerRenameCareer`）宣告差異，或明確接受該等入口FAIL；屬政策判斷，未經批准不改期望值或基準。固定基準的入口（如`hof-first-ballot-e2e`、`salary-history-e2e`）不隨`origin/main`變動，不在本項範圍。
 
-> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋5（待決／保留）＋7（候補）＋3（CI-LINUX-FULL-01／獨立artifact待辦／TEST-COMPARE-BASELINE-01）＝**29**；55唯一ID、26完成／29未完（2026-10-18：D2-G9-RELEASE結案，改計CI-LINUX-FULL-01；另加TEST-COMPARE-BASELINE-01）。歷史38／47／48／52項及前階段快照保持原數。
+> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋5（待決／保留）＋10（候補）＋3（CI-LINUX-FULL-01／獨立artifact待辦／TEST-COMPARE-BASELINE-01）＝**32**；58唯一ID、26完成／32未完（2026-10-18：D2-G9-RELEASE結案，改計CI-LINUX-FULL-01；另加TEST-COMPARE-BASELINE-01）。歷史38／47／48／52項及前階段快照保持原數。 2026-10-19新增3項，UI-06／07沿用既有ID。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
