@@ -1,3 +1,4 @@
+import {openBoardAction} from './support/board-menu.mjs';
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
 import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
@@ -65,27 +66,27 @@ try{
   await page.locator('#preferences-close').click();assert.equal(await page.locator('#in-name').inputValue(),'長い名前テスト');
   assert.equal(await page.evaluate(()=>document.activeElement.hasAttribute('data-open-preferences')),true);
   await page.reload();assert.equal(await page.locator('html').getAttribute('data-theme'),'scoreboard');
-  await page.locator('#btn-start').click();await page.locator('#board-preferences').click();
+  await page.locator('#btn-start').click();await openBoardAction(page,'board-preferences');
   await page.locator('#preferences-close').focus();await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.name),'theme');
   await page.keyboard.press('Shift+Tab');assert.equal(await page.evaluate(()=>document.activeElement.id),'preferences-close');
   await page.keyboard.press('Escape');assert.equal(await page.locator('#display-preferences').evaluate(el=>el.open),false);
-  assert.equal(await page.evaluate(()=>document.activeElement.id),'board-preferences');
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'board-menu-toggle');
   const act=await page.locator('#act').evaluate(el=>el.innerHTML);
-  await page.locator('#board-preferences').click();await page.locator('#preferences-reset').click();await page.locator('#preferences-close').click();
+  await openBoardAction(page,'board-preferences');await page.locator('#preferences-reset').click();await page.locator('#preferences-close').click();
   assert.equal(await page.locator('#act').evaluate(el=>el.innerHTML),act);
-  for(const tab of ['player','career','home']){await page.locator(`[data-main-view="${tab}"]`).click();await page.locator('#board-preferences').click();await setPreferences(page,'night','large','compact');await page.locator('#preferences-close').click();assert.equal(await page.locator(`[data-main-view="${tab}"]`).getAttribute('aria-current'),'page');}
+  for(const tab of ['player','career','home']){await page.locator(`[data-main-view="${tab}"]`).click();await openBoardAction(page,'board-preferences');await setPreferences(page,'night','large','compact');await page.locator('#preferences-close').click();assert.equal(await page.locator(`[data-main-view="${tab}"]`).getAttribute('aria-current'),'page');}
   // Exercise retained training DOM/listeners after a touch-based setting change.
   for(let i=0;i<10&&await page.locator('#act .abrow').count()===0;i++)await page.locator('#act button:not(:disabled)').first().click();
   assert.ok(await page.locator('#act .abrow').count()>0,'training allocation reached');
   await page.locator('#act .abrow[aria-disabled="false"]').first().click();
   const trainingMarkup=await page.locator('#act').evaluate(el=>el.innerHTML);
-  await page.locator('#board-preferences').click();await setPreferences(page,'classic','large','compact');await page.keyboard.press('Escape');
+  await openBoardAction(page,'board-preferences');await setPreferences(page,'classic','large','compact');await page.keyboard.press('Escape');
   assert.equal(await page.locator('#act').evaluate(el=>el.innerHTML),trainingMarkup,'training DOM was rebuilt');
   await page.locator('#act .abrow[aria-disabled="false"]').first().focus();await page.keyboard.press('Enter');
   await page.waitForFunction(markup=>document.querySelector('#act').innerHTML!==markup,trainingMarkup,{timeout:5000}).catch(e=>{if(e.name!=='TimeoutError')throw e;});
   assert.notEqual(await page.locator('#act').evaluate(el=>el.innerHTML),trainingMarkup,'retained row listener works');
   for(const theme of ['standard','night','classic','scoreboard'])for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
-    await page.locator('#board-preferences').click();await setPreferences(page,theme,fontSize,density);await page.keyboard.press('Escape');
+    await openBoardAction(page,'board-preferences');await setPreferences(page,theme,fontSize,density);await page.keyboard.press('Escape');
     for(const [view,tabs] of [['home',[]],['player',['ability','traits']],['career',['stats','achievements','contract','yearly']]]){
       await page.locator(`[data-main-view="${view}"]`).click();
       for(const tab of tabs.length?tabs:[null]){
@@ -108,18 +109,17 @@ try{
   await lp.locator('#display-preferences').waitFor({state:'attached'});
   assert.equal(await lp.locator('#btn-start').isDisabled(),true,'start is gated until engine handlers exist');
   await lp.locator('#in-name').fill('読込中の入力');await lp.locator('[data-open-preferences]').first().click();await lp.locator('[name="theme"][value="night"]').check();await lp.keyboard.press('Escape');
-  releaseEngine();await loaded;await lp.locator('#btn-start').click();await lp.locator('#board-preferences').waitFor({state:'visible'});assert.equal(await lp.locator('html').getAttribute('data-theme'),'night');assert.ok((await lp.locator('#bd-name').innerText()).includes('読込中の入力'));await loading.close();
+  releaseEngine();await loaded;await lp.locator('#btn-start').click();await lp.locator('#board-menu-toggle').waitFor({state:'visible'});assert.equal(await lp.locator('html').getAttribute('data-theme'),'night');assert.ok((await lp.locator('#bd-name').innerText()).includes('読込中の入力'));await loading.close();
 
   const blocked=await browser.newContext();await blocked.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new Error('storage disabled');}});});
   const bp=await blocked.newPage();wire(bp);await bp.goto(`${target}/?seed=storage-test`);await bp.locator('[data-open-preferences]').first().click();await bp.locator('[name="theme"][value="night"]').check();assert.equal(await bp.locator('#preferences-save-status').innerText(),'この端末には設定を保存できませんでした。');await bp.keyboard.press('Escape');await bp.locator('#btn-start').click();await bp.locator('#board').waitFor({state:'visible'});await blocked.close();
   const touch=await browser.newContext({viewport:{width:320,height:568},isMobile:true,hasTouch:true}),tp=await touch.newPage();wire(tp);
-  await tp.goto(`${target}/?seed=touch-test`);await tp.locator('[data-open-preferences]').first().tap();await tp.locator('[name="theme"][value="scoreboard"]').tap();await tp.locator('[name="fontSize"][value="large"]').tap();await tp.locator('[name="density"][value="compact"]').tap();await tp.locator('#preferences-close').tap();await tp.locator('#btn-start').tap();await tp.locator('#board-preferences').tap();await tp.locator('#preferences-close').tap();assert.ok((await fits(tp)).width<=320);
-  // v1.10.2 added share AFTER settings. Verify the approved wrapped controls,
-  // not the obsolete v1.7 assumption that settings is the last header button.
-  const header=await tp.evaluate(()=>{const content=document.querySelector('#bd-top').getBoundingClientRect();return {left:content.left,right:content.right,buttons:['btn-restart','board-preferences','board-share'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};})};});
+  await tp.goto(`${target}/?seed=touch-test`);await tp.locator('[data-open-preferences]').first().tap();await tp.locator('[name="theme"][value="scoreboard"]').tap();await tp.locator('[name="fontSize"][value="large"]').tap();await tp.locator('[name="density"][value="compact"]').tap();await tp.locator('#preferences-close').tap();await tp.locator('#btn-start').tap();await openBoardAction(tp,'board-preferences',{touch:true});await tp.locator('#preferences-close').tap();assert.ok((await fits(tp)).width<=320);
+  // Only the disclosure remains in the header; the panel is tested separately.
+  const header=await tp.evaluate(()=>{const content=document.querySelector('#bd-top').getBoundingClientRect();return {left:content.left,right:content.right,buttons:['board-menu-toggle'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};})};});
   for(const box of header.buttons)assert.ok(box.width>=44&&box.height>=44&&box.left>=header.left-1&&box.right<=header.right+1,box.id+' visible touch target');
   for(let i=0;i<header.buttons.length;i++)for(let j=i+1;j<header.buttons.length;j++){const a=header.buttons[i],b=header.buttons[j];assert.ok(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top,'wrapped header buttons overlap');}
-  assert.ok(Math.abs(header.buttons.at(-1).right-header.right)<1,'share is at the approved right edge');
+  assert.ok(Math.abs(header.buttons.at(-1).right-header.right)<1,'menu is at the approved right edge');
   console.log('Current wrapped header geometry: '+JSON.stringify(header));
   await tp.screenshot({path:path.join(artifacts,`touch-${channel}-320.png`)});await touch.close();
   }
@@ -136,7 +136,7 @@ try{
         for(let step=0;step<2000;step++){
           if(variant==='candidate'&&step%17===0){
             const before=await p.evaluate(()=>window.__displayRegression());
-            await p.locator('#board-preferences').click();await setPreferences(p,['standard','night','classic','scoreboard'][step%4],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
+            await openBoardAction(p,'board-preferences');await setPreferences(p,['standard','night','classic','scoreboard'][step%4],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
             assert.deepEqual(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
           const result=await p.evaluate(({labels,texts})=>{

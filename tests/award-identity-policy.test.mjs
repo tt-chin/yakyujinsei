@@ -119,14 +119,39 @@ check('pure queries leave frozen complete state/honors/RNG fields unchanged', ()
   for (let i = 0; i < 100; i++) buildAwardIdentityView(state.honors, {level: state.lv});
   assert.deepEqual(state, before);
 });
+const snapshotHash=value=>createHash('sha256').update(value).digest('hex');
+function snapshotText(buffer){
+  const text=buffer.toString('utf8');
+  assert.deepEqual(Buffer.from(text,'utf8'),buffer,'snapshot must be valid UTF-8');
+  return text.replaceAll('\r\n','\n');
+}
+function assertFrozenSnapshot(working,frozen,expected){
+  assert.equal(snapshotHash(frozen),expected,'original Git bytes must retain frozen hash');
+  assert.equal(snapshotText(working),snapshotText(frozen),'working snapshot differs beyond LF/CRLF');
+}
+function exactReplacement(source,from,to){
+  assert.equal(source.split(from).length,2,'approved overlay must match exactly once');
+  return source.replace(from,to);
+}
+check('snapshot verifier accepts EOL only and rejects tampering',()=>{
+  const original=Buffer.from('alpha\nbeta\n'),expected=snapshotHash(original);
+  for(const text of ['alpha\nbeta\n','alpha\r\nbeta\r\n'])assertFrozenSnapshot(Buffer.from(text),original,expected);
+  for(const text of ['Alpha\nbeta\n','alpha \nbeta\n','alpha\nbeta','alpha\rbeta\n'])
+    assert.throws(()=>assertFrozenSnapshot(Buffer.from(text),original,expected));
+  assert.throws(()=>assertFrozenSnapshot(original,Buffer.from('tampered'),expected));
+  assert.throws(()=>assertFrozenSnapshot(Buffer.from([0xff]),original,expected));
+});
 check('frozen B1/A product-isolation evidence retained; B consumer contracts are separately tested', () => {
   const base = '287dd1a00448add8563410659170aba0d8f2f012';
   const historical = JSON.parse(fs.readFileSync('docs/reviews/development-a/before-hashes.json', 'utf8'));
   const hash = value => createHash('sha256').update(value).digest('hex');
-  assert.equal(hash(fs.readFileSync('docs/reviews/development-a/b1-snapshot/award-identity-policy.js')),
-    '363c39186bbea9de4c9ce89ead3adfba8eeeb635292120d95c640b30e7cc02bf');
-  assert.equal(hash(fs.readFileSync('docs/reviews/development-a/b1-snapshot/award-identity-policy.test.mjs')),
-    '5b9c2a8a35808d92fa11a30e8fbed68e43420310826e28835b5bffe24175ffdd');
+  for(const [name,expected] of [
+    ['award-identity-policy.js','363c39186bbea9de4c9ce89ead3adfba8eeeb635292120d95c640b30e7cc02bf'],
+    ['award-identity-policy.test.mjs','5b9c2a8a35808d92fa11a30e8fbed68e43420310826e28835b5bffe24175ffdd']]){
+    const file='docs/reviews/development-a/b1-snapshot/'+name;
+    const frozen=execFileSync('git',['show','2a11a6444c643002d1c3143fd7827b94ce4ce2eb:'+file],{maxBuffer:20e6});
+    assertFrozenSnapshot(fs.readFileSync(file),frozen,expected);
+  }
   const files = execFileSync('git', ['ls-tree','-r','--name-only',base,'docs/src'], {encoding:'utf8'}).trim().split('\n');
   for (const file of files) {
     const old = execFileSync('git',['show',`${base}:${file}`], {maxBuffer:20e6}).toString().replaceAll('\r\n','\n');
@@ -143,7 +168,20 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
     if(file==='docs/src/config.js'){
       // G9 approved only the release literal; frozen B1/A snapshots remain untouched.
       assert.match(acceptedA,/^export const VERSION = '1\.12\.0';/);
-      assert.equal(current,acceptedA.replace("'1.12.0'","'1.13.0'"),file+': G9 exact approved version change only');
+      assert.equal(current,exactReplacement(acceptedA,"'1.12.0'","'1.13.1'"),file+': approved dev version literal only');
+    }else if(file==='docs/src/main.js'){
+      let expected=exactReplacement(acceptedA,"import { initializeDisplayPreferences } from './ui/preferences.js';",
+        "import { initializeDisplayPreferences } from './ui/preferences.js';\nimport { initializeBoardMenu } from './ui/board-menu.js';\nimport { initializeInformationDialogs } from './ui/information-dialog.js';");
+      expected=exactReplacement(expected,"document.getElementById('btn-start').disabled=false;",
+        "document.getElementById('btn-start').disabled=false;\ninitializeBoardMenu();\ninitializeInformationDialogs();");
+      assert.equal(current,expected,'main: exact approved UI wiring, no other edits');
+      assert.throws(()=>assert.equal(current+'\n// unexpected',expected));
+    }else if(file==='docs/src/ui/navigation.js'){
+      let expected=exactReplacement(acceptedA,"import { renderRecord } from './record-view.js';",
+        "import { renderRecord } from './record-view.js';\nimport { initializeDesktopOverview } from './desktop-overview.js';");
+      expected=exactReplacement(expected,"export function initNavigation({documentRef=document,onOpenPlayer,onOpenCareer,onNavigate=()=>{}}){",
+        "export function initNavigation({documentRef=document,onOpenPlayer,onOpenCareer,onNavigate=()=>{}}){\n  initializeDesktopOverview({documentRef,onOpenPlayer,onOpenCareer});");
+      assert.equal(current,expected,'navigation: exact read-only overview wiring, no other edits');
     }else if(!allowedB.has(path.basename(file)))assert.equal(current,acceptedA,file+': no unrelated B wiring');
   }
 });

@@ -1,4 +1,5 @@
 import { renderRecord } from './record-view.js';
+import { initializeDesktopOverview } from './desktop-overview.js';
 import { renderCareer } from './player-detail.js';
 import { renderAbility, renderTraits } from './ability-view.js';
 
@@ -6,6 +7,7 @@ const uiState={activeMainView:'home',activePlayerTab:'ability',activeCareerTab:'
 let controller=null;
 
 export function initNavigation({documentRef=document,onOpenPlayer,onOpenCareer,onNavigate=()=>{}}){
+  initializeDesktopOverview({documentRef,onOpenPlayer,onOpenCareer});
   const nav=documentRef.getElementById('main-nav'), board=documentRef.getElementById('board'), panels=[...documentRef.querySelectorAll('[data-main-panel]')], mainButtons=[...nav.querySelectorAll('[data-main-view]')], playerTabs=[...documentRef.querySelectorAll('[data-player-tab]')], careerTabs=[...documentRef.querySelectorAll('[data-career-tab]')];
   const syncBoardHeight=()=>nav.style.setProperty('--board-height',`${board.getBoundingClientRect().height}px`);
   if(typeof ResizeObserver!=='undefined')new ResizeObserver(syncBoardHeight).observe(board,{box:'border-box'});

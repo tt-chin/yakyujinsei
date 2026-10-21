@@ -1,0 +1,17 @@
+.information-dialog{margin:auto;width:min(620px,calc(100% - 24px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid var(--control-edge);border-radius:14px;padding:22px;background:var(--panel);color:var(--chalk);font:inherit}
+.information-dialog::backdrop{background:var(--overlay-bg)}
+.information-dialog h2{color:var(--amber);margin-bottom:18px}
+.information-dialog section{margin:18px 0}
+.information-dialog h3{font-size:1em;margin-bottom:6px}
+.information-dialog p{white-space:pre-line;overflow-wrap:anywhere}
+.information-dialog button{min-height:44px;padding:8px 22px;background:var(--panel);color:var(--chalk);border:1px solid var(--control-edge);border-radius:8px;cursor:pointer;font:inherit}
+.information-dialog :focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.start-information{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.start-information .btn{width:auto;flex:1;min-width:100px}
+.desktop-overview{display:none}
+@media(min-width:1180px){
+ .desktop-overview:not([hidden]){display:block;position:fixed;top:16px;bottom:16px;width:min(300px,calc((100vw - 620px)/2));overflow-y:auto;overflow-wrap:anywhere;padding:0 8px;overscroll-behavior:contain}
+ #desktop-player{right:calc(50% + 300px)}
+ #desktop-career{left:calc(50% + 300px)}
+ .desktop-overview .ui-panel{margin-bottom:14px}
+}
