@@ -13,7 +13,7 @@
 | 1 | `Rng` | 封裝生涯 RNG 的種子與步進演算法；`S.rngState` 仍為唯一狀態 | L3 / R3 | 完成；PR #5 併入 `dev`（`36fc242`），見 §2.9、§2.10 |
 | 1b | `Rng` 觀測 hook | 測試改用正式 hook 計數，脫離原始碼字串替換 | L3 / R3（含 `game.js` RNG 路徑） | 完成；同 PR #5，見 §2b.6 |
 | 1c | `Rng` 方法化 | `ri`／`pick`／`chance`／`N0`／`pickRecord` 改由 `Rng` 提供 | L3 / R3 | 暫緩（方案 A，2026-10-18 使用者決定）；細部計畫見 §2c |
-| 2 | `GameView` | `card`／`divider`／`board`／`choose` 等純 DOM 操作移出；`allocUI` 暫緩 | L3 / R3 | 本機完成（§2d.7～§2d.10）；PR #8 已合併 `dev`（`1bc65df`）解衝突並重新驗證（§2d.11）；待 push、併入 `dev`、GitHub Actions CI |
+| 2 | `GameView` | `card`／`divider`／`board`／`choose` 等純 DOM 操作移出；`allocUI` 暫緩 | L3 / R3 | 完成；PR #8 併入 `dev`（`26efa59`），合併 `1bc65df` 的衝突與重新驗證見 §2d.11；T14 測試修正為 PR #9；GitHub Actions CI 未確認 |
 | 3 | `CareerSession` | 收容 `S` 外狀態（`stepQ`、`choiceGeneration` 等）與年度流程函式 | L3 | 概要 |
 | 4 | LEGACY 覆寫逐組處理 | 32 組覆寫逐組決定合併或 `super` | L3 | 概要 |
 
@@ -582,7 +582,7 @@ export class GameView {
 | Full | 82 PASS／**1 FAIL**／0 SKIP／0 BLOCKED（2663 秒，`test-results/2026-10-21T13-23-33-559Z-full/`）；§2d.5 的 8 支 UI E2E 皆含於此次 Full 且 PASS，未另行單獨執行 |
 
 - Full 的 FAIL：`international-personal-stats-e2e` 的 T14 共 32 案（4 寬度 × 4 主題 × P／IF）`locator.click` 逾時；同入口的固定 seed 生涯（S／RNG 比對）PASS。原因：T14 點擊 `[data-open-preferences]` 的最後一個，`1bc65df` 起該元素為收合選單內的 `#board-preferences`，不可見；`1bc65df` 未更新此測試。於 `1bc65df` 的獨立 worktree 以 `--fixtures-only` 執行，FAIL 為同一 32 案（11 PASS），與合併後 HEAD 的 FAIL 集合完全一致。判定為 `dev` 既有的測試不相容，與本期重構無關；本 PR 不修正（範圍外，待使用者決定）。
-  - 修正（2026-10-21，使用者批准）：PR #8 併入 `dev`（`26efa59`）後，另開 `fix/intl-stats-board-menu`，`68f6138` 將 T14 改用 `openBoardAction(p,'board-preferences')`（斷言不變）。`international-personal-stats-e2e` 於 `1bc65df` 基底與 `68f6138` 皆 PASS（221／217 秒）；`68f6138` Quick 63 PASS／0 FAIL／0 SKIP／0 BLOCKED。Full 未重跑。
+  - 修正（2026-10-21，使用者批准）：PR #8 併入 `dev`（`26efa59`）後，另開 `fix/intl-stats-board-menu`（PR #9 → `dev`），`68f6138` 將 T14 改用 `openBoardAction(p,'board-preferences')`（斷言不變）。`international-personal-stats-e2e` 於 `1bc65df` 基底與 `68f6138` 皆 PASS（221／217 秒）；`68f6138` Quick 63 PASS／0 FAIL／0 SKIP／0 BLOCKED。Full 未重跑。
 - 未確認：GitHub Actions CI。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
