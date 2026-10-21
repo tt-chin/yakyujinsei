@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {withCareerSessionAccess} from './career-session-access.mjs';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
@@ -17,8 +18,8 @@ let s6rng=[],s6steps=[],s6done=0,s6moves=0;
 const s6R=R;R=()=>{const before=S.rngState,value=s6R();s6rng.push({before,after:S.rngState,value});return value;};
 const s6allocDone=allocDone;allocDone=(t,d)=>{s6steps.push({kind:'confirm',touched:s6clone(t),isDice:d,state:s6clone(S)});return s6allocDone(t,d);};
 window.__stage6={
- get:()=>({state:s6clone(S),rng:s6clone(s6rng),allocation:window.__s6allocation?.(),steps:s6clone(s6steps),done:s6done,moves:s6moves,generation:choiceGeneration,token:activeChoiceToken&&{generation:activeChoiceToken.generation,running:activeChoiceToken.running},queue:stepQ.map(f=>f.name),dom:$('act').outerHTML,listeners:[...$('act').querySelectorAll('.abrow,button')].map(e=>({key:e.dataset.abilityKey,label:e.textContent,onclick:typeof e.onclick==='function',onkeydown:typeof e.onkeydown==='function',connected:e.isConnected,disabled:e.disabled??e.getAttribute('aria-disabled'),tabIndex:e.tabIndex}))}),
- fixture:v=>{actClear();S={rngState:0};seedInit(SEED);S=newState('第六階段検証',v.pos||'P');if(v.stage==='HS'){S.stage='HS';setSchool('HS');}else setAmateur(v.stage||'CORP');Object.assign(S,{age:v.age??25,year:2032,stageYr:1,lastD:0,rehab:0,pool:0,seasonFactor:1,skipMid:false,lastOverflow:0,dpos:v.pos==='IF'?'SS':null});for(const k of POS_AB[S.pos]){S.ab[k]=v.ability??40;S.pot[k]=v.potential??80;}S.carry=v.carry??{sta:0};if(v.key&&v.value!==undefined)S.ab[v.key]=v.value;S.traits={...(v.traits||{})};S.samePick=0;S.samePickKey=null;S.comboKey=null;S.samePickBonus=false;stepQ=[];seasonEndContext=null;pendingOffseasonSalary=null;window.__s6allocation=null;s6rng=[];s6steps=[];s6done=0;s6moves=0;board(0);},
+ get:()=>({state:s6clone(S),rng:s6clone(s6rng),allocation:window.__s6allocation?.(),steps:s6clone(s6steps),done:s6done,moves:s6moves,generation:__cs.choiceGeneration,token:__cs.activeChoiceToken&&{generation:__cs.activeChoiceToken.generation,running:__cs.activeChoiceToken.running},queue:__cs.stepQ.map(f=>f.name),dom:$('act').outerHTML,listeners:[...$('act').querySelectorAll('.abrow,button')].map(e=>({key:e.dataset.abilityKey,label:e.textContent,onclick:typeof e.onclick==='function',onkeydown:typeof e.onkeydown==='function',connected:e.isConnected,disabled:e.disabled??e.getAttribute('aria-disabled'),tabIndex:e.tabIndex}))}),
+ fixture:v=>{actClear();S={rngState:0};seedInit(SEED);S=newState('第六階段検証',v.pos||'P');if(v.stage==='HS'){S.stage='HS';setSchool('HS');}else setAmateur(v.stage||'CORP');Object.assign(S,{age:v.age??25,year:2032,stageYr:1,lastD:0,rehab:0,pool:0,seasonFactor:1,skipMid:false,lastOverflow:0,dpos:v.pos==='IF'?'SS':null});for(const k of POS_AB[S.pos]){S.ab[k]=v.ability??40;S.pot[k]=v.potential??80;}S.carry=v.carry??{sta:0};if(v.key&&v.value!==undefined)S.ab[v.key]=v.value;S.traits={...(v.traits||{})};S.samePick=0;S.samePickKey=null;S.comboKey=null;S.samePickBonus=false;__cs.stepQ=[];__cs.seasonEndContext=null;__cs.pendingOffseasonSalary=null;window.__s6allocation=null;s6rng=[];s6steps=[];s6done=0;s6moves=0;board(0);},
  alloc:mode=>allocUI(mode,'第六階段・能力配分',()=>{s6done++;choose('次の操作',[{t:'次へ',f:()=>{s6steps.push({kind:'next'});}}]);}),
  cost:k=>abCost(k),pre:()=>phasePre(),end:()=>phaseEnd(),corpSeason:()=>amateurSeason(),fixtureYear:y=>{S.year=y;},
  corpChoice:()=>choose('年度決算検証',[{t:'年度決算',f:()=>phaseEnd()}]),
@@ -33,6 +34,7 @@ window.__stage6={
 export function instrument(source){
   const marker='  const touchedKeys={};';assert.equal(source.split(marker).length,2);
   source=source.replace(marker,marker+`\n  window.__s6allocation=()=>({pool,idx,dice:dice&&dice.slice(),hist:JSON.parse(JSON.stringify(hist)),touchedKeys:{...touchedKeys},remaining:remaining(),start:JSON.parse(JSON.stringify(sessionStart))});`);
+  source=withCareerSessionAccess(source);
   const at=source.lastIndexOf('})();');assert.ok(at>0);
   return source.slice(0,at)+hook+source.slice(at);
 }

@@ -36,6 +36,7 @@ const nonTests = {
   'support/first-difference.mjs': ['support','Read-only first-difference diagnostic, imported by historical E2E controls.'],
   'support/dom-snapshot.mjs': ['support','Browser-side per-step #log/#act/#board DOM, S and RNG snapshot; imported by game-view-dom-e2e.'],
   'support/rng-instrument.mjs': ['support','E2E RNG call counter: careerRng.onDraw on current game.js, legacy R text replace on old baselines; throws on miss.'],
+  'support/career-session-access.mjs': ['support','E2E hook accessor __cs for career flow state: careerSession.<name> on current game.js, bare bindings on old baselines; throws on miss.'],
   'retirement-hof-test-support.mjs': ['support','Imported VM fixtures; not an executable test.'],
   'retirement-hof-analysis.mjs': ['analysis','Requires approved captured pilot/vote input; rewrites historical report data. Run explicitly outside automatic profiles.'],
   'retirement-hof-report.mjs': ['report','Rewrites historical approved report; not an automatic regression.'],
