@@ -15,7 +15,7 @@ import {GAME_VIEW_HOOK,captureGameView} from './support/dom-snapshot.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
-const baselineRef=arg('baseline')||'2a11a6444c643002d1c3143fd7827b94ce4ce2eb';
+const baselineRef=arg('baseline')||'1bc65dfc2b8ba226930b23dca85a03e678e91253';
 // Harness self-check only: a DOM-only change on the candidate side (year header text) must FAIL.
 const negativeControl=process.argv.includes('--negative-control');
 const server=createServer(async(req,res)=>{
