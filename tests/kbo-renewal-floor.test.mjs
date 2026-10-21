@@ -37,7 +37,7 @@ function harness(){
   card:()=>{},board:()=>{},bindLatestSalaryDetailLink:()=>{},fmtMoney:String,salaryDecisionSummary:()=>'',salaryDecisionLink:()=>'',isBelowActiveMinimum:()=>false,
   saveSalaryDecision:(type,candidate,previousSalary,finalSalary)=>S.salaryDecisionHistory.push({type,candidate,previousSalary,finalSalary}),advances:0});
  vm.runInContext('const LV='+game.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';const PATHS={KBO:["KBO2","KBO1"]};let salaryFor,salaryCandidate,applyDemotionSalary,markClubInitiatedRenewal;'+
-  between('  salaryFor = function','\n\n  let pendingOffseasonSalary')+';let pendingOffseasonSalary=null;'+
+  between('  salaryFor = function','\n  function migrateSalaryV130State')+';let careerSession={pendingOffseasonSalary:null};'+
   game.match(/  const kboPreviousPackage=[^\n]+/)[0]+between('  salaryCandidate=','\n  function saveSalaryDecision')+
   game.match(/  const nextContractId=[^\n]+/)[0]+game.match(/  function fixedContract[^\n]+/)[0]+
   between('  function finalizePendingOffseasonSalary','\n  function applyLevelSalary')+
