@@ -168,7 +168,7 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
     if(file==='docs/src/config.js'){
       // G9 approved only the release literal; frozen B1/A snapshots remain untouched.
       assert.match(acceptedA,/^export const VERSION = '1\.12\.0';/);
-      assert.equal(current,exactReplacement(acceptedA,"'1.12.0'","'1.13.2'"),file+': approved dev version literal only');
+      assert.equal(current,exactReplacement(acceptedA,"'1.12.0'","'1.13.3'"),file+': approved dev version literal only');
     }else if(file==='docs/src/main.js'){
       let expected=exactReplacement(acceptedA,"import { initializeDisplayPreferences } from './ui/preferences.js';",
         "import { initializeDisplayPreferences } from './ui/preferences.js';\nimport { initializeBoardMenu } from './ui/board-menu.js';\nimport { initializeInformationDialogs } from './ui/information-dialog.js';");
