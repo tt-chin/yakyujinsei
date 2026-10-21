@@ -9,8 +9,18 @@
 .start-information{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px}
 .start-information .btn{width:auto;flex:1;min-width:100px}
 .desktop-overview{display:none}
+/* Narrow sidebars use label/value rows; wide sidebars can safely use columns. */
+#desktop-career .ui-data-list{grid-template-columns:minmax(0,1fr);gap:3px}
+#desktop-career .ui-data-list dt{margin-top:10px;min-width:0;white-space:normal;overflow-wrap:anywhere}
+#desktop-career .ui-data-list dd{min-width:0;max-width:100%;text-align:left;white-space:normal;overflow-wrap:anywhere}
+#desktop-career .contract-yearly-salaries,#desktop-career .contract-yearly-salaries span{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+@container (min-width:420px){
+ #desktop-career .ui-data-list{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);column-gap:16px;row-gap:8px}
+ #desktop-career .ui-data-list dt{margin-top:0}
+ #desktop-career .ui-data-list dd{text-align:right}
+}
 @media(min-width:1180px){
- .desktop-overview:not([hidden]){display:block;position:fixed;top:16px;bottom:16px;width:min(300px,calc((100vw - 620px)/2));overflow-y:auto;overflow-wrap:anywhere;padding:0 8px;overscroll-behavior:contain}
+ .desktop-overview:not([hidden]){display:block;position:fixed;top:16px;bottom:16px;width:calc((100vw - 620px)/2 - 16px);container-type:inline-size;overflow-y:auto;overflow-wrap:anywhere;padding:0 8px;overscroll-behavior:contain}
  #desktop-player{right:calc(50% + 300px)}
  #desktop-career{left:calc(50% + 300px)}
  .desktop-overview .ui-panel{margin-bottom:14px}

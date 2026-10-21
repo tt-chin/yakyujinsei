@@ -16,9 +16,12 @@ export function initializeInformationDialogs(){
     for(const [title,body] of entry.sections){const section=document.createElement('section'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=title;p.textContent=body;section.append(h,p);dialog.append(section);}
     const close=document.createElement('button');close.type='button';close.textContent='閉じる';dialog.append(close);document.body.append(dialog);
     let opener=null,position=null;
-    close.addEventListener('click',()=>dialog.close());
-    dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();});
-    dialog.addEventListener('close',()=>{opener?.focus({preventScroll:true});if(position)window.scrollTo(...position);});
+    const restore=()=>{const target=opener,scroll=position;opener=null;position=null;target?.focus({preventScroll:true});if(scroll)window.scrollTo(...scroll);};
+    const dismiss=()=>{dialog.close();restore();};
+    close.addEventListener('click',dismiss);
+    dialog.addEventListener('cancel',event=>{event.preventDefault();dismiss();});
+    dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dismiss();});
+    dialog.addEventListener('close',()=>{if(!dialog.open)restore();});
     document.querySelectorAll('[data-information="'+key+'"]').forEach(button=>button.addEventListener('click',()=>{if(dialog.open)return;opener=button.closest('#board-menu')?document.getElementById('board-menu-toggle'):button;position=[window.scrollX,window.scrollY];dialog.showModal();heading.focus({preventScroll:true});}));
   }
 }

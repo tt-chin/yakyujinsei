@@ -1,5 +1,43 @@
 import assert from 'node:assert/strict';
 
+// Native renderer fixture: long contracts and money must fit without touching game S.
+async function verifyDesktopContract(page,screenshot){
+  const original=await page.evaluate(()=>({width:innerWidth,height:innerHeight,theme:document.documentElement.dataset.theme,font:document.documentElement.dataset.fontSize}));
+  try{
+    for(const width of [1180,1280,1440,1876,2560]){
+      await page.setViewportSize({width,height:900});
+      await page.locator('#desktop-career').waitFor({state:'visible'});
+      for(const theme of ['standard','night','classic','scoreboard'])for(const font of ['small','medium','large']){
+        const result=await page.evaluate(async({theme,font})=>{
+          document.documentElement.dataset.theme=theme;document.documentElement.dataset.fontSize=font;
+          const target=document.querySelector('#desktop-career').lastElementChild;
+          const html=target.innerHTML;
+          const {renderCareer}=await import('/src/ui/player-detail.js');
+          renderCareer(target,{contract:{description:'2029～2035年 球団保有期間・複数年の保証契約',remainingYears:'7年',guaranteedTotal:'1,234,567,890万円',schedule:['2029年 123,456,789万円（支払済み）','2030年 123,456,789万円','2031年 123,456,789万円'],signingBonus:'123,456,789万円',developmentStipend:'1,234万円',yearOutsideIncome:'12,345万円',outsideIncome:'123,456万円',corpIncome:'1,234万円',careerEarnings:'1,234,567,890万円',history:[]}},'contract');
+          const aside=document.querySelector('#desktop-career'),r=aside.getBoundingClientRect();
+          return {html,left:r.left,right:r.right,width:r.width,overflow:document.documentElement.scrollWidth>innerWidth,
+            labels:[...target.querySelectorAll('dt')].map(n=>({text:n.textContent,width:n.getBoundingClientRect().width})),
+            values:[...target.querySelectorAll('dd')].map(n=>({scroll:n.scrollWidth,client:n.clientWidth})),
+            texts:target.textContent};
+        },{theme,font});
+        try{
+          assert.ok(!result.overflow);
+          assert.ok(result.left>=0&&result.right<=width);
+          if(width>=1876)assert.ok(result.width>500,'wide viewport uses previously empty margins');
+          for(const label of result.labels)assert.ok(label.width>=80,'label must not collapse to one-character column: '+label.text);
+          for(const value of result.values)assert.ok(value.scroll<=value.client+1,'contract value overflow');
+          assert.match(result.texts,/1,234,567,890万円/);
+          assert.match(result.texts,/2031年/);
+          if(screenshot&&width===1876&&theme==='night'&&font==='large')await page.screenshot({path:screenshot.replace('menu-1280.png','contract-wide.png')});
+        }finally{await page.evaluate(html=>{document.querySelector('#desktop-career').lastElementChild.innerHTML=html;},result.html);}
+      }
+    }
+  }finally{
+    await page.evaluate(o=>{document.documentElement.dataset.theme=o.theme;document.documentElement.dataset.fontSize=o.font;},original);
+    await page.setViewportSize({width:original.width,height:original.height});
+  }
+}
+
 // Current menu path; historical source controls retain their original visible button.
 export async function openBoardAction(page,id,{touch=false}={}) {
   const action=page.locator('#'+id),toggle=page.locator('#board-menu-toggle');
@@ -8,6 +46,7 @@ export async function openBoardAction(page,id,{touch=false}={}) {
 }
 
 export async function verifyBoardMenu(page,{width,screenshot}={}) {
+  if(width===1280)await verifyDesktopContract(page,screenshot);
   for(const key of ['help','updates']){
     await page.locator('#board-menu-toggle').click();
     await page.locator('#board-menu-panel [data-information="'+key+'"]').click();
