@@ -31,6 +31,7 @@ import { acceptDraftSelection, declineDraftSelection, draftSigningTerms, isDraft
 import { NPB_BONUS_RANGES, createSigningBonusTerms, calculatePostingFee, applySigningPayment } from './signing-bonus-policy.js';
 import { effectiveMarketOrg, marketTier, foreignProSeasons, accrueForeignFirstTeamSeason, getCrossLeaguePolicy, applyCrossLeagueSalary, applyKboForeignPackageCap } from './cross-league-market-policy.js';
 import { createChoiceActionToken, runChoiceAction } from '../ui/choice-action.js';
+import { GameView } from '../ui/game-view.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
 import { resolveStatBucket } from './stat-bucket.js';
@@ -56,10 +57,7 @@ const ri=(a,b)=>a+Math.floor(R()*(b-a+1));
 const pick=a=>a[Math.floor(R()*a.length)];
 const chance=p=>R()*100<p;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function scrollBottom(){ /* iOS Safari iframe内でスムーズスクロールでは白画面が起きやすいため、同期スクロールへ変更+rAF。 */
-  try{ requestAnimationFrame(function(){ window.scrollTo(0, document.body.scrollHeight); }); }
-  catch(e){ try{ window.scrollTo(0, document.body.scrollHeight); }catch(_){} }
-}
+function scrollBottom(){ gameView.scrollBottom(); }
 const N0=(sd)=> (R()+R()+R()+R()-2)/2*sd*2; /* 正規分布の近似。 */
 
 /* 静的データ。 */
@@ -631,12 +629,8 @@ var MAX_YEARS=8;         /* DOM 最大保持年度領域数。 */
 function logTarget(){ return _curYearBody || $('log'); }
 // DOM presentation lifetime only; no display markers in S or replay data.
 const traitPresentation=new WeakMap();
-function archiveTraitResults(){
-  $('log').querySelectorAll('[data-trait-result]').forEach(node=>{
-    node.replaceChildren();const name=document.createElement('h4');name.textContent=node.dataset.traitName;node.appendChild(name);
-    delete node.dataset.traitResult;
-  });
-}
+const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key)});
+function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){
   const lost={'ゴムゴムの腕、ついに限界':'rubber','結果で黙らせる':'cancer','一芸特化を返上':'onetool','イップス克服':'yips'}[title];
   if(lost){node.dataset.traitResult='removed:'+lost;node.dataset.traitName=displayTrait(lost);return {title,html};}
@@ -662,19 +656,17 @@ function traitResultMarkup(node,title,html){
   if(starts[key])html+='<br>'+starts[key];
   return {title:'隠し特性解放：'+label,html};
 }
-function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
-  ({title,html}=traitResultMarkup(d,title,html));
-  d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d);
-  if(d.dataset.traitResult&&!d.dataset.traitResult.startsWith('removed:'))traitPresentation.get(S).add(d.dataset.traitResult);
-  scrollBottom(); }
-function divider(t){ /* dividerごとに新しい年度の折りたたみ領域を開始。 */ const log=$('log'); const blocks=log.querySelectorAll('.yr-block'); /* 終了した直前年へ展開アイコンを付けるが、collapsedは付けず開いたままにする。 */ const prev = blocks[blocks.length - 1]; if(prev){ const h = prev.querySelector('.yr-head'); if(h && prev.querySelector('.yr-body').children.length) h.classList.add('has-body'); } /* 二つ前の年度領域を見つけて折りたたむ。 */ const prevPrev = blocks[blocks.length - 2]; if(prevPrev){ prevPrev.classList.add('collapsed'); } /* 建新領域。 */ const block=document.createElement('div'); block.className='yr-block'; const head=document.createElement('div'); head.className='yr-head'; head.textContent=t; const body=document.createElement('div'); body.className='yr-body'; head.onclick=()=>block.classList.toggle('collapsed'); block.appendChild(head); block.appendChild(body); log.appendChild(block); _curYearBody=body; /* 上限超える時は最古の年度領域を削除してDOMを解放。 */ const newBlocks=log.querySelectorAll('.yr-block'); if(newBlocks.length>MAX_YEARS){ for(let i=0;i<newBlocks.length-MAX_YEARS;i++)newBlocks[i].remove(); } }
-function board(phase){
-  $('bd-name').innerHTML=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
+function card(cls,title,html){ gameView.card(cls,title,html); }
+function divider(t){ _curYearBody=gameView.divider(t,MAX_YEARS); }
+function board(phase){ gameView.renderBoard(boardModel(phase)); }
+function boardModel(phase){
+  const nameHtml=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
   let t;
   if(S.stage==='HS')t=S.team+'（高'+['一','二','三'][S.stageYr-1]+'）';
   else if(S.stage==='U')t=S.team+'（大'+['一','二','三','四'][S.stageYr-1]+'）';
   else if((S.stage==='CORP'||S.stage==='IND'))t=S.team+'（アマチュア）';
   else t=S.teamName();
+  let teamHtml;
   { const tc = (S.orgTeamId && TEAM_COLOR[S.orgTeamId]) || 'var(--amber)';
     /* 白色か判定し、白背景に白文字となるのを防ぐ。 */
     const isWhite = (tc.toLowerCase() === '#ffffff' || tc.toLowerCase() === '#fff');
@@ -686,20 +678,14 @@ function board(phase){
     
     const dot = isProColored ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isWhite ? '#cccccc' : tc};margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba(0、0、0、0.2);"></span>` : '';
     
-    $('bd-team').innerHTML = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
-  $('bd-age').textContent=S.age; $('bd-year').textContent=S.year;
-  $('bd-ovr').textContent=ovr(); if(S.pos==='P'){const el=$('bd-tj'); if(el)el.textContent='';} $('bd-sal').textContent=Math.round((S.currentSalary||0)/10000).toLocaleString();
-  [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
+    teamHtml = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
+  const age=S.age, year=S.year;
+  const ovrValue=ovr(), clearTj=S.pos==='P', salaryText=Math.round((S.currentSalary||0)/10000).toLocaleString();
+  return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase};
 }
 let choiceGeneration=0, activeChoiceToken=null;
-function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove('collapsed'); a.style.pointerEvents='';
-  const t=$('act-toggle'); if(t)t.style.display='none'; }
-function actToggleSync(){
-  const a=$('act'), t=$('act-toggle'); if(!t)return;
-  const has=a.innerHTML.trim()!=='' && a.style.display!=='none';
-  t.style.display=has?'block':'none';
-  t.textContent=a.classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる';
-}
+function actClear(){ gameView.actClear(); }
+function actToggleSync(){ gameView.actToggleSync(); }
 function escapeDiagnosticHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 let resultViewDepth=0;
 let currentChoiceAction=null;
@@ -725,14 +711,10 @@ function runWithResultView(action){const before=$('log').querySelectorAll('.card
 function choose(title,opts){
   actClear(); const a=$('act'), generation=++choiceGeneration, token=createChoiceActionToken(generation);
   const view={state:S,year:S.year,generation,title,opts,buttons:[],accepted:false,kind:'CHOICE'};choiceViews.set(S,view);
-  activeChoiceToken=token; a.style.pointerEvents='';
-  a.classList.remove('collapsed'); /* 新しい選択肢が表示されたら自動で展開。 */
-  if(title)a.innerHTML=`<div class="title">${title}</div>`;
-  opts.forEach(o=>{ const b=document.createElement('button');
-    b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'');
-    b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
-    b.disabled=false;
-    b.onclick=()=>{if(S!==view.state||S.year!==view.year||view.accepted)return;return runWithResultView(()=>runChoiceAction({action:()=>invokeAnnualChoice(view,o.f),currentMarkup:()=>a.innerHTML,clear:actClear,restore:()=>{if(S===view.state&&S.year===view.year)choose(title,opts);},token,currentGeneration:()=>choiceGeneration,currentToken:()=>activeChoiceToken,activateToken:t=>{activeChoiceToken=t;},isCurrentChoice:()=>b.isConnected&&a.contains(b),buttonLabel:b.textContent.trim(),disableAll:()=>{a.querySelectorAll('button').forEach(button=>{button.disabled=true;});a.style.pointerEvents='none';},errorContext:()=>{const ct=S?.ct,schedule=Array.isArray(ct?.annualSchedule)?ct.annualSchedule:[],due=schedule.find(x=>Number(x.year)===Number(S?.year));return{year:S?.year??null,age:S?.age??null,stage:S?.stage??null,org:S?.org??null,level:S?.lv??null,contractId:ct?.contractId??null,contractStartYear:ct?.startYear??null,contractEndYear:ct?.endYear??null,contractRemainingYears:ct?.remainingYears??null,contractAnnualSalary:ct?.annualSalary??null,currentSalary:S?.currentSalary??null,lastSalaryPaidYear:S?.lastSalaryPaidYear??null,currentYearSchedule:due?{year:due.year,amount:due.amount,paid:Boolean(due.paid)}:null};},reportError:(error,d)=>{const val=x=>escapeDiagnosticHTML(String(x??'—')),schedule=d.currentYearSchedule?`${val(d.currentYearSchedule.amount)}円／${d.currentYearSchedule.paid?'支払済み':'未払い'}`:'なし';card('bad','処理中にエラーが発生しました',`選択処理を完了できませんでした。<br><b>エラーコード：${val(d.code)}</b><br><small>年度 ${val(d.year)}｜年齢 ${val(d.age)}｜${val(d.org)} ${val(d.level)}<br>契約ID ${val(d.contractId)}｜期間 ${val(d.contractStartYear)}～${val(d.contractEndYear)}｜残り ${val(d.contractRemainingYears)}年<br>現在年俸 ${val(d.currentSalary)}円｜最終支給年 ${val(d.lastSalaryPaidYear)}｜当年度年俸 ${schedule}</small><br>もう一度選択せず、この画面をスクリーンショットして報告してください。`);actToggleSync();}}));};view.buttons.push(b);a.appendChild(b); });
+  activeChoiceToken=token;
+  const buttons=gameView.renderChoices(title,opts);
+  opts.forEach((o,i)=>{ const b=buttons[i];
+    b.onclick=()=>{if(S!==view.state||S.year!==view.year||view.accepted)return;return runWithResultView(()=>runChoiceAction({action:()=>invokeAnnualChoice(view,o.f),currentMarkup:()=>a.innerHTML,clear:actClear,restore:()=>{if(S===view.state&&S.year===view.year)choose(title,opts);},token,currentGeneration:()=>choiceGeneration,currentToken:()=>activeChoiceToken,activateToken:t=>{activeChoiceToken=t;},isCurrentChoice:()=>b.isConnected&&a.contains(b),buttonLabel:b.textContent.trim(),disableAll:()=>{a.querySelectorAll('button').forEach(button=>{button.disabled=true;});a.style.pointerEvents='none';},errorContext:()=>{const ct=S?.ct,schedule=Array.isArray(ct?.annualSchedule)?ct.annualSchedule:[],due=schedule.find(x=>Number(x.year)===Number(S?.year));return{year:S?.year??null,age:S?.age??null,stage:S?.stage??null,org:S?.org??null,level:S?.lv??null,contractId:ct?.contractId??null,contractStartYear:ct?.startYear??null,contractEndYear:ct?.endYear??null,contractRemainingYears:ct?.remainingYears??null,contractAnnualSalary:ct?.annualSalary??null,currentSalary:S?.currentSalary??null,lastSalaryPaidYear:S?.lastSalaryPaidYear??null,currentYearSchedule:due?{year:due.year,amount:due.amount,paid:Boolean(due.paid)}:null};},reportError:(error,d)=>{const val=x=>escapeDiagnosticHTML(String(x??'—')),schedule=d.currentYearSchedule?`${val(d.currentYearSchedule.amount)}円／${d.currentYearSchedule.paid?'支払済み':'未払い'}`:'なし';card('bad','処理中にエラーが発生しました',`選択処理を完了できませんでした。<br><b>エラーコード：${val(d.code)}</b><br><small>年度 ${val(d.year)}｜年齢 ${val(d.age)}｜${val(d.org)} ${val(d.level)}<br>契約ID ${val(d.contractId)}｜期間 ${val(d.contractStartYear)}～${val(d.contractEndYear)}｜残り ${val(d.contractRemainingYears)}年<br>現在年俸 ${val(d.currentSalary)}円｜最終支給年 ${val(d.lastSalaryPaidYear)}｜当年度年俸 ${schedule}</small><br>もう一度選択せず、この画面をスクリーンショットして報告してください。`);actToggleSync();}}));};view.buttons.push(b); });
   actToggleSync();view.rendered=true; if(!resultViewDepth)scrollAction();
 }
 /* 能力加算介面：mode {dice：[..]} または {pool：n}。 */
@@ -2980,7 +2962,7 @@ $('btn-start').onclick=()=>{
   };
 
   stageLabel = function(){if(S.stage==='HS')return '高校'+S.stageYr+'年';if(S.stage==='U')return '大学'+S.stageYr+'年';if(S.stage==='CORP')return '社会人'+(S.corpYears+1)+'年目';if(S.stage==='IND')return '独立リーグ'+(S.indYears+1)+'年目';return LV[S.lv]?.n||S.stage;};
-  board = function(phase){LEGACY.board(phase);$('bd-name').firstChild.textContent=S.name;$('bd-sal').textContent=Math.round((S.currentSalary||0)/10000).toLocaleString();const lbl=$('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='年俸（万）';};
+  board = function(phase){LEGACY.board(phase);gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()});};
 
   function setSchool(kind){const a=kind==='U'?DATA.universities:DATA.highSchools,r=pickRecord(a);S.schoolId=r.schoolId;S.schoolTier=r.tier;S.team=r.name;S.lv=kind;S.org='AMATEUR';}
   function setAmateur(stage){S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=pickRecord(listByOrg(stage)).teamId;S.team=teamRec(S.orgTeamId).name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;}
