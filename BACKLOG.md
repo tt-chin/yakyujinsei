@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+2026-10-22限定修正（1.13.3，待使用者審查）：使用者明確批准將原CPBL送別資格與文案改為NPB年資＋目前海外（MLB／MiLB／KBO／CPBL），保留_daiba一次性旗標，既有true不補發。R2／L2，僅送別卡片與其旗標；不改金錢、能力、honors、引退續行或RNG。基準6e06b1b64abc5f8be1a1a42d68e44c4d1944a16d加本輪工作樹；384原生函式fixture及PC／320／390px共24原生卡片fixture PASS，其他S／RNG精確一致。初回Quick63 PASS／1 FAIL（npb-return-ui的歷史整段比較包含本次批准的送別變更），原報告npb-farewell-quick保留；只對送別函式新增逐字精確期待值，其他契約／復歸嚴格比較保留，限定重測通過。最終Quick64 PASS／0 FAIL／0 SKIP／0 BLOCKED，237.775秒，test-results/npb-farewell-quick-final/summary.json；最終UI入口PASS，npb-farewell-final-render/summary.json。Full／CI／實機NOT_RUN；本輪局部事件不涉及核心計算，不冒充完整生涯或Full驗收。歷史golden不改，未commit／push／部署。
+
 ## 1. 最新進度總覽
 
 | 指標 | 數量 | 說明 |

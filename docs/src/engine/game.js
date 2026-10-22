@@ -1752,11 +1752,11 @@ function buyoutRemaining(rate){ /* 残契約の支払いは選手都合の解除
   S.currentSalary=0;
   return result.buyoutAmount;
 }
-/* 引退時にCPBLへ戻っていなければ、台北ドームで始球式の送別イベントを追加。 */
+/* NPBでプレーし、海外で引退する選手へ日本球界から一度だけ送別。 */
 function daibaFarewell(cont){
-  const cp=S.stats&&S.stats.CPBL,playedCPBL=!!(cp&&cp.yr>0);
-  if(S.stage==='PRO'&&playedCPBL&&S.org!=='CPBL'&&!S._daiba){ S._daiba=true;
-    card('gold','最後の一球',`本拠地でプレーする夢はかなわなかったが、招待を受けて<b class="hl">台北ドーム</b>へ戻り、一日台湾プロ野球選手となった。始球式、4万人が見守る中でキャリア最後の一球を投げる――勝敗のためではない。かつて土のグラウンドで夢を見た自分のために。`);
+  const npb=S.stats&&S.stats.NPB,playedNPB=!!(npb&&npb.yr>0);
+  if(S.stage==='PRO'&&playedNPB&&['MLB','MiLB','KBO','CPBL'].includes(S.org)&&!S._daiba){ S._daiba=true;
+    card('gold','日本球界への別れ',`かつてプレーした日本プロ野球から招待を受け、古巣の本拠地で始球式を務めた。日本のファンへ感謝を伝え、キャリア最後の一球を投じた。`);
   }
   cont();
 }
@@ -3098,7 +3098,7 @@ $('btn-start').onclick=()=>{
   function phaseIntlPre(){processIntlPhase('PRE',()=>nextStep());}
   startYear = function(){careerSession.stepQ=[phasePre,phaseIntlPre,phaseMid,phaseEnd];divider(`${S.year}年・${S.age}歳・${stageLabel()}`);nextStep();};
 
-  daibaFarewell = function(cont){const cp=S.stats&&S.stats.CPBL,playedCPBL=!!(cp&&cp.yr>0);if(S.stage==='PRO'&&playedCPBL&&S.org!=='CPBL'&&!S._daiba){S._daiba=true;card('gold','台湾球界への別れ',`かつてプレーした台湾プロ野球から招待を受け、古巣の本拠地で始球式を務めた。台湾のファンへ感謝を伝え、キャリア最後の一球を投じた。`);}cont();};
+  daibaFarewell = function(cont){const npb=S.stats&&S.stats.NPB,playedNPB=!!(npb&&npb.yr>0);if(S.stage==='PRO'&&playedNPB&&['MLB','MiLB','KBO','CPBL'].includes(S.org)&&!S._daiba){S._daiba=true;card('gold','日本球界への別れ',`かつてプレーした日本プロ野球から招待を受け、古巣の本拠地で始球式を務めた。日本のファンへ感謝を伝え、キャリア最後の一球を投じた。`);}cont();};
 
   function overseasOffer(org,lv,label,o,minD,finish){
     const min={KBO:47,CPBL:45,MiLB:60}[org]||99;

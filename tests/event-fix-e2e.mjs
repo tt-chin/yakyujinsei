@@ -9,7 +9,7 @@ import os from 'node:os';
 import {instrumentRng} from './support/rng-instrument.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.slice(name.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
-const hook=`\nwindow.__fix={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),draw:n=>drawEvents(n,()=>{window.__drawDone=(window.__drawDone||0)+1;}),board:p=>board(p),retire:()=>endGame('検証'),resolve:(id,mode,success)=>{const e=EVENTS.find(e=>e.id===id),p=beginEvent(S,e),r=applyEvent(S,e,mode,{chance:()=>{R();return success;},pick,abilityKeys:POS_AB[S.pos],occurrenceID:p.eventOccurrenceID});renderEventResult(e,r.result);return r.result;}};`;
+const hook=`\nwindow.__fix={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),draw:n=>drawEvents(n,()=>{window.__drawDone=(window.__drawDone||0)+1;}),board:p=>board(p),farewell:()=>daibaFarewell(()=>{window.__farewellDone=(window.__farewellDone||0)+1;}),retire:()=>endGame('検証'),resolve:(id,mode,success)=>{const e=EVENTS.find(e=>e.id===id),p=beginEvent(S,e),r=applyEvent(S,e,mode,{chance:()=>{R();return success;},pick,abilityKeys:POS_AB[S.pos],occurrenceID:p.eventOccurrenceID});renderEventResult(e,r.result);return r.result;}};`;
 const server=createServer(async(req,res)=>{try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\//,'')||'index.html';if(rel.includes('..'))throw Error('path');let body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrumentRng(body.toString(),'__rngCalls')+hook;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':'text/html; charset=utf-8');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const local=`http://127.0.0.1:${server.address().port}`,target=arg('preview')||local,shots=path.join(os.tmpdir(),'yakyujinsei-event-fix');await mkdir(shots,{recursive:true});
 const browser=await chromium.launch({channel:process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||'chrome',headless:true}),errors=[];
@@ -55,6 +55,20 @@ try{
       // Exhaust the actual pool. No redraw, loop or extra RNG after it becomes empty.
       await p.evaluate(async()=>{const {EVENT_CATALOG}=await import('./src/data/event-cards-jp.js'),{eventEligible}=await import('./src/engine/event-policy.js');window.__fix.set({year:2035,pos:'IF',stage:'PRO',lv:'NPB1',org:'NPB',age:23,traits:{favorite:false,adking:false},eventDrawYear:2035,eventDrawnCardIDs:[]});const s=window.__fix.get().state,ids=EVENT_CATALOG.events.filter(e=>eventEligible(e,s)).map(e=>e.id);window.__fix.set({eventDrawnCardIDs:ids});window.__fix.draw(3);});const beforeEmpty=await p.evaluate(()=>window.__fix.get());await p.locator('#act button').click();assert.equal(await p.evaluate(()=>window.__drawDone),2);assert.deepEqual(await p.evaluate(()=>window.__fix.get()),beforeEmpty);assert.match(await p.locator('#log').innerText(),/今年まだ引いていない/);
       await p.evaluate(()=>window.__fix.retire());await openBoardAction(p,'board-share');assert.equal(await p.locator('#share-seed-value').inputValue(),saved.state.seed);await p.keyboard.press('Escape');await p.locator('#sh-img').click();await p.locator('#sh-out img').waitFor();const beforeRetCopy=await p.evaluate(()=>window.__fix.get());await p.locator('#sh-url').click();await p.locator('#sh-url-status input').waitFor();assert.equal(await p.locator('#sh-url-status input').inputValue(),url);assert.deepEqual(await p.evaluate(()=>window.__fix.get()),beforeRetCopy,'existing retirement copy changed S/RNG');
+    }
+    if(!arg('preview')){
+      for(const pos of ['P','IF'])for(const org of ['MLB','MiLB','KBO','CPBL']){
+        await p.evaluate(({pos,org})=>window.__fix.set({pos,org,stage:'PRO',stats:{NPB:{yr:2}},_daiba:false}),{pos,org});
+        const before=await p.evaluate(()=>({snapshot:window.__fix.get(),cards:document.querySelector('#log').textContent.split('日本球界への別れ').length,done:window.__farewellDone||0}));
+        await p.evaluate(()=>{window.__fix.farewell();window.__fix.farewell();});
+        const after=await p.evaluate(()=>({snapshot:window.__fix.get(),cards:document.querySelector('#log').textContent.split('日本球界への別れ').length,done:window.__farewellDone||0}));
+        assert.deepEqual(after.snapshot,{...before.snapshot,state:{...before.snapshot.state,_daiba:true}},'farewell only changes once flag; RNG and all other S exact');
+        assert.equal(after.cards,before.cards+1);assert.equal(after.done,before.done+2);
+      }
+      assert.match(await p.locator('#log').innerText(),/日本プロ野球.*日本のファン/);
+      assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'farewell has no horizontal overflow');
+      await p.locator('#log .card').filter({has:p.locator('h4',{hasText:'日本球界への別れ'})}).last().screenshot({style:'#board{visibility:hidden!important}',path:path.join(shots,'npb-farewell-'+width+'.png')});
+      console.log(`${width}: 8 native farewell fixtures PASS (P/IF, four overseas orgs, once-only, full S/RNG and continuation)`);
     }
     await ctx.close();console.log(`${arg('preview')?'Preview':'Local'} ${width}: sharing/seed-only URL/clipboard fallbacks/focus/header/rotation and ${arg('preview')?'deployed UI':'event points/exhaustion/all phases/read-only RNG/retirement'} passed`);
   }
