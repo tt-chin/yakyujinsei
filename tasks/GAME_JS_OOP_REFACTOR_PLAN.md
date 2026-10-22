@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE4_DETAILED_PLAN_PENDING（2026-10-22）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE4A_LOCAL_DONE（2026-10-23）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -15,7 +15,7 @@
 | 1c | `Rng` 方法化 | `ri`／`pick`／`chance`／`N0`／`pickRecord` 改由 `Rng` 提供 | L3 / R3 | 暫緩（方案 A，2026-10-18 使用者決定）；細部計畫見 §2c |
 | 2 | `GameView` | `card`／`divider`／`board`／`choose` 等純 DOM 操作移出；`allocUI` 暫緩 | L3 / R3 | 完成；PR #8 併入 `dev`（`26efa59`），合併 `1bc65df` 的衝突與重新驗證見 §2d.11；T14 測試修正為 PR #9；GitHub Actions CI 未確認 |
 | 3 | `CareerSession` | 收容 `S` 外的流程／選項控制狀態（3-A）與 JP 覆寫 IIFE 內的 context 變數（3-B）；不含 `S`、`careerRng`、年度流程函式 | L3 / R3 | 本機完成（§2e.7，`refactor/career-session` `db5c39b`）；已 push，PR #10 → `dev` 待合併（§2e.8）；GitHub Actions CI 未確認 |
-| 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 細部計畫（§2f），待批准 |
+| 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 本機完成（§2f.7，`refactor/legacy-overrides` `34c9c7b`）；未 push，PR → `dev` 待批准；GitHub Actions CI 未確認 |
 
 共通原則：
 
@@ -907,6 +907,76 @@ export function injectOverlayHook(source, hook) {
 4. §2f.5-2：執行期證據以 scratchpad worktree 的 Full（4 組平行）進行。
 
 - 使用者決定（2026-10-22）：上列 1～4 項皆批准。commit／push 另批。實作從 §2f.5-0 開始，順序依 §2f.5。
+
+§2f.5-0 結果（2026-10-22，唯讀；對象 `game.js` 與 `d2a564e` 相同；acorn 8.15.0＋eslint-scope 8.4.0，scratchpad 腳本，未加入 repo 依賴）：
+
+| 項目 | 結果 |
+|---|---|
+| IIFE 外的自由識別字中，解析到 IIFE 區域宣告者 | **0**（自由識別字共 32 個，其餘為瀏覽器內建名稱與下述 4 個） |
+| IIFE 頂層 `return`／`var` | 皆 0（`var` 0 個，故無與模組層級重複） |
+| IIFE 頂層 `this`／`arguments`／`eval`／`with` | 皆 0 |
+| IIFE 宣告（函式 42、`const` 21、`let` 1，共 64）與模組層級的名稱重複 | 現況 0；模擬刪除 21 個本體並把 19 個轉為宣告後亦 0 |
+| 19 個覆寫的形式 | 皆為 IIFE 頂層單一、匿名的 `  name = function(` 指派；該指派以外無其他寫入 |
+| `makeOffers`／`pickOfferUI` 引用 | 12 處全在刪除範圍內（範圍外 0） |
+| 刪除範圍 | 23 段 399 行＋外殼 3 行＝−402 行（與 §2f.2 一致） |
+
+- 附帶發現：IIFE 外另有 4 個未宣告名稱（`careerEarnings`、`ct`、`currentSalary`、`fmtMoneyJPY`），全部只出現在舊 `phaseEnd` 本體內（`game.js:1628`）。該本體若被呼叫會 ReferenceError，可作為不可達的旁證；刪除後消失。
+
+計畫修正（2026-10-22，harness 實作前逐檔確認時發現；使用者批准 A～C）：
+
+- **A. `overlay-hook` 的新原始碼路徑（A′：附加在模組頂層）**：§2f.3 草案每次注入各包一個 `{ }`，`withCareerSessionAccess` 注入的 `const __cs` 對其後的 hook 不可見。先改為單一共用區塊（A，已批准），但負控制顯示仍不足（見下），再改為不包區塊、依注入順序附加在模組頂層（A′，2026-10-22 使用者批准）。新舊判別為「標記的下一行是否為 `(() => {`」。
+  - 理由：`kbo-renewal-e2e` 的 hook 宣告 `function applyKboForeignPackageCap(){…}`（同名 import 改名為 `original…`），原本提升到 IIFE 作用域，由覆寫區的 `salaryCandidate`（`game.js:2855`）呼叫；包在區塊內時，嚴格模式下該宣告只在區塊內，覆寫區解析不到。該名稱的引用全部在原 IIFE 區域（`game.js:2776` 以後）。
+  - 取捨：hook 的函式宣告對覆寫區可見（同原本），對覆寫區之前的程式碼也可見；後者原本會 ReferenceError，而 IIFE 外的自由識別字只有內建名稱與舊 `phaseEnd` 內 4 個（§2f.5-0），hook 皆未宣告。hook 的 `const`／`let`／函式與模組名稱同名時，原本為安靜遮蔽或覆蓋，A′ 下為載入時 SyntaxError（較嚴格）。
+  - 執行順序差異：`instrumentRng` 在現行原始碼檔尾附加的 `careerRng.onDraw=…`，原本在 hook 之後執行，改為在 hook 之前；16 檔的 hook 皆未引用 `careerRng`（grep），不可觀察。
+  - `overlay-hook.test` 新增鑑別案例「覆寫區的函式呼叫 hook 宣告的函式」（嚴格模式），區塊設計下為 ReferenceError。
+  - §2f.4-1 理由的更正：hook 落入 `game.js:2747` 的小 IIFE 時仍可存取 `S`（該 IIFE 位於模組作用域內）。實際問題是時點：hook 在覆寫區語句執行前即執行，評估時的包裝會被之後的覆寫指派蓋掉，覆寫區的 `const` 尚在 TDZ。
+  - 負控制（scratchpad 拆殼複本，`game.js` 只刪外殼 3 行；同一組 Quick 入口 `bug-act-01-02`、`kbo-renewal`、`npb-return`、`championship-intl`、`trait-system`、`global-contract-market`、`salary-history`）：舊注入方式 2 FAIL／5 PASS（`bug-act-01-02-e2e`：`signTo` 包裝被覆寫，`afterCalls` 為 null；`kbo-renewal-e2e`：生涯未完成）；區塊設計（A）1 FAIL（`kbo-renewal-e2e`）；A′ 7 PASS。
+- **B. `tests/npb-return-ui.test.mjs` 斷言變更（同 §2f.4-5，與 `game.js` 同一 commit）**：`:63` 斷言舊 `daibaFarewell` 本體在現行原始碼恰出現 1 次，改為斷言核准的 `card('gold','日本球界への別れ',…)` 整句恰出現 1 次（刪除後只在 JP 版）。`:64` 的切片比較：`73d5a58` 側把舊送別替換為空字串（原為核准文字）；`handleDemotion` 段的終點，現行側改為 `/* 長期契約/短期契約`，舊側維持 `function outOfOrg`。
+- **C. 一併刪除只描述被刪本體的註解 7 行**：`game.js:602`、`835`、`1612`、`1755`、`1837`、`1893`、`2003`（行號以 `d2a564e` 計）。刪除合計 −409 行。`/* シーズン開幕前。 */`、`/* 開始設定。 */` 保留。
+- 與 §2f.4 的其他差異：
+  - `tests/support/approved-school-oracle.mjs` 不修改：遇含 `from './school-policy.js'` 的原始碼即提早 return，現行與 4-A 後的原始碼皆含該 import，只有舊歷史原始碼走到 `newState` 錨點。
+  - `kbo-renewal-floor` 新形式下，vm 前置的 `let` 須移除 `salaryFor`（否則與函式宣告重複宣告）。
+  - `trait-policy` 的終點改為 `^(?:function maybeIntl\(|let applyPromotionSalary=)`（行首）；現行與 `9fcb24a` 的切片與原本逐字相同（已比對）。
+  - `scripts/ci-full-batches.test.mjs` 在本分支 HEAD 原本即 FAIL：斷言 83 入口，實為 84（`4cb4c98` 新增 `npb-farewell.test` 時未同步）。本期改為 85（含 `overlay-hook.test`），批次為 `[10,11,10,11,11,10,11,11]`；`TESTING.md` 的 83 同步為 85。
+
+§2f.5-1 結果（2026-10-22，本機 macOS，Brave 155＋`--disable-features=BraveFarbling`；`game.js` 未修改，工作樹，未 commit）：
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（162 檔） |
+| 相關單元 | `overlay-hook`（8 案例）、`school-policy`、`championship-intl`、`npb-return-ui`、`kbo-renewal-floor`、`trait-policy`、`rng-instrument`、`kbo-renewal-floor --baseline=d2a564e`、`school-policy --baseline=d2a564e` 皆 PASS；`ci-full-batches.test` 31 PASS／0 FAIL／1 SKIP（Linux 限定案例） |
+| Full | 4 組平行（21／22／22／20），合計 **85 PASS／0 FAIL／0 SKIP／0 BLOCKED**，85 入口不重複；報告 `head` 為 `87a235a`（未 commit 的工作樹）。`test-results/harness-full-g0`～`g3/`。此時 helper 的新原始碼路徑仍為區塊設計（A）；舊原始碼路徑與 A′ 相同，A′ 後未在未修改的 `game.js` 上重跑 Full |
+| 負控制 | 見上「A」：舊注入方式 2 FAIL、A 1 FAIL、A′ 7 PASS；另以 A′ 在拆殼複本跑全部瀏覽器 E2E：**23 PASS／0 FAIL／0 SKIP／0 BLOCKED** |
+| reviewer | 無問題（基準 SHA 的標記與 IIFE 首行、雙錨點、`kbo-renewal-floor` 條件前置、`trait-policy` regex 於 CRLF／`9fcb24a`、hook 文字與求值順序、頂層附加的衝突、移除的錯誤訊息無殘留引用） |
+
+§2f.5-2 結果（2026-10-22，本機；scratchpad worktree＝HEAD＋上記 harness，`game.js` 的 21 個舊本體與舊 onclick 本體開頭插入記錄＋`console.error`＋`throw Error('DEAD_CALL:<name>')`，共 22 處；不 commit）：
+
+- Full 4 組平行，85 入口：**83 PASS／2 FAIL／0 SKIP／0 BLOCKED**。
+- 2 FAIL 皆為原始碼文字耦合的單元測試（插入造成的假象，非執行期呼叫）：`npb-farewell.test`（以 `productionFunction('daibaFarewell')` 抽出舊本體在 vm 中直接執行 → `DEAD_CALL:daibaFarewell`）；`npb-return-ui.test`（舊送別本體的逐字斷言 `exactly one approved base farewell`）。兩者在 §2f.4-5／計畫修正 B 中本來就要改寫。
+- 瀏覽器 E2E 23 入口全部 PASS；`DEAD_CALL` 只出現在 `npb-farewell.test` 的 log，其他報告與 log 為 0 筆。23 支 E2E 皆註冊 `pageerror`／`console` 監聽（原始碼文字確認，未逐支確認其處理方式）。
+- 判定（2026-10-22 使用者同意的條件）：**VERIFIED**——Full 涵蓋的流程中，19 個舊本體、`makeOffers`、`pickOfferUI`、舊 onclick 本體在執行期未被呼叫。範圍限於 Full 涵蓋的流程；非全路徑證明。`CONTRACT-LEGACY-01` 的結案條件滿足。
+
+§2f.5-3～6 結果（2026-10-22～23，本機 macOS，Brave 155＋`--disable-features=BraveFarbling`；對象：`b29ccc8`＋未 commit 的 `game.js`／測試變更）：
+
+- `game.js`：以 acorn 位置做位元組層級編輯（51 處：刪除 32 段、拆殼 2 處、轉換 19 個），3313 → 2904 行（−409），CRLF 維持，acorn 可解析。
+- 實作中追加的斷言期望值變更（皆為 §2f.4 未列，2026-10-23 使用者逐項批准）：
+  - `tests/salary-flow.test.mjs` 的原始碼文字計數：`R(` 35→28、`ri(` 74→43、`chance(`＋legacy slot 57→45、`pick(` 23→14。減少的全部在刪除的舊本體內（`git diff` 確認：轉換行內的 3 個 `ri(` 前後相同；新增行中無 `R(`／`ri(`／`chance(`／`pick(`）。`draw('<SLOT>')` 清單、`chance(terms.winChance)` 不變。
+  - `tests/full-power-pitching-e2e.mjs:17`：`phasePre` 與 `20920dd`（經批准的校正）逐字比較，基準側刪除 `/* 大學季前… */` 註解＋`if(false){…}`（22 行）後比較；已確認此為唯一差異，並斷言刪除範圍含 `if(false){`。
+- `npb-farewell.test`（§2f.4-5）、`npb-return-ui.test`（計畫修正 B）依批准內容修改。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（162 檔） |
+| `kbo-renewal-floor --baseline=d2a564e` | PASS |
+| Quick | 65 PASS／0 FAIL／0 SKIP／0 BLOCKED（`salary-flow` 修改後） |
+| Full | 4 組平行（21／22／22／20），85 入口不重複：84 PASS／1 FAIL（`full-power-pitching-e2e`，上記 `phasePre` 斷言）。斷言修改後該入口單獨重跑 PASS（354 秒）。其餘 84 入口未於修改後重跑（該變更只影響此檔） |
+| `game-view-dom-e2e --baseline=d2a564e` | PASS：8 段生涯（P／IF／OF，1280／390）每一步 DOM／`S`／RNG 完全一致 |
+| `stage10-risk-e2e --compare=d2a564e` | 58 PASS／1 FAIL（`E-original-comparison-IF`）。失敗斷言為 `assert.equal(b.state.traits.grinder,false)`（`b`＝比較基準）：此比較原本預設 grinder 修正前的 SHA，`d2a564e` 已含修正，與 `game.js` 變更無關；其前的 actions／`S`／RNG `deepEqual` 皆通過，P 的比較 PASS。計畫指定 `--compare=d2a564e` 時未考慮此點；2026-10-23 使用者同意記錄為預期內 FAIL、不修改測試（未在 `b29ccc8` 上重跑佐證） |
+| 目視（自動操作＋截圖） | 1280 投手 `yakyo-test-001`：542 步至退休畫面；390 內野手 `jp3-infielder-01`：543 步至退休畫面。Console 錯誤／pageerror／失敗請求／4xx 皆 0，無橫向捲動。TJゲージ未四捨五入為既有 `UI-TJ-GAUGE-01` |
+
+- `game.js` 行號變動（§1.1-5；舊＝`d2a564e`，3313 → 2904 行）：1–236：0；265–601：−28；612–762：−38；770–834：−45；857–1141：−67；1147–1206：−72；1213–1252：−78；1273–1560：−98；1636–1754：−173；1763–1813：−181；1853–1892：−220；1961–1978：−288；2078–2754：−387；2774–2775：−406；2778–3312：−408（19 個宣告就地改寫，偏移相同）。其餘舊行已刪除。
+- reviewer（`d2a564e..` 的 `game.js`＋4 測試）：無問題（19 個轉換以規則重算後 diff 為空；IIFE 前區域僅刪除、保留的註解完好；CRLF 2904／2904；`LEGACY` 不捕獲 19 名稱、評估期間無引用；`salary-flow` 計數註解與實數一致）。23 支瀏覽器 E2E 未由 reviewer 重跑。
+- commit：`b29ccc8`（harness）、`34c9c7b`（`game.js`＋4 測試）、文件。`BACKLOG.md`：移除 `CONTRACT-LEGACY-01`（結案條件由 §2f.5-2 滿足）；`REFACTOR-AUDIT-01` 補記 4-A，不結案。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
