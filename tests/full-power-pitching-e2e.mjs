@@ -14,7 +14,9 @@ const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs
 const approvedPhoenixPrior=withApprovedPhoenixControl(prior);
 const current=await readFile(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const canonical=s=>s.replaceAll('\r\n','\n');
-for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(canonical(productionFunction(fn,current)),canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();"),'pitching rules unchanged except approved callback: '+fn);
+// Phase 4-A deleted phasePre's unreachable college-path block (comment + if(false){...}); drop it from the prior side only.
+const withoutDeadBlock=(fn,text)=>{if(fn!=='phasePre')return text;const a=text.indexOf('  /* 大學季前'),b=text.indexOf("  if(S.stage==='PRO'&&S.age>=36",a);assert.ok(a>0&&b>a&&text.slice(a,b).includes('if(false){'),'dead block in prior phasePre');return text.slice(0,a)+text.slice(b);};
+for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(canonical(productionFunction(fn,current)),withoutDeadBlock(fn,canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();")),'pitching rules unchanged except approved callback'+(fn==='phasePre'?' and deleted dead block':'')+': '+fn);
 // Calculation and accumulation body stays byte-exact; only authorized continuation wiring differs.
 const seasonBody=src=>canonical(productionFunction('proSeason',src));
 const oldSeason=seasonBody(prior),newSeason=seasonBody(current);

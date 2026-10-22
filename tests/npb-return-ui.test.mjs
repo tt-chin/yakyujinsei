@@ -50,18 +50,14 @@ for(const [start,end,original]of [
  ["        if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP()))){","        }else if(o>=LV.NPB2.min&&chance(50)){","        if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP())))alts.push({t:'NPB一軍への移籍',s:'NPB移籍契約',f:()=>{buyoutRemaining();signTo('NPB','NPB1');advance();}});\n"],
  ["        }else if(o>=LV.NPB2.min&&chance(50)){","      }else if(S.org==='NPB'","        else if(o>=LV.NPB2.min&&chance(50))alts.push({t:'日本の二軍（支配下）へ移籍',f:()=>{buyoutRemaining();signTo('NPB','NPB2');advance();}});\n"]
 ]){const a=now.indexOf(start),b=now.indexOf(end,a+start.length);assert.ok(a>=0&&b>a);now=now.slice(0,a)+original+now.slice(b);}
-// User-approved 1.13.3 farewell only: exact replacement, never ignore buyout or
-// return logic. Eligibility/once-only/all other S and RNG are independently
+// User-approved 1.13.3 farewell only: exact text, never ignore buyout or return logic.
+// Phase 4-A deleted the base farewell: the approved card exists only in the overlay version,
+// and the old side drops its base farewell so the surrounding code still compares verbatim. Eligibility/once-only/all other S and RNG are independently
 // executed by npb-farewell.test.mjs and event-fix-e2e.mjs.
 const oldFarewell=oldGame.slice(oldGame.indexOf('/* 引退時にCPBLへ'),oldGame.indexOf('function handleDemotion'));
 assert.ok(oldFarewell.startsWith('/* 引退時にCPBLへ')&&oldFarewell.includes('function daibaFarewell(cont)'));
-const approvedFarewell="/* NPBでプレーし、海外で引退する選手へ日本球界から一度だけ送別。 */\n"+
-  "function daibaFarewell(cont){\n"+
-  "  const npb=S.stats&&S.stats.NPB,playedNPB=!!(npb&&npb.yr>0);\n"+
-  "  if(S.stage==='PRO'&&playedNPB&&['MLB','MiLB','KBO','CPBL'].includes(S.org)&&!S._daiba){ S._daiba=true;\n"+
-  "    card('gold','日本球界への別れ',`かつてプレーした日本プロ野球から招待を受け、古巣の本拠地で始球式を務めた。日本のファンへ感謝を伝え、キャリア最後の一球を投じた。`);\n"+
-  "  }\n  cont();\n}\n";
-const approvedOldGame=oldGame.replace(oldFarewell,approvedFarewell);
-assert.equal(now.split(approvedFarewell).length,2,'exactly one approved base farewell; no wildcard');
-for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision'],['function handleDemotion','/* 再契約'],['function buyoutRemaining','function handleDemotion'],["  if(S.stage==='PRO'&&S.age>=36","/* シーズン中。 */"]]){assert.ok(now.includes(start));const finish=end==='/* 再契約'? 'function outOfOrg':end;assert.ok(now.includes(finish));assert.equal(now.slice(now.indexOf(start),now.indexOf(finish,now.indexOf(start))),approvedOldGame.slice(approvedOldGame.indexOf(start),approvedOldGame.indexOf(finish,approvedOldGame.indexOf(start))),start+' unchanged except exact approved farewell');}
+const approvedFarewellCard="card('gold','日本球界への別れ',`かつてプレーした日本プロ野球から招待を受け、古巣の本拠地で始球式を務めた。日本のファンへ感謝を伝え、キャリア最後の一球を投じた。`);";
+const approvedOldGame=oldGame.replace(oldFarewell,'');
+assert.equal(now.split(approvedFarewellCard).length,2,'exactly one approved farewell card; no wildcard');
+for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision'],['function handleDemotion','/* 再契約'],['function buyoutRemaining','function handleDemotion'],["  if(S.stage==='PRO'&&S.age>=36","/* シーズン中。 */"]]){assert.ok(now.includes(start));const finish=end==='/* 再契約'? 'function outOfOrg':end,finishNow=end==='/* 再契約'? '/* 長期契約/短期契約':end;assert.ok(now.includes(finishNow));assert.equal(now.slice(now.indexOf(start),now.indexOf(finishNow,now.indexOf(start))),approvedOldGame.slice(approvedOldGame.indexOf(start),approvedOldGame.indexOf(finish,approvedOldGame.indexOf(start))),start+' unchanged except deleted base farewell');}
 console.log(`${cases} NPB return contract gates/cache/single completion/salary handoff and unchanged market/contract policies passed.`);
