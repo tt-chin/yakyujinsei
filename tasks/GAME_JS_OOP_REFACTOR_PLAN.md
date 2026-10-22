@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE2_DETAILED_PLAN_PENDING（2026-10-18）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE4_DETAILED_PLAN_PENDING（2026-10-22）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -14,8 +14,8 @@
 | 1b | `Rng` 觀測 hook | 測試改用正式 hook 計數，脫離原始碼字串替換 | L3 / R3（含 `game.js` RNG 路徑） | 完成；同 PR #5，見 §2b.6 |
 | 1c | `Rng` 方法化 | `ri`／`pick`／`chance`／`N0`／`pickRecord` 改由 `Rng` 提供 | L3 / R3 | 暫緩（方案 A，2026-10-18 使用者決定）；細部計畫見 §2c |
 | 2 | `GameView` | `card`／`divider`／`board`／`choose` 等純 DOM 操作移出；`allocUI` 暫緩 | L3 / R3 | 完成；PR #8 併入 `dev`（`26efa59`），合併 `1bc65df` 的衝突與重新驗證見 §2d.11；T14 測試修正為 PR #9；GitHub Actions CI 未確認 |
-| 3 | `CareerSession` | 收容 `S` 外的流程／選項控制狀態（3-A）與 JP 覆寫 IIFE 內的 context 變數（3-B）；不含 `S`、`careerRng`、年度流程函式 | L3 / R3 | 本機完成（§2e.7，`refactor/career-session` `db5c39b`）；待 push、PR 併入 `dev`、GitHub Actions CI |
-| 4 | LEGACY 覆寫逐組處理 | 32 組覆寫逐組決定合併或 `super` | L3 | 概要 |
+| 3 | `CareerSession` | 收容 `S` 外的流程／選項控制狀態（3-A）與 JP 覆寫 IIFE 內的 context 變數（3-B）；不含 `S`、`careerRng`、年度流程函式 | L3 / R3 | 本機完成（§2e.7，`refactor/career-session` `db5c39b`）；已 push，PR #10 → `dev` 待合併（§2e.8）；GitHub Actions CI 未確認 |
+| 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 細部計畫（§2f），待批准 |
 
 共通原則：
 
@@ -756,6 +756,158 @@ export class CareerSession {
 - reviewer：未執行（合併無衝突解決，本分支無新增邏輯）。
 - 未確認：GitHub Actions CI（push `29ef092` 後）。
 
+## 2f. 第 4 期：LEGACY 覆寫 4-A（細部計畫，2026-10-22）
+
+### 2f.1 目標與範圍
+
+- 目標：刪除 `game.js` 中被 JP 覆寫完全取代、不再執行的舊本體與舊路徑；拆除 JP 覆寫 IIFE 的外殼，使同名函式只剩一個定義。
+- 範圍內（4-A）：
+  1. 刪除 19 個完全取代的舊本體：`newState`、`salaryFor`、`stageLabel`、`startYear`、`teamChampRate`、`doTradeExec`、`amateurSeason`、`maybeIntl`、`phaseEnd`、`daibaFarewell`、`outOfOrg`、`teamListOf`、`signTo`、`faFlow`、`faMarket`、`crossOffers`、`runDraft`、`pathChoiceHS`、`pathChoiceU4`。
+  2. 刪除 `makeOffers`、`pickOfferUI`、`phasePre` 內的 `if(false){…}` 區塊、舊 `$('btn-start').onclick=()=>{…}`。結案 `CONTRACT-LEGACY-01`。
+  3. 拆殼：刪除 `(() => {`、`  'use strict';`、`})();` 三行；原 IIFE 內程式碼保留兩格縮排，順序不變。19 個 `  name = function(…){…};` 就地改為 `  function name(…){…}`。
+- 範圍外：
+  - **4-B**（暫緩，同 §2c 方案 A）：檔頭 RNG 舊定義 `seedInit`／`R`、`_s`、`fixed-seed-v160` 的文字斷言。`seedInit = function`／`R = function` 兩行維持指派形式（vm harness 以此抽取）。
+  - **4-C**（不做）：`board`、`movement`、`advance`、`endGame` 的包裝。原本體為現役程式碼。`LEGACY` 物件與其未使用的 `phasePre`／`phaseMid`／`proSeason` 屬性不動。
+  - **4-D**（不做）：8 個薪資 stub（`let applyPromotionSalary=()=>{}` 等）與其在原 IIFE 區域內的指派。
+  - 刪除後才變成未使用的周邊定義（例：`CPBL_TEAMS`／`NPB_TEAMS`／`MLB_TEAMS`、`faYears`、`selPos`）：本期不追刪，只記錄。
+  - `tools/development-g9/verify-version-metadata.mjs:31`（錨點 `newState = function`）、`tools/development-a/runtime.mjs`、`docs/reviews/*` 的歷史工具：不修改，只記錄（同 §2.4、§2e.1）。
+- 允許差分：**無**。同一 seed／選擇的 `S`、RNG 值與呼叫次數、`#log`／`#act`／`#board` 的 DOM 完全一致。
+- 使用者決定（2026-10-22）：採 4-A；以拆殼方式（不把本體搬回原位置）；保留縮排。
+
+### 2f.2 現況（2026-10-22 唯讀確認，基準 `d2a564e`；以 acorn 8.15.0 做 AST 分析）
+
+| 項目 | 結果 |
+|---|---|
+| 覆寫綁定 | 33 個：完全取代 21（上列 19 個＋`seedInit`、`R`）、包裝 4（`board`／`movement` 經 `LEGACY`，`advance` 經 `advanceWithoutSalaryFinalization`，`endGame` 經 `LEGACY`＋`legacyEndGame` 兩層）、stub 補上 8 |
+| 舊本體可達性（靜態） | 19 個舊本體在 IIFE 指派後沒有捕獲者；模組層級與 IIFE 評估期間沒有呼叫這 19 個名稱，也沒有以值捕獲（`LEGACY` 只捕獲 `board`、`movement`、`phasePre`、`phaseMid`、`proSeason`、`endGame`） |
+| `makeOffers`／`pickOfferUI` | 12 個呼叫點全在 19 個舊本體內，或在 `if(false){`（`game.js:836`）內；靜態判斷不可達 |
+| 舊開始處理 | `game.js:2755` 的 onclick 在 IIFE 評估時被 `game.js:3309` `$('btn-start').onclick=startJapanese` 覆蓋，使用者操作前已失效 |
+| 名稱重複 | IIFE 直接宣告 64 個，與模組層級、彼此之間、19 個舊本體皆**零重複**（拆殼後不會 SyntaxError，名稱解析不變） |
+| `})();` 出現位置 | 4 處：`game.js:50`、`784`（皆在運算式／函式內）、`2747`（act-toggle 小 IIFE 結尾）、`3313`（JP IIFE 結尾） |
+| 刪除行數 | 19 個舊本體 344 行；`pickOfferUI` 9、`makeOffers` 6、`if(false)` 區塊 21、舊 onclick 19，共 55 行；外殼 3 行。合計約 −402 行（3313 → 約 2911 行） |
+
+拆殼前後的語意：
+
+- IIFE 內語句的執行順序與時點不變：IIFE 原本就在模組評估的最後執行，拆殼後同樣的語句在同一位置依序執行。
+- ES module 本身即 strict mode，刪除 `'use strict'` 不影響。箭頭 IIFE 的 `this` 為 `undefined`，與模組頂層相同。
+- 19 個名稱改為函式宣告後，在模組實例化時即綁定 JP 版本；原本在 IIFE 指派前的瞬間是舊版本。因評估期間不呼叫這些名稱（上表），兩者不可觀察。
+- 原 IIFE 內的函式宣告提升到模組層級後，IIFE 外的程式碼如果引用這些名稱，原本會 ReferenceError，拆殼後會解析成功。須在實作前確認這類自由識別字為零（§2f.5-0）。
+
+### 2f.3 設計
+
+`docs/src/engine/game.js`（CRLF 維持）：
+
+```js
+/* ================= 日本版仕様オーバーレイ 1.0.4 ================= */
+  const DATA = JP_DATA;                         // 原 (() => { 與 'use strict' 兩行刪除
+  const LEGACY = { board, movement, phasePre, phaseMid, proSeason, endGame };
+  …
+  function teamListOf(org){return listByOrg(org).map(t=>t.teamId);}   // 原 teamListOf = function(org){…};
+  …
+  $('btn-restart').onclick=()=>{…};
+                                                // 原 })(); 刪除
+```
+
+- 19 個轉換只改宣告形式：`name = function(` → `function name(`，結尾 `};` → `}`；參數與本體逐字不動。
+- 舊本體刪除與宣告轉換必須在同一 commit：只做其一時，模組中會有兩個同名函式宣告（SyntaxError），或名稱沒有定義。
+- 標記註解 `/* ================= 日本版仕様オーバーレイ 1.0.4 ================= */` 保留（`stage10-risk-e2e` 以它為錨點）。
+
+新增 `tests/support/overlay-hook.mjs`：
+
+```js
+export function injectOverlayHook(source, hook) {
+  const marker = '/* ================= 日本版仕様オーバーレイ 1.0.4 ================= */';
+  const at = source.indexOf(marker);
+  if (at < 0) throw Error('OVERLAY_HOOK_MISS');
+  if (/^\(\(\) => \{\r?$/m.test(source.slice(at, at + marker.length + 16))) {   // 舊原始碼：IIFE 內
+    const end = source.lastIndexOf('})();');
+    if (end < at) throw Error('OVERLAY_HOOK_MISS');
+    return source.slice(0, end) + hook + source.slice(end);
+  }
+  return source + '\n{\n' + hook + '\n}\n';                                       // 新原始碼：模組末尾的區塊
+}
+```
+
+- 舊原始碼（各 E2E 的歷史基準 SHA）：沿用現行插入位置。新增「插入點須在標記之後」的檢查；現行 16 檔中有 10 檔找不到時不報錯，改用 helper 後會丟 `OVERLAY_HOOK_MISS`。這是更嚴格的檢查，不是放寬。
+- 新原始碼：附加在檔尾，以 `{ }` 包住。hook 內的 `const`／`let`／`function` 維持區塊作用域，等同原本在 IIFE 內的區域作用域，不會與模組層級名稱衝突。執行時點與原本相同（原本插在 IIFE 最後一行之後、`})();` 之前）。
+- 判別方式與錨點細節於實作時以舊、新原始碼的單元測試定案；上段為介面草案。
+
+### 2f.4 測試變更（harness 變更，非期望值變更，需揭露；第 5 點除外）
+
+1. **E2E 注入（16 檔）**：以下各自呼叫 `lastIndexOf('})();')` 的位置改用 `injectOverlayHook`。拆殼後，`lastIndexOf` 會命中 `game.js:2747` 的小 IIFE，hook 落在無法存取 `S` 的作用域。hook 本文與斷言不變。
+   - `tests/support/career-session-access.mjs`、`tests/support/baseline-initial-potential.mjs`、`tests/support/stage6-browser.mjs`
+   - `stage10-risk-e2e`、`contract-salary-e2e`、`kbo-renewal-e2e`、`bug-act-01-02-e2e`、`npb-return-e2e`、`championship-intl-e2e`、`international-personal-stats-e2e`、`trait-system-e2e`、`trait-display-e2e`、`salary-history-e2e`、`smallschool-c-e2e`、`full-power-pitching-e2e`、`global-contract-market-e2e`
+   - 附加在原始碼之後的 6 檔（`display-preferences`、`draft-income`、`event-fix`、`event-system`、`hof-first-ballot`、`replay-share-theme`）不受影響。
+2. **`stage10-risk-e2e` 的 `oldNames`**：移除 9 個本期刪除的名稱（`newState`、`startYear`、`amateurSeason`、`salaryFor`、`signTo`、`faMarket`、`crossOffers`、`makeOffers`、`pickOfferUI`），保留 `board`、`movement`、`endGame`、`phasePre`、`phaseMid`、`proSeason`、`advance`。
+   - 理由：`makeOffers`／`pickOfferUI` 刪除後，標記前的 `makeOffers=s10wrap(…)` 會 ReferenceError；其餘 7 個在拆殼後會包到 JP 版本，`legacy.*` 標籤失真。
+   - 斷言（`legacy.board`>0、`legacy.endGame`>0、追蹤與非追蹤的 actions／state／rng 一致、`--compare` 比較）不變。
+3. **vm 切片錨點（雙錨點：新原始碼用 `  function name(`，舊基準用 `  name = function(`）**：
+
+| 檔案:行 | 現行錨點 | 失效原因 | 是否也套用於舊基準 |
+|---|---|---|---|
+| `tests/school-policy.test.mjs:34` | `'  newState = function(name,pos)'` → `'\n  const nextContractId'` | 起點消失 | 是（`--baseline`） |
+| `tests/support/approved-school-oracle.mjs:14` | 同上 | 起點消失，丟 `Unrecognized historical school scope`；連帶 8 支 E2E（`international-personal-stats`、`full-power-pitching`、`trait-display`，以及經 `baseline-initial-potential` 的 `draft-income`、`hof-first-ballot`、`display-preferences`、`contract-salary`、`kbo-renewal`） | 是（歷史原始碼） |
+| `tests/championship-intl.test.mjs:41` | 終點 `'  maybeIntl = function(done)'` | 終點消失，切片變成幾乎整個檔案 | 待實作時確認 |
+| `tests/npb-return-ui.test.mjs:8` | 起點 `'  crossOffers = function(o){'` | 起點消失 | 待實作時確認 |
+| `tests/npb-return-ui.test.mjs:66` | 終點 `'function outOfOrg'`（與 `approvedOldGame` 比對） | 舊 `outOfOrg` 刪除後，第一個 `function outOfOrg` 落在原 IIFE 區域，切片範圍錯誤 | 是（`approvedOldGame`） |
+| `tests/kbo-renewal-floor.test.mjs:40` | `between('  salaryFor = function', …)` | 起點消失 | 是（`--baseline`） |
+| `tests/trait-policy.test.mjs:105` | 終點 `'function maybeIntl('` | 同 `outOfOrg`：終點移到原 IIFE 區域 | 舊基準 `9fcb24a` 不變；新原始碼改用刪除後緊接 `awards` 的定義 |
+
+   - 兩格縮排保留，因此以兩格縮排為錨點的 IIFE 區域切片（`kbo-renewal-floor:41–44`、`international-personal-stats:68`、`event-integration:36`、`npb-return-ui:66` 的 `'  salaryCandidate='`、`championship-intl:56`）不受影響。
+4. **新增 `tests/overlay-hook.test.mjs`**：測試新原始碼走檔尾區塊、`d2a564e` 原始碼走 IIFE 內插入、無標記或插入點在標記之前時丟錯。另需同步 Full 入口數 84→85（`scripts/ci-full-batches.test.mjs`）、`scripts/TESTING.md`，並在 `scripts/test-manifest.mjs` 的 `nonTests` 登記 `support/overlay-hook.mjs`。
+5. **`tests/npb-farewell.test.mjs:8–20`（斷言變更，須另行批准）**：此測試同時抽出舊本體（`productionFunction('daibaFarewell')`）與 JP 版本（regex `^  daibaFarewell = function`），並斷言 `'base and active definitions agree'`。舊本體刪除後，此比較的前提消失。
+   - 方案：改為只抽出 JP 版本（`  function daibaFarewell(`），刪除該項比較斷言。
+   - 保留：與 `6e06b1b` 舊版的比較（`:27–30`）及其他斷言。
+   - 此變更與 `game.js` 放在同一 commit：在舊本體仍存在的 HEAD 上，原斷言仍然成立。
+
+### 2f.5 驗證（L3 / R3）
+
+比較基準：`d2a564ecbc78d9b8027956d9349b2c7ba1a63934`（`game.js` 與 `29ef092` 相同）；允許差分：無。
+
+0. **實作前檢查（唯讀，scratchpad）**
+   - acorn 確認 IIFE 外的程式碼中，解析到 IIFE 區域宣告的自由識別字為 0。
+   - IIFE 頂層沒有 `return`／`var` 宣告與模組層級重複。
+   - 結果記錄於 §2f.7。
+1. **harness commit**（`game.js` 未修改）
+   - `overlay-hook.test` PASS。
+   - §2f.4 第 1～3 點的所有入口在未修改的 HEAD 上 PASS（走舊路徑／舊錨點）。
+   - 負控制：在 scratchpad 的拆殼複本上，以現行（未改）注入方式跑 1 支 E2E，確認 FAIL；改用 helper 後 PASS。
+2. **執行期不可達證據**（比照 §2.5-3；`CONTRACT-LEGACY-01` 的結案條件）
+   - 在 scratchpad 的 `git worktree` 中，把 19 個舊本體、`makeOffers`、`pickOfferUI`、舊 onclick 本體改為記錄（`(globalThis.__deadCalls??=[]).push(name)`）後丟 `DEAD_CALL:<name>`。
+   - 以 4 組平行執行 Full，判定：全部 PASS，且所有報告與 Console 輸出中 `DEAD_CALL` 為 0 筆。
+   - 不 commit。範圍限於 Full 涵蓋的流程，結果記錄為 VERIFIED／UNVERIFIED。
+3. **實作 commit**（`game.js`、`npb-farewell.test`）
+   - `node scripts/check-syntax.mjs`。
+   - 相關單元：`school-policy`、`championship-intl`、`npb-return-ui`、`kbo-renewal-floor --baseline=d2a564e`、`trait-policy`、`npb-farewell`、`international-personal-stats`、`event-integration`、`rng`、`award-journal-native`、`fixed-seed-v160`、`overlay-hook`、`verify-modularization`、`information-architecture`。
+   - `game-view-dom-e2e --baseline=d2a564e`：8 段生涯，每一步的 DOM／`S`／RNG 計數一致。
+   - §2f.4 第 1 點的 16 檔與 `stage10-risk-e2e --compare=d2a564e`。
+   - Quick。
+4. **Full**：4 組平行（同 §2e.7）。分組執行，不是單一 Full 報告；`ci-full-batches` 的嚴格彙整未執行。
+5. **目視**：PC（1280）／手機（390），開始畫面到退休畫面各 1 段生涯；Console／404 為 0。
+6. **記錄**：`game.js` 行號變動（§1.1-5），不改寫歷史報告。
+7. **reviewer**：審查 `d2a564e..HEAD` 的 diff。重點：19 個轉換逐字一致、刪除範圍、helper 的判別與錯誤路徑、雙錨點、CRLF／LF。
+8. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2f.6 交付
+
+- 分支：`refactor/legacy-overrides`（自 `refactor/career-session` `d2a564e` 建立，2026-10-22 使用者批准）。
+- PR #10 須以 merge commit 併入 `dev`（不 squash），之後本分支的 PR 目標改為 `dev`，不需 rebase。PR #10 若再修改，本分支須合併該修改並重跑 §2f.5-3。
+- commit 順序：harness → `game.js`＋`npb-farewell.test` → 文件。
+- 變更檔：
+  - 新增：`tests/support/overlay-hook.mjs`、`tests/overlay-hook.test.mjs`。
+  - 修改：`docs/src/engine/game.js`、§2f.4 所列 23 個測試檔、`scripts/test-manifest.mjs`、`scripts/ci-full-batches.test.mjs`、`scripts/TESTING.md`。
+  - 文件：本計畫（§2f.7）、`BACKLOG.md`（移除 `CONTRACT-LEGACY-01`；`REFACTOR-AUDIT-01` 補記第 4 期 4-A 結果，不結案）。
+- 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（§9.3）。不修改 `main`。
+
+### 2f.7 待決
+
+1. 是否批准依本節實作（commit／push 另批）。
+2. §2f.4 第 5 點：刪除 `npb-farewell.test` 的 `'base and active definitions agree'` 斷言。
+3. §2f.4 第 4 點：新增 `overlay-hook.test`，Full 入口數 84→85。
+4. §2f.5-2：執行期證據以 scratchpad worktree 的 Full（4 組平行）進行。
+
+- 使用者決定（2026-10-22）：上列 1～4 項皆批准。commit／push 另批。實作從 §2f.5-0 開始，順序依 §2f.5。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -779,6 +931,7 @@ export class CareerSession {
 
 ### 3.4 第 4 期：LEGACY 覆寫
 
+- 細部計畫見 §2f（範圍已修正：只做 4-A）。以下為原概要。
 - 32 組逐組決定「合併為單一版本」或「`extends` + `super`」；捕獲原函式與讀取新綁定的語意差異需逐組驗證（STAGE5 稽核）。
 - 刪除舊定義前需執行期可達性證據；包含檔頭 RNG 舊定義與 `_s`（同時調整 `fixed-seed-v160`）。
 
