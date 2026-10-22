@@ -14,7 +14,7 @@
 | 1b | `Rng` 觀測 hook | 測試改用正式 hook 計數，脫離原始碼字串替換 | L3 / R3（含 `game.js` RNG 路徑） | 完成；同 PR #5，見 §2b.6 |
 | 1c | `Rng` 方法化 | `ri`／`pick`／`chance`／`N0`／`pickRecord` 改由 `Rng` 提供 | L3 / R3 | 暫緩（方案 A，2026-10-18 使用者決定）；細部計畫見 §2c |
 | 2 | `GameView` | `card`／`divider`／`board`／`choose` 等純 DOM 操作移出；`allocUI` 暫緩 | L3 / R3 | 完成；PR #8 併入 `dev`（`26efa59`），合併 `1bc65df` 的衝突與重新驗證見 §2d.11；T14 測試修正為 PR #9；GitHub Actions CI 未確認 |
-| 3 | `CareerSession` | 收容 `S` 外狀態（`stepQ`、`choiceGeneration` 等）與年度流程函式 | L3 | 概要 |
+| 3 | `CareerSession` | 收容 `S` 外的流程／選項控制狀態（3-A）與 JP 覆寫 IIFE 內的 context 變數（3-B）；不含 `S`、`careerRng`、年度流程函式 | L3 / R3 | 本機完成（§2e.7，`refactor/career-session` `db5c39b`）；待 push、PR 併入 `dev`、GitHub Actions CI |
 | 4 | LEGACY 覆寫逐組處理 | 32 組覆寫逐組決定合併或 `super` | L3 | 概要 |
 
 共通原則：
@@ -585,6 +585,177 @@ export class GameView {
   - 修正（2026-10-21，使用者批准）：PR #8 併入 `dev`（`26efa59`）後，另開 `fix/intl-stats-board-menu`（PR #9 → `dev`），`68f6138` 將 T14 改用 `openBoardAction(p,'board-preferences')`（斷言不變）。`international-personal-stats-e2e` 於 `1bc65df` 基底與 `68f6138` 皆 PASS（221／217 秒）；`68f6138` Quick 63 PASS／0 FAIL／0 SKIP／0 BLOCKED。Full 未重跑。
 - 未確認：GitHub Actions CI。
 
+## 2e. 第 3 期：`CareerSession`（細部計畫，2026-10-21）
+
+### 2e.1 目標與範圍
+
+- 目標：把 `game.js` 中散在模組層級與 JP 覆寫 IIFE 內、屬於「一場生涯的流程狀態」的可變變數，收入單一 `CareerSession` 實例。只作容器搬移，不改流程邏輯。
+- 範圍內，分兩個子期，前一子期驗證通過後才進下一個：
+  - **3-A**（模組層級）：`stepQ`、`choiceGeneration`、`activeChoiceToken`、`resultViewDepth`、`currentChoiceAction`、`currentChoiceContext`。
+  - **3-B**（JP 覆寫 IIFE `2778`～`3319` 的閉包區域變數）：`pendingOffseasonSalary`、`npbReturnOfferContext`、`seasonEndContext`、`corpSettlements`。
+- 範圍外（2026-10-21 使用者確認）：
+  - `S`、`careerRng`、`_s`、`SEED`：維持模組層級的直接名稱。`S` 被全部 E2E 注入碼直接引用；`careerRng` 只在 IIFE 初始化時建立一次（`2815`），且 `tests/support/rng-instrument.mjs:5` 以 `/^let careerRng = null;$/m` 判斷計數路徑，該行改變會靜默退回舊替換方式。
+  - `gameView`（`632`，§3.3 原稱 `view`）：第 2 期的畫面物件，不持有生涯狀態。
+  - `_curYearBody`／`MAX_YEARS`：同 §2d.3。
+  - `choiceViews`／`seasonContinuations`／`yearHandoffs`（`693`）：以 `S` 為 key 的 WeakMap，已按生涯區分。
+  - 函式型 `let`（`applyPromotionSalary` 等 `1638`～`1644`、`resumeSeasonEnd:694`）：LEGACY 覆寫，第 4 期。
+  - 年度流程函式（`startYear`、`nextStep`、`phase*`、`advance`）本身：不搬移。
+  - `tools/development-a/runtime.mjs`：研究工具，非測試入口。其注入碼直接引用 `stepQ`（`:10`）與 `currentChoiceContext`（`:21`、`:22`），3-A 後將失效；不修改，只在此記錄（2026-10-21 使用者決定）。
+- §3.3 原概要的修正：`pendingOffseasonSalary` 等四項不是模組層級變數，而是 IIFE 閉包區域變數；`view` 不存在（實為 `gameView`）。
+- 允許差分：**無**。同一 seed／選擇的 `S`、RNG 值與呼叫次數、`#log`／`#act`／`#board` 的 DOM 完全一致。
+
+### 2e.2 現況（2026-10-21 唯讀確認，基準 `3267ee6`；`game.js` 與 `26efa59` 相同）
+
+`game.js` 內引用處（含宣告行）：
+
+| 變數 | 子期 | 宣告 | 引用行 | 測試耦合 |
+|---|---|---|---|---|
+| `stepQ` | 3-A | `233`（`let S=null, stepQ=[];`） | `764`、`771`、`3102` | E2E 注入：`stage10-risk-e2e:23,28`、`support/stage6-browser:20,21`、`full-power-pitching-e2e:29,31` |
+| `choiceGeneration` | 3-A | `686` | `698`、`703`、`712`、`717`、`722`、`725`、`2094`、`3249`、`3254` | `choice-action.test:112`（regex `\+\+choiceGeneration`）、`ui-foundation.test:38`（regex）、E2E 注入：`stage6-browser:20`、`bug-act-01-02-e2e:20` |
+| `activeChoiceToken` | 3-A | `686` | `714`、`717`、`722`、`2094` | E2E 注入：`stage6-browser:20`、`bug-act-01-02-e2e:20` |
+| `resultViewDepth` | 3-A | `690` | `710`、`718` | 無 |
+| `currentChoiceAction` | 3-A | `691` | `708`、`2951` | 無 |
+| `currentChoiceContext` | 3-A | `692` | `705`、`706`、`2086` | 無（`tools/development-a/runtime.mjs` 除外，§2e.1） |
+| `pendingOffseasonSalary` | 3-B | `2827` | `2874`～`2881`、`2894`、`2900`、`2951`、`3146`、`3234`、`3286` | 原文錨點：`kbo-renewal-floor.test:40`；vm context 屬性：`championship-intl.test:55`；E2E 注入：`stage10-risk:28`、`stage6-browser:21`、`kbo-renewal-e2e:22`、`npb-return-e2e:16`、`contract-salary-e2e:29` |
+| `npbReturnOfferContext` | 3-B | `3112` | `3124`、`3125`、`3139` | 原文錨點：`npb-return-ui.test:8`；E2E 注入：`npb-return-e2e:16`、`contract-salary-e2e:29` |
+| `seasonEndContext` | 3-B | `3205` | `3222`、`3273`、`3285` | 原文錨點：`championship-intl.test:56`；E2E 注入：`stage10-risk:28`、`stage6-browser:21`、`contract-salary-e2e:29` |
+| `corpSettlements` | 3-B | `3260`（`const … new WeakMap()`） | `3265`、`3266`、`3286` | 無 |
+
+- E2E 的注入位置皆在最後一個 `})();` 之前（例：`stage10-risk-e2e:36`、`support/stage6-browser:36`），因此注入碼以直接名稱同時讀寫模組層級與 IIFE 閉包變數。
+- 同一段注入碼會打入舊 SHA 的原始碼：`stage10-risk --compare`、`contract-salary-e2e`／`npb-return-e2e`／`kbo-renewal-e2e` 的 `/baseline`、`full-power-pitching-e2e` 的 `baseline`（各入口有各自的預設舊 SHA，例 `kbo-renewal-e2e:12` 為 `f3efb0a`、`full-power-pitching-e2e:11` 為 `20920dd`）。改名後注入碼必須能同時在新舊原始碼上運作。
+- 重設：`startJapanese`（`3310`）只重新指派 `S` 與 `SEED`，不重設上表任何變數；`btn-restart`（`3318`）以重新載入頁面重設。`btn-start` 能否不重新載入而第二次觸發未確認；與本期無關，本期不得新增重設（見 §2e.3）。
+- 持久化：上表變數皆不寫入 localStorage、分享 URL 或 `S`。
+- `game.js` 為 CRLF（第 1 期已知），修改時保持。
+
+### 2e.3 設計
+
+`docs/src/engine/career-session.js`（新）：
+
+```js
+export class CareerSession {
+  constructor() {
+    // 3-A
+    this.stepQ = [];
+    this.choiceGeneration = 0;
+    this.activeChoiceToken = null;
+    this.resultViewDepth = 0;
+    this.currentChoiceAction = null;
+    this.currentChoiceContext = null;
+    // 3-B
+    this.pendingOffseasonSalary = null;
+    this.npbReturnOfferContext = null;
+    this.seasonEndContext = null;
+    this.corpSettlements = new WeakMap();
+  }
+}
+```
+
+- 只有欄位，沒有方法；**不提供 `reset()`**。現行 `startJapanese` 不重設這些變數，新增重設即屬行為變更。
+- 不 import `game.js` 的任何狀態，不碰 DOM、不呼叫 RNG。採 class、獨立檔案，與第 1 期 `Rng`、第 2 期 `GameView` 一致（2026-10-21 使用者確認名稱）。
+- 3-B 的欄位在 3-A 時不先加入；各子期只加入該子期的欄位。
+
+`docs/src/engine/game.js`：
+
+- 3-A：`233` 改為 `let S=null;`，其後新增 `const careerSession=new CareerSession();`；刪除 `686`、`690`～`692` 的宣告；全部引用逐一改為 `careerSession.<name>`，運算子與順序不變（例：`++choiceGeneration` → `++careerSession.choiceGeneration`）。
+- 3-B：刪除 IIFE 內 `2827`、`3112`、`3205`、`3260` 的宣告，引用改為 `careerSession.<name>`。IIFE 可見模組層級，不需另外傳入。
+- 檢查點：
+  - 搬移前確認各名稱在引用處沒有被同名區域變數或參數遮蔽（遮蔽處不可改寫）。
+  - 實例建立早於任何讀寫：模組層級的呼叫與事件綁定皆在 `233` 之後。
+  - `corpSettlements` 的 WeakMap 建立時點由 IIFE 執行時提前至模組初始化；WeakMap 無可觀測副作用，差分＝無。
+  - 改寫後 `game.js` 內以 `\b<name>\b` grep，除 `careerSession.<name>` 與 `career-session.js` 外為 0。
+
+### 2e.4 測試變更（harness 變更，非期望值變更，需揭露）
+
+- 新增 `tests/support/career-session-access.mjs`：輸入被注入的原始碼文字，回傳一段注入前導碼，定義 `__cs` 物件，每個欄位各一組 getter／setter。
+  - 原始碼含 `new CareerSession(` → 指向 `careerSession.<name>`；否則確認舊宣告存在（例 `let S=null, stepQ=[];`、`  let pendingOffseasonSalary=null;`）→ 指向直接名稱。
+  - 兩者皆不符時 **throw**，不靜默退回（避免 `rng-instrument` 式的靜默失效）。
+  - 3-A 完成而 3-B 未完成的中間狀態也須正確判斷（各欄位分別判斷）。
+  - `scripts/test-manifest.mjs` 的 `nonTests` 登記此檔。
+- E2E 注入碼改用 `__cs.<name>`，並在注入時加上前導碼：`stage10-risk-e2e`、`support/stage6-browser`、`full-power-pitching-e2e`、`kbo-renewal-e2e`、`npb-return-e2e`、`contract-salary-e2e`、`bug-act-01-02-e2e`。斷言不變。
+- 原始碼 regex：`choice-action.test:112`、`ui-foundation.test:38` 改為比對 `careerSession.choiceGeneration`；斷言意圖不變。
+- 原文錨點與 vm context：`kbo-renewal-floor.test:40`、`npb-return-ui.test:8`、`championship-intl.test:55–56` 改用 3-B 後仍存在的錨點，並在 vm context 提供 `careerSession` stub（取代原本的 `pendingOffseasonSalary:null` 等）。新錨點於實作時逐檔確認，切出的程式範圍須與現行相同。
+- 順序：先建 `career-session-access.mjs` 並改好 E2E 注入，在**未修改的 `game.js`** 上確認上列 E2E 全 PASS；負控制：對不含任何已知宣告的原始碼呼叫時確實 throw。之後才進 3-A。
+
+### 2e.5 驗證（L3 / R3）
+
+比較基準：`3267ee68c2d9e5d36d4fd57ba4a74e101088cb14`（`origin/dev`，PR #9 merge commit；`game.js` 與 `26efa59` 相同）。各 E2E 的既有預設舊 SHA 不變。
+
+每個子期：
+
+1. `node scripts/check-syntax.mjs`。
+2. 相關單元：`choice-action`、`ui-foundation`、`kbo-renewal-floor`、`npb-return-ui`、`championship-intl`、`fixed-seed-v160`、`rng-instrument`。
+3. `game-view-dom-e2e`：對基準的 DOM／`S`／RNG 計數差分＝無。
+4. 相關 E2E：`stage10-risk-e2e`、`stage6-*`（經 `support/stage6-browser`）、`full-power-pitching-e2e`、`kbo-renewal-e2e`、`npb-return-e2e`、`contract-salary-e2e`、`bug-act-01-02-e2e`。
+5. Quick。
+
+兩個子期完成後：
+
+6. Full（本機 Brave＋`--disable-features=BraveFarbling`）。L3 證據以本機為主（§1.1-7）。
+7. PC（1280）／手機（390）目視：開始、年度選項、季末結算、NPB 回歸／契約選項、退休畫面。Console／404 為 0。
+8. 記錄 `game.js` 行號變動（§1.1-5）。
+9. reviewer。
+
+### 2e.6 交付與待決
+
+- 分支：`refactor/career-session`（自 `origin/dev` `3267ee6` 建立）。3-A、3-B 各自 commit，合為一個 PR 併入 `dev`；Full 於兩個子期完成後執行一次。不修改 `main`。
+- 變更檔：
+  - 新增：`docs/src/engine/career-session.js`、`tests/support/career-session-access.mjs`。
+  - 修改：`docs/src/engine/game.js`、§2e.4 所列測試、`scripts/test-manifest.mjs`。
+  - 不新增測試入口（Full 入口數不變）。
+- 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC。
+- 使用者決定（2026-10-21）：
+  1. 範圍為 3-A 與 3-B（推薦案為暫緩；使用者選擇兩者皆做）。
+  2. `S`、`careerRng`、`_s`、`SEED`、`gameView`、`_curYearBody` 等排除於本期（§2e.1）。
+  3. 名稱 `CareerSession`、實例 `careerSession`、獨立檔案。
+  4. `tools/development-a/runtime.mjs` 不修改，只記錄。
+- 待決：是否批准依本節實作（commit／push 另批）。→ 2026-10-21 使用者批准實作；2026-10-22 批准本機 commit（push 另批）。
+
+### 2e.7 實施結果（2026-10-21～22，本機）
+
+| commit | 內容 |
+|---|---|
+| `e39831b` | harness：`tests/support/career-session-access.mjs`、7 支 E2E 注入改用 `__cs`、`scripts/test-manifest.mjs` 登記 |
+| `d303c32` | 3-A：新增 `docs/src/engine/career-session.js`；`game.js` 6 個變數改為 `careerSession.<name>`（34 處）；`choice-action.test:112`、`ui-foundation.test:38` 的 regex |
+| `db5c39b` | 3-B：IIFE 內 4 個變數改為 `careerSession.<name>`（28 處）；`kbo-renewal-floor.test:40`、`npb-return-ui.test:8,12`、`championship-intl.test:55–56` 的錨點與 vm stub |
+
+- 實作與驗證以 `git worktree` 並行（2026-10-21 使用者批准）：3-B 在 3-A 的 E2E 執行期間於另一 worktree 實作，**未等 3-A 驗證通過才開始**（與 §2e.1「前一子期驗證通過後才進下一個」不同）；3-B 的驗證在 3-A 全數通過後才執行，commit 依 harness → 3-A → 3-B 順序建立。HEAD 檔案與已驗證的 worktree 逐檔一致（`cmp`）。
+- E2E 改為分組平行執行（2026-10-21 使用者批准；各組獨立 `--output`，伺服器皆 `listen(0)`）。
+
+驗證（本機 macOS，Brave＋`--disable-features=BraveFarbling`；比較基準 `3267ee68c2d9e5d36d4fd57ba4a74e101088cb14`）：
+
+| 階段 | 結果 |
+|---|---|
+| harness，未修改的 `game.js` | 相關 E2E 12 入口 12 PASS／0 FAIL／0 SKIP／0 BLOCKED（1121 秒，`test-results/2026-10-21T15-23-37-964Z-full/`）。負控制：無 IIFE 結尾、無任何欄位、欄位缺漏的 get／set 皆 throw；重複套用不重複注入；`game.js`＋`__cs` 可解析。各 E2E 舊基準（`37121fb`、`f3efb0a`、`20920dd`、`73d5a58`、`origin/main`）的欄位判斷逐一確認，缺漏欄位為 MISSING（存取時 throw） |
+| 3-A | `check-syntax` PASS；相關單元 7 支 PASS；Quick 63 PASS／0 FAIL／0 SKIP／0 BLOCKED；相關 E2E 12 PASS（4 組平行）；`game-view-dom-e2e --baseline=3267ee6`：8 生涯（P／IF／OF，1280／390）DOM／`S`／RNG 完全一致 |
+| 3-B | 同上：`check-syntax`、相關單元 7 支（含 `kbo-renewal-floor --baseline=3267ee6`）PASS；Quick 63 PASS；相關 E2E 12 PASS；`game-view-dom-e2e` 8 生涯完全一致 |
+| Full（`db5c39b`） | 4 組平行（21／21／21／20 入口），合計 **83 PASS／0 FAIL／0 SKIP／0 BLOCKED**，83 入口不重複、4 份報告的 `head` 皆為 `db5c39b`；最長一組 443 秒（`test-results/phase3-full-g0`～`g3/`）。此為分組執行，非單一 Full 報告；`ci-full-batches` 的嚴格彙整未執行 |
+| 目視 | Playwright MCP 瀏覽器、本機靜態伺服器：1280 寬投手 `yakyo-test-001` 自開始至退休畫面（542 步）；390 寬同一退休畫面與內野手 `jp3-infielder-01` 年度能力分配（75 步）。Console 0、失敗請求 0、390 寬無橫向捲動 |
+| reviewer | 無問題（引用遺漏／重複前綴／遮蔽、求值順序與初始化時點、`__cs` 假 PASS、錨點範圍、換行混用皆檢查） |
+
+- 驗證中的 BLOCKED：3-A 第一次分組執行以相對路徑指定 `--playwright`，全部入口 BLOCKED（模組解析失敗，測試未執行）；改為絕對路徑重跑後如上。
+- `game.js` 行號變動（§1.1-5；舊＝`3267ee6`，3319 行 → 3313 行）：舊 1–2：0；3–233：+1；234–685：+2；687–689：+1；693–2826：−2；2828–3111：−3；3113–3204：−4；3206–3259：−5；3261–3319：−6。
+- 範圍外的觀察（未修改）：桌面版左欄「コンディション」的 TJゲージ顯示未四捨五入的小數（例 `13.947368421052632`）。`game-view-dom-e2e` 判定 `#log`／`#act`／`#board` 與基準一致，原始碼確認為既有表示（`buildAbilityViewModel` 的 `String(S.tj||0)`，自 `08d0759` 起，`3267ee6` 相同）；未在基準 SHA 上目視確認。已列 BACKLOG `UI-TJ-GAUGE-01`（2026-10-22 使用者批准）。
+- 已知影響：`tools/development-a/runtime.mjs` 的注入碼引用 `stepQ`、`currentChoiceContext`，3-A 後失效（§2e.1 決定不修改）。
+- 未確認：GitHub Actions CI。
+
+### 2e.8 PR #10 合併 `dev` 與重新驗證（2026-10-22，本機）
+
+- 原因：PR #10（`refactor/career-session` → `dev`）未合併期間，`origin/dev` 新增 `4cb4c98`（1.13.3，引退送別改為日本球界；改 `game.js` 的 `daibaFarewell` 2 處、`npb-return-ui.test`、`event-fix-e2e`，新增 `npb-farewell.test`）。
+- 合併：`29ef092`（`origin/dev` → 本分支，不 rebase、不 force push），無文字衝突；`npb-return-ui.test.mjs` 自動合併（本分支改檔頭錨點與 vm stub，`dev` 改檔尾送別比對）。已 push（`b0f5f88..29ef092`）。
+- 比較基準：`4cb4c987792f6d1291fb76b73af4e9eb332931ec`（`origin/dev`）。
+- 驗證（對象：`29ef092`；本機 macOS，Brave 155＋`--disable-features=BraveFarbling`，非 CI）：
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（160 檔） |
+| 相關單元 | `choice-action`、`ui-foundation`、`npb-return-ui`、`championship-intl`、`fixed-seed-v160`、`rng-instrument`、`npb-farewell`、`award-identity-policy`、`kbo-renewal-floor --baseline=4cb4c98`、`verify-modularization` 皆 PASS |
+| `game-view-dom-e2e --baseline=4cb4c98` | PASS：8 生涯 DOM／`S`／RNG 每一步完全一致 |
+| Quick | 64 PASS／0 FAIL／0 SKIP／0 BLOCKED（110 秒，`test-results/merge-dev-quick/`） |
+| Full | 4 組平行（19／21／21／23 入口），合計 **84 PASS／0 FAIL／0 SKIP／0 BLOCKED**，84 入口不重複、4 份報告的 `head` 皆為 `29ef092`；最長一組 462 秒（`test-results/merge-dev-full-g0`～`g3/`）。分組執行，非單一 Full 報告；`ci-full-batches` 的嚴格彙整未執行 |
+
+- reviewer：未執行（合併無衝突解決，本分支無新增邏輯）。
+- 未確認：GitHub Actions CI（push `29ef092` 後）。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -602,6 +773,7 @@ export class GameView {
 
 ### 3.3 第 3 期：`CareerSession`
 
+- 細部計畫見 §2e（範圍已修正）。以下為原概要。
 - 收容 `S`、`careerRng`、`view` 及 `S` 外狀態（`stepQ`、`choiceGeneration`、`activeChoiceToken`、`pendingOffseasonSalary`、`npbReturnOfferContext`、`corpSettlements`、`seasonEndContext`）。
 - 先作為容器搬移，不改流程邏輯。
 

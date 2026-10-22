@@ -111,7 +111,7 @@
 
 - [x] **TRAIT-PITCHER-TC** — `LOCAL_PASS / USER_ACCEPTED`。正式P01～P08第一階段及可信同年同聯盟三實得P07／pitcherTC／MVP已由A與B驗收並獲使用者接受；B本機提交56e72d9792529f3221c1a1ffadaf563bceebe26d。Quick61／Full80、原生producer→Decision→Receipt→Consumer、PC／320／390及四條A策略／同B重播證據見[B驗收](docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md)。新獎自然平衡與完整B實機UI仍未驗證；版本／CI／Preview／發布由D2-G9-RELEASE獨立追蹤，不混為已發布。
 
-## 3. 未完成工作（27 項）
+## 3. 未完成工作（28 項）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（4 項）
 
@@ -137,13 +137,14 @@
 - [ ] **SHARE-111-DEVICE** — `BLOCKED`。iPhone／Android／PC 的原生 share sheet、取消、PNG 主題、圖片分享與儲存驗收。
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。重新檢查所有可到達的日文文案、野球術語與畫面位置；與 v1.8.2 的 92 事件翻譯替換分開管理，不擅自全面重翻。
 
-### 3.4 P2 — 規格待決與保留（5 項）
+### 3.4 P2 — 規格待決與保留（6 項）
 
 - [ ] **OVR-01** — `DESIGN_PENDING`。野手 OVR 加入 stamina 5% 的提案，先比較現行公式與提案，批准後才能修改。
 - [ ] **TRAIT-NITENICHI** — `承認済み保留`。二天一流，須先有獲批准的二刀流及投手三冠制度。
 - [ ] **TRAIT-CHAMPIONMAKER** — `承認済み保留`。優勝請負人，待累計 5 冠、計算範圍、勝率加成及 RNG 政策核准。
 - [ ] **CONTRACT-LEGACY-01** — `重構候補・要調査`。確認舊 `makeOffers`／`pickOfferUI`／市場定義是否真正不可達；未驗證固定 Seed、契約回歸前不得刪除。
 - [ ] **CONTRACT-ASIA-01** — `未実装・仕様待ち`。KBO 亞洲名額及球團整體外國人預算，與現有 `FOREIGN_STANDARD` 不同。
+- [ ] **UI-TJ-GAUGE-01** — `未着手・表示規則待ち`。能力畫面「コンディション」的 TJゲージ以 `String(S.tj||0)` 顯示未四捨五入的小數（例 `13.947368421052632`；`buildAbilityViewModel`，自 `08d0759` 起）。2026-10-22 第3期目視確認時發現，與 CareerSession 重構無關。需先決定顯示位數與是否顯示上限（50／100），只改表示、不改 `S.tj` 計算與 RNG。
 
 ### 3.5 P2 — 未來功能候補（10 項）
 
