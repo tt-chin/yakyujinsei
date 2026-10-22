@@ -1103,6 +1103,35 @@ export class CareerPresenter {
 - 32 組逐組決定「合併為單一版本」或「`extends` + `super`」；捕獲原函式與讀取新綁定的語意差異需逐組驗證（STAGE5 稽核）。
 - 刪除舊定義前需執行期可達性證據；包含檔頭 RNG 舊定義與 `_s`（同時調整 `fixed-seed-v160`）。
 
+### 3.5 第 6 期候補：耦合調查摘要（2026-10-23，基準 `097e212`，scout 唯讀調查；未 commit 的原始表格已隨 session 消失）
+
+- 方法：acorn＋eslint-scope 對 `game.js`（當時 2904 行）的頂層宣告做清單與靜態呼叫圖，依名稱與呼叫關係人工分群。分群為啟發式，群間有重疊（例：`advance`、`endGame`、`retireScene` 各出現在兩群）。第 5 期後 `view_models` 已移出。
+- 頂層宣告 276 個（原 IIFE 前 176、後 100）。模組層級可變綁定：`SEED, _s, S, careerRng, resumeSeasonEnd, CHEER, CHEER_SAFE, applyPromotionSalary, applyDemotionSalary, markClubInitiatedRenewal, salaryDForContract, salaryCandidate, recordSalaryEvaluation, recordIndependentSalaryEvaluation, appendContractExtension, selPos, signingRenderRetry`。
+
+| 群 | 成員 | 行數 | 群內／跨群呼叫 | RNG |
+|---|---|---|---|---|
+| `year_season_flow` | phasePre, phaseMid, proSeason, resumeProfessionalSeason, advance, startYear, nextStep, phaseEnd, phaseIntlPre, settlePhaseEnd, allocDone, checkTraitsMid, evOdds | 260 | 11／76 | 有 |
+| `market_fa` | faYears, demotionAudit, tradeCheck, portionOf, faFlow, faMarket, showFaMarket, priceFaOffer, acceptFaOffer, faOfferText, outOfOrg, crossOffers, overseasOffer, renewAndAdvance, arbitrationFlow | 163 | 8／89 | 有 |
+| `contract_salary` | movement, buyoutRemaining, handleDemotion, retireBelowActiveMinimum, termParams, termChoice, extensionOffer, ageGateUSA, ageGateJP, advance, applyLevelSalary, finalizePendingOffseasonSalary, saveSalaryDecision, saveSalaryEvaluation, salaryDecisionLink, salaryDecisionSummary, bindLatestSalaryDetailLink | 172 | 17／61 | 有 |
+| `let_overrides`（4-D） | applyPromotionSalary, applyDemotionSalary, markClubInitiatedRenewal, salaryDForContract, salaryCandidate, recordSalaryEvaluation, recordIndependentSalaryEvaluation, appendContractExtension, resumeSeasonEnd（`let` stub，覆寫區重新指派） | 41 | 0／0 | 無（本體內呼叫者另計） |
+| `contract_state` | newState, nextContractId, fixedContract, signTo, doTradeExec, stageLabel, salaryFor, migrateSalaryV130State, migrateSalaryV140State | 45 | 3／30 | 有 |
+| `salary_helpers` | serviceYearsFor, contractStageFor, currentMarketResult, currentMarketRating, previousSalaryForOffer, hadAmericanContract, kboPreviousPackage | 10 | 2／0 | 無 |
+| `awards_hof` | awards, collectLegacyAwardPlan, renderCheckpointCard, careerScore, careerAllStars, honorScore, tierOf, retireScene, endGame | 272 | 6／27 | 有 |
+| `events_love` | evOdds, eventChoiceSummary, drawEvents, partnerJob, datePool, affairPool, loveEvent, divorceRec, loveCaught, proposalAsk, loveCaughtDating, loveGainTxt, renderEventResult, resolveEvent | 190 | 14／35 | 有 |
+| `amateur_draft_path` | setSchool, setAmateur, enterDraftPath, draftFallback, runDraft, pathChoiceHS, pathChoiceU4, amateurSeason, cupOnce, qualifierOnce | 80 | 11／42 | 有 |
+| `injury_tj` | injuryProb, rollInjury, injStatLoss, tjAccrue, tjCap, tjGamble, tjTwoStrike, tjBigInjury, afterGamble | 108 | 8／25 | 有 |
+| `stats_sim` | blankStat, bucketOf, simSeason, applySeasonForm, defRuns, addStatTotal, accStat, accLevelStat, statLine, slgOf, fmtIP, isSP, pitcherRole, roleN | 187 | 12／7 | 有 |
+| `international` | intlEvents, intlPhase, intlThreshold, intlLevelEligible, addIntlStats, completeIntl, processIntlPhase, maybeIntl | 50 | 7／10 | 有 |
+| `ui_board` | $, logTarget, card, divider, board, boardModel, actClear, actToggleSync, escapeDiagnosticHTML, choose, allocUI, restorePendingChoice, invokeAnnualChoice, invokeChoiceAction, scrollAction, runWithResultView, scrollBottom | 100 | 23／8 | 無 |
+| 其他 | `ability_traits`（14 個／125 行，無 RNG）、`dp_defense`（6／90，無）、`career_stats`（7／65，無）、`share_retire`（shareImage 等 3／354，有）、`movement_settle`（5／52，無）、`team_misc`（6／6，有）、`rng_seed`（15／17，有） | | | |
+
+- 測試的原始碼文字耦合（scout 清單；**不完整**：漏列 `information-architecture.test`、`record-condition-fix.test` 的 regex 錨點，第 5 期實作時才發現。規劃第 6 期時須對目標函式重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`）：
+  - `productionFunction`：`fnv1a32`、`tjCap`、`tjAccrue`、`proSeason`、`resumeProfessionalSeason`、`phasePre`、`tjGamble`、`applySeasonForm`、`simSeason`、`renderCheckpointCard`、`awards`、`collectLegacyAwardPlan`、`isSP`、`removeTrait`，及 `retirement-hof-test-support` 的 `careerScore`／`capTeam`／`defShare`／`posLegendPhrase`／`honorScore`／`tierOf`／`retireScene`／`blankStat`／`addStatTotal`／`accStat`。
+  - `indexOf` 切片（起點→終點）：`fmtIP→roleN`、`addIntlStats→completeIntl`、`afterGamble→pitcherRole`、`awards→maybeIntl|let applyPromotionSalary`、`seedInit→clamp`、`allocUI→nextStep`、`movement(){→advance()`、`movement(){→buyoutRemaining`、`handleDemotion→retireBelowActiveMinimum`、`salaryCandidate=→saveSalaryDecision`、`buyoutRemaining→handleDemotion`、`simSeason→/* シーズン状態は10%`、`dpQual→const DP_RANK=`、`eventChoiceSummary→drawEvents`、`accLevelStat→statLine`、`evOdds→drawEvents`、`resolveEvent→/* シーズン中即時可解鎖的特性。 */`、`newState→const nextContractId`、`saveSalaryEvaluation→recordSalaryEvaluation=function(`、`professionalEnds…→movement = function()`；`kbo-renewal-floor` 另以 `between()` 切 `salaryFor`、`salaryCandidate=`、`finalizePendingOffseasonSalary`、`applyLevelSalary` 等。
+  - 與基準逐字比較：`full-power-pitching-e2e`（tjAccrue／tjCap／phasePre／proSeason）、`npb-return-ui`（4 段）、`event-copy`、`international-personal-stats`。
+  - 計數：`salary-flow.test` 的 `R(` 28、`ri(` 43、`chance(`＋slot 45、`pick(` 14 等（搬移函式到其他模組時，`game.js` 內的計數會改變）。
+- 對第 6 期的含意（未決定）：`let_overrides` 的 8 個薪資 stub＋`salary_helpers` 是範圍最小、跨群呼叫最少的候補，但被 `kbo-renewal-floor`、`salary-evaluation-receipt`、`npb-return-ui` 以文字切片；`contract_salary`／`market_fa` 跨群呼叫多；`year_season_flow` 是整個遊戲迴圈，風險最高。4-D 原決定「不做」，若採用須重新取得決定。
+
 ## 4. 使用者決定（2026-10-18）
 
 1. 前置 1：D2-G9-RELEASE 殘項未結案，仍可開始第 1 期的本機實作與驗證；重構 PR 併入 `dev` 的時機另行決定。
