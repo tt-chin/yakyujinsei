@@ -5,7 +5,7 @@ import {runInNewContext} from 'node:vm';
 import {createContract,markSalaryPaid,appendExtension,contractNeedsRenewal} from '../docs/src/engine/contract-policy.js';
 
 const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
-const source=game.slice(game.indexOf('  crossOffers = function(o){'),game.indexOf('  function renewAndAdvance'));
+const source=game.slice(Math.max(game.indexOf('  function crossOffers(o){'),game.indexOf('  crossOffers = function(o){')),game.indexOf('  function renewAndAdvance'));
 function fixture(org,level,years=1){
   const original=createContract({contractId:'test',org,teamId:'team',signedYear:2035,startYear:2035,years,annualSalary:120_000_000});
   const s={year:2035,org,lv:level,ct:markSalaryPaid(original,2035).contract},calls={draw:0,advance:0,sign:0,years:0,buyout:0};let buttons;

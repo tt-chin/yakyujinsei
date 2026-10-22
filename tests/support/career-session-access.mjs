@@ -1,13 +1,12 @@
-// Test-only accessor for injected E2E hooks. Defines `__cs` before the last `})();` of game.js, so hooks read/write
+// Test-only accessor for injected E2E hooks. Defines `__cs` at the overlay hook point (overlay-hook.mjs), so hooks read/write
 // career flow state the same way on current sources (careerSession.<name>) and old baselines (bare let/const bindings).
 // A field found in neither form throws on access instead of reading undefined; `__cs.has(name)` replaces `typeof name` guards.
+import {injectOverlayHook} from './overlay-hook.mjs';
 const FIELDS = ['stepQ','choiceGeneration','activeChoiceToken','resultViewDepth','currentChoiceAction','currentChoiceContext',
   'pendingOffseasonSalary','npbReturnOfferContext','seasonEndContext','corpSettlements'];
 const MARK = 'const __cs={';
 export function withCareerSessionAccess(source) {
   if (source.includes(MARK)) return source;
-  const at = source.lastIndexOf('})();');
-  if (at < 0) throw Error('CAREER_SESSION_ACCESS_NO_IIFE_END');
   const present = [];
   const props = FIELDS.map(name => {
     const target = source.includes('careerSession.' + name) ? 'careerSession.' + name
@@ -18,5 +17,5 @@ export function withCareerSessionAccess(source) {
   });
   if (!present.length) throw Error('CAREER_SESSION_ACCESS_NO_FIELDS');
   props.push(`has(n){return ${JSON.stringify(present)}.includes(n);}`);
-  return source.slice(0, at) + `\n${MARK}${props.join(',')}};\n` + source.slice(at);
+  return injectOverlayHook(source, `\n${MARK}${props.join(',')}};\n`);
 }

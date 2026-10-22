@@ -25,7 +25,7 @@ function instrument(source){
  source=instrumentRng(source.replace('applyKboForeignPackageCap }','applyKboForeignPackageCap as originalApplyKboForeignPackageCap }'),'__rngCalls')
   .replace("if(targetOrg==='KBO'){const cap=","if(targetOrg==='KBO'){window.__kboCandidate={sourceLevel,targetLevel,rating,convertedRating,baseSalary,raw,contractMult,positionMult,transferType,previousSalary,cross,injury};const cap=");
  source=withCareerSessionAccess(source);
- const at=source.lastIndexOf('})();');assert.ok(at>0);return source.slice(0,at)+hook+source.slice(at);
+ return injectOverlayHook(source,hook);
 }
 const cache=new Map(),server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),old=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname).replace(/^\/(baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');if(old&&!cache.has(rel))cache.set(rel,execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20e6}));let body=old?cache.get(rel):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(body);}catch(error){res.statusCode=404;res.end(String(error));}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -93,3 +93,4 @@ try{
 import {withApprovedBirthSnapshot} from './support/baseline-initial-potential.mjs';
 import {instrumentRng} from './support/rng-instrument.mjs';
 import {withCareerSessionAccess} from './support/career-session-access.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';

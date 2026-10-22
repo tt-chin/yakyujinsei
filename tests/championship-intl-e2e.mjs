@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import {instrumentRng} from './support/rng-instrument.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),baseline='004cd26';
 const arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
@@ -22,7 +23,7 @@ window.__champTest={${getter},
  retire:()=>endGame('優勝・国際特性の表示検証'),
  share:()=>{const out=document.createElement('div');document.body.appendChild(out);const text=[],base=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(t,...a){text.push(t);return base.call(this,t,...a);};try{shareImage([],out);return {png:out.querySelector('img').src,text};}finally{CanvasRenderingContext2D.prototype.fillText=base;out.remove();}}
 };`;
-function instrument(content,old=false){content=instrumentRng(content,'__rngCalls');const at=content.lastIndexOf('})();');return content.slice(0,at)+(old?`window.__champTest={${getter}};`:hook)+content.slice(at);}
+function instrument(content,old=false){content=instrumentRng(content,'__rngCalls');return injectOverlayHook(content,old?`window.__champTest={${getter}};`:hook);}
 const cache=new Map();
 const server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),old=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname).replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('Invalid path');if(old&&!cache.has(rel))cache.set(rel,execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20*1024*1024}));let content=old?cache.get(rel):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')content=instrument(content.toString(),old);res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);}catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));

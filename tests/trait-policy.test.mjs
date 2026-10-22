@@ -102,7 +102,8 @@ vm.runInContext("afterGamble('inject',()=>{})",rubberContext);
 assert.equal(rubberState.traits.rubber,true);assert.match(rubberCards[0][2],/上限が50から100に、注射成功率が55%から85%に上昇/);assert.doesNotMatch(rubberCards[0][2],/2倍/);
 assert.match(current,/const succP=S\.traits\.rubber\?85:55/);assert.match(current,/return S\.traits\.rubber\?100:50/);
 const oldGame=execFileSync('git',['show','9fcb24a:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:3e6});
-const awards=source=>source.slice(source.indexOf('function awards('),source.indexOf('function maybeIntl('));
+// Old sources end at the base maybeIntl; after phase 4-A deletes it (and phaseEnd), the next definition is the salary stub.
+const awards=source=>source.slice(source.indexOf('function awards('),source.search(/^(?:function maybeIntl\(|let applyPromotionSalary=)/m));
 function journalFixture(ctx,chances,state){
  Object.assign(state,{seed:'trait-award-fixture',pool:0,removed:[],rngState:0});
  Object.assign(ctx,transactions,{SEED:state.seed,getAwardDefinition,structuredClone,hasCurrentAwardEffect,teamNick:x=>x,traitPresentation:new WeakMap(),R:()=>{state.rngState++;return .9999999999;},

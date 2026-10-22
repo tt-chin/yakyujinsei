@@ -6,6 +6,7 @@ import {harness,arg,instrument} from './support/stage6-browser.mjs';
 import {TRAIT_LABELS,TRAIT_TEXT} from '../docs/src/engine/trait-policy.js';
 import {EVENT_TRAIT_TEXT} from '../docs/src/engine/event-policy.js';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';
 
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'a0b880bb7e7fe74e743daa0cb8144455c9fdded2')+'^{commit}'],{encoding:'utf8'}).trim();
 const source=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
@@ -29,7 +30,7 @@ const hook=`window.__traitDisplay={
 };`;
 async function page(width,pos='IF',seed='trait-display',old=false){
  const p=await h.page(width,pos,seed);
- await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(source):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);const at=body.lastIndexOf('})();');await route.fulfill({response,body:body.slice(0,at)+hook+body.slice(at)});});
+ await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(source):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook)});});
  await p.reload();await p.waitForFunction(()=>window.__traitDisplay&&!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
 }
 const descriptions={...TRAIT_TEXT,...EVENT_TRAIT_TEXT};
