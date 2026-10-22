@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE4A_LOCAL_DONE（2026-10-23）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE4A_LOCAL_DONE / PHASE5_LOCAL_DONE（2026-10-23）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -16,6 +16,7 @@
 | 2 | `GameView` | `card`／`divider`／`board`／`choose` 等純 DOM 操作移出；`allocUI` 暫緩 | L3 / R3 | 完成；PR #8 併入 `dev`（`26efa59`），合併 `1bc65df` 的衝突與重新驗證見 §2d.11；T14 測試修正為 PR #9；GitHub Actions CI 未確認 |
 | 3 | `CareerSession` | 收容 `S` 外的流程／選項控制狀態（3-A）與 JP 覆寫 IIFE 內的 context 變數（3-B）；不含 `S`、`careerRng`、年度流程函式 | L3 / R3 | 本機完成（§2e.7，`refactor/career-session` `db5c39b`）；已 push，PR #10 → `dev` 待合併（§2e.8）；GitHub Actions CI 未確認 |
 | 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 本機完成（§2f.7，`refactor/legacy-overrides` `34c9c7b`）；未 push，PR → `dev` 待批准；GitHub Actions CI 未確認 |
+| 5 | `CareerPresenter` | `build*ViewModel`（`game.js:582–588`）移入 `docs/src/ui/career-presenter.js` 的類別，依賴以建構子注入；`game.js` 保留 5 個一行委派 | L2 / R2（PR 前 Full 一次） | 本機完成（§2g.8），未 commit |
 
 共通原則：
 
@@ -977,6 +978,103 @@ export function injectOverlayHook(source, hook) {
 - `game.js` 行號變動（§1.1-5；舊＝`d2a564e`，3313 → 2904 行）：1–236：0；265–601：−28；612–762：−38；770–834：−45；857–1141：−67；1147–1206：−72；1213–1252：−78；1273–1560：−98；1636–1754：−173；1763–1813：−181；1853–1892：−220；1961–1978：−288；2078–2754：−387；2774–2775：−406；2778–3312：−408（19 個宣告就地改寫，偏移相同）。其餘舊行已刪除。
 - reviewer（`d2a564e..` 的 `game.js`＋4 測試）：無問題（19 個轉換以規則重算後 diff 為空；IIFE 前區域僅刪除、保留的註解完好；CRLF 2904／2904；`LEGACY` 不捕獲 19 名稱、評估期間無引用；`salary-flow` 計數註解與實數一致）。23 支瀏覽器 E2E 未由 reviewer 重跑。
 - commit：`b29ccc8`（harness）、`34c9c7b`（`game.js`＋4 測試）、文件。`BACKLOG.md`：移除 `CONTRACT-LEGACY-01`（結案條件由 §2f.5-2 滿足）；`REFACTOR-AUDIT-01` 補記 4-A，不結案。
+
+## 2g. 第 5 期：`CareerPresenter`（細部計畫，2026-10-23）
+
+### 2g.1 目標與範圍
+
+- 目標：把唯讀的 view model 建構（STAGE5 路線 R3）從 `game.js` 抽成 `CareerPresenter` 類別，形成「核心 → presenter → view（`GameView`／`navigation`）」三層。第 2 期已把 DOM 操作移出；本期把「`S` → 顯示用資料」的轉換移出。
+- 範圍內：`buildRecordViewModel`、`buildAbilityViewModel`、`buildTraitsViewModel`、`buildPlayerViewModel`、`buildCareerViewModel`，以及只被它們使用的 `statSummary`、`rehabStatusText`（`game.js:582–588`，皆為單行）。
+- 範圍外：
+  - `UI-TJ-GAUGE-01`（`buildAbilityViewModel` 的 TJ 顯示）等顯示規則修正：§1.1-2，不與重構同一 change-set。本期期間凍結 `UI-TJ-GAUGE-01`、`INJ-UI-01`、`PLY-01`、`INT-01`（皆未開始，無並行衝突），完成後改在新模組上進行。
+  - `currentAffiliation`（`game.js:581`）：原始碼中只出現定義 1 次，疑似未使用；只記錄，不刪除。
+  - `tools/development-b/runtime.mjs`（引用 `buildCareerViewModel`）等歷史工具：不修改（委派保留名稱，引用仍有效）。
+- 允許差分：**無**。同一 seed／選擇的 `S`、RNG、`#log`／`#act`／`#board` DOM，以及每一步的 player／career view model 完全一致。
+- 使用者決定（2026-10-23）：命名、D2（保留委派）、風險等級 L2／R2（PR 前 Full 一次）皆依本節。
+
+### 2g.2 現況（2026-10-23 唯讀確認，基準 `097e212`；scout 調查＋抽查）
+
+| 項目 | 結果 |
+|---|---|
+| 讀寫 | 7 個函式皆只讀 `S`；不寫入狀態、不抽 RNG；回傳 `Object.freeze` 物件 |
+| 對外入口 | `initNavigation({onArchive…,onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel})`（`game.js:2900`）；`navigation.js`、`desktop-overview.js` 經 callback 取得。`docs/src/ui/*` 沒有直接呼叫 |
+| `game.js` 內依賴 | `fmtMoney`（574）、`fmtIP`、`displayTrait`（575）、`teamNick`（1067）、常數 `ABL`／`POS_AB`／`POSN`（65–67） |
+| import 依賴 | `formatRehabStatus`（`ui/condition-view-model.js`）、`removedTraitLabel`（`engine/trait-policy.js`）、`contractTypeLabel`（`ui/contract-labels.js`） |
+| 測試耦合 | `ui-foundation.test:40` regex `onOpenPlayer:buildPlayerViewModel`；`:41` regex `abilities:POS_AB\[S\.pos\]\.map`；`trait-display-e2e:18` hook 呼叫 `buildTraitsViewModel()` |
+| 既有驗證的涵蓋 | `game-view-dom-e2e` 只比對 `#log`／`#act`／`#board`，不含桌面左右欄與 player／career 畫面 |
+
+### 2g.3 設計
+
+新增 `docs/src/ui/career-presenter.js`（LF）：
+
+```js
+export class CareerPresenter {
+  constructor({getState, labels:{ABL,POS_AB,POSN}, fmtMoney, fmtIP, displayTrait, teamNick}) {…}
+  player()  // 原 buildPlayerViewModel
+  career()  // 原 buildCareerViewModel
+  ability() // 原 buildAbilityViewModel（含 rehabStatusText）
+  traits()  // 原 buildTraitsViewModel
+  record()  // 原 buildRecordViewModel（含 statSummary）
+}
+```
+
+- 本體逐字搬移；只把 `S` 改為每次呼叫時取得的 state、`game.js` 內依賴改為注入值、互相呼叫改為 `this.<method>()`。不得順手修改顯示規則或字串。
+- 3 個 import 由新模組直接 import。
+- `game.js`：import `CareerPresenter`；`const careerPresenter=new CareerPresenter({getState:()=>S,…})`；5 個 `build*ViewModel` 保留名稱，改為一行委派（例：`function buildPlayerViewModel(){return careerPresenter.player();}`）；刪除 `statSummary`、`rehabStatusText`。
+  - 保留名稱的理由：`ui-foundation.test:40`、`trait-display-e2e:18`、`tools/development-b` 不需修改；基準 `097e212` 有同名函式，可用同一段 capture 逐步比對。委派是否拆除留待日後決定。
+  - `ui-foundation.test:41` 的 `abilities:POS_AB[S.pos].map` 隨本體移出 `game.js` 而失配：改為比對新模組（測試錨點變更，非期望值變更；實作時確認寫法）。
+- 建構時點：`careerPresenter` 須在 `initNavigation` 呼叫前建立；`getState` 為延遲讀取，`S` 重新指派（新生涯）後仍讀到最新值。
+
+### 2g.4 測試變更（harness 變更，非期望值變更，需揭露）
+
+1. `game-view-dom-e2e`：capture 加入每一步的 `buildPlayerViewModel()`、`buildCareerViewModel()`（JSON），與基準逐步比對。基準 `097e212` 有同名函式，兩側使用同一 capture。基準的預設值改為 `097e212` 須另行確認（現行預設 `1bc65df`；本期驗證以 `--baseline=097e212` 指定）。
+2. 新增 `tests/career-presenter.test.mjs`：以 vm 從 `097e212` 抽出舊 7 函式，與 `CareerPresenter` 在多組 fixture（P／IF、`ct` 有／無、`annualSchedule` 有／無、`traits`／`removed`、`statsByLevel` 各組織、`incomeLedger`、`rehab`／`skipMid`）上比對輸出（深度相等，含 freeze 狀態）。Full 入口 85→86；同步 `scripts/test-manifest.mjs`（若需）、`scripts/ci-full-batches.test.mjs`、`scripts/TESTING.md`。
+3. `ui-foundation.test:41`：錨點改為新模組（見 §2g.3）。
+
+### 2g.5 驗證（L2 / R2）
+
+比較基準：`097e212`（`refactor/legacy-overrides` HEAD）；允許差分：無。
+
+1. harness commit（`game.js` 未修改；只含 §2g.4-1 的 capture 擴充）：`game-view-dom-e2e --baseline=097e212` PASS（含新 capture）。負控制：在 scratchpad 讓現行側的 view model 改變 1 個字元，確認 FAIL。`career-presenter.test` 測試新模組，與實作放在同一 commit。
+2. 實作 commit：`check-syntax`；`career-presenter.test`、`ui-foundation.test`、`verify-modularization`、`information-architecture` 等相關單元；`game-view-dom-e2e --baseline=097e212`（8 生涯，每步 DOM／`S`／RNG／view model 一致）；`trait-display-e2e`、`display-preferences-e2e`；Quick。
+3. 目視：1280／390 的 player（能力・特性）與 career（契約・成績）畫面、桌面左右欄；Console／404 為 0。
+4. PR 前 Full 一次（4 組平行，分組執行，非單一 Full 報告）。
+5. reviewer：`097e212..HEAD`。重點：本體逐字搬移、注入完整性、`getState` 延遲讀取、freeze 一致、CRLF（`game.js`）／LF（新模組）。
+6. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2g.6 交付
+
+- 分支：`refactor/career-presenter`（自 `refactor/legacy-overrides` `097e212` 建立，2026-10-23 使用者批准；疊加分支）。PR #10 與 `refactor/legacy-overrides` 的 PR 須以 merge commit 併入 `dev`；上游若再修改，本分支須合併並重跑 §2g.5-2。
+- commit 順序：harness → 實作 → 文件。commit／push 另批。
+- 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（§9.3）。不修改 `main`。
+
+### 2g.7 待決
+
+1. 是否批准依本節實作（commit／push 另批）。
+2. `game-view-dom-e2e` 預設基準是否維持 `1bc65df`（本期以參數指定 `097e212`）。
+
+- 使用者決定（2026-10-23）：批准依本節實作；`game-view-dom-e2e` 預設基準維持 `1bc65df`。commit／push 另批。
+
+### 2g.8 實施結果（2026-10-23，本機 macOS，Brave 155＋`--disable-features=BraveFarbling`；對象 `097e212`＋未 commit 變更）
+
+- 實作：新增 `docs/src/ui/career-presenter.js`（LF）。`game.js`（CRLF，2904 → 2903 行）：`:39` 的 `formatRehabStatus` import（改為只由新模組使用）換成 `CareerPresenter` import；`:582` 建立 `careerPresenter`；5 個 `build*ViewModel` 改為一行委派；刪除 `statSummary`、`rehabStatusText`。
+- 測試變更：
+  - harness：`tests/support/dom-snapshot.mjs` 的 capture 加入 player／career view model。`--baseline=097e212`（`game.js` 未修改）8 生涯 PASS；負控制（現行側 `'契約なし'` 多 1 個空白）在第 0 步偵測 `$.views.career.contract.description`。
+  - 新增 `tests/career-presenter.test.mjs`（5 案例）；負控制（presenter 改 1 字）FAIL。
+  - 錨點改為新模組（非期望值變更）：`ui-foundation.test:41`（計畫內）；`information-architecture.test`（`formatRehabStatus(S)` 改比對新模組；`スタミナ` 的 `doesNotMatch` 改為 `game+presenter`）、`record-condition-fix.test`（`rehabStatusText` 的 regex 改為私有方法本體；`大きな故障（通算）`）——後兩者為 scout 調查未列、實作時發現。
+  - Full 入口 85→86（`ci-full-batches.test` 批次 `[10,11,11,11,10,11,11,11]`、`TESTING.md`）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（164 檔） |
+| 相關單元 | `career-presenter`、`ui-foundation`、`information-architecture`、`record-condition-fix`、`verify-modularization`、`ci-full-batches.test`（31 PASS／1 SKIP） |
+| `game-view-dom-e2e --baseline=097e212` | PASS：8 生涯每一步 DOM／`S`／RNG／player・career view model 完全一致 |
+| Quick | 66 PASS／0 FAIL／0 SKIP／0 BLOCKED（`record-condition-fix` 修正後） |
+| Full | 4 組平行（22／22／22／20），86 入口不重複：85 PASS／1 FAIL（`record-condition-fix`，上記錨點）。修正後該入口單獨與 Quick 重跑 PASS；Full 未重跑 |
+| 目視（自動操作＋截圖） | 1280 投手 542 步、390 內野手 543 步至退休畫面，並開啟「選手」「キャリア」分頁；Console 錯誤／pageerror／失敗請求／4xx 皆 0，無橫向捲動；顯示值與 4-A 時相同 |
+| reviewer | 無問題（7 個本體逆向替換後與基準逐位元組相同；`S` 每次呼叫重新取得；委派與 callback 的 `this`；注入完整、無 TDZ；改寫錨點同等或更嚴格；fixture 涵蓋各分支；CRLF／LF） |
+
+- `game.js` 行號變動（舊＝`097e212`，2904 → 2903 行）：1–581：0；589–2904：−1（582–588 改寫為 582–587）。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
