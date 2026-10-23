@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE6_MERGED / PHASE7_PLANNED（2026-10-23）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE6_MERGED / PHASE7A_LOCAL_DONE（2026-10-23）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -18,7 +18,7 @@
 | 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 完成；PR #12 併入 `dev`（`d3efd11`），見 §2f.7；PR → `dev` 不觸發 CI |
 | 5 | `CareerPresenter` | `build*ViewModel`（`game.js:582–588`）移入 `docs/src/ui/career-presenter.js` 的類別，依賴以建構子注入；`game.js` 保留 5 個一行委派 | L2 / R2（PR 前 Full 一次） | 完成；PR #14 併入 `dev`（`86b4f03`），見 §2g.8 |
 | 6 | `SeasonStats` | `simSeason`／`applySeasonForm`／`defRuns`／`blankStat`／`addStatTotal`／`accStat`／`accLevelStat` 移入 `docs/src/engine/season-stats.js` 的類別；RNG 經 `game.js` 的 `R` 延遲注入；`game.js` 保留 7 個一行委派 | L3 / R3 | 完成；PR #15 併入 `dev`（`34ed23c`），見 §2h.8、§2h.9 |
-| 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策（另立計畫）；參賽流程留在 `game.js` | L3 / R3 | 細部計畫草案（§2i），待批准 |
+| 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策（另立計畫）；參賽流程留在 `game.js` | L3 / R3 | 7-A 本機完成（§2i.8，`refactor/international`）；7-B 未規劃 |
 
 共通原則：
 
@@ -1186,7 +1186,7 @@ export class SeasonStats {
 - PR #15（`refactor/season-stats` `0ff7ba5`）以 merge commit `34ed23cfdd0755b486ae6c148449947590dd32dc` 併入 `dev`；合併後工作樹與 `0ff7ba5` 相同（`git diff` 無差分），未重新驗證。
 - 合併後 `dev` push 的 Quick CI：未確認。
 
-## 2i. 第 7 期：國際大會群的領域拆分（細部計畫草案，2026-10-23，待批准）
+## 2i. 第 7 期：國際大會群的領域拆分（細部計畫，2026-10-23；7-A 本機完成，見 §2i.8）
 
 ### 2i.1 方針（2026-10-23 使用者同意）
 
@@ -1219,7 +1219,7 @@ export class SeasonStats {
 
 ### 2i.3 7-A 設計
 
-- `SeasonStats` 新增 `addIntlStats()`（置於 `accLevelStat` 之後）：開頭一行 `const S=this.#getState(),{clamp,isSP}=this.#deps,{R,chance,ri}=this.#rng;`，其後為原本體逐字。檔頭註解的 `(OOP plan §2h)` 改為 `(OOP plan §2h, §2i)`。
+- `SeasonStats` 新增 `addIntlStats()`（置於 `defRuns` 之後、`addStatTotal` 之前；不可置於 `accLevelStat` 之後，因 `information-architecture.test:18–19` 自 `accLevelStat(levelKey,st){` 切至檔尾並斷言無 RNG 呼叫，2i.4-4 重新掃描時發現）：開頭一行 `const S=this.#getState(),{clamp,isSP}=this.#deps,{R,chance,ri}=this.#rng;`，其後為原本體逐字。檔頭註解的 `(OOP plan §2h)` 改為 `(OOP plan §2h, §2i)`。
 - `game.js:2499` 改為 `  function addIntlStats(){return seasonStats.addIntlStats();}`，錨點文字不變；行數不變（2759），其他行號無變動。
 - 建構子、`game.js` 接線、`seasonStatsBridge` 皆不變。
 
@@ -1253,6 +1253,27 @@ export class SeasonStats {
 1. 是否批准 7-A 依本節實作（2i.4-1 的計數變更於實作時另請批准）。
 2. 7-B 的放置（新檔，或併入 `international-trait-policy.js`）：於 7-B 細部計畫時決定。
 3. 7-A 完成後是否接著規劃 7-B。
+
+使用者決定（2026-10-23）：1 批准；2i.4-1 的計數變更於實作時批准（數字同預估）。2、3 未決。
+
+### 2i.8 7-A 實施結果（2026-10-23，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `02f69c4`＋未 commit 變更）
+
+- 實施前重新掃描（2i.4-4）：發現 `information-architecture.test:18–19`（自 `accLevelStat(levelKey,st){` 切至檔尾並斷言無 RNG 呼叫），方法位置改為 `defRuns` 之後（使用者同意，§2i.3 已更正）。其餘與 §2i.2 一致；`tools/`、`docs/designs/` 無引用。
+- 實作：`season-stats.js`（LF）新增 `addIntlStats()`，本體由腳本自 `game.js:2499` 機械搬移；`game.js`（CRLF）`:2499` 改為一行委派，行數維持 2759，行號無變動。建構子、接線、`seasonStatsBridge` 不變。
+- 測試變更：harness 2 檔（`international-personal-stats.test` 逆向替換後與 `e602174` 逐位元組比較；`championship-intl.test` 以 vm ctx 當下 stub 建構 `SeasonStats`，`N0`／`pitcherRole`／`checkGoldclothSeason` 為 `assert.fail`）；`season-stats.test` 101→129（`addIntlStats` 6 狀態×4 序列、零累積、重新指派 `R` 3 案例）；`salary-flow.test` 計數 `game.js` `R(` 23→22、`ri(` 42→39、`chance(`＋slot 44→42、`pick(` 14，`season-stats.js` `[5,1,1,0]`→`[6,4,3,0]`。Full 入口數不變（87）。
+
+| 項目 | 結果 |
+|---|---|
+| 逐字搬移 | 逆向替換後與 `34ed23c:2499` 逐位元組相同（腳本＋reviewer 獨立比對） |
+| `check-syntax` | PASS（166 檔） |
+| harness 舊路徑 | `game.js` 修改前 `international-personal-stats`、`championship-intl` PASS |
+| 相關單元 | `season-stats`（129）、`international-personal-stats`（15）、`championship-intl`（96）、`salary-flow`、`full-power-pitching`（53／0）、`information-architecture`、`event-integration`、`verify-modularization` 皆 PASS |
+| `game-view-dom-e2e --baseline=34ed23c` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（該 e2e 不判定是否出場國際大會） |
+| e2e | `championship-intl-e2e` PASS、`international-personal-stats-e2e` 50／0（含自然 WBC／Premier12 出場斷言）、`trait-system-e2e --ui-only` PASS、`full-power-pitching-e2e` 36／0、`stage10-risk-e2e` 57／0（`S10_FAULT_*` 為注入故障，預期） |
+| 負控制 | ①新方法多抽 1 次 `R`：`season-stats`、`championship-intl`、`international-personal-stats` FAIL。②接線改為直接捕獲 `rng:{R,N0,chance,ri}`：`season-stats` 的 `addIntlStats` 重新指派案例單獨 FAIL（`championship-intl`、`international-personal-stats` 使用自有 stub，未偵測，屬預期） |
+| Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（與工作樹內容一致；`sourceFingerprint` `ca69ad255e64…`，比較基準 `origin/main` `650e4dd`），4 組平行（22／22／22／21），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（357／427／468／471 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 無問題（逐字搬移、自由識別字皆經注入、RNG 延遲綁定、CRLF／LF、harness 未放寬、新增案例皆有抽取） |
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
