@@ -1,6 +1,6 @@
 # 野球人生｜CI Linux Full 平行化計畫書
 
-**文件狀態：OWNER_APPROVED（2026-10-23） / IMPLEMENTED_LOCAL（CI 實跑未驗證）**
+**文件狀態：OWNER_APPROVED（2026-10-23） / CI_DISPATCH_PASS（PR → `dev` 待提出；→ `main` PR 自動 Full 未驗證）**
 **建立日期：2026-10-22**
 **對象：repo 擁有者審閱。核准前不修改 workflow。**
 
@@ -141,4 +141,14 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 | 負控制（scratchpad 複本） | matrix 7 批／刪除批次上傳 path／`tests` job 去掉 `if`／aggregate 去掉 `merge-multiple`／aggregate 去掉 `always()`／`full-plan` 改為安裝 Chromium：6 組皆 FAIL |
 | reviewer | 無中等以上問題；低 3 件：bootstrap log 不收（接受，見上）、`tests` job 殘留 glob（已刪）、`full-plan` 未斷言不裝 Chromium（已加） |
 | `ci-full-batches.test.mjs` | FAIL（`exact 83 entries`：實為 84）。未修改的 `origin/dev` `4036e87` 同樣 FAIL（`4cb4c98` 新增 `npb-farewell.test` 時未同步），與本變更無關；PR #12（4-A）已將其改為 85。本分支不修改 |
-| GitHub `workflow_dispatch`（§5-4、§5-5） | 未執行（push 後執行） |
+| §5-5 `workflow_dispatch` mode=`quick`（Run 39879434936，`b6f71f6`） | success：`tests` 3 分 51 秒；`full-plan`／`full-batch`／`full-aggregate` 皆 skipped |
+| §5-4 `workflow_dispatch` mode=`full`（Run 39879968880，Tests #58，`b6f71f6dbe6f90e511334e5ad9e063af9f344fe5`） | success，wall time **21 分 37 秒**（現行 58 分 48 秒）。`full-aggregate`：`{"status":"PASS","expected":84,"acceptedPass":84,"issues":[]}`；8 批 10／11／10／11／10／11／10／11 PASS；artifact 10 個（plan＋8 批＋彙整）。§3.2 的多 runner 前提（log 絕對路徑、plan hash、環境一致）成立 |
+
+各批測試耗時（`summary.json` 的 `seconds`，不含各 job 的準備約 1 分）：
+
+| batch | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| 秒 | 5 | 520 | 384 | **1205** | 550 | 23 | 294 | 321 |
+
+- 瓶頸仍為 batch 4（約 20 分），符合 §6 的預估；後續見 BACKLOG `CI-FULL-BALANCE-01`。
+- 未驗證：→ `main` PR 自動觸發的 Full（§5-6）。
