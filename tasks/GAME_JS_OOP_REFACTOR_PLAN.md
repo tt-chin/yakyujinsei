@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE6_MERGED / PHASE7A_LOCAL_DONE（2026-10-23）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE7B_MERGED / PHASE8_PR_OPEN / PHASE9_LOCAL_DONE（2026-10-23）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -18,7 +18,9 @@
 | 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 完成；PR #12 併入 `dev`（`d3efd11`），見 §2f.7；PR → `dev` 不觸發 CI |
 | 5 | `CareerPresenter` | `build*ViewModel`（`game.js:582–588`）移入 `docs/src/ui/career-presenter.js` 的類別，依賴以建構子注入；`game.js` 保留 5 個一行委派 | L2 / R2（PR 前 Full 一次） | 完成；PR #14 併入 `dev`（`86b4f03`），見 §2g.8 |
 | 6 | `SeasonStats` | `simSeason`／`applySeasonForm`／`defRuns`／`blankStat`／`addStatTotal`／`accStat`／`accLevelStat` 移入 `docs/src/engine/season-stats.js` 的類別；RNG 經 `game.js` 的 `R` 延遲注入；`game.js` 保留 7 個一行委派 | L3 / R3 | 完成；PR #15 併入 `dev`（`34ed23c`），見 §2h.8、§2h.9 |
-| 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策（另立計畫）；參賽流程留在 `game.js` | L3 / R3 | 7-A 本機完成（§2i.8，`refactor/international`）；7-B 未規劃 |
+| 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策 `international-selection-policy.js`；參賽流程留在 `game.js` | L3 / R3 | 7-A 完成；PR #16 併入 `dev`（`67dcab9`），見 §2i.9。7-B 完成；PR #17 併入 `dev`（`52e4cdb`），見 §2i.16 |
+| 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 本機完成（§2j.7）；PR #19 → `dev` 已提出、未合併 |
+| 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 本機完成（§2k.7，`refactor/defense-position`） |
 
 共通原則：
 
@@ -1444,7 +1446,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | reviewer | 1 次（`git diff 52e4cdb` 工作樹），無問題 |
 | NOT_RUN | `retirement-hof-analysis`、`retirement-hof-report`（會改寫歷史報告；harness 變更由 `retirement-hof-balance`／`hof-first-ballot-league` 涵蓋） |
 
-## 2k. 第 9 期：守備位置 policy（細部計畫，2026-10-23）
+## 2k. 第 9 期：守備位置 policy（細部計畫，2026-10-23；本機完成，見 §2k.7）
 
 第 8 期 PR #19 已提出、未合併。候補選定依據見 §3.9。
 
@@ -1503,6 +1505,22 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 ### 2k.6 待決
 
 使用者決定（2026-10-23）：範圍 5 函式，`cOk` 不抽；常數留 `game.js`；等價 fixture 置於 `event-integration.test`；分支自 `0cb3ccc` 先開；調查記入 §3.9。實作待批准。
+
+### 2k.7 實施結果（2026-10-23，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `0f64711`＋未 commit 變更，實作 commit `06bee92`）
+
+- 實施前重新掃描（2k.3-3）：新名稱無既存參照；舊名稱除 §2k.1 所列外無新增（`docs/` 只有 `MODULE_FUNCTION_INDEX.md`、`STAGE5_SPEC_ARCHITECTURE_AUDIT.md` 說明文字）。
+- 實作：新檔 `defense-position-policy.js`（LF，35 行，本體除 `S`／常數改為參數外逐字搬移）；`game.js`（CRLF）`:40` 新增 import，`:77`／`:90`／`:91`／`:93`／`:94` 一行委派，2744→2717 行。`CURRENT_SPEC:456` 追加一句。
+- 測試變更：`event-integration.test:11` 的 vm fixture 加入 `defensePositionQualified`（harness）；同檔新增等價 fixture：分別以 `0cb3ccc` 與現行 `game.js` 的 `function dpScore(`→`function dposReview(` 區塊（含 `DP_*` 常數）於各自 vm 執行，先確認兩邊常數一致，再逐格比較 10 位置（8 守備位置＋`DH`＋未知值）的 `dpScore`／`dpQual`、`dpBar`、`dpList`、`dpMult` 與 `dpScore`／`dpQual` 呼叫紀錄（確認 `scoreOf` 呼叫時機）。格：`pos` 4×等級 6（含 `undefined`）×年齡 9（20–27、30）×`favorite` 2×能力 68 種（各門檻＋`-6.5`～`+0.5` 的均一值＋2 組非均一）＋`dpMult` 用 `pos` 4×`dpos` 11，共 29,420 格；以格數、`dpQual` 真偽兩值皆出現、`S` 不變作守衛。Full 入口數不變（87）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（169 檔） |
+| 相關單元 | `event-integration`、`kbo-renewal-floor`、`global-contract-market`、`award-identity-policy`、`salary-flow`（計數不變）、`verify-modularization`、`information-architecture` 皆 PASS |
+| `game-view-dom-e2e --baseline=0cb3ccc` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（直接執行） |
+| 負控制 | ①`dpQual` 門檻 `>=`→`>`、②`dpBar` 年齡 `<=21`→`<21`、③`dpScore` SS 權重 `0.5`→`0.51`、④`dpMult` 去除投手回傳 1：皆 FAIL。①先被既有斷言 `event-integration.test:23` 攔下，另以 scratchpad 副本（去除既有 `dpQual` 斷言，未變異時 PASS）確認等價 fixture 本身亦 FAIL。policy 檔還原後 `cmp` 一致 |
+| Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（與工作樹逐位元組一致，新檔以 `git add -N` 納入；`sourceFingerprint` `90a379687e33…`，與 Quick 相同；比較基準 `origin/main` `650e4dd`），4 組平行（21／22／22／22），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（290／835／351／318 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（`git diff 0cb3ccc` 工作樹），無問題 |
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
