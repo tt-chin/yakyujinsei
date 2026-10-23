@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
-import {buildFixedCases,buildSpecialCases,measure,createProductionHarness,leagues,labels,GAME_SOURCE} from './retirement-hof-test-support.mjs';
+import {buildFixedCases,buildSpecialCases,measure,createProductionHarness,productionFunction,leagues,labels,GAME_SOURCE} from './retirement-hof-test-support.mjs';
 import {honorScoreFor} from '../docs/src/engine/hall-of-fame-policy.js';
 import {execFileSync} from 'node:child_process';
+import vm from 'node:vm';
+import {careerScoreFor,defenseShareFor,hallOfFameTier} from '../docs/src/engine/hall-of-fame-tier-policy.js';
 const aHonorSource=execFileSync('git',['show','efd4710c4c5c366ff3aba69c59180031c82ff18a:docs/src/engine/hall-of-fame-policy.js'],{encoding:'utf8'});
 const {honorScoreFor:aHonorScoreFor}=await import('data:text/javascript;base64,'+Buffer.from(aHonorSource).toString('base64'));
 const cases=buildFixedCases();assert.equal(cases.length,160);let assertions=0;
@@ -25,5 +27,21 @@ assert.ok(Number.isNaN(measure({id:'missing',league:'NPB',pos:'P',stats:{IP:10}}
 const both=measure({id:'multiple',league:'CPBL',pos:'IF',stats:{...blank(),H:8600,yr:4},state:{stats:{CPBL:{...blank(),H:8600,yr:4},MLB:{...blank(),H:11000,yr:10}}}});
 const multi=createProductionHarness({pos:'IF',lv:'MLB',stage:'PRO',year:2050,traits:{},honors:[],stats:{CPBL:{...blank(),H:8600,yr:4},MLB:{...blank(),H:11000,yr:10}},teamTally:{}},'multi');multi.run("retireScene({CPBL:tierOf('CPBL'),MLB:tierOf('MLB')})");assert.equal(multi.snapshot().state.hofInfo.length,2);assert.equal(multi.snapshot().state.legendLeague,'メジャーリーグ','first-ballot league must exclude later-ballot inductees');assertions+=3;
 assert.match(GAME_SOURCE,/NPB2:[^\n]+statBucket:'NPB'/);assert.match(GAME_SOURCE,/KBO2:[^\n]+statBucket:'KBO'/);assert.match(GAME_SOURCE,/CPBL2:[^\n]+statBucket:'CPBL'/);assertions+=3;
+// OOP §2j phase 8: 52e4cdb careerScore/defShare/tierOf vs current wrappers + hall-of-fame-tier-policy, with final TIER_TH/LG_N and a stub honorScore.
+const tierBaseline=execFileSync('git',['show','52e4cdb36d6b770a2c73ca89e947c94bcc616562:docs/src/engine/game.js'],{encoding:'utf8'});
+const tables=createProductionHarness({pos:'IF',traits:{},honors:[],stats:{}}),finalTH=tables.snapshot().thresholds,finalLG=JSON.parse(tables.run('JSON.stringify(LG_N)'));
+const tierCell=(source,state,bucket,honor)=>{const c=vm.createContext({S:structuredClone(state),TIER_TH:finalTH,LG_N:finalLG,careerScoreFor,defenseShareFor,hallOfFameTier,bucket,log:[],honorScore:b=>{c.log.push('honor:'+b);return honor;}});
+ vm.runInContext(['careerScore','defShare','tierOf'].map(name=>productionFunction(name,source)).join('\n')+'\nconst scoreOf=careerScore;careerScore=st=>{log.push("career");return scoreOf(st);};',c);
+ return vm.runInContext('const before=JSON.stringify(S),tier=tierOf(bucket),calls=log.slice(),share=defShare(bucket);JSON.stringify({tier,calls,share,base:S.stats[bucket]?scoreOf(S.stats[bucket]):null,unchanged:before===JSON.stringify(S)})',c);};
+let tierCells=0;const tiersSeen=new Set();
+for(const bucket of Object.keys(finalTH))for(const pos of ['P','IF']){const th=finalTH[bucket],cells=[];
+ for(let k=0;k<4;k++)for(const delta of [-1,-0.5,-0.4,0,0.4]){const W=Math.floor(th[k]/13);cells.push(pos==='P'?[{...blank(),W},{sc:th[k]-W*13+delta}]:[{...blank(),H:th[k]},{sc:delta}]);}
+ for(const flags of [{},{mvp:1},{aceN:1},{king:1},{mvp:1,king:1},{king:2}])for(const H of [0,th[0]])cells.push([{...blank(),H,W:Math.floor(H/13)},{sc:0,mvp:0,aceN:0,king:0,...flags}]);
+ for(const DEF of [-5,undefined,0,7])cells.push([{...blank(),H:120,HR:10,SB:5,RBI:40,BB:20,W:9,SV:3,SO:80,IP:150.1,DEF},{sc:30}]);
+ cells.push([undefined,{sc:0}]);
+ for(const [st,honor] of cells){const state={pos,stats:st?{[bucket]:st}:{}},A=tierCell(tierBaseline,state,bucket,honor),B=tierCell(GAME_SOURCE,state,bucket,honor),a=JSON.parse(A);
+  assert.equal(B,A,`hall-of-fame tier equivalence ${bucket} ${pos} ${JSON.stringify(st)} ${JSON.stringify(honor)}`);assert.ok(a.unchanged);assert.deepEqual(a.calls,st?['honor:'+bucket,'career']:[]);if(a.tier)tiersSeen.add(a.tier.i);tierCells++;}
+}
+assert.ok(Object.keys(finalTH).length>=4);assert.equal(tierCells,Object.keys(finalTH).length*2*37,'tier equivalence cell count');assert.deepEqual([...tiersSeen].sort(),[0,1,2,3,4]);assertions+=tierCells;
 console.log(`${cases.length} synthetic grid + ${special.length} special + ${assertions-cases.length} boundary/characterization cases PASS; production functions verbatim, no game changes`);
 export {cases};

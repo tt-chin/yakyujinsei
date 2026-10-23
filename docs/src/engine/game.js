@@ -36,6 +36,7 @@ import { createChoiceActionToken, runChoiceAction } from '../ui/choice-action.js
 import { GameView } from '../ui/game-view.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
+import { careerScoreFor, defenseShareFor, hallOfFameTier } from './hall-of-fame-tier-policy.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
@@ -1563,10 +1564,7 @@ function advance(){
 /* キャリア終盤。 */
 const TIER_TH={CPBL:[8500,6000,3100,1800],KBO:[8200,5900,3000,1800],NPB:[8000,5800,3000,1800],MLB:[8500,6500,3600,2000]};
 const LG_N={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ',MINOR:'マイナーリーグ/二軍'};
-function careerScore(st){
-  if(S.pos==='P')return st.W*13+st.SV*6+st.SO*0.9+st.IP*0.35;
-  return st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+Math.max(0,st.DEF||0)*6;
-}
+function careerScore(st){return careerScoreFor(st,S.pos);}
 function roleName3(r){ return {SP:'先発投手',MR:'リリーバー',CL:'抑え'}[r]||'投手'; }
 function primaryPos(){ /* 通算の半数超を守った位置を主守備とし、該当なしなら年数順でユーティリティーまたはスイングマンと判定。 */
   if(S.pos==='P'){
@@ -1591,12 +1589,7 @@ function capTeam(bucket){ /* 当該リーグで最長在籍の球団、殿堂入
   for(const k in tb)if(tb[k]>bn){bn=tb[k];best=k;}
   return best&&window.TEAM_MASTER&&window.TEAM_MASTER[best]?window.TEAM_MASTER[best].name:best;
 }
-function defShare(bucket){ /* 守備貢献占キャリア総価値値割合 0~1。 */
-  const st=S.stats[bucket]; if(!st||S.pos==='P')return 0;
-  const off=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3;
-  const def=Math.max(0,st.DEF||0)*6;
-  return (off+def)>0?def/(off+def):0;
-}
+function defShare(bucket){return defenseShareFor(S.stats[bucket],S.pos);}
 function posLegendPhrase(bucket){ /* に応じて守備割合とタイトル決定守備位置敘述。 */
   const share=defShare(bucket), st=S.stats[bucket];
   const dp=S.dpos||(S.pos==='C'?'C':null);
@@ -1610,16 +1603,7 @@ function posLegendPhrase(bucket){ /* に応じて守備割合とタイトル決�
 function honorScore(bucket){
   return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S});
 }
-function tierOf(bucket){
-  const st=S.stats[bucket]; if(!st)return null;
-  const hs=honorScore(bucket);
-  const sc=careerScore(st)+hs.sc,th=TIER_TH[bucket];
-  let i=sc>=th[0]?0:sc>=th[1]?1:sc>=th[2]?2:sc>=th[3]?3:4;
-  /* タイトル最低条件：MVP/最優秀投手賞は最低でもスター級;部門タイトルは最低でもレギュラー級。 */
-  if(hs.mvp||hs.aceN)i=Math.min(i,1);
-  else if(hs.king)i=Math.min(i,2);
-  return {i,sc:Math.round(sc),name:LG_N[bucket]+['殿堂','スター選手','デイリープレイヤー','フリンジプレイヤー','ページ上の乗客'][i]};
-}
+function tierOf(bucket){const st=S.stats[bucket];if(!st)return null;const hs=honorScore(bucket);return hallOfFameTier({baseScore:careerScore(st),honor:hs,thresholds:TIER_TH[bucket],leagueName:LG_N[bucket]});}
 function statTable(bucket){
   const st=S.stats[bucket]; if(!st)return '';
   let rows;
