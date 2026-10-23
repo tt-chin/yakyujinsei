@@ -37,6 +37,7 @@ import { GameView } from '../ui/game-view.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
 import { careerScoreFor, defenseShareFor, hallOfFameTier } from './hall-of-fame-tier-policy.js';
+import { defenseScoreFor, defenseBarFor, defensePositionQualified, defensePositionCandidates, defensePositionMultiplier } from './defense-position-policy.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
@@ -73,19 +74,7 @@ const DPN={SS:'遊撃手','2B':'二塁手','3B':'三塁手','1B':'一塁手',
  CF:'中堅手',RF:'右翼手',LF:'左翼手',DH:'指名打者',C:'捕手'};
 /* 守備位置ごとに守備範囲・捕球・肩力の基準をリーグ基準から補正する。三塁に遊撃並みの守備範囲は求めず、一塁では肩力をほぼ評価しない。 */
 /* 守備位置ごとに重視する能力を変え、総合守備評価を返す。 */
-function dpScore(p){ const a=S.ab;
-  switch(p){
-    case 'SS': return a.rng*0.5 + a.fld*0.3 + a.arm*0.2;   /* 遊撃手：守備範囲を重視。 */
-    case '2B': return a.rng*0.45+ a.fld*0.4 + a.arm*0.15;  /* 二塁手：守備範囲と捕球を重視し、肩力は補助。 */
-    case '3B': return a.arm*0.45+ a.fld*0.35+ a.rng*0.2;   /* 三塁手：肩力を重視。 */
-    case 'CF': return a.rng*0.55+ a.fld*0.3 + a.arm*0.15;  /* 中堅手：守備範囲を重視。 */
-    case 'RF': return a.arm*0.45+ a.rng*0.35+ a.fld*0.2;   /* 右翼手：強肩を重視。 */
-    case 'LF': return a.rng*0.4 + a.fld*0.35+ a.arm*0.25;  /* 左翼手：守備範囲を中心に、基準は低め。 */
-    case 'C':  return a.fld*0.4 + a.cat*0.4 + a.arm*0.2;   /* 捕手：捕球・リード・肩力を重視し、守備範囲は評価しない。 */
-    case '1B': return a.fld*0.6 + a.rng*0.2 + a.arm*0.2;   /* 一塁手：捕球を重視し、基準は低め。 */
-    default: return 99;
-  }
-}
+function dpScore(p){return defenseScoreFor(S.ab,p);}
 /* 守備位置・リーグ別の守備基準。守備評価が基準以上なら守備可能とし、MLBを最も厳しくする。 */
 const DP_TH={
   C:  {CPBL1:46, NPB1:54, MLB:60},
@@ -98,27 +87,11 @@ const DP_TH={
   '1B':{CPBL1:36,NPB1:42, MLB:48}};
 const DP_BAR={CPBL1:45,NPB1:54,MLB:60}; /* 保持与える捕手 cOk 等旧判定。 */
 const DP_MULT={SS:1.15,CF:1.15,C:1.12,'2B':1.05,'3B':1.05,RF:1.05,'1B':1.0,LF:1.0,DH:0.92};
-function dpBar(){ /* 年輕球員吃能力上限紅利、球団不急著拔守備位置。 */
-  const base=DP_BAR[S.lv]||0;
-  const disc=S.age<=21?7:S.age<=24?5:S.age<=26?2:0;
-  return base-disc;
-}
-function dpQual(p){
-  if(p==='DH')return true;
-  if(!DP_TH[p]||!DP_TH[p][S.lv])return true;   /* トップ階級以外のリーグでは制限しない。 */
-  /* 年輕球員吃能力上限紅利：基準略降(球団与える時間成長)。 */
-  const youthAdj = (S.age<24?-3 : S.age<26?-1.5 : 0)+(S.traits.favorite?-3:0);
-  return dpScore(p) >= DP_TH[p][S.lv]+youthAdj;
-}
+function dpBar(){return defenseBarFor({bars:DP_BAR,level:S.lv,age:S.age});}
+function dpQual(p){return defensePositionQualified({position:p,thresholds:DP_TH,level:S.lv,age:S.age,favorite:S.traits.favorite,scoreOf:dpScore});}
 const DP_RANK={SS:0,CF:0,'2B':1,'3B':2,RF:2,'1B':3,LF:3,DH:4,C:0}; /* 守備位置市試合価値の序列(SS>2B>3B)。 */
-function dpList(){ /* 守備難易度順に、内野手は内野、外野手は外野を走査し、守れる中で最上位の位置を選ぶ。 */
-  /* 候補守備位置は現在の守備群に合わせ、内野・外野それぞれの守備スペクトラムから選ぶ。 */
-  const order = S.pos==='IF'
-    ? ['SS','2B','3B','1B']       /* 内野：遊撃＞二塁＞三塁＞一塁。 */
-    : ['CF','RF','LF','1B'];      /* 外野：中堅＞右翼＞左翼＞一塁。 */
-  const q=order.filter(dpQual); q.push('DH'); return q;
-}
-function dpMult(){ return (S.pos!=='P'&&S.dpos)?(DP_MULT[S.dpos]||1):1; }
+function dpList(){return defensePositionCandidates(S.pos,dpQual);}
+function dpMult(){return defensePositionMultiplier({position:S.pos,defensePosition:S.dpos,multipliers:DP_MULT});}
 function dposReview(cont){
   if(S.stage!=='PRO'||!(S.lv==='CPBL1'||S.lv==='NPB1'||S.lv==='MLB')){ cont(); return; }
   if(S.pos==='C'){ /* 捕手の基準には余裕を持たせるが、基準を大きく下回れば一塁またはDHへ回す。 */

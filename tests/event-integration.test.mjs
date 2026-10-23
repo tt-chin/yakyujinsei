@@ -5,10 +5,12 @@ import vm from 'node:vm';
 import * as domestic from '../docs/src/engine/domestic-tournament-policy.js';
 import {TRAIT_LABELS,TRAIT_TEXT,highSchoolChampionCount} from '../docs/src/engine/trait-policy.js';
 import {ensureEventState,beginEventSeason,consumeEventSeason} from '../docs/src/engine/event-state-policy.js';
+import * as defensePolicy from '../docs/src/engine/defense-position-policy.js';
+import {execFileSync} from 'node:child_process';
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const sim=game.slice(game.indexOf('function simSeason('),game.indexOf('/* シーズン状態は10%'));
 const qual=game.slice(game.indexOf('function dpQual('),game.indexOf('const DP_RANK='));
-const fixture={S:{pos:'P',role:'SP',age:23,lv:'NPB1',ab:{vel:20,ctl:20,brk:20,sta:30,con:20,pow:20,eye:20,spd:20},traits:{},seasonFactor:1,dpos:null},LV:{NPB1:{par:53,g:143}},DP_TH:{SS:{NPB1:50}},dpScore:()=>44,clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),N0:()=>0,R:()=>.5,isSP:()=>true,pitcherRole:()=> 'SP',defRuns:()=>0,applySeasonForm:()=>{}};
+const fixture={S:{pos:'P',role:'SP',age:23,lv:'NPB1',ab:{vel:20,ctl:20,brk:20,sta:30,con:20,pow:20,eye:20,spd:20},traits:{},seasonFactor:1,dpos:null},LV:{NPB1:{par:53,g:143}},DP_TH:{SS:{NPB1:50}},dpScore:()=>44,defensePositionQualified:defensePolicy.defensePositionQualified,clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),N0:()=>0,R:()=>.5,isSP:()=>true,pitcherRole:()=> 'SP',defRuns:()=>0,applySeasonForm:()=>{}};
 const moved=game.includes('seasonStats.simSeason(');
 const context=vm.createContext(fixture);if(!moved)vm.runInContext(sim,context);
 const seasonStats=moved?new (await import('../docs/src/engine/season-stats.js')).SeasonStats({getState:()=>fixture.S,levels:fixture.LV,rng:{R:()=>fixture.R(),N0:sd=>fixture.N0(sd),chance:p=>fixture.chance(p),ri:(a,b)=>fixture.ri(a,b)},clamp:fixture.clamp,isSP:()=>fixture.isSP(),pitcherRole:()=>fixture.pitcherRole(),checkGoldclothSeason:()=>fixture.checkGoldclothSeason()}):null;
@@ -45,4 +47,22 @@ for(const stage of ['HS','U','CORP','IND'])for(const rest of [false,true]){
   if(rest){assert.equal(rng,0);assert.equal(state.log[0].line,'全休');}
   else{assert.equal(state.eventSeasonContext.form,-2);assert.ok(state.domesticTournamentLog.length>0);const before=rng;vm.runInContext('amateurSeason()',ctx);assert.equal(rng,before,'completed tournament guards prevent redraw');if(stage==='IND')assert.ok(indResults);}
 }
+// OOP §2k phase 9: 0cb3ccc dpScore/dpBar/dpQual/dpList/dpMult vs current wrappers + defense-position-policy, with the final DP_* tables.
+const dpBaseline=execFileSync('git',['show','0cb3cccff0ef8fdd4a5f80fdfd4fa859b19cad9d:docs/src/engine/game.js'],{encoding:'utf8'});
+const dpBlock=source=>source.slice(source.indexOf('function dpScore('),source.indexOf('function dposReview('));
+const dpContext=source=>{const c=vm.createContext({...defensePolicy,log:[]});vm.runInContext(dpBlock(source)+'\nconst scoreOf=dpScore,qualOf=dpQual;dpScore=p=>{log.push("score:"+p);return scoreOf(p);};dpQual=p=>{log.push("qual:"+p);return qualOf(p);};',c);return c;};
+const dpOld=dpContext(dpBaseline),dpNew=dpContext(game);
+assert.ok(dpBlock(dpBaseline).length>0&&dpBlock(game).length>0);assert.equal(vm.runInContext('JSON.stringify([DP_TH,DP_BAR,DP_MULT,DP_RANK])',dpNew),vm.runInContext('JSON.stringify([DP_TH,DP_BAR,DP_MULT,DP_RANK])',dpOld));
+const dpPositions=['SS','2B','3B','CF','RF','LF','C','1B','DH','XX'];
+const dpCell=(c,state)=>{c.S=structuredClone(state);c.log=[];return vm.runInContext(`(()=>{const before=JSON.stringify(S),r={scores:${JSON.stringify(dpPositions)}.map(p=>scoreOf(p)),bar:dpBar(),qual:${JSON.stringify(dpPositions)}.map(p=>dpQual(p)),list:dpList(),mult:dpMult()};return JSON.stringify({r,log,unchanged:before===JSON.stringify(S)});})()`,c);};
+const dpTH=JSON.parse(vm.runInContext('JSON.stringify(DP_TH)',dpOld)),dpValues=new Set([30,45.5,70]);
+for(const th of Object.values(dpTH))for(const t of Object.values(th))for(const d of [-6.5,-6,-4.5,-3,-1.5,-1,0,0.5])dpValues.add(t+d);
+const dpAbilities=[...dpValues].map(v=>({rng:v,fld:v,arm:v,cat:v})).concat([{rng:70,fld:40,arm:30,cat:55},{rng:35,fld:62,arm:58,cat:20}]);
+let dpCells=0,dpQualSeen=new Set();
+for(const pos of ['P','C','IF','OF'])for(const lv of ['CPBL1','NPB1','MLB','NPB2','CORP',undefined])for(const age of [20,21,22,23,24,25,26,27,30])for(const traits of [{},{favorite:true}])for(const ab of dpAbilities){
+  const state={pos,lv,age,traits,ab,dpos:null},A=dpCell(dpOld,state);
+  assert.equal(dpCell(dpNew,state),A,`defense position equivalence ${JSON.stringify(state)}`);const a=JSON.parse(A);assert.ok(a.unchanged);a.r.qual.forEach(q=>dpQualSeen.add(q));dpCells++;}
+for(const pos of ['P','C','IF','OF'])for(const dpos of [null,...dpPositions]){const state={pos,lv:'NPB1',age:27,traits:{},ab:dpAbilities[0],dpos},A=dpCell(dpOld,state);
+  assert.equal(dpCell(dpNew,state),A,`defense multiplier equivalence ${pos} ${dpos}`);dpCells++;}
+assert.equal(dpCells,4*6*9*2*dpAbilities.length+4*11,'defense position equivalence cell count');assert.deepEqual([...dpQualSeen].sort(),[false,true]);
 console.log('Actual favorite coefficients, injury order, tournament/season/state/display integration passed.');
