@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {harness,instrument,arg} from './support/stage6-browser.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';
 const baseline='0fd13c7532fd03da136c72ef64e9890858cfb81e';
 const oldSource=execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
 const h=await harness('smallschool-c');
@@ -22,7 +23,7 @@ async function page(width=1280,pos='IF',seed='s10-trait-38',old=false){const p=a
  // route.fetch bypasses the shared Preview route; its raw response needs the base hook.
  // Loopback already instruments the response, so never install the RNG wrapper twice.
  if(!body.includes('let s6rng=[]'))body=instrument(body);
- const at=body.lastIndexOf('})();');await route.fulfill({response,body:body.slice(0,at)+hook+body.slice(at)});});await p.reload();await p.waitForFunction(()=>window.__small&&!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;}
+ await route.fulfill({response,body:injectOverlayHook(body,hook)});});await p.reload();await p.waitForFunction(()=>window.__small&&!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;}
 const clean=s=>{const x=structuredClone(s);delete x.birthHighSchool;return x;};
 try{
  for(const width of [1280,320,390])await h.test('birth-school-ui-'+width,{width,fixture:true},async()=>{const p=await page(width);assert.match(await p.locator('#log').innerText(),/C級・弱小校/);await p.screenshot({path:h.output+'/natural-C-'+width+'.png',fullPage:true});for(let i=0;i<10;i++){const birth=await p.evaluate(i=>window.__small.fixture('C',i),i);assert.equal(birth.schoolId,'HS_'+String(51+i).padStart(3,'0'));assert.equal(birth.tier,'C');await p.evaluate(()=>window.__small.show());assert.match(await p.locator('#log').innerText(),/高校（C級）/);}const birth=(await h.get(p)).state.birthHighSchool;await p.evaluate(()=>window.__small.school());assert.deepEqual((await h.get(p)).state.birthHighSchool,birth);for(const stage of ['CORP','IND','PRO']){await p.evaluate(s=>window.__small.stage(s),stage);await p.evaluate(()=>window.__small.advance());assert.deepEqual((await h.get(p)).state.birthHighSchool,birth);}await p.screenshot({path:h.output+'/schools-'+width+'.png',fullPage:true});await p.close();});

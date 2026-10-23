@@ -19,14 +19,13 @@ function applyKboForeignPackageCap(input){
 }
 window.__kboCaps=[];
 window.__kboTest={get:()=>({state:JSON.parse(JSON.stringify(S)),calls:window.__rngCalls||0,failure:window.__kboFailure||null,caps:window.__kboCaps}),
- fixture:()=>{actClear();S=newState('契約検証','IF');Object.assign(S,{year:2049,age:39,stage:'PRO',org:'KBO',lv:'KBO1',orgTeamId:'KBO_GWANGJU_TIGERS',currentSalary:168210000,contractSequence:9,marketInjury:'HEALTHY',lastD:-5.75,serviceTime:{KBO:8},ab:{sta:45,con:45,pow:45,spd:45,eye:45,rng:45,fld:45,arm:45},dpos:'DH',seasonFactor:1});S.ct=createContract({contractId:'KBO-FIXTURE',org:'KBO',teamId:S.orgTeamId,signedYear:2048,startYear:2049,years:1,annualSalary:S.currentSalary,incentive:createIncentiveTerms({org:'KBO',annualSalary:S.currentSalary})});S.ct=markSalaryPaid(S.ct,2049).contract;pendingOffseasonSalary=null;window.__fixtureAdv=0;const normalAdvance=advance;advance=()=>{finalizePendingOffseasonSalary();window.__fixtureAdv++;};choose('満了年度の降格',[{t:'KBO二軍へ降格',f:()=>{const from=S.lv;S.lv='KBO2';applyDemotionSalary(from,S.lv);advance();}}]);},
+ fixture:()=>{actClear();S=newState('契約検証','IF');Object.assign(S,{year:2049,age:39,stage:'PRO',org:'KBO',lv:'KBO1',orgTeamId:'KBO_GWANGJU_TIGERS',currentSalary:168210000,contractSequence:9,marketInjury:'HEALTHY',lastD:-5.75,serviceTime:{KBO:8},ab:{sta:45,con:45,pow:45,spd:45,eye:45,rng:45,fld:45,arm:45},dpos:'DH',seasonFactor:1});S.ct=createContract({contractId:'KBO-FIXTURE',org:'KBO',teamId:S.orgTeamId,signedYear:2048,startYear:2049,years:1,annualSalary:S.currentSalary,incentive:createIncentiveTerms({org:'KBO',annualSalary:S.currentSalary})});S.ct=markSalaryPaid(S.ct,2049).contract;__cs.pendingOffseasonSalary=null;window.__fixtureAdv=0;const normalAdvance=advance;advance=()=>{finalizePendingOffseasonSalary();window.__fixtureAdv++;};choose('満了年度の降格',[{t:'KBO二軍へ降格',f:()=>{const from=S.lv;S.lv='KBO2';applyDemotionSalary(from,S.lv);advance();}}]);},
  pay:()=>{S.year=2050;S.pool=0;movement=()=>{window.__fixtureMoves=(window.__fixtureMoves||0)+1;};phaseEnd();},adv:()=>window.__fixtureAdv};`;
 function instrument(source){
- source=source.replace('applyKboForeignPackageCap }','applyKboForeignPackageCap as originalApplyKboForeignPackageCap }')
-  .replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;')
-  .replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;')
+ source=instrumentRng(source.replace('applyKboForeignPackageCap }','applyKboForeignPackageCap as originalApplyKboForeignPackageCap }'),'__rngCalls')
   .replace("if(targetOrg==='KBO'){const cap=","if(targetOrg==='KBO'){window.__kboCandidate={sourceLevel,targetLevel,rating,convertedRating,baseSalary,raw,contractMult,positionMult,transferType,previousSalary,cross,injury};const cap=");
- const at=source.lastIndexOf('})();');assert.ok(at>0);return source.slice(0,at)+hook+source.slice(at);
+ source=withCareerSessionAccess(source);
+ return injectOverlayHook(source,hook);
 }
 const cache=new Map(),server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),old=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname).replace(/^\/(baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');if(old&&!cache.has(rel))cache.set(rel,execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20e6}));let body=old?cache.get(rel):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(body);}catch(error){res.statusCode=404;res.end(String(error));}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -92,3 +91,6 @@ try{
  process.exit(failure?1:0);
 }
 import {withApprovedBirthSnapshot} from './support/baseline-initial-potential.mjs';
+import {instrumentRng} from './support/rng-instrument.mjs';
+import {withCareerSessionAccess} from './support/career-session-access.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';

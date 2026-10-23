@@ -5,6 +5,8 @@ import {createHash} from 'node:crypto';
 import {harness,arg,instrument} from './support/stage6-browser.mjs';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
 import {withApprovedPhoenixControl,phoenixAwardProbe,assertApprovedPhoenixCareer} from './support/first-difference.mjs';
+import {openBoardAction} from './support/board-menu.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'e602174a22d7472e1021d780388ad61adc6b11b6')+'^{commit}'],{encoding:'utf8'}).trim();
 const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
 const approvedPhoenixPrior=withApprovedPhoenixControl(prior);
@@ -20,7 +22,7 @@ const hook=`window.__intlDisplay={
 };`;
 async function page(width,pos='P',seed='intl-stats',old=false,approved=false){
  const p=await h.page(width,pos,seed);
- await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(approved?approvedPhoenixPrior:prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);const at=body.lastIndexOf('})();');await route.fulfill({response,body:body.slice(0,at)+hook+phoenixAwardProbe+body.slice(at)});});
+ await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(approved?approvedPhoenixPrior:prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook+phoenixAwardProbe)});});
  await p.reload();await p.waitForFunction(()=>window.__intlDisplay&&!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
 }
 const clean=s=>{const copy=structuredClone(s);delete copy.version;for(const r of Object.values(copy.intlTraitResults||{}))delete r.personalStats;return copy;};
@@ -45,7 +47,7 @@ try{
  await h.test('T10-T12-old-copy-redraw',{fixture:true},async()=>{const p=await page(320);await fixture(p);await accept(p);const saved=await h.get(p),personal=saved.state.intlTraitResults['P12:2035'].personalStats;
   await p.evaluate(()=>window.__intlDisplay.change({pos:'IF',intlStat:{G:999}}));const before=await h.get(p);for(let n=0;n<3;n++)await p.evaluate(()=>window.__intlDisplay.redraw('P12:2035'));assert.deepEqual(await h.get(p),before);assert.deepEqual(before.state.intlTraitResults['P12:2035'].personalStats,personal);assert.match(await p.locator('#log').innerText(),/登板/);assert.equal(await p.evaluate(()=>window.__intlDisplay.render('absent')),'<p>本大会の個人成績：記録なし</p>');await p.close();});
  for(const width of [1280,320,360,390])for(const theme of ['standard','night','classic','scoreboard'])for(const pos of ['P','IF'])await h.test('T14-'+width+'-'+theme+'-'+pos,{width,theme,pos,font:'large',fixture:true},async()=>{
-  const p=await page(width,pos),beforeSettings=await h.get(p);await p.locator('[data-open-preferences]').last().click();await p.locator('[name="theme"][value="'+theme+'"]').check();await p.locator('[name="fontSize"][value="large"]').check();await p.locator('#preferences-close').click();assert.deepEqual(await h.get(p),beforeSettings);await fixture(p,{pos});await accept(p);const before=await h.get(p);const card=p.locator('.intl-personal-stats');assert.equal(await card.count(),1);assert.match(await card.innerText(),pos==='P'?/登板.*投球回.*勝利.*セーブ[\s\S]*奪三振.*防御率/:/出場.*打席.*打数.*安打[\s\S]*打率.*本塁打.*打点/);
+  const p=await page(width,pos),beforeSettings=await h.get(p);await openBoardAction(p,'board-preferences');await p.locator('[name="theme"][value="'+theme+'"]').check();await p.locator('[name="fontSize"][value="large"]').check();await p.locator('#preferences-close').click();assert.deepEqual(await h.get(p),beforeSettings);await fixture(p,{pos});await accept(p);const before=await h.get(p);const card=p.locator('.intl-personal-stats');assert.equal(await card.count(),1);assert.match(await card.innerText(),pos==='P'?/登板.*投球回.*勝利.*セーブ[\s\S]*奪三振.*防御率/:/出場.*打席.*打数.*安打[\s\S]*打率.*本塁打.*打点/);
   assert.ok(await card.evaluate(n=>n.scrollWidth<=n.clientWidth));assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.waitForFunction(()=>[...document.querySelectorAll('#log .card')].every(n=>Number(getComputedStyle(n).opacity)===1));await p.screenshot({path:h.output+'/T14-'+width+'-'+theme+'-'+pos+'.png',fullPage:true});assert.deepEqual(await h.get(p),before);await p.close();
  });
  if(!process.argv.includes('--fixtures-only')){

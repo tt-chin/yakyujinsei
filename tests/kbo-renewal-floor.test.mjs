@@ -26,6 +26,8 @@ test('renewal upper bound and fixed costs unchanged',()=>{const r=cap({annualSal
 test('genuine floor/package and fixed-cost conflicts still throw',()=>{for(const annualSalary of [1,150_000_000])assert.throws(()=>cap({annualSalary,levelMinimum:142_000_000}),/KBO_PACKAGE_FLOOR_CAP_CONFLICT/);assert.throws(()=>cap({annualSalary:8_000_000,levelMinimum:8_000_000,signingBonus:149_000_000}),/KBO_PACKAGE_FLOOR_CAP_CONFLICT/);assert.throws(()=>cap({annualSalary:8_000_000,signingBonus:150_010_000}),/KBO_PACKAGE_FIXED_COST_EXCEEDS_CAP/);});
 
 // Execute the active game functions verbatim, with UI-only collaborators replaced.
+// Phase 4-A turns the overlay's salaryFor assignment into a declaration; --baseline sources keep the assignment.
+const salaryForDeclared=game.includes('\n  function salaryFor(');
 const between=(start,end)=>{const a=game.indexOf(start),b=game.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,start);return game.slice(a,b);};
 function harness(){
  const S={year:2049,age:39,pos:'IF',stage:'PRO',org:'KBO',lv:'KBO1',orgTeamId:'KBO_GWANGJU_TIGERS',currentSalary:168_210_000,contractSequence:9,marketInjury:'HEALTHY',serviceTime:{KBO:8},salaryEvaluationHistory:[],salaryDecisionHistory:[],stats:{},skipMid:true};
@@ -36,8 +38,8 @@ function harness(){
   currentMarketRating:()=>-5.75,dpMult:()=>.92,ovr:()=>44,injurySalaryMultiplier:()=>1,isRecentStar:()=>false,serviceYearsFor:org=>S.serviceTime[org]||0,previousSalaryForOffer:()=>S.currentSalary,hadAmericanContract:()=>false,migrateSalaryV130State:()=>{},
   card:()=>{},board:()=>{},bindLatestSalaryDetailLink:()=>{},fmtMoney:String,salaryDecisionSummary:()=>'',salaryDecisionLink:()=>'',isBelowActiveMinimum:()=>false,
   saveSalaryDecision:(type,candidate,previousSalary,finalSalary)=>S.salaryDecisionHistory.push({type,candidate,previousSalary,finalSalary}),advances:0});
- vm.runInContext('const LV='+game.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';const PATHS={KBO:["KBO2","KBO1"]};let salaryFor,salaryCandidate,applyDemotionSalary,markClubInitiatedRenewal;'+
-  between('  salaryFor = function','\n\n  let pendingOffseasonSalary')+';let pendingOffseasonSalary=null;'+
+ vm.runInContext('const LV='+game.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';const PATHS={KBO:["KBO2","KBO1"]};let '+(salaryForDeclared?'':'salaryFor,')+'salaryCandidate,applyDemotionSalary,markClubInitiatedRenewal;'+
+  between(salaryForDeclared?'  function salaryFor(':'  salaryFor = function','\n  function migrateSalaryV130State')+';let careerSession={pendingOffseasonSalary:null};'+
   game.match(/  const kboPreviousPackage=[^\n]+/)[0]+between('  salaryCandidate=','\n  function saveSalaryDecision')+
   game.match(/  const nextContractId=[^\n]+/)[0]+game.match(/  function fixedContract[^\n]+/)[0]+
   between('  function finalizePendingOffseasonSalary','\n  function applyLevelSalary')+

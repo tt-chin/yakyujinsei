@@ -43,13 +43,13 @@ function fixture(){
  return {plan,output,file:path.join(output,'batch-2/summary.json'),receipt:path.join(output,'batch-2/batch.json')};
 }
 function change(file,fn){const r=JSON.parse(readFileSync(file));fn(r);write(file,r);}
-test('exact original 80 entries, eight ordered disjoint batches; future count has no gaps',()=>{
- assert.equal(ids.length,80);assert.deepEqual(splitIds(ids).map(b=>b.length),Array(8).fill(10));
+test('exact 87 entries, eight ordered disjoint batches; future count has no gaps',()=>{
+ assert.equal(ids.length,87);assert.deepEqual(splitIds(ids).map(b=>b.length),[10,11,11,11,11,11,11,11]);
  assert.deepEqual(splitIds([...ids,'future-entry']).flat(),[...ids,'future-entry']);
  assert.throws(()=>splitIds(['same','same'],1));
 });
 test('all batches complete, exact command/profile and strict aggregate PASS',()=>{
- const f=fixture(),r=aggregate(f.plan,f.output,ids);assert.equal(r.status,'PASS');assert.equal(r.counts.PASS,80);assert.equal(r.unverified,0);assert.deepEqual(r.results.map(r=>r.id),ids);
+ const f=fixture(),r=aggregate(f.plan,f.output,ids);assert.equal(r.status,'PASS');assert.equal(r.counts.PASS,87);assert.equal(r.unverified,0);assert.deepEqual(r.results.map(r=>r.id),ids);
  assert.throws(()=>runBatch(f.plan,1,f.output),'cannot overwrite evidence');
 });
 const faults={
@@ -80,7 +80,7 @@ for(const [name,fault]of Object.entries(faults))test(name+' cannot produce Full 
 });
 for(const status of ['FAIL','SKIP','BLOCKED'])test(status+' never counts as PASS',()=>{
  const f=fixture();change(f.file,r=>{const x=r.results[0];x.status=status;x.exitCode=status==='FAIL'?1:null;r.counts.PASS--;r.counts[status]++;});
- const r=aggregate(f.plan,f.output,ids);assert.equal(r.status,'FAIL_OR_INCOMPLETE');assert.equal(r.counts.PASS,79);assert.equal(r.counts[status],1);
+ const r=aggregate(f.plan,f.output,ids);assert.equal(r.status,'FAIL_OR_INCOMPLETE');assert.equal(r.counts.PASS,86);assert.equal(r.counts[status],1);
 });
 test('interruption after batch 1 leaves its independent evidence intact',()=>{
  const f=fixture(),before=hash(readFileSync(path.join(f.output,'batch-1/summary.json')));

@@ -6,6 +6,9 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
+import {instrumentRng} from './support/rng-instrument.mjs';
+import {withCareerSessionAccess} from './support/career-session-access.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
@@ -14,9 +17,9 @@ function instrument(source){
  const actionAnchor=source.includes('action:()=>invokeAnnualChoice(view,o.f),')?'action:()=>invokeAnnualChoice(view,o.f),':source.includes('action:()=>invokeChoiceAction(o.f),')?'action:()=>invokeChoiceAction(o.f),':'action:o.f,';
  assert.ok(source.includes(actionAnchor),'choice observer anchor');
  const invoke=actionAnchor==='action:o.f,'?'o.f()':actionAnchor.includes('invokeAnnualChoice')?'invokeAnnualChoice(view,o.f)':'invokeChoiceAction(o.f)';
- source=source.replace('function R(){','function R(){window.__calls=(window.__calls||0)+1;').replace('R = function(){','R = function(){window.__calls=(window.__calls||0)+1;').replace('function card(cls,title,html){','function card(cls,title,html){window.__cardCalls=(window.__cardCalls||0)+1;(window.__cardHTML??=[]).push({cls,title,html});').replace(actionAnchor,`action:()=>{window.__actionCalls=(window.__actionCalls||0)+1;return ${invoke};},`);
- const at=source.lastIndexOf('})();');assert.ok(at>0);
- return source.slice(0,at)+`const auditSignTo=signTo;signTo=function(...args){const calls=window.__calls||0,rng=_s;try{return auditSignTo(...args);}finally{window.__signAudit={beforeCalls:calls,afterCalls:window.__calls||0,beforeRng:rng,afterRng:_s};}};window.__actAudit={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__calls||0,actions:window.__actionCalls||0,sign:window.__signAudit||null,generation:choiceGeneration,token:activeChoiceToken?.generation,running:activeChoiceToken?.running,dom:document.querySelector('#act').outerHTML,cards:window.__cardCalls||0}),draft:(from,development=false)=>{actClear();S=newState('入団検証',S.pos);Object.assign(S,{age:from==='HS'?18:22,year:2032,stage:from,lv:from,stageYr:from==='HS'?3:4,entryRoute:from,seasonFactor:1});Object.keys(S.ab).forEach(k=>S.ab[k]=development?(from==='HS'?31:39):60);enterDraftPath(from);}};`+source.slice(at);
+ source=instrumentRng(source,'__calls').replace('function card(cls,title,html){','function card(cls,title,html){window.__cardCalls=(window.__cardCalls||0)+1;(window.__cardHTML??=[]).push({cls,title,html});').replace(actionAnchor,`action:()=>{window.__actionCalls=(window.__actionCalls||0)+1;return ${invoke};},`);
+ source=withCareerSessionAccess(source);
+ return injectOverlayHook(source,`const auditSignTo=signTo;signTo=function(...args){const calls=window.__calls||0,rng=_s;try{return auditSignTo(...args);}finally{window.__signAudit={beforeCalls:calls,afterCalls:window.__calls||0,beforeRng:rng,afterRng:_s};}};window.__actAudit={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__calls||0,actions:window.__actionCalls||0,sign:window.__signAudit||null,generation:__cs.choiceGeneration,token:__cs.activeChoiceToken?.generation,running:__cs.activeChoiceToken?.running,dom:document.querySelector('#act').outerHTML,cards:window.__cardCalls||0}),draft:(from,development=false)=>{actClear();S=newState('入団検証',S.pos);Object.assign(S,{age:from==='HS'?18:22,year:2032,stage:from,lv:from,stageYr:from==='HS'?3:4,entryRoute:from,seasonFactor:1});Object.keys(S.ab).forEach(k=>S.ab[k]=development?(from==='HS'?31:39):60);enterDraftPath(from);}};`);
 }
 const server=createServer(async(req,res)=>{try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1)||'index.html';if(rel.includes('..'))throw Error('path');let body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));

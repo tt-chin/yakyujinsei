@@ -5,14 +5,13 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
-import {GAME_SOURCE as liveSource,productionFunction} from '../../../tests/retirement-hof-test-support.mjs';
+import {GAME_SOURCE as src,productionFunction} from '../../../tests/retirement-hof-test-support.mjs';
 import {awardTraitUnlocks,goldclothEligible,TRAIT_TEXT} from '../../src/engine/trait-policy.js';
 import {isBelowActiveMinimum,findDemotionTarget,demotionChoiceText} from '../../src/engine/career-policy.js';
 import {createContract,contractNeedsRenewal} from '../../src/engine/contract-policy.js';
 const arg=k=>process.argv.find(x=>x.startsWith('--'+k+'='))?.slice(k.length+3);
 const after=arg('mode')==='after';
 assert(arg('output'),'Explicit new output required; never overwrite historical results');
-const src=arg('source')?execFileSync('git',['show',arg('source')+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}):liveSource;
 const start=performance.now(),out=[];
 const levels=src.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1];
 const paths=src.match(/Object.assign\(PATHS,(\{[^\n]+\})\);/)[1];
@@ -33,7 +32,7 @@ function harness(state,seed='award-jp-0',overall=52){
   observe:(key,v)=>Object.assign(observed,{[key]:structuredClone(v)}),recordR:x=>rng.push(x),note:x=>trace.push(x)});
  const originals=[...(src.includes('function hasCurrentJapaneseAward(')?['hasCurrentJapaneseAward']:[]),'awards','removeTrait','isSP','traitCard','handleDemotion','fnv1a32','movement'];
  // Existing productionFunction extracts intact functions. Only observer calls are added in memory.
- const code=originals.map(n=>{let f=productionFunction(n,src);if(n==='awards')f=f.replace('    if(S.traits.glass&&!S.traits.phoenix)',"    observe('phoenixReached',{glass:S.traits.glass,phoenix:S.traits.phoenix,pool:S.pool});\n    if(S.traits.glass&&!S.traits.phoenix)");
+ const code=originals.map(n=>{let f=productionFunction(n);if(n==='awards')f=f.replace('    if(S.traits.glass&&!S.traits.phoenix)',"    observe('phoenixReached',{glass:S.traits.glass,phoenix:S.traits.phoenix,pool:S.pool});\n    if(S.traits.glass&&!S.traits.phoenix)");
   if(n==='movement')f=f.replace('  if(wonAward||goodReal)',"  observe('movement',{wonAward,goodReal,o,minReq,perf});\n  if(wonAward||goodReal)");return f;}).join('\n');
  vm.runInContext(`const LV=${levels},PATHS=${paths};const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));let _s=0,seedInit,R;${seedSource}\n${rSource}\nconst nativeR=R;R=()=>{const v=nativeR();recordR(v);return v;};${chanceSource}\n${code}\nconst nativeHandleDemotion=handleDemotion;handleDemotion=(...a)=>{note('handleDemotion-native');return nativeHandleDemotion(...a);};const LEGACY={movement:(...a)=>{note('LEGACY.movement-native');return movementLegacy(...a);}};const movementLegacy=movement;${overlay}`,context);
  context.S.seed=seed;context.fixtureSeed=seed;vm.runInContext('seedInit(fixtureSeed)',context);
@@ -74,22 +73,6 @@ for(const [id,award] of [['B08-55chance','最優秀投手賞'],['B09-protected',
  const state=baseState();state.honors=[produced.get(award)];const h=harness(state,demotionSeed,60);h.run('movement()');const protectedNow=after||award==='年間MVP';assert.equal(h.rng.length,protectedNow?0:1);assert.equal(h.trace.includes('handleDemotion-native'),!protectedNow);
  record(id,'high-overall-performance-branch',{state,overall:60,seed:demotionSeed},h,{rng:protectedNow?0:1,demotion:!protectedNow},{...h.observed.movement,demotionHandlerEntered:!protectedNow},protectedNow?'PASS':'FAIL',{source:'game.js:1625-1627',note:'Actual 55% performance demotion branch; native RNG is not mocked.'});
 }
-if(arg('history')==='true')for(const [i,title] of ['最佳投手','打擊王','全壘打王','金手套'].entries()){
- const state=baseState();state.honors=[`2035 NPB${title}`];const p=harness(state,quietSeed);p.context.st={...baseStat(),IP:0};p.run("awards('NPB',st)");assert.equal(!!p.snapshot().traits.phoenix,i<3);assert.deepEqual(p.snapshot().honors,state.honors);
- record('H-P-'+title,'native-legacy-alias',{state,seed:quietSeed},p,{phoenix:i<3},{phoenix:!!p.snapshot().traits.phoenix,pool:p.snapshot().pool});
- const m=harness(state,quietSeed);m.run('movement()');assert.equal(m.observed.movement.wonAward,true);assert.equal(m.trace.includes('handleDemotion-native'),false);assert.deepEqual(m.snapshot().honors,state.honors);
- record('H-D-'+title,'native-legacy-alias',{state,seed:quietSeed},m,{wonAward:true},{...m.observed.movement});
-}
-if(arg('extended')==='true')for(const league of ['NPB','KBO','台湾プロ野球','メジャーリーグ']){
- for(const title of ['最優秀投手賞','首位打者','本塁打王','最優秀防御率投手賞','沢村賞','首位打者（候補）']){
-  const state=baseState();state.honors=[`2035 ${league}${title}`];const h=harness(state,quietSeed);h.context.st={...baseStat(),IP:0};h.run("awards('NPB',st)");const eligible=['最優秀投手賞','首位打者','本塁打王'].includes(title),expected=after&&eligible;assert.equal(!!h.snapshot().traits.phoenix,expected);assert.equal(h.snapshot().pool,expected?15:7);assert.deepEqual(h.snapshot().honors,state.honors);
-  record('X-P-'+league+'-'+title,'native-awards-history-fixture',{state,seed:quietSeed},h,{phoenix:expected},{phoenix:!!h.snapshot().traits.phoenix,pool:h.snapshot().pool},!after&&eligible?'FAIL':'PASS',{note:'Exact historical honor fixture, not actual award producer. Old cross-league same-year scope retained; new P02/P08 names receive no effect.'});
- }
- for(const title of ['最優秀投手賞','首位打者','ゴールデングラブ賞','最優秀防御率投手賞','沢村賞','最優秀投手賞（候補）']){
-  const state=baseState();state.honors=[`2035 ${league}${title}`];const h=harness(state,quietSeed);h.run('movement()');const eligible=['最優秀投手賞','首位打者','ゴールデングラブ賞'].includes(title),expected=after&&eligible;assert.equal(h.observed.movement.wonAward,expected);assert.equal(h.trace.includes('handleDemotion-native'),!expected);assert.deepEqual(h.snapshot().honors,state.honors);
-  record('X-D-'+league+'-'+title,'active-movement-history-fixture',{state,seed:quietSeed},h,{wonAward:expected},{...h.observed.movement,demotion:!expected},!after&&eligible?'FAIL':'PASS',{note:'Native movement branch; no synthetic contract acceptance or payment. New P02/P08 excluded.'});
- }
-}
-const result={mode:after?'LIMITED_FIX_VALIDATION':'PRE_FIX_BASELINE',head:execFileSync('git',['rev-parse','HEAD']).toString().trim(),branch:execFileSync('git',['branch','--show-current']).toString().trim(),version:fs.readFileSync(new URL('../../src/config.js',import.meta.url),'utf8').match(/VERSION\s*=\s*['"]([^'"]+)/)[1],node:process.version,engineSha256:createHash('sha256').update(src).digest('hex'),fixtureSeeds:{quietSeed,asSeed,demotionSeed},summary:{runtimeCases:out.length,harnessPASS:out.length,harnessFAIL:0,policyPASS:out.filter(r=>r.policyStatus==='PASS').length,policyFAIL:out.filter(r=>r.policyStatus==='FAIL').length,BLOCKED:0},cases:out,seconds:(performance.now()-start)/1000,limits:['Synthetic fixtures, not natural careers or UI E2E','DOM/market boundary test doubles; no accepted demotion or real payment','Observers inserted only in isolated in-memory copies; original decisions and active RNG unchanged','Policy FAIL means observed current defect, not fixture failure']};
+const result={mode:'VALIDATION_ONLY / ANALYSIS_ONLY',head:execFileSync('git',['rev-parse','HEAD']).toString().trim(),branch:execFileSync('git',['branch','--show-current']).toString().trim(),version:fs.readFileSync(new URL('../../src/config.js',import.meta.url),'utf8').match(/VERSION\s*=\s*['"]([^'"]+)/)[1],node:process.version,engineSha256:createHash('sha256').update(src).digest('hex'),fixtureSeeds:{quietSeed,asSeed,demotionSeed},summary:{runtimeCases:out.length,harnessPASS:out.length,harnessFAIL:0,policyPASS:out.filter(r=>r.policyStatus==='PASS').length,policyFAIL:out.filter(r=>r.policyStatus==='FAIL').length,BLOCKED:0},cases:out,seconds:(performance.now()-start)/1000,limits:['Synthetic fixtures, not natural careers or UI E2E','DOM/market boundary test doubles; no accepted demotion or real payment','Observers inserted only in isolated in-memory copies; original decisions and active RNG unchanged','Policy FAIL means observed current defect, not fixture failure']};
 fs.writeFileSync(arg('output'),JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify({summary:result.summary,seeds:result.fixtureSeeds,seconds:result.seconds},null,2));

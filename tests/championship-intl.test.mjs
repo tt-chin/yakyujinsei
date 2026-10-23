@@ -6,6 +6,7 @@ import {productionFunction} from './retirement-hof-test-support.mjs';
 import {JP_DATA} from '../docs/src/data/jp-data.js';
 import * as champ from '../docs/src/engine/championship-policy.js';
 import * as intl from '../docs/src/engine/international-trait-policy.js';
+import * as selection from '../docs/src/engine/international-selection-policy.js';
 import {internationalPersonalStats,renderInternationalPersonalStats} from '../docs/src/ui/international-personal-stats.js';
 import * as contracts from '../docs/src/engine/contract-policy.js';
 import {applyIncentivePayment,createIncentiveTerms} from '../docs/src/engine/incentive-policy.js';
@@ -13,6 +14,7 @@ import {classifyMarketInjury} from '../docs/src/engine/injury-market-policy.js';
 import * as receipts from '../docs/src/engine/award-transaction-policy.js';
 import {prepareSeasonPayment} from '../docs/src/engine/season-payment-policy.js';
 const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
+const SeasonStats=game.includes('seasonStats.addIntlStats(')?(await import('../docs/src/engine/season-stats.js')).SeasonStats:null;
 const teamById=id=>JP_DATA.teams.find(t=>t.teamId===id);
 let cases=0;
 function test(name,fn){fn();cases++;console.log('PASS '+name);}
@@ -37,8 +39,10 @@ test('structured result overrides ambiguous honor, valid final count retained',(
 // Execute the actual active international functions, not a reimplementation.
 function activeIntl(v={},source=game){
   const s=state({ab:{vel:65,ctl:65,brk:65,sta:65},pos:'P',role:'SP',rehab:0,skipMid:false,seasonFactor:1,intlDeclinedCount:0,...v});let opts,draws=0,done=0,cards=[];
-  const context={...intl,internationalPersonalStats,renderInternationalPersonalStats,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
-  runInNewContext(source.slice(source.indexOf('  function intlEvents('),source.indexOf('  maybeIntl = function(done)')),context);
+  const context={...intl,...selection,internationalPersonalStats,renderInternationalPersonalStats,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
+  // OOP plan §2i (7-A): with the addIntlStats delegate, the vm group calls a SeasonStats built from the live context stubs.
+  if(source.includes('seasonStats.addIntlStats('))context.seasonStats=new SeasonStats({getState:()=>context.S,levels:null,rng:{R:()=>context.R(),N0:()=>assert.fail('N0'),chance:p=>context.chance(p),ri:(a,b)=>context.ri(a,b)},clamp:(x,a,b)=>context.clamp(x,a,b),isSP:()=>context.isSP(),pitcherRole:()=>assert.fail('pitcherRole'),checkGoldclothSeason:()=>assert.fail('checkGoldclothSeason')});
+  runInNewContext(source.slice(source.indexOf('  function intlEvents('),Math.max(source.indexOf('  function maybeIntl(done)'),source.indexOf('  maybeIntl = function(done)'))),context);
   return {s,context,run:phase=>context.processIntlPhase(phase,()=>done++),options:()=>opts,report:()=>({draws,done,cards})};
 }
 test('I06 actual accepted callback twice: stats/RNG/rewards/next once',()=>{const f=activeIntl({intlCount:2,intlFinalCount:1});f.context.rank=1;f.run('POST');const button=f.options()[0];button.f();const saved=JSON.stringify(f.s),report=JSON.stringify(f.report());button.f();assert.equal(JSON.stringify(f.s),saved);assert.equal(JSON.stringify(f.report()),report);assert.equal(f.s.intlCount,3);assert.equal(f.s.intlFinalCount,2);assert.equal(f.report().done,1);assert.equal(f.report().cards.length,2);});
@@ -48,12 +52,25 @@ test('international result UI failure can redraw without RNG/recommit',()=>{cons
 test('unlock UI retry does not duplicate already rendered result',()=>{const f=activeIntl({intlCount:2,intlFinalCount:2});f.run('POST');const b=f.options()[0],card=f.context.card;let attempts=0;f.context.card=(...a)=>{if(++attempts===2)throw Error('Unlock UI fixture');card(...a);};assert.throws(()=>b.f(),/Unlock UI fixture/);const saved=JSON.stringify(f.s),draws=f.report().draws;f.context.card=card;b.f();assert.equal(JSON.stringify(f.s),saved);assert.equal(f.report().draws,draws);assert.equal(f.report().cards.length,2);assert.equal(f.report().done,1);});
 const oldGame=execFileSync('git',['show','004cd26:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20000000});
 for(const [pos,role,ab] of [['P','SP',{vel:65,ctl:65,brk:65}],['P','MR',{vel:65,ctl:65,brk:65}],['IF',null,{con:65,pow:65,eye:65,spd:65}]])for(const rank of [0,1,2,3])for(const intlace of [false,true])test('old/new international RNG/stats '+[pos,role,rank,intlace].join('/'),()=>{const v={pos,role,ab,traits:{intlace},injNext:17},old=activeIntl(v,oldGame),now=activeIntl(v);for(const f of [old,now]){f.context.rank=rank;f.context.isSP=()=>role==='SP';f.run('POST');f.options()[0].f();}assert.equal(now.report().draws,old.report().draws);assert.deepEqual(now.s.intlStat,old.s.intlStat);assert.equal(now.s.injNext,old.s.injNext);assert.equal(now.s.intlCount,old.s.intlCount);assert.equal(now.s.pool,old.s.pool+(intlace&&rank===3?1:0));});
+// OOP plan §2i (7-B): schedule/selection delegates match the pre-extraction rules cell by cell (the extra ovr() call is disclosed, not compared).
+const preSelection=execFileSync('git',['show','3c0f3e1c047654c56ad306070a788c1aeee43f05:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20000000});
+function intlRules(source){
+  const c={...intl,...selection,DATA:JP_DATA,S:{},overall:0,ovr:()=>c.overall};
+  runInNewContext(source.slice(source.indexOf('  function intlEvents('),source.indexOf('  function addIntlStats(')),c);
+  if(source.includes('  function intlSelection(e)')){c.select=e=>c.intlSelection(e);return c;}
+  const deny=/if\((!intlLevelEligible\(e\)\|\|ovr\(\)<threshold)\)\{completeIntl\(e,'DENIED',next\);return;\}/.exec(source),injured=/if\((S\.rehab>0\|\|S\.skipMid\|\|S\.seasonFactor<1)\)\{\r?\n\s*card\('info','日本代表招集見送り'/.exec(source);
+  assert.ok(deny&&injured,'pre-extraction selection conditions found');
+  c.select=runInNewContext(`e=>{const threshold=intlThreshold(e);if(${deny[1]})return 'DENIED';if(${injured[1]})return 'INJURED';return 'ELIGIBLE';}`,c);
+  return c;
+}
+test('7-B schedule/phase/threshold old/new',()=>{const old=intlRules(preSelection),now=intlRules(game);let n=0;for(const data of [JP_DATA,{...JP_DATA,intlEvents:[{eventKey:'WBC:2035',name:'ワールド・ベースボール・クラシック',startDate:'2035-03-05'},{eventKey:'P12:2035',name:'WBSCプレミア12',startDate:'2035-11-10'}]}]){old.DATA=now.DATA=data;for(let year=2020;year<=2070;year++){const events=now.intlEvents(year);assert.equal(JSON.stringify(events),JSON.stringify(old.intlEvents(year)),'events '+year);n+=events.length;for(const e of events){assert.equal(now.intlPhase(e),old.intlPhase(e));assert.equal(now.intlThreshold(e),old.intlThreshold(e));}}}assert.equal(n,45);for(let m=1;m<=12;m++){const e={eventKey:'X:2035',startDate:'2035-'+String(m).padStart(2,'0')+'-01'};assert.equal(now.intlPhase(e),old.intlPhase(e),'month '+m);}});
+test('7-B selection old/new grid incl. undefined injury fields',()=>{const old=intlRules(preSelection),now=intlRules(game);let cells=0;for(const e of [{eventKey:'WBC:2030'},{eventKey:'P12:2031'}])for(const lv of ['NPB1','NPB2','NPB_DEV','MLB','MiLB','KBO1','KBO2','CPBL1','CPBL2','R','A1','A2','A3','IND',undefined])for(const overall of [54,55,57,58,59])for(const rehab of [undefined,0,1])for(const skipMid of [undefined,false,true])for(const seasonFactor of [undefined,1,.5,0]){for(const c of [old,now]){c.S={lv,rehab,skipMid,seasonFactor};c.overall=overall;}assert.equal(now.select(e),old.select(e),JSON.stringify({e,lv,overall,rehab,skipMid,seasonFactor}));cells++;}assert.equal(cells,5400);});
 test('C09 actual active phaseEnd: champion, maintenance, salary/incentive/progression once',()=>{
   const s=state({seed:'championship-native-receipt',tradeRefuse:2,tradeHeat:8,careerEarnings:111,careerBaseSalary:0,careerIncentive:0,yearlyIncentivePaid:{},yearOutsideIncome:111});
   s.ct=contracts.createContract({contractId:'champ',org:'NPB',teamId:s.orgTeamId,signedYear:2034,startYear:2035,years:2,annualSalary:100000000,incentive:createIncentiveTerms({org:'NPB',annualSalary:100000000})});
   champ.captureSeasonChampionship(s);let draws=0,moved=0,cards=0;
-  const c={...champ,...contracts,...receipts,prepareSeasonPayment,applyIncentivePayment,classifyMarketInjury,S:s,phaseEnd:null,board:()=>{},migrateSalaryV140State:()=>{},teamRec:teamById,R:()=>{draws++;return 0;},escapeHTML:x=>x,card:()=>cards++,fmtMoney:x=>String(x),movement:()=>moved++,pendingOffseasonSalary:null,choose:()=>assert.fail('no pool'),allocUI:()=>{},choiceViews:new WeakMap(),restorePendingChoice:()=>false};
-  runInNewContext(productionFunction('renderCheckpointCard',game)+'\n'+game.slice(game.indexOf('  let seasonEndContext=null;'),game.indexOf('  movement = function()',game.indexOf('  let seasonEndContext=null;'))),c);
+  const c={...champ,...contracts,...receipts,prepareSeasonPayment,applyIncentivePayment,classifyMarketInjury,S:s,phaseEnd:null,board:()=>{},migrateSalaryV140State:()=>{},teamRec:teamById,R:()=>{draws++;return 0;},escapeHTML:x=>x,card:()=>cards++,fmtMoney:x=>String(x),movement:()=>moved++,careerSession:{pendingOffseasonSalary:null,seasonEndContext:null,corpSettlements:new WeakMap()},choose:()=>assert.fail('no pool'),allocUI:()=>{},choiceViews:new WeakMap(),restorePendingChoice:()=>false};
+  runInNewContext(productionFunction('renderCheckpointCard',game)+'\n'+game.slice(game.indexOf('  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();'),game.indexOf('  movement = function()',game.indexOf('  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();'))),c);
   c.phaseEnd();const saved=JSON.stringify(s);c.phaseEnd();assert.equal(JSON.stringify(s),saved);assert.deepEqual([draws,moved,cards],[1,1,2]);assert.equal(s.careerBaseSalary,100000000);assert.equal(s.careerEarnings,100000111);assert.deepEqual([s.tradeRefuse,s.tradeHeat],[1,3]);
 });
 test('snapshot placement and franchise hookup use unchanged actual path',()=>{assert.ok(game.indexOf('captureSeasonChampionship(S);')>game.indexOf('recordSalaryEvaluation(entry.st);'));assert.ok(game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('tjGamble(()=>demotionAudit'));const source=game.slice(game.indexOf('function movement(){'),game.indexOf('function advance()'));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});

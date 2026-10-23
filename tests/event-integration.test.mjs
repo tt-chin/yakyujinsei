@@ -9,8 +9,11 @@ const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url)
 const sim=game.slice(game.indexOf('function simSeason('),game.indexOf('/* シーズン状態は10%'));
 const qual=game.slice(game.indexOf('function dpQual('),game.indexOf('const DP_RANK='));
 const fixture={S:{pos:'P',role:'SP',age:23,lv:'NPB1',ab:{vel:20,ctl:20,brk:20,sta:30,con:20,pow:20,eye:20,spd:20},traits:{},seasonFactor:1,dpos:null},LV:{NPB1:{par:53,g:143}},DP_TH:{SS:{NPB1:50}},dpScore:()=>44,clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),N0:()=>0,R:()=>.5,isSP:()=>true,pitcherRole:()=> 'SP',defRuns:()=>0,applySeasonForm:()=>{}};
-const context=vm.createContext(fixture);vm.runInContext(sim,context);
-const run=()=>vm.runInContext("simSeason('NPB1')",context);
+const moved=game.includes('seasonStats.simSeason(');
+const context=vm.createContext(fixture);if(!moved)vm.runInContext(sim,context);
+const seasonStats=moved?new (await import('../docs/src/engine/season-stats.js')).SeasonStats({getState:()=>fixture.S,levels:fixture.LV,rng:{R:()=>fixture.R(),N0:sd=>fixture.N0(sd),chance:p=>fixture.chance(p),ri:(a,b)=>fixture.ri(a,b)},clamp:fixture.clamp,isSP:()=>fixture.isSP(),pitcherRole:()=>fixture.pitcherRole(),checkGoldclothSeason:()=>fixture.checkGoldclothSeason()}):null;
+if(seasonStats){seasonStats.defRuns=fixture.defRuns;seasonStats.applySeasonForm=fixture.applySeasonForm;}
+const run=()=>seasonStats?seasonStats.simSeason('NPB1'):vm.runInContext("simSeason('NPB1')",context);
 let plain=run();fixture.S.traits.favorite=true;let favored=run();assert.ok(favored.G>plain.G);assert.equal(favored.G,15);
 fixture.S.seasonFactor=.5;assert.equal(run().G,8,'injury factor applies after favorite');
 fixture.S.pos='IF';fixture.S.seasonFactor=1;fixture.S.ab.sta=20;fixture.S.traits.favorite=false;plain=run();fixture.S.traits.favorite=true;favored=run();assert.equal(plain.G,14);assert.equal(favored.G,119);

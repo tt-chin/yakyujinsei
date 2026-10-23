@@ -6,6 +6,7 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
+import {instrumentRng} from './support/rng-instrument.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').slice(1).join('=');
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
@@ -13,7 +14,7 @@ const hook=`\nwindow.__eventTest={get:()=>({state:JSON.parse(JSON.stringify(S)),
 const server=createServer(async(req,res)=>{
   try{const u=new URL(req.url,'http://localhost'),baseline=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname).replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');
     let content=baseline?execFileSync('git',['show',`93ad2c7:docs/${rel}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',rel));
-    if(rel==='src/engine/game.js'){content=content.toString().replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;')+(baseline?`\nwindow.__eventTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),sim:lv=>simSeason(lv)};`:hook);}
+    if(rel==='src/engine/game.js'){content=instrumentRng(content.toString(),'__rngCalls')+(baseline?`\nwindow.__eventTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),sim:lv=>simSeason(lv)};`:hook);}
     res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
   }catch(e){res.statusCode=404;res.end(String(e));}
 });

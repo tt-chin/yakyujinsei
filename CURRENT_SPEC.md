@@ -1,4 +1,23 @@
-# 現行規格（dev v1.13.0準備中／main表記は歴史記録）
+# 現行規格（正式公開 v1.13.0／開発版 v1.13.3）
+
+### 開発版1.13.3：日本球界への別れ
+
+使用者批准將原台灣送別事件的資格與文案改為日本球界：引退呼叫時須為PRO、S.stats.NPB.yr>0、目前組織為MLB／MiLB／KBO／CPBL，且既有S._daiba尚未成立。標題為「日本球界への別れ」，內文為受日本プロ野球邀請、在古巢本拠地始球並向日本球迷致謝。沿用_daiba一次性旗標，既有true不補發；NPB在籍、無NPB年資、非PRO或未知組織不觸發。不改引退續行、能力、金錢、honors或RNG。此為本次批准的資格變更，不視為跨版卡片／_daiba全等；其他S仍須一致。
+
+### 開発版1.13.2：PC概要欄の幅・契約表示
+
+1180px以上の左右欄は300px固定上限を廃止し、画面幅に追従して外側余白約24pxと中央560pxの操作領域を保持する。右側の契約・収入は狭い欄では項目名と値を縦配置、欄幅420px以上では両列に最小幅0を指定した2列にする。長い契約期間、年度別金額、金額文字列は折り返し、情報を削らない。変更はdesktop-career内に限定し、スマートフォン・キャリア詳細本体・金額計算・S／RNGは変更しない。
+
+### 開発版1.13.1：右上メニュー
+
+公開済み1.13.0とは別の未公開作業ツリー。右上は「メニュー」ボタン1個とし、表示設定／共有／開発を応援／最初からやり直すを展開する。既存の設定、Seed共有、再開確認の処理を再利用し、選手状態・RNG・所得・賞の規則は変更しない。Esc／外側クリック／フォーカス離脱で閉じ、設定／共有ダイアログからは表示中のメニューボタンへフォーカスを返す。タッチ44px、キーボードのTab・方向キー・Home／Endに対応する。
+
+支援は利用者指定のOFUSE（https://ofuse.me/dcb7f92e）を別タブで開く外部リンクのみ。日本／円／単発の任意支援で、決済はOFUSE側に委ねる。サイト内で決済情報を扱わず、能力・抽選・待遇への特典なし。開始画面に支援ボタンは置かない。遊び方・更新履歴は同ページdialogで表示し、閉じた後は元の位置へ戻る。履歴はCHANGELOGから生成する公開用データ（node scripts/update-release-notes.mjs、最新10版）を唯一の派生元とする。1180px以上では左に能力・特性、右に通算成績・契約の唯読概要を表示し、既存view modelとrendererを再利用する。1180px未満では非表示とし、選択肢・計算・RNGを変更しない。実決済・OFUSE受取設定・実機共有は本機UI検査の対象外。
+
+
+> 現行公開状態（2026-10-16）：正式ソース／main `650e4dd21718b4abec3876fc9ef6148714c21d4f`、公開Repository `15adf286e687ab2efc70e9e694ae024f75c3f10b`。既存Publish Workflow成功、同SHA Linux Quick61 PASS、正式サイトP／IF×1280／320／390pxの基本Smoke6組PASS。[公開検収](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)参照。Linux FullはGitHub Actionsで未PASS（2026-10-18、本機Docker Linuxで`650e4dd` 80 PASS、BACKLOG CI-LINUX-FULL-01）、artifact全原件保存は **ARTIFACT_COVERAGE_BLOCKED** のまま。公開成功をFull合格や全機能検証と解釈しない。文書入口は[現行文書ナビ](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)。
+
+以下の2026-10-15準備記録及び過去版の検証状態は歴史快照であり、現在の公開状態を上書きしない。
 
 > 2026-10-15 D2同期：本地dev基準 `56e72d9792529f3221c1a1ffadaf563bceebe26d`（受入時1.12.0）には、利用者が受け入れた投手個人賞D2と年度取引基盤が実装済み。現行挙動は第17節。追加承認により作業ツリーのconfigとCHANGELOGを1.13.0へ更新し、規則は変更しない。新規S.version及びbirthHighSchool.createdVersionは1.13.0；出生記録の現行版一致判定は既存方針のまま、旧記録を補完しない。[G9發布準備](docs/reviews/PITCHER_AWARDS_D2_G9_RELEASE_PREPARATION.md)参照。未コミット・未配信であり、CI／Preview／本番の合格を意味しない。本書の過去版別検証・main表記は当時の記録であり、現在の配信確認ではない。
 
@@ -434,7 +453,7 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 ### 15.1 範囲・承認
 
 - YAKYUJINSEI_V1.9.1_CHAMPIONSHIP_INTL_FIX_SPECの有効仕様を本節へ移管。旧公開基準5602a7cではなく、dev 004cd26（1.10.3）を実装前の比較基準とする。使用者はMINOR 1.11.0、対象年度の追加優勝抽選による後続seed差、季末の拒否／不満減算を承認。dev push／PreviewはAGENTSに従い、main／本番は別承認。
-- championship-policy.js／international-trait-policy.jsはDOM・グローバルRNGを参照せず、既存RNGと球団Master照会を注入する。到達不能な旧phaseEnd／maybeIntlは削除せず、旧給与処理を委譲しない。
+- championship-policy.js／international-trait-policy.jsはDOM・グローバルRNGを参照せず、既存RNGと球団Master照会を注入する。到達不能な旧phaseEnd／maybeIntlは削除せず、旧給与処理を委譲しない。international-selection-policy.js（大会日程・代表選考）はDOM・S・RNGを参照しない純関数とし、公式日程と選考に必要な値を引数で受け取る。
 - 92イベントの文案・条件・数値、能力値と成績生成、年俸モデル、FA、国際日程／召集条件／順位確率、共有画像のテーマ、seed-only URLは変更しない。全球団の合計100%優勝分布、国際MVP、大会別履歴一覧、intlBest、二刀流、保存機能、優勝賞金／育成点は追加しない。1.11.8の既存結果カードへの本大会成績表示だけは第15.4節に従う。優勝請負人の累計5冠／機率+5百分点は引き続き別案件。
 
 ### 15.2 優勝対象と機率
@@ -508,7 +527,9 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 
 <a id="d2-current-spec"></a>
 
-## 17. 投手個人賞D2・年度取引（本地dev実装、未公開）
+## 17. 投手個人賞D2・年度取引（1.13.0公開済み）
+
+本節の製品規則は公開済み。以下に記載したA／B本地受入SHA・当時の未確認範囲は履歴として保持する。現行公開／Full延後の区別は冒頭及び[公開検収](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)を参照。新たな規則・精度・回復保証は追加しない。
 
 ### 17.1 適用範囲と識別
 
@@ -517,6 +538,16 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 P01=最多勝利投手賞／PITCH_WINS、P02=最優秀防御率投手賞／PITCH_ERA、P03=最多三振奪取投手賞／PITCH_STRIKEOUTS、P04=勝率第一位投手賞／PITCH_WIN_PCT、P05=最多セーブ投手賞／PITCH_SAVES、P06=最優秀中継ぎ投手賞／PITCH_RELIEF、P07=投手三冠王／PITCH_TRIPLE_CROWN、P08=沢村賞／PITCH_SAWAMURA。
 
 四リーグとも旧「最優秀投手賞」を新たに発行しない。過去の同賞はLEGACY_BEST_PITCHERとして原文・大賞待遇を保持し、P02／P08へ変換しない。P03／P05／P06の旧短名は同義の読取ビューで扱い、S.honors自体の順序・原文・重複を削除しない。未知歴史名からIDや三冠・未払効果を推測しない。各Consumer専用の厳密な旧名相容規則は、全域Registry aliasや新賞Decisionの信頼根拠にはしない。
+
+<a id="d2-identity-history"></a>
+
+#### 17.1.1 歴史識別とConsumer互換性の境界
+
+個人賞の読取は四桁年度・既知リーグラベル・完全一致の正式名／確認済みaliasによる。現在の所属球団から過去リーグを逆算せず、候補中文aliasや「王」／MVPを含むだけの文字列から新IDを作らない。All-Starのファン投票附註は既知の完全一致形式のみ識別する。新しいcanonical keyの年度1～9999の検証範囲は、歴史honors表示が三桁年度にも対応するという意味ではない。
+
+UNKNOWNの個人賞と、明示された国際・チーム・アマチュアのNOT_IN_SCOPEを分離する。未知原文は保持し、新効果を推測しない。既存Consumerだけが認める厳密な旧形式は、そのConsumerの従来待遇のみ保持する。例えば旧「年度MVP」「守備王」「出塁王」「最多勝」の一部Consumerでの受理を、全域ID・完了Decision・P07実得源・新たな復活／保護へ昇格させない。
+
+歴史phoenix+8の補発、結算済み賞の再抽選、支払済み年俸／契約の再計算、S.honorsの全面改写は行わない。既存の国際・チーム・範囲外Consumerと旧賞の同年度跨リーグ保護は変更せず、未知個人賞の推測禁止と両立できない場合は停止・報告する。正式な細則は[D2§14.13.4](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-consumers)及び[AF08十条](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-history)。現行接点は[identity](docs/src/engine/award-identity-policy.js)と[consumer policy](docs/src/engine/award-consumer-policy.js)。
 
 ### 17.2 資格・確率
 
@@ -545,6 +576,16 @@ P01～P06は部門級、P08は大賞級。P07自体に別枠の大賞HOF加点�
 
 phoenixと降格保護は別資格集合。P08実得は既存のglassかつ未phoenixの場合のみglass解除・phoenix取得・pool+8を生涯一回発動し、同季MVPとも共有する。獲賞当年・該当contextのmovement保護であり、永続保護・更新保証・引退免除ではない。P01～P06へ一律に同待遇を広げず、GoldGloveにphoenix、All-Starに新たな両保護を付与しない。G1-Aで修正した日本語旧賞の資格と各Consumer固有の歴史待遇は保持する。
 
+<a id="d2-consumer-boundaries"></a>
+
+#### 17.3.1 資格集合・表示・既存待遇の保持
+
+既存の復活対象はMVP／新人王／旧最優秀投手賞／首位打者／本塁打王。既存降格保護はこれらに打点王／盗塁王／打撃三冠王／GoldGloveを含む別集合であり、最高出塁率や全ての部門賞へ一般化しない。G1-Aで補った日文名は既知リーグ接頭辞など従来の適用形式を保持する。Consumer専用の旧名形式と既存国際MVPの作用も原範囲を維持し、新P08は可信な同年度NPB1/SP実得contextに限る。復活時はglass解除、removedへの既存名記録、phoenix取得、pool+8を同じ生涯一回の効果として扱う。
+
+新人王は市場.25／HOF140で、直接FULLを保証しない。GoldGloveと年間最優秀守備選手は市場.25／fallback1、HOFはそれぞれ300／220。All-Starは市場／fallback加点や直接FULLを与えず、HOFの既存投手70／野手40を維持する。ホームラン王などの旧aliasはConsumer別の従来待遇を保持し、他のConsumerへ拡大しない。全support ID・旧名の詳細は[D2の待遇矩陣](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-consumers)と現行[Consumer実装](docs/src/engine/award-consumer-policy.js)を併読し、設計表の未確認alias候補を実装済みと扱わない。
+
+新発行は正式displayName、歴史表示はoriginalTextを用い、カード・成就・引退・PNGで原文と順序を保つ。取得時の説明とそれ以外の名称表示、折返しの既存規則を変更するためにhonorsを再構築しない。
+
 ### 17.4 RNG・Journal・年度続行
 
 新P01／P04／P08は六欄canonical identity、UTF-8長さframing、承認済みH1を用いる独立deterministic抽選であり、主Rを消費しない。P02／P03／P05／P06と元MVP等の資格短絡・順序・100%時の原主R一回を保持する。
@@ -553,8 +594,43 @@ phoenixと降格保護は別資格集合。P08実得は既存のglassかつ未ph
 
 支持する回復は同頁・同Sで記録済みの同期境界。未記録の主R消費窓、矛盾するpartial状態、OOM／任意host crash、reload、未知のstartYear／phasePre部分実行は自動修復せず診断して停止する。途中自動保存、旧版エンジン、rv/rules URLを追加しない。
 
+<a id="d2-technical-contract-index"></a>
+
+#### 17.4.1 現行技術契約への参照
+
+以下は既承認の詳細契約への正確な参照であり、候補モデルや未検証の任意回復を実装済みへ昇格させない。D2内のDESIGN_ONLY／NOT_IMPLEMENTED／NOT_RUN等は原時点の記録を保つ。実装済み範囲と実行証拠は17.5及びA／B受入、公開検収を併読する。契約と製品に矛盾があれば自動的にどちらかを採用せず停止・報告する。
+
+- **RNG・精度**：[D2§14.13.1 AF01～AF03](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-rng)。六欄domain／初期化済みseed／year／league／awardId／ruleId、UTF-8の4-byte unsigned big-endian長さframing、上限、H1定数／unsigned演算、uと判定式、p=0/100の決定的分岐、GV01～GV13、schemaとrule版の分離を保持する。single-playerの語意は第七欄ではない。実装は[award-rng-policy](docs/src/engine/award-rng-policy.js)、原向量は[g2-vectors](tools/development-a/g2-vectors.json)であり、ここに別のgoldenを作らない。
+- **Decision・Journal・Receipt**：[D2§14.13.2 AF04／AF05](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-receipts)。同S／年度／凍結league、完全key、原槽preallocate→同期R→記録、完了権限、原順序、個別writeのpresence／before／after／衝突停止、honors／trait／AS／history／salary評価の責任を保持する。[現行transaction policy](docs/src/engine/award-transaction-policy.js)のlive参照・所有権確認を構造等値だけで置き換えない。設計のAnnualTx例はSの永続schemaではない。
+- **年度checkpoint**：[D2§14.13.3 AF06及び完成条件表](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-checkpoints)。AWARD_PREPARED、DRAW_RECORDED、AWARD_EFFECTS_COMMITTED、SEASON_PAYMENT_COMMITTED、RESULT_RENDERED、WAIT_ALLOCATION／WAIT_CHOICE、CHOICE_COMMITTED、YEAR_HANDOFF_COMMITTEDそれぞれの進入／完了／再試行／停止条件を保持する。これらは契約上の段階で、全てが同名の製品phase文字列とは限らない。実接点は[game](docs/src/engine/game.js)のproSeason／awards／settleProfessionalEnd／movement／advance。
+- **ID・Consumer**：[D2§14.13.4 AF07](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-consumers)。完整support registry、Consumer別待遇、復活／降格集合、完全一致解析、semantic読取ビュー、原文表示の責任を保持する。§17.1.1のConsumer-only旧名と全域IDを混同しない。
+- **故障・受入Gate**：[D2§14.13.5](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-gates)。F-A／F-B01～12／F-YEAR／F-GV／F-ID01～12と元T／TR／ANの対応を保持する。G3の完成Decision fixture＋実際Receiptによる限定PASSは、G6／G7の真producer→Decision→Receipt→Consumer統合PASSの代わりではない。全T／TRの個別log対応が再確認済みとは主張しない。
+- **歴史互換性**：[D2§14.13.6 AF08](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-contract-history)。十条の制限は現行互換性の境界であり、未確認alias採用や歴史補発の許可ではない。
+
+<a id="d2-execution-compatibility"></a>
+
+#### 17.4.2 実行順序・再開・比較の境界
+
+awardsはphaseMidのproSeasonから呼ばれ、phaseEndで成績生成からやり直すものではない。旧賞の合法槽順序を保ち、新Decision／P07・MVP合流、個別効果、給与評価、元の後続イベント、phaseEndの支払／表示／選択へ進む。既存成績を再simSeason／accStatせず、支払済みを年度全体完了とはみなさない。
+
+記録済み槽は読取りで続行し、R消費後・記録前の不明窓はAMBIGUOUS_RNGで停止する。Receiptは証明可能なbefore／afterだけを続行し、並行した合法pool／契約変更を上書きしない。給与評価は既存の年度履歴更新、支払は元contractId／年度／出来高guardを用い、HOFは履歴から導出する評価であって重入時に加算する支払Receiptではない。
+
+支払後の表示失敗はsaved resultから再描画し、配分payload・dice順序・有効sessionを保持する。未接受choiceを新たなactionとして再実行せず、古いS／year／generation／session／取引tokenを拒否する。handoffはfromYear／targetYear／age／stageYrを区別し、yearがtargetなら再incrementしない。未知のstartYear／phasePre部分実行はNEXT_YEAR_AMBIGUOUSで停止する。詳細条件は上記AF06を正本参照とする。
+
+A→Bは最初の承認済み実効果前の既存S／選択／主Rを厳密比較し、新技術Decision／Receiptも別途厳格検査する。同じ入力の旧槽は資格・順序・回数・結果を保持する。合法な新効果後の状態／選択肢／主R分岐はproducer→Decision→Receipt→Consumer→状態差→後続Rの因果があるものだけEXPECTED_D2_CHANGEとし、不明差分はREGRESSION。全Sやhonors／salary／awardDecisionsを一括無視しない。同版Bの同条件再生は完全S／Decision／Receipt／選択／主R一致を要求する。この比較契約は将来の変更・試験実行の授権ではない。
+
 ### 17.5 証拠と未確認範囲
 
 [A受入](docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md)及び[B受入](docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md)は利用者接受済みの本地範囲。A Quick56／Full75、B Quick61／Full80はそれぞれ元の実行記録で、本節追加後の新実行ではない。G2同一製品ソースの実iPhone Safari52 PASSを保持するが、B全UIの新実機検証・Linux CI・Preview・公開確認ではない。
 
 四つのA固定策略自然生涯はBで普通S／選択／主R一致、同Bの完全Decision／Receipt重播も一致。これらの自然路線には新賞winnerがなく、新効果は真実のproducer→Decision→Receipt→Consumer受控Runtimeで検証した。自然得賞率・頂尖サンプルの平衡は未確認のまま。詳細な差異規則とG9残項は[G9報告](docs/reviews/PITCHER_AWARDS_D2_G9_ACCEPTANCE.md)。規則の承認原典は[D2](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md)で保持し、現在の実装仕様は本節を正本とする。
+
+<a id="d2-historical-design-index"></a>
+
+### 17.6 歴史設計・取代根拠（現行数値として適用しない）
+
+- D2§1～3のD1比較・A01～A09批准・実在リーグ研究は出典履歴。現行製品の適用範囲は17.1～17.3、実装／公開範囲は17.5及び公開検収で確認する。
+- D2§4.2候補／4.2.1のA曲線・NPB13勝は[§4.2.2承認B／NPB12](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#p01-p04-approved-design)と17.2に取代された。旧13勝分析を新12勝の実測値へ書き換えない。
+- D2§4.3／11／12のIP150／IP190／G100／基本55・旧曲線は[§13のP08最終承認](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#p08-approved-design)と17.2のIP180／S3／B2／G95へ取代された。手機2039年の1.10.3ケースはOFFLINE_ESTIMATEのまま保持する。
+- D2§14.3／14.4／14.7の候補方式より[§14.13正式技術契約](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-technical-approved)を参照する。候補全文を実装済みへ一括昇格させない。
+- D2§14.13.7、Decision Log及び工程計画内のNOT_IMPLEMENTED／NOT_AUTHORIZED／PLANNED等は元時点の記録。後続A／B受入と1.13.0公開検収を別証拠として併記し、当時のFAIL／NOT_RUN／WAIVEDは変更しない。Linux Full NOT_ACCEPTED / DEFERRED、ARTIFACT_COVERAGE_BLOCKED及び未完了の証拠対応・文書整理は残る。

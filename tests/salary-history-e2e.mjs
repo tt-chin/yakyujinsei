@@ -8,6 +8,8 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
 import os from 'node:os';
+import {instrumentRng} from './support/rng-instrument.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').slice(1).join('=');
@@ -22,8 +24,8 @@ const server=createServer(async(req,res)=>{try{
   if(old&&!cache.has(rel))cache.set(rel,execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20*1024*1024}));
   let content=old?cache.get(rel):await readFile(path.join(root,'docs',rel));
   if(rel==='src/engine/game.js'){
-    content=content.toString().replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;');
-    const at=content.lastIndexOf('})();');content=content.slice(0,at)+hook+content.slice(at);
+    content=instrumentRng(content.toString(),'__rngCalls');
+    content=injectOverlayHook(content,hook);
   }
   res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
 }catch(e){res.statusCode=404;res.end(String(e));}});

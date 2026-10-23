@@ -21,6 +21,7 @@ const browserProfiles = {
   'event-fix-e2e': {seconds:15},
   'global-contract-market-e2e': {args:['--quick'], seconds:30},
   'hof-first-ballot-e2e': {seconds:50},
+  'game-view-dom-e2e': {seconds:300,reason:'OOP phase 2 GameView guard: P/IF fixed-seed careers at 1280/390, per-step #log/#act/#board DOM, S and RNG count identical to fixed baseline 2a11a64. No Quick profile.'},
   'npb-return-e2e': {args:['--quick'], seconds:60},
   'replay-share-theme-e2e': {args:['--ui-only'], seconds:30},
   'salary-history-e2e': {args:['--ui-only'], seconds:20},
@@ -28,10 +29,15 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/board-menu.mjs': ['support','Native header menu interaction and E2E assertions; preserves historical visible-button controls.'],
   'support/approved-school-oracle.mjs': ['support','Explicit approved C-school/COPY positive-control overlay; never an old-bug negative oracle. Raw old/new traces remain separate.'],
   'support/baseline-initial-potential.mjs': ['support','Approved birth-potential adapter for positive historical UI comparisons; unadapted fixed-seed S/R proof stays separate. Not executable.'],
   'support/stage6-browser.mjs': ['support','Test-only native browser fixture and state/RNG/DOM trace; imported by Stage 6 probes.'],
   'support/first-difference.mjs': ['support','Read-only first-difference diagnostic, imported by historical E2E controls.'],
+  'support/dom-snapshot.mjs': ['support','Browser-side per-step #log/#act/#board DOM, S and RNG snapshot; imported by game-view-dom-e2e.'],
+  'support/rng-instrument.mjs': ['support','E2E RNG call counter: careerRng.onDraw on current game.js, legacy R text replace on old baselines; throws on miss.'],
+  'support/career-session-access.mjs': ['support','E2E hook accessor __cs for career flow state: careerSession.<name> on current game.js, bare bindings on old baselines; throws on miss.'],
+  'support/overlay-hook.mjs': ['support','E2E hook injection point: before the overlay IIFE end on old baselines, one shared block at module end once the overlay is unwrapped; throws on miss.'],
   'retirement-hof-test-support.mjs': ['support','Imported VM fixtures; not an executable test.'],
   'retirement-hof-analysis.mjs': ['analysis','Requires approved captured pilot/vote input; rewrites historical report data. Run explicitly outside automatic profiles.'],
   'retirement-hof-report.mjs': ['report','Rewrites historical approved report; not an automatic regression.'],

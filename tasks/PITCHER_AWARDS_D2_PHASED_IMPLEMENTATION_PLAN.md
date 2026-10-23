@@ -1,5 +1,13 @@
 # 野球人生｜投手獎項 D2 分階段實作計畫書
 
+## 現行執行索引（2026-10-16）
+
+A0／G2～G4、G5～G8的既有本地接受範圍保持；G9正式1.13.0發布與基本Smoke已完成，來源／main為 `650e4dd21718b4abec3876fc9ef6148714c21d4f`、正式Repository為 `15adf286e687ab2efc70e9e694ae024f75c3f10b`。[發布驗收](../docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)記錄同SHA Quick61及六組正式站Smoke。
+
+Linux Full **NOT_ACCEPTED / DEFERRED**，不再調查／修正／重跑；**ARTIFACT_COVERAGE_BLOCKED**獨立維持。使用者明確批准此次發布不以Full PASS為前置，不代表刪除原G8／G9 Gate或把未執行視為通過。原Gate、失敗恢復契約、批准及歷史結果全文保持；未來實作或恢復Full仍需新授權。
+
+文件移轉／整理未完成，只建立[現行導航](../docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#1-目前基準與閱讀入口)與[整理計畫](../docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md)。以下2026-10-15及更早的CURRENT EXECUTION STATUS、NOT_AUTHORIZED／NOT_STARTED／未公開文字屬歷史批准快照，不作現行執行許可；不能因本索引自行啟動新工作。
+
 ## CURRENT EXECUTION STATUS（2026-10-15）
 
 原計畫與各Gate要求保留。使用者其後已明確授權並接受開發A及B：A0／G2～G4、G5～G8為LOCAL_PASS / USER_ACCEPTED；受驗B來源已本機提交`56e72d9792529f3221c1a1ffadaf563bceebe26d`，VERSION仍1.12.0。證據見[A驗收](../docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_A_ACCEPTANCE.md)、[B驗收](../docs/reviews/PITCHER_AWARDS_D2_DEVELOPMENT_B_ACCEPTANCE.md)。以下「A／B未開始、Runtime未驗證、AF09未授權」等為原2026-10-14計畫快照，不再是目前工程狀態；原規則及驗收標準沒有降低。
@@ -21,7 +29,7 @@ G9追加批准1.13.0 MINOR、VERSION／CHANGELOG及必要文件的發布準備�
 - 開始時工作樹：`M docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md`；未追蹤的 `docs/reviews/G1_B2_CONSUMER_COMPATIBILITY_REVIEW.md`、`docs/reviews/G1_B_PRE_IMPLEMENTATION_REVIEW.md`、`docs/src/engine/award-identity-policy.js`、`tasks/`、`tests/award-identity-policy.test.mjs`。保留全部既有內容；本次僅編輯本計畫。
 - [G1-A 驗收](../docs/reviews/G1_A_LIMITED_FIX_ACCEPTANCE.md)：PASS / ACCEPTED，僅限定日文名稱漏判修正及其因果差分；不是完整 G1 或新獎項接入 PASS。
 - G1-B1：唯讀 Registry／Adapter 與測試已存在、未接入產品；未找到專用 Markdown 驗收報告。最新 R1 結果見先前回覆／本地產物，開始開發 A 前需核對受驗來源、日誌與適用範圍，不補造報告或假設完整 F-ID01～12 已通過。
-- [G1-B2 相容性調查](../docs/reviews/G1_B2_CONSUMER_COMPATIBILITY_REVIEW.md)已存在於本地 Repository（尚未追蹤），使用者已明確接受為 **ANALYSIS_ONLY / ACCEPTED**；證據為靜態分析，不是 Consumer 接線 Runtime PASS，也不授權實作。其 API／來源／順序及測試隔離邊界缺口列入下方前置事項；本次不修改該報告或混入提交。
+- [G1-B2 相容性調查](../docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md)已存在於本地 Repository（尚未追蹤），使用者已明確接受為 **ANALYSIS_ONLY / ACCEPTED**；證據為靜態分析，不是 Consumer 接線 Runtime PASS，也不授權實作。其 API／來源／順序及測試隔離邊界缺口列入下方前置事項；本次不修改該報告或混入提交。
 - 本次風險 R0，只做文件檢查；Quick／Full／CI／生涯重播均 NOT_RUN。
 
 ## 1. 目的與權威來源

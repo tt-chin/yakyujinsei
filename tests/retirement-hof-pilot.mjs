@@ -9,6 +9,7 @@ import {createHash} from 'node:crypto';
 import path from 'node:path';
 import os from 'node:os';
 import {VERSION} from '../docs/src/config.js';
+import {instrumentRng} from './support/rng-instrument.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const hook=`
@@ -27,7 +28,7 @@ window.__hofAudit={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:wi
  if(!button)return 'waiting';
  window.__hofActions.push({year:S.year,level:S.lv,choice:button.dataset.abilityKey||button.innerText});button.click();return S.done?'done':'action';
 }};`;
-const instrument=s=>s.replace('function R(){','function R(){window.__rngCalls=(window.__rngCalls||0)+1;').replace('R = function(){','R = function(){window.__rngCalls=(window.__rngCalls||0)+1;')+hook;
+const instrument=s=>instrumentRng(s,'__rngCalls')+hook;
 const server=createServer(async(req,res)=>{try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\//,'')||'index.html';if(rel.includes('..'))throw Error('path');let body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css':rel.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`,browser=await chromium.launch({channel:process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||'chrome',headless:true});
 const cases=Array.from({length:25},(_,i)=>({seed:`hof111-pilot-${String(i+1).padStart(2,'0')}`,pos:['P','P','C','IF','OF'][i%5]})).flatMap(c=>['ordered-overseas','balanced-stay'].map(strategy=>({...c,strategy}))).filter(c=>(!arg('seeds')||arg('seeds').split(',').includes(c.seed))&&(!arg('strategy')||c.strategy===arg('strategy'))).slice(0,Number(arg('limit')||50));
