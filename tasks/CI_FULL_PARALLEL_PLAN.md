@@ -156,7 +156,7 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 
 ## 9. 依耗時平衡分批（`CI-FULL-BALANCE-01`，計畫，2026-10-24）
 
-**狀態：已實作，本機驗證完成（§9.8）；CI dispatch、commit／push／PR 未執行。**
+**狀態：已實作（`cdf0a25`），CI Full PASS（§9.8）；wall time 未改善（安裝慢，見 §10），PR 暫停至 §10 完成後一併驗證。**
 
 ### 9.1 現況（唯讀確認，`origin/dev` `f4a2894`，87 入口）
 
@@ -237,4 +237,66 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 | 負控制③（scratchpad 複本，移除批內順序檢查） | 對調案例 FAIL（`Missing expected exception`） |
 | reviewer | 實作無問題；中 1 件（批內順序檢查無常駐測試，已補） |
 
-- 未執行：§9.5-4 CI `workflow_dispatch` mode=`full`（各批秒數與 wall time 未實測）；commit／push／PR。
+- commit：`cdf0a25`（實作）、`5b57f6e`（本節）；已 push `ci/full-balance`，未開 PR。
+
+§9.5-4 CI（Run 40038325238，Tests #68，`workflow_dispatch` mode=`full`，`5b57f6e89b2159b65348fdb62aecc6ab3746ce7b`）：success。`full-aggregate`：`{"status":"PASS","expected":87,"acceptedPass":87,"issues":[]}`；8 批皆 PASS，0 FAIL／SKIP／BLOCKED；artifact 10 個。
+
+| batch | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| 入口數 | 1 | 1 | 1 | 13 | 16 | 18 | 14 | 23 |
+| 測試秒數（`summary.json`） | **809** | 545 | 311 | 355 | 515 | 231 | 348 | 247 |
+| 安裝步驟 | **7分12秒** | 23秒 | 25秒 | 7分10秒 | 8分05秒 | 25秒 | 24秒 | 34秒 |
+| job 合計 | — | 9分43秒 | 5分48秒 | 13分24秒 | 17分04秒 | 4分31秒 | 6分27秒 | 4分57秒 |
+
+- 最大批測試秒數 1205 → 809（`full-power-pitching-e2e` 單獨；本機 362 秒的 2.2 倍，高於 §9.2 預估 620–720 秒）。
+- wall time **21分47秒**（#58：21分37秒），未改善。原因：batch 1／4／5 的 `playwright install --with-deps chromium` 中 apt 下載 `Fetched 25.9 MB in 6min 47s (63.7 kB/s)`（`azure.archive.ubuntu.com`；其他批 1 秒），恰落在最長的 batch 1。npm 安裝約 1 秒、瀏覽器下載約 10 秒，正常。
+- 安裝正常時 wall time 推算約 15 分（batch 2 的準備開銷約 40 秒），**未實測**。由 §10（`CI-ENV-PIN-01`）處理安裝後一併驗證。
+
+## 10. CI 環境鎖定：Playwright container（`CI-ENV-PIN-01`，計畫，2026-10-24）
+
+**狀態：計畫已核准撰寫；實作前須另行批准。**
+
+### 10.1 問題
+
+- `tests`／`full-batch` 每次以 `playwright install --with-deps chromium` 自 Ubuntu apt 鏡像安裝系統套件。鏡像偶發極慢：Tests #66 Quick `Fetched 20.0 MB in 11min 51s`；Tests #68 Full 8 批中 3 批 `Fetched 25.9 MB in 6min 47s`（§9.8），使 §9 的分批收益被抵消。
+- apt 套件取當下最新版（版本漂移）。
+- GitHub Actions 各 job 為獨立 VM，無法繼承前一 job 的安裝；artifact 轉送只能帶 npm 模組與瀏覽器，帶不走 apt 安裝至 `/usr` 的系統套件與字型；apt 快取不保證命中亦不提供完整性（BACKLOG 已不採）。
+
+### 10.2 設計
+
+- `tests`、`full-batch` 加：
+  ```yaml
+  container:
+    image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
+    options: --ipc=host
+  ```
+  digest 為 multi-arch index（2026-10-24 自 MCR registry 取得，含 amd64 `sha256:c091b21d…`、arm64 `sha256:941cc91e…`）。image 內含 Playwright 1.62.1 的系統套件、字型與瀏覽器。
+- 保留 `setup-node` 24.15.0 與 `npm install … playwright@1.62.1`（Node 版本不依 image 內建）。`install --with-deps chromium` 改為 `install chromium`（無 `--with-deps`）；預期瀏覽器已存在而不下載，以 log 記錄實際行為。
+- 加 `git config --global --add safe.directory "$GITHUB_WORKSPACE"`（container 內以 root 執行，工作目錄擁有者可能不同）；實測不需要則移除。
+- `full-plan`、`full-aggregate` 不需瀏覽器，維持 host，不變。
+- 不變：Runner、測試旗標、timeout、斷言、歷史基準、artifact 名稱與 path、`ci-full-batches.mjs`。
+- 分類：R2（CI 執行環境；不接遊戲本體）。
+
+### 10.3 `check-workflow.mjs` 變更
+
+- `tests`／`full-batch`：`container.image` 須符合 `mcr.microsoft.com/playwright:v<版本>-noble@sha256:<64 hex>`，`<版本>` 須等於 npm 安裝的 `playwright@<版本>`；`container.options` 含 `--ipc=host`。
+- 所有 job 不得含 `--with-deps`（取代現行「`tests`／`full-batch` 須含 `--with-deps chromium`」的斷言）。
+- `full-plan`／`full-aggregate` 不得有 `container`。
+- 其餘斷言不變。
+
+### 10.4 驗證
+
+1. 本機 `node scripts/check-workflow.mjs --playwright=<外部模組>` PASS。負控制（scratchpad 複本）：image 只有 tag 無 digest／image 版本與 npm 不一致／缺 `--ipc=host`／恢復 `--with-deps`／`full-plan` 加 container：各須 FAIL。
+2. reviewer：diff 一次。
+3. CI（分支 `ci/env-pin`，自 `ci/full-balance` `5b57f6e`，含 §9）：依序 dispatch `full`、`quick`、`linux-smoke` 各一次（同分支 dispatch 會互相取消，不連發）。
+   - Full：aggregate `{"status":"PASS","expected":87,...}`、0 FAIL／SKIP／BLOCKED；各批 browser／node metadata 一致（aggregate 檢查）。
+   - Quick：PASS（`check-workflow` 於 container 內通過）。
+   - linux-smoke：PASS（`/tmp` alias 與 socket 路徑在 container 內可用）。
+   - 記錄：image 拉取時間（`Initialize containers`）、安裝步驟時間與是否下載瀏覽器、各批秒數、wall time，並與 §9.8 比較。
+4. 未確認（待 CI 證明）：image 拉取時間（推估 1 分內）、root 執行下 git／artifact 路徑、image 環境下全部 87 入口是否 PASS（已確認 `replay-share-theme-e2e` 的 PNG 比對為同次執行內 baseline 對目前版本，不依存檔圖片）。
+
+### 10.5 交付
+
+- 分支 `ci/env-pin`。commit：文件（§9.8 CI 結果、§10、BACKLOG）→ 實作（`test.yml`、`check-workflow.mjs`）→ 結果文件。
+- PR：`ci/full-balance` 與 `ci/env-pin` 的 PR 方式（一併或依序）於 CI 驗證後決定；push／dispatch／PR 各另批。
+- 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（AGENTS §9.3）。
