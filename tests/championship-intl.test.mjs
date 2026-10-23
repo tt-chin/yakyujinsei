@@ -38,7 +38,7 @@ test('structured result overrides ambiguous honor, valid final count retained',(
 function activeIntl(v={},source=game){
   const s=state({ab:{vel:65,ctl:65,brk:65,sta:65},pos:'P',role:'SP',rehab:0,skipMid:false,seasonFactor:1,intlDeclinedCount:0,...v});let opts,draws=0,done=0,cards=[];
   const context={...intl,internationalPersonalStats,renderInternationalPersonalStats,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
-  runInNewContext(source.slice(source.indexOf('  function intlEvents('),source.indexOf('  maybeIntl = function(done)')),context);
+  runInNewContext(source.slice(source.indexOf('  function intlEvents('),Math.max(source.indexOf('  function maybeIntl(done)'),source.indexOf('  maybeIntl = function(done)'))),context);
   return {s,context,run:phase=>context.processIntlPhase(phase,()=>done++),options:()=>opts,report:()=>({draws,done,cards})};
 }
 test('I06 actual accepted callback twice: stats/RNG/rewards/next once',()=>{const f=activeIntl({intlCount:2,intlFinalCount:1});f.context.rank=1;f.run('POST');const button=f.options()[0];button.f();const saved=JSON.stringify(f.s),report=JSON.stringify(f.report());button.f();assert.equal(JSON.stringify(f.s),saved);assert.equal(JSON.stringify(f.report()),report);assert.equal(f.s.intlCount,3);assert.equal(f.s.intlFinalCount,2);assert.equal(f.report().done,1);assert.equal(f.report().cards.length,2);});

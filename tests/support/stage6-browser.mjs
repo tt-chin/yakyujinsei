@@ -7,6 +7,7 @@ import {execFileSync} from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
 import {fileURLToPath} from 'node:url';
+import {injectOverlayHook} from './overlay-hook.mjs';
 
 export const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 export const root=fileURLToPath(new URL('../../',import.meta.url));
@@ -35,8 +36,7 @@ export function instrument(source){
   const marker='  const touchedKeys={};';assert.equal(source.split(marker).length,2);
   source=source.replace(marker,marker+`\n  window.__s6allocation=()=>({pool,idx,dice:dice&&dice.slice(),hist:JSON.parse(JSON.stringify(hist)),touchedKeys:{...touchedKeys},remaining:remaining(),start:JSON.parse(JSON.stringify(sessionStart))});`);
   source=withCareerSessionAccess(source);
-  const at=source.lastIndexOf('})();');assert.ok(at>0);
-  return source.slice(0,at)+hook+source.slice(at);
+  return injectOverlayHook(source,hook);
 }
 export async function harness(name){
   const output=path.resolve(arg('output')||path.join(os.tmpdir(),name));await mkdir(output,{recursive:true});

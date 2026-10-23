@@ -39,14 +39,15 @@ assert.equal((game.match(/baseSalary\*\(cross\?1:contractMult\)\*positionMult/g)
 assert.doesNotMatch(evaluationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 const journalBridge='captureAwardSlot(tx,id,p,()=>R(),()=>realState.rngState)';
 assert.equal(game.split(journalBridge).length,2,'one native Journal bridge, not a new independent draw');
-assert.equal((game.replace(journalBridge,'captureAwardSlot(nativeBridge)').match(/\bR\(/g) || []).length,35,'all other native RNG call sites unchanged');
+// Phase 4-A deleted unreachable base bodies: R( -7 (35->28), ri( -31 (74->43), chance( -12 (57->45), pick( -9 (23->14); no site added.
+assert.equal((game.replace(journalBridge,'captureAwardSlot(nativeBridge)').match(/\bR\(/g) || []).length,28,'all other native RNG call sites unchanged');
 // Six round-specific bonus sites are consolidated; each draft still consumes one ri.
-assert.equal((game.match(/\bri\(/g) || []).length, 74);
+assert.equal((game.match(/\bri\(/g) || []).length, 43);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 const legacyJournalSlots=[...game.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
-assert.equal((game.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,57,'existing eligible chance sites moved to one-to-one legacy slots');
-assert.equal((game.match(/\bpick\(/g) || []).length, 23);
+assert.equal((game.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,45,'existing eligible chance sites moved to one-to-one legacy slots');
+assert.equal((game.match(/\bpick\(/g) || []).length, 14);
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(game, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);

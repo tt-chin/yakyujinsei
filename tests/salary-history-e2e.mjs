@@ -9,6 +9,7 @@ import {createHash} from 'node:crypto';
 import path from 'node:path';
 import os from 'node:os';
 import {instrumentRng} from './support/rng-instrument.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').slice(1).join('=');
@@ -24,7 +25,7 @@ const server=createServer(async(req,res)=>{try{
   let content=old?cache.get(rel):await readFile(path.join(root,'docs',rel));
   if(rel==='src/engine/game.js'){
     content=instrumentRng(content.toString(),'__rngCalls');
-    const at=content.lastIndexOf('})();');content=content.slice(0,at)+hook+content.slice(at);
+    content=injectOverlayHook(content,hook);
   }
   res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
 }catch(e){res.statusCode=404;res.end(String(e));}});

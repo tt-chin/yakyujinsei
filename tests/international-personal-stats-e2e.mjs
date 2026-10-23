@@ -6,6 +6,7 @@ import {harness,arg,instrument} from './support/stage6-browser.mjs';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
 import {withApprovedPhoenixControl,phoenixAwardProbe,assertApprovedPhoenixCareer} from './support/first-difference.mjs';
 import {openBoardAction} from './support/board-menu.mjs';
+import {injectOverlayHook} from './support/overlay-hook.mjs';
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'e602174a22d7472e1021d780388ad61adc6b11b6')+'^{commit}'],{encoding:'utf8'}).trim();
 const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
 const approvedPhoenixPrior=withApprovedPhoenixControl(prior);
@@ -21,7 +22,7 @@ const hook=`window.__intlDisplay={
 };`;
 async function page(width,pos='P',seed='intl-stats',old=false,approved=false){
  const p=await h.page(width,pos,seed);
- await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(approved?approvedPhoenixPrior:prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);const at=body.lastIndexOf('})();');await route.fulfill({response,body:body.slice(0,at)+hook+phoenixAwardProbe+body.slice(at)});});
+ await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(approved?approvedPhoenixPrior:prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook+phoenixAwardProbe)});});
  await p.reload();await p.waitForFunction(()=>window.__intlDisplay&&!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
 }
 const clean=s=>{const copy=structuredClone(s);delete copy.version;for(const r of Object.values(copy.intlTraitResults||{}))delete r.personalStats;return copy;};
