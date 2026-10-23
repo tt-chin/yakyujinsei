@@ -1362,6 +1362,70 @@ export class SeasonStats {
 | Full | scratchpad worktree（與工作樹內容一致，新檔以 `git add -N` 納入 `ls-files`；`CURRENT_SPEC` 追記前；`sourceFingerprint` `7058a6453847…`，比較基準 `origin/main` `650e4dd`），4 組平行（21／22／22／22），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（274／818／330／286 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 2 次（併入版、新檔版）皆無問題。指出：新檔於主工作樹未追蹤時，`git ls-files` 系檢查不涵蓋（Full worktree 已以 `git add -N` 涵蓋） |
 
+## 2j. 第 8 期：殿堂評分 policy（細部計畫，2026-10-23）
+
+PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #64）PASS。候補選定依據見 §3.8。
+
+### 2j.1 現況（2026-10-23 唯讀確認，基準 `52e4cdb`）
+
+- `game.js`（2761 行）`:1566` `careerScore(st)`（讀 `S.pos`）、`:1594` `defShare(bucket)`（讀 `S.stats`／`S.pos`）、`:1613` `tierOf(bucket)`（讀 `S.stats`、`TIER_TH`、`LG_N`，呼叫 `honorScore`→`careerScore`）：無 RNG、不寫 `S`、無 UI。`:1610` `honorScore` 已是委派 `hall-of-fame-policy.js` `honorScoreFor` 的一行函式，本期不動。
+- 呼叫者：`tierOf` 只被 `endGame`（`:1719`）呼叫；`defShare` 只被 `posLegendPhrase`（`:1601`）；`careerScore`、`honorScore` 只被 `tierOf`。`docs/src` 其他模組無參照。
+- `TIER_TH`（`:1564`）與 `LG_N`（`:1565`）於 JP 覆寫區 `:2242` 被 `Object.assign` 改寫，故須於呼叫時讀取，不可於模組內複製。
+- `tierOf` 以未四捨五入的分數判定 `i`，回傳的 `sc` 才 `Math.round`；`retireScene` 的首輪判定使用此四捨五入值（`CURRENT_SPEC:413`），位置須保留。
+- 文字耦合：
+  - `retirement-hof-test-support.mjs:20–21`：`productionFunction` 依名稱取出 `careerScore`／`capTeam`／`defShare`／`posLegendPhrase`／`honorScore`／`tierOf`／`retireScene` 等於 vm 執行；ctx 只注入 `honorScoreFor`、`hasHistoricalDefenseAward`、`window.TEAM_MASTER`；另以 regex 取 `TIER_TH`／`LG_N`／`DPN` 與 `Object.assign(TIER_TH,…)`。`createProductionHarness` 使用者：`hof-first-ballot-league.test`（`retireScene` 以 `925987dc` 原始碼，其餘用現行）、`retirement-hof-balance.test`、`retirement-hof-analysis`（manifest 排除於自動測試）。只 import `productionFunction` 的 8 個測試取其他函式，不受影響。
+  - `tools/development-b/defense-history-boundaries.mjs:10`：取出 `defShare`＋`posLegendPhrase` 於自有 vm ctx；未被 manifest 或其他檔案參照（手動工具）。
+  - `tools/development-b/runtime.mjs:31`：瀏覽器 hook 呼叫全域 `honorScore`（不受影響）。
+  - `hof-first-ballot-e2e:26`、`tests/support/stage6-browser.mjs:44`：以 `git ls-files docs` 決定載入檔案，未追蹤的新檔不在其內。
+  - 設計文件：`docs/design/MODULE_FUNCTION_INDEX.md` 固定於舊 SHA `ea951c2`（7-A／7-B 未維護），不改；`CURRENT_DETAILED_DESIGN.md:94` 描述行為，行為不變，不改。
+
+### 2j.2 設計
+
+分類：L3／R3（殿堂評定）。無 RNG，`salary-flow` 計數不變；但判定錯誤會改變殿堂結果與後續投票演出。
+
+- 新檔 `hall-of-fame-tier-policy.js`（LF）的 export（名稱與 `game.js` 函式不同，避免 import 衝突及 `productionFunction` 的 `'function careerScore('` 誤配）：
+  - `careerScoreFor(stats,position)`：原 `careerScore` 本體，`S.pos` 改為參數。
+  - `defenseShareFor(stats,position)`：原 `defShare` 本體。
+  - `hallOfFameTier({baseScore,honor,thresholds,leagueName})` → `{i,sc,name}`：`honor` 傳整個物件（保底依 `mvp`／`aceN`／`king` 旗標）；tier 名稱陣列照原樣搬入。
+- `game.js`（CRLF）新增一行 import；三函式改為一行委派，錨點文字保留：
+  - `function careerScore(st){return careerScoreFor(st,S.pos);}`
+  - `function defShare(bucket){return defenseShareFor(S.stats[bucket],S.pos);}`
+  - `function tierOf(bucket){const st=S.stats[bucket];if(!st)return null;const hs=honorScore(bucket);return hallOfFameTier({baseScore:careerScore(st),honor:hs,thresholds:TIER_TH[bucket],leagueName:LG_N[bucket]});}`（保留 `honorScore`→`careerScore` 的呼叫順序與 `if(!st)return null`）
+- `posLegendPhrase`、`capTeam`、`honorScore`、`retireScene`、`hall-of-fame-policy.js` 不變。
+
+### 2j.3 測試變更（需揭露）
+
+1. 等價 fixture（`retirement-hof-balance.test` 內新增，Full 入口數不變 87）：自 `52e4cdb` 取出舊 `careerScore`／`defShare`／`tierOf`，vm ctx 以可控 stub 提供 `honorScore`，並提供最終 `TIER_TH`／`LG_N`；與新 export 逐格比較。格：4 職業聯盟（`MINOR` 無 `TIER_TH`，不列入）、分數恰等於各門檻 `th[k]`、`mvp`／`aceN`／`king` 單獨及搭配低分、投手／非投手、`DEF` 為負數或 `undefined`、`st` 不存在。跨 realm 故以 `JSON.stringify`＋筆數守衛比較。
+2. harness（非期望值變更）：`retirement-hof-test-support` 的 vm ctx 加入新模組 export。
+3. `tools/development-b/defense-history-boundaries.mjs` 的 vm ctx 補一行（加入 `defenseShareFor`）。
+4. 實作前以新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列者先報告再改。
+
+### 2j.4 驗證（L3／R3）
+
+比較基準：`52e4cdb36d6b770a2c73ca89e947c94bcc616562`（`dev`）；允許差分：無。
+
+1. `check-syntax`；`retirement-hof-balance`、`hof-first-ballot-league`、`award-legacy-consumer`、`award-consumer-contract`、`award-identity-policy`、`pitcher-award-integration`、`salary-flow`、`verify-modularization`、`information-architecture`。
+2. `game-view-dom-e2e --baseline=52e4cdb`、`hof-first-ballot-e2e`（新檔 commit 前先 `git add -N`）；Quick。
+3. 負控制（scratchpad，各改一處）：①門檻比較 `>=`→`>`；② MVP 保底 1→2；③ `careerScore` 一個權重；④去除 `defShare` 的投手回傳 0 分支。確認等價 fixture FAIL。
+4. Full 一次（worktree＋`git add -N`，4 組平行）；重跑範圍如實記錄。
+5. reviewer：`52e4cdb..HEAD`。重點：等價（四捨五入位置、保底、呼叫順序）、錨點文字、新 export 無 DOM／`S`／全域 RNG、CRLF（`game.js`）／LF（policy 檔）。
+6. `retirement-hof-analysis`／`report` 會改寫歷史報告，不執行（harness 變更涵蓋之），記為 NOT_RUN。FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2j.5 交付
+
+- 分支：`refactor/hall-of-fame-tier`（自 `dev` `52e4cdb`）。commit 順序：文件（§2j、§3.8）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG（§9.3）。`CURRENT_SPEC:456` 於同行追記新檔（不參照 DOM／`S`／RNG 的純函式）。不修改 `main`。
+
+### 2j.6 待決
+
+1. 範圍：3 函式（`careerScore`／`defShare`／`tierOf`）或 5 函式（＋`posLegendPhrase`／`capTeam`；前者回傳日文文案，後者讀 `window.TEAM_MASTER`，較接近 `retireScene` 的演出）。
+2. 放置：新檔，或併入 `hall-of-fame-policy.js`（在 `allowedB`，凍結斷言不擋；但周圍為 `efd4710` accepted-A 證據測試與 `tools/development-b/*` 的範圍）。
+3. `defense-history-boundaries.mjs`：vm ctx 補一行，或註記為過時。
+4. `CURRENT_SPEC` 追記位置：`:456`（policy 檔一覽，7-B 前例）或殿堂章節 `:413` 附近。
+5. 耦合調查摘要是否記入計畫文件。
+
+使用者決定（2026-10-23）：1 採 3 函式；2 新檔 `hall-of-fame-tier-policy.js`；3 補一行；4 `:456`；5 記入 §3.8。實作待批准。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -1430,6 +1494,22 @@ export class SeasonStats {
 
 - 開始前：①確認 7-B PR 的合併與 CI；②以合併後 `dev` 為基準重新做耦合調查（§3.5 的表為 `097e212`、2904 行時點，已過時），並掃描 `docs/src` 全域的凍結斷言（`award-identity-policy.test:155`，§2i.10）與 `ls-tree`／`ls-files`／`readdirSync` 系掃描；③依內聚度（自有狀態、群內／跨群呼叫比、注入數）選定。
 - 候補（數字為 §3.5 舊值）：`injury_tj`（108 行，8／25，有 RNG；建議：故障機率・TJ 規則抽為純函式 policy，抽取留原處；`tjCap`／`tjAccrue`／`tjGamble` 有 `productionFunction` 與 `full-power-pitching-e2e` 逐字比較）、`amateur_draft_path`（80，11／42）、`events_love`（190，14／35）、`awards_hof`（272，6／27，Receipt 相關 R3 核心）。`year_season_flow` 依 §3.6 最後進行。
+- 使用者決定（2026-10-23）：第 8 期採 `awards_hof` 中的殿堂評分 policy（`careerScore`／`defShare`／`tierOf`），細部計畫見 §2j；調查見 §3.8。
+
+### 3.8 第 8 期候補：耦合調查摘要（2026-10-23，基準 `52e4cdb`，`game.js` 2761 行；scout 唯讀調查＋抽查）
+
+- 方法：acorn＋eslint-scope 解析 `game.js`，依 §3.7 的舊成員清單重新定位，並掃描 `tests/`、`tests/support/`、`scripts/`、`tools/` 的文字耦合。行數與 RNG 為 scout 計數；分類為人工判斷。
+
+| 群 | 行數 | RNG | 主要耦合 | 領域組成 |
+|---|---|---|---|---|
+| `injury_tj` | 108 | chance 6、ri 7、pick 2 | `full-power-pitching-e2e` 逐字比較 `tjAccrue`／`tjCap`；`full-power-pitching.test` 取出 `tjCap`／`tjAccrue`／`tjGamble`；`trait-policy.test:100` 切 `afterGamble→pitcherRole`；`championship-intl.test:76` 錨點 `tjGamble(()=>demotionAudit` | 純規則只有 `injuryProb`（11 行，只讀 `S`）；其餘混有 RNG、`S` 變更與 UI |
+| `amateur_draft_path` | 80 | R 2、ri 9 | 全部在 JP 覆寫區內（縮排兩格），跨群呼叫約 36 個；`event-integration.test:39` 切 `cupOnce→intlEvents`；`domestic-tournament-policy.mjs:87–89` regex；多個 e2e 直接呼叫 `setSchool`／`setAmateur`／`runDraft`／`enterDraftPath`／`amateurSeason` | RNG＋`S` 變更＋UI 混合 |
+| `events_love` | 190 | R 2、pick 11、chance 9 | `event-copy.test:32` 以 `a7fe2e8` 逐字凍結 `evOdds→drawEvents` 與 `resolveEvent→/* シーズン中即時可解鎖的特性。 */`；`event-integration.test:36` 切 `eventChoiceSummary→drawEvents`；`CHEER`／`CHEER_SAFE` 為模組層級可變綁定 | 純規則只有 `partnerJob`／`datePool`／`affairPool`；`loveEvent`（81 行）為 RNG＋`S` 變更＋UI |
+| `awards_hof` | 470（含 `endGame` 205 行） | R 5、ri 2 | `trait-policy.test:106` 切 `awards→maybeIntl\|let applyPromotionSalary=`；`award-journal-native.test:27`、`tools/development-b/award-runtime-support.mjs:37` 取出 `awards`／`renderCheckpointCard`／`collectLegacyAwardPlan`；`retirement-hof-test-support.mjs:21` 取出殿堂函式；Receipt／`journalBridge` | 殿堂評分（`careerScore`／`defShare`／`tierOf`）為純規則；其餘為 Receipt 交易、RNG 與 UI |
+
+- `salary-flow.test` 計數（排除 bridge 後）：`R(` 22、`ri(` 39、`chance(`＋legacy slot 42、`pick(` 14。
+- 全樹掃描：`check-syntax`（`readdirSync` 全部語法檢查）、`verify-modularization`、`information-architecture` 不擋新檔；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點已存在且不在 `allowedB` 的檔案，`docs/src/engine/` 的新檔不受影響。`index.html` 只載入 `main.js`，`game.js` import 的新模組不需改 `index.html`。
+- 結論：四群皆為領域混合，整群搬移不符 §3.7 的內聚度基準；`awards_hof` 中的殿堂評分可依 7-B 型抽為純函式 policy，且不影響 `salary-flow` 計數。
 
 ## 4. 使用者決定（2026-10-18）
 
