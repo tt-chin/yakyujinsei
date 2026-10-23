@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
+const seasonStats = await readFile(path.join(root, 'docs/src/engine/season-stats.js'), 'utf8');
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-period-policy.js'), 'utf8');
@@ -40,13 +41,19 @@ assert.doesNotMatch(evaluationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 const journalBridge='captureAwardSlot(tx,id,p,()=>R(),()=>realState.rngState)';
 assert.equal(game.split(journalBridge).length,2,'one native Journal bridge, not a new independent draw');
 // Phase 4-A deleted unreachable base bodies: R( -7 (35->28), ri( -31 (74->43), chance( -12 (57->45), pick( -9 (23->14); no site added.
-assert.equal((game.replace(journalBridge,'captureAwardSlot(nativeBridge)').match(/\bR\(/g) || []).length,28,'all other native RNG call sites unchanged');
+// Phase 6 moved simSeason/applySeasonForm into SeasonStats: R( -5, ri( -1, chance( -1 in game.js, the same 5/1/1 in season-stats.js.
+// Its game.js wiring only forwards to the current R/ri/chance (late binding) and is not a draw site.
+const seasonStatsBridge='rng:{R:()=>R(),N0:sd=>N0(sd),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}';
+assert.equal(game.split(seasonStatsBridge).length,2,'one SeasonStats RNG bridge, not new independent draws');
+const gameSites=game.replace(seasonStatsBridge,'rng:{seasonStatsBridge}');
+assert.equal((gameSites.replace(journalBridge,'captureAwardSlot(nativeBridge)').match(/\bR\(/g) || []).length,23,'all other native RNG call sites unchanged');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonStats.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[5,1,1,0],'SeasonStats draw sites moved verbatim');
 // Six round-specific bonus sites are consolidated; each draft still consumes one ri.
-assert.equal((game.match(/\bri\(/g) || []).length, 43);
+assert.equal((gameSites.match(/\bri\(/g) || []).length, 42);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 const legacyJournalSlots=[...game.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
-assert.equal((game.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,45,'existing eligible chance sites moved to one-to-one legacy slots');
+assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,44,'existing eligible chance sites moved to one-to-one legacy slots');
 assert.equal((game.match(/\bpick\(/g) || []).length, 14);
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
