@@ -156,7 +156,7 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 
 ## 9. 依耗時平衡分批（`CI-FULL-BALANCE-01`，計畫，2026-10-24）
 
-**狀態：DRAFT。核准前不修改 `ci-full-batches.mjs` 與其測試。**
+**狀態：已實作，本機驗證完成（§9.8）；CI dispatch、commit／push／PR 未執行。**
 
 ### 9.1 現況（唯讀確認，`origin/dev` `f4a2894`，87 入口）
 
@@ -218,3 +218,23 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 3. 之後的瓶頸 `full-power-pitching-e2e`（20 個完整生涯，manifest 900 秒）是否另案拆分：本計畫不含。
 
 使用者決定（2026-10-24）：1 採 manifest `seconds`；2 維持 8 批；3 不含於本計畫。計畫文件 commit 批准；實作於新 session 進行（實作前仍須明確批准）。
+
+### 9.8 實作紀錄（2026-10-24，分支 `ci/full-balance`，HEAD `a09e1bb`，未 commit）
+
+- `ci-full-batches.mjs`：新增 `fullSeconds()`（Full 入口 id→manifest `seconds`）與 `DEFAULT_SECONDS=5`；`splitIds(ids,count=8,weightOf)` 依 §9.3 實作 LPT（未傳 `weightOf` 時全部為預設值，即依序輪流分配）；`plan` 傳入 `fullSeconds()`；`validatePlan` 依 §9.3 改寫。`run`／`aggregate` 只讀 `plan.json`，不使用權重。
+- 與 §9.3「aggregate 不變」的差異（使用者 2026-10-24 核准）：`aggregate` 回傳前將 `results` 依 inventory 順序排序（1 行）。原因：各批串接後不再是 inventory 順序；維持 `summary.json` 既有順序，並使 `ci-full-batches.test.mjs` 的 `r.results` 順序斷言不需修改。workflow 與其他程式不讀取此順序。
+- 與 §9.4 的差異：平衡斷言不用「最大批 ≤ max（最大單一權重，總權重／8＋最大單一權重）」——以 manifest 權重計，現行依入口數分批最大 1442 ＜ 上限 1507，此斷言無法讓負控制 FAIL。改為 LPT 必然成立的性質：「多入口批的合計減去其最輕入口 ≤ 最輕批的合計」（可推出原上限）。
+- 測試追加（reviewer 指出，使用者核准）：`inventory omissions/order changes rejected` 增加「批內兩入口對調 → `validatePlan` throw」；原本只有 `pop()`，在集合比較即 throw，不經過批內順序檢查。
+- `TESTING.md:5`：改為依 manifest `seconds` 以 LPT 平衡分批的說明。
+
+| 項目 | 結果 |
+|---|---|
+| `ci-full-batches.test.mjs`（macOS） | 32 項：31 PASS、1 SKIP（Linux 限定 alias 測試） |
+| `check-syntax`／`check-workflow.mjs`（外部 Playwright 1.59.0-alpha） | PASS／PASS（exit 0） |
+| 本機 `plan` | 87 入口、無重複；各批 manifest 秒數 900／600／600／552／552／551／550／551（入口數 1／1／1／13／16／18／14／23），最大批為 `full-power-pitching-e2e` 單獨 |
+| 負控制①（`validatePlan`） | 缺漏／重複／批內順序錯誤／批數不足／空批：5 組皆 throw |
+| 負控制②（scratchpad 複本，`splitIds` 改回依入口數平分） | 平衡斷言 FAIL（`Batch 2 unbalanced`） |
+| 負控制③（scratchpad 複本，移除批內順序檢查） | 對調案例 FAIL（`Missing expected exception`） |
+| reviewer | 實作無問題；中 1 件（批內順序檢查無常駐測試，已補） |
+
+- 未執行：§9.5-4 CI `workflow_dispatch` mode=`full`（各批秒數與 wall time 未實測）；commit／push／PR。
