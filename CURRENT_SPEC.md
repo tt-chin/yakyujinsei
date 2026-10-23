@@ -453,7 +453,7 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 ### 15.1 範囲・承認
 
 - YAKYUJINSEI_V1.9.1_CHAMPIONSHIP_INTL_FIX_SPECの有効仕様を本節へ移管。旧公開基準5602a7cではなく、dev 004cd26（1.10.3）を実装前の比較基準とする。使用者はMINOR 1.11.0、対象年度の追加優勝抽選による後続seed差、季末の拒否／不満減算を承認。dev push／PreviewはAGENTSに従い、main／本番は別承認。
-- championship-policy.js／international-trait-policy.jsはDOM・グローバルRNGを参照せず、既存RNGと球団Master照会を注入する。到達不能な旧phaseEnd／maybeIntlは削除せず、旧給与処理を委譲しない。
+- championship-policy.js／international-trait-policy.jsはDOM・グローバルRNGを参照せず、既存RNGと球団Master照会を注入する。到達不能な旧phaseEnd／maybeIntlは削除せず、旧給与処理を委譲しない。international-selection-policy.js（大会日程・代表選考）はDOM・S・RNGを参照しない純関数とし、公式日程と選考に必要な値を引数で受け取る。
 - 92イベントの文案・条件・数値、能力値と成績生成、年俸モデル、FA、国際日程／召集条件／順位確率、共有画像のテーマ、seed-only URLは変更しない。全球団の合計100%優勝分布、国際MVP、大会別履歴一覧、intlBest、二刀流、保存機能、優勝賞金／育成点は追加しない。1.11.8の既存結果カードへの本大会成績表示だけは第15.4節に従う。優勝請負人の累計5冠／機率+5百分点は引き続き別案件。
 
 ### 15.2 優勝対象と機率

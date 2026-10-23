@@ -43,6 +43,7 @@ import { canPlayHighSchoolFall, canPlaySenbatsu, nextSenbatsuEligibleYear, quali
 
 import { normalizeChampionshipState, captureSeasonChampionship, settleChampionship, maintainSeasonEnd } from './championship-policy.js';
 import { normalizeInternationalState, validateInternationalEntry, prepareInternationalResult, commitInternationalResult, INTLACE_UNLOCK_TEXT } from './international-trait-policy.js';
+import { internationalEvents, internationalPhase, internationalThreshold, internationalSelection } from './international-selection-policy.js';
 import { internationalPersonalStats, renderInternationalPersonalStats } from '../ui/international-personal-stats.js';
 window.__YAKYO_JP_DATA__ = JP_DATA;
 
@@ -2492,10 +2493,10 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
     consumeEventSeason(S);
     const rows=results.map(result=>result.html);S.log.push({y:S.year,age:S.age,tm:S.team,line:rows.map(x=>x.replace(/<[^>]+>/g,'')).join('、'),inj:false});card('','国内大会',rows.join('<br>'));maybeIntl(()=>nextStep());}
 
-  function intlEvents(year){const official=DATA.intlEvents.filter(e=>Number(e.startDate.slice(0,4))===year);if(official.length)return official;const out=[];if(year>2026&&(year-2026)%4===0)out.push({eventKey:'WBC:'+year,name:'ワールド・ベースボール・クラシック',startDate:year+'-03-05',endDate:year+'-03-17',status:'ESTIMATED',priority:1});if(year>2027&&(year-2027)%4===0)out.push({eventKey:'P12:'+year,name:'WBSCプレミア12',startDate:year+'-11-10',endDate:year+'-11-21',status:'ESTIMATED',priority:2});return out.sort((a,b)=>a.startDate.localeCompare(b.startDate)||a.priority-b.priority);}
-  function intlPhase(e){return Number(e.startDate.slice(5,7))<=6?'PRE':'POST';}
-  function intlThreshold(e){return e.eventKey.startsWith('WBC:')?58:55;}
-  function intlLevelEligible(e){const wbc=e.eventKey.startsWith('WBC:');return (wbc?['NPB1','MLB','KBO1','CPBL1']:['NPB1','KBO1','CPBL1']).includes(S.lv);}
+  function intlEvents(year){return internationalEvents(year,DATA.intlEvents);}
+  function intlPhase(e){return internationalPhase(e);}
+  function intlThreshold(e){return internationalThreshold(e);}
+  function intlSelection(e){return internationalSelection(e,{level:S.lv,overall:ovr(),rehab:S.rehab,skipMid:S.skipMid,seasonFactor:S.seasonFactor});}
   function addIntlStats(){return seasonStats.addIntlStats();}
   function completeIntl(e,status,next){
     if(S.intlCompletedKeys[e.eventKey])return;
@@ -2509,9 +2510,9 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
     let i=0;
     const next=()=>{
       if(i>=q.length){done();return;}
-      const e=q[i++],threshold=intlThreshold(e);
-      if(!intlLevelEligible(e)||ovr()<threshold){completeIntl(e,'DENIED',next);return;}
-      if(S.rehab>0||S.skipMid||S.seasonFactor<1){
+      const e=q[i++],threshold=intlThreshold(e),selection=intlSelection(e);
+      if(selection==='DENIED'){completeIntl(e,'DENIED',next);return;}
+      if(selection==='INJURED'){
         card('info','日本代表招集見送り',`<b class="hl">${e.name}</b>の代表候補に入ったが、負傷またはリハビリ中のため招集は見送られた。`);
         completeIntl(e,'DENIED',next);return;
       }
