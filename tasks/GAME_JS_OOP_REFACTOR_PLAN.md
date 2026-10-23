@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE7B_MERGED / PHASE8_PR_OPEN / PHASE9_LOCAL_DONE（2026-10-23）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE8_MERGED / PHASE9_PR_PENDING（2026-10-23）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -19,7 +19,7 @@
 | 5 | `CareerPresenter` | `build*ViewModel`（`game.js:582–588`）移入 `docs/src/ui/career-presenter.js` 的類別，依賴以建構子注入；`game.js` 保留 5 個一行委派 | L2 / R2（PR 前 Full 一次） | 完成；PR #14 併入 `dev`（`86b4f03`），見 §2g.8 |
 | 6 | `SeasonStats` | `simSeason`／`applySeasonForm`／`defRuns`／`blankStat`／`addStatTotal`／`accStat`／`accLevelStat` 移入 `docs/src/engine/season-stats.js` 的類別；RNG 經 `game.js` 的 `R` 延遲注入；`game.js` 保留 7 個一行委派 | L3 / R3 | 完成；PR #15 併入 `dev`（`34ed23c`），見 §2h.8、§2h.9 |
 | 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策 `international-selection-policy.js`；參賽流程留在 `game.js` | L3 / R3 | 7-A 完成；PR #16 併入 `dev`（`67dcab9`），見 §2i.9。7-B 完成；PR #17 併入 `dev`（`52e4cdb`），見 §2i.16 |
-| 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 本機完成（§2j.7）；PR #19 → `dev` 已提出、未合併 |
+| 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 完成；PR #19 併入 `dev`（`7940e97`），見 §2j.8 |
 | 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 本機完成（§2k.7，`refactor/defense-position`） |
 
 共通原則：
@@ -1444,6 +1444,11 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
 | Full | scratchpad worktree（與工作樹內容一致，新檔以 `git add -N` 納入；`sourceFingerprint` `ac44ac2bb48d…`，與 Quick 相同；比較基準 `origin/main` `650e4dd`），4 組平行（22／22／22／21），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（379／796／369／315 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 1 次（`git diff 52e4cdb` 工作樹），無問題 |
+
+### 2j.8 PR #19 合併 `dev`（2026-10-23）
+
+- 使用者建立 PR #19（`refactor/hall-of-fame-tier` `0cb3ccc` → `dev`），以 merge commit `7940e970954419d9252d8a062a0814e87cce386f` 併入 `dev`。`dev` 另含 `8d4d682`（只改 `BACKLOG.md`），故合併後與 `0cb3ccc` 的差分只有 `BACKLOG.md`，程式碼相同，未重新驗證。
+- 合併後 `dev` push 的 Quick CI（Tests #66，run `39974089520`）：PASS（`tests` job 15 分 41 秒，其中 `Install test-only Playwright` 12 分 13 秒）。
 | NOT_RUN | `retirement-hof-analysis`、`retirement-hof-report`（會改寫歷史報告；harness 變更由 `retirement-hof-balance`／`hof-first-ballot-league` 涵蓋） |
 
 ## 2k. 第 9 期：守備位置 policy（細部計畫，2026-10-23；本機完成，見 §2k.7）
@@ -1499,7 +1504,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 ### 2k.5 交付
 
-- 分支：`refactor/defense-position`（自 `refactor/hall-of-fame-tier` `0cb3ccc`；#19 合併後將 `dev` 合入）。commit 順序：文件（§2k、§3.9）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 分支：`refactor/defense-position`（自 `refactor/hall-of-fame-tier` `0cb3ccc`；計畫原為 #19 合併後將 `dev` 合入。實際 `dev` `7940e97` 與 `0cb3ccc` 只差 `BACKLOG.md`、`git merge-tree` 無衝突，2026-10-23 使用者同意不合入）。commit 順序：文件（§2k、§3.9）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
 - 不升 VERSION、不改 CHANGELOG（§9.3）。`CURRENT_SPEC:456` 於同行追記新檔（不參照 DOM／`S`／RNG 的純函式）。不修改 `main`。
 
 ### 2k.6 待決
