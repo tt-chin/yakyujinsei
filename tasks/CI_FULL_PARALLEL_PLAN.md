@@ -1,6 +1,7 @@
 # 野球人生｜CI Linux Full 平行化計畫書
 
 **文件狀態：OWNER_APPROVED（2026-10-23） / CI_DISPATCH_PASS（PR → `dev` 待提出；→ `main` PR 自動 Full 未驗證）**
+**§9（依耗時平衡分批）：DRAFT（2026-10-24），未核准**
 **建立日期：2026-10-22**
 **對象：repo 擁有者審閱。核准前不修改 workflow。**
 
@@ -152,3 +153,68 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 
 - 瓶頸仍為 batch 4（約 20 分），符合 §6 的預估；後續見 BACKLOG `CI-FULL-BALANCE-01`。
 - 未驗證：→ `main` PR 自動觸發的 Full（§5-6）。
+
+## 9. 依耗時平衡分批（`CI-FULL-BALANCE-01`，計畫，2026-10-24）
+
+**狀態：DRAFT。核准前不修改 `ci-full-batches.mjs` 與其測試。**
+
+### 9.1 現況（唯讀確認，`origin/dev` `f4a2894`，87 入口）
+
+- `splitIds(ids,count=8)` 依 inventory 順序按入口數切成連續 8 段（10／11×7）。`validatePlan` 要求 `plan.batches.flat()` 與 inventory 順序完全相同（`ci-full-batches.mjs:24–29`）。
+- `test.mjs --only=` 依 inventory 順序執行（`test.mjs:23`），`aggregate` 要求各批 `summary.json` 的結果順序與 `plan.batches[i]` 相同；故批內順序須為 inventory 順序。
+- `test-manifest.mjs` 已有各入口的 `seconds` 預估（`syntax` 無）。
+- 實測（本機 macOS＋Brave 156，2026-10-23 phase 9 Full，`sourceFingerprint` `90a379687e33…`）：87 入口合計 1789 秒；前幾名 `full-power-pitching-e2e` 362、`international-personal-stats-e2e` 253、`bug-act-01-02-e2e` 196、`game-view-dom-e2e` 143、`draft-income-e2e` 135。CI 各批耗時約為本機合計的 1.7–2.0 倍（Tests #58）。
+
+| CI batch | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| 本機合計（秒，現行分批） | 7 | 281 | 217 | **617** | 334 | 16 | 130 | 187 |
+| CI #58（秒） | 5 | 520 | 384 | **1205** | 550 | 23 | 294 | 321 |
+| CI #65（job，含準備） | 40s | 10m27s | 9m13s | **25m10s** | 12m48s | 1m5s | 5m52s | 18m7s |
+
+### 9.2 試算（本機實測秒數，8 批）
+
+| 分批方式 | 各批（秒） | 最大 |
+|---|---|---|
+| 現行（入口數） | 7／281／217／617／334／16／130／187 | 617 |
+| LPT，權重＝manifest `seconds` | 362／253／125／213／278／234／177／147 | **362** |
+| LPT，權重＝本機實測 | 362／253／196／196／196／196／196／196 | **362** |
+| LPT 實測，10／12 批 | — | 362 |
+
+- 兩種權重的最大值相同：`full-power-pitching-e2e` 單獨一批即為下限，增加批數無效。
+- 結論：使用既有 manifest `seconds`，不新增實測耗時表；manifest 預估雖與實測有落差（如 `smallschool-c-e2e` 600／125），不影響最大批。
+- 預估：CI Full 最大批由約 1205 秒降至 `full-power-pitching-e2e` 單獨的耗時（本機 362 秒×1.7–2.0 ≈ 620–720 秒），wall time 約 13 分（現行 21–26 分）。**未實測。**
+
+### 9.3 設計
+
+- `splitIds(ids,count=8,weightOf)`：LPT（最長處理時間優先）。依權重由大到小（同值依 inventory 順序）逐一放入目前合計最小的批（同值取編號小者）；完成後各批依 inventory 順序排序。結果為決定性。
+- 權重：`plan` 時由 inventory 取 `seconds`；無值者（`syntax`、新增入口）用固定預設值 5。
+- `validatePlan`：「`batches.flat()` 等於 inventory 順序」改為：每個入口恰出現一次（無缺漏、無重複）、各批非空且批內為 inventory 順序、批數 8。其餘（`plan.mode`、aggregate 的所有檢查）不變。
+- 不變：workflow（matrix 1–8）、`check-workflow.mjs`、Runner、測試旗標、timeout、斷言、歷史基準、`aggregate`、artifact 名稱與 path。
+- 分類：R1 相當（CI 工具，不接遊戲）。風險：入口在不同 runner 上的組合改變；各入口為獨立 process，批內依序執行，記憶體不累加。
+
+### 9.4 測試變更（需揭露）
+
+- `ci-full-batches.test.mjs:46–48`「exact 87 entries, eight ordered disjoint batches」：入口數 87 維持；各批長度 `[10,11,…]` 與「新入口附加於末尾」的斷言改為：每個入口恰一次、批內 inventory 順序、決定性（兩次結果相同）、無權重入口亦被分配、最大批權重不超過「最大單一權重」與「總權重／8＋最大單一權重」中的較大者（LPT 的保證）。`splitIds(['same','same'],1)` throw 維持。
+- 其餘 fixture 透過 `splitIds(ids)` 產生 plan，不需修改。
+- `TESTING.md:5`「依原 inventory 順序拆成8批（…每批10～11個）」改為依 manifest 耗時平衡的說明。
+
+### 9.5 驗證
+
+1. `node scripts/ci-full-batches.test.mjs`；`node scripts/check-workflow.mjs --playwright=<外部模組>`（workflow 不變，確認仍 PASS）；`check-syntax`。
+2. 負控制：①`validatePlan` 對缺漏、重複、批內順序錯誤、批數不足皆 throw；②LPT 改為依入口數平分時，最大批權重斷言 FAIL。
+3. 本機：`node scripts/ci-full-batches.mjs plan --output=<scratchpad>` 產生 plan，確認 87 入口與各批權重合計。
+4. CI：分支 `ci/full-balance` 以 `workflow_dispatch` mode=`full` 執行一次；驗收為 aggregate `{"status":"PASS","expected":87,...}`、0 FAIL／SKIP／BLOCKED，並記錄各 batch 秒數與 wall time。Quick 不受影響，不另跑。
+5. reviewer：diff 一次。
+
+### 9.6 交付
+
+- 分支 `ci/full-balance`（自 `origin/dev` `f4a2894`）。commit：文件（§9、BACKLOG）→ 實作（含測試、`TESTING.md`）→ 結果文件。PR → `dev`；commit／push／PR／dispatch 另批。
+- 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（AGENTS §9.3）。
+
+### 9.7 待決
+
+1. 權重來源：manifest `seconds`（建議，§9.2）或另建實測耗時表。
+2. 批數：維持 8（建議；增加無效，§9.2）。
+3. 之後的瓶頸 `full-power-pitching-e2e`（20 個完整生涯，manifest 900 秒）是否另案拆分：本計畫不含。
+
+使用者決定（2026-10-24）：1 採 manifest `seconds`；2 維持 8 批；3 不含於本計畫。計畫文件 commit 批准；實作於新 session 進行（實作前仍須明確批准）。
