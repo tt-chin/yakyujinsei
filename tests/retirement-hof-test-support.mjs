@@ -5,6 +5,7 @@ import {honorScoreFor} from '../docs/src/engine/hall-of-fame-policy.js';
 import {hasHistoricalDefenseAward} from '../docs/src/engine/award-consumer-policy.js';
 import {Rng} from '../docs/src/engine/rng.js';
 export const GAME_SOURCE=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
+const SeasonStats=GAME_SOURCE.includes('seasonStats.blankStat(')?(await import('../docs/src/engine/season-stats.js')).SeasonStats:null;
 export const leagues=['CPBL','KBO','NPB','MLB'];
 export const firstLevels={CPBL:'CPBL1',KBO:'KBO1',NPB:'NPB1',MLB:'MLB'};
 export const labels={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ'};
@@ -19,7 +20,8 @@ export function createProductionHarness(state,seed='hof-fixed',retirementSource=
  const declarations=literal('TIER_TH')+'\n'+literal('LG_N')+'\n'+literal('DPN')+'\nconst LV='+GAME_SOURCE.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';\n'+GAME_SOURCE.match(/Object.assign\(TIER_TH,\{[^\n]+\}\)/)[0]+';\n'+GAME_SOURCE.match(/Object.assign\(LG_N,\{[^\n]+\}\)/)[0]+';';
  const functions=['careerScore','capTeam','defShare','posLegendPhrase','honorScore','tierOf','retireScene','blankStat','addStatTotal','accStat','fnv1a32'].map(name=>productionFunction(name,name==='retireScene'?retirementSource:GAME_SOURCE)).join('\n');
  const rng=`let _s=0,seedInit,R;const careerRng=new Rng(()=>S,fnv1a32);${GAME_SOURCE.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}\n${GAME_SOURCE.match(/R = function\(\)\{[^\n]+/)[0]}\nlet calls=0;const nativeR=R;R=()=>{calls++;return nativeR();};const ri=(a,b)=>a+Math.floor(R()*(b-a+1));`;
- vm.runInContext(declarations+'\n'+functions+'\n'+rng,context);context.seed=seed;vm.runInContext('seedInit(seed)',context);
+ const seasonStats=SeasonStats?'\nconst seasonStats=new SeasonStats({getState:()=>S,levels:LV,rng:{R:()=>R(),N0:sd=>N0(sd),chance:p=>chance(p),ri:(a,b)=>ri(a,b)},clamp:(v,a,b)=>clamp(v,a,b),isSP:()=>isSP(),pitcherRole:()=>pitcherRole(),checkGoldclothSeason:()=>checkGoldclothSeason()});':'';if(SeasonStats)context.SeasonStats=SeasonStats;
+ vm.runInContext(declarations+'\n'+functions+'\n'+rng+seasonStats,context);context.seed=seed;vm.runInContext('seedInit(seed)',context);
  return {context,cards,run:code=>vm.runInContext(code,context),snapshot:()=>JSON.parse(vm.runInContext('JSON.stringify({state:S,calls,rng:_s,thresholds:TIER_TH})',context))};
 }
 export function components(st,pos){return pos==='P'?{wins:13*st.W,saves:6*st.SV,strikeouts:.9*st.SO,innings:.35*st.IP}:{hits:st.H,homeRuns:3*st.HR,steals:.8*st.SB,rbi:.5*st.RBI,walks:.3*st.BB,defense:6*Math.max(0,st.DEF||0)};}
