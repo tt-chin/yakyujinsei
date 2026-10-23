@@ -1186,7 +1186,7 @@ export class SeasonStats {
 - PR #15（`refactor/season-stats` `0ff7ba5`）以 merge commit `34ed23cfdd0755b486ae6c148449947590dd32dc` 併入 `dev`；合併後工作樹與 `0ff7ba5` 相同（`git diff` 無差分），未重新驗證。
 - 合併後 `dev` push 的 Quick CI：未確認。
 
-## 2i. 第 7 期：國際大會群的領域拆分（細部計畫，2026-10-23；7-A 本機完成，見 §2i.8）
+## 2i. 第 7 期：國際大會群的領域拆分（細部計畫，2026-10-23；7-A 本機完成，見 §2i.8；7-B 計畫見 §2i.10）
 
 ### 2i.1 方針（2026-10-23 使用者同意）
 
@@ -1256,6 +1256,8 @@ export class SeasonStats {
 
 使用者決定（2026-10-23）：1 批准；2i.4-1 的計數變更於實作時批准（數字同預估）。2、3 未決。
 
+使用者決定（2026-10-23，PR #16 建立後）：2 併入 `international-trait-policy.js`；3 接著規劃 7-B（§2i.10）。
+
 ### 2i.8 7-A 實施結果（2026-10-23，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `02f69c4`＋未 commit 變更）
 
 - 實施前重新掃描（2i.4-4）：發現 `information-architecture.test:18–19`（自 `accLevelStat(levelKey,st){` 切至檔尾並斷言無 RNG 呼叫），方法位置改為 `defRuns` 之後（使用者同意，§2i.3 已更正）。其餘與 §2i.2 一致；`tools/`、`docs/designs/` 無引用。
@@ -1274,6 +1276,68 @@ export class SeasonStats {
 | Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
 | Full | scratchpad worktree（與工作樹內容一致；`sourceFingerprint` `ca69ad255e64…`，比較基準 `origin/main` `650e4dd`），4 組平行（22／22／22／21），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（357／427／468／471 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 無問題（逐字搬移、自由識別字皆經注入、RNG 延遲綁定、CRLF／LF、harness 未放寬、新增案例皆有抽取） |
+
+### 2i.9 PR #16（2026-10-23）
+
+- 使用者建立 PR #16（`refactor/international` `3c0f3e1c047654c56ad306070a788c1aeee43f05` → `dev`）；本紀錄時未合併。PR 的 CI 結果：未確認。
+
+### 2i.10 7-B 現況（2026-10-23 唯讀確認，基準 `3c0f3e1`；scout 調查＋抽查）
+
+- `game.js:2495–2498`：`intlEvents(year)`（讀 `DATA.intlEvents`，`DATA` 為 `:2225` 的 `JP_DATA`；唯一讀取者）、`intlPhase(e)`、`intlThreshold(e)`（不讀 `S`）、`intlLevelEligible(e)`（讀 `S.lv`）。四行無 `R(`／`ri(`／`chance(`／`pick(`；在 `ffb9e32`～`3c0f3e1` 間未變更。
+- `processIntlPhase`（`:2505`）內聯兩段條件：`:2513` `!intlLevelEligible(e)||ovr()<threshold`（短路：等級不合格時不呼叫 `ovr()`）、`:2514` `S.rehab>0||S.skipMid||S.seasonFactor<1`（三欄位為 `undefined` 時皆判為未負傷）。`threshold` 另用於選項說明 `代表基準：総合${threshold}以上`。
+- `ovr()`（`:340`）與 `dpScore`（`:74`）：讀 `S.ab`／`S.pos`／`S.dpos`／`S.traits.yips`，無 RNG、無副作用（已逐行確認）；`S.traits` 由 `normalizeInternationalState` 先行保證存在。未被任何測試或 LEGACY 覆寫重新指派。
+- 文字耦合：
+  - `championship-intl.test:42`：自 `'  function intlEvents('` 切至 `'  function maybeIntl(done)'` 於 vm 執行；ctx 展開 `international-trait-policy.js` 全部 export（`...intl`），`ovr:()=>65`（不計次）、`DATA:JP_DATA`；I08 覆寫 `f.context.DATA`。`004cd26` 新舊比較。
+  - `event-integration.test:39`：`'  function intlEvents('` 為業餘大會切片終點。
+  - `international-personal-stats.test`：`'  function addIntlStats('`～`'  function completeIntl('` 位元組比較（不受影響）。
+  - `salary-flow.test`：計數不變（四行無 RNG，`pick(` 仍在 `processIntlPhase`）。
+  - `championship-intl-e2e:44–45`：強制清單已含 `international-trait-policy.js`。
+  - 無測試斷言 `international-trait-policy.js` 的 export 清單，無 `ovr(`／`S.lv` 計數。
+- 規格：`CURRENT_SPEC:482`（基準 58／55、可選等級、日程 Master、4 年週期推定、PRE／POST、見送り／辭退）、`:456`（policy 檔不參照 DOM／全域 RNG）。BACKLOG 無相關項目。
+
+### 2i.11 7-B 設計
+
+分類：L3／R3。抽出的程式本身無 RNG，但其判定決定 `pick` 與 `addIntlStats` 是否消費 RNG；抽錯即會使同一 seed 的抽取序列偏移。
+
+- `international-trait-policy.js`（LF）新增 export（命名沿用該檔 `*International*`）：
+  - `internationalEvents(year,officialEvents)`：原 `intlEvents` 本體，`DATA.intlEvents` 改為參數。
+  - `internationalPhase(e)` → `'PRE'|'POST'`；`internationalThreshold(e)` → `58|55`。
+  - `internationalSelection(e,{level,overall,rehab,skipMid,seasonFactor})` → `'ELIGIBLE'|'DENIED'|'INJURED'`。等級清單與比較式照抄原式（含 `rehab>0||skipMid||seasonFactor<1` 的 `undefined` 語意）。
+- `game.js`（CRLF）`:2495–2498` 改為一行委派，錨點文字 `  function intlEvents(` 保留，行數維持 2759：
+  - `  function intlEvents(year){return internationalEvents(year,DATA.intlEvents);}`
+  - `  function intlPhase(e){return internationalPhase(e);}`
+  - `  function intlThreshold(e){return internationalThreshold(e);}`
+  - `  function intlSelection(e){return internationalSelection(e,{level:S.lv,overall:ovr(),rehab:S.rehab,skipMid:S.skipMid,seasonFactor:S.seasonFactor});}`（取代 `intlLevelEligible`，使用者同意）
+- `processIntlPhase` 依 `intlSelection(e)` 分支：`'DENIED'` → `completeIntl(e,'DENIED',next)`；`'INJURED'` → 原 `card` 後 `completeIntl(e,'DENIED',next)`。`card` 文字、`completeIntl` 呼叫、`pick` 位置不變。import 行加入新名稱。
+- 揭露：`ovr()` 改為每場大會皆呼叫一次（原為等級合格時才呼叫）。`ovr()` 為純函式且無 RNG，結果等價；vm stub 不計次，測試不判定此差異。
+
+### 2i.12 7-B 測試變更（需揭露）
+
+1. 等價 fixture（`championship-intl.test` 內新增，Full 入口數不變 87）：自 `3c0f3e1` 原始碼取出舊四函式與兩段內聯條件，與新 export 逐格比較。格：公式年＋數個 WBC／P12 四年週期（含非週期年）、14 種 `S.lv` × WBC／P12、`overall` ∈ {54,55,57,58,59}、傷病三欄位（含 `undefined`）。
+2. harness：預估不需修改（新 export 經 `...intl` 進入 vm ctx；I08 的 `DATA` 覆寫於呼叫時讀取）。實作前對新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/designs/`；本節未列者先報告再改。
+3. 不新增 policy 檔的 no-RNG 掃描測試（範圍外）；由 reviewer 人工確認。
+
+### 2i.13 7-B 驗證（L3／R3）
+
+比較基準：`3c0f3e1c047654c56ad306070a788c1aeee43f05`（`refactor/international`）；允許差分：無。
+
+1. `check-syntax`；`championship-intl`、`event-integration`、`international-personal-stats`、`salary-flow`、`season-stats`、`information-architecture`、`verify-modularization`。
+2. `game-view-dom-e2e --baseline=3c0f3e1`；`championship-intl-e2e`、`international-personal-stats-e2e`、`trait-system-e2e --ui-only`；Quick。
+3. 負控制（scratchpad，各改一條規則）：①門檻 58→57；② WBC 名單去除 `MLB`；③ `<1`→`<=1`；④推定週期偏移一年。確認等價 fixture FAIL。
+4. Full 一次（4 組平行，不加 `--temp-root`）；重跑範圍如實記錄。
+5. reviewer：`3c0f3e1..HEAD`。重點：條件等價（含 `undefined`、短路差異）、錨點文字、新 export 無 DOM／全域 RNG、CRLF（`game.js`）／LF（policy 檔）。
+6. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2i.14 7-B 交付
+
+- 分支：`refactor/international-selection`（自 `refactor/international` `3c0f3e1`，stacked；PR #16 合併前其 diff 含 7-A）。commit 順序：文件（§2i.9～本節）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（§9.3；`CURRENT_SPEC:456` 已涵蓋該 policy 檔）。不修改 `main`。
+
+### 2i.15 7-B 待決
+
+1. 是否批准 7-B 依 §2i.11～2i.14 實作。
+
+使用者決定（2026-10-23）：放置併入 `international-trait-policy.js`；`intlLevelEligible` 改為 `intlSelection` 委派（行數不變）；分支基於 `refactor/international`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
