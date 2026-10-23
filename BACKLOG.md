@@ -14,7 +14,7 @@
 | DESIGN_PENDING | **8** | UI介紹／履歷／桌面布局轉為IMPLEMENTED_UNVERIFIED，其他原狀態保留 |
 | 其他候補／保留／混合 | **11** | UI-06／07改列待設計，其餘保留原狀態 |
 
-以上依唯一正式checkbox重新計算：**26 + 32 = 58**（2026-10-18：D2-G9-RELEASE以發布範圍結案、新增CI-LINUX-FULL-01、TEST-COMPARE-BASELINE-01；以下為前輪說明，保留原時點）。前輪TRAIT-PITCHER-TC已按本地接受範圍結案；本輪只同步Linux CI優先策略、保留D2-G9-RELEASE未完成並新增D2-CI-ARTIFACT-01，不改其他52個既有ID的完成狀態。全力投球1.11.9的Linux Quick47／Full65及Preview29案、1.11.6與1.11.7的測試數字仍為各版歷史證據，不冒充D2結果。啟動Linux Full仍須核對本次推送SHA與實際Run，未啟動前不標CI_IN_PROGRESS。其他smallschool／COPY等較早描述與後續專項文件的時點差異不在本輪整理，保持獨立範圍。前十階段歷史數字與報告不改寫。 2026-10-19新增3項使用者需求；UI-06／07不重複計數。
+以上依唯一正式checkbox重新計算：**26 + 32 = 58**（2026-10-18：D2-G9-RELEASE以發布範圍結案、新增CI-LINUX-FULL-01、TEST-COMPARE-BASELINE-01；以下為前輪說明，保留原時點）。前輪TRAIT-PITCHER-TC已按本地接受範圍結案；本輪只同步Linux CI優先策略、保留D2-G9-RELEASE未完成並新增D2-CI-ARTIFACT-01，不改其他52個既有ID的完成狀態。全力投球1.11.9的Linux Quick47／Full65及Preview29案、1.11.6與1.11.7的測試數字仍為各版歷史證據，不冒充D2結果。啟動Linux Full仍須核對本次推送SHA與實際Run，未啟動前不標CI_IN_PROGRESS。其他smallschool／COPY等較早描述與後續專項文件的時點差異不在本輪整理，保持獨立範圍。前十階段歷史數字與報告不改寫。 2026-10-19新增3項使用者需求；UI-06／07不重複計數。 2026-10-23新增CI-FULL-BALANCE-01。
 
 ### 1.1 開發階段完成履歷
 
@@ -166,7 +166,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 本輪驗證（2026-10-21，HEAD 2a11a64加工作樹／1.13.1）：R2／L2；原方向鍵冒泡FAIL已修復並保留首次紀錄；首輪Quick60 PASS／3 FAIL，初始化位置及精確版號斷言修復後，最終Quick62 PASS／1 FAIL。剩餘award-identity-policy.test為未修改B1快照工作樹CRLF與原Git LF hash差異，未修改HEAD測試亦可重現；舊G9凍結來源契約對後續UI／版號調整亦須另審，不自行放寬。相關4入口與直接3入口PASS，投手／野手固定Seed主RNG652／549比較不變；原生Menu／Share fixture S／RNG不變。Full NOT_RUN（本批局部UI，無遊戲規則／RNG改動）；OFUSE實際付款、iPhone／Android原生分享NOT_RUN。原FAIL及新log留在忽略的test-results/menu-20261021-*；來源hash清單menu-20261021-source-audit.json。未commit／push／部署，待使用者審查。
 
-### 3.6 P1 — D2發布準備與獨立CI證據待辦（3 項）
+### 3.6 P1 — D2發布準備與獨立CI證據待辦（4 項）
 
 - [x] **D2-G9-RELEASE** — `RELEASED / CLOSED_WITH_SPLIT_RESIDUALS`（2026-10-18）。正式1.13.0發布與基本Smoke已完成，來源650e4dd／正式站15adf28，見[發布驗收](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)。使用者決定以發布範圍結案，殘項拆出：Linux Full與舊工具固定路徑依賴改由CI-LINUX-FULL-01追蹤（本機Docker Linux Full對650e4dd 80 PASS已獲接受為替代證據；GitHub Actions Linux Full仍未PASS、未豁免）；artifact保存由D2-CI-ARTIFACT-01；文件整理見上方索引。未將任何殘項標為PASS。
 
@@ -180,7 +180,9 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 - [ ] **TEST-COMPARE-BASELINE-01** — `DESIGN_PENDING`（2026-10-19縮小範圍）。以`origin/main`為比較基準的3入口（`contract-salary-e2e`、`draft-income-e2e`、`display-preferences-e2e`）在`dev`升版而`main`未跟上時，`birthHighSchool.createdVersion`版本戳記不同，自第0步不一致。**版本戳記部分已處理**：使用者批准比照既有`delete state.version`，於比對前排除該欄位（衍生結果`traits.smallschool`仍比對）；`display-preferences-e2e`亦改用共用`assertSameCareer`防止失敗時OOM。本機Docker 2 CPU／7GB驗證：3入口對`7220ad8`（1.12.0）與`650e4dd`皆PASS（`contract-salary-e2e` 381案，峰值≤3.49GB）；排除前對`7220ad8`的FAIL（含milb-demotion兩案）與`display-preferences-e2e`的OOM皆僅由此欄位造成。**剩餘待決**：有規則變更的版本於發布前跑dev Full時，跨版本比對是否須以許容差分oracle（如`assertApprovedProducerRenameCareer`）宣告差異，或明確接受該等入口FAIL；屬政策判斷，未經批准不改期望值或基準。固定基準的入口（如`hof-first-ballot-e2e`、`salary-history-e2e`）不隨`origin/main`變動，不在本項範圍。2026-10-19 CI確認：Run39260159042（`2a11a64`，Linux Chromium）中3入口對`650e4dd`皆PASS（`contract-salary-e2e` 135.9秒、`display-preferences-e2e` 115.1秒、`draft-income-e2e` 334.2秒）；本次`dev`與`main`的VERSION相同，不構成跨版本規則變更的驗證，剩餘待決不變。
 
-> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋5（待決／保留）＋10（候補）＋3（CI-LINUX-FULL-01／獨立artifact待辦／TEST-COMPARE-BASELINE-01）＝**32**；58唯一ID、26完成／32未完（2026-10-18：D2-G9-RELEASE結案，改計CI-LINUX-FULL-01；另加TEST-COMPARE-BASELINE-01）。歷史38／47／48／52項及前階段快照保持原數。 2026-10-19新增3項，UI-06／07沿用既有ID。
+- [ ] **CI-FULL-BALANCE-01** — `PROPOSED / NOT_APPROVED`（2026-10-23）。CI Full 平行化（[計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §7-2）後，wall time 由最重的一批決定。`splitIds` 依入口數平分；以 manifest 預估秒數試算（86入口，`ffb9e32`），8批為 26／636／641／1442／714／50／638／710 秒，改為依耗時平衡（貪婪法）可降為 900／600／600／552／552／551／552／550 秒，下限為 `full-power-pitching-e2e` 單一入口（預估900秒）。預估 wall time 由平行化後約23分鐘降至約13～14分鐘（未驗證）。須修改 `scripts/ci-full-batches.mjs` 與 `ci-full-batches.test.mjs`（現行「各批依序串接＝inventory順序」斷言須改寫，另需批准）。完成條件：以平行化後首次 CI Full 的各 batch job 實測耗時決定是否實施及耗時來源（manifest `seconds` 或實測校正），實施後 CI Full aggregate PASS 且記錄 wall time。平行化實測（2026-10-23，Run 39879968880，84入口）：wall time 21分37秒；8批測試耗時 5／520／384／1205／550／23／294／321 秒（batch 4 為瓶頸）。
+
+> **未完成項目核算：** 4（原規格／回歸／歷史細項＋smallschool）＋6（殿堂）＋4（實機／文案）＋5（待決／保留）＋10（候補）＋3（CI-LINUX-FULL-01／獨立artifact待辦／TEST-COMPARE-BASELINE-01）＝**32**；58唯一ID、26完成／32未完（2026-10-18：D2-G9-RELEASE結案，改計CI-LINUX-FULL-01；另加TEST-COMPARE-BASELINE-01）。歷史38／47／48／52項及前階段快照保持原數。 2026-10-19新增3項，UI-06／07沿用既有ID。 2026-10-23新增CI-FULL-BALANCE-01（§3.6改計4項）。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
