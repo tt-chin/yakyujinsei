@@ -1072,6 +1072,7 @@ export class CareerPresenter {
 | `game-view-dom-e2e --baseline=097e212` | PASS：8 生涯每一步 DOM／`S`／RNG／player・career view model 完全一致 |
 | Quick | 66 PASS／0 FAIL／0 SKIP／0 BLOCKED（`record-condition-fix` 修正後） |
 | Full | 4 組平行（22／22／22／20），86 入口不重複：85 PASS／1 FAIL（`record-condition-fix`，上記錨點）。修正後該入口單獨與 Quick 重跑 PASS；Full 未重跑 |
+| Full（確定程式碼，2026-10-23） | 對象 `ffb9e32`（4-A＋第 5 期＋§3.5 文件，`game.js` 與 `64e37b4` 相同），scratchpad worktree，4 組平行（21／22／21／22），86 入口不重複：**86 PASS／0 FAIL／0 SKIP／0 BLOCKED**（280／833／339／289 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | 目視（自動操作＋截圖） | 1280 投手 542 步、390 內野手 543 步至退休畫面，並開啟「選手」「キャリア」分頁；Console 錯誤／pageerror／失敗請求／4xx 皆 0，無橫向捲動；顯示值與 4-A 時相同 |
 | reviewer | 無問題（7 個本體逆向替換後與基準逐位元組相同；`S` 每次呼叫重新取得；委派與 callback 的 `this`；注入完整、無 TDZ；改寫錨點同等或更嚴格；fixture 涵蓋各分支；CRLF／LF） |
 
