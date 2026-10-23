@@ -1362,7 +1362,7 @@ export class SeasonStats {
 | Full | scratchpad worktree（與工作樹內容一致，新檔以 `git add -N` 納入 `ls-files`；`CURRENT_SPEC` 追記前；`sourceFingerprint` `7058a6453847…`，比較基準 `origin/main` `650e4dd`），4 組平行（21／22／22／22），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（274／818／330／286 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 2 次（併入版、新檔版）皆無問題。指出：新檔於主工作樹未追蹤時，`git ls-files` 系檢查不涵蓋（Full worktree 已以 `git add -N` 涵蓋） |
 
-## 2j. 第 8 期：殿堂評分 policy（細部計畫，2026-10-23）
+## 2j. 第 8 期：殿堂評分 policy（細部計畫，2026-10-23；本機完成，見 §2j.7）
 
 PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #64）PASS。候補選定依據見 §3.8。
 
@@ -1425,6 +1425,24 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 5. 耦合調查摘要是否記入計畫文件。
 
 使用者決定（2026-10-23）：1 採 3 函式；2 新檔 `hall-of-fame-tier-policy.js`；3 補一行；4 `:456`；5 記入 §3.8。實作待批准。
+
+### 2j.7 實施結果（2026-10-23，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `203f225`＋未 commit 變更）
+
+- 實施前重新掃描（2j.3-4）：除 §2j.1 所列外，另有 `tests/retirement-hof-pilot.mjs:19`、`docs/reviews/pitcher-tc-research/research.mjs`（瀏覽器 hook 於插樁後的 `game.js` 內呼叫全域 `tierOf`／`TIER_TH`）與 `tests/retirement-hof-report.mjs:32`（說明文字）。同名包裝與常數留在 `game.js`，皆不受影響、未修改。
+- 實作：新檔 `hall-of-fame-tier-policy.js`（LF，20 行）；`game.js`（CRLF）`:39` 新增 import，`:1567`／`:1592`／`:1606` 一行委派，2760→2744 行。`CURRENT_SPEC:456` 追加一句。
+- 測試變更：`retirement-hof-test-support` 的 vm ctx 加入 3 個 export（harness）；`defense-history-boundaries.mjs` 新增 import 與 ctx 各一行（計畫寫「補一行」，實為 2 行）；`retirement-hof-balance.test` 新增等價 fixture：`52e4cdb` 舊函式與現行包裝＋新模組，於 vm 以可控 `honorScore` stub 逐格比較，格為最終 `TIER_TH` 全部 6 key（計畫寫 4 職業聯盟，另含 `IND`／`CORP`）×投手／非投手×37 格（門檻 ±1／−0.5／−0.4／0／+0.4、`mvp`／`aceN`／`king` 旗標與組合、`DEF` 負／`undefined`／0／正、`st` 不存在），共 444 格。以 `JSON.stringify` 比較，並以格數、tier 0–4 皆出現、`S` 不變、呼叫順序 `honorScore`→`careerScore` 作守衛。Full 入口數不變（87）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（168 檔） |
+| 相關單元 | `retirement-hof-balance`（160＋20＋531）、`hof-first-ballot-league`（31）、`award-legacy-consumer`、`award-consumer-contract`（19／0）、`award-identity-policy`（135）、`pitcher-award-integration`（29／0）、`salary-flow`（計數不變）、`verify-modularization`、`information-architecture` 皆 PASS；手動工具 `defense-history-boundaries` 264／0 |
+| `game-view-dom-e2e --baseline=52e4cdb` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（直接執行。runner 只對 manifest 有 `comparison` 的入口轉送 `--baseline`，經 runner 執行時比較的是預設基準 `1bc65dfc`） |
+| e2e | `hof-first-ballot-e2e` PASS（新檔 `git add -N`） |
+| 負控制 | ①門檻 `>=`→`>`、② MVP 保底 1→2、③ `careerScore` 權重 `W*13`→`W*12`、④去除 `defenseShareFor` 的投手回傳 0：等價 fixture 皆 FAIL；policy 檔還原後 `cmp` 一致 |
+| Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（與工作樹內容一致，新檔以 `git add -N` 納入；`sourceFingerprint` `ac44ac2bb48d…`，與 Quick 相同；比較基準 `origin/main` `650e4dd`），4 組平行（22／22／22／21），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（379／796／369／315 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（`git diff 52e4cdb` 工作樹），無問題 |
+| NOT_RUN | `retirement-hof-analysis`、`retirement-hof-report`（會改寫歷史報告；harness 變更由 `retirement-hof-balance`／`hof-first-ballot-league` 涵蓋） |
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
