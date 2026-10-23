@@ -5,6 +5,7 @@ import { formatRehabStatus } from '../docs/src/ui/condition-view-model.js';
 
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const record=fs.readFileSync(new URL('../docs/src/ui/record-view.js',import.meta.url),'utf8');
+const presenter=fs.readFileSync(new URL('../docs/src/ui/career-presenter.js',import.meta.url),'utf8');
 const levels={NPB_DEV:{statBucket:'NPB'},NPB2:{statBucket:'NPB'},NPB1:{statBucket:'NPB'},KBO2:{statBucket:'KBO'},KBO1:{statBucket:'KBO'},CPBL2:{statBucket:'CPBL'},CPBL1:{statBucket:'CPBL'},R:{statBucket:'MINOR'},A1:{statBucket:'MINOR'},A2:{statBucket:'MINOR'},A3:{statBucket:'MINOR'},MLB:{statBucket:'MLB'},IND:{statBucket:'IND'},CORP:{statBucket:'CORP'}};
 for(const key of ['NPB_DEV','NPB2','NPB1'])assert.equal(resolveStatBucket(levels,key),'NPB');
 for(const key of ['KBO2','KBO1'])assert.equal(resolveStatBucket(levels,key),'KBO');
@@ -18,8 +19,8 @@ assert.equal(formatRehabStatus({rehab:0,skipMid:true,seasonFactor:0}),'リハビ
 assert.equal(formatRehabStatus({rehab:1,skipMid:true,seasonFactor:0}),'リハビリ中（今季全休・残り1年）');
 assert.equal(formatRehabStatus({rehab:1,skipMid:false,seasonFactor:1}),'残り1年');
 assert.equal(formatRehabStatus({rehab:0,skipMid:false,seasonFactor:1}),'なし');
-assert.match(game,/function rehabStatusText\(\)\{return formatRehabStatus\(S\);\}/);
-assert.match(game,/大きな故障（通算）/);
+assert.match(presenter,/#rehabStatusText\(\)\{const S=this\.#getState\(\);return formatRehabStatus\(S\);\}/);
+assert.match(presenter,/大きな故障（通算）/);
 assert.match(record,/プレー年数/);assert.match(record,/階級別通算成績/);
 assert.doesNotMatch(record,/競技シーズン|競技別通算/);
 console.log('Record classification and condition display checks passed.');

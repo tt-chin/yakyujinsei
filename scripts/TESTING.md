@@ -2,9 +2,9 @@
 
 ## CI Full 分批保存
 
-CI 的 Full 透過 `scripts/ci-full-batches.mjs` 依原 inventory 順序拆成8批（目前85入口，每批10～11個），呼叫原 `scripts/test.mjs full --only=...`；不更改 Runner、測試旗標、timeout、斷言或歷史基準。Quick／Audit 保持原命令。`plan` 固定當次 HEAD、Run ID／attempt及已解析的 origin/main；`run 1`～`run 8` 分別輸出到 `test-results/ci-full/batch-N/`，每批後由獨立 upload-artifact step 保存；`aggregate` 嚴格驗證完整集合、來源與環境、exit/status、log SHA256，任一缺失、FAIL／SKIP／BLOCKED或重用結果都不能得到Full PASS。
+CI 的 Full 透過 `scripts/ci-full-batches.mjs` 依原 inventory 順序拆成8批（目前86入口，每批10～11個），呼叫原 `scripts/test.mjs full --only=...`；不更改 Runner、測試旗標、timeout、斷言或歷史基準。Quick／Audit 保持原命令。`plan` 固定當次 HEAD、Run ID／attempt及已解析的 origin/main；`run 1`～`run 8` 分別輸出到 `test-results/ci-full/batch-N/`，每批後由獨立 upload-artifact step 保存；`aggregate` 嚴格驗證完整集合、來源與環境、exit/status、log SHA256，任一缺失、FAIL／SKIP／BLOCKED或重用結果都不能得到Full PASS。
 
-本地工具驗證：`node scripts/ci-full-batches.test.mjs`（合成故障案例＋一個明示原生Runner案例；不是完整Full）。Workflow檢查仍使用 `node scripts/check-workflow.mjs --playwright=<外部模組>`。新工具測試是CI工具的獨立驗證，不新增到遊戲85入口。
+本地工具驗證：`node scripts/ci-full-batches.test.mjs`（合成故障案例＋一個明示原生Runner案例；不是完整Full）。Workflow檢查仍使用 `node scripts/check-workflow.mjs --playwright=<外部模組>`。新工具測試是CI工具的獨立驗證，不新增到遊戲86入口。
 
 每批artifact名稱含Run ID、attempt及批次號，保存14天；保留既有tmp證據allowlist，不將全部大型／可能含敏感資料的tmp自動上傳。既有 `D2-CI-ARTIFACT-01 / ARTIFACT_COVERAGE_BLOCKED` 仍有效；summary／log保存不等於完整原始S/RNG可重播封存。Runner突然關閉時，只有之前已完成上傳的批次可期待保留，正在執行的批次及後續批次仍可能遺失；`always()`不能保證失去runner後仍能執行。正常測試失敗後後續批次仍會執行，原失敗step不會被最終彙整或上傳掩蓋。
 
