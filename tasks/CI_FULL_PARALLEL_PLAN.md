@@ -1,6 +1,6 @@
 # 野球人生｜CI Linux Full 平行化計畫書
 
-**文件狀態：PLAN / OWNER_APPROVAL_PENDING（2026-10-22）**
+**文件狀態：OWNER_APPROVED（2026-10-23） / IMPLEMENTED_LOCAL（CI 實跑未驗證）**
 **建立日期：2026-10-22**
 **對象：repo 擁有者審閱。核准前不修改 workflow。**
 
@@ -124,3 +124,21 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 3. 是否核准新增 `actions/download-artifact`（SHA 固定）。
 4. 是否核准在作業分支以 `workflow_dispatch` 執行 §5-4、§5-5。
 5. 作業分支名稱 `ci/full-matrix`（自 `origin/dev`），以 PR 併入 `dev`；`main` 依 AGENTS §10 另行反映。BACKLOG 是否另立項目追蹤。
+
+- 擁有者決定（2026-10-23）：核准 1、3、4、5。2 不含於本計畫，另立 BACKLOG `CI-FULL-BALANCE-01`（`PROPOSED / NOT_APPROVED`），待平行化後首次 CI Full 的各 job 實測耗時再決定。
+
+## 8. 實作紀錄（2026-10-23，分支 `ci/full-matrix`，自 `origin/dev` `4036e87`）
+
+- `actions/download-artifact`：v8.0.2（`9000827ccba6bdab643e8b6fd33ac0654aef8333`，2026-10-07 發布）。v8 與 `upload-artifact` v7 同日（2026-02-26）發布，為對應的直接上傳版本。
+- `test.yml`：`tests` job 加 job 層級 `if`（非 Full），既有步驟條件不變，移除 Full 步驟。`full-plan` 只 `npm install` Playwright（YAML 解析器用，不裝 Chromium）。`full-batch` 的安裝步驟與 `tests` 相同。`full-aggregate` 不安裝 Playwright；8 批證據以 `pattern`＋`merge-multiple: true` 下載回 `test-results/ci-full/`（各批 artifact 內的 `plan.json` 內容相同）。彙整 artifact 名稱沿用 `tests-<event>-<run_id>-<attempt>`，path 限 `test-results/ci-full/` 下的 summary／plan／各批 json 與 log。
+- 與 §3.1 的差異：各 job 的 `test-results/ci-bootstrap/*.log`（Playwright／Chromium 安裝 log）不收進 artifact（舊單一 job 的彙整 artifact 有收）；`full-batch` 的同內容仍在 job log（`tee`）。收進 artifact 會改變批次 artifact 的根目錄而影響 `merge-multiple` 的下載路徑。reviewer 指出此差異不在 §3；使用者 2026-10-23 接受不收（擁有者另行確認）。`tests` job 上傳 path 中已無法匹配的 3 個 `test-results/ci-full/…` glob 一併刪除。
+- `check-workflow.mjs`：改為驗證 4 個 job 的構成、`if`／`needs`／matrix／`fail-fast`、plan 與批次的上傳／下載名稱與 path、步驟順序；其餘斷言不變。新增：所有 `uses` 須以 40 位 commit SHA 固定。
+- `TESTING.md`：新增平行執行段落與「Re-run all jobs」限制（第 5 行的入口數敘述不改，避免與 OOP 分支的同行修改衝突）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-workflow.mjs`（外部 Playwright 1.59.0-alpha 的 YAML 解析器） | PASS |
+| 負控制（scratchpad 複本） | matrix 7 批／刪除批次上傳 path／`tests` job 去掉 `if`／aggregate 去掉 `merge-multiple`／aggregate 去掉 `always()`／`full-plan` 改為安裝 Chromium：6 組皆 FAIL |
+| reviewer | 無中等以上問題；低 3 件：bootstrap log 不收（接受，見上）、`tests` job 殘留 glob（已刪）、`full-plan` 未斷言不裝 Chromium（已加） |
+| `ci-full-batches.test.mjs` | FAIL（`exact 83 entries`：實為 84）。未修改的 `origin/dev` `4036e87` 同樣 FAIL（`4cb4c98` 新增 `npb-farewell.test` 時未同步），與本變更無關；PR #12（4-A）已將其改為 85。本分支不修改 |
+| GitHub `workflow_dispatch`（§5-4、§5-5） | 未執行（push 後執行） |
