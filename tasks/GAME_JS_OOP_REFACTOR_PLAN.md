@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE4A_LOCAL_DONE / PHASE5_LOCAL_DONE（2026-10-23）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE4A_PR_OPEN / PHASE5_LOCAL_DONE / PHASE6_PLANNED（2026-10-23）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -15,8 +15,9 @@
 | 1c | `Rng` 方法化 | `ri`／`pick`／`chance`／`N0`／`pickRecord` 改由 `Rng` 提供 | L3 / R3 | 暫緩（方案 A，2026-10-18 使用者決定）；細部計畫見 §2c |
 | 2 | `GameView` | `card`／`divider`／`board`／`choose` 等純 DOM 操作移出；`allocUI` 暫緩 | L3 / R3 | 完成；PR #8 併入 `dev`（`26efa59`），合併 `1bc65df` 的衝突與重新驗證見 §2d.11；T14 測試修正為 PR #9；GitHub Actions CI 未確認 |
 | 3 | `CareerSession` | 收容 `S` 外的流程／選項控制狀態（3-A）與 JP 覆寫 IIFE 內的 context 變數（3-B）；不含 `S`、`careerRng`、年度流程函式 | L3 / R3 | 本機完成（§2e.7，`refactor/career-session` `db5c39b`）；已 push，PR #10 → `dev` 待合併（§2e.8）；GitHub Actions CI 未確認 |
-| 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 本機完成（§2f.7，`refactor/legacy-overrides` `34c9c7b`）；未 push，PR → `dev` 待批准；GitHub Actions CI 未確認 |
-| 5 | `CareerPresenter` | `build*ViewModel`（`game.js:582–588`）移入 `docs/src/ui/career-presenter.js` 的類別，依賴以建構子注入；`game.js` 保留 5 個一行委派 | L2 / R2（PR 前 Full 一次） | 本機完成（§2g.8），未 commit |
+| 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 本機完成（§2f.7，`refactor/legacy-overrides` `097e212`）；已 push，PR #12 → `dev` 待合併（2026-10-23）；PR → `dev` 不觸發 CI |
+| 5 | `CareerPresenter` | `build*ViewModel`（`game.js:582–588`）移入 `docs/src/ui/career-presenter.js` 的類別，依賴以建構子注入；`game.js` 保留 5 個一行委派 | L2 / R2（PR 前 Full 一次） | 本機完成（§2g.8），`refactor/career-presenter` `6825df9`；未 push，PR 待 4-A 併入後 |
+| 6 | `SeasonStats` | `simSeason`／`applySeasonForm`／`defRuns`／`blankStat`／`addStatTotal`／`accStat`／`accLevelStat` 移入 `docs/src/engine/season-stats.js` 的類別；RNG 經 `game.js` 的 `R` 延遲注入；`game.js` 保留 7 個一行委派 | L3 / R3 | 細部計畫（§2h），待批准實作 |
 
 共通原則：
 
@@ -1075,6 +1076,82 @@ export class CareerPresenter {
 | reviewer | 無問題（7 個本體逆向替換後與基準逐位元組相同；`S` 每次呼叫重新取得；委派與 callback 的 `this`；注入完整、無 TDZ；改寫錨點同等或更嚴格；fixture 涵蓋各分支；CRLF／LF） |
 
 - `game.js` 行號變動（舊＝`097e212`，2904 → 2903 行）：1–581：0；589–2904：−1（582–588 改寫為 582–587）。
+- commit：`dac9bd0`（harness）、`64e37b4`（實作）、`6825df9`（文件）。
+
+## 2h. 第 6 期：`SeasonStats`（細部計畫，2026-10-23）
+
+### 2h.1 目標與範圍
+
+- 目標：把季成績的模擬與累計（§3.5 的 `stats_sim` 群核心）從 `game.js` 抽成 `SeasonStats` 類別。這是第一次把抽 RNG 的函式移出 `game.js`，同時建立「RNG 經 `game.js` 的 `R` 延遲注入」的模式，供日後 `injury_tj`、`international` 等群沿用。
+- 範圍內（7 個，約 160 行，行號以 `ffb9e32` 計）：`simSeason`（403–486）、`applySeasonForm`（488–522）、`defRuns`（524–534）、`blankStat`（237）、`addStatTotal`（535–540）、`accStat`（541–548）、`accLevelStat`（549–554）。
+- 範圍外（留在 `game.js`）：`pitcherRole`、`isSP`、`roleN`、`fmtIP`、`statLine`、`slgOf`、`bucketOf`。理由：多群共用的顯示／角色 helper；`fmtIP→roleN` 被 `championship-intl`、`international-personal-stats`（含與基準逐位元組比較）切片。
+- 允許差分：**無**。同一 seed／選擇的 `S`、RNG 消耗次數與順序、`#log`／`#act`／`#board` DOM、player／career view model 完全一致。
+- 使用者決定（2026-10-23）：第 6 期選 `stats_sim`（L3／R3）；範圍、命名、方法名沿用皆依本節；`HOF-NATURAL-SAMPLE-01` 研究停止中，可修改 `retirement-hof-test-support`（§1.1-3）。
+
+### 2h.2 現況（2026-10-23 唯讀確認，基準 `ffb9e32`；scout 靜態分析＋測試耦合調查＋抽查）
+
+| 項目 | 結果 |
+|---|---|
+| RNG | `simSeason`：`R(` 4、`N0(` 8、`chance(` 1、`ri(` 1；`applySeasonForm`：`R(` 1。其餘 5 個無 |
+| `S` 寫入 | `simSeason`：`role`（未設定時）；`accStat`：`stats`、`teamTally`、`dposYears`、`roleYears`；`accLevelStat`：`statsByLevel`。`applySeasonForm`／`defRuns` 只讀 `S`、改寫傳入的 `st` |
+| `game.js` 內依賴 | `LV`（`Object.assign` 就地擴充）、`clamp`、`R`、`N0`、`chance`、`ri`、`isSP`、`pitcherRole`、`checkGoldclothSeason` |
+| 呼叫者 | `proSeason`（`simSeason`、`accStat`、`accLevelStat`）、`addIntlStats`、`collectLegacyAwardPlan`、`recordSalaryEvaluation`、`shareImage`、`statTable`、`boardModel` 等（`blankStat`／`addStatTotal`） |
+| 測試重新指派 | `full-power-pitching-e2e:29` 在 hook 內 `accLevelStat=(lv,st)=>{…}`。其餘被搬名稱未見指派（實作前再 grep） |
+| hook 以名稱引用 | `blankStat`（`stage6-browser`、`stage10-risk-e2e`、`trait-display-e2e`、`tools/development-a/runtime`）、`accLevelStat`（`full-power-pitching-e2e`） |
+| 原始碼文字耦合 | `full-power-pitching.test`：`productionFunction` 抽 `simSeason`／`applySeasonForm`（支援 `--source=<SHA>`）；`event-integration:9`：切片 `function simSeason(`→`/* シーズン状態は10%`；`information-architecture:15–17`：`proSeason` 內 `accStat(bucket,st); accLevelStat(levelKey,st);`、`function addStatTotal(t,st)`、切片 `function accLevelStat`→`function statLine`；`retirement-hof-test-support:20`：`productionFunction` 抽 `blankStat`／`addStatTotal`／`accStat`；`full-power-pitching-e2e:23`：`proSeason` 內 ` const st=simSeason` 起的切片與 `20920dd` 逐字比較；`salary-flow.test:43–50`：整檔計數 `R(` 28、`ri(` 43、`chance(`＋slot 45、`pick(` 14 |
+
+### 2h.3 設計
+
+新增 `docs/src/engine/season-stats.js`（LF）：
+
+```js
+export class SeasonStats {
+  constructor({getState, levels, rng:{R,N0,chance,ri}, clamp, isSP, pitcherRole, checkGoldclothSeason}) {…}
+  simSeason(lv) / applySeasonForm(st,lv) / defRuns(lv)
+  blankStat() / addStatTotal(t,st) / accStat(bucket,st) / accLevelStat(levelKey,st)
+}
+```
+
+- 本體逐字搬移；只把 `S` 改為每次呼叫時取得的 state、`game.js` 內依賴改為注入值、群內互相呼叫改為 `this.<method>()`。方法名沿用原函式名（reviewer 可逆向替換後與基準逐位元組比對）。不得順手修改計算、常數或註解。
+- `game.js` 端：`const seasonStats=new SeasonStats({getState:()=>S, levels:LV, rng:{R:()=>R(),N0:sd=>N0(sd),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}, clamp, isSP:()=>isSP(), pitcherRole:()=>pitcherRole(), checkGoldclothSeason:()=>checkGoldclothSeason()})`。
+  - RNG 一律以 lambda 延遲綁定：測試在 `game.js` 作用域重新指派 `R`（強制取值、追蹤、`onDraw` 計數）時，新模組的抽取仍經由當時的 `R`。抽取次數與順序由逐字搬移保證。`Rng` 方法化（第 1c 期）仍暫緩，不在本期處理。
+  - `LV` 傳參考即可（模組初始化時就地擴充，同一物件）。
+- `game.js` 保留 7 個同名一行委派（例：`function simSeason(lv){return seasonStats.simSeason(lv);}`），參數名保持原樣。理由：`accLevelStat` 須維持可重新指派的綁定；`proSeason` 內呼叫文字與 `information-architecture:15–16`、`full-power-pitching-e2e:23` 不變；hook 以名稱引用 `blankStat` 仍可解析。委派是否拆除留待日後決定。
+- 群內呼叫走 `this.<method>()`，不經 `game.js` 委派。前提：群內被呼叫的 `applySeasonForm`、`defRuns`、`blankStat`、`addStatTotal` 沒有被測試重新指派（2h.2；實作前 grep 確認）。
+- 建構時點：`seasonStats` 須在任何 `simSeason`／`blankStat` 呼叫前建立（含模組初始化期間的呼叫；實作時確認無 TDZ）。
+
+### 2h.4 測試變更（需揭露）
+
+1. **期望值變更（須另行批准）**：`salary-flow.test` 的 `game.js` 計數 `R(` 28→23、`ri(` 43→42、`chance(`＋slot 45→44（`pick(` 14 不變）；同時新增對 `season-stats.js` 的計數斷言（`R(` 5、`ri(` 1、`chance(` 1），使兩檔合計維持 28／43／45。確切數字實作時以 grep 確認後再請批准。
+2. harness／錨點變更（非期望值變更）：
+   - `full-power-pitching.test`：現行原始碼改由新模組建構 `SeasonStats`（注入 vm 內的 `R`／`N0` 等）；`--source=<舊SHA>` 仍以 `productionFunction` 抽取（新舊雙路徑）。
+   - `event-integration:9`：`simSeason` 切片改為新模組。
+   - `information-architecture:17`：`accLevelStat` 切片改為新模組（:15–16 不變）。
+   - `retirement-hof-test-support:20`：`blankStat`／`addStatTotal`／`accStat` 依原始碼是否含委派走新舊雙路徑。
+3. 新增 `tests/season-stats.test.mjs`：以 vm 從 `ffb9e32` 抽出舊 7 函式，與 `SeasonStats` 在相同的決定性 `R` 序列下比對回傳值、`S` 變化、抽取序列（次數與順序）。fixture：投手 SP／MR／CL（含 `favorite`）、野手各 `sta` 段、DH 轉向、捕手、`seasonFactor` 0／<0.9／≥0.9、調子 3 分支、`accStat` 的 `MINOR`／`teamTally`、`statsByLevel` 初始化、`NPB1` 的 `checkGoldclothSeason`。Full 入口 86→87；同步 `scripts/test-manifest.mjs`（若需）、`scripts/ci-full-batches.test.mjs`、`scripts/TESTING.md`。
+4. 實作前對 7 個名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`（指派、切片的起點與終點、regex、計數），若有本節未列者先報告再改。
+
+### 2h.5 驗證（L3 / R3）
+
+比較基準：`ffb9e32`（`refactor/career-presenter`；`game.js` 與 `64e37b4` 相同）；允許差分：無。
+
+1. harness commit（`game.js` 未修改）：2h.4-2 的雙路徑在現行原始碼上 PASS，`full-power-pitching.test --source=ffb9e32` PASS。
+2. 實作 commit：`check-syntax`；`season-stats.test`、`salary-flow`、`full-power-pitching`、`event-integration`、`information-architecture`、`retirement-hof-balance`、`hof-first-ballot-league`、`verify-modularization` 等相關單元；`game-view-dom-e2e --baseline=ffb9e32`（8 生涯，每步 DOM／`S`／RNG／view model 一致）；`full-power-pitching-e2e`、`trait-system-e2e`、`trait-display-e2e`、`stage10-risk-e2e`；Quick。
+3. 負控制：scratchpad 中讓新模組的 `applySeasonForm` 多抽 1 次 `R`，確認 `season-stats.test` 與 `game-view-dom-e2e` FAIL；把 `rng` 改為直接捕獲（非 lambda），確認重新指派 `R` 的測試能偵測。
+4. Full 一次（4 組平行，分組執行，非單一 Full 報告）；修正後若有入口重跑，如實記錄範圍。
+5. reviewer：`ffb9e32..HEAD`。重點：本體逐字搬移、RNG 延遲綁定、注入完整性、`getState` 延遲讀取、委派與 `this`、TDZ、CRLF（`game.js`）／LF（新模組）。
+6. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2h.6 交付
+
+- 分支：`refactor/season-stats`（自 `refactor/career-presenter` 建立；疊加分支）。上游 PR（#12：4-A；之後第 5 期）以 merge commit 併入 `dev`；上游若再修改，本分支須合併並重跑 2h.5-2。
+- commit 順序：harness → 實作 → 文件。commit／push 另批。
+- 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（§9.3）。不修改 `main`。
+
+### 2h.7 待決
+
+1. 是否批准依本節實作（commit／push 另批）。
+2. 2h.4-1 的計數期望值變更（實作時確認數字後提出）。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -1131,6 +1208,7 @@ export class CareerPresenter {
   - 與基準逐字比較：`full-power-pitching-e2e`（tjAccrue／tjCap／phasePre／proSeason）、`npb-return-ui`（4 段）、`event-copy`、`international-personal-stats`。
   - 計數：`salary-flow.test` 的 `R(` 28、`ri(` 43、`chance(`＋slot 45、`pick(` 14 等（搬移函式到其他模組時，`game.js` 內的計數會改變）。
 - 對第 6 期的含意（未決定）：`let_overrides` 的 8 個薪資 stub＋`salary_helpers` 是範圍最小、跨群呼叫最少的候補，但被 `kbo-renewal-floor`、`salary-evaluation-receipt`、`npb-return-ui` 以文字切片；`contract_salary`／`market_fa` 跨群呼叫多；`year_season_flow` 是整個遊戲迴圈，風險最高。4-D 原決定「不做」，若採用須重新取得決定。
+- 使用者決定（2026-10-23）：第 6 期採 `stats_sim`（L3／R3），細部計畫見 §2h。另：PR #11 為 `ci/full-matrix`（只新增 `tasks/CI_FULL_PARALLEL_PLAN.md`），非 4-A；4-A 於 2026-10-23 以 PR #12 提出。
 
 ## 4. 使用者決定（2026-10-18）
 
