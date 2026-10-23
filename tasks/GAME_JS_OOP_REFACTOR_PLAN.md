@@ -1444,6 +1444,66 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | reviewer | 1 次（`git diff 52e4cdb` 工作樹），無問題 |
 | NOT_RUN | `retirement-hof-analysis`、`retirement-hof-report`（會改寫歷史報告；harness 變更由 `retirement-hof-balance`／`hof-first-ballot-league` 涵蓋） |
 
+## 2k. 第 9 期：守備位置 policy（細部計畫，2026-10-23）
+
+第 8 期 PR #19 已提出、未合併。候補選定依據見 §3.9。
+
+### 2k.1 現況（2026-10-23 唯讀確認，基準 `0cb3ccc`，`game.js` 2744 行）
+
+- `game.js` `:76` `dpScore(p)`（讀 `S.ab`）、`:101` `dpBar()`（讀 `S.lv`／`S.age`、`DP_BAR`）、`:106` `dpQual(p)`（讀 `S.lv`／`S.age`／`S.traits.favorite`、`DP_TH`，呼叫 `dpScore`）、`:114` `dpList()`（讀 `S.pos`，`filter(dpQual)` 後加 `'DH'`）、`:121` `dpMult()`（讀 `S.pos`／`S.dpos`、`DP_MULT`）：無 RNG、不寫 `S`、無 UI。
+- 常數：`DP_TH`（`:90`）只被 `dpQual` 使用；`DP_BAR`（`:99`）只被 `dpBar`；`DP_MULT`（`:100`）被 `dpMult` 與 `dposReview`（`:170`／`:175` 年俸係數文案）；`DP_RANK`（`:113`）只被 `dposReview`（`:168`）。JP 覆寫區無 `Object.assign` 改寫。
+- 呼叫者：`dpScore`←`dpQual`、`ovr`（`:350`）；`dpBar`←`dposReview` 內 `cOk`（`:126`）；`dpQual`←`dpList`、`dposReview`（`:131`／`:142`／`:166`）；`dpList`←`dposReview`（`:163`）；`dpMult`←`salaryCandidate` 預設參數（`:2277`）。`dposReview`（`:122`，`choose`／`card` 流程，寫 `S.dpos`／`S.role`）不動。
+- 文字耦合：
+  - `event-integration.test:10`：`game.slice(indexOf('function dpQual('),indexOf('const DP_RANK='))` 於 vm 執行；`:11` fixture 注入 `DP_TH:{SS:{NPB1:50}}` 與 `dpScore` stub（`()=>44`／`()=>47`），`:22–26` 斷言依此值。
+  - `kbo-renewal-floor.test:38`：`dpMult:()=>.92` 僅為 stub，不切原始碼。
+  - `docs/design/MODULE_FUNCTION_INDEX.md`、`STATE_AND_RNG_REFERENCE.md`、`docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md`：說明文字，不改。`CURRENT_SPEC:104–105` 描述 `ovr`／`dpScore` 行為，行為不變，不改。
+  - 全樹掃描：`check-syntax`、`global-contract-market.test:9`（`readdirSync` 檢查 import 解析）會看到新檔；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點的檔案，新檔不受影響。
+
+### 2k.2 設計
+
+分類：L3／R3（能力評價・年俸係數・守備位置轉換）。無 RNG，`salary-flow` 計數不變；但 `dpScore` 經 `ovr` 影響年俸與市場評價，`dpMult` 為年俸係數。
+
+- 新檔 `docs/src/engine/defense-position-policy.js`（LF）的 export（名稱與 `game.js` 函式不同）：
+  - `defenseScoreFor(ability,position)`：原 `dpScore` 本體，`S.ab` 改為參數。
+  - `defenseBarFor({bars,level,age})`：原 `dpBar` 本體。
+  - `defensePositionQualified({position,thresholds,level,age,favorite,scoreOf})`：原 `dpQual` 本體；`scoreOf` 為計分函式，維持原本只在通過 `DH`／門檻存在檢查後才計分。
+  - `defensePositionCandidates(position,qualified)`：原 `dpList` 本體（守備順序陣列照原樣搬入）。
+  - `defensePositionMultiplier({position,defensePosition,multipliers})`：原 `dpMult` 本體。
+- `game.js`（CRLF）新增一行 import；5 函式改為一行委派，函式名稱與錨點文字保留：
+  - `function dpScore(p){return defenseScoreFor(S.ab,p);}`
+  - `function dpBar(){return defenseBarFor({bars:DP_BAR,level:S.lv,age:S.age});}`
+  - `function dpQual(p){return defensePositionQualified({position:p,thresholds:DP_TH,level:S.lv,age:S.age,favorite:S.traits.favorite,scoreOf:dpScore});}`
+  - `function dpList(){return defensePositionCandidates(S.pos,dpQual);}`
+  - `function dpMult(){return defensePositionMultiplier({position:S.pos,defensePosition:S.dpos,multipliers:DP_MULT});}`
+- 常數 `DP_TH`／`DP_BAR`／`DP_MULT`／`DP_RANK` 留在 `game.js`，呼叫時傳入：`const DP_RANK=` 是 `event-integration.test:10` 的終點錨點；該 fixture 以自有 `DP_TH` 與 `dpScore` stub 斷言，若門檻移入模組則改用實值（SS／NPB1＝58），`:23` 不成立。
+- `dposReview`（含其中的捕手判定 `cOk`）、`ovr`、`salaryCandidate` 不變。
+
+### 2k.3 測試變更（需揭露）
+
+1. harness（非期望值變更）：`event-integration.test:11` 的 vm fixture 加入 `defensePositionQualified`。
+2. 等價 fixture（`event-integration.test` 內新增，Full 入口數不變 87）：自 `0cb3ccc` 取出舊 `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 與最終 `DP_TH`／`DP_BAR`／`DP_MULT`，與現行包裝＋新模組逐格比較。格：8 守備位置＋`DH`＋未知值、頂級（`CPBL1`／`NPB1`／`MLB`）與其他等級、`dpBar` 年齡邊界 21／22／24／25／26／27、`dpQual` 年齡邊界 23／24／25／26、`favorite` 有無、`pos` 為 `P`／`C`／`IF`／`OF`、`dpos` 為 `null`／各位置／`DH`、能力值使分數恰等於門檻±。跨 realm 以 `JSON.stringify`＋格數守衛比較，並確認 `S` 不變。
+3. 實作前以新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列者先報告再改。
+
+### 2k.4 驗證（L3／R3）
+
+比較基準：`0cb3ccc`（完整 SHA 於實施時解析；#19 合併後若 `dev` 程式碼不同則改用 `dev`）；允許差分：無。
+
+1. `check-syntax`；`event-integration`、`kbo-renewal-floor`、`global-contract-market`、`award-identity-policy`、`salary-flow`、`verify-modularization`、`information-architecture`。
+2. `game-view-dom-e2e --baseline=<基準>`（直接執行）；新檔 commit 前先 `git add -N`；Quick。
+3. 負控制（scratchpad，各改一處）：①`dpQual` 門檻比較 `>=`→`>`；②`dpBar` 年齡邊界 `<=21`→`<21`；③`dpScore` 一個權重；④`dpMult` 去除投手回傳 1 分支。確認等價 fixture FAIL。
+4. Full 一次（worktree＋`git add -N`，4 組平行）；重跑範圍如實記錄。
+5. reviewer：`<基準>..HEAD`。重點：等價（`scoreOf` 呼叫時機、`filter` 順序、`DH` 附加、`||` fallback）、錨點文字、新 export 無 DOM／`S`／全域 RNG、CRLF（`game.js`）／LF（policy 檔）。
+6. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2k.5 交付
+
+- 分支：`refactor/defense-position`（自 `refactor/hall-of-fame-tier` `0cb3ccc`；#19 合併後將 `dev` 合入）。commit 順序：文件（§2k、§3.9）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG（§9.3）。`CURRENT_SPEC:456` 於同行追記新檔（不參照 DOM／`S`／RNG 的純函式）。不修改 `main`。
+
+### 2k.6 待決
+
+使用者決定（2026-10-23）：範圍 5 函式，`cOk` 不抽；常數留 `game.js`；等價 fixture 置於 `event-integration.test`；分支自 `0cb3ccc` 先開；調查記入 §3.9。實作待批准。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -1528,6 +1588,21 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - `salary-flow.test` 計數（排除 bridge 後）：`R(` 22、`ri(` 39、`chance(`＋legacy slot 42、`pick(` 14。
 - 全樹掃描：`check-syntax`（`readdirSync` 全部語法檢查）、`verify-modularization`、`information-architecture` 不擋新檔；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點已存在且不在 `allowedB` 的檔案，`docs/src/engine/` 的新檔不受影響。`index.html` 只載入 `main.js`，`game.js` import 的新模組不需改 `index.html`。
 - 結論：四群皆為領域混合，整群搬移不符 §3.7 的內聚度基準；`awards_hof` 中的殿堂評分可依 7-B 型抽為純函式 policy，且不影響 `salary-flow` 計數。
+
+### 3.9 第 9 期候補：純規則函式調查（2026-10-23，基準 `0cb3ccc`，`game.js` 2744 行；scout 唯讀調查＋抽查）
+
+- 方法：§3.8 的結論為整群搬移不適用，故改為對 `game.js` 全部 222 個函式記錄 RNG、`S` 讀寫、UI／DOM、可變綁定與呼叫關係，篩出無 RNG・不寫 `S`・無 UI・非委派的函式，再對應 §3.5 的群並掃描文字耦合。
+- scout 計數：純規則 110、近純（僅一項不符）62。**計數偏高**：UI 判定有漏（抽查發現 `shareImage` 使用 `document`／`canvas`、`bindLatestSalaryDetailLink` 使用 `querySelectorAll`，皆被列為純規則）；下表只列抽查確認者。
+
+| 候補 | 內容 | 內聚度 | 文字耦合 |
+|---|---|---|---|
+| `dp_defense` | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult`＋`DP_*` 常數（`:76–121`） | 單一領域，群內互相呼叫；只讀 `S` | `event-integration.test:10` 切片；`kbo-renewal-floor:38` stub |
+| `salary_helpers` | `serviceYearsFor`／`salaryCandidate` 等（JP 覆寫區） | 集群，但多依賴既有 policy，部分回傳 HTML | `kbo-renewal-floor` 以 `between`／regex 切 `salaryFor`／`salaryCandidate=`／`kboPreviousPackage`；`stage10-risk-e2e` 以全域名使用 `salaryFor` |
+| `ability_traits` | `ovr`（13 呼叫者）／`playerType`／`toolGap`／`abCost`／`injuryProb` | 各自孤立 | 少 |
+| `rng_seed` | `fnv1a32`／`normalizeSeed` 等（約 11 行） | 集群 | `fnv1a32` 被 6 處以上 `productionFunction` 取出；`seedInit→clamp` 切片 |
+| `events_love` 純規則部分 | `evOdds`／`datePool` 等（約 25 行） | 小 | `event-copy.test:32` 以 `a7fe2e8` 逐字凍結 |
+
+- 使用者決定（2026-10-23）：第 9 期採 `dp_defense`，細部計畫見 §2k。
 
 ## 4. 使用者決定（2026-10-18）
 
