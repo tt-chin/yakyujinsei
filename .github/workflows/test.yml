@@ -23,6 +23,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   tests:
+    if: ${{ github.event_name != 'pull_request' && inputs.mode != 'full' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
@@ -55,157 +56,6 @@ jobs:
         run: |
           node scripts/ci-full-batches.test.mjs
           node scripts/linux-chromium-smoke.mjs
-      - name: Plan Full batches
-        id: full-plan
-        if: env.TEST_MODE == 'full'
-        run: node scripts/ci-full-batches.mjs plan
-      - name: Run Full batch 1/8
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs run 1
-      - name: Save Full batch 1 evidence
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-1
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 1
-          path: |
-            test-results/ci-full/plan.json
-            test-results/ci-full/batch-1/*.log
-            test-results/ci-full/batch-1/*.json
-            test-results/ci-full/batch-1/tmp/yakyujinsei-*/**
-            test-results/ci-full/batch-1/tmp/yakyujinsei-*.json
-            test-results/ci-full/batch-1/tmp/runner-contract-*/**
-      - name: Run Full batch 2/8
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs run 2
-      - name: Save Full batch 2 evidence
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-2
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 1
-          path: |
-            test-results/ci-full/plan.json
-            test-results/ci-full/batch-2/*.log
-            test-results/ci-full/batch-2/*.json
-            test-results/ci-full/batch-2/tmp/yakyujinsei-*/**
-            test-results/ci-full/batch-2/tmp/yakyujinsei-*.json
-            test-results/ci-full/batch-2/tmp/runner-contract-*/**
-      - name: Run Full batch 3/8
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs run 3
-      - name: Save Full batch 3 evidence
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-3
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 1
-          path: |
-            test-results/ci-full/plan.json
-            test-results/ci-full/batch-3/*.log
-            test-results/ci-full/batch-3/*.json
-            test-results/ci-full/batch-3/tmp/yakyujinsei-*/**
-            test-results/ci-full/batch-3/tmp/yakyujinsei-*.json
-            test-results/ci-full/batch-3/tmp/runner-contract-*/**
-      - name: Run Full batch 4/8
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs run 4
-      - name: Save Full batch 4 evidence
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-4
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 1
-          path: |
-            test-results/ci-full/plan.json
-            test-results/ci-full/batch-4/*.log
-            test-results/ci-full/batch-4/*.json
-            test-results/ci-full/batch-4/tmp/yakyujinsei-*/**
-            test-results/ci-full/batch-4/tmp/yakyujinsei-*.json
-            test-results/ci-full/batch-4/tmp/runner-contract-*/**
-      - name: Run Full batch 5/8
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs run 5
-      - name: Save Full batch 5 evidence
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-5
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 1
-          path: |
-            test-results/ci-full/plan.json
-            test-results/ci-full/batch-5/*.log
-            test-results/ci-full/batch-5/*.json
-            test-results/ci-full/batch-5/tmp/yakyujinsei-*/**
-            test-results/ci-full/batch-5/tmp/yakyujinsei-*.json
-            test-results/ci-full/batch-5/tmp/runner-contract-*/**
-      - name: Run Full batch 6/8
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs run 6
-      - name: Save Full batch 6 evidence
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-6
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 1
-          path: |
-            test-results/ci-full/plan.json
-            test-results/ci-full/batch-6/*.log
-            test-results/ci-full/batch-6/*.json
-            test-results/ci-full/batch-6/tmp/yakyujinsei-*/**
-            test-results/ci-full/batch-6/tmp/yakyujinsei-*.json
-            test-results/ci-full/batch-6/tmp/runner-contract-*/**
-      - name: Run Full batch 7/8
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs run 7
-      - name: Save Full batch 7 evidence
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-7
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 1
-          path: |
-            test-results/ci-full/plan.json
-            test-results/ci-full/batch-7/*.log
-            test-results/ci-full/batch-7/*.json
-            test-results/ci-full/batch-7/tmp/yakyujinsei-*/**
-            test-results/ci-full/batch-7/tmp/yakyujinsei-*.json
-            test-results/ci-full/batch-7/tmp/runner-contract-*/**
-      - name: Run Full batch 8/8
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs run 8
-      - name: Save Full batch 8 evidence
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-8
-          retention-days: 14
-          if-no-files-found: error
-          compression-level: 1
-          path: |
-            test-results/ci-full/plan.json
-            test-results/ci-full/batch-8/*.log
-            test-results/ci-full/batch-8/*.json
-            test-results/ci-full/batch-8/tmp/yakyujinsei-*/**
-            test-results/ci-full/batch-8/tmp/yakyujinsei-*.json
-            test-results/ci-full/batch-8/tmp/runner-contract-*/**
-      - name: Aggregate Full batches
-        if: ${{ always() && env.TEST_MODE == 'full' && steps.full-plan.outcome == 'success' }}
-        run: node scripts/ci-full-batches.mjs aggregate
       - name: Save logs and evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -219,7 +69,124 @@ jobs:
             test-results/*/tmp/yakyujinsei-*/**
             test-results/*/tmp/yakyujinsei-*.json
             test-results/*/tmp/runner-contract-*/**
+            test-results/linux-smoke/**
+  full-plan:
+    if: ${{ github.event_name == 'pull_request' || inputs.mode == 'full' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      TEST_BROWSER: chromium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - name: Install test-only Playwright
+        shell: bash
+        run: |
+          export PLAYWRIGHT_MODULE="$RUNNER_TEMP/test-tools/node_modules/playwright"
+          echo "PLAYWRIGHT_MODULE=$PLAYWRIGHT_MODULE" >> "$GITHUB_ENV"
+          npm install --prefix "$RUNNER_TEMP/test-tools" --no-save --no-package-lock --ignore-scripts playwright@1.62.1
+      - name: Validate workflow
+        run: node scripts/check-workflow.mjs
+      - name: Plan Full batches
+        run: node scripts/ci-full-batches.mjs plan
+      - name: Save Full plan
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-plan
+          retention-days: 14
+          if-no-files-found: error
+          path: test-results/ci-full/plan.json
+  full-batch:
+    needs: full-plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [1, 2, 3, 4, 5, 6, 7, 8]
+    env:
+      TEST_BROWSER: chromium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - name: Install test-only Playwright
+        shell: bash
+        run: |
+          mkdir -p test-results/ci-bootstrap
+          export PLAYWRIGHT_MODULE="$RUNNER_TEMP/test-tools/node_modules/playwright"
+          echo "PLAYWRIGHT_MODULE=$PLAYWRIGHT_MODULE" >> "$GITHUB_ENV"
+          npm install --prefix "$RUNNER_TEMP/test-tools" --no-save --no-package-lock --ignore-scripts playwright@1.62.1 2>&1 | tee test-results/ci-bootstrap/playwright-install.log
+          node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium 2>&1 | tee test-results/ci-bootstrap/chromium-install.log
+      - name: Load Full plan
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-plan
+          path: test-results/ci-full
+      - name: Run Full batch
+        run: node scripts/ci-full-batches.mjs run ${{ matrix.batch }}
+      - name: Save Full batch evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-${{ matrix.batch }}
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 1
+          path: |
+            test-results/ci-full/plan.json
+            test-results/ci-full/batch-${{ matrix.batch }}/*.log
+            test-results/ci-full/batch-${{ matrix.batch }}/*.json
+            test-results/ci-full/batch-${{ matrix.batch }}/tmp/yakyujinsei-*/**
+            test-results/ci-full/batch-${{ matrix.batch }}/tmp/yakyujinsei-*.json
+            test-results/ci-full/batch-${{ matrix.batch }}/tmp/runner-contract-*/**
+  full-aggregate:
+    needs: [full-plan, full-batch]
+    if: ${{ always() && needs.full-plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - name: Load Full plan
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-plan
+          path: test-results/ci-full
+      - name: Load Full batch evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-*
+          merge-multiple: true
+          path: test-results/ci-full
+      - name: Aggregate Full batches
+        run: node scripts/ci-full-batches.mjs aggregate
+      - name: Save logs and evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-${{ github.event_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            test-results/ci-full/summary.json
             test-results/ci-full/plan.json
             test-results/ci-full/batch-*/*.json
             test-results/ci-full/batch-*/*.log
-            test-results/linux-smoke/**
