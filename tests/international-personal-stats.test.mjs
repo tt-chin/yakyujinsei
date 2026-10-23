@@ -64,7 +64,18 @@ test('T13 decimal IP rounding leaves input untouched; invalid deltas fail visibl
 });
 test('existing addIntlStats and fmtIP implementations remain byte-equivalent',()=>{
  const baseline=execFileSync('git',['show','e602174a22d7472e1021d780388ad61adc6b11b6:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}).replace(/\r\n/g,'\n');
- const current=source.replace(/\r\n/g,'\n');
+ let current=source.replace(/\r\n/g,'\n');
+ // OOP plan §2i (7-A): addIntlStats moved into SeasonStats; game.js keeps a one-line delegate. Rebuild the former
+ // game.js line from the method (drop the state/deps/RNG destructuring line) so the byte comparison still covers it.
+ if(current.includes('seasonStats.addIntlStats(')){
+  const delegate='  function addIntlStats(){return seasonStats.addIntlStats();}\n';
+  assert.equal(current.split(delegate).length,2,'game.js keeps one addIntlStats delegate');
+  const seasonStats=readFileSync(new URL('../docs/src/engine/season-stats.js',import.meta.url),'utf8').replace(/\r\n/g,'\n');
+  const header='  addIntlStats(){\n    const S=this.#getState(),{clamp,isSP}=this.#deps,{R,chance,ri}=this.#rng;\n    ';
+  assert.equal(seasonStats.split(header).length,2,'one SeasonStats addIntlStats method');
+  const at=seasonStats.indexOf(header)+header.length;
+  current=current.replace(delegate,'  function addIntlStats(){'+seasonStats.slice(at,seasonStats.indexOf('\n  }\n',at))+'}\n');
+ }
  for(const [start,end]of [['  function addIntlStats(', '  function completeIntl('],['function fmtIP(', 'function roleN(']])assert.equal(current.slice(current.lastIndexOf(start),current.indexOf(end,current.lastIndexOf(start))),baseline.slice(baseline.lastIndexOf(start),baseline.indexOf(end,baseline.lastIndexOf(start))));
 });
 console.log(cases+' cases PASS');
