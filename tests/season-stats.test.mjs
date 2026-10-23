@@ -19,13 +19,17 @@ const oldFunctions=line(old,/^function blankStat\(\).*$/m)+'\n'+between(old,'\nf
 const delegates=NAMES.map(n=>line(current,new RegExp('^function '+n+'\\(.*$','m'))).join('\n');
 assert.ok(NAMES.every(n=>delegates.includes('return seasonStats.'+n+'(')),'game.js keeps one-line delegates');
 const wiring=line(current,/^const seasonStats=new SeasonStats\(.*$/m);
+// OOP plan §2i (7-A): addIntlStats joined SeasonStats; its game.js line is the same in ffb9e32 and 34ed23c.
+const oldIntl=line(old,/^  function addIntlStats\(\).*$/m);
+const intlDelegate=line(current,/^  function addIntlStats\(\).*$/m);
+assert.equal(intlDelegate,'  function addIntlStats(){return seasonStats.addIntlStats();}','game.js keeps the addIntlStats delegate');
 
 function side(kind,state,seq){
   const draws=[],gold=[];let i=0;
   const ctx=vm.createContext({S:structuredClone(state),LV:levels,SeasonStats,draws,
     R:()=>{const v=seq[i++%seq.length];draws.push(v);return v;},
     checkGoldclothSeason:()=>{gold.push(ctx.S.statsByLevel?.NPB1?.yr??null);}});
-  vm.runInContext(shared+(kind==='old'?oldFunctions:wiring+'\n'+delegates),ctx);
+  vm.runInContext(shared+(kind==='old'?oldFunctions+'\n'+oldIntl:wiring+'\n'+delegates+'\n'+intlDelegate),ctx);
   return {ctx,draws,gold,run:code=>vm.runInContext(code,ctx)};
 }
 const lcg=seed=>{let x=seed>>>0;return Array.from({length:97},()=>((x=Math.imul(x,1664525)+1013904223>>>0)/4294967296));};
@@ -83,10 +87,21 @@ for(const [name,v,code] of [
   ['init + NPB1 goldcloth',{},"accLevelStat('NPB1',{G:5,IP:30});accLevelStat('NPB1',{G:2,IP:3})"],
   ['MLB (no goldcloth)',{statsByLevel:{MLB:null}},"accLevelStat('MLB',{G:5,IP:30})"],
 ])test('accLevelStat '+name,()=>same(name,{...base,...v},code,[.5]));
+const intlStat={G:3,IP:12.1,W:1,SV:1,SO:9,ER:4,PA:14,AB:12,H:4,HR:1,RBI:3};
+for(const [name,v] of Object.entries({'P SP':{},'P MR':{role:'MR'},'P CL':{role:'CL'},'P low ability':{ab:{...ab,vel:30,ctl:30,brk:30}},'IF':{pos:'IF',role:null},'IF high ability':{pos:'IF',role:null,ab:{...ab,con:90,pow:90,eye:90}}}))
+  for(const [seqName,seq] of [['lcg1',lcg(1)],['lcg7',lcg(7)],['low',[.01]],['high',[.99]]])
+    test(`addIntlStats ${name} ${seqName}`,()=>same('addIntlStats '+name,{...base,intlStat:{...intlStat},...v},'addIntlStats()',seq));
+test('addIntlStats zero intlStat',()=>same('addIntlStats zero',{...base,intlStat:Object.fromEntries(Object.keys(intlStat).map(k=>[k,0]))},'addIntlStats()',lcg(3)));
+
 // Late binding: a test (or replay hook) that reassigns R after construction must still see every draw.
 for(const v of [{},{role:'MR'},{pos:'IF',role:null}])test('R reassigned after construction is used '+JSON.stringify(v),()=>{
   const a=side('old',{...base,...v},[.5]),b=side('new',{...base,...v},[.5]);a.run("simSeason('NPB1')");
   b.run("var rebound=0;R=()=>{rebound++;return .5;}");b.run("simSeason('NPB1')");
+  assert.deepEqual([b.draws.length,b.run('rebound')],[0,a.draws.length],'every draw goes through the reassigned R');
+});
+for(const v of [{},{role:'MR'},{pos:'IF',role:null}])test('addIntlStats R reassigned after construction is used '+JSON.stringify(v),()=>{
+  const state={...base,intlStat:{...intlStat},...v},a=side('old',state,[.5]),b=side('new',state,[.5]);a.run('addIntlStats()');
+  b.run("var rebound=0;R=()=>{rebound++;return .5;}");b.run('addIntlStats()');
   assert.deepEqual([b.draws.length,b.run('rebound')],[0,a.draws.length],'every draw goes through the reassigned R');
 });
 test('state read on every call',()=>{

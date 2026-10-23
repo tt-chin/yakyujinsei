@@ -2496,7 +2496,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function intlPhase(e){return Number(e.startDate.slice(5,7))<=6?'PRE':'POST';}
   function intlThreshold(e){return e.eventKey.startsWith('WBC:')?58:55;}
   function intlLevelEligible(e){const wbc=e.eventKey.startsWith('WBC:');return (wbc?['NPB1','MLB','KBO1','CPBL1']:['NPB1','KBO1','CPBL1']).includes(S.lv);}
-  function addIntlStats(){const a=S.ab,IS={...S.intlStat},g=ri(5,8);IS.G+=g;if(S.pos==='P'){const dd=(a.vel+a.ctl+a.brk)/3-58,ip=+(ri(4,9)+R()*3).toFixed(1),k9=clamp(7.2+dd*.13,4,14),era=clamp(3.7-dd*.16,.8,8);IS.IP=+(IS.IP+ip).toFixed(1);IS.SO+=Math.round(ip/9*k9);IS.ER+=Math.round(era*ip/9);if(chance(45))IS.W++;if(!isSP()&&chance(30))IS.SV++;}else{const dd=(a.con*.5+a.pow*.2+a.eye*.18+a.spd*.12)-58,pa=g*ri(3,4),ab=Math.round(pa*.86),avg=clamp(.265+dd*.006,.15,.5),h=Math.round(ab*avg),hr=Math.round(h*clamp(.06+Math.max(0,a.pow-58)*.006,.03,.28));IS.PA+=pa;IS.AB+=ab;IS.H+=h;IS.HR+=hr;IS.RBI+=Math.round(hr*2.1+h*.35);}return IS;}
+  function addIntlStats(){return seasonStats.addIntlStats();}
   function completeIntl(e,status,next){
     if(S.intlCompletedKeys[e.eventKey])return;
     if(status==='DECLINED')S.intlDeclinedCount++;
