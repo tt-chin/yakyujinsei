@@ -1154,6 +1154,32 @@ export class SeasonStats {
 1. 是否批准依本節實作（commit／push 另批）。
 2. 2h.4-1 的計數期望值變更（實作時確認數字後提出）。
 
+使用者決定（2026-10-23）：1 批准；2 採方案 A（見 §2h.8）。另：PR #14（第 5 期）已併入 `dev`。
+
+### 2h.8 實施結果（2026-10-23，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `d23a893`＋未 commit 變更）
+
+- 實施前重新掃描（2h.4-4）：§2h.2 未列者——`retirement-hof-pilot:17`（hook 重新指派 `accLevelStat`）、`event-system-e2e:13,17`（hook 以名稱呼叫 `simSeason`）、`hof-first-ballot-e2e:12`、`smallschool-c-e2e:17`（`blankStat`）經委派解析，不需修改。更正：§2h.2 的 `tools/development-a/runtime` 應為 `tools/development-b/runtime.mjs`。`event-integration:11` 以 vm 全域 stub 取代 `defRuns`／`applySeasonForm`，搬移後群內呼叫走 `this`，故新路徑改為覆寫 instance 方法（使用者同意的追加 harness 變更）。
+- 實作：新增 `docs/src/engine/season-stats.js`（LF，由腳本自 `game.js` 機械產生）。方法開頭以解構取得 `S`／依賴／RNG（不產生 `R(` 等字面），群內呼叫改為 `this.<method>()`。`game.js`（CRLF，2903 → 2759 行）：`:4` 新增 import；`:237` 建立 `seasonStats`（AST 確認頂層無 7 函式的引用，無 TDZ）；7 個一行委派；`/* 成績シミュレーション。 */` 留在原處，各函式前置註解隨方法搬移。
+- 測試變更：
+  - harness（`d23a893`，`game.js` 未修改）：4 檔以委派字串 `seasonStats.<name>(` 切換新舊路徑，`season-stats.js` 一律以動態 `import()` 載入（`full-power-pitching.test` 依 `--source` 以 `git show` 取同一 SHA 的模組，經 `data:` URL 匯入）。現行原始碼 PASS，`full-power-pitching.test --source=ffb9e32` 53／0。
+  - 期望值變更（方案 A，比照 `journalBridge`）：`salary-flow` 以常數 `seasonStatsBridge`（接線行的 `rng:{…}`，斷言恰 1 次）在計數前排除；`game.js` 的 `R(` 28→23、`ri(` 43→42、`chance(`＋slot 45→44（`pick(` 14 不變），另斷言 `season-stats.js` 的 `R`／`ri`／`chance`／`pick` 為 5／1／1／0，兩檔合計維持 28／43／45。不排除時接線的延遲綁定 lambda 會使 `game.js` 多計 `R(`／`ri(`／`chance(` 各 1（方案 B，未採用）。
+  - 新增 `tests/season-stats.test.mjs`（101 案例）：`ffb9e32` 的舊 7 函式與「新模組＋`game.js` 的實際委派與接線」在相同 `R` 序列下比對回傳值、`S`、抽取序列與 `checkGoldclothSeason` 呼叫；另含重新指派 `R` 後所有抽取都經新 `R`、`S` 每次呼叫重新讀取。
+  - Full 入口 86→87（`ci-full-batches.test` 批次 `[10,11,11,11,11,11,11,11]`、PASS 數 87／86、`TESTING.md` 2 處）。
+
+| 項目 | 結果 |
+|---|---|
+| 逐字搬移 | 7 個本體逆向替換後與 `ffb9e32` 逐位元組相同（腳本比對＋reviewer 獨立比對） |
+| `check-syntax` | PASS（165 檔） |
+| 相關單元 | `season-stats`（101）、`salary-flow`、`full-power-pitching`（工作樹／`--source=ffb9e32` 皆 53／0）、`event-integration`、`information-architecture`、`retirement-hof-balance`、`hof-first-ballot-league`、`verify-modularization`、`ci-full-batches.test` 皆 PASS |
+| `game-view-dom-e2e --baseline=ffb9e32` | PASS：8 生涯每一步 DOM／`S`／RNG／view model 完全一致 |
+| e2e | `full-power-pitching-e2e` 36／0、`trait-system-e2e --ui-only` PASS、`trait-display-e2e` 18／0、`stage10-risk-e2e` 57／0（`S10_FAULT_*` 為注入故障，預期） |
+| 負控制 | ①新模組 `applySeasonForm` 多抽 1 次 `R`：`season-stats`、`salary-flow`、`game-view-dom-e2e`（第 70 步 `rngState`）皆 FAIL。②`rng` 改為直接捕獲：`salary-flow`、`game-view-dom-e2e`（第 70 步 `#log`）FAIL；`season-stats` 初版未偵測（`N0` 經全域 `R`，`REBOUND` 仍拋出），改為「重新指派後抽取次數全數經新 `R`、舊 `R` 0 次」（P SP／MR、IF）後 FAIL |
+| Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（與工作樹內容一致；`sourceFingerprint` `57d57a19b367…`，比較基準 `origin/main` `650e4dd`），4 組平行（22／22／22／21），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（337／744／334／287 秒）。首次嘗試因 `--temp-root`（僅限 Linux）在啟動時中止、0 入口執行，移除後重跑。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 無問題（逐字搬移、RNG 延遲綁定、注入完整、`getState` 每次讀取、委派與 hook 攔截、無 TDZ、CRLF／LF、雙路徑與計數排除未放寬、fixture 涵蓋 2h.4-3、86→87 一致） |
+
+- `game.js` 行號變動（舊＝`ffb9e32`，2903 → 2759 行）：1–3：0；4–235：+1；236–402：+2；403–554 改寫為 405–410；555–2903：−144。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
