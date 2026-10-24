@@ -55,7 +55,7 @@ try{
     assert.ok(await p.locator('#act').innerText());assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'horizontal overflow');await p.screenshot({path:path.join(artifacts,`event-${width}.png`)});
     // Keep a stale button and dispatch twice: the generation lock must execute only once.
     await p.evaluate(()=>{const b=document.querySelector('#act button');b.click();b.click();});assert.equal(await p.locator('[data-event-occurrence-id]').count(),1);
-    await p.locator('[data-main-view="career"]').click();await p.locator('[data-career-tab="contract"]').click();assert.match(await p.locator('#career-content').innerText(),/スポンサー収入累計/);
+    await p.locator('[data-main-view="career"]').click();await p.locator('[data-career-tab="contract"]').click();assert.match(await p.locator('#career-content').innerText(),/(^|\n)スポンサー収入\n/);
     await p.locator('#salary-detail-trigger').click();assert.match(await p.locator('#salary-detail-body').innerText(),/所得内訳/);await p.locator('#salary-detail-close').click();
     await p.locator('[data-main-view="player"]').click();await p.locator('[data-player-tab="traits"]').click();await ctx.close();
   }console.log('PC/320px/390px event + stale double click + income navigation passed');
@@ -69,7 +69,7 @@ try{
       const before=await p.evaluate(()=>window.__eventTest.get());
       await p.locator('#sh-img').click();await p.locator('#sh-out img').waitFor();
       assert.deepEqual(await p.evaluate(()=>window.__eventTest.get()),before,'retirement/share changes state or RNG');
-      assert.match(await p.locator('#log').innerText(),/スポンサー収入累計/);
+      assert.match(await p.locator('#log').innerText(),/(^|\n)スポンサー収入\n/);
       histories.push(records);await ctx.close();
     }
     assert.deepEqual(histories[0],histories[1],seed+' replay differs');const last=histories[0].at(-1);assert.ok(last.state.done);console.log(`${seed}/${pos}: ${histories[0].length} actions, RNG ${last.calls}, retirement ${last.state.year}, exact replay`);
