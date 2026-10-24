@@ -330,7 +330,7 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 
 ## 11. `full-power-pitching-e2e` 依 seed 拆分（`CI-PITCHING-E2E-01`，計畫，2026-10-24）
 
-**狀態：計畫已定（11.5 待決三點使用者 2026-10-24 照建議核准）；實作前須另行批准。** 方向已由使用者決定（BACKLOG：採②依 seed 拆分）；本節定拆分方式、入口與斷言、manifest `seconds`。基準：`ci/env-pin` `a879da0`（PR #21，可 fast-forward 至 `dev`），分支 `ci/pitching-split`。
+**狀態：已實作（`50139d0`），CI Full／linux-smoke PASS（§11.6）；PR 待 PR #21 合併後建立。** 方向已由使用者決定（BACKLOG：採②依 seed 拆分）；本節定拆分方式、入口與斷言、manifest `seconds`。基準：`ci/env-pin` `a879da0`（PR #21，可 fast-forward 至 `dev`），分支 `ci/pitching-split`。
 
 ### 11.1 現況（唯讀確認）
 
@@ -379,3 +379,25 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 
 - 依序：本節核准 → 實作（測試檔、兩入口檔、manifest、`ci-full-batches.test.mjs`、`TESTING.md`）→ 本機驗證 → commit → push／dispatch 各另批 → 結果記錄 §11.6、BACKLOG。PR #21 合併後先 rebase 至 `dev`。
 - 決定（使用者 2026-10-24，皆照建議）：①S03 歸入 `fixtures` 組；②入口檔命名 `full-power-pitching-<seed>-e2e.mjs`；③manifest 秒數先取等比換算，CI 實測後另案校正。
+
+### 11.6 實作與 CI 結果（2026-10-24，分支 `ci/pitching-split`）
+
+- commit：`fc87173`（§11 計畫、BACKLOG）→ `50139d0`（實作：測試檔 `--part`、兩薄入口、manifest、`ci-full-batches.test.mjs` 87→89／86→88、`TESTING.md`）。
+- reviewer：無阻擋；low 1 件（薄入口不帶 `--part` 直接執行會跑全部 36 案）依計畫設計維持現狀（使用者 2026-10-24 決定）。
+- 本機（macOS＋Brave，外部 Playwright 1.59.0-alpha）：`test.mjs full --only=` 三入口 3／3 PASS：fixtures 78.7 秒（30 案）、jp3 135.6 秒（3 案）、yakyo 148.0 秒（3 案），合計 363 秒；三份 harness `summary.json` 的 `records[].id` 聯集 36、無重複，與依原迴圈列舉的 36 個 ID 一致（移除一案的負控制可檢出）；`--part=unknown`／`--part=`／`--part=yakyo-test-001 --fixtures-only` 皆 throw（exit 1）；不帶 part 的 `--fixtures-only` 29／29 PASS；`ci-full-batches.test` 31 PASS／1 SKIP（Linux 專用）；Quick 67／67 PASS。不帶參數的整檔 36 案直接執行未實測。
+
+| Run | commit | mode | 結果 |
+|---|---|---|---|
+| 40055238234（#73） | `50139d0` | full | success，wall time **11分15秒**（前次 18分43秒）；`{"status":"PASS","expected":89,"acceptedPass":89,"issues":[]}` |
+| 40056950062（#74） | `50139d0` | linux-smoke | success，約1分；`ci-full-batches.test` 32／32 PASS（含 `exact 89 entries`、Linux alias 測試） |
+
+各批（`summary.json` 測試秒數）：
+
+| batch | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| 40046088278（`ec54253`，§10.6） | 990 | 435 | 197 | 293 | 622 | 234 | 272 | 198 |
+| 40055238234（`50139d0`） | 470 | 221 | 468 | 506 | 410 | 537 | 493 | 239 |
+
+- 拆分入口 CI 秒數（本機比）：`full-power-pitching-e2e` 169（2.1倍，batch 7）、`-yakyo-test-001-e2e` 424（2.9倍，batch 4）、`-jp3-pitcher-02-e2e` 325（2.4倍，batch 6）。最大批 537 秒（batch 6），不再由單一入口決定。
+- 各批仍不均（221–537 秒）：manifest 預估與 CI 實測偏差，例如 `smallschool-c-e2e` 600→218、`international-personal-stats-e2e` 600→469、`bug-act-01-02-e2e` 500→453（manifest 值為 §9 既有）。依 §11.5③，秒數校正另案，本次不改。
+- 未驗證：→ `main` PR 自動觸發的 Full、`dev` push 的 Quick。PR：PR #21 合併後建立 `ci/pitching-split` → `dev`（使用者 2026-10-24 決定）。
