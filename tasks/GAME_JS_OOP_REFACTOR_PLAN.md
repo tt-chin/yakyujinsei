@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、中間結果見 §2m.9）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9（本機驗證完成，push／PR 待批）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1861,7 +1861,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 分支：自 `refactor/flow-state-machine` 疊新分支（名稱待定），基準暫用 `d39c9badcfc3fa0b4d3254a113e0d83531db3a1e`；11-A 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃。
 - commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
 
-### 2m.9 PR #27 合併與 11-B 第 1 批中間結果（2026-10-24，本機 macOS；分支 `refactor/flow-outcome-amateur`，未 commit 變更）
+### 2m.9 PR #27 合併與 11-B 第 1 批結果（2026-10-24～25，本機 macOS；分支 `refactor/flow-outcome-amateur`，實作 commit `ab1bc8b`、中間結果文件 commit `2d90a44`，未 push）
 
 - PR #27（`refactor/flow-state-machine` `d39c9ba` → `dev`，5 commits，以 Playwright 經 Brave 建立）以 merge commit `026c5cd89e3b189cf2a93e9425f344f57fafc208` 併入 `dev`；之前 `dev` 已有 PR #26（design tokens，`7ef43d3`，不涉 `game.js`）。合併後 `dev` push 的 Quick CI（Tests #86）：completed successfully，3 分 31 秒（未展開 log 確認 PASS 數）。
 - 本分支：§2m.8 計畫 commit `1ba3e3c`，merge `origin/dev` 為 `ae04f08`。`game.js` 於 `d39c9ba` 與 `026c5cd` 間無差分，§2m.8 的重掃結果不變；**第 1 批比較基準改為 `026c5cd89e3b189cf2a93e9425f344f57fafc208`**（Case F 的 `git show` 亦用此 SHA）。
@@ -1879,7 +1879,16 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | 負控制 | ①`JOIN_CORP`／`JOIN_IND` 互換：FAIL（kind 斷言）、②`draftFallback` 社會人分支漏呼叫：FAIL、③`SIGNED_MILB` 分派到 `endGame`：FAIL |
 | reviewer | 1 次（工作樹差分），無問題（另確認 `f:advance` 改寫不影響 `signTo` 重試判斷、`saveSalaryEvaluation` 切片內容不變） |
 
-- 未完成：`game-view-dom-e2e --baseline=026c5cd…`（直接執行）；e2e：`bug-act-01-02-e2e`、`smallschool-c-e2e`、`draft-income-e2e`、`stage10-risk-e2e`、`contract-salary-e2e`、`trait-system-e2e`；Quick；Full（scratchpad worktree＋`git add -N`，本機 4 組平行）；實作 commit／push／PR。
+以下於 2026-10-25 在 scratchpad worktree（`2d90a44`，`game.js` 同 `ab1bc8b`；對 `026c5cd` 為 +21／−8）以 Brave（Playwright shim）執行，非 CI 的 Linux Chromium：
+
+| 項目 | 結果 |
+|---|---|
+| `game-view-dom-e2e --baseline=026c5cd…`（直接執行） | PASS（8 career，exit 0；末行基準為 `026c5cd89e3b189cf2a93e9425f344f57fafc208`） |
+| e2e 6 項（runner，`--baseline=026c5cd…`） | `bug-act-01-02-e2e`、`smallschool-c-e2e`、`draft-income-e2e`、`stage10-risk-e2e`、`contract-salary-e2e`、`trait-system-e2e` 6／6 PASS；`contract-salary-e2e` 收到 `--compare=026c5cd…`、`draft-income-e2e` 收到 `--baseline=026c5cd…` |
+| Quick | 68／68 PASS |
+| Full（本機 4 組平行，依 manifest `seconds` LPT 分組，未傳 `--baseline`） | 92／92 PASS（4 組聯集＝`fullIds()` 92 項，無重複／遺漏） |
+
+- 未完成：push／PR（另批）。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
