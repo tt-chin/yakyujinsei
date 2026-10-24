@@ -38,6 +38,7 @@ import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
 import { careerScoreFor, defenseShareFor, hallOfFameTier } from './hall-of-fame-tier-policy.js';
 import { defenseScoreFor, defenseBarFor, defensePositionQualified, defensePositionCandidates, defensePositionMultiplier } from './defense-position-policy.js';
+import { toolGapFor, overallRatingFor, playerTypeFor, abilityStepCostFor } from './ability-evaluation-policy.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
@@ -220,17 +221,7 @@ function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
     if(!S.removed.includes(label))S.removed.push(label); } }
 /* 一芸特化：評価対象は三つの役割軸のみ——打撃(長打力/Contact)、走塁(速度)、守備(総合)。 */
 function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
-function toolGap(){ const a=S.ab;
-  const hit=Math.max(a.pow,a.con);        /* 打撃維度：長打力または Contact 取高。 */
-  const run=a.spd;                         /* 走塁維度。 */
-  const def=S.pos==='C'?(a.rng+a.fld+a.arm+a.cat)/4:(a.rng+a.fld+a.arm)/3; /* 守備総合。 */
-  const dims=[['hit',hit,'代打'],['run',run,'代走'],['def',def,'守備固め']];
-  dims.sort((x,y)=>y[1]-x[1]);
-  const topDim=dims[0], secDim=dims[1];
-  const gap=topDim[1]-secDim[1];
-  /* 比より対象の役割：代打確認長打力/Contact 高い方を説明文に採用。 */
-  const role=topDim[2];
-  return {gap, role, val:topDim[1], dim:topDim[0]}; }
+function toolGap(){return toolGapFor(S.ab,S.pos);}
 function tjAccrue(){ /* 毎季TJゲージを蓄積する。球速と変化球が高いほど負担が増え、投球強度で倍率を決める。 */
   if(S.pos!=='P'||S.seasonFactor<=0)return;
   const mult={'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}[S.effort]||1.0;
@@ -312,44 +303,9 @@ function fmtIP(ip){ /* 十進出位局数轉棒球表示：小数部分 →三�
 }
 function roleN(r){ return {SP:'先発',MR:'中継ぎ',CL:'抑え'}[r]||'—'; }
 function isSP(){ return S.role==='SP'; } /* 先発引擎判定。 */
-function ovr(){
-  const a=S.ab;
-  if(S.pos==='P'){ const arr=[a.vel,a.ctl,a.brk].sort((x,y)=>y-x);
-    return Math.round(arr[0]*0.42+arr[1]*0.30+arr[2]*0.18+a.sta*0.10); }
-  const off=[a.con,a.pow,a.eye,a.spd].sort((x,y)=>y-x);
-  const offv=off[0]*0.38+off[1]*0.27+off[2]*0.20+off[3]*0.15;
-  /* 守備評価：現在の守備位置のdpScore(と守備位置基準システムと一致);DH 守備価値なし → 「1B 守備評価 −12」として計算(これにより同じ打撃力なら一塁手がDHを常に上回る)。守備位置が未設定なら守れる中で最上位の守備位置の評価を使う。 */
-  const dpForOvr = S.dpos || (S.pos==='C'?'C':(S.pos==='OF'?'CF':'SS'));
-  const def = S.dpos==='DH' ? (dpScore('1B')-12) : dpScore(dpForOvr);
-  /* 守備重み：重要守備位置(SS/CF/C)最大 30%、コーナーは低め;DH 用と 1B 同じ重み(守備評価に含まれる DH ペナルティ)。 */
-  const dw=S.dpos?({SS:0.30,CF:0.30,C:0.30,'2B':0.22,'3B':0.22,RF:0.20,'1B':0.12,LF:0.14,DH:0.12})[S.dpos]??0.22:0.24;
-  let v=Math.round(offv*(1-dw)+def*dw);
-  if(S.traits.yips)v-=3; /* イップス：心理的影響、システム評価 -3。 */
-  return v;
-}
-function playerType(){
-  const a=S.ab;
-  if(S.traits.onetool&&S.toolRole)return S.toolRole+'ユーティリティー';
-  if(S.pos==='P'){
-    const m=Math.max(a.vel,a.ctl,a.brk);
-    if(m<52)return '期待の若手';
-    if(a.sta>=m&&a.sta>=62)return '鉄腕';
-    if(m===a.vel)return '剛腕'; if(m===a.brk)return '変化球の魔術師'; return '精密機械';
-  }
-  if(S.pos==='C'){ const rest=Math.max(a.con,a.pow,a.spd,a.eye,a.rng,a.fld,a.arm);
-    if(a.cat>=58&&rest<=a.cat-8)return 'リードの達人'; }
-  const dv=S.pos==='C'?(a.rng+a.fld+a.cat)/3:(a.rng+a.fld+a.arm)/3;
-  const cand=[['大砲タイプ',a.pow],['安打製造機',a.con],['選球眼の鬼',a.eye],['韋駄天',a.spd],['守備職人',dv]];
-  cand.sort((x,y)=>y[1]-x[1]);
-  if(cand[0][1]<52)return '期待の若手';
-  if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return 'オールラウンダー';
-  return cand[0][0];
-}
-function abCost(k){ /* 次の能力段階に必要なポイント(は addAb コスト式と一致させる)。 */
-  const cur=S.ab[k], pk=(S.pot&&S.pot[k])||62, isP=S.pos==='P';
-  let c=isP?(cur>=66?7:cur>=60?4:cur>=55?2:1):(cur>=72?3:cur>=64?2:1);
-  if(cur>=pk)c*=isP?4:3; return c;
-}
+function ovr(){return overallRatingFor({ability:S.ab,position:S.pos,defensePosition:S.dpos,traits:S.traits});}
+function playerType(){return playerTypeFor({ability:S.ab,position:S.pos,traits:S.traits,toolRole:S.toolRole});}
+function abCost(k){return abilityStepCostFor({ability:S.ab,potential:S.pot,key:k,position:S.pos});}
 function addAb(k,v){ if(!(k in S.ab))return 0; const o=S.ab[k];
   S.lastOverflow=0; /* 【修正】紀錄真正溢出的ポイント。 */
   if(v<0){ S.ab[k]=clamp(o+v,1,80); return S.ab[k]-o; } /* 扣値 1：1、不吃ゲージ成本。 */
