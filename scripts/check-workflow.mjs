@@ -89,6 +89,8 @@ assert.deepEqual(aggJob.needs,['full-plan','full-batch']);
 assert.equal(aggJob.if,"${{ always() && needs.full-plan.result == 'success' }}");
 setup(aggJob);
 assert.deepEqual(aggJob.container,batchJob.container,'full-aggregate must share the full-batch container: batch summaries record absolute log paths');
+// actions/checkout's safe.directory does not persist to later steps; git runs as root on a runner-owned workspace.
+for(const [id,j]of Object.entries(workflow.jobs).filter(([,j])=>j.container))assert.ok(j.steps.some(s=>s.run?.includes('git config --global --add safe.directory "$GITHUB_WORKSPACE"')),id+' must trust the container workspace');
 const aggPlan=aggJob.steps.findIndex(isPlanDownload);
 const aggBatches=aggJob.steps.findIndex(s=>s.uses?.startsWith('actions/download-artifact@')&&s.with?.pattern==='tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-*');
 assert.equal(aggJob.steps[aggBatches]?.with['merge-multiple'],true);assert.equal(aggJob.steps[aggBatches].with.path,'test-results/ci-full');
