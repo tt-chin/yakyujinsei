@@ -254,7 +254,7 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 
 ## 10. CI 環境鎖定：Playwright container（`CI-ENV-PIN-01`，計畫，2026-10-24）
 
-**狀態：計畫已核准撰寫；實作前須另行批准。**
+**狀態：已實作（`e12a6f1`、`ec54253`），CI Full／Quick／linux-smoke 皆 PASS（§10.6）；PR 未建立。**
 
 ### 10.1 問題
 
@@ -272,7 +272,7 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
   ```
   digest 為 multi-arch index（2026-10-24 自 MCR registry 取得，含 amd64 `sha256:c091b21d…`、arm64 `sha256:941cc91e…`）。image 內含 Playwright 1.62.1 的系統套件、字型與瀏覽器。
 - 保留 `setup-node` 24.15.0 與 `npm install … playwright@1.62.1`（Node 版本不依 image 內建）。`install --with-deps chromium` 改為 `install chromium`（無 `--with-deps`）；預期瀏覽器已存在而不下載，以 log 記錄實際行為。
-- 加 `git config --global --add safe.directory "$GITHUB_WORKSPACE"`（container 內以 root 執行，工作目錄擁有者可能不同）；實測不需要則移除。
+- 加 `git config --global --add safe.directory "$GITHUB_WORKSPACE"`（container 內以 root 執行，工作目錄擁有者不同）。實測**必要**：`actions/checkout` 的設定不延續到後續步驟，Run 40043897770 的 `full-aggregate` 缺此設定即 `fatal: detected dubious ownership`（§10.6）；三個 container job 皆設定，`check-workflow` 斷言之。
 - `full-plan` 不需瀏覽器，維持 host，不變。`full-aggregate` 亦使用同一 container（reviewer 指出、使用者 2026-10-24 核准）：各批 `summary.json` 記錄 log 絕對路徑（`test.mjs:24,58`），container 內為 `/__w/…`、host 為 `/home/runner/work/…`，aggregate 在 host 會以 `Log outside batch` 拒絕全部批次；同 container 可維持 §8 的「各 runner log 絕對路徑一致」前提，不改 `ci-full-batches.mjs`。
 - 不變：Runner、測試旗標、timeout、斷言、歷史基準、artifact 名稱與 path、`ci-full-batches.mjs`。
 - 分類：R2（CI 執行環境；不接遊戲本體）。
@@ -301,3 +301,29 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 - 分支 `ci/env-pin`。commit：文件（§9.8 CI 結果、§10、BACKLOG）→ 實作（`test.yml`、`check-workflow.mjs`）→ 結果文件。
 - PR：`ci/full-balance` 與 `ci/env-pin` 的 PR 方式（一併或依序）於 CI 驗證後決定；push／dispatch／PR 各另批。
 - 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（AGENTS §9.3）。
+
+### 10.6 實作與 CI 結果（2026-10-24，分支 `ci/env-pin`）
+
+- commit：`8d67a87`（§9.8 CI 結果、§10 計畫、BACKLOG）→ `3b21c95`（§10 修訂：aggregate 同 container）→ `e12a6f1`（實作）→ `ec54253`（aggregate 補 `safe.directory`）。
+- reviewer：critical 1 件（aggregate 在 host 時 log 絕對路徑不一致，Full 必 FAIL）→ 採 A：aggregate 同 container（使用者核准）；low 3 件（`--ipc=` 覆寫、npm 版本抽取範圍、`safe.directory` 多餘）前二件已修，第三件經實測**判斷錯誤**（見下）。
+- 本機：`check-workflow`（外部 Playwright 1.59.0-alpha）PASS；負控制 9 組皆 FAIL：image 無 digest／image 與 npm 版本不一致／缺 `--ipc=host`／`--ipc=host --ipc=private`／恢復 `--with-deps`／`full-plan` 加 container／`full-aggregate` 無 container／`full-aggregate` image 不同／`full-aggregate` 缺 `safe.directory`。
+
+| Run | commit | mode | 結果 |
+|---|---|---|---|
+| 40043897770（#69） | `e12a6f1` | full | **failure**：8 批 87 入口皆 PASS，`full-aggregate` 於 `git rev-parse HEAD` 失敗（`dubious ownership`；`safe.directory` 只設在安裝步驟，aggregate 無該步驟）→ `ec54253` 修正 |
+| 40046088278 | `ec54253` | full | success，wall time **18分43秒**；`{"status":"PASS","expected":87,"acceptedPass":87,"issues":[]}` |
+| 40047702299 | `ec54253` | quick | success，3分51秒；67 PASS／0 FAIL；container 內 `check-workflow` PASS |
+| 40048126586 | `ec54253` | linux-smoke | success，1分11秒；`ci-full-batches.test` 32／32 PASS（含 Linux alias 測試）；`linux-chromium-smoke` PASS |
+
+各批（`summary.json` 測試秒數）：
+
+| batch | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| #68（host＋apt，§9.8） | 809 | 545 | 311 | 355 | 515 | 231 | 348 | 247 |
+| #69（container，`e12a6f1`） | 976 | 392 | 241 | 454 | 422 | 229 | 228 | 212 |
+| 40046088278（container，`ec54253`） | 990 | 435 | 197 | 293 | 622 | 234 | 272 | 198 |
+
+- 安裝步驟：#68 為 23秒～8分05秒（apt 鏡像）；container 下 8 批皆 **2 秒**，`install chromium` 無下載輸出。image 拉取＋container 初始化 29–42 秒（#69 各批；aggregate 36 秒）。
+- wall time：#68 21分47秒 → 18分24秒（#69）／18分43秒。安裝變動已消除；剩餘瓶頸為 batch 1 `full-power-pitching-e2e`（CI 809–990 秒，跨 run 差異約 ±10%），後續見 BACKLOG `CI-PITCHING-E2E-01`。
+- 測試秒數在 runner 間差異明顯（如 batch 5：515／422／622），單次比較不足以判定 container 對測試本身速度的影響。
+- 未驗證：→ `main` PR 自動觸發的 Full、`dev` push 的 Quick（事件條件未變）。
