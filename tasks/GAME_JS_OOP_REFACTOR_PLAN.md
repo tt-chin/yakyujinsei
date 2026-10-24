@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、中間結果見 §2m.9）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1860,6 +1860,26 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 分支：自 `refactor/flow-state-machine` 疊新分支（名稱待定），基準暫用 `d39c9badcfc3fa0b4d3254a113e0d83531db3a1e`；11-A 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃。
 - commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
+
+### 2m.9 PR #27 合併與 11-B 第 1 批中間結果（2026-10-24，本機 macOS；分支 `refactor/flow-outcome-amateur`，未 commit 變更）
+
+- PR #27（`refactor/flow-state-machine` `d39c9ba` → `dev`，5 commits，以 Playwright 經 Brave 建立）以 merge commit `026c5cd89e3b189cf2a93e9425f344f57fafc208` 併入 `dev`；之前 `dev` 已有 PR #26（design tokens，`7ef43d3`，不涉 `game.js`）。合併後 `dev` push 的 Quick CI（Tests #86）：completed successfully，3 分 31 秒（未展開 log 確認 PASS 數）。
+- 本分支：§2m.8 計畫 commit `1ba3e3c`，merge `origin/dev` 為 `ae04f08`。`game.js` 於 `d39c9ba` 與 `026c5cd` 間無差分，§2m.8 的重掃結果不變；**第 1 批比較基準改為 `026c5cd89e3b189cf2a93e9425f344f57fafc208`**（Case F 的 `git show` 亦用此 SHA）。
+- 實作：`game.js`（CRLF，2695→2708 行，CR 行數＝總行數）20 處替換（`DRAFTED` 1、`ENTER_UNIVERSITY` 2、`JOIN_CORP` 4、`JOIN_IND` 4、`SIGNED_MILB` 1、`STAY` 4、`RETIRED` 4）；`reportFlowOutcome` 位於 `:2308`–`:2319`（`advance=function` 之後、`  function newState(` 之前）；`movement` 覆寫 `:2678` 的 PRO 尾段（`accrueForeignFirstTeamSeason(S);` 起）與基準逐字相同。
+- 測試變更（`draft-signing-policy.test.mjs`）：
+  - `:90`（原 `:87`）正則改為 `reportFlowOutcome({kind:'AMATEUR_DRAFTED'})`。
+  - Case F（新增）：現行與 `026c5cd` 各以 `'use strict';`＋`let movement;`＋4 個 `productionFunction`＋`:2665`／`:2678` 整行建 vm（現行另加 `reportFlowOutcome`）；20 個情境（HS 1／3 年×總合 45／52／56、U 2／4 年、CORP 3 種、IND，各×`runDraft` 結果 `signed`／`fail`）以 DFS 點擊全部 `choose` 選項，共 87 葉；比較兩側呼叫紀錄（JSON 字串）＋葉數守衛 87＋7 種 kind 覆蓋＋未知 kind 拋出 `UNKNOWN_FLOW_OUTCOME:`。
+  - **計畫外追加（需揭露）**：負控制①（`pathChoiceU4` 的 `JOIN_CORP`／`JOIN_IND` 互換）最初 PASS——兩者都分派到 `advance()`，呼叫序列無差異。為滿足 §2m.8 負控制要求，追加各葉的 kind 一致性斷言：由末端 `advance`／`endGame` 前一筆呼叫（`setAmateur`→`JOIN_<stage>`、`setSchool`→`ENTER_UNIVERSITY`、`signTo`→`SIGNED_MILB`、`runDraft`→`DRAFTED`、`endGame`→`RETIRED`，其餘→`STAY`）推導應回報的 kind，與實際回報比對。只改測試。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（176 檔） |
+| 相關單元 | `draft-signing-policy`、`income-summary`、`kbo-renewal-floor`、`championship-intl`（98）、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`（135／0）皆 PASS |
+| 逐處突變（scratchpad worktree） | 20 處各自改為 `endGame('MUT')`：20／20 FAIL；site1（`DRAFTED`）先被 `:90` 正則攔下，另以去除該斷言的副本確認由 Case F FAIL；還原後 PASS |
+| 負控制 | ①`JOIN_CORP`／`JOIN_IND` 互換：FAIL（kind 斷言）、②`draftFallback` 社會人分支漏呼叫：FAIL、③`SIGNED_MILB` 分派到 `endGame`：FAIL |
+| reviewer | 1 次（工作樹差分），無問題（另確認 `f:advance` 改寫不影響 `signTo` 重試判斷、`saveSalaryEvaluation` 切片內容不變） |
+
+- 未完成：`game-view-dom-e2e --baseline=026c5cd…`（直接執行）；e2e：`bug-act-01-02-e2e`、`smallschool-c-e2e`、`draft-income-e2e`、`stage10-risk-e2e`、`contract-salary-e2e`、`trait-system-e2e`；Quick；Full（scratchpad worktree＋`git add -N`，本機 4 組平行）；實作 commit／push／PR。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
