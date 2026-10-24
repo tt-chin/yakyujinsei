@@ -408,3 +408,10 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 - 拆分入口 CI 秒數（本機比）：`full-power-pitching-e2e` 169（2.1倍，batch 7）、`-yakyo-test-001-e2e` 424（2.9倍，batch 4）、`-jp3-pitcher-02-e2e` 325（2.4倍，batch 6）。最大批 537 秒（batch 6），不再由單一入口決定。
 - 各批仍不均（221–537 秒）：manifest 預估與 CI 實測偏差，例如 `smallschool-c-e2e` 600→218、`international-personal-stats-e2e` 600→469、`bug-act-01-02-e2e` 500→453（manifest 值為 §9 既有）。依 §11.5③，秒數校正另案，本次不改。
 - 未驗證：→ `main` PR 自動觸發的 Full、`dev` push 的 Quick。PR：PR #21 合併後建立 `ci/pitching-split` → `dev`（使用者 2026-10-24 決定）。
+
+### 11.7 PR #22 合併 `dev`（2026-10-24）
+
+- PR #22（`ci/pitching-split` → `dev`）以 merge commit `136aa2c` 合併，含 `fc87173`、`50139d0`、`ef78224`、`2dea0bf`（§10.7 紀錄）。
+- `dev` push：Tests Run40070131548（#76，`136aa2c`），success；tests job 3分53秒，`{"PASS":67,"FAIL":0,"SKIP":0,"BLOCKED":0}`（測試 174 秒）；Full 系列 job 依事件條件跳過。§11.6 的「`dev` push 的 Quick」未驗證項至此確認。
+- BACKLOG：`CI-PITCHING-E2E-01` 勾選；`CI-FULL-BALANCE-01`（§9，`cdf0a25` 已隨 PR #21 進入 `dev`）經使用者同意一併勾選。
+- 未驗證：→ `main` PR 自動觸發的 Full。
