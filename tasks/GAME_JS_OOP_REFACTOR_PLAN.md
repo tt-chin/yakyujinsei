@@ -1546,8 +1546,9 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - `dpScore`（`:77`）已是 `defenseScoreFor(S.ab,p)` 的一行委派（第 9 期）。
 - `addAb`（`:353`，寫 `S.ab`／`S.carry`／`S.lastOverflow`）內有與 `abCost` 相同的成本式；`abCost` 註解要求兩者一致。
 - 文字耦合：
-  - `ability-allocation.test:18–19`：`assert.match(game,/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/)` 與 `/if\(cur>=pk\)cost\*=isP\?4:3/`。前者目前同時命中 `abCost` 與 `addAb`，後者只命中 `addAb`；`addAb` 不動，搬移後仍 PASS。`:8` `doesNotMatch(game,/…|ability-allocation-policy/)`：新模組名不得為 `ability-allocation-policy`。
-  - vm stub（不切原始碼）：`kbo-renewal-floor.test:38` `ovr:()=>44`、`championship-intl.test:42,55,58,61`、`event-integration.test:31,44` `ovr:()=>50`、`full-power-pitching.test:17` `toolGap:()=>({gap:0})`、`tools/development-b/legacy-effect-boundaries.mjs:30` `ovr:()=>52`。
+  - `ability-allocation.test:19–20`：`assert.match(game,/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/)` 與 `/if\(cur>=pk\)cost\*=isP\?4:3/`。前者目前同時命中 `abCost`（`:350`）、`addAb`（`:361`）、`addAbStat`（`:832`），後者只命中 `addAb`；`addAb`／`addAbStat` 不動，搬移後仍 PASS。`:8` `doesNotMatch(game,/…|ability-allocation-policy/)`：新模組名不得為 `ability-allocation-policy`。
+  - `verify-modularization.mjs:58`（2026-10-24 實作前重掃發現）：`assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g)||[]).length,3)` 為精確計數，目前三處即上列 `:350`／`:361`／`:832`。搬移後 `game.js` 剩 2 → FAIL，處理見 §2l.3-3。`:59` `doesNotMatch(game,/cur>=66\?7:cur>=58\?4:…/)` 不受影響。
+  - vm stub（不切原始碼）：`kbo-renewal-floor.test:38` `ovr:()=>44`、`championship-intl.test:42,55,58,61`、`event-integration.test:31,44` `ovr:()=>50`、`full-power-pitching.test:17` `toolGap:()=>({gap:0})`、`tools/development-b/legacy-effect-boundaries.mjs:30` `ovr:()=>52`、`docs/reviews/g1-a-validation/fixtures.mjs:29`／`docs/reviews/award-jp-name-validation/validate.mjs:26` `ovr:()=>overall`。
   - 瀏覽器全域呼叫：`stage10-risk-e2e:31,33`、`contract-salary-e2e:31` 的 `ovr()`；`tests/support/stage6-browser.mjs:25` 的 `abCost(k)`。函式名留在 `game.js`，不受影響。
   - `productionFunction`／`indexOf`／`between` 切片：四函式名皆 0 件；測試或工具中對四名稱、`dpScore` 的重新賦值也是 0 件（`event-integration.test:26,53` 只改 vm 內的 `dpScore`，不經 `ovr`）。
   - 全樹掃描：`check-syntax`（`readdirSync`）、`global-contract-market.test:9`（import 解析）會看到新檔；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點的檔案，新檔不受影響。`index.html` 只載入 `main.js`。
@@ -1580,7 +1581,8 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
    - 投手且 `S.traits` 為 `undefined` 時，舊新兩側的 `ovr` 結果（或例外）必須一致。
    - 判定方式：跨 realm 以 `JSON.stringify` 比較，並以格數守衛確認 `S` 不變。
    - 加入 `execFileSync` 後，manifest 自動推導的 `dependencies` 會變成「＋Git history」，實作時確認無斷言依賴此值。
-2. 實作前用新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`。本節未列的耦合，先報告再改。
+2. 實作前用新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`。本節未列的耦合，先報告再改。2026-10-24 已重掃（scout＋直接 grep），新發現 `verify-modularization.mjs:58`（§2l.1），其餘與 §2l.1 一致。
+3. `verify-modularization.mjs:58` 期望值變更（§2l.6⑤）：`game.js` 的計數 3→2；新增斷言 `ability-evaluation-policy.js` 內同一式恰好 1 次，三份副本合計仍受文字守護。`:59` 保留。
 
 ### 2l.4 驗證（L3／R3）
 
@@ -1594,7 +1596,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
    - ③`playerType` `m<52`→`m<=52`
    - ④`toolGap` 捕手 `/4`→`/3`
    - ⑤`abCost` `cur>=66`→`cur>66`
-   - ⑤不會被 `ability-allocation.test:18` 攔下（該斷言命中 `addAb`）；若有某一處先被既有斷言攔下，另以去除該斷言的 scratchpad 副本確認 fixture 本身 FAIL。
+   - ⑤不會被 `ability-allocation.test:19` 攔下（該斷言命中 `addAb`），但會先被 §2l.3-3 新增的 policy 計數斷言攔下；此時及其他先被既有斷言攔下的情形，另以去除該斷言的 scratchpad 副本確認 fixture 本身 FAIL。
 4. Full 一次（scratchpad worktree＋`git add -N`，本機 4 組平行）；重跑範圍如實記錄。
 5. reviewer：`f4a2894..HEAD` 的程式差分。重點：
    - 等價：讀取順序、`traits` 延遲解參照、`||62`、排序穩定性。
@@ -1613,11 +1615,15 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 ### 2l.6 待決
 
 1. `ovr` 的守備評分：①新模組直接 import `defenseScoreFor`（建議；`dpScore` 本身就是 `defenseScoreFor(S.ab,p)`，且無測試替換 `dpScore` 來影響 `ovr`）；②比照 `dpQual` 注入 `scoreOf:dpScore`（多一個參數，保留 `game.js` 端的替換點）。
-2. `abCost`／`addAb` 的重複成本式：①只搬 `abCost`、`addAb` 不動（建議；`addAb` 寫 `S`，且 `ability-allocation.test:18–19` 以文字鎖定 `addAb` 的式子）；②抽出共用成本函式給兩者使用（`addAb` 也要改，並要變更 `ability-allocation.test` 的期望值）。
+2. `abCost`／`addAb` 的重複成本式：①只搬 `abCost`、`addAb` 不動（建議；`addAb` 寫 `S`，且 `ability-allocation.test:19–20` 以文字鎖定 `addAb` 的式子）；②抽出共用成本函式給兩者使用（`addAb` 也要改，並要變更 `ability-allocation.test` 的期望值）。
 3. 等價 fixture 位置：`ability-allocation.test`（建議；不增加入口）或另開新測試檔（Full 入口 89→90，`ci-full-batches.test` 的入口數斷言要一起改）。
 4. export 名稱：`toolGapFor`／`overallRatingFor`／`playerTypeFor`／`abilityStepCostFor`。
 
 使用者決定（2026-10-24）：四點皆照建議（①直接 import `defenseScoreFor`；②只搬 `abCost`，`addAb` 不動；③fixture 置於 `ability-allocation.test`；④export 名稱如上）。實作待批准。
+
+5. `verify-modularization.mjs:58` 的精確計數（實作前重掃發現）：①`game.js` 計數 3→2，另斷言新模組內恰好 1 次（建議）；②只改 3→2（新模組的副本無文字守護）；③在 `game.js` 留註解副本湊計數（不建議，為測試保留假原始碼）。
+
+使用者決定（2026-10-24）：第 5 點採①。實作待批准。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
