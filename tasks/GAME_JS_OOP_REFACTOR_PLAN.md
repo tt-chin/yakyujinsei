@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED / PHASE10_PLANNED（2026-10-24）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED / PHASE10_LOCAL_DONE（2026-10-24）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -21,7 +21,7 @@
 | 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策 `international-selection-policy.js`；參賽流程留在 `game.js` | L3 / R3 | 7-A 完成；PR #16 併入 `dev`（`67dcab9`），見 §2i.9。7-B 完成；PR #17 併入 `dev`（`52e4cdb`），見 §2i.16 |
 | 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 完成；PR #19 併入 `dev`（`7940e97`），見 §2j.8 |
 | 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 完成；PR #20 併入 `dev`（`f4a2894`），見 §2k.8 |
-| 10 | 能力評價 policy | `ovr`／`playerType`／`toolGap`／`abCost` 本體移入 `ability-evaluation-policy.js` 純函式；`game.js` 保留一行委派；`addAb` 不動 | L3 / R3 | 計畫（§2l），實作未批准 |
+| 10 | 能力評價 policy | `ovr`／`playerType`／`toolGap`／`abCost` 本體移入 `ability-evaluation-policy.js` 純函式；`game.js` 保留一行委派；`addAb` 不動 | L3 / R3 | 本機完成（實作 commit `e75159e`），見 §2l.7；PR 待 PR #21 與 `ci/pitching-split` 合併 |
 
 共通原則：
 
@@ -1534,7 +1534,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 合併後 `dev` push 的 Quick CI（Tests #67，run `39977180332`）：PASS（3 分 56 秒）。
 - 本節以 `ci/full-balance` 分支的文件 commit 提交（第 10 期分支未開）。
 
-## 2l. 第 10 期：能力評價 policy（細部計畫，2026-10-24，未批准實作）
+## 2l. 第 10 期：能力評價 policy（細部計畫，2026-10-24；本機完成，見 §2l.7）
 
 候補選定依據見 §3.10。
 
@@ -1624,6 +1624,30 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 5. `verify-modularization.mjs:58` 的精確計數（實作前重掃發現）：①`game.js` 計數 3→2，另斷言新模組內恰好 1 次（建議）；②只改 3→2（新模組的副本無文字守護）；③在 `game.js` 留註解副本湊計數（不建議，為測試保留假原始碼）。
 
 使用者決定（2026-10-24）：第 5 點採①。實作待批准。
+
+### 2l.7 實施結果（2026-10-24，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `86203bc`＋未 commit 變更，實作 commit `e75159e`）
+
+- 實施前重新掃描（§2l.3-2）：新名稱無既存參照；新發現 `verify-modularization.mjs:58` 精確計數（§2l.1），以 §2l.6⑤①處理。
+- 實作：新檔 `ability-evaluation-policy.js`（LF，53 行；本體除 `S` 改為參數、`dpScore(x)`→`defenseScoreFor(a,x)` 外逐字搬移，以 sed 置換後與 `f4a2894` 本體逐行 diff 確認）；`game.js`（CRLF，2717→2673 行，CR 行數＝總行數）`:41` 新增 import，`:224` `toolGap`、`:306`–`:308` `ovr`／`playerType`／`abCost` 一行委派。`CURRENT_SPEC:456` 追加一句。
+- 測試變更：
+  - `ability-allocation.test`：新增等價 fixture。以 `f4a2894` 與現行 `game.js` 的 `dpScore` 行＋`function toolGap(`→`function tjAccrue(`＋`function ovr(`→`function addAb(` 區塊，各在自己的 vm 執行（注入 `defense-position-policy`／`ability-evaluation-policy` export），每格輸出 `ovr`／`playerType`／`toolGap`／全 12 鍵 `abCost`（例外以 `E:<型>:<訊息>` 比較）與 `S` 不變旗標，以 JSON 字串比較。
+  - 主格：`pos` 4×`dpos` 12（`undefined`／`null`／8 守備位置／`DH`／`XX`）×特性 10（`traits` 為 `undefined`／`{}`／`yips`／`onetool`／兩者 × `toolRole` 有無）×能力 53（均一 51–63 門檻值 10、`cat` 邊界 6、`sta` 邊界 6、投手主項／全能 4、選球眼／韋駄天／守備職人 3、固定 LCG 24）＝25,440 格。
+  - 成本格：`pos` 4×鍵 12×`cur` 14×`pot` 6（`undefined`／`{}`／`0`／`cur`−1／`cur`／`cur`+1）＝4,032 格。合計 29,472 格。
+  - 守衛：格數、13 種選手タイプ與 3 種一芸役割皆出現、`S` 不變、投手＋`traits` 為 `undefined` 時 `ovr` 回傳數值且 `playerType` 為 `TypeError`。
+  - `verify-modularization.mjs:58`：`game.js` 計數 3→2，新增新模組內恰好 1 次的斷言（使用者批准的期望值變更）。Full 入口數不變（89）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（172 檔） |
+| 相關單元 | `ability-allocation`、`championship-intl`、`event-integration`、`kbo-renewal-floor`、`full-power-pitching`、`salary-flow`（計數不變）、`award-identity-policy`、`global-contract-market`、`information-architecture`、`verify-modularization` 皆 PASS |
+| `game-view-dom-e2e --baseline=f4a2894…` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（直接執行，末行確認基準） |
+| `stage6-ability-e2e` | 89 PASS／0 FAIL |
+| 負控制 | ①`ovr` 投手權重 `0.42`→`0.43`、②`DH` `-12`→`-11`、③`playerType` `m<52`→`m<=52`、④`toolGap` 捕手 `/4`→`/3`、⑤`abCost` `cur>=66`→`cur>66`：皆由等價 fixture 本身 FAIL（scratchpad 副本只改 policy 檔，`game.js` 未變，既有斷言皆通過後才到 fixture）。⑤另會被 `verify-modularization` 的新計數斷言攔下（不同檔） |
+| Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（`git diff HEAD --binary` 與工作樹一致，新檔以 `git add -N` 納入；`sourceFingerprint` `15704f35e621…`，與 Quick 相同；比較基準 `origin/main` `4d2fcfd`），4 組平行（23／19／24／23），89 入口不重複：**89 PASS／0 FAIL／0 SKIP／0 BLOCKED**（550／296／489／384 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（`git diff HEAD` 工作樹），無問題；另以四種 policy 輸出擾動確認 fixture 會 FAIL |
+
+- 未完成：push、PR → `dev`（§2l.5，待 PR #21 與 `ci/pitching-split` 合併後 rebase）、CI。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
