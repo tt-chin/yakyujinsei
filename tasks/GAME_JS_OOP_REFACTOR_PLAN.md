@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED / PHASE10_LOCAL_DONE / PHASE11_SURVEY（2026-10-24）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED / PHASE10_LOCAL_DONE / PHASE11_PLANNED（2026-10-24）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -22,6 +22,7 @@
 | 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 完成；PR #19 併入 `dev`（`7940e97`），見 §2j.8 |
 | 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 完成；PR #20 併入 `dev`（`f4a2894`），見 §2k.8 |
 | 10 | 能力評價 policy | `ovr`／`playerType`／`toolGap`／`abCost` 本體移入 `ability-evaluation-policy.js` 純函式；`game.js` 保留一行委派；`addAb` 不動 | L3 / R3 | 本機完成（實作 commit `e75159e`），見 §2l.7；PR 待 PR #21 與 `ci/pitching-split` 合併 |
+| 11 | 流程狀態機 | 11-A：賽季後處理的回呼鏈改為 `game.js` 內的步驟分派；11-B：各領域直接呼叫 `advance`／`endGame` 改為回報具名結果，依領域分批 | L3 / R3 | 計畫中，見 §2m；實作未批准 |
 
 共通原則：
 
@@ -1649,6 +1650,92 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 未完成：push、PR → `dev`（§2l.5，待 PR #21 與 `ci/pitching-split` 合併後 rebase）、CI。
 
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；計畫中，實作未批准）
+
+候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
+
+### 2m.1 現況（2026-10-24 唯讀確認，基準 `43a38cf`，`game.js` 2673 行；實作前於新基準重掃）
+
+- 11-A 對象：`resumeProfessionalSeason`（`:1046–1062`）只由 `proSeason`（`:963` 重入、`:1044` 首次）呼叫。`:1057` 於 `PIPELINE_PREPARED` 階段執行 `tjGamble(()=>demotionAudit(()=>tradeCheck(()=>maybeIntl(()=>nextStep()))))`，前後將 `entry.phase` 設為 `PIPELINE_STARTED`／`PIPELINE_WAIT`。
+- 鏈上各層（scout 讀本體＋抽查）：
+  - `tjGamble(cont)`（`:232`）：守衛不符直接 `cont()`；否則 `choose` 兩選項，`ri`／`chance` 後經 `afterGamble` 呼叫 `cont`。
+  - `demotionAudit(cont)`（`:871`）：無 RNG，各路徑 `cont()`。
+  - `tradeCheck(cont)`（`:887`）：`chance(p)` 後依分支直接或於 `choose` 回呼內 `cont()`。
+  - `maybeIntl(done)`（`:2458`）＝`processIntlPhase('POST',done)`：逐一處理大會，佇列耗盡時 `done()`。
+  - 各層在所有路徑恰好呼叫後續一次，RNG 皆在呼叫後續前消耗。
+- 11-B 對象（scout 盤點＋抽查，數字為概數，各批開始前重新逐處盤點）：`advance` 約 34 處、`endGame` 14 處，分布於 15 個函式；約三分之二在 `choose` 回呼內。`advance`（`:1482`）以 `yearHandoffs` 保護重入，`:2284` 覆寫先執行 `finalizePendingOffseasonSalary`；`endGame`（`:1625`）於 `:2657` 覆寫加 `setTimeout` 文字改寫；`movement` 為 `:1257`（`LEGACY.movement`）→`:2643`→`:2645` 三層。
+- 文字耦合（11-A）：
+  - `full-power-pitching-e2e.mjs:30`：`productionFunction('resumeProfessionalSeason',current)` 須逐字包含鏈字串（另含 `awards(entry.bucket,entry.st)` 等 4 項，不受影響）。
+  - `championship-intl.test.mjs:76`：`game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('tjGamble(()=>demotionAudit')`。
+  - `full-power-pitching.test.mjs:19`：vm 只以 `productionFunction` 取出 `tjCap`／`tjAccrue`／`proSeason`／`resumeProfessionalSeason`／`phasePre`；新增的分派函式不在 vm 內，`proSeason()` 會 `ReferenceError`。
+  - `championship-intl-e2e.mjs:22`：執行時以 `tjGamble=c=>c()` 等替換五個全域名稱再呼叫 `proSeason()`。
+  - `salary-flow` 計數：不新增、不移動 RNG 呼叫點，不變。`stage10-risk-e2e` 的包裝名單不含鏈上五個名稱。
+- 文字耦合（11-B，§3.11 已列，各批重掃）：`draft-signing-policy:87`、`career-movement-policy:50`、`salary-flow:30`、`npb-return-ui:50–51`、`event-integration:34`、`kbo-renewal-floor:47`、`championship-intl:73,76`、`fixed-seed-v160:22`；執行時替換全域名稱的 e2e：`stage10-risk-e2e`、`contract-salary-e2e`、`npb-return-e2e`、`smallschool-c-e2e`、`trait-system-e2e`。
+
+### 2m.2 設計
+
+分類：L3／R3（年度流程、RNG 順序）。共通原則：
+
+- 分派函式放在 `game.js`（CRLF），不放新模組：測試會在執行時替換全域名稱，ESM 匯入的綁定無法從外部替換。
+- 分派一律在執行當下以名稱呼叫目標函式，不在表中保存函式參照。
+- 同步執行、在原位置、依原順序呼叫原函式；不新增或移動 RNG 呼叫點。
+- `S`、`seasonContinuations` 的階段值、`yearHandoffs` 不新增欄位或狀態（`entry.phase` 不細分）。
+
+**11-A：賽季後處理分派**
+
+- 新增 `function runSeasonPipeline(step)`（暫名，§2m.6①）：步驟名單 `['TJ_GAMBLE','DEMOTION_AUDIT','TRADE_CHECK','INTL_POST']` 寫在函式內，`step` 超出名單時呼叫 `nextStep()`，否則以 `switch` 呼叫 `tjGamble`／`demotionAudit`／`tradeCheck`／`maybeIntl`，傳入 `()=>runSeasonPipeline(step+1)`。
+- `:1057` 的鏈改為 `runSeasonPipeline(0)`；`entry.phase` 的設定位置與值不變。
+- 等價性：原鏈與新分派的呼叫順序、後續呼叫次數、回傳值（皆捨棄）、同步完成時 `nextStep` 早於 `PIPELINE_WAIT` 的時序皆相同。
+
+**11-B：年度層結果回報（各批開始前另立細部）**
+
+- 新增 `function reportFlowOutcome(outcome)`（暫名，§2m.6①）：依 `outcome.kind` 決定呼叫 `advance()` 或 `endGame(outcome.reason)`，在執行當下以名稱呼叫。各領域原本直接呼叫 `advance()`／`endGame()` 的位置改為回報具名結果；領域內部的下一步（如拒絕降格後的 `outOfOrg`）不歸此函式。
+- 結果名稱依領域分組，命名規則見 §2m.6②。
+- 分批（建議順序，§2m.6④）：
+  1. 業餘選路：`enterDraftPath`、`draftFallback`、`pathChoiceHS`、`pathChoiceU4`、`movement`（`:2643`）的 HS／U／CORP／IND 分支。
+  2. 降格：`handleDemotion`、`retireBelowActiveMinimum`。
+  3. FA／市場：`crossOffers`、`renewAndAdvance`、`arbitrationFlow`、`acceptFaOffer`、`showFaMarket`、`outOfOrg`。
+  4. 年度：`movement`（`:1257`）、`phasePre`。
+- 待確認：`:1257` 的 HS／U 分支在 `:2643` 覆寫後是否仍可達（`:2643` 自行處理非 PRO，PRO 才委派 `LEGACY.movement`）。不可達時該批只記錄、不改。
+
+### 2m.3 測試變更（需揭露，期望值變更皆需批准）
+
+11-A：
+
+1. `full-power-pitching-e2e.mjs:30`：鏈字串改為要求 `runSeasonPipeline(0)`，並另以 `productionFunction('runSeasonPipeline',current)` 斷言步驟名單順序與四個 `case` 的呼叫對象（§2m.6③）。
+2. `championship-intl.test.mjs:76`：錨點 `tjGamble(()=>demotionAudit` 改為 `runSeasonPipeline(0)`，維持「冠軍快照在後處理之前」的順序斷言。
+3. `full-power-pitching.test.mjs:19`：比照 `resumeProfessionalSeason` 的條件式，`source.includes('function runSeasonPipeline(')` 時一併取出（舊 SHA 不含此函式）。
+4. 新增行為 fixture（放在既有入口，不增加 Full 入口數）：以 vm 取出現行與基準 SHA 的 `resumeProfessionalSeason`（＋`runSeasonPipeline`），以記錄呼叫順序的 stub 執行，比較兩側的呼叫序列、後續呼叫次數與 `entry.phase` 變化，涵蓋「全部直接續行」「某層延遲續行（模擬 `choose`）」「某層拋出例外」。
+5. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
+
+11-B：各批的斷言變更於該批細部計畫列出。
+
+### 2m.4 驗證（L3／R3）
+
+比較基準：實作開始時的 `origin/dev`（第 10 期合併後），解析為完整 SHA；允許差分：無。
+
+1. `check-syntax`；相關單元：`full-power-pitching`（.test）、`championship-intl`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`、`global-contract-market`。
+2. `game-view-dom-e2e --baseline=<基準>`（直接執行）：8 生涯每一步 DOM／`S`／RNG 完全一致；`full-power-pitching-e2e`、`championship-intl-e2e`、`stage10-risk-e2e`；Quick。
+3. 負控制（scratchpad 副本，各改一處）：①交換 `DEMOTION_AUDIT`／`TRADE_CHECK` 順序、②某 `case` 少呼叫後續、③`step+1`→`step+2`，確認 §2m.3-4 的 fixture 本身 FAIL（先被既有斷言攔下時，另以去除該斷言的副本確認）。
+4. Full 一次（scratchpad worktree＋`git add -N`，本機 4 組平行）。
+5. reviewer：程式差分。重點：呼叫順序與次數、執行當下查名稱、換行（`game.js` CRLF）、無新增 `S` 欄位與 RNG 呼叫點。
+6. 11-B 各批比照 1–5，另加該批相關 e2e（如 `contract-salary-e2e`、`npb-return-e2e`、`smallschool-c-e2e`、`trait-system-e2e`、`draft-income-e2e`）。
+7. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2m.5 交付
+
+- 本節（計畫）commit 於 `refactor/ability-evaluation`，隨第 10 期 PR 進 `dev`。
+- 實作：第 10 期併入 `dev` 後，自 `dev` 開 `refactor/flow-state-machine`（暫名）。11-A 一個 PR；11-B 每批一個 PR。
+- commit 順序：文件（各段細部）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG（§9.3）；行為不變，`CURRENT_SPEC` 不改。不修改 `main`。
+
+### 2m.6 待決
+
+1. 函式名稱：`runSeasonPipeline`／`reportFlowOutcome`（建議）或其他。
+2. 11-B 結果名稱的命名規則：①`領域_結果` 大寫蛇形，例如 `DEMOTION_TRANSFER_NPB2`、`AMATEUR_DRAFTED`（建議）；②只用結果，例如 `TRANSFER_NPB2`。
+3. 11-A 等價斷言（§2m.3-1）：①要求 `runSeasonPipeline(0)`＋斷言步驟名單與 `case` 對象（建議）；②只保留行為 fixture，刪除文字斷言。
+4. 11-B 分批順序：照 §2m.2 的 1→4（建議；業餘選路分支最單純，`movement`／`phasePre` 牽涉最廣放最後）或其他。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -1820,6 +1907,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | B：賽季後處理表驅動 | `resumeProfessionalSeason` 的 4 層串接鏈（已有階段標記） | 鏈上各層在所有路徑恰好呼叫後續一次、RNG 皆在呼叫後續前消耗；`resumeProfessionalSeason` 只由 `proSeason` 呼叫。會壞：`full-power-pitching-e2e.mjs:30`（逐字要求鏈字串）、`championship-intl.test.mjs:76`（`captureSeasonChampionship(S);` 須在 `tjGamble(()=>demotionAudit` 之前），需批准改為等價斷言；`championship-intl-e2e.mjs:22` 執行時替換五個名稱，須執行當下查名稱（移到 ESM 模組則壞）；`salary-flow` 計數不變。收益小（5 步線性），價值在驗證 A 的機制 |
 
 - 建議（未決）：先以 B 驗證同步分派、執行當下查名稱、RNG 順序不變三點，再決定是否投入 A。
+- 使用者決定（2026-10-24）：第 11 期採 A＋B（11-A＝路線 B 先行，11-B＝路線 A），細部計畫見 §2m。
 - 順帶發現（未驗證、與本期無關）：`tools/development-a/runtime.mjs` 寫 `stepQ=[phaseEnd]` 而無 `__cs.` 前綴，第 3 期後疑似只設定無作用的全域變數。
 
 ## 4. 使用者決定（2026-10-18）
