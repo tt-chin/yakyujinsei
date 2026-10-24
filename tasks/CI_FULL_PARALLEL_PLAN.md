@@ -273,20 +273,21 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
   digest 為 multi-arch index（2026-10-24 自 MCR registry 取得，含 amd64 `sha256:c091b21d…`、arm64 `sha256:941cc91e…`）。image 內含 Playwright 1.62.1 的系統套件、字型與瀏覽器。
 - 保留 `setup-node` 24.15.0 與 `npm install … playwright@1.62.1`（Node 版本不依 image 內建）。`install --with-deps chromium` 改為 `install chromium`（無 `--with-deps`）；預期瀏覽器已存在而不下載，以 log 記錄實際行為。
 - 加 `git config --global --add safe.directory "$GITHUB_WORKSPACE"`（container 內以 root 執行，工作目錄擁有者可能不同）；實測不需要則移除。
-- `full-plan`、`full-aggregate` 不需瀏覽器，維持 host，不變。
+- `full-plan` 不需瀏覽器，維持 host，不變。`full-aggregate` 亦使用同一 container（reviewer 指出、使用者 2026-10-24 核准）：各批 `summary.json` 記錄 log 絕對路徑（`test.mjs:24,58`），container 內為 `/__w/…`、host 為 `/home/runner/work/…`，aggregate 在 host 會以 `Log outside batch` 拒絕全部批次；同 container 可維持 §8 的「各 runner log 絕對路徑一致」前提，不改 `ci-full-batches.mjs`。
 - 不變：Runner、測試旗標、timeout、斷言、歷史基準、artifact 名稱與 path、`ci-full-batches.mjs`。
 - 分類：R2（CI 執行環境；不接遊戲本體）。
 
 ### 10.3 `check-workflow.mjs` 變更
 
-- `tests`／`full-batch`：`container.image` 須符合 `mcr.microsoft.com/playwright:v<版本>-noble@sha256:<64 hex>`，`<版本>` 須等於 npm 安裝的 `playwright@<版本>`；`container.options` 含 `--ipc=host`。
+- `tests`／`full-batch`：`container.image` 須符合 `mcr.microsoft.com/playwright:v<版本>-noble@sha256:<64 hex>`，`<版本>` 須等於 `npm install` 步驟的 `playwright@<版本>`；`container.options` 須恰為 `--ipc=host`（不允許後續 `--ipc=` 覆寫）。
+- `full-aggregate`：`container` 須與 `full-batch` 完全相同。
 - 所有 job 不得含 `--with-deps`（取代現行「`tests`／`full-batch` 須含 `--with-deps chromium`」的斷言）。
-- `full-plan`／`full-aggregate` 不得有 `container`。
+- `full-plan` 不得有 `container`。
 - 其餘斷言不變。
 
 ### 10.4 驗證
 
-1. 本機 `node scripts/check-workflow.mjs --playwright=<外部模組>` PASS。負控制（scratchpad 複本）：image 只有 tag 無 digest／image 版本與 npm 不一致／缺 `--ipc=host`／恢復 `--with-deps`／`full-plan` 加 container：各須 FAIL。
+1. 本機 `node scripts/check-workflow.mjs --playwright=<外部模組>` PASS。負控制（scratchpad 複本）：image 只有 tag 無 digest／image 版本與 npm 不一致／缺 `--ipc=host`／`--ipc=host --ipc=private`／恢復 `--with-deps`／`full-plan` 加 container／`full-aggregate` 無 container 或 image 不同：各須 FAIL。
 2. reviewer：diff 一次。
 3. CI（分支 `ci/env-pin`，自 `ci/full-balance` `5b57f6e`，含 §9）：依序 dispatch `full`、`quick`、`linux-smoke` 各一次（同分支 dispatch 會互相取消，不連發）。
    - Full：aggregate `{"status":"PASS","expected":87,...}`、0 FAIL／SKIP／BLOCKED；各批 browser／node metadata 一致（aggregate 檢查）。
