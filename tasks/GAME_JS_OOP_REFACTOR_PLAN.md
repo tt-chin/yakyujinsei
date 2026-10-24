@@ -1686,6 +1686,10 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
   - §2m.1 未列的耦合，在上述插入點下不受影響：`trait-policy.test.mjs:106`（`awards(` 切到 `^function maybeIntl(`／`let applyPromotionSalary=`）、`championship-intl.test.mjs:45`（`  function intlEvents(` 切到 `  function maybeIntl(done)`）、`docs/designs/pitcher-awards-d2-analysis.mjs:54`（`awards(` 切到 `function maybeIntl(`）。若插在 `awards` 與 `maybeIntl`／`applyPromotionSalary` 之間，三處都會納入新函式。
   - `full-power-pitching.test.mjs:17` 的 vm 將 `tjGamble` 替換為 `()=>{}`（不呼叫後續），此 harness 只驗到 `tjGamble`，無法驗後續各層。
   - `verify-modularization`、`information-architecture` 沒有 `^function` 計數斷言。
+- 11-A 開工重掃（2026-10-24，`origin/dev` 已前進至 `ec903fd`（PR #24／#25），以 merge `64d74cd` 併入本分支；`game.js` 2684 行）：
+  - `2e69096..ec903fd` 的 `game.js` 差分為檔首新增 `import {incomeSummary}` 一行、`endGame` 文字與 `shareImage`（新增 2 格縮排的巢狀 `function incomeCell(`），不涉 11-A。
+  - 錨點皆下移 1 行：`tjGamble:233`、`demotionAudit:872`、`tradeCheck:888`、`resumeProfessionalSeason:1047`、鏈 `:1058`、結尾 `:1063`、`function awards(:1064`、`maybeIntl:2469`。插入點限制不變（`:1063`／`:1064` 之間）。
+  - 以 `runSeasonPipeline`／`resumeProfessionalSeason`／鏈字串／`PIPELINE_*`／鄰接函式名重掃 `tests/`、`scripts/`、`tools/`、`docs/`：耦合與上列相同，無新增（`award-journal-native.test:27`、`tools/development-b/award-runtime-support.mjs:37` 自 `function awards(` 起擷取，不受影響）。
 
 ### 2m.2 設計
 
@@ -1745,7 +1749,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 ### 2m.4 驗證（L3／R3）
 
-比較基準：實作開始時的 `origin/dev`（第 10 期合併後），解析為完整 SHA；允許差分：無。11-A 預定 `2e690969a6db14826aa87e85e94e78819acd8e17`（PR #23 合併）；開工時若 `origin/dev` 已前進，改用新 SHA 並重掃。
+比較基準：實作開始時的 `origin/dev`（第 10 期合併後），解析為完整 SHA；允許差分：無。11-A 預定 `2e690969a6db14826aa87e85e94e78819acd8e17`（PR #23 合併）；開工時若 `origin/dev` 已前進，改用新 SHA 並重掃。開工時 `origin/dev` 已前進，11-A 實際基準改為 `ec903fd3cac9f62a457dbed18effe8065510679d`（PR #25 合併；重掃見 §2m.1），§2m.3-4 fixture 的 `git show` 亦用此 SHA。
 
 1. `check-syntax`；相關單元：`full-power-pitching`（.test）、`championship-intl`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`、`global-contract-market`。
 2. `game-view-dom-e2e --baseline=<基準>`（直接執行）：8 生涯每一步 DOM／`S`／RNG 完全一致；`full-power-pitching-e2e`、`championship-intl-e2e`、`stage10-risk-e2e`；Quick。
