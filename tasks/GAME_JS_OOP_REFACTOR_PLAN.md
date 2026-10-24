@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9（本機驗證完成，push／PR 待批）；第 2 批計畫見 §2m.10（實作待批）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9（本機驗證完成，push／PR 待批）；第 2 批計畫見 §2m.10、結果見 §2m.11（本機驗證完成，push／PR 待批）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1946,6 +1946,29 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 分支：`refactor/flow-outcome-demotion`，自 `refactor/flow-outcome-amateur`（`26ec1bf`）疊出；基準暫用 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。第 1 批併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃。
 - commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
+
+### 2m.11 11-B 第 2 批結果（2026-10-25，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/flow-outcome-demotion`，實作 commit `5cc17c4`，未 push）
+
+- 開工：`git fetch` 後 `origin/dev` 仍為 `026c5cd`，比較基準維持 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。以新名稱重掃 `tests/`、`scripts/`、`tools/`、`docs/`：耦合與 §2m.10 所列相同，無新增（`docs/reviews/*.json` 只是輸出）。
+- 實作：`game.js`（CRLF，2708→2715 行，CR 行數＝總行數）9 處替換（`TRANSFER_NPB1`／`NPB2`／`CPBL1` 各 1、`ACCEPTED` 2、`REFUSED` 1、`DEMOTION_RETIRED` 2（仍在 `daibaFarewell` 回呼內）、`ACTIVE_MINIMUM_RETIRED` 1（保留 template literal））；`reportFlowOutcome` 於 AMATEUR 各 case 之後追加 7 個 case（`:2317`–`:2323`）。`retireBelowActiveMinimum` 的兩個呼叫端（`:1282`、`:2583`）皆捨棄回傳值。
+- 測試變更（`npb-return-ui.test.mjs`，32→45 案）：
+  - `:39`：`demotionSource` 末尾追加 `productionFunction('reportFlowOutcome',now)`；既有斷言不改。
+  - `:63`–`:72`：與 `73d5a58` 逐字比較前，7 個精確字串反向替換（CPBL1、ACCEPTED×2 以 `board(2);`／`board(2); ` 前後文區分、REFUSED、RETIRED×2 以理由區分、ACTIVE_MINIMUM），各斷言恰好出現 1 次；NPB1／NPB2 由既有 `:50–53` 白名單整段換回。
+  - 行為 fixture（新增）：現行與 `026c5cd` 各以 `'use strict';`＋`handleDemotion`＋`retireBelowActiveMinimum`（現行另加 `reportFlowOutcome`）建 vm。13 情境：MiLB（移籍 NPB1／移籍 NPB2／無選項）、NPB（有／無 CPBL）、無降格目標（`outOfOrg`）、長約×traits（無／`franchise`／`intlace`／`cancer`）、33 歲以上（內含巢狀移籍選項）、イップス、直接呼叫 `retireBelowActiveMinimum`。DFS 點擊全部選項共 27 葉；比較兩側呼叫紀錄＋各葉 `S`（JSON 字串）、葉數守衛 27、各葉 kind 一致性（由 `signTo` 目標、`applyDemotionSalary`、`S.demotionRefused`、`daibaFarewell`、`現役続行を断念` card 推導）、7 種 kind 覆蓋。
+  - **計畫字面修正（需揭露）**：§2m.10 寫「9 種 kind 覆蓋」，實為 7 種 kind 分布於 9 處。測試改為 7 種 kind 集合斷言＋9 處到達斷言（`site()`：ACCEPTED 以有無「降格を受け入れるか、新天地を選ぶか？」選項區分、RETIRED 以理由區分）。屬測試端解讀，計畫內容不變。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（176 檔） |
+| 相關單元 | `npb-return-ui`（45）、`npb-farewell`（384）、`career-movement-policy`、`draft-signing-policy`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`（135／0）皆 PASS |
+| 負控制＋逐處突變（scratchpad worktree） | 確認方式：另建「檔首至 `let cases=0;`＋新 fixture」的變體（去除全部既有斷言，比計畫的「去除該斷言」更嚴）。①互換 `TRANSFER_NPB1`／`NPB2`：FAIL（只由 kind 一致性斷言攔下，呼叫紀錄比較通過，與第 1 批教訓相同）、②拒絕降格分支漏呼叫：FAIL、③`DEMOTION_RETIRED` 分派到 `advance`：FAIL；9 處各自改為 `endGame('MUT')`：9／9 FAIL；還原後 PASS。完整檔案上 12 項亦皆 FAIL，但其中 NPB1／NPB2／ACCEPTED（有選項）3 項為 `endGame is not defined`（既有 `:42` context 無 `endGame` stub 的突變副作用），該 3 項的證據以變體為準 |
+| `game-view-dom-e2e --baseline=026c5cd…`（直接執行） | PASS：8 生涯 DOM／`S`／RNG 完全一致（末行確認基準） |
+| e2e 5 項（runner，`--baseline=026c5cd…`） | `contract-salary-e2e`（收到 `--compare=026c5cd…`）、`npb-return-e2e`、`global-contract-market-e2e`、`event-fix-e2e`、`stage10-risk-e2e` 5／5 PASS |
+| Quick | 68／68 PASS |
+| Full（scratchpad worktree，與工作樹逐 byte 相同；依 manifest `seconds` LPT 分 4 組 24／22／24／22，聯集＝`fullIds()` 92 項無重複／遺漏；未傳 `--baseline`） | 92／92 PASS（625／375／622／436 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（工作樹差分），無問題（另確認 2 格縮排的 `reportFlowOutcome` 為模組頂層、CRLF、回傳值無使用者） |
+
+- 未完成：push／PR（另批）。第 1 批（`refactor/flow-outcome-amateur`）亦未 push；第 2 批分支疊在其上。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
