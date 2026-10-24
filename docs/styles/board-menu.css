@@ -1,9 +1,9 @@
 /* Disclosure remains in the board; its panel does not affect sticky geometry. */
 #board-menu{position:relative;flex:none;margin-left:auto}
-#board-menu-toggle{display:flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:8px 10px;border:1px solid var(--control-edge);border-radius:8px;background:var(--panel);color:var(--amber);font:inherit;cursor:pointer}
-#board-menu-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(240px,calc(100vw - 32px));max-height:calc(100dvh - 100px);overflow:auto;padding:6px;border:1px solid var(--control-edge);border-radius:12px;background:var(--panel);color:var(--chalk);box-shadow:0 12px 32px var(--shadow-color)}
+#board-menu-toggle{display:flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:8px 10px;border:1px solid var(--control-edge);border-radius:var(--radius-md);background:var(--panel);color:var(--amber);font:inherit;cursor:pointer}
+#board-menu-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(240px,calc(100vw - 32px));max-height:calc(100dvh - 100px);overflow:auto;padding:6px;border:1px solid var(--control-edge);border-radius:12px;background:var(--panel);color:var(--chalk);box-shadow:var(--shadow-popover)}
 #board-menu-panel[hidden]{display:none}
-#board-menu-panel button,#board-menu-panel a{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:44px;min-width:0;margin:0;padding:10px 12px;border:0;border-radius:6px;background:transparent;color:var(--chalk);font:inherit;text-align:left;line-height:1.5;text-decoration:none;cursor:pointer;overflow-wrap:anywhere}
+#board-menu-panel button,#board-menu-panel a{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:44px;min-width:0;margin:0;padding:10px 12px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--chalk);font:inherit;text-align:left;line-height:1.5;text-decoration:none;cursor:pointer;overflow-wrap:anywhere}
 #board-menu-panel button:hover,#board-menu-panel a:hover{background:var(--metric-bg)}
 #board-menu-panel button:focus-visible,#board-menu-panel a:focus-visible,#board-menu-toggle:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 #board-menu-panel #btn-restart{border-top:1px solid var(--control-edge);border-radius:0;color:var(--bad)}
