@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED / PHASE10_LOCAL_DONE（2026-10-24）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED / PHASE10_LOCAL_DONE / PHASE11_SURVEY（2026-10-24）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -1708,7 +1708,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 ### 3.6 年度流程的狀態機方向（2026-10-23 使用者意見）
 
-- 現況（`3c0f3e1`，唯讀確認）：已是隱含狀態機。年度內位置為 `careerSession.stepQ`（函式參照，`startYear` 設為 `[phasePre,phaseIntlPre,phaseMid,phaseEnd]`，`nextStep` 逐一 shift），生涯階段為 `S.stage`（賦值 32 處），等待輸入為 `choose(`（約 47 處），後續流程與區域旗標存於閉包，無法序列化。
+- 現況（`3c0f3e1`，唯讀確認）：已是隱含狀態機。年度內位置為 `careerSession.stepQ`（函式參照，`startYear` 設為 `[phasePre,phaseIntlPre,phaseMid,phaseEnd]`，`nextStep` 逐一 shift），生涯階段為 `S.stage`（賦值 32 處；2026-10-24 於 `43a38cf` 重查：寫入 6 處、讀寫合計 77 處，見 §3.11），等待輸入為 `choose(`（約 47 處），後續流程與區域旗標存於閉包，無法序列化。
 - 目的：(a) 可讀性／轉移一覽、(c) 測試不依賴原始碼文字切片。不採整體改寫（RNG 順序、文字切片耦合、LEGACY 覆寫的成本過高）。
 - 做法（於 `year_season_flow` 期另立細部計畫）：①年度步驟改為具名資料（如 `PRE`／`INTL_PRE`／`MID`／`END`）＋分派函式；②`S.stage` 轉移抽出為純函式 policy（同 7-B 型）。
 - (b) 年度中途存檔／續玩：將來候補。現階段不將 `choose` 閉包狀態化，但後續拆分避免妨礙其實現的設計。
@@ -1770,6 +1770,57 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 全樹掃描：`check-syntax`、`global-contract-market.test` 會讀到新檔，不擋；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點的檔案；`verify-modularization`、`information-architecture` 只讀指定檔名。`index.html` 只載入 `main.js`。
 - `salary-flow.test` 計數（`R(` 22、`ri(` 39、`chance(`＋legacy slot 42、`pick(` 14）：上表的純規則候補都不含 RNG，搬移不影響計數。
 - 使用者決定（2026-10-24）：第 10 期採 `ability_eval`，成績比率不做。細部計畫見 §2l。
+
+### 3.11 第 11 期候補：領域地圖與流程狀態機（2026-10-24，基準 `43a38cf`，`game.js` 2673 行；scout 唯讀調查＋scratchpad AST 腳本＋抽查；**未決**）
+
+- 視覺化報告：[`.claude/reports/oop-phase11-domain-flow-survey.html`](../.claude/reports/oop-phase11-domain-flow-survey.html)（領域地圖、引用矩陣、event storming 時間線、局部狀態機、路線對比；內容同本節）。
+- 背景：§3.10 後純規則候補已用盡（剩餘者價值低或被文字耦合排除）。§3.6 的①②重新評估：①`stepQ` 只有 `:510`（`nextStep` shift）與 `:2460`（`startYear` 整體指派）兩處，無年度中途插入、無序列化；具名化後 `stage6-browser.mjs:22`、`stage10-risk-e2e.mjs:25`、`tools/development-a/runtime.mjs` 的 `stepQ.map(f=>f.name)` 快照會變，`full-power-pitching-e2e.mjs:38` 直接塞 `[phaseEnd]`。②`S.stage` 寫入只有 6 處（`newState`、`signTo`、`setAmateur`、`draftFallback`、`pathChoiceHS`、`pushAma`），值為常數或參數、條件多為玩家選擇，抽成 policy 無實質內容。→ ①②皆不單獨成期。
+- 方法：acorn AST 將 179 個頂層函式依名稱人工分為 16 領域，計算領域間引用（不重複函式對）與 `S` 欄位寫入（含巢狀）。限制：腳本把物件屬性鍵（如 `{startYear:S.year}`）也算成引用，引用數可能少量高估；分群為人工判斷。
+
+**領域地圖**
+
+| 層 | 領域（行數） | 特徵 |
+|---|---|---|
+| 基礎 | RNG（16）、UI（93） | 只被呼叫 |
+| 葉領域 | 守備（62）、能力・特性（126）、成績模擬（129）、故障・TJ（108）、事件・戀愛（191）、獎項（186）、國際（51）、引退・殿堂（334）、分享圖（286） | 除 RNG／UI／能力輔助外幾乎不呼叫其他業務領域 |
+| 樞紐 | 契約・薪資（214）＋FA・市場・移籍（306）、業餘・選秀（81） | 市場→薪資 46 條引用，寫入欄位幾乎相同（`ct`／`lv`／`org`／`team`／`stage`／`serviceTime`…），實為同一「所屬與契約」領域 |
+| 編排 | 年度流程（200） | 引用 14 個領域 |
+
+- 分享圖 `shareImage`：不用 RNG、不寫 `S`，只讀資料畫 canvas，可比照第 5 期移至 `docs/src/ui/`；文字耦合未掃。
+- 故障、事件、引退、獎項、國際：可比照第 6 期 `SeasonStats`（class＋注入 `R`／UI／`S`），但移動 RNG 呼叫點會改變 `salary-flow` 計數（需批准），且各有文字耦合（`full-power-pitching` 逐字比較、`event-copy` 凍結且 `CHEER` 為可變綁定、`retirement-hof-test-support`／`award-journal-native` 的 `productionFunction`）。
+
+**Event storming 熱點**
+
+1. 決定下一步的入口分散：`advance` 約 34 處、14 個函式（`movement` 兩個定義、`handleDemotion` 6、`pathChoiceHS` 4、`draftFallback` 3、`outOfOrg`、`crossOffers`、FA／仲裁、`phasePre`…）。`startYear` 只由 `advance`（`:1490`）與 `startJapanese`（`:2665`）呼叫。
+2. 結束生涯的入口分散：`endGame` 14 處、9 個函式（`phasePre`、`movement`、`handleDemotion`、`retireBelowActiveMinimum`、`draftFallback`、`pathChoiceU4`、`showFaMarket`、`outOfOrg`）。
+3. `S` 欄位無單一寫入者：`traits` 由 9 領域 17 函式寫入；所屬欄位（`stage`／`stageYr`／`lv`／`org`／`orgTeamId`／`team`）由契約、市場、業餘寫入；`ab`／`pot` 由故障、能力、事件、流程寫入。
+4. Policy（「X 之後做 Y」）寫死在巢狀回呼，例如 `resumeProfessionalSeason` 的 `tjGamble(()=>demotionAudit(()=>tradeCheck(()=>maybeIntl(()=>nextStep()))))`。
+5. 等待中的命令（`choose` 閉包）無法序列化，即 §3.6 (b) 的障礙。
+
+**既存的局部狀態機（重入保護，不決定下一步）**
+
+| 位置 | 狀態 |
+|---|---|
+| `advance`（`:1482`，`yearHandoffs`） | `PREPARED → STARTED → COMMITTED` |
+| `resumeProfessionalSeason`（`:1048–1057`，`seasonContinuations`） | `BUILDING → AWARDS → EVALUATION → CHAMPIONSHIP → TJ_ACCRUAL → PIPELINE_PREPARED → PIPELINE_STARTED → PIPELINE_WAIT` |
+| `settleProfessionalEnd`（`:2575–2607`） | `STARTED → CHAMPIONSHIP_RENDER → PAYMENT_PREPARED → PAYMENT_COMMITTED → RESULT_RENDERED → MOVEMENT → WAIT_CHOICE → WAIT_ALLOCATION → ALLOCATION_STARTED → ALLOCATION_COMMITTED` |
+| `movement` 覆寫（`:2645`，`professionalMoves`） | `STARTED → WAIT_CHOICE` |
+
+- 覆寫：`advance` 於 `:2284` 包一層（先 `finalizePendingOffseasonSalary`）；`endGame` 於 `:2657` 包一層（`setTimeout` 改寫畫面文字）；`movement` 為 `:1257`（`LEGACY.movement`）→ `:2643` → `:2645`（`performMovement`）三層。
+
+**方向：狀態機當 process manager 控制 policy**
+
+- 出口約三分之二在 `choose` 回呼內，領域函式無法同步回傳結果；可行形式為把各處的 `advance()`／`endGame()` 換成單一通用入口（例：`flow.report({kind})`），由狀態機決定下一步。各函式結果種類合計約 50（`movement` 15、FA／仲裁 8、`handleDemotion` 7、`outOfOrg` 4、選路 4–5），但年度層只歸到 2–3 個轉移（下一年／結束生涯／業餘選路）。
+- 不採事件匯流排（pub/sub）：RNG 順序要求同步、固定順序，會退化為函式呼叫而多一層抽象（AGENTS §5）。
+- 限制：分派須同步且在原位置執行原函式（RNG 順序不變）；須於執行當下查名稱，因 `stage10-risk-e2e`、`contract-salary-e2e`、`npb-return-e2e`（整個替換 `advance`）、`smallschool-c-e2e`、`trait-system-e2e` 會替換全域名稱。
+
+| 路線 | 範圍 | 主要成本 |
+|---|---|---|
+| A：年度層 `flow.report` | `advance`／`endGame` 約 48 處、15 函式，多在樞紐領域 | 文字耦合約 8 測試需批准期望值變更（`draft-signing-policy:87`、`career-movement-policy:50`、`salary-flow:30`、`npb-return-ui:50–51`、`event-integration:34`、`kbo-renewal-floor:47`、`championship-intl:73,76`、`fixed-seed-v160:22`）；5 個 e2e 相容；L3／R3 |
+| B：賽季後處理表驅動 | `resumeProfessionalSeason` 的 4 層串接鏈（已有階段標記） | 鏈上各層在所有路徑恰好呼叫後續一次、RNG 皆在呼叫後續前消耗；`resumeProfessionalSeason` 只由 `proSeason` 呼叫。會壞：`full-power-pitching-e2e.mjs:30`（逐字要求鏈字串）、`championship-intl.test.mjs:76`（`captureSeasonChampionship(S);` 須在 `tjGamble(()=>demotionAudit` 之前），需批准改為等價斷言；`championship-intl-e2e.mjs:22` 執行時替換五個名稱，須執行當下查名稱（移到 ESM 模組則壞）；`salary-flow` 計數不變。收益小（5 步線性），價值在驗證 A 的機制 |
+
+- 建議（未決）：先以 B 驗證同步分派、執行當下查名稱、RNG 順序不變三點，再決定是否投入 A。
+- 順帶發現（未驗證、與本期無關）：`tools/development-a/runtime.mjs` 寫 `stepQ=[phaseEnd]` 而無 `__cs.` 前綴，第 3 期後疑似只設定無作用的全域變數。
 
 ## 4. 使用者決定（2026-10-18）
 
