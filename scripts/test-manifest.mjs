@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'information-dialog-e2e': {seconds:90,reason:'Shared help/update dialog: fixed regions, custom indicator, viewport/content resizing, scroll lock, focus and observer cleanup across mobile/desktop; no full-career replay.'},
   'income-display-e2e': {seconds:40,reason:'Native read-only income summary/detail/retirement/canvas, 30 role/viewport/financial fixtures with exact S/RNG checks.'},
   'smallschool-c-e2e': {seconds:600,reason:'C-school native initialization, immutable birth snapshots, retirement fixtures, three viewports and raw cross-version P/IF traces with exact new-version replay.'},
   'full-power-pitching-e2e': {args:['--part=fixtures'],seconds:180,reason:'Real pitching-plan callbacks, viewport/role matrix and TJ follow-up fixtures (29 cases) plus the IF unchanged control (4 complete career runs); approved full-power branch traces and exact replay. S01-S02 seeds run as separate entries; not a Quick entry.'},

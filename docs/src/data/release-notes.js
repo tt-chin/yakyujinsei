@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.13.5｜2026/10/24",
+    "lines": [
+      "- 「遊び方」「更新履歴」の見出しと閉じるボタンを固定。",
+      "- 本文のスクロール位置を見やすくし、スマートフォンでの操作を改善。"
+    ]
+  },
+  {
     "title": "1.13.4｜2026/10/24",
     "lines": [
       "- 収入の項目名と内訳を整理し、年俸と社会人給与を「年俸・報酬」に統一。",

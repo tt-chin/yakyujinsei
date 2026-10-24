@@ -172,8 +172,10 @@
 - [ ] **PLY-01** — 背號與年度履歷；需先決定 00、轉隊、重複及改號規則。
 - [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。
-- [ ] **UI-06** — `IMPLEMENTED_UNVERIFIED`。1.13.1已實作同頁「遊び方」dialog並從選單進入，關閉返回原位置，不重設人生。已提交dev，待使用者審查／尚未正式發布。 既有測試的最新結果與歷史FAIL見下方「UI驗收現況」，未以實作完成自動結案。
-- [ ] **UI-07** — `IMPLEMENTED_UNVERIFIED`。1.13.1已實作同頁更新履歷dialog；由CHANGELOG經update-release-notes產生最新10版公開資料，1.13.3已同步送別修正，不另手動維護第二份歷史。已提交dev，待使用者審查／尚未正式發布。 既有測試的最新結果與歷史FAIL見下方「UI驗收現況」，未以實作完成自動結案。
+- [ ] **UI-06** — `IMPLEMENTED_UNVERIFIED`。既有同頁「遊び方」dialog沿用原文章；本輪1.13.5改為共用固定標題／可捲動本文／固定閉じる三區、背景捲動鎖定及位置／焦點還原。本輪本機驗證通過，待使用者審查，未提交／部署此修正，不自動結案。
+- [ ] **UI-07** — `IMPLEMENTED_UNVERIFIED`。更新履歷UI以RELEASE_NOTES.md精簡文案為來源，經update-release-notes產生配信資料；CHANGELOG維持詳細正本（1.13.4已分離，不再直接複製最新10版長文）。本輪1.13.5與遊び方共用三區及持續位置指示，精簡／詳細履歷已同步，待使用者審查，未部署本輪修正。
+
+  1.13.5限定驗證：Chromium 11 PASS／0 FAIL（test-results/information-dialog-accepted/summary.json）、WebKit 11 PASS／0 FAIL（information-dialog-webkit-recheck/summary.json）；320×568、390×844、844×390、390×240、1280×900，含標題／操作區固定、末段可讀、背景還原、keyboard／Esc／外側／native close、快速重開、observer與事件清理、內容及visualViewport變化、無溢出隱藏軌道。Chromium另驗證原生觸控；WebKit手機模式無wheel API，背景鎖定改用scrollBy嘗試，不能冒充iPhone實機。Quick 68 PASS／0 FAIL／0 SKIP／0 BLOCKED、504.095秒（information-dialog-quick/summary.json）；既有選單相關event-fix-e2e通過，S／RNG不變。CI分批工具31 PASS／1 Linux-only SKIP，僅同步新增入口數91→92，不改Runner或CI通過條件。早期FAIL為測試量測（預留padding、短文無section、鍵盤動畫未停止）及WebKit不支援wheel，原始summary保留於information-dialog-initial、information-dialog-recheck-1、information-dialog-chromium-final、information-dialog-webkit。Full／CI／實機Safari NOT_RUN，artifact缺口及其他歷史未驗證狀態不變。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
 - [ ] **UI-MENU-01** — `IMPLEMENTED_UNVERIFIED`。1.13.1已整合設定、共有、OFUSE與重新開始；沿用既有處理，支援Esc／外側點擊／焦點及鍵盤。1.13.2修正dialog非同步close造成的焦點競態。已提交dev，待使用者審查／尚未正式發布。 既有測試的最新結果與歷史FAIL見下方「UI驗收現況」，未以實作完成自動結案。
 - [ ] **UI-DESKTOP-LAYOUT-01** — `IMPLEMENTED_UNVERIFIED`。1.13.1已實作1180px以上左右唯讀概要、手機單欄；1.13.2取消側欄300px上限、保留中央560px操作區，契約／收入依欄寬改直排或雙欄並允許折行。已提交dev，待使用者審查／尚未正式發布。GameView相關既有Runtime回歸證據見下方，不代表整體重構結案。 既有測試的最新結果與歷史FAIL見下方「UI驗收現況」，未以實作完成自動結案。
