@@ -106,3 +106,16 @@
 - commit 順序：本計畫 → 實作（CSS、斷言、`CURRENT_SPEC.md`、版本與 `CHANGELOG.md`）→ 結果紀錄（本文件 §6）。commit／push／PR 各另批。
 - BACKLOG：核准後新增項目（例如 `UI-DESIGN-TOKENS-01`），完成時勾選。
 - 不修改 `main`。
+
+## 6. 第 1 段結果（2026-10-24）
+
+- 實作 commit：`fcb22a9`（`ui/design-tokens`，基準 `origin/dev` `55e60a4`）。分級 L1／R2：只改 CSS、測試、文件與版本，`game.js`、RNG、`S`、DOM 未變。版本 1.13.5 → 1.13.6（PATCH）。
+- 計畫外追加的耦合：`tests/award-identity-policy.test.mjs` 凍結 `docs/src` 並只允許 `config.js` 的核准版本字面值，升版須同步（經使用者核准改為 `'1.13.6'`）。token 用途表最初漏算 `themes.css` 內的參照（`.btn small`、`:focus-visible`、`:disabled`），經 reviewer 指出後更正。
+- 驗證（本機 macOS＋Brave 155，非 CI Linux Chromium）：
+  1. computed style 等價：scratchpad 腳本比較 `origin/dev` 與變更後全部元素及 `::before`／`::after` 的四角 `border-radius` 與 `box-shadow`，1280／375 × 開始畫面／生涯中 × 4 主題 × 3 字級 × 2 密度＝96 組，全部一致（最多 395 項、110 項非預設）。兩側使用同一份 `release-notes.js`，避免新增履歷項造成的元素數差。負控制（`--shadow-nav` 改 1px）FAIL。
+  2. 字體：CDP `CSS.getPlatformFontsForNode` 的 `.card`、`#bd-name` 由 PingFang TC 變為 Noto Sans JP（web font，CDP 名稱為可變字體的 `Noto Sans JP Thin`）；`document.fonts` 含 Noto Sans JP 400／500／700／900 loaded。`h1`、`.btn` 的直接文字節點為空，未取得。
+  3. 字體斷言：修正後 PASS；套用 `origin/dev` 的 `base.css` 時以 `Noto Sans TC is not loaded` FAIL（負控制）。
+  4. 截圖 48 張（1280／375 × 開始／設定／生涯 × 4 主題 × 前後）無水平溢出、無 page error；抽查只有字形差異。
+  5. Quick 67 PASS／1 FAIL（`award-identity-policy.test`，即上述耦合）；更新後該入口單獨重跑 PASS，未重跑整個 Quick。`npb-return-e2e`、`replay-share-theme-e2e` 2／2 PASS（分享 PNG 不變）。
+  6. reviewer：1 項（用途表錯誤）已更正，其餘無發現。
+- 未確認：Windows／手機的字體回退未實測；Full 未執行（L1，合併 `main` 前依既有流程）。
