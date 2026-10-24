@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED（2026-10-23）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED / PHASE10_PLANNED（2026-10-24）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -21,6 +21,7 @@
 | 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策 `international-selection-policy.js`；參賽流程留在 `game.js` | L3 / R3 | 7-A 完成；PR #16 併入 `dev`（`67dcab9`），見 §2i.9。7-B 完成；PR #17 併入 `dev`（`52e4cdb`），見 §2i.16 |
 | 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 完成；PR #19 併入 `dev`（`7940e97`），見 §2j.8 |
 | 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 完成；PR #20 併入 `dev`（`f4a2894`），見 §2k.8 |
+| 10 | 能力評價 policy | `ovr`／`playerType`／`toolGap`／`abCost` 本體移入 `ability-evaluation-policy.js` 純函式；`game.js` 保留一行委派；`addAb` 不動 | L3 / R3 | 計畫（§2l），實作未批准 |
 
 共通原則：
 
@@ -1533,6 +1534,91 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 合併後 `dev` push 的 Quick CI（Tests #67，run `39977180332`）：PASS（3 分 56 秒）。
 - 本節以 `ci/full-balance` 分支的文件 commit 提交（第 10 期分支未開）。
 
+## 2l. 第 10 期：能力評價 policy（細部計畫，2026-10-24，未批准實作）
+
+候補選定依據見 §3.10。
+
+### 2l.1 現況（2026-10-24 唯讀確認，基準 `origin/dev` `f4a2894`，`game.js` 2717 行）
+
+- `game.js` `:223` `toolGap()`（讀 `S.ab`／`S.pos`）、`:315` `ovr()`（讀 `S.ab`／`S.pos`／`S.dpos`／`S.traits.yips`，呼叫 `dpScore`）、`:330` `playerType()`（讀 `S.ab`／`S.pos`／`S.traits.onetool`／`S.toolRole`）、`:348` `abCost(k)`（讀 `S.ab[k]`／`S.pot`／`S.pos`）：無 RNG、不寫 `S`、無 DOM（本體 grep `document`／`canvas`／`querySelector`／`innerHTML`／`choose(`／HTML 字串 0 件）。皆為頂層宣告，不在 JP 覆寫區，無重新賦值。
+- 讀取順序：`ovr` 的投手分支在讀 `S.dpos`／`S.traits` 前即 return；野手分支最後才讀 `S.traits.yips`。`playerType` 第一行即讀 `S.traits.onetool`。
+- 呼叫者：`ovr`←15 處（`:477` 看板 view model、`:623`／`:625` 海外回歸、`:882`、`:933`、`:1302`、`:2226` 社會人年俸、`:2252`／`:2261` 年俸候補、`:2374`／`:2382` 選秀、`:2403`、`:2407`／`:2417` 學生大會、`:2456` 代表選拔）；`playerType`←`:457` 看板、`:1999` `shareImage`；`toolGap`←`:1072`；`abCost`←`:531` 能力配分 UI。
+- `dpScore`（`:77`）已是 `defenseScoreFor(S.ab,p)` 的一行委派（第 9 期）。
+- `addAb`（`:353`，寫 `S.ab`／`S.carry`／`S.lastOverflow`）內有與 `abCost` 相同的成本式；`abCost` 註解要求兩者一致。
+- 文字耦合：
+  - `ability-allocation.test:18–19`：`assert.match(game,/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/)` 與 `/if\(cur>=pk\)cost\*=isP\?4:3/`。前者目前同時命中 `abCost` 與 `addAb`，後者只命中 `addAb`；`addAb` 不動，搬移後仍 PASS。`:8` `doesNotMatch(game,/…|ability-allocation-policy/)`：新模組名不得為 `ability-allocation-policy`。
+  - vm stub（不切原始碼）：`kbo-renewal-floor.test:38` `ovr:()=>44`、`championship-intl.test:42,55,58,61`、`event-integration.test:31,44` `ovr:()=>50`、`full-power-pitching.test:17` `toolGap:()=>({gap:0})`、`tools/development-b/legacy-effect-boundaries.mjs:30` `ovr:()=>52`。
+  - 瀏覽器全域呼叫：`stage10-risk-e2e:31,33`、`contract-salary-e2e:31` 的 `ovr()`；`tests/support/stage6-browser.mjs:25` 的 `abCost(k)`。函式名留在 `game.js`，不受影響。
+  - `productionFunction`／`indexOf`／`between` 切片：四函式名皆 0 件；測試或工具中對四名稱、`dpScore` 的重新賦值也是 0 件（`event-integration.test:26,53` 只改 vm 內的 `dpScore`，不經 `ovr`）。
+  - 全樹掃描：`check-syntax`（`readdirSync`）、`global-contract-market.test:9`（import 解析）會看到新檔；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點的檔案，新檔不受影響。`index.html` 只載入 `main.js`。
+  - `CURRENT_SPEC:104–105` 描述 `ovr`／`dpScore` 行為，行為不變，不改。
+
+### 2l.2 設計
+
+分類：L3／R3（`ovr` 影響年俸、市場評價、選秀、代表選拔、海外回歸）。無 RNG，`salary-flow` 計數不變。
+
+- 新檔 `docs/src/engine/ability-evaluation-policy.js`（LF）。export 名稱與 `game.js` 的函式名不同：
+  - `toolGapFor(ability,position)`：原 `toolGap` 本體。
+  - `overallRatingFor({ability,position,defensePosition,traits})`：原 `ovr` 本體；`dpScore(x)` 改為 `defenseScoreFor(ability,x)`（自 `./defense-position-policy.js` import，見 §2l.6①）。傳入 `traits` 物件、在原位置讀 `traits.yips`，保留「投手分支不碰 `S.traits`／`S.dpos`」的順序。
+  - `playerTypeFor({ability,position,traits,toolRole})`：原 `playerType` 本體。
+  - `abilityStepCostFor({ability,potential,key,position})`：原 `abCost` 本體；`(potential&&potential[key])||62` 保留原形，註解改為指向 `game.js` 的 `addAb`。
+- `game.js`（CRLF）新增一行 import，四函式改為一行委派，函式名與所在行保留：
+  - `function toolGap(){return toolGapFor(S.ab,S.pos);}`
+  - `function ovr(){return overallRatingFor({ability:S.ab,position:S.pos,defensePosition:S.dpos,traits:S.traits});}`
+  - `function playerType(){return playerTypeFor({ability:S.ab,position:S.pos,traits:S.traits,toolRole:S.toolRole});}`
+  - `function abCost(k){return abilityStepCostFor({ability:S.ab,potential:S.pot,key:k,position:S.pos});}`
+- 委派只讀取 `S` 的屬性參照（不解參照 `S.traits.*`），不新增例外路徑。
+- `addAb`、`dpScore`、`DP_*`、`ovr` 的所有呼叫端不變。
+
+### 2l.3 測試變更（需揭露）
+
+1. 等價 fixture 放在 `tests/ability-allocation.test.mjs`（LF；既有 Quick／Full 入口，不新增入口檔，所以本分支 89 入口不變）。用 `git show f4a2894:docs/src/engine/game.js` 取出舊 `toolGap`／`ovr`／`playerType`／`abCost`，與現行委派＋新模組各在自己的 vm 執行，逐格比較：
+   - 守備：`pos` 為 `P`／`C`／`IF`／`OF`；`dpos` 為 `undefined`／`null`／8 守備位置／`DH`／未知值。
+   - 特性：`yips`／`onetool` 有無；`toolRole` 有無。
+   - 能力：均一值（各分類門檻 52／58／60／62 的 ±1）、`cat`／`sta` 邊界、以固定 LCG 產生的非均一向量（不用 `Math.random`）。
+   - `abCost`：各 key，`cur` 取 54–56／59–61／63–67／71–73，`pot` 為 `undefined`／缺 key／`cur`±1。
+   - 投手且 `S.traits` 為 `undefined` 時，舊新兩側的 `ovr` 結果（或例外）必須一致。
+   - 判定方式：跨 realm 以 `JSON.stringify` 比較，並以格數守衛確認 `S` 不變。
+   - 加入 `execFileSync` 後，manifest 自動推導的 `dependencies` 會變成「＋Git history」，實作時確認無斷言依賴此值。
+2. 實作前用新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`。本節未列的耦合，先報告再改。
+
+### 2l.4 驗證（L3／R3）
+
+比較基準：`f4a2894`（實施時解析為完整 SHA）；允許差分：無。
+
+1. `check-syntax`；相關單元：`ability-allocation`、`championship-intl`、`event-integration`、`kbo-renewal-floor`、`full-power-pitching`（.test）、`salary-flow`（計數不變）、`award-identity-policy`、`global-contract-market`、`verify-modularization`、`information-architecture`。
+2. `game-view-dom-e2e --baseline=f4a2894`（直接執行）；`stage6-ability-e2e`（經 `abCost`）；新檔 commit 前先 `git add -N`；Quick。
+3. 負控制（scratchpad，各改一處），確認等價 fixture FAIL：
+   - ①`ovr` 投手權重 `0.42`→`0.43`
+   - ②`ovr` `DH` 的 `-12`→`-11`
+   - ③`playerType` `m<52`→`m<=52`
+   - ④`toolGap` 捕手 `/4`→`/3`
+   - ⑤`abCost` `cur>=66`→`cur>66`
+   - ⑤不會被 `ability-allocation.test:18` 攔下（該斷言命中 `addAb`）；若有某一處先被既有斷言攔下，另以去除該斷言的 scratchpad 副本確認 fixture 本身 FAIL。
+4. Full 一次（scratchpad worktree＋`git add -N`，本機 4 組平行）；重跑範圍如實記錄。
+5. reviewer：`f4a2894..HEAD` 的程式差分。重點：
+   - 等價：讀取順序、`traits` 延遲解參照、`||62`、排序穩定性。
+   - 錨點文字與 `ability-allocation.test` 的正規表示式。
+   - 新 export 無 DOM／`S`／全域 RNG。
+   - 換行：`game.js` 為 CRLF，policy 檔為 LF。
+6. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2l.5 交付
+
+- 分支：`refactor/ability-evaluation`。2026-10-24 使用者決定自 `ci/pitching-split` `ef78224` 開，因為計畫文件 §2k.8 只存在於 CI 分支鏈；`docs/` 與 `f4a2894` 逐位元組相同。
+- PR → `dev`：須等 PR #21 與 `ci/pitching-split` 合併後，rebase 到 `dev` 再建。
+- commit 順序：文件（§2l、§3.10）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG（§9.3）。`CURRENT_SPEC:456` 於同行追記新檔（不參照 DOM／`S`／RNG 的純函式）。不修改 `main`。
+
+### 2l.6 待決
+
+1. `ovr` 的守備評分：①新模組直接 import `defenseScoreFor`（建議；`dpScore` 本身就是 `defenseScoreFor(S.ab,p)`，且無測試替換 `dpScore` 來影響 `ovr`）；②比照 `dpQual` 注入 `scoreOf:dpScore`（多一個參數，保留 `game.js` 端的替換點）。
+2. `abCost`／`addAb` 的重複成本式：①只搬 `abCost`、`addAb` 不動（建議；`addAb` 寫 `S`，且 `ability-allocation.test:18–19` 以文字鎖定 `addAb` 的式子）；②抽出共用成本函式給兩者使用（`addAb` 也要改，並要變更 `ability-allocation.test` 的期望值）。
+3. 等價 fixture 位置：`ability-allocation.test`（建議；不增加入口）或另開新測試檔（Full 入口 89→90，`ci-full-batches.test` 的入口數斷言要一起改）。
+4. export 名稱：`toolGapFor`／`overallRatingFor`／`playerTypeFor`／`abilityStepCostFor`。
+
+使用者決定（2026-10-24）：四點皆照建議（①直接 import `defenseScoreFor`；②只搬 `abCost`，`addAb` 不動；③fixture 置於 `ability-allocation.test`；④export 名稱如上）。實作待批准。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -1632,6 +1718,28 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | `events_love` 純規則部分 | `evOdds`／`datePool` 等（約 25 行） | 小 | `event-copy.test:32` 以 `a7fe2e8` 逐字凍結 |
 
 - 使用者決定（2026-10-23）：第 9 期採 `dp_defense`，細部計畫見 §2k。
+
+### 3.10 第 10 期候補：純規則函式再調查（2026-10-24，基準 `origin/dev` `f4a2894`，`game.js` 2717 行；scout 唯讀調查＋抽查）
+
+- 方法：依 §3.8／§3.9 未採用的候補，以 acorn＋eslint-scope 重新記錄 RNG、`S` 讀寫、DOM／UI、可變綁定、呼叫關係，並掃描 `tests/`、`tests/support/`、`scripts/`、`tools/` 的文字耦合與 `docs/src` 全樹掃描。
+- 抽查方式：下表各函式本體已直接 grep DOM 關鍵字並讀原始碼確認。scout 腳本的 `S` 寫入計數漏算巢狀欄位（例如 `S.ab.vel=`），所以表中的 `S` 讀寫以原始碼為準。
+
+| 候補 | 內容 | RNG／寫 `S`／UI | 文字耦合 | 判斷 |
+|---|---|---|---|---|
+| `ability_eval` | `ovr`／`playerType`／`toolGap`／`abCost`（`:223`–`:352`，不相鄰） | 無／無／無 | 無切片或 `productionFunction`；只有 vm stub 與瀏覽器全域呼叫；`ability-allocation.test:18–19` 鎖定 `addAb` 的成本式 | 同一領域、輸入相同，彼此不互相呼叫 → **採用（§2l）** |
+| 成績比率 | `slgOf`（`:396`）／`portionOf`（`:965`） | 無／無／無（只吃參數） | 無 | 16 行，價值低 |
+| `injuryProb` | `:368`，11 行 | 無／無／無 | 無 | 單一函式，價值低 |
+| `rng_seed` | `normalizeSeed`／`fnv1a32`／`deriveSeedInt` 等（JP 覆寫區 `:2204–2212`） | 無（`generateSeed` 用 `crypto`） | `fnv1a32` 被 `productionFunction` 取出 5 處（`rng.test:15`、`award-journal-native.test:27`、`retirement-hof-test-support:22`、`tools` 2 處）；`verify-version-metadata:38` 找 `function fnv1a32(` 行 | 排除 |
+| `salary_helpers` | `serviceYearsFor`～`salaryCandidate`（JP 覆寫區 `:2240–2263`） | 無／無／無 | `salary-flow.test:20–27` 斷言 `let … salaryCandidate;` 宣告形式；`kbo-renewal-floor:43`、`npb-return-ui:62` 切片；多個 e2e 以全域使用 | 排除 |
+| 投手角色 | `pitcherRole`／`fmtIP`／`roleN`／`isSP`（`:298–314`） | 無／無／無 | `fmtIP`→`roleN` 被 `international-personal-stats.test:8,79`、`championship-intl.test:42` 切片；`isSP` 被 `productionFunction` 取出 2 處；`pitcherRole` 是 `trait-policy.test:100`、`season-stats.test:16` 的錨點 | 排除 |
+| `events_love` 純規則部分 | `evOdds`／`partnerJob`／`datePool`／`affairPool` | 無／無／無 | `datePool`／`affairPool` 讀可變 `let CHEER`／`CHEER_SAFE`；`event-copy.test:32` 以 `a7fe2e8` 逐字凍結 `evOdds` | 排除 |
+| `injury_tj` 其餘 | `tjAccrue`／`tjGamble`／`tjTwoStrike`／`tjBigInjury`／`afterGamble` | 有 RNG 或寫 `S`／`choose`／HTML | `full-power-pitching-e2e:23` 逐字比較 `tjAccrue`／`tjCap` | 排除 |
+| `amateur_draft_path` | `setSchool`／`setAmateur`／`runDraft`／`amateurSeason` | 寫 `S`、RNG、UI | 多個 e2e 以全域呼叫 | 無純規則 |
+
+- `year_season_flow`：依 §3.6 最後進行，本次不列為候選。
+- 全樹掃描：`check-syntax`、`global-contract-market.test` 會讀到新檔，不擋；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點的檔案；`verify-modularization`、`information-architecture` 只讀指定檔名。`index.html` 只載入 `main.js`。
+- `salary-flow.test` 計數（`R(` 22、`ri(` 39、`chance(`＋legacy slot 42、`pick(` 14）：上表的純規則候補都不含 RNG，搬移不影響計數。
+- 使用者決定（2026-10-24）：第 10 期採 `ability_eval`，成績比率不做。細部計畫見 §2l。
 
 ## 4. 使用者決定（2026-10-18）
 
