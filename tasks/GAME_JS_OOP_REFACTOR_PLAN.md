@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9（本機驗證完成，push／PR 待批）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9（本機驗證完成，push／PR 待批）；第 2 批計畫見 §2m.10（實作待批）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1889,6 +1889,63 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | Full（本機 4 組平行，依 manifest `seconds` LPT 分組，未傳 `--baseline`） | 92／92 PASS（4 組聯集＝`fullIds()` 92 項，無重複／遺漏） |
 
 - 未完成：push／PR（另批）。
+
+### 2m.10 11-B 第 2 批：降格（細部計畫，2026-10-25；計畫已批准，實作待批准）
+
+**現況（唯讀確認，基準 `026c5cd`，`game.js` 2708 行（本分支，含第 1 批）；scout 唯讀調查＋抽查）**
+
+- 對象 2 個函式、9 處：`advance()` 6、`endGame(...)` 3。第 1 批的插入點在 `:2308` 以後，對象區段的行號與 `026c5cd` 相同。
+
+  | 位置 | 分支 | 原呼叫 | kind |
+  |---|---|---|---|
+  | `:1393` | MiLB 降格時移籍 NPB 一軍 | `advance()` | `DEMOTION_TRANSFER_NPB1` |
+  | `:1396` | MiLB 降格時移籍 NPB 二軍（支配下） | `advance()` | `DEMOTION_TRANSFER_NPB2` |
+  | `:1400` | NPB 降格時移籍 CPBL 一軍 | `advance()` | `DEMOTION_TRANSFER_CPBL1` |
+  | `:1405` | 有其他選項時接受降格 | `advance()` | `DEMOTION_ACCEPTED` |
+  | `:1406` | 沒有其他選項的降格 | `advance()` | `DEMOTION_ACCEPTED` |
+  | `:1419` | 以長約條款拒絕降格 | `advance()` | `DEMOTION_REFUSED` |
+  | `:1420` | 長約面談時引退（`daibaFarewell` 回呼內） | `endGame(...)` | `DEMOTION_RETIRED` |
+  | `:1424` | 33 歲以上面談時引退（`daibaFarewell` 回呼內） | `endGame(...)` | `DEMOTION_RETIRED` |
+  | `:1429` | `retireBelowActiveMinimum` | `endGame(...)` | `ACTIVE_MINIMUM_RETIRED` |
+
+- 呼叫端：`handleDemotion` 由 `movement`（`:1337`、`:1340`）呼叫；`retireBelowActiveMinimum` 由 `movement`（`:1282`）與 `outOfOrg`（`:2576`）呼叫。兩者皆無覆寫。
+- `doDemote` 末尾的 `outOfOrg(o)`、選項 `f:doDemote` 屬領域內部的下一步，不改（§2m.2）。
+- 文字耦合：
+  - 直接失效：
+    - `npb-return-ui.test.mjs:38–42`：以 `function handleDemotion`～`function retireBelowActiveMinimum` 的切片放入 `runInNewContext`，context 無 `reportFlowOutcome`，`:44` 點擊選項時 `ReferenceError`。
+    - `npb-return-ui.test.mjs:62`：`function handleDemotion`～`/* 長期契約/短期契約`（含 `retireBelowActiveMinimum`）與 `73d5a58` 逐字比較。`:49–52` 既有白名單會把 NPB1／NPB2 移籍兩段整段換回舊文字，其餘 7 處（`:1400`／`:1405`／`:1406`／`:1419`／`:1420`／`:1424`／`:1429`）產生差異。
+  - 不受影響：`career-movement-policy.mjs:51,53,54`（只找呼叫處與 `card('bad','現役続行を断念',…)`）；`draft-signing-policy.test.mjs` Case F（`productionFunction('reportFlowOutcome')`，只跑業餘情境，7 種 kind 覆蓋斷言不變，未知 kind 仍拋出）；`contract-salary-e2e:30`、`npb-return-e2e:18`、`global-contract-market-e2e:14`（瀏覽器內實際呼叫 `handleDemotion`）；`salary-flow` 計數不變；無 `advance(`／`endGame(`／`reportFlowOutcome` 計數斷言；理由原文無測試斷言（只出現在 `docs/reviews/*.json` 輸出）。
+  - 不在 `test-manifest` 的工具／歷史審查：`tools/development-b/legacy-effect-boundaries.mjs:34`、`docs/reviews/g1-a-validation/fixtures.mjs:33`、`docs/reviews/award-jp-name-validation/validate.mjs:30` 以 `productionFunction('handleDemotion')` 放入 vm，fixture 只走長約分支且不點擊選項，不會執行到 `reportFlowOutcome`。依 AGENTS.md §6.4 不修改，只記錄。
+
+**設計（L3／R3；使用者決定 2026-10-25：照建議，`retireBelowActiveMinimum` 用 `ACTIVE_MINIMUM_RETIRED`）**
+
+- `reportFlowOutcome` 不新增函式，只在既有 `switch` 的 AMATEUR 各 case 之後追加：`DEMOTION_TRANSFER_NPB1`／`DEMOTION_TRANSFER_NPB2`／`DEMOTION_TRANSFER_CPBL1`／`DEMOTION_ACCEPTED`／`DEMOTION_REFUSED` → `return advance();`，`DEMOTION_RETIRED`／`ACTIVE_MINIMUM_RETIRED` → `return endGame(outcome.reason);`。
+- 各處只把末尾的 `advance()`／`endGame(...)` 換成 `reportFlowOutcome({...})`；`buyoutRemaining`、`signTo`、`applyDemotionSalary`、`board`、`card`、`S.lv=`、`S.demotionRefused=`、特性設定留在原位、原順序。`DEMOTION_RETIRED` 仍在 `daibaFarewell` 回呼內，`reason` 於回呼執行時求值（與原本相同）。
+- `retireBelowActiveMinimum` 用 `ACTIVE_MINIMUM_RETIRED`：它也由 `movement` 與 `outOfOrg`（FA 領域）呼叫，與降格無特定關係。
+- 不新增或移動 RNG 呼叫點，不新增 `S` 欄位。
+
+**測試變更（需揭露）**
+
+1. `npb-return-ui.test.mjs:38–42`：以 `productionFunction('reportFlowOutcome',…)` 將正式的 `reportFlowOutcome` 一併放入 vm；`advance` 仍由原 stub 計數，既有斷言不改。
+2. `npb-return-ui.test.mjs:62`：比照 `:49–52` 的白名單，比較前追加 7 個精確字串的反向替換（`reportFlowOutcome({...})` → 原 `advance()`／`endGame(...)`），每個斷言恰好出現 1 次；其餘文字仍逐字比較。
+3. 新增行為 fixture（`npb-return-ui.test.mjs`，不增加 Full 入口數）：
+   - 現行與 `026c5cd` 各以 `'use strict';`＋`handleDemotion`＋`retireBelowActiveMinimum` 建 vm，現行另加 `reportFlowOutcome`；基準以 `git show 026c5cd…:docs/src/engine/game.js` 取得。
+   - 情境：MiLB 降格（移籍 NPB1／移籍 NPB2／無其他選項）、NPB 降格（有／無 CPBL 選項）、無降格目標（`outOfOrg`）、長約三選項（拒絕降格分「尚無チームの癌」與「已有或被 franchise／intlace 擋下」）、33 歲以上兩選項、觸發イップス、直接呼叫 `retireBelowActiveMinimum`。`chance` 依情境給定結果，`daibaFarewell` stub 同步呼叫後續。
+   - 以 DFS 點擊全部 `choose` 選項；比較兩側呼叫紀錄（`advance`／`endGame` 含理由／`signTo` 參數／`buyoutRemaining`／`applyDemotionSalary`／`board`／`card`／`traitCard`／`outOfOrg`／`daibaFarewell`）與各葉的 `S` 快照（JSON 字串）＋葉數守衛＋9 種 kind 覆蓋。
+   - 各葉 kind 一致性斷言：由前一筆呼叫推導應回報的 kind（`signTo` 目標 → `TRANSFER_*`、`applyDemotionSalary` → `ACCEPTED`、`S.demotionRefused` → `REFUSED`、`daibaFarewell` → `RETIRED`、`現役続行を断念` card → `ACTIVE_MINIMUM_RETIRED`），與實際回報比對（第 1 批教訓：分派到同一目標的 kind 互換時，呼叫序列無差異）。
+4. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
+
+**驗證（比照 §2m.4）**
+
+1. `check-syntax`；相關單元：`npb-return-ui`、`npb-farewell`、`career-movement-policy`、`draft-signing-policy`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`。
+2. `game-view-dom-e2e --baseline=026c5cd…`（直接執行）；`contract-salary-e2e`、`npb-return-e2e`、`global-contract-market-e2e`、`event-fix-e2e`、`stage10-risk-e2e`；Quick。
+3. 負控制（scratchpad 副本，各改一處）：①互換 `DEMOTION_TRANSFER_NPB1`／`DEMOTION_TRANSFER_NPB2`、②拒絕降格分支漏呼叫 `reportFlowOutcome`、③`DEMOTION_RETIRED` 分派到 `advance`；另 9 處各自改為 `endGame('MUT')` 的逐處突變。確認 fixture 本身 FAIL（先被既有斷言攔下時，另以去除該斷言的副本確認）。
+4. Full 一次；reviewer 一次（程式差分）。
+
+**交付**
+
+- 分支：`refactor/flow-outcome-demotion`，自 `refactor/flow-outcome-amateur`（`26ec1bf`）疊出；基準暫用 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。第 1 批併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃。
+- commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
