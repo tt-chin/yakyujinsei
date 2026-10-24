@@ -17,15 +17,24 @@ function environment(){
   return {node:process.version,platform:process.platform,arch:process.arch,osRelease:os.release(),totalMemory:os.totalmem(),freeMemory:os.freemem(),diskAvailableBytes:disk.bavail*disk.bsize,runnerOS:process.env.RUNNER_OS??null,imageOS:process.env.ImageOS??null,imageVersion:process.env.ImageVersion??null};
 }
 export function fullIds(){return ['syntax',...inventory(new URL('../',import.meta.url)).filter(e=>e.modes.includes('full')).map(e=>e.id)];}
-export function splitIds(ids,count=8){
+export function fullSeconds(){return new Map(inventory(new URL('../',import.meta.url)).filter(e=>e.modes.includes('full')).map(e=>[e.id,e.seconds]));}
+export const DEFAULT_SECONDS=5;
+// LPT: heaviest first (ties by inventory order) into the lightest batch (ties by lowest index); each batch keeps inventory order for test.mjs --only.
+export function splitIds(ids,count=8,weightOf=()=>undefined){
   assert.ok(ids.length>=count&&new Set(ids).size===ids.length);
-  return Array.from({length:count},(_,i)=>ids.slice(Math.floor(i*ids.length/count),Math.floor((i+1)*ids.length/count)));
+  const weight=id=>weightOf(id)??DEFAULT_SECONDS,order=new Map(ids.map((id,i)=>[id,i]));
+  const batches=Array.from({length:count},()=>({ids:[],sum:0}));
+  for(const id of [...ids].sort((a,b)=>weight(b)-weight(a)||order.get(a)-order.get(b))){
+    const b=batches.reduce((m,x)=>x.sum<m.sum?x:m);b.ids.push(id);b.sum+=weight(id);
+  }
+  return batches.map(b=>b.ids.sort((x,y)=>order.get(x)-order.get(y)));
 }
 export function validatePlan(plan,ids){
   assert.equal(plan.mode,'full');assert.equal(plan.batches.length,8);
-  assert.deepEqual(plan.batches.flat(),ids,'Full inventory/order changed or omitted');
-  assert.equal(new Set(plan.batches.flat()).size,ids.length,'Duplicate entry');
-  assert.ok(plan.batches.every(b=>b.length));
+  const flat=plan.batches.flat(),order=new Map(ids.map((id,i)=>[id,i]));
+  assert.equal(new Set(flat).size,flat.length,'Duplicate entry');
+  assert.deepEqual([...flat].sort(),[...ids].sort(),'Full inventory changed or omitted');
+  assert.ok(plan.batches.every(b=>b.length&&b.every((id,i)=>!i||order.get(b[i-1])<order.get(id))),'Empty batch or batch not in inventory order');
 }
 export function linuxTempAlias(target){
   mkdirSync(target,{recursive:true});
@@ -86,6 +95,7 @@ export function aggregate(plan,output,ids){
       batches.push({index:i,status:good?'PASS':'FAIL_OR_INCOMPLETE',exitCode:receipt.exitCode,counts,seconds:r.seconds});
     }catch(e){issues.push({batch:i,error:e.message});batches.push({index:i,status:'NOT_ACCEPTED'});}
   }
+  const order=new Map(ids.map((id,i)=>[id,i]));results.sort((a,b)=>order.get(a.id)-order.get(b.id));
   const pass=issues.length===0&&results.length===ids.length;
   const counts=Object.fromEntries(['PASS','FAIL','SKIP','BLOCKED'].map(s=>[s,results.filter(r=>r.status===s).length]));
   return {mode:'full',head:plan.head,runId:plan.runId,runAttempt:plan.runAttempt,baseline:plan.baseline,expected:ids.length,status:pass?'PASS':'FAIL_OR_INCOMPLETE',counts,acceptedPass:counts.PASS,unverified:ids.length-results.length,batches,issues,results,artifactCoverage:'ARTIFACT_COVERAGE_BLOCKED'};
@@ -95,8 +105,8 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
   if(command==='plan'){
     mkdirSync(output,{recursive:true});assert.ok(!existsSync(planFile),'Refuse to overwrite evidence');
-    const head=git('rev-parse','HEAD');if(process.env.GITHUB_SHA)assert.equal(head,process.env.GITHUB_SHA);
-    const plan={mode:'full',head,runId:process.env.GITHUB_RUN_ID||'LOCAL',runAttempt:process.env.GITHUB_RUN_ATTEMPT||'LOCAL',browser:process.env.TEST_BROWSER||'chrome',baseline:git('rev-parse','origin/main^{commit}'),batches:splitIds(fullIds())};
+    const head=git('rev-parse','HEAD'),seconds=fullSeconds();if(process.env.GITHUB_SHA)assert.equal(head,process.env.GITHUB_SHA);
+    const plan={mode:'full',head,runId:process.env.GITHUB_RUN_ID||'LOCAL',runAttempt:process.env.GITHUB_RUN_ATTEMPT||'LOCAL',browser:process.env.TEST_BROWSER||'chrome',baseline:git('rev-parse','origin/main^{commit}'),batches:splitIds(fullIds(),8,id=>seconds.get(id))};
     validatePlan(plan,fullIds());write(planFile,plan);console.log(JSON.stringify(plan,null,2));
   }else{
     assert.ok(['run','aggregate'].includes(command),'Usage: plan | run <1..8> | aggregate');

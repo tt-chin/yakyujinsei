@@ -7,14 +7,14 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **28** | 包含D2發布範圍結案、C級高校／弱小校の星，以及4-A既有條件已滿足的LEGACY清理 |
-| 未完成 | **32** | 恢復TJ顯示及CI耗時平衡兩個既有待辦；UI審查、CI工具路徑與artifact缺口保持未完成 |
+| 未完成 | **33** | 恢復TJ顯示及CI耗時平衡兩個既有待辦；新增CI執行環境鎖定提案；UI審查、CI工具路徑與artifact缺口保持未完成 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
 | IMPLEMENTED_UNVERIFIED | **9** | 五項UI／支持已實作提交dev，待審查；原4項保留 |
 | DESIGN_PENDING | **7** | C級高校語意已定案並結案；其餘設計待決保持 |
-| 其他候補／保留／混合 | **12** | 包含TJ顯示規則、CI耗時平衡提案及CI_PASS但工具路徑待處理；UI-06／07已計入IMPLEMENTED_UNVERIFIED |
+| 其他候補／保留／混合 | **14** | 包含TJ顯示規則、CI耗時平衡提案、CI執行環境鎖定提案、full-power-pitching-e2e耗時提案及CI_PASS但工具路徑待處理；UI-06／07已計入IMPLEMENTED_UNVERIFIED |
 
-以上依唯一正式checkbox重新計算：**28 + 32 = 60**。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
+以上依唯一正式checkbox重新計算：**28 + 34 = 62**（2026-10-24新增CI-ENV-PIN-01、CI-PITCHING-E2E-01）。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
 
 
 ### 1.1 開發階段完成履歷
@@ -131,7 +131,7 @@
 
 - [x] **CONTRACT-LEGACY-01** — `VERIFIED_IN_TESTED_PATHS / CLOSED_SCOPE_LIMITED`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2f.5-2、§2f.7：使用者同意的DEAD_CALL驗證涵蓋23個瀏覽器E2E，舊makeOffers／pickOfferUI無執行期呼叫；4-A刪除舊本體及拆殼，8生涯DOM／S／RNG一致，已由PR #12（d3efd11）併dev。這不是全路徑不可達證明，原Full 84 PASS／1 FAIL及限定修復重測、stage10比較基準造成的預期FAIL均保留在原計畫；第5期後另有確定來源86入口全PASS證據，不回改原FAIL。市場／規則重設、4-B／4-C／4-D與整體重構不在此結案範圍；後續仍由REFACTOR-AUDIT-01追蹤。
 
-## 3. 未完成工作（32 項）
+## 3. 未完成工作（33 項）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（3 項）
 
@@ -191,7 +191,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 本輪驗證（2026-10-21，HEAD 2a11a64加工作樹／1.13.1）：R2／L2；原方向鍵冒泡FAIL已修復並保留首次紀錄；首輪Quick60 PASS／3 FAIL，初始化位置及精確版號斷言修復後，最終Quick62 PASS／1 FAIL。剩餘award-identity-policy.test為未修改B1快照工作樹CRLF與原Git LF hash差異，未修改HEAD測試亦可重現；舊G9凍結來源契約對後續UI／版號調整亦須另審，不自行放寬。相關4入口與直接3入口PASS，投手／野手固定Seed主RNG652／549比較不變；原生Menu／Share fixture S／RNG不變。Full NOT_RUN（本批局部UI，無遊戲規則／RNG改動）；OFUSE實際付款、iPhone／Android原生分享NOT_RUN。原FAIL及新log留在忽略的test-results/menu-20261021-*；來源hash清單menu-20261021-source-audit.json。未commit／push／部署，待使用者審查。
 
-### 3.6 P1 — CI殘項（4項未完成；另保留1項已完成發布索引）
+### 3.6 P1 — CI殘項（5項未完成；另保留1項已完成發布索引）
 
 - [x] **D2-G9-RELEASE** — `RELEASED / CLOSED_WITH_SPLIT_RESIDUALS`（2026-10-18）。正式1.13.0發布與基本Smoke已完成，來源650e4dd／正式站15adf28，見[發布驗收](docs/reviews/RELEASE_1130_DEVELOPMENT_SUMMARY.md#g9與正式1130)。使用者決定以發布範圍結案，殘項拆出：Linux Full與舊工具固定路徑依賴改由CI-LINUX-FULL-01追蹤（本機Docker Linux Full對650e4dd 80 PASS已獲接受為替代證據；2026-10-19指定2a11a64的GitHub Actions Linux Full已82 PASS；舊工具路徑仍待處理，不沿用至1.13.3）；artifact保存由D2-CI-ARTIFACT-01；文件整理見上方索引。未將任何殘項標為PASS。
 
@@ -205,9 +205,13 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 - [ ] **TEST-COMPARE-BASELINE-01** — `DESIGN_PENDING`（2026-10-19縮小範圍）。以`origin/main`為比較基準的3入口（`contract-salary-e2e`、`draft-income-e2e`、`display-preferences-e2e`）在`dev`升版而`main`未跟上時，`birthHighSchool.createdVersion`版本戳記不同，自第0步不一致。**版本戳記部分已處理**：使用者批准比照既有`delete state.version`，於比對前排除該欄位（衍生結果`traits.smallschool`仍比對）；`display-preferences-e2e`亦改用共用`assertSameCareer`防止失敗時OOM。本機Docker 2 CPU／7GB驗證：3入口對`7220ad8`（1.12.0）與`650e4dd`皆PASS（`contract-salary-e2e` 381案，峰值≤3.49GB）；排除前對`7220ad8`的FAIL（含milb-demotion兩案）與`display-preferences-e2e`的OOM皆僅由此欄位造成。**剩餘待決**：有規則變更的版本於發布前跑dev Full時，跨版本比對是否須以許容差分oracle（如`assertApprovedProducerRenameCareer`）宣告差異，或明確接受該等入口FAIL；屬政策判斷，未經批准不改期望值或基準。固定基準的入口（如`hof-first-ballot-e2e`、`salary-history-e2e`）不隨`origin/main`變動，不在本項範圍。2026-10-19 CI確認：Run39260159042（`2a11a64`，Linux Chromium）中3入口對`650e4dd`皆PASS（`contract-salary-e2e` 135.9秒、`display-preferences-e2e` 115.1秒、`draft-income-e2e` 334.2秒）；本次`dev`與`main`的VERSION相同，不構成跨版本規則變更的驗證，剩餘待決不變。
 
-- [ ] **CI-FULL-BALANCE-01** — `PROPOSED / NOT_APPROVED`（2026-10-23）。依[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §7-2、§8，8批平行化已完成，但splitIds仍按入口數平分；Run39879968880指定b6f71f6（84入口）記錄21分37秒，批次耗時5／520／384／1205／550／23／294／321秒，第4批為瓶頸。依耗時平衡是另案未批准提案；舊86入口manifest試算不代表目前87入口或實測提速。需先決定manifest預估或實測校正，再另批ci-full-batches.mjs及其嚴格分批斷言變更；保留不漏測、不重複、任一FAIL／SKIP／BLOCKED不得PASS。驗收須指定SHA的完整Linux Full aggregate及實際wall time；本次只恢復漏列。
+- [ ] **CI-FULL-BALANCE-01** — `PROPOSED / NOT_APPROVED`（2026-10-23）。依[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §7-2、§8，8批平行化已完成，但splitIds仍按入口數平分；Run39879968880指定b6f71f6（84入口）記錄21分37秒，批次耗時5／520／384／1205／550／23／294／321秒，第4批為瓶頸。依耗時平衡是另案未批准提案；舊86入口manifest試算不代表目前87入口或實測提速。需先決定manifest預估或實測校正，再另批ci-full-batches.mjs及其嚴格分批斷言變更；保留不漏測、不重複、任一FAIL／SKIP／BLOCKED不得PASS。驗收須指定SHA的完整Linux Full aggregate及實際wall time；本次只恢復漏列。2026-10-24：計畫見[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §9（DRAFT，未核准）；以manifest `seconds`為權重的LPT試算，最大批由本機617秒降至362秒（`full-power-pitching-e2e`單獨一批為下限），CI預估約13分，未實測。2026-10-24：已實作（`ci/full-balance` `cdf0a25`）；Run40038325238（`5b57f6e`）Full PASS 87／87，最大批測試1205→809秒，但wall time 21分47秒未改善（3批apt安裝約7分，見CI-ENV-PIN-01）；PR暫停至CI-ENV-PIN-01後一併驗證（§9.8）。
 
-> **未完成項目核算：** 3（規格／回歸／歷史細項）＋6（殿堂）＋4（實機／文案）＋5（待決／保留，含TJ顯示）＋10（候補及已實作待審UI）＋4（CI工具路徑／artifact／比較政策／耗時平衡）＝**32**；60唯一ID、28完成／32未完。C級高校與LEGACY清理分別列第2.10／2.11節；D2-G9-RELEASE在第3.6節作已完成發布索引。歷史驗收數字不修改。
+- [ ] **CI-ENV-PIN-01** — `IMPLEMENTED / CI_PASS / PR_PENDING`（2026-10-24；[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §10.6；`ci/env-pin` `ec54253`：Full Run40046088278 PASS 87／87、18分43秒，Quick、linux-smoke PASS；安裝步驟由最長8分降為2秒。合併後勾選）。原始記錄：Run40038325238 Full 8批中3批apt `Fetched 25.9 MB in 6min 47s`。CI執行環境未完全鎖定：`playwright install --with-deps chromium`的apt套件取Ubuntu noble當下最新版（有GPG簽章但版本漂移）；Chromium由`playwright-core`固定revision、自Playwright CDN下載，本機1.59下載程式未見checksum驗證（1.62.1未確認）；npm以`--no-package-lock`安裝。Tests #66（`7940e97`，Run39974089520）的Quick因apt鏡像`Fetched 20.0 MB in 11min 51s (28.1 kB/s)`耗時15分41秒（平常約4分；#67恢復為3分56秒）。首選方案：`tests`／`full-batch`改用以digest鎖定的`mcr.microsoft.com/playwright:v1.62.1-noble@sha256:…` container（`--ipc=host`，保留`setup-node` 24.15.0與`npm install playwright@1.62.1`），移除`--with-deps`；備案為apt重試設定。未確認：image字型對截圖比較（`replay-share-theme-e2e`）的影響、container內`/__w/_temp`與Linux temp路徑／linux-smoke的相容性、root執行時git操作、image拉取時間與內建Node版本。另可選CI專用lockfile（AGENTS §5須批准）。須修改`test.yml`與`check-workflow.mjs`（AGENTS §6.2須批准）；不採依賴快取（apt安裝於`/usr`，快取不解決慢速且不提供完整性）。
+
+- [ ] **CI-PITCHING-E2E-01** — `APPROACH_DECIDED / PLAN_PENDING`（2026-10-24）。`full-power-pitching-e2e`為CI Full單一最長入口（Run40038325238：809秒；Run40043897770：976秒；本機約362秒），在§9 LPT分批下獨佔batch 1並決定wall time。結構（`tests/full-power-pitching-e2e.mjs`，52行）：fixture 29件（E01 3寬×3角色×3投球方式、E03 TJ 2件，各1季）＋完整生涯**22次**（S01-S02 2 seed×3投球方式×old／now／repeat＝18、S03 IF 4；manifest記載「20」有誤），全部依序執行；每步一次`page.evaluate`並保存前後完整`S`與SHA256。候選：①測試內2–3個生涯並行（參考`retirement-hof-pilot.mjs:58`；須確認harness並行安全與記憶體峰值）②拆為多個Full入口供LPT分配（須處理一檔一入口的inventory與87入口斷言）。不刪除repeat重現斷言、不減少每步證據。分段耗時（2026-10-24本機macOS＋Brave 156，`ec54253`，36 PASS／363秒；harness `summary.json`的`records[].seconds`）：E01 24.9秒（7%）、E03 1.6秒、S01-S02 290.5秒（80%；`yakyo-test-001` 全力62.8／通常40.2／省エネ48.1＝151.1，`jp3-pitcher-02` 54.8／37.2／47.5＝139.5）、S03 44.3秒（12%）；每次生涯平均約15秒。輸出1.8 GB JSON（15個career檔，88–202 MB，縮排格式），202 MB檔的stringify＋寫入約0.6秒，非主因；主因推定為每步`page.evaluate`往返並傳回前後完整`S`（約530步／生涯，未單獨量測）。CI artifact不含此`summary.json`（輸出目錄不符`tmp/yakyujinsei-*`）。**使用者決定（2026-10-24）：採②，依seed拆分**，例如`yakyo-test-001`（151秒）／`jp3-pitcher-02`（140秒）／fixture＋S03（71秒），本機最大約151秒，依CI倍率2.2–2.7推算約330–410秒；拆分方式、inventory與87入口斷言、manifest `seconds`的處理待計畫批准後實作。預估瓶頸轉為`international-personal-stats-e2e`（392–545秒），Full wall time約10–11分，**未實測**。
+
+> **未完成項目核算：** 3（規格／回歸／歷史細項）＋6（殿堂）＋4（實機／文案）＋5（待決／保留，含TJ顯示）＋10（候補及已實作待審UI）＋6（CI工具路徑／artifact／比較政策／耗時平衡／環境鎖定／投球E2E耗時）＝**34**；62唯一ID、28完成／34未完。C級高校與LEGACY清理分別列第2.10／2.11節；D2-G9-RELEASE在第3.6節作已完成發布索引。歷史驗收數字不修改。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 

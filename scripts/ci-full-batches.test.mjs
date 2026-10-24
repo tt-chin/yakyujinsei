@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {fullIds,splitIds,validatePlan,runBatch,aggregate,linuxTempAlias} from './ci-full-batches.mjs';
+import {fullIds,fullSeconds,DEFAULT_SECONDS,splitIds,validatePlan,runBatch,aggregate,linuxTempAlias} from './ci-full-batches.mjs';
 test('Linux socket pathname budget (107 bytes excluding NUL)',()=>{
  const suffix='/org.chromium.Chromium.ABCDEF/SingletonSocket';
  assert.ok(Buffer.byteLength('/tmp/yj-ABCDEF/t'+suffix)<108);
@@ -43,9 +43,17 @@ function fixture(){
  return {plan,output,file:path.join(output,'batch-2/summary.json'),receipt:path.join(output,'batch-2/batch.json')};
 }
 function change(file,fn){const r=JSON.parse(readFileSync(file));fn(r);write(file,r);}
-test('exact 87 entries, eight ordered disjoint batches; future count has no gaps',()=>{
- assert.equal(ids.length,87);assert.deepEqual(splitIds(ids).map(b=>b.length),[10,11,11,11,11,11,11,11]);
- assert.deepEqual(splitIds([...ids,'future-entry']).flat(),[...ids,'future-entry']);
+test('exact 87 entries, eight duration-balanced disjoint batches in inventory order; unweighted entries assigned',()=>{
+ const seconds=fullSeconds(),weight=id=>seconds.get(id)??DEFAULT_SECONDS,order=new Map(ids.map((id,i)=>[id,i]));
+ const batches=splitIds(ids,8,id=>seconds.get(id));
+ assert.equal(ids.length,87);assert.equal(seconds.has('syntax'),false);
+ assert.deepEqual([...batches.flat()].sort(),[...ids].sort());
+ assert.ok(batches.every(b=>b.length&&b.every((id,i)=>!i||order.get(b[i-1])<order.get(id))));
+ assert.deepEqual(splitIds(ids,8,id=>seconds.get(id)),batches,'Deterministic');
+ // Greedy invariant: a batch minus its lightest entry never exceeds the lightest batch (implies max <= max(top, total/8+top)).
+ const sums=batches.map(b=>b.reduce((s,id)=>s+weight(id),0));
+ batches.forEach((b,i)=>{if(b.length>1)assert.ok(sums[i]-Math.min(...b.map(weight))<=Math.min(...sums),'Batch '+(i+1)+' unbalanced');});
+ assert.equal(splitIds([...ids,'future-entry'],8,id=>seconds.get(id)).flat().filter(id=>id==='future-entry').length,1);
  assert.throws(()=>splitIds(['same','same'],1));
 });
 test('all batches complete, exact command/profile and strict aggregate PASS',()=>{
@@ -87,7 +95,9 @@ test('interruption after batch 1 leaves its independent evidence intact',()=>{
  unlinkSync(f.file);const r=aggregate(f.plan,f.output,ids);assert.equal(r.batches[0].status,'PASS');assert.equal(hash(readFileSync(path.join(f.output,'batch-1/summary.json'))),before);
 });
 test('inventory omissions/order changes rejected',()=>{
- const f=fixture();f.plan.batches[0].pop();assert.throws(()=>validatePlan(f.plan,ids));
+ const f=fixture(),swapped=structuredClone(f.plan),b=swapped.batches[0];[b[0],b[1]]=[b[1],b[0]];
+ f.plan.batches[0].pop();assert.throws(()=>validatePlan(f.plan,ids));
+ assert.throws(()=>validatePlan(swapped,ids),/inventory order/);
 });
 test('native existing Runner executes a selected original test with unchanged full flags',()=>{
  const output=path.join(temp,'native');mkdirSync(output);

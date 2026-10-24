@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE8_MERGED / PHASE9_PR_PENDING（2026-10-23）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED（2026-10-23）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -20,7 +20,7 @@
 | 6 | `SeasonStats` | `simSeason`／`applySeasonForm`／`defRuns`／`blankStat`／`addStatTotal`／`accStat`／`accLevelStat` 移入 `docs/src/engine/season-stats.js` 的類別；RNG 經 `game.js` 的 `R` 延遲注入；`game.js` 保留 7 個一行委派 | L3 / R3 | 完成；PR #15 併入 `dev`（`34ed23c`），見 §2h.8、§2h.9 |
 | 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策 `international-selection-policy.js`；參賽流程留在 `game.js` | L3 / R3 | 7-A 完成；PR #16 併入 `dev`（`67dcab9`），見 §2i.9。7-B 完成；PR #17 併入 `dev`（`52e4cdb`），見 §2i.16 |
 | 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 完成；PR #19 併入 `dev`（`7940e97`），見 §2j.8 |
-| 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 本機完成（§2k.7，`refactor/defense-position`） |
+| 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 完成；PR #20 併入 `dev`（`f4a2894`），見 §2k.8 |
 
 共通原則：
 
@@ -1526,6 +1526,12 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
 | Full | scratchpad worktree（與工作樹逐位元組一致，新檔以 `git add -N` 納入；`sourceFingerprint` `90a379687e33…`，與 Quick 相同；比較基準 `origin/main` `650e4dd`），4 組平行（21／22／22／22），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（290／835／351／318 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 1 次（`git diff 0cb3ccc` 工作樹），無問題 |
+
+### 2k.8 PR #20 合併 `dev`（2026-10-23）
+
+- PR #20（`refactor/defense-position` `9ce9454` → `dev`，以 Playwright 經 Brave 建立）以 merge commit `f4a289422e76591b17106ec07cf87c61170fa246` 併入 `dev`；合併後與 `9ce9454` 的差分只有 `BACKLOG.md`（`dev` 既有的 `8d4d682`），程式碼相同，未重新驗證。
+- 合併後 `dev` push 的 Quick CI（Tests #67，run `39977180332`）：PASS（3 分 56 秒）。
+- 本節以 `ci/full-balance` 分支的文件 commit 提交（第 10 期分支未開）。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
