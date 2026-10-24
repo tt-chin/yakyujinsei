@@ -1,4 +1,8 @@
-# 現行規格（正式公開 v1.13.3／開発版 v1.13.5）
+# 現行規格（正式公開 v1.13.3／開発版 v1.13.6）
+
+### 開発版1.13.6：表示フォント指定・角丸／影トークン
+
+本文フォント`--sans`を、読み込み済みのNoto Sans JPから始まる日本語字体列（Noto Sans JP→Hiragino Sans→Hiragino Kaku Gothic ProN→Yu Gothic→Meiryo→sans-serif）に修正する。従来はNoto Sans TC指定のため読み込み済みのNoto Sans JPが使われず、端末の繁体字フォントで表示されていた。base.cssの`:root`に角丸・影のトークンを追加して該当する字面値を置き換え、computed styleは変えない（§8）。共有画像のcanvas字体・色、ゲーム状態・RNGは変更しない。
 
 ### 開発版1.13.5：案内ダイアログの固定操作区画
 
@@ -234,6 +238,34 @@ v1.11.5の安全性修正：能力配分の行・Undo・全リセット・確定
 - schemaVersion不一致・壊れたJSONは全既定値へ、未知の値は該当項目だけ既定値へ戻す。ストレージ取得・保存の例外は捕捉し、タブ内で設定を継続する。保存失敗時だけ設定画面内に「この端末には設定を保存できませんでした。」と表示する。
 - 開始画面のseed欄下とゲーム中ボード右端から同一ダイアログを開く。選択を即時適用・保存し、閉じても維持する。「初期設定に戻す」は確認なしで既定値へ戻す。フォーカスを閉じ込め、Escapeで閉じて起点ボタンへ戻す。
 - `src/ui/preferences.js`が設定値・検証・保存・ダイアログを所有する。main.jsで設定適用後にengineを読み込む。themes.cssが色変数を所有し、jp-theme.cssは定義を持たない互換入口。base.css／ui-navigation.cssは意味別トークンを参照し、preferences.cssが文字倍率・密度・設定UIを所有する。
+- フォント（1.13.6）：base.cssが`--sans`（本文）・`--mono`（数値・seed）を所有する。各先頭字体はindex.htmlのGoogle Fonts読込（Noto Sans JP 400／500／700／900、IBM Plex Mono 500／700）と一致させ、display-preferences.testで検証する。
+- 角丸・影トークン（1.13.6、base.cssの`:root`、全テーマ共通）：`--radius-xs`4px、`--radius-sm`6px、`--radius-md`8px、`--radius-lg`10px、`--radius-xl`14px、`--radius-round`50%。複合値は`var(--radius-lg) var(--radius-lg) 0 0`のように組み合わせる。影は層の用途だけをトークン化し、`--shadow-overlay`（ダイアログ）、`--shadow-board`（記分板）、`--shadow-nav`（ナビ）、`--shadow-popover`（ボードメニュー）とする。単回の0／1／2／7／9／12px角丸、装飾的な光彩（`0 0 8px var(--amber)`）とinset影は字面値のまま。
+- 色トークンの用途（themes.css、4テーマ共通名。名称は球場・黒板の比喩を維持する）：
+
+| トークン | 用途 |
+|---|---|
+| `--bg` | ページ・開始画面・ナビの背景 |
+| `--panel`／`--panel2` | カード・入力・能力行の背景／ボタン・選択中・押下時の背景 |
+| `--edge` | 記分板・カード等の区切り線 |
+| `--control-edge` | ボタン・入力・選択肢の操作境界（対比3:1以上） |
+| `--chalk`／`--dim` | 本文／補助文字 |
+| `--amber` | 強調（球団名・数値・点灯ランプ） |
+| `--clay`／`--good`／`--bad`／`--blue` | カード見出し記号（通常／好結果／悪結果／情報）。good・badは上昇・下降表示にも使う |
+| `--body-glow`／`--start-glow` | 本文・開始画面背景の光彩 |
+| `--board-bg-start`／`--board-bg-end` | 記分板背景のグラデーション |
+| `--action-bg-start`／`--action-bg-end` | 操作区の背景 |
+| `--metric-bg`／`--metric-glow` | 指標セル・タグ・成績行の背景／指標数値の光彩 |
+| `--bar-bg`／`--bar-start`／`--potential-marker` | 能力バーの背景／塗り／潜在値マーカー |
+| `--lamp-bg` | ランプ消灯色 |
+| `--primary-button-start`／`-end`／`-text`／`-edge` | 主要ボタン（`.btn.main`）の背景・文字・枠 |
+| `--warning-edge` | 警告ボタンの枠 |
+| `--dice-bg`／`-shadow`／`-stitch`／`-six` | サイコロの背景・影・縫い目・6の目 |
+| `--overlay-bg` | ダイアログの背景幕・年俸内訳パネル |
+| `--board-shadow`／`--nav-shadow`／`--shadow-color` | 影トークンの色（`--shadow-board`／`--shadow-nav`／`--shadow-overlay`・`--shadow-popover`） |
+| `--button-detail`／`--primary-button-detail` | ボタン／主要ボタン内の補足文字（`.btn small`）。button-detailは対比検証の対象 |
+| `--focus-ring` | キーボードfocusの輪郭（`:focus-visible`、対比3:1以上） |
+| `--disabled-opacity` | 無効なボタン・能力行の不透明度 |
+
 - 非同期起動中は開始ボタンをdisabledとし、engine初期化後にmain.jsから有効化する。読み込み中のクリックを未登録handlerへ送らない。
 - htmlのdata-theme／data-font-size／data-densityだけを切り替える。S、URL、RNG、キャリア記録へ保存しない。ゲームの描画・選択・board処理を再実行せず、現在タブ・操作DOM・listener・配分途中状態を保持する。
 - `getDisplayPreferences().theme`が後続画像テーマ機能用の公開インターフェース。変更通知は`yakyujinsei:displaychange`（detailは設定のコピー）。v1.7.0ではCanvasのimageColor・画像レイアウトを変更しない。

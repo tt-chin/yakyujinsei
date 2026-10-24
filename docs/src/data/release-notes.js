@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.13.6｜2026/10/24",
+    "lines": [
+      "- 画面の文字を日本語フォントで表示するよう修正。"
+    ]
+  },
+  {
     "title": "1.13.5｜2026/10/24",
     "lines": [
       "- 「遊び方」「更新履歴」の見出しと閉じるボタンを固定。",
