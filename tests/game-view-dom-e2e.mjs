@@ -26,6 +26,7 @@ const server=createServer(async(req,res)=>{
     let content=baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
+      if(!baseline)content+='\nwindow.__expectIncomeDisplay=true;';
       if(negativeControl&&!baseline)content+='\nconst __negativeDivider=divider;divider=function(t){__negativeDivider(t+\' \');};';
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
@@ -42,7 +43,7 @@ async function career(variant,{seed,pos,balanced},viewport,stopAt=-1){
   page.on('pageerror',error=>errors.push(`${variant} ${seed}: ${error.message}`));
   page.on('console',message=>{if(message.type()==='error')errors.push(`${variant} ${seed}: ${message.text()}`);});
   try{
-    await page.goto(`${local}/${variant==='baseline'?'baseline/':''}?seed=${seed}`);await page.locator('#btn-start').waitFor();
+    await page.goto(`${local}/${variant==='baseline'?'baseline/':''}?seed=${seed}`);await page.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
     await page.locator(`#seg-pos [data-v="${pos}"]`).click();await page.locator('#in-name').fill('画面回帰');await page.locator('#btn-start').click();
     return await page.evaluate(async({capture,action,balanced,stopAt})=>{
       const snap=new Function('return '+capture)(),choose=new Function('return '+action)(),steps=[];

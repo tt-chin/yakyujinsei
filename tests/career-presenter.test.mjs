@@ -34,6 +34,8 @@ const fixtures={
 for(const [name,state] of Object.entries(fixtures))test(name+': presenter equals 097e212 builders',()=>{
   const presenter=new CareerPresenter({getState:()=>state,labels,...helpers});
   const expected=oldModels(structuredClone(state));
+  const values=[['pay','年俸・報酬',Number(state.careerBaseSalary||0)+Number(state.corpIncome||0)],['incentive','出来高',Number(state.careerIncentive||0)],['signing','契約金・支度金',Number(state.careerSigningBonus||0)+Number(state.careerDevelopmentStipend||0)],['buyout','契約解除補償金',Number(state.careerBuyout||0)],['outside','スポンサー収入',Number(state.careerOutsideIncome||0)],['total','生涯総収入',Number(state.careerEarnings||0)]];
+  expected.career=Object.freeze({...expected.career,contract:Object.freeze({...expected.career.contract,incomeRows:Object.freeze(values.map(([key,label,value])=>Object.freeze({key,label,value:helpers.fmtMoney(value)})))})});
   for(const method of ['player','career','ability','traits','record'])assert.deepEqual(shape(presenter[method]()),shape(expected[method]),method);
 });
 test('state is read on every call (new career after S is reassigned)',()=>{

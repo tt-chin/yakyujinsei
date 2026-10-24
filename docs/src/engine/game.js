@@ -1,4 +1,5 @@
 import { VERSION } from '../config.js';
+import {incomeSummary} from '../ui/income-summary.js';
 import { Rng } from './rng.js';
 import { CareerSession } from './career-session.js';
 import { SeasonStats } from './season-stats.js';
@@ -1755,7 +1756,7 @@ function endGame(reason){
   const cur=lv.st==='married'?`妻 ${lv.partner}（子ども${lv.kids}人）`:lv.st==='dating'?`交際中 ${lv.partner}（${lv.dyrs||0}年）`:lv.st==='divorced'?'離婚':'独身';
   const exStr=exes.length?`｜前妻 ${exes.map(e=>`${e?.name||''}（${Number(e?.kids)||0}）`).join('、')}`:'';
   const totKids=(Number(lv.kids)||0)+exes.reduce((t,e)=>t+(Number(e?.kids)||0),0);
-  card('','キャリアプロフィール',`特性：${tr.join(' ')||'（なし）'}<br>家族：${cur}${exStr}｜子ども合計 ${totKids} 人${lv.affairs?`｜不倫 ${lv.affairs}(${lv.caught})`:''}<br>日本代表出場：${S.intlCount}大会｜キャリア通算の大故障：${S.bigInj}回${S.pos==='P'?`｜トミー・ジョン手術：${S.tjCount}回`:''}<br>固定年俸累計：${fmtMoney(S.careerBaseSalary||0)}｜契約金・育成支度金累計：${fmtMoney((S.careerSigningBonus||0)+(S.careerDevelopmentStipend||0))}<br>出来高累計：${fmtMoney(S.careerIncentive||0)}｜買い取り累計：${fmtMoney(S.careerBuyout||0)}<br>スポンサー収入累計：${fmtMoney(S.careerOutsideIncome||0)}<br>社会人給与累計：${fmtMoney(S.corpIncome||0)}<br>生涯総収入：<b class="hl" style="font-size:18px">${fmtMoney(Math.round(S.careerEarnings))}</b>`);
+  card('','キャリアプロフィール',`特性：${tr.join(' ')||'（なし）'}<br>家族：${cur}${exStr}｜子ども合計 ${totKids} 人${lv.affairs?`｜不倫 ${lv.affairs}(${lv.caught})`:''}<br>日本代表出場：${S.intlCount}大会｜キャリア通算の大故障：${S.bigInj}回${S.pos==='P'?`｜トミー・ジョン手術：${S.tjCount}回`:''}<dl class="income-summary">${incomeSummary(S).map(row=>`<dt>${row.label}</dt><dd${row.key==='total'?' class="hl"':''}>${fmtMoney(row.amount)}</dd>`).join('')}</dl>`);
   /* ファンコメント。 */
   const pool=FAN[best].slice(); const picks=[];
   while(picks.length<3&&pool.length)picks.push(pool.splice(Math.floor(R()*pool.length),1)[0]);
@@ -2087,10 +2088,20 @@ function shareImage(evals,out){
   }
 
   c.fillStyle=imageColor.accent; c.font='bold 16px sans-serif';
-  c.fillText('固定年俸 '+fmtMoney(S.careerBaseSalary||0)+'　出来高 '+fmtMoney(S.careerIncentive||0),PAD,y); y+=26;
-  c.fillText('契約金・支度金 '+fmtMoney((S.careerSigningBonus||0)+(S.careerDevelopmentStipend||0))+'　買い取り '+fmtMoney(S.careerBuyout||0),PAD,y); y+=26;
-  c.fillText('社会人給与 '+fmtMoney(S.corpIncome||0)+'　生涯総収入 '+fmtMoney(Math.round(S.careerEarnings)),PAD,y); y+=26;
-  c.fillText('スポンサー収入 '+fmtMoney(S.careerOutsideIncome||0),PAD,y); y+=26;
+  const income=incomeSummary(S),incomeGap=24,incomeWidth=(W-PAD*2-incomeGap)/2;
+  function incomeCell(entry,x,width){
+    const text=entry.label+' '+fmtMoney(entry.amount);
+    let size=16;c.font='bold '+size+'px sans-serif';
+    while(c.measureText(text).width>width&&size>6){size-=0.25;c.font='bold '+size+'px sans-serif';}
+    c.fillText(text,x,y);
+  }
+  incomeCell(income[0],PAD,incomeWidth);incomeCell(income[1],PAD+incomeWidth+incomeGap,incomeWidth);y+=26;
+  incomeCell(income[2],PAD,incomeWidth);incomeCell(income[3],PAD+incomeWidth+incomeGap,incomeWidth);y+=26;
+  incomeCell(income[4],PAD,W-PAD*2);y+=26;
+  incomeCell(income[5],PAD,W-PAD*2);y+=26;
+
+
+
   c.fillStyle=imageColor.dim; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
   c.textAlign='right'; c.fillText(VERSION,W-PAD,H-40); c.textAlign='left';
 
