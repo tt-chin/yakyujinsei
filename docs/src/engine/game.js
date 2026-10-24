@@ -1055,11 +1055,22 @@ function resumeProfessionalSeason(entry){
   if(entry.phase==='CHAMPIONSHIP'){captureSeasonChampionship(S);entry.phase='TJ_ACCRUAL';}
   if(entry.phase==='TJ_ACCRUAL'){if(S.pos==='P'&&S.seasonFactor>0)tjAccrue();entry.phase='PIPELINE_PREPARED';}
   if(entry.phase==='PIPELINE_PREPARED'){
-    entry.phase='PIPELINE_STARTED';tjGamble(()=>demotionAudit(()=>tradeCheck(()=>maybeIntl(()=>nextStep()))));entry.phase='PIPELINE_WAIT';return;
+    entry.phase='PIPELINE_STARTED';runSeasonPipeline(0);entry.phase='PIPELINE_WAIT';return;
   }
   if(resumeSeasonEnd())return;
   if(restorePendingChoice())return;
   throw new Error('SEASON_CONTINUATION_AMBIGUOUS');
+}
+function runSeasonPipeline(step){
+  const steps=['TJ_GAMBLE','DEMOTION_AUDIT','TRADE_CHECK','INTL_POST'];
+  if(step>=steps.length)return nextStep();
+  const cont=()=>runSeasonPipeline(step+1);
+  switch(steps[step]){
+    case 'TJ_GAMBLE':return tjGamble(cont);
+    case 'DEMOTION_AUDIT':return demotionAudit(cont);
+    case 'TRADE_CHECK':return tradeCheck(cont);
+    case 'INTL_POST':return maybeIntl(cont);
+  }
 }
 function awards(bucket,st){
   if(!LV[S.lv].top||S.seasonFactor===0)return;

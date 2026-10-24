@@ -27,7 +27,11 @@ const oldSeason=seasonBody(prior),newSeason=seasonBody(current);
 assert.equal(newSeason.slice(newSeason.indexOf(' const st=simSeason'),newSeason.indexOf('  Object.assign(continuation,')),
  oldSeason.slice(oldSeason.indexOf(' const st=simSeason'),oldSeason.indexOf('  awards(bucket,st);')),'full native season calculations, RNG and accumulation unchanged');
 const continuationBody=productionFunction('resumeProfessionalSeason',current);
-for(const call of ['awards(entry.bucket,entry.st)','recordSalaryEvaluation(entry.st)','captureSeasonChampionship(S)','tjAccrue()','tjGamble(()=>demotionAudit(()=>tradeCheck(()=>maybeIntl(()=>nextStep()))))'])assert(continuationBody.includes(call),'required original continuation '+call);
+for(const call of ['awards(entry.bucket,entry.st)','recordSalaryEvaluation(entry.st)','captureSeasonChampionship(S)','tjAccrue()','runSeasonPipeline(0)'])assert(continuationBody.includes(call),'required original continuation '+call);
+// Phase 11-A: the post-season chain runs through runSeasonPipeline; step order and dispatch targets stay the original chain.
+const pipelineBody=productionFunction('runSeasonPipeline',current);
+assert(pipelineBody.includes("const steps=['TJ_GAMBLE','DEMOTION_AUDIT','TRADE_CHECK','INTL_POST'];"),'post-season step order unchanged');
+for(const call of ["case 'TJ_GAMBLE':return tjGamble(cont);","case 'DEMOTION_AUDIT':return demotionAudit(cont);","case 'TRADE_CHECK':return tradeCheck(cont);","case 'INTL_POST':return maybeIntl(cont);",'if(step>=steps.length)return nextStep();','const cont=()=>runSeasonPipeline(step+1);'])assert(pipelineBody.includes(call),'required pipeline dispatch '+call);
 const hook=`
 window.__effortInputs=[];window.__effortSeasons=[];window.__effortTJ=[];
 const observedAcc=accLevelStat;accLevelStat=(lv,st)=>{window.__effortSeasons.push({year:S.year,lv,role:S.role,effort:S.effort,st:JSON.parse(JSON.stringify(st)),calls:window.__stage6.get().rng.length});return observedAcc(lv,st);};

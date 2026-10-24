@@ -1648,9 +1648,17 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | Full | scratchpad worktree（`git diff HEAD --binary` 與工作樹一致，新檔以 `git add -N` 納入；`sourceFingerprint` `15704f35e621…`，與 Quick 相同；比較基準 `origin/main` `4d2fcfd`），4 組平行（23／19／24／23），89 入口不重複：**89 PASS／0 FAIL／0 SKIP／0 BLOCKED**（550／296／489／384 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 1 次（`git diff HEAD` 工作樹），無問題；另以四種 policy 輸出擾動確認 fixture 會 FAIL |
 
-- 未完成：push、PR → `dev`（§2l.5，待 PR #21 與 `ci/pitching-split` 合併後 rebase）、CI。
+- 未完成：push、PR → `dev`（§2l.5，待 PR #21 與 `ci/pitching-split` 合併後 rebase）、CI。→ 已完成，見 §2l.8。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；計畫中，實作未批准）
+### 2l.8 PR #23 合併 `dev`（2026-10-24）
+
+- PR #22 合併（`136aa2c`）後，以 `git rebase --onto origin/dev ef78224` 將 8 個 commit 移到 `dev`，無衝突；與 rebase 前相比只差 `2dea0bf` 帶入的文件。rebase 後 `315f3ec` 的本機 Quick：67 PASS／0 FAIL。另加 `d36799b`（PR #22 合併紀錄，CI 計畫 §11.7）。
+- PR #23（`refactor/ability-evaluation` `d36799b` → `dev`，9 commits，以 Playwright 經 Brave 建立）以 merge commit `2e690969a6db14826aa87e85e94e78819acd8e17` 併入 `dev`；tree 與 `d36799b` 相同。
+- 合併後 `dev` push 的 Quick CI（Tests #77，run `40070955988`）：success，tests job 4 分 8 秒，`{"PASS":67,"FAIL":0,"SKIP":0,"BLOCKED":0}`（測試 199 秒）；Full 系列 job 依事件條件跳過。
+- 未驗證：→ `main` PR 自動觸發的 Full。
+- 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
+
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1671,6 +1679,17 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
   - `championship-intl-e2e.mjs:22`：執行時以 `tjGamble=c=>c()` 等替換五個全域名稱再呼叫 `proSeason()`。
   - `salary-flow` 計數：不新增、不移動 RNG 呼叫點，不變。`stage10-risk-e2e` 的包裝名單不含鏈上五個名稱。
 - 文字耦合（11-B，§3.11 已列，各批重掃）：`draft-signing-policy:87`、`career-movement-policy:50`、`salary-flow:30`、`npb-return-ui:50–51`、`event-integration:34`、`kbo-renewal-floor:47`、`championship-intl:73,76`、`fixed-seed-v160:22`；執行時替換全域名稱的 e2e：`stage10-risk-e2e`、`contract-salary-e2e`、`npb-return-e2e`、`smallschool-c-e2e`、`trait-system-e2e`。
+- 11-A 重掃（2026-10-24，`e725fd6`；與 `2e69096` 的 `game.js` 相同）：
+  - 上列錨點 `:232`／`:510`／`:871`／`:887`／`:1046`／`:1057`／`:2458` 皆未移動。`function awards(` 在 `:1063`，緊接 `resumeProfessionalSeason` 結尾 `:1062`。
+  - `maybeIntl` 位於 overlay 段（`:2138` 起），只是縮排，不在 block 內，屬模組頂層，可由頂層函式以名稱呼叫。
+  - `productionFunction`（`tests/retirement-hof-test-support.mjs:13`）切到下一個 `/\n\s{0,2}function \w+\(/`。新函式插在 `:1062`／`:1063` 之間時，`resumeProfessionalSeason` 的擷取正好止於新函式，新函式本身也能單獨擷取；新函式本體內不可有以 0–2 格縮排開頭的 `function` 行。
+  - §2m.1 未列的耦合，在上述插入點下不受影響：`trait-policy.test.mjs:106`（`awards(` 切到 `^function maybeIntl(`／`let applyPromotionSalary=`）、`championship-intl.test.mjs:45`（`  function intlEvents(` 切到 `  function maybeIntl(done)`）、`docs/designs/pitcher-awards-d2-analysis.mjs:54`（`awards(` 切到 `function maybeIntl(`）。若插在 `awards` 與 `maybeIntl`／`applyPromotionSalary` 之間，三處都會納入新函式。
+  - `full-power-pitching.test.mjs:17` 的 vm 將 `tjGamble` 替換為 `()=>{}`（不呼叫後續），此 harness 只驗到 `tjGamble`，無法驗後續各層。
+  - `verify-modularization`、`information-architecture` 沒有 `^function` 計數斷言。
+- 11-A 開工重掃（2026-10-24，`origin/dev` 已前進至 `ec903fd`（PR #24／#25），以 merge `64d74cd` 併入本分支；`game.js` 2684 行）：
+  - `2e69096..ec903fd` 的 `game.js` 差分為檔首新增 `import {incomeSummary}` 一行、`endGame` 文字與 `shareImage`（新增 2 格縮排的巢狀 `function incomeCell(`），不涉 11-A。
+  - 錨點皆下移 1 行：`tjGamble:233`、`demotionAudit:872`、`tradeCheck:888`、`resumeProfessionalSeason:1047`、鏈 `:1058`、結尾 `:1063`、`function awards(:1064`、`maybeIntl:2469`。插入點限制不變（`:1063`／`:1064` 之間）。
+  - 以 `runSeasonPipeline`／`resumeProfessionalSeason`／鏈字串／`PIPELINE_*`／鄰接函式名重掃 `tests/`、`scripts/`、`tools/`、`docs/`：耦合與上列相同，無新增（`award-journal-native.test:27`、`tools/development-b/award-runtime-support.mjs:37` 自 `function awards(` 起擷取，不受影響）。
 
 ### 2m.2 設計
 
@@ -1685,6 +1704,24 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 新增 `function runSeasonPipeline(step)`（暫名，§2m.6①）：步驟名單 `['TJ_GAMBLE','DEMOTION_AUDIT','TRADE_CHECK','INTL_POST']` 寫在函式內，`step` 超出名單時呼叫 `nextStep()`，否則以 `switch` 呼叫 `tjGamble`／`demotionAudit`／`tradeCheck`／`maybeIntl`，傳入 `()=>runSeasonPipeline(step+1)`。
 - `:1057` 的鏈改為 `runSeasonPipeline(0)`；`entry.phase` 的設定位置與值不變。
+- 插入點（硬性限制，§2m.1 重掃）：緊接 `resumeProfessionalSeason` 之後、`function awards(` 之前。
+- 已批准的差分形狀（2026-10-24；CRLF）：
+
+  ```js
+  function runSeasonPipeline(step){
+    const steps=['TJ_GAMBLE','DEMOTION_AUDIT','TRADE_CHECK','INTL_POST'];
+    if(step>=steps.length)return nextStep();
+    const cont=()=>runSeasonPipeline(step+1);
+    switch(steps[step]){
+      case 'TJ_GAMBLE':return tjGamble(cont);
+      case 'DEMOTION_AUDIT':return demotionAudit(cont);
+      case 'TRADE_CHECK':return tradeCheck(cont);
+      case 'INTL_POST':return maybeIntl(cont);
+    }
+  }
+  ```
+
+  `:1057` 改為 `entry.phase='PIPELINE_STARTED';runSeasonPipeline(0);entry.phase='PIPELINE_WAIT';return;`。
 - 等價性：原鏈與新分派的呼叫順序、後續呼叫次數、回傳值（皆捨棄）、同步完成時 `nextStep` 早於 `PIPELINE_WAIT` 的時序皆相同。
 
 **11-B：年度層結果回報（各批開始前另立細部）**
@@ -1705,14 +1742,14 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 1. `full-power-pitching-e2e.mjs:30`：鏈字串改為要求 `runSeasonPipeline(0)`，並另以 `productionFunction('runSeasonPipeline',current)` 斷言步驟名單順序與四個 `case` 的呼叫對象（§2m.6③）。
 2. `championship-intl.test.mjs:76`：錨點 `tjGamble(()=>demotionAudit` 改為 `runSeasonPipeline(0)`，維持「冠軍快照在後處理之前」的順序斷言。
 3. `full-power-pitching.test.mjs:19`：比照 `resumeProfessionalSeason` 的條件式，`source.includes('function runSeasonPipeline(')` 時一併取出（舊 SHA 不含此函式）。
-4. 新增行為 fixture（放在既有入口，不增加 Full 入口數）：以 vm 取出現行與基準 SHA 的 `resumeProfessionalSeason`（＋`runSeasonPipeline`），以記錄呼叫順序的 stub 執行，比較兩側的呼叫序列、後續呼叫次數與 `entry.phase` 變化，涵蓋「全部直接續行」「某層延遲續行（模擬 `choose`）」「某層拋出例外」。
+4. 新增行為 fixture（放在既有入口，不增加 Full 入口數）：以 vm 取出現行與基準 SHA 的 `resumeProfessionalSeason`（＋`runSeasonPipeline`），以記錄呼叫順序的 stub 執行，比較兩側的呼叫序列、後續呼叫次數與 `entry.phase` 變化，涵蓋「全部直接續行」「某層延遲續行（模擬 `choose`）」「某層拋出例外」。基準以 `git show 2e69096:docs/src/engine/game.js` 取得（比照 `trait-policy.test` 的 `git show 9fcb24a`）；不沿用 `:17` 的 harness（`tjGamble` 不續行），另建記錄呼叫的 context；vm 原始碼前置 `'use strict';`（sloppy vm 會把 block 內函式提升到全域，掩蓋作用域錯誤）。
 5. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
 
 11-B：各批的斷言變更於該批細部計畫列出。
 
 ### 2m.4 驗證（L3／R3）
 
-比較基準：實作開始時的 `origin/dev`（第 10 期合併後），解析為完整 SHA；允許差分：無。
+比較基準：實作開始時的 `origin/dev`（第 10 期合併後），解析為完整 SHA；允許差分：無。11-A 預定 `2e690969a6db14826aa87e85e94e78819acd8e17`（PR #23 合併）；開工時若 `origin/dev` 已前進，改用新 SHA 並重掃。開工時 `origin/dev` 已前進，11-A 實際基準改為 `ec903fd3cac9f62a457dbed18effe8065510679d`（PR #25 合併；重掃見 §2m.1），§2m.3-4 fixture 的 `git show` 亦用此 SHA。
 
 1. `check-syntax`；相關單元：`full-power-pitching`（.test）、`championship-intl`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`、`global-contract-market`。
 2. `game-view-dom-e2e --baseline=<基準>`（直接執行）：8 生涯每一步 DOM／`S`／RNG 完全一致；`full-power-pitching-e2e`、`championship-intl-e2e`、`stage10-risk-e2e`；Quick。
@@ -1737,6 +1774,33 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 4. 11-B 分批順序：照 §2m.2 的 1→4（建議；業餘選路分支最單純，`movement`／`phasePre` 牽涉最廣放最後）或其他。
 
 使用者決定（2026-10-24）：四點皆照建議（①`runSeasonPipeline`／`reportFlowOutcome`；②`領域_結果` 大寫蛇形；③要求 `runSeasonPipeline(0)`＋斷言步驟名單與 `case` 對象；④分批順序 1→4）。實作待第 10 期併入 `dev` 後另行批准。
+
+使用者決定（2026-10-24，PR #23 合併後）：批准 §2m.2 的 11-A 差分形狀與 §2m.3 的測試變更（含插入點限制、fixture 另建 context＋`'use strict'`、基準 `2e69096`）；實作於下一個 session 在 `refactor/flow-state-machine` 進行。reviewer 於實作後執行；push／PR 另批。
+
+### 2m.7 11-A 實施結果（2026-10-24，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `64d74cd`＋未 commit 變更，實作 commit `6d70943`）
+
+- 開工：`origin/dev` 已前進至 `ec903fd`，以 merge `64d74cd` 併入，基準改用 `ec903fd`（§2m.4），重掃無新增耦合（§2m.1）。
+- 實作：`game.js`（CRLF，2684→2695 行，CR 行數＝總行數）`:1058` 鏈改為 `runSeasonPipeline(0)`，`:1064`–`:1074` 新增 `runSeasonPipeline`（與 §2m.2 已批准形狀逐字相同），位於 `resumeProfessionalSeason` 結尾與 `function awards(` 之間。
+- 測試變更（§2m.3）：
+  - `full-power-pitching-e2e.mjs:30`：鏈字串改為 `runSeasonPipeline(0)`；`:31`–`:34` 以 `productionFunction('runSeasonPipeline',current)` 斷言步驟名單、四個 `case` 呼叫對象、終端 `nextStep()` 與 `step+1` 續行。
+  - `championship-intl.test.mjs:76`：錨點改為 `runSeasonPipeline(0)`。
+  - `full-power-pitching.test.mjs:19`：含 `function runSeasonPipeline(` 時一併載入 vm。
+  - 行為 fixture（`full-power-pitching.test.mjs`，11 案 `P11A-*`；53→64 案，Full 入口數不變）：現行與 `ec903fd` 各自以 `'use strict';`＋`resumeProfessionalSeason`（＋`runSeasonPipeline`）建 vm，自 `entry.phase='PIPELINE_PREPARED'` 執行；五個 stub 記錄 `[名稱, entry.phase]`。情境：全部直接續行 1、四層各自延遲續行 4（回傳後再續行）、五層各自拋出 5，以 JSON 字串比較兩側並設長度守衛；另 1 案以字面值斷言直接續行的完整序列（五次呼叫皆在 `PIPELINE_STARTED`，回傳後 `PIPELINE_WAIT`）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（176 檔） |
+| 相關單元 | `full-power-pitching`（64／0）、`championship-intl`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`、`global-contract-market` 皆 PASS |
+| `game-view-dom-e2e --baseline=ec903fd…` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（直接執行，末行確認基準） |
+| `full-power-pitching-e2e --part=fixtures` | 30 PASS／0 FAIL |
+| `championship-intl-e2e --ui-only` | PASS，Console／JS-CSS 404：0（執行時替換鏈上五個全域名稱，驗證分派於執行當下查名稱） |
+| `stage10-risk-e2e` | 57 PASS／0 FAIL（`errors` 為注入的 `S10_FAULT_*`） |
+| 負控制 | scratchpad worktree（套用未 commit 差分後各改一處）：①交換 `DEMOTION_AUDIT`／`TRADE_CHECK`：10 案 FAIL、②`TRADE_CHECK` 續行改為 `()=>{}`：8 案 FAIL、③`step+1`→`step+2`：10 案 FAIL；三者 FAIL 皆只在 `P11A-*`，既有 53 案皆通過（文字斷言在另一檔，不遮蔽）；還原後 0 FAIL |
+| Quick | 68 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（`git diff` 與工作樹一致；`sourceFingerprint` `8d4143c5b3d3…`，與 Quick 相同；比較基準 `origin/main` `04decb0`），4 組平行（24／22／24／22），92 入口不重複：**92 PASS／0 FAIL／0 SKIP／0 BLOCKED**（606／359／622／433 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（工作樹差分），無問題；另確認三處文字切片（`trait-policy.test:106`、`championship-intl.test:45`、`pitcher-awards-d2-analysis:54`）與 `ec903fd` 逐 byte 相同 |
+
+- 未完成：push、PR → `dev`、CI（§2m.5，另批）。11-B 各批細部計畫待開始前另立。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
