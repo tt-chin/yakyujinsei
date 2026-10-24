@@ -1390,20 +1390,20 @@ function handleDemotion(o,path,idx){
       if(S.org==='MiLB'){
         if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP()))){
           const candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:'NPB1',contractMult:1}),annualSalary=candidate.annualSalary;
-          alts.push({t:'NPB一軍への移籍',s:`NPB移籍契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('NPB','NPB1',undefined,undefined,undefined,undefined,{annualSalary,candidate});advance();}});
+          alts.push({t:'NPB一軍への移籍',s:`NPB移籍契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('NPB','NPB1',undefined,undefined,undefined,undefined,{annualSalary,candidate});reportFlowOutcome({kind:'DEMOTION_TRANSFER_NPB1'});}});
         }else if(o>=LV.NPB2.min&&chance(50)){
           const candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:'NPB2',contractMult:1}),annualSalary=candidate.annualSalary;
-          alts.push({t:'日本の二軍（支配下）へ移籍',s:`NPB二軍（支配下）契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('NPB','NPB2',undefined,undefined,undefined,undefined,{annualSalary,candidate});advance();}});
+          alts.push({t:'日本の二軍（支配下）へ移籍',s:`NPB二軍（支配下）契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('NPB','NPB2',undefined,undefined,undefined,undefined,{annualSalary,candidate});reportFlowOutcome({kind:'DEMOTION_TRANSFER_NPB2'});}});
         }
       }else if(S.org==='NPB'&&o>=LV.CPBL1.min&&chance(70)){
         const annualSalary=salaryCandidate({sourceLevel:S.lv,targetLevel:'CPBL1',contractMult:1}).annualSalary;
-        alts.push({t:'台湾プロ野球からのオファーを受ける',s:`台湾プロ野球一軍契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('CPBL','CPBL1',undefined,undefined,undefined,undefined,{annualSalary});advance();}});
+        alts.push({t:'台湾プロ野球からのオファーを受ける',s:`台湾プロ野球一軍契約｜年俸${fmtMoney(annualSalary)}`,f:()=>{buyoutRemaining();signTo('CPBL','CPBL1',undefined,undefined,undefined,undefined,{annualSalary});reportFlowOutcome({kind:'DEMOTION_TRANSFER_CPBL1'});}});
       }
       if(alts.length){
         card('bad','降格通告',`成績が基準に届かず、球団は<b class="dn">${LV[targetLevel].n}</b>への降格を通告。しかし同時に、他リーグからオファーが届いた。`);
         choose('降格を受け入れるか、新天地を選ぶか？',[
-          {t:LV[targetLevel].n+'への降格を受け入れる',main:true,f:()=>{const fromLv=S.lv;S.lv=targetLevel;applyDemotionSalary(fromLv,targetLevel);board(2);advance();}},...alts]);
-      }else{ const fromLv=S.lv;S.lv=targetLevel;applyDemotionSalary(fromLv,targetLevel);card('bad','降格通告',`成績が基準に届かず、<b class="dn">${LV[targetLevel].n}</b>への降格が決まった。`); board(2); advance(); }
+          {t:LV[targetLevel].n+'への降格を受け入れる',main:true,f:()=>{const fromLv=S.lv;S.lv=targetLevel;applyDemotionSalary(fromLv,targetLevel);board(2);reportFlowOutcome({kind:'DEMOTION_ACCEPTED'});}},...alts]);
+      }else{ const fromLv=S.lv;S.lv=targetLevel;applyDemotionSalary(fromLv,targetLevel);card('bad','降格通告',`成績が基準に届かず、<b class="dn">${LV[targetLevel].n}</b>への降格が決まった。`); board(2); reportFlowOutcome({kind:'DEMOTION_ACCEPTED'}); }
     }
     else outOfOrg(o);
   };
@@ -1416,17 +1416,17 @@ function handleDemotion(o,path,idx){
         if(!S.traits.cancer&&!S.traits.franchise&&!S.traits.intlace){ S.traits.cancer=true;
           card('bad','隠し特性解放：チームの癌','契約条項を持ち出して降格を拒否。首脳陣は呆れ、仲間も陰でざわつく――居場所は守ったが、ロッカールームの信頼を失った。'); }
         else card('info','降格を拒否する','契約条項を盾に一軍残留を勝ち取った。球団はこの一件を忘れない。');
-        board(1); advance(); }},
-      {t:'このまま現役を引退する',warn:true,s:'現役として名誉ある引退をする',f:()=>{buyoutRemaining();daibaFarewell(()=>endGame('降格を受け入れず、'+S.year+' 年に引退を発表。'));}}]);
+        board(1); reportFlowOutcome({kind:'DEMOTION_REFUSED'}); }},
+      {t:'このまま現役を引退する',warn:true,s:'現役として名誉ある引退をする',f:()=>{buyoutRemaining();daibaFarewell(()=>reportFlowOutcome({kind:'DEMOTION_RETIRED',reason:'降格を受け入れず、'+S.year+' 年に引退を発表。'}));}}]);
   } else if(S.age>=33){
     choose('球団面談：成績が現レベルの最低基準にも届いていない',[
       {t:acceptText,f:doDemote},
-      {t:'引退を選択する',warn:true,s:'現役として名誉ある引退をする',f:()=>{buyoutRemaining();daibaFarewell(()=>endGame('下位リーグへの降格を拒み、'+S.year+' 年に引退を発表。'));}}]);
+      {t:'引退を選択する',warn:true,s:'現役として名誉ある引退をする',f:()=>{buyoutRemaining();daibaFarewell(()=>reportFlowOutcome({kind:'DEMOTION_RETIRED',reason:'下位リーグへの降格を拒み、'+S.year+' 年に引退を発表。'}));}}]);
   } else doDemote();
 }
 function retireBelowActiveMinimum(){
   card('bad','現役続行を断念','総合力が現役続行の最低基準を下回ったため、ユニフォームを脱ぐことを決断した。');
-  endGame(`総合力が現役続行の最低基準を下回り、${S.year}年に現役を引退した。`);
+  reportFlowOutcome({kind:'ACTIVE_MINIMUM_RETIRED',reason:`総合力が現役続行の最低基準を下回り、${S.year}年に現役を引退した。`});
 }
 /* 長期契約/短期契約 選択処理。 */
 function termParams(d,lv){ /* 長期契約 >2 年、短期契約 1-2 年;年齢大または成績爛 → 不十分格長期契約。 */
@@ -2314,6 +2314,13 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
       case 'AMATEUR_SIGNED_MILB':
       case 'AMATEUR_DRAFTED':return advance();
       case 'AMATEUR_RETIRED':return endGame(outcome.reason);
+      case 'DEMOTION_TRANSFER_NPB1':
+      case 'DEMOTION_TRANSFER_NPB2':
+      case 'DEMOTION_TRANSFER_CPBL1':
+      case 'DEMOTION_ACCEPTED':
+      case 'DEMOTION_REFUSED':return advance();
+      case 'DEMOTION_RETIRED':
+      case 'ACTIVE_MINIMUM_RETIRED':return endGame(outcome.reason);
     }
     throw new Error('UNKNOWN_FLOW_OUTCOME:'+outcome.kind);
   }
