@@ -254,7 +254,7 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 
 ## 10. CI 環境鎖定：Playwright container（`CI-ENV-PIN-01`，計畫，2026-10-24）
 
-**狀態：已實作（`e12a6f1`、`ec54253`），CI Full／Quick／linux-smoke 皆 PASS（§10.6）；PR 未建立。**
+**狀態：已實作（`e12a6f1`、`ec54253`），CI Full／Quick／linux-smoke 皆 PASS（§10.6）；PR #21 併入 `dev`（`7fbfde4`），`dev` push Quick PASS（§10.7）。**
 
 ### 10.1 問題
 
@@ -327,6 +327,13 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 - wall time：#68 21分47秒 → 18分24秒（#69）／18分43秒。安裝變動已消除；剩餘瓶頸為 batch 1 `full-power-pitching-e2e`（CI 809–990 秒，跨 run 差異約 ±10%），後續見 BACKLOG `CI-PITCHING-E2E-01`。
 - 測試秒數在 runner 間差異明顯（如 batch 5：515／422／622），單次比較不足以判定 container 對測試本身速度的影響。
 - 未驗證：→ `main` PR 自動觸發的 Full、`dev` push 的 Quick（事件條件未變）。
+
+### 10.7 PR #21 合併 `dev`（2026-10-24）
+
+- PR #21（`ci/env-pin` → `dev`）以 merge commit `7fbfde4` 合併；其 tree 與 `a879da0` 相同（`ci/full-balance` 的 LPT 分批 `cdf0a25` 亦隨此 PR 進入 `dev`）。
+- `dev` push：Tests Run40068894037（#75，`7fbfde4`），mode quick，success；tests job 3分23秒，`{"PASS":67,"FAIL":0,"SKIP":0,"BLOCKED":0}`（測試 155 秒）；Full 系列 job 依事件條件跳過。§10.6 的「`dev` push 的 Quick」未驗證項至此確認。
+- 未驗證：→ `main` PR 自動觸發的 Full。
+- `ci/pitching-split` 的基底 `a879da0` 已在 `dev`，且 `7fbfde4` 與 `a879da0` 同 tree，§11.5 原定的 rebase 不改變內容，省略；PR 直接自 `ci/pitching-split` 建立。
 
 ## 11. `full-power-pitching-e2e` 依 seed 拆分（`CI-PITCHING-E2E-01`，計畫，2026-10-24）
 
