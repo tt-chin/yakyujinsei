@@ -26,6 +26,7 @@ const server=createServer(async(req,res)=>{
     let content=baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
+      if(!baseline)content+='\nwindow.__expectIncomeDisplay=true;';
       if(negativeControl&&!baseline)content+='\nconst __negativeDivider=divider;divider=function(t){__negativeDivider(t+\' \');};';
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);

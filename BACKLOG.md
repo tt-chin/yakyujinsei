@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+收入顯示統一（2026-10-24，開發版1.13.4，待使用者審查）：R2／L2；年俸・報酬合計careerBaseSalary與corpIncome，總額直接顯示careerEarnings，不改取得／支給規則或資料欄位。最終本機Quick 68 PASS／0 FAIL／0 SKIP／0 BLOCKED（300.233秒，test-results/income-display-quick-final/summary.json）；收入專項30組及6組退休版型PASS，PC1280／手機模擬320・390px；8條自然生涯逐步比較基準2e690969a6db14826aa87e85e94e78819acd8e17，除逐項驗證的核准收入呈現及版本metadata外，S／選擇／RNG與其他DOM一致。初回Quick65 PASS／3 FAIL保留於income-display-quick：兩項舊分類期待值、一項測試替換字串組裝錯誤，限定修正後重跑全Quick通過；歷史golden未改。Full／CI／Preview／實機NOT_RUN，未提交、推送或部署；既有未完成項目及artifact缺口不結案。
+
 2026-10-22限定修正（1.13.3，待使用者審查）：使用者明確批准將原CPBL送別資格與文案改為NPB年資＋目前海外（MLB／MiLB／KBO／CPBL），保留_daiba一次性旗標，既有true不補發。R2／L2，僅送別卡片與其旗標；不改金錢、能力、honors、引退續行或RNG。基準6e06b1b64abc5f8be1a1a42d68e44c4d1944a16d加本輪工作樹；384原生函式fixture及PC／320／390px共24原生卡片fixture PASS，其他S／RNG精確一致。初回Quick63 PASS／1 FAIL（npb-return-ui的歷史整段比較包含本次批准的送別變更），原報告npb-farewell-quick保留；只對送別函式新增逐字精確期待值，其他契約／復歸嚴格比較保留，限定重測通過。最終Quick64 PASS／0 FAIL／0 SKIP／0 BLOCKED，237.775秒，test-results/npb-farewell-quick-final/summary.json；最終UI入口PASS，npb-farewell-final-render/summary.json。提交前當輪Full／CI／實機NOT_RUN（後續CI狀態見下節）；本輪局部事件不涉及核心計算，不冒充完整生涯或Full驗收。歷史golden不改。已於`4cb4c987792f6d1291fb76b73af4e9eb332931ec`提交至遠端dev；使用者審查待確認，正式main／公開倉庫仍為1.13.0，後續已核對此SHA的Quick CI與Cloudflare部署success（見第1.3節），不代表使用者UI驗收或正式發布。
 
 ## 1. 最新進度總覽

@@ -43,10 +43,10 @@ function fixture(){
  return {plan,output,file:path.join(output,'batch-2/summary.json'),receipt:path.join(output,'batch-2/batch.json')};
 }
 function change(file,fn){const r=JSON.parse(readFileSync(file));fn(r);write(file,r);}
-test('exact 89 entries, eight duration-balanced disjoint batches in inventory order; unweighted entries assigned',()=>{
+test('exact 91 entries, eight duration-balanced disjoint batches in inventory order; unweighted entries assigned',()=>{
  const seconds=fullSeconds(),weight=id=>seconds.get(id)??DEFAULT_SECONDS,order=new Map(ids.map((id,i)=>[id,i]));
  const batches=splitIds(ids,8,id=>seconds.get(id));
- assert.equal(ids.length,89);assert.equal(seconds.has('syntax'),false);
+ assert.equal(ids.length,91);assert.equal(seconds.has('syntax'),false);
  assert.deepEqual([...batches.flat()].sort(),[...ids].sort());
  assert.ok(batches.every(b=>b.length&&b.every((id,i)=>!i||order.get(b[i-1])<order.get(id))));
  assert.deepEqual(splitIds(ids,8,id=>seconds.get(id)),batches,'Deterministic');
@@ -57,7 +57,7 @@ test('exact 89 entries, eight duration-balanced disjoint batches in inventory or
  assert.throws(()=>splitIds(['same','same'],1));
 });
 test('all batches complete, exact command/profile and strict aggregate PASS',()=>{
- const f=fixture(),r=aggregate(f.plan,f.output,ids);assert.equal(r.status,'PASS');assert.equal(r.counts.PASS,89);assert.equal(r.unverified,0);assert.deepEqual(r.results.map(r=>r.id),ids);
+ const f=fixture(),r=aggregate(f.plan,f.output,ids);assert.equal(r.status,'PASS');assert.equal(r.counts.PASS,91);assert.equal(r.unverified,0);assert.deepEqual(r.results.map(r=>r.id),ids);
  assert.throws(()=>runBatch(f.plan,1,f.output),'cannot overwrite evidence');
 });
 const faults={
@@ -88,7 +88,7 @@ for(const [name,fault]of Object.entries(faults))test(name+' cannot produce Full 
 });
 for(const status of ['FAIL','SKIP','BLOCKED'])test(status+' never counts as PASS',()=>{
  const f=fixture();change(f.file,r=>{const x=r.results[0];x.status=status;x.exitCode=status==='FAIL'?1:null;r.counts.PASS--;r.counts[status]++;});
- const r=aggregate(f.plan,f.output,ids);assert.equal(r.status,'FAIL_OR_INCOMPLETE');assert.equal(r.counts.PASS,88);assert.equal(r.counts[status],1);
+ const r=aggregate(f.plan,f.output,ids);assert.equal(r.status,'FAIL_OR_INCOMPLETE');assert.equal(r.counts.PASS,90);assert.equal(r.counts[status],1);
 });
 test('interruption after batch 1 leaves its independent evidence intact',()=>{
  const f=fixture(),before=hash(readFileSync(path.join(f.output,'batch-1/summary.json')));
