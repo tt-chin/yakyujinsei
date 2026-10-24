@@ -5,7 +5,9 @@ import {fileURLToPath} from 'node:url';
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
   'smallschool-c-e2e': {seconds:600,reason:'C-school native initialization, immutable birth snapshots, retirement fixtures, three viewports and raw cross-version P/IF traces with exact new-version replay.'},
-  'full-power-pitching-e2e': {seconds:900,reason:'Real pitching-plan callbacks, viewport/role matrix, normal and energy-saving P plus IF unchanged controls; approved full-power branch traces and exact replay. Includes 20 complete career runs; not a Quick entry.'},
+  'full-power-pitching-e2e': {args:['--part=fixtures'],seconds:180,reason:'Real pitching-plan callbacks, viewport/role matrix and TJ follow-up fixtures (29 cases) plus the IF unchanged control (4 complete career runs); approved full-power branch traces and exact replay. S01-S02 seeds run as separate entries; not a Quick entry.'},
+  'full-power-pitching-yakyo-test-001-e2e': {args:['--part=yakyo-test-001'],seconds:380,reason:'full-power-pitching-e2e S01-S02 for yakyo-test-001: full, normal and energy-saving P, each old/current/repeat (9 complete career runs); not a Quick entry.'},
+  'full-power-pitching-jp3-pitcher-02-e2e': {args:['--part=jp3-pitcher-02'],seconds:350,reason:'full-power-pitching-e2e S01-S02 for jp3-pitcher-02: full, normal and energy-saving P, each old/current/repeat (9 complete career runs); not a Quick entry.'},
   'international-personal-stats-e2e': {seconds:600,reason:'Tournament snapshots and result cards, T01-T14 browser matrix, six exact baseline S/RNG careers. No Quick profile.'},
   'trait-display-e2e': {seconds:180,reason:'All trait labels, acquisition-only explanation lifetime, retirement/PNG and exact pre-change P/IF S/RNG careers.'},
   'stage10-risk-e2e': {seconds:240,reason:'Pre-refactor investigation: natural trait routes, overseas salary flow, explicit return faults and passive LEGACY traces. Desired-behaviour failures remain FAIL; no Quick profile.'},

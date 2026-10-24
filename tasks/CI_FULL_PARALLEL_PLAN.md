@@ -254,7 +254,7 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 
 ## 10. CI 環境鎖定：Playwright container（`CI-ENV-PIN-01`，計畫，2026-10-24）
 
-**狀態：已實作（`e12a6f1`、`ec54253`），CI Full／Quick／linux-smoke 皆 PASS（§10.6）；PR 未建立。**
+**狀態：已實作（`e12a6f1`、`ec54253`），CI Full／Quick／linux-smoke 皆 PASS（§10.6）；PR #21 併入 `dev`（`7fbfde4`），`dev` push Quick PASS（§10.7）。**
 
 ### 10.1 問題
 
@@ -327,3 +327,84 @@ GitHub（須擁有者核准；PR → `dev` 不觸發 CI，故以 `workflow_dispa
 - wall time：#68 21分47秒 → 18分24秒（#69）／18分43秒。安裝變動已消除；剩餘瓶頸為 batch 1 `full-power-pitching-e2e`（CI 809–990 秒，跨 run 差異約 ±10%），後續見 BACKLOG `CI-PITCHING-E2E-01`。
 - 測試秒數在 runner 間差異明顯（如 batch 5：515／422／622），單次比較不足以判定 container 對測試本身速度的影響。
 - 未驗證：→ `main` PR 自動觸發的 Full、`dev` push 的 Quick（事件條件未變）。
+
+### 10.7 PR #21 合併 `dev`（2026-10-24）
+
+- PR #21（`ci/env-pin` → `dev`）以 merge commit `7fbfde4` 合併；其 tree 與 `a879da0` 相同（`ci/full-balance` 的 LPT 分批 `cdf0a25` 亦隨此 PR 進入 `dev`）。
+- `dev` push：Tests Run40068894037（#75，`7fbfde4`），mode quick，success；tests job 3分23秒，`{"PASS":67,"FAIL":0,"SKIP":0,"BLOCKED":0}`（測試 155 秒）；Full 系列 job 依事件條件跳過。§10.6 的「`dev` push 的 Quick」未驗證項至此確認。
+- 未驗證：→ `main` PR 自動觸發的 Full。
+- `ci/pitching-split` 的基底 `a879da0` 已在 `dev`，且 `7fbfde4` 與 `a879da0` 同 tree，§11.5 原定的 rebase 不改變內容，省略；PR 直接自 `ci/pitching-split` 建立。
+
+## 11. `full-power-pitching-e2e` 依 seed 拆分（`CI-PITCHING-E2E-01`，計畫，2026-10-24）
+
+**狀態：已實作（`50139d0`），CI Full／linux-smoke PASS（§11.6）；PR 待 PR #21 合併後建立。** 方向已由使用者決定（BACKLOG：採②依 seed 拆分）；本節定拆分方式、入口與斷言、manifest `seconds`。基準：`ci/env-pin` `a879da0`（PR #21，可 fast-forward 至 `dev`），分支 `ci/pitching-split`。
+
+### 11.1 現況（唯讀確認）
+
+- `tests/full-power-pitching-e2e.mjs`（52 行，CRLF）：L12–25 為源碼／基準比較（`tjAccrue`／`tjCap`／`phasePre`／`proSeason` 本體、續行呼叫），L38 `harness('full-power-pitching')`，L46 E01 27 案、L47 E03 2 案，L48 `--fixtures-only` 跳過其後；L49 S01-S02 6 案（2 seed×3 投球方式，各 old／now／repeat 3 次生涯）、L50 S03 1 案（4 次生涯）。共 36 案、22 次生涯。
+- `scripts/test-manifest.mjs` `inventory()`（L47–62）以 `tests/` 檔案一對一產生入口，未分類檔 `throw`；入口可帶 `args`，`test.mjs:69` 在 full 模式傳入 `e.args`（先例：`display-preferences-e2e` `--only-seed=`、`replay-share-theme-e2e` `--ui-only`）。同一檔多入口無機制。
+- 輸出目錄：`stage6-browser.mjs:42` `arg('output')||os.tmpdir()/<harness 名>`，`test.mjs` 不傳 `--output`；同批依序執行時同名 harness 會覆寫 `summary.json`。
+- 斷言 87：`scripts/ci-full-batches.test.mjs:46`（標題）、`:49`、`:60`；`:91` 為 86（87−1）。`scripts/TESTING.md:5,7` 散文 87。其他 87（`retirement-hof-*`）無關。`check-workflow.mjs` 無相關。
+- `ci-full-batches.mjs` LPT 以 manifest `seconds` 為權重（未設者 `DEFAULT_SECONDS=5`），無入口 ID 寫死。
+- `tools/development-b/producer-rename-saved.mjs:7` 預設讀保存的 `…/tmp/full-power-pitching/career-yakyo-test-001-*.json`（歷史證據重分析，可 `--directory=`）；不在自動 profile。
+
+### 11.2 設計
+
+- **選擇 part（測試檔）**：`full-power-pitching-e2e.mjs` 新增 `--part=<fixtures|yakyo-test-001|jp3-pitcher-02>`：
+  - `fixtures`：E01＋E03＋S03（S03 為 IF 對照，與 seed 拆分無關，併入最輕組）；
+  - `yakyo-test-001`／`jp3-pitcher-02`：僅該 seed 的 S01-S02 3 案；
+  - 未指定：與現行相同（36 案）；`--fixtures-only` 行為不變（E01＋E03）。
+  - 未知 part 值 `throw`（避免零案 PASS）；L12–25 源碼比較每個 part 都執行（成本小，各入口獨立把關）。
+  - harness 名改為 `'full-power-pitching'+(part?'-'+part:'')`，避免同批覆寫；未指定時路徑不變。
+- **入口（一檔一入口，不改 `inventory()`）**：新增兩個薄入口檔，僅 `import './full-power-pitching-e2e.mjs';` 與一行說明：
+  - `tests/full-power-pitching-yakyo-test-001-e2e.mjs`
+  - `tests/full-power-pitching-jp3-pitcher-02-e2e.mjs`
+  - part 一律由 manifest `args` 指定（三入口一致，`test.mjs` 報告的 `command` 可見 part）。不採「`inventory()` 支援同檔多入口」：須改共用工具與報告格式，範圍較大。
+- **manifest**：
+  - `full-power-pitching-e2e`：`args:['--part=fixtures']`，`seconds:180`；
+  - `full-power-pitching-yakyo-test-001-e2e`：`args:['--part=yakyo-test-001']`，`seconds:380`；
+  - `full-power-pitching-jp3-pitcher-02-e2e`：`args:['--part=jp3-pitcher-02']`，`seconds:350`；
+  - 秒數依本機分段（71／151／140 秒，合計 362）按現行 900 等比換算後取整；`reason` 改寫各自案數與生涯數（修正「20」→ 實際 fixtures 29 案＋S03 4 次生涯／各 seed 9 次生涯）。
+  - `--legacy-careers` 只清除含 `--ui-only`／`--quick`／`--only-seed=` 的 args（`test.mjs:69`），`--part=` 不受影響。
+- **斷言／文件**：`ci-full-batches.test.mjs` 87→89（`:46,49,60`）、86→88（`:91`）；`TESTING.md:5,7` 87→89，`:21` 補 `--part` 與三入口說明。歷史紀錄中的 87 不改。
+- 不變：遊戲本體、案內容、每步證據、repeat 重現斷言、基準 SHA、`ci-full-batches.mjs`、`test.mjs`、workflow。
+- 分類：R2（測試／CI 工具；不接遊戲本體）。不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（AGENTS §9.3）。
+
+### 11.3 試算（manifest `seconds`，LPT 8 批，未實測）
+
+以 `splitIds` 試算（scratchpad 腳本，`a879da0`）：現行 87 入口最大批 900（`full-power-pitching-e2e` 單獨）；拆分後 89 入口各批 608–609，三個 pitching 入口分入不同批（yakyo 與 jp3 各與他入口同批）。CI 實測倍率 2.2–2.7 推算 yakyo 入口約 330–410 秒；瓶頸預期轉為 `international-personal-stats-e2e` 等（CI 392–545 秒，batch 5 曾 622 秒），Full wall time 約 11–12 分，**未實測**。
+
+### 11.4 驗證
+
+1. 本機（Brave，外部 Playwright）：三入口各自以 `test.mjs full --only=<id>` 執行 PASS；三份 `summary.json` 的 `records[].id` 聯集＝36 案原 ID，無重複、無缺漏（與 `ec54253` 本機整檔 36 案比對）；未指定 part 的直接執行仍為 36 案。
+2. 負控制：`--part=unknown` 須 FAIL（throw）；scratchpad 副本中讓某 part 漏一案，聯集比對須 FAIL。
+3. `node scripts/ci-full-batches.test.mjs`、`node scripts/test.mjs quick` PASS。
+4. CI：分支 `workflow_dispatch` Full（擁有者核准），記錄 89／89、各批秒數、wall time；linux-smoke（含 `ci-full-batches.test`）。
+5. reviewer（測試邏輯變更）。
+
+### 11.5 交付與待決
+
+- 依序：本節核准 → 實作（測試檔、兩入口檔、manifest、`ci-full-batches.test.mjs`、`TESTING.md`）→ 本機驗證 → commit → push／dispatch 各另批 → 結果記錄 §11.6、BACKLOG。PR #21 合併後先 rebase 至 `dev`。
+- 決定（使用者 2026-10-24，皆照建議）：①S03 歸入 `fixtures` 組；②入口檔命名 `full-power-pitching-<seed>-e2e.mjs`；③manifest 秒數先取等比換算，CI 實測後另案校正。
+
+### 11.6 實作與 CI 結果（2026-10-24，分支 `ci/pitching-split`）
+
+- commit：`fc87173`（§11 計畫、BACKLOG）→ `50139d0`（實作：測試檔 `--part`、兩薄入口、manifest、`ci-full-batches.test.mjs` 87→89／86→88、`TESTING.md`）。
+- reviewer：無阻擋；low 1 件（薄入口不帶 `--part` 直接執行會跑全部 36 案）依計畫設計維持現狀（使用者 2026-10-24 決定）。
+- 本機（macOS＋Brave，外部 Playwright 1.59.0-alpha）：`test.mjs full --only=` 三入口 3／3 PASS：fixtures 78.7 秒（30 案）、jp3 135.6 秒（3 案）、yakyo 148.0 秒（3 案），合計 363 秒；三份 harness `summary.json` 的 `records[].id` 聯集 36、無重複，與依原迴圈列舉的 36 個 ID 一致（移除一案的負控制可檢出）；`--part=unknown`／`--part=`／`--part=yakyo-test-001 --fixtures-only` 皆 throw（exit 1）；不帶 part 的 `--fixtures-only` 29／29 PASS；`ci-full-batches.test` 31 PASS／1 SKIP（Linux 專用）；Quick 67／67 PASS。不帶參數的整檔 36 案直接執行未實測。
+
+| Run | commit | mode | 結果 |
+|---|---|---|---|
+| 40055238234（#73） | `50139d0` | full | success，wall time **11分15秒**（前次 18分43秒）；`{"status":"PASS","expected":89,"acceptedPass":89,"issues":[]}` |
+| 40056950062（#74） | `50139d0` | linux-smoke | success，約1分；`ci-full-batches.test` 32／32 PASS（含 `exact 89 entries`、Linux alias 測試） |
+
+各批（`summary.json` 測試秒數）：
+
+| batch | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| 40046088278（`ec54253`，§10.6） | 990 | 435 | 197 | 293 | 622 | 234 | 272 | 198 |
+| 40055238234（`50139d0`） | 470 | 221 | 468 | 506 | 410 | 537 | 493 | 239 |
+
+- 拆分入口 CI 秒數（本機比）：`full-power-pitching-e2e` 169（2.1倍，batch 7）、`-yakyo-test-001-e2e` 424（2.9倍，batch 4）、`-jp3-pitcher-02-e2e` 325（2.4倍，batch 6）。最大批 537 秒（batch 6），不再由單一入口決定。
+- 各批仍不均（221–537 秒）：manifest 預估與 CI 實測偏差，例如 `smallschool-c-e2e` 600→218、`international-personal-stats-e2e` 600→469、`bug-act-01-02-e2e` 500→453（manifest 值為 §9 既有）。依 §11.5③，秒數校正另案，本次不改。
+- 未驗證：→ `main` PR 自動觸發的 Full、`dev` push 的 Quick。PR：PR #21 合併後建立 `ci/pitching-split` → `dev`（使用者 2026-10-24 決定）。
