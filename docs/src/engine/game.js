@@ -1,4 +1,5 @@
 import { VERSION } from '../config.js';
+import {incomeSummary} from '../ui/income-summary.js';
 import { Rng } from './rng.js';
 import { CareerSession } from './career-session.js';
 import { SeasonStats } from './season-stats.js';
@@ -36,6 +37,9 @@ import { createChoiceActionToken, runChoiceAction } from '../ui/choice-action.js
 import { GameView } from '../ui/game-view.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
+import { careerScoreFor, defenseShareFor, hallOfFameTier } from './hall-of-fame-tier-policy.js';
+import { defenseScoreFor, defenseBarFor, defensePositionQualified, defensePositionCandidates, defensePositionMultiplier } from './defense-position-policy.js';
+import { toolGapFor, overallRatingFor, playerTypeFor, abilityStepCostFor } from './ability-evaluation-policy.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
@@ -72,19 +76,7 @@ const DPN={SS:'遊撃手','2B':'二塁手','3B':'三塁手','1B':'一塁手',
  CF:'中堅手',RF:'右翼手',LF:'左翼手',DH:'指名打者',C:'捕手'};
 /* 守備位置ごとに守備範囲・捕球・肩力の基準をリーグ基準から補正する。三塁に遊撃並みの守備範囲は求めず、一塁では肩力をほぼ評価しない。 */
 /* 守備位置ごとに重視する能力を変え、総合守備評価を返す。 */
-function dpScore(p){ const a=S.ab;
-  switch(p){
-    case 'SS': return a.rng*0.5 + a.fld*0.3 + a.arm*0.2;   /* 遊撃手：守備範囲を重視。 */
-    case '2B': return a.rng*0.45+ a.fld*0.4 + a.arm*0.15;  /* 二塁手：守備範囲と捕球を重視し、肩力は補助。 */
-    case '3B': return a.arm*0.45+ a.fld*0.35+ a.rng*0.2;   /* 三塁手：肩力を重視。 */
-    case 'CF': return a.rng*0.55+ a.fld*0.3 + a.arm*0.15;  /* 中堅手：守備範囲を重視。 */
-    case 'RF': return a.arm*0.45+ a.rng*0.35+ a.fld*0.2;   /* 右翼手：強肩を重視。 */
-    case 'LF': return a.rng*0.4 + a.fld*0.35+ a.arm*0.25;  /* 左翼手：守備範囲を中心に、基準は低め。 */
-    case 'C':  return a.fld*0.4 + a.cat*0.4 + a.arm*0.2;   /* 捕手：捕球・リード・肩力を重視し、守備範囲は評価しない。 */
-    case '1B': return a.fld*0.6 + a.rng*0.2 + a.arm*0.2;   /* 一塁手：捕球を重視し、基準は低め。 */
-    default: return 99;
-  }
-}
+function dpScore(p){return defenseScoreFor(S.ab,p);}
 /* 守備位置・リーグ別の守備基準。守備評価が基準以上なら守備可能とし、MLBを最も厳しくする。 */
 const DP_TH={
   C:  {CPBL1:46, NPB1:54, MLB:60},
@@ -97,27 +89,11 @@ const DP_TH={
   '1B':{CPBL1:36,NPB1:42, MLB:48}};
 const DP_BAR={CPBL1:45,NPB1:54,MLB:60}; /* 保持与える捕手 cOk 等旧判定。 */
 const DP_MULT={SS:1.15,CF:1.15,C:1.12,'2B':1.05,'3B':1.05,RF:1.05,'1B':1.0,LF:1.0,DH:0.92};
-function dpBar(){ /* 年輕球員吃能力上限紅利、球団不急著拔守備位置。 */
-  const base=DP_BAR[S.lv]||0;
-  const disc=S.age<=21?7:S.age<=24?5:S.age<=26?2:0;
-  return base-disc;
-}
-function dpQual(p){
-  if(p==='DH')return true;
-  if(!DP_TH[p]||!DP_TH[p][S.lv])return true;   /* トップ階級以外のリーグでは制限しない。 */
-  /* 年輕球員吃能力上限紅利：基準略降(球団与える時間成長)。 */
-  const youthAdj = (S.age<24?-3 : S.age<26?-1.5 : 0)+(S.traits.favorite?-3:0);
-  return dpScore(p) >= DP_TH[p][S.lv]+youthAdj;
-}
+function dpBar(){return defenseBarFor({bars:DP_BAR,level:S.lv,age:S.age});}
+function dpQual(p){return defensePositionQualified({position:p,thresholds:DP_TH,level:S.lv,age:S.age,favorite:S.traits.favorite,scoreOf:dpScore});}
 const DP_RANK={SS:0,CF:0,'2B':1,'3B':2,RF:2,'1B':3,LF:3,DH:4,C:0}; /* 守備位置市試合価値の序列(SS>2B>3B)。 */
-function dpList(){ /* 守備難易度順に、内野手は内野、外野手は外野を走査し、守れる中で最上位の位置を選ぶ。 */
-  /* 候補守備位置は現在の守備群に合わせ、内野・外野それぞれの守備スペクトラムから選ぶ。 */
-  const order = S.pos==='IF'
-    ? ['SS','2B','3B','1B']       /* 内野：遊撃＞二塁＞三塁＞一塁。 */
-    : ['CF','RF','LF','1B'];      /* 外野：中堅＞右翼＞左翼＞一塁。 */
-  const q=order.filter(dpQual); q.push('DH'); return q;
-}
-function dpMult(){ return (S.pos!=='P'&&S.dpos)?(DP_MULT[S.dpos]||1):1; }
+function dpList(){return defensePositionCandidates(S.pos,dpQual);}
+function dpMult(){return defensePositionMultiplier({position:S.pos,defensePosition:S.dpos,multipliers:DP_MULT});}
 function dposReview(cont){
   if(S.stage!=='PRO'||!(S.lv==='CPBL1'||S.lv==='NPB1'||S.lv==='MLB')){ cont(); return; }
   if(S.pos==='C'){ /* 捕手の基準には余裕を持たせるが、基準を大きく下回れば一塁またはDHへ回す。 */
@@ -246,17 +222,7 @@ function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
     if(!S.removed.includes(label))S.removed.push(label); } }
 /* 一芸特化：評価対象は三つの役割軸のみ——打撃(長打力/Contact)、走塁(速度)、守備(総合)。 */
 function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
-function toolGap(){ const a=S.ab;
-  const hit=Math.max(a.pow,a.con);        /* 打撃維度：長打力または Contact 取高。 */
-  const run=a.spd;                         /* 走塁維度。 */
-  const def=S.pos==='C'?(a.rng+a.fld+a.arm+a.cat)/4:(a.rng+a.fld+a.arm)/3; /* 守備総合。 */
-  const dims=[['hit',hit,'代打'],['run',run,'代走'],['def',def,'守備固め']];
-  dims.sort((x,y)=>y[1]-x[1]);
-  const topDim=dims[0], secDim=dims[1];
-  const gap=topDim[1]-secDim[1];
-  /* 比より対象の役割：代打確認長打力/Contact 高い方を説明文に採用。 */
-  const role=topDim[2];
-  return {gap, role, val:topDim[1], dim:topDim[0]}; }
+function toolGap(){return toolGapFor(S.ab,S.pos);}
 function tjAccrue(){ /* 毎季TJゲージを蓄積する。球速と変化球が高いほど負担が増え、投球強度で倍率を決める。 */
   if(S.pos!=='P'||S.seasonFactor<=0)return;
   const mult={'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}[S.effort]||1.0;
@@ -338,44 +304,9 @@ function fmtIP(ip){ /* 十進出位局数轉棒球表示：小数部分 →三�
 }
 function roleN(r){ return {SP:'先発',MR:'中継ぎ',CL:'抑え'}[r]||'—'; }
 function isSP(){ return S.role==='SP'; } /* 先発引擎判定。 */
-function ovr(){
-  const a=S.ab;
-  if(S.pos==='P'){ const arr=[a.vel,a.ctl,a.brk].sort((x,y)=>y-x);
-    return Math.round(arr[0]*0.42+arr[1]*0.30+arr[2]*0.18+a.sta*0.10); }
-  const off=[a.con,a.pow,a.eye,a.spd].sort((x,y)=>y-x);
-  const offv=off[0]*0.38+off[1]*0.27+off[2]*0.20+off[3]*0.15;
-  /* 守備評価：現在の守備位置のdpScore(と守備位置基準システムと一致);DH 守備価値なし → 「1B 守備評価 −12」として計算(これにより同じ打撃力なら一塁手がDHを常に上回る)。守備位置が未設定なら守れる中で最上位の守備位置の評価を使う。 */
-  const dpForOvr = S.dpos || (S.pos==='C'?'C':(S.pos==='OF'?'CF':'SS'));
-  const def = S.dpos==='DH' ? (dpScore('1B')-12) : dpScore(dpForOvr);
-  /* 守備重み：重要守備位置(SS/CF/C)最大 30%、コーナーは低め;DH 用と 1B 同じ重み(守備評価に含まれる DH ペナルティ)。 */
-  const dw=S.dpos?({SS:0.30,CF:0.30,C:0.30,'2B':0.22,'3B':0.22,RF:0.20,'1B':0.12,LF:0.14,DH:0.12})[S.dpos]??0.22:0.24;
-  let v=Math.round(offv*(1-dw)+def*dw);
-  if(S.traits.yips)v-=3; /* イップス：心理的影響、システム評価 -3。 */
-  return v;
-}
-function playerType(){
-  const a=S.ab;
-  if(S.traits.onetool&&S.toolRole)return S.toolRole+'ユーティリティー';
-  if(S.pos==='P'){
-    const m=Math.max(a.vel,a.ctl,a.brk);
-    if(m<52)return '期待の若手';
-    if(a.sta>=m&&a.sta>=62)return '鉄腕';
-    if(m===a.vel)return '剛腕'; if(m===a.brk)return '変化球の魔術師'; return '精密機械';
-  }
-  if(S.pos==='C'){ const rest=Math.max(a.con,a.pow,a.spd,a.eye,a.rng,a.fld,a.arm);
-    if(a.cat>=58&&rest<=a.cat-8)return 'リードの達人'; }
-  const dv=S.pos==='C'?(a.rng+a.fld+a.cat)/3:(a.rng+a.fld+a.arm)/3;
-  const cand=[['大砲タイプ',a.pow],['安打製造機',a.con],['選球眼の鬼',a.eye],['韋駄天',a.spd],['守備職人',dv]];
-  cand.sort((x,y)=>y[1]-x[1]);
-  if(cand[0][1]<52)return '期待の若手';
-  if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return 'オールラウンダー';
-  return cand[0][0];
-}
-function abCost(k){ /* 次の能力段階に必要なポイント(は addAb コスト式と一致させる)。 */
-  const cur=S.ab[k], pk=(S.pot&&S.pot[k])||62, isP=S.pos==='P';
-  let c=isP?(cur>=66?7:cur>=60?4:cur>=55?2:1):(cur>=72?3:cur>=64?2:1);
-  if(cur>=pk)c*=isP?4:3; return c;
-}
+function ovr(){return overallRatingFor({ability:S.ab,position:S.pos,defensePosition:S.dpos,traits:S.traits});}
+function playerType(){return playerTypeFor({ability:S.ab,position:S.pos,traits:S.traits,toolRole:S.toolRole});}
+function abCost(k){return abilityStepCostFor({ability:S.ab,potential:S.pot,key:k,position:S.pos});}
 function addAb(k,v){ if(!(k in S.ab))return 0; const o=S.ab[k];
   S.lastOverflow=0; /* 【修正】紀錄真正溢出的ポイント。 */
   if(v<0){ S.ab[k]=clamp(o+v,1,80); return S.ab[k]-o; } /* 扣値 1：1、不吃ゲージ成本。 */
@@ -1563,10 +1494,7 @@ function advance(){
 /* キャリア終盤。 */
 const TIER_TH={CPBL:[8500,6000,3100,1800],KBO:[8200,5900,3000,1800],NPB:[8000,5800,3000,1800],MLB:[8500,6500,3600,2000]};
 const LG_N={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ',MINOR:'マイナーリーグ/二軍'};
-function careerScore(st){
-  if(S.pos==='P')return st.W*13+st.SV*6+st.SO*0.9+st.IP*0.35;
-  return st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+Math.max(0,st.DEF||0)*6;
-}
+function careerScore(st){return careerScoreFor(st,S.pos);}
 function roleName3(r){ return {SP:'先発投手',MR:'リリーバー',CL:'抑え'}[r]||'投手'; }
 function primaryPos(){ /* 通算の半数超を守った位置を主守備とし、該当なしなら年数順でユーティリティーまたはスイングマンと判定。 */
   if(S.pos==='P'){
@@ -1591,12 +1519,7 @@ function capTeam(bucket){ /* 当該リーグで最長在籍の球団、殿堂入
   for(const k in tb)if(tb[k]>bn){bn=tb[k];best=k;}
   return best&&window.TEAM_MASTER&&window.TEAM_MASTER[best]?window.TEAM_MASTER[best].name:best;
 }
-function defShare(bucket){ /* 守備貢献占キャリア総価値値割合 0~1。 */
-  const st=S.stats[bucket]; if(!st||S.pos==='P')return 0;
-  const off=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3;
-  const def=Math.max(0,st.DEF||0)*6;
-  return (off+def)>0?def/(off+def):0;
-}
+function defShare(bucket){return defenseShareFor(S.stats[bucket],S.pos);}
 function posLegendPhrase(bucket){ /* に応じて守備割合とタイトル決定守備位置敘述。 */
   const share=defShare(bucket), st=S.stats[bucket];
   const dp=S.dpos||(S.pos==='C'?'C':null);
@@ -1610,16 +1533,7 @@ function posLegendPhrase(bucket){ /* に応じて守備割合とタイトル決�
 function honorScore(bucket){
   return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S});
 }
-function tierOf(bucket){
-  const st=S.stats[bucket]; if(!st)return null;
-  const hs=honorScore(bucket);
-  const sc=careerScore(st)+hs.sc,th=TIER_TH[bucket];
-  let i=sc>=th[0]?0:sc>=th[1]?1:sc>=th[2]?2:sc>=th[3]?3:4;
-  /* タイトル最低条件：MVP/最優秀投手賞は最低でもスター級;部門タイトルは最低でもレギュラー級。 */
-  if(hs.mvp||hs.aceN)i=Math.min(i,1);
-  else if(hs.king)i=Math.min(i,2);
-  return {i,sc:Math.round(sc),name:LG_N[bucket]+['殿堂','スター選手','デイリープレイヤー','フリンジプレイヤー','ページ上の乗客'][i]};
-}
+function tierOf(bucket){const st=S.stats[bucket];if(!st)return null;const hs=honorScore(bucket);return hallOfFameTier({baseScore:careerScore(st),honor:hs,thresholds:TIER_TH[bucket],leagueName:LG_N[bucket]});}
 function statTable(bucket){
   const st=S.stats[bucket]; if(!st)return '';
   let rows;
@@ -1842,7 +1756,7 @@ function endGame(reason){
   const cur=lv.st==='married'?`妻 ${lv.partner}（子ども${lv.kids}人）`:lv.st==='dating'?`交際中 ${lv.partner}（${lv.dyrs||0}年）`:lv.st==='divorced'?'離婚':'独身';
   const exStr=exes.length?`｜前妻 ${exes.map(e=>`${e?.name||''}（${Number(e?.kids)||0}）`).join('、')}`:'';
   const totKids=(Number(lv.kids)||0)+exes.reduce((t,e)=>t+(Number(e?.kids)||0),0);
-  card('','キャリアプロフィール',`特性：${tr.join(' ')||'（なし）'}<br>家族：${cur}${exStr}｜子ども合計 ${totKids} 人${lv.affairs?`｜不倫 ${lv.affairs}(${lv.caught})`:''}<br>日本代表出場：${S.intlCount}大会｜キャリア通算の大故障：${S.bigInj}回${S.pos==='P'?`｜トミー・ジョン手術：${S.tjCount}回`:''}<br>固定年俸累計：${fmtMoney(S.careerBaseSalary||0)}｜契約金・育成支度金累計：${fmtMoney((S.careerSigningBonus||0)+(S.careerDevelopmentStipend||0))}<br>出来高累計：${fmtMoney(S.careerIncentive||0)}｜買い取り累計：${fmtMoney(S.careerBuyout||0)}<br>スポンサー収入累計：${fmtMoney(S.careerOutsideIncome||0)}<br>社会人給与累計：${fmtMoney(S.corpIncome||0)}<br>生涯総収入：<b class="hl" style="font-size:18px">${fmtMoney(Math.round(S.careerEarnings))}</b>`);
+  card('','キャリアプロフィール',`特性：${tr.join(' ')||'（なし）'}<br>家族：${cur}${exStr}｜子ども合計 ${totKids} 人${lv.affairs?`｜不倫 ${lv.affairs}(${lv.caught})`:''}<br>日本代表出場：${S.intlCount}大会｜キャリア通算の大故障：${S.bigInj}回${S.pos==='P'?`｜トミー・ジョン手術：${S.tjCount}回`:''}<dl class="income-summary">${incomeSummary(S).map(row=>`<dt>${row.label}</dt><dd${row.key==='total'?' class="hl"':''}>${fmtMoney(row.amount)}</dd>`).join('')}</dl>`);
   /* ファンコメント。 */
   const pool=FAN[best].slice(); const picks=[];
   while(picks.length<3&&pool.length)picks.push(pool.splice(Math.floor(R()*pool.length),1)[0]);
@@ -2174,10 +2088,20 @@ function shareImage(evals,out){
   }
 
   c.fillStyle=imageColor.accent; c.font='bold 16px sans-serif';
-  c.fillText('固定年俸 '+fmtMoney(S.careerBaseSalary||0)+'　出来高 '+fmtMoney(S.careerIncentive||0),PAD,y); y+=26;
-  c.fillText('契約金・支度金 '+fmtMoney((S.careerSigningBonus||0)+(S.careerDevelopmentStipend||0))+'　買い取り '+fmtMoney(S.careerBuyout||0),PAD,y); y+=26;
-  c.fillText('社会人給与 '+fmtMoney(S.corpIncome||0)+'　生涯総収入 '+fmtMoney(Math.round(S.careerEarnings)),PAD,y); y+=26;
-  c.fillText('スポンサー収入 '+fmtMoney(S.careerOutsideIncome||0),PAD,y); y+=26;
+  const income=incomeSummary(S),incomeGap=24,incomeWidth=(W-PAD*2-incomeGap)/2;
+  function incomeCell(entry,x,width){
+    const text=entry.label+' '+fmtMoney(entry.amount);
+    let size=16;c.font='bold '+size+'px sans-serif';
+    while(c.measureText(text).width>width&&size>6){size-=0.25;c.font='bold '+size+'px sans-serif';}
+    c.fillText(text,x,y);
+  }
+  incomeCell(income[0],PAD,incomeWidth);incomeCell(income[1],PAD+incomeWidth+incomeGap,incomeWidth);y+=26;
+  incomeCell(income[2],PAD,incomeWidth);incomeCell(income[3],PAD+incomeWidth+incomeGap,incomeWidth);y+=26;
+  incomeCell(income[4],PAD,W-PAD*2);y+=26;
+  incomeCell(income[5],PAD,W-PAD*2);y+=26;
+
+
+
   c.fillStyle=imageColor.dim; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
   c.textAlign='right'; c.fillText(VERSION,W-PAD,H-40); c.textAlign='left';
 

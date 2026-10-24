@@ -1,6 +1,6 @@
 # 野球人生｜game.js 物件導向化分期計畫書
 
-**文件狀態：IMPLEMENTATION_PLAN / PHASE6_MERGED / PHASE7A_LOCAL_DONE（2026-10-23）**
+**文件狀態：IMPLEMENTATION_PLAN / PHASE9_MERGED / PHASE10_LOCAL_DONE / PHASE11_PLANNED（2026-10-24）**
 **建立日期：2026-10-18**
 **對應 BACKLOG：`REFACTOR-AUDIT-01`（本計畫不使其結案）**
 
@@ -18,7 +18,11 @@
 | 4 | LEGACY 覆寫（4-A） | 覆寫綁定實為 33 個（STAGE5 稽核記為 32，未含 `recordIndependentSalaryEvaluation`）。4-A：刪除 19 個完全取代的死本體與舊路徑，拆除 JP 覆寫 IIFE 外殼，19 個覆寫就地改為函式宣告；4-B 暫緩、4-C／4-D 不做 | L3 / R3 | 完成；PR #12 併入 `dev`（`d3efd11`），見 §2f.7；PR → `dev` 不觸發 CI |
 | 5 | `CareerPresenter` | `build*ViewModel`（`game.js:582–588`）移入 `docs/src/ui/career-presenter.js` 的類別，依賴以建構子注入；`game.js` 保留 5 個一行委派 | L2 / R2（PR 前 Full 一次） | 完成；PR #14 併入 `dev`（`86b4f03`），見 §2g.8 |
 | 6 | `SeasonStats` | `simSeason`／`applySeasonForm`／`defRuns`／`blankStat`／`addStatTotal`／`accStat`／`accLevelStat` 移入 `docs/src/engine/season-stats.js` 的類別；RNG 經 `game.js` 的 `R` 延遲注入；`game.js` 保留 7 個一行委派 | L3 / R3 | 完成；PR #15 併入 `dev`（`34ed23c`），見 §2h.8、§2h.9 |
-| 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策（另立計畫）；參賽流程留在 `game.js` | L3 / R3 | 7-A 本機完成（§2i.8，`refactor/international`）；7-B 未規劃 |
+| 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策 `international-selection-policy.js`；參賽流程留在 `game.js` | L3 / R3 | 7-A 完成；PR #16 併入 `dev`（`67dcab9`），見 §2i.9。7-B 完成；PR #17 併入 `dev`（`52e4cdb`），見 §2i.16 |
+| 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 完成；PR #19 併入 `dev`（`7940e97`），見 §2j.8 |
+| 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 完成；PR #20 併入 `dev`（`f4a2894`），見 §2k.8 |
+| 10 | 能力評價 policy | `ovr`／`playerType`／`toolGap`／`abCost` 本體移入 `ability-evaluation-policy.js` 純函式；`game.js` 保留一行委派；`addAb` 不動 | L3 / R3 | 本機完成（實作 commit `e75159e`），見 §2l.7；PR 待 PR #21 與 `ci/pitching-split` 合併 |
+| 11 | 流程狀態機 | 11-A：賽季後處理的回呼鏈改為 `game.js` 內的步驟分派；11-B：各領域直接呼叫 `advance`／`endGame` 改為回報具名結果，依領域分批 | L3 / R3 | 計畫中，見 §2m；實作未批准 |
 
 共通原則：
 
@@ -1362,6 +1366,378 @@ export class SeasonStats {
 | Full | scratchpad worktree（與工作樹內容一致，新檔以 `git add -N` 納入 `ls-files`；`CURRENT_SPEC` 追記前；`sourceFingerprint` `7058a6453847…`，比較基準 `origin/main` `650e4dd`），4 組平行（21／22／22／22），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（274／818／330／286 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 2 次（併入版、新檔版）皆無問題。指出：新檔於主工作樹未追蹤時，`git ls-files` 系檢查不涵蓋（Full worktree 已以 `git add -N` 涵蓋） |
 
+## 2j. 第 8 期：殿堂評分 policy（細部計畫，2026-10-23；本機完成，見 §2j.7）
+
+PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #64）PASS。候補選定依據見 §3.8。
+
+### 2j.1 現況（2026-10-23 唯讀確認，基準 `52e4cdb`）
+
+- `game.js`（2761 行）`:1566` `careerScore(st)`（讀 `S.pos`）、`:1594` `defShare(bucket)`（讀 `S.stats`／`S.pos`）、`:1613` `tierOf(bucket)`（讀 `S.stats`、`TIER_TH`、`LG_N`，呼叫 `honorScore`→`careerScore`）：無 RNG、不寫 `S`、無 UI。`:1610` `honorScore` 已是委派 `hall-of-fame-policy.js` `honorScoreFor` 的一行函式，本期不動。
+- 呼叫者：`tierOf` 只被 `endGame`（`:1719`）呼叫；`defShare` 只被 `posLegendPhrase`（`:1601`）；`careerScore`、`honorScore` 只被 `tierOf`。`docs/src` 其他模組無參照。
+- `TIER_TH`（`:1564`）與 `LG_N`（`:1565`）於 JP 覆寫區 `:2242` 被 `Object.assign` 改寫，故須於呼叫時讀取，不可於模組內複製。
+- `tierOf` 以未四捨五入的分數判定 `i`，回傳的 `sc` 才 `Math.round`；`retireScene` 的首輪判定使用此四捨五入值（`CURRENT_SPEC:413`），位置須保留。
+- 文字耦合：
+  - `retirement-hof-test-support.mjs:20–21`：`productionFunction` 依名稱取出 `careerScore`／`capTeam`／`defShare`／`posLegendPhrase`／`honorScore`／`tierOf`／`retireScene` 等於 vm 執行；ctx 只注入 `honorScoreFor`、`hasHistoricalDefenseAward`、`window.TEAM_MASTER`；另以 regex 取 `TIER_TH`／`LG_N`／`DPN` 與 `Object.assign(TIER_TH,…)`。`createProductionHarness` 使用者：`hof-first-ballot-league.test`（`retireScene` 以 `925987dc` 原始碼，其餘用現行）、`retirement-hof-balance.test`、`retirement-hof-analysis`（manifest 排除於自動測試）。只 import `productionFunction` 的 8 個測試取其他函式，不受影響。
+  - `tools/development-b/defense-history-boundaries.mjs:10`：取出 `defShare`＋`posLegendPhrase` 於自有 vm ctx；未被 manifest 或其他檔案參照（手動工具）。
+  - `tools/development-b/runtime.mjs:31`：瀏覽器 hook 呼叫全域 `honorScore`（不受影響）。
+  - `hof-first-ballot-e2e:26`、`tests/support/stage6-browser.mjs:44`：以 `git ls-files docs` 決定載入檔案，未追蹤的新檔不在其內。
+  - 設計文件：`docs/design/MODULE_FUNCTION_INDEX.md` 固定於舊 SHA `ea951c2`（7-A／7-B 未維護），不改；`CURRENT_DETAILED_DESIGN.md:94` 描述行為，行為不變，不改。
+
+### 2j.2 設計
+
+分類：L3／R3（殿堂評定）。無 RNG，`salary-flow` 計數不變；但判定錯誤會改變殿堂結果與後續投票演出。
+
+- 新檔 `hall-of-fame-tier-policy.js`（LF）的 export（名稱與 `game.js` 函式不同，避免 import 衝突及 `productionFunction` 的 `'function careerScore('` 誤配）：
+  - `careerScoreFor(stats,position)`：原 `careerScore` 本體，`S.pos` 改為參數。
+  - `defenseShareFor(stats,position)`：原 `defShare` 本體。
+  - `hallOfFameTier({baseScore,honor,thresholds,leagueName})` → `{i,sc,name}`：`honor` 傳整個物件（保底依 `mvp`／`aceN`／`king` 旗標）；tier 名稱陣列照原樣搬入。
+- `game.js`（CRLF）新增一行 import；三函式改為一行委派，錨點文字保留：
+  - `function careerScore(st){return careerScoreFor(st,S.pos);}`
+  - `function defShare(bucket){return defenseShareFor(S.stats[bucket],S.pos);}`
+  - `function tierOf(bucket){const st=S.stats[bucket];if(!st)return null;const hs=honorScore(bucket);return hallOfFameTier({baseScore:careerScore(st),honor:hs,thresholds:TIER_TH[bucket],leagueName:LG_N[bucket]});}`（保留 `honorScore`→`careerScore` 的呼叫順序與 `if(!st)return null`）
+- `posLegendPhrase`、`capTeam`、`honorScore`、`retireScene`、`hall-of-fame-policy.js` 不變。
+
+### 2j.3 測試變更（需揭露）
+
+1. 等價 fixture（`retirement-hof-balance.test` 內新增，Full 入口數不變 87）：自 `52e4cdb` 取出舊 `careerScore`／`defShare`／`tierOf`，vm ctx 以可控 stub 提供 `honorScore`，並提供最終 `TIER_TH`／`LG_N`；與新 export 逐格比較。格：4 職業聯盟（`MINOR` 無 `TIER_TH`，不列入）、分數恰等於各門檻 `th[k]`、`mvp`／`aceN`／`king` 單獨及搭配低分、投手／非投手、`DEF` 為負數或 `undefined`、`st` 不存在。跨 realm 故以 `JSON.stringify`＋筆數守衛比較。
+2. harness（非期望值變更）：`retirement-hof-test-support` 的 vm ctx 加入新模組 export。
+3. `tools/development-b/defense-history-boundaries.mjs` 的 vm ctx 補一行（加入 `defenseShareFor`）。
+4. 實作前以新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列者先報告再改。
+
+### 2j.4 驗證（L3／R3）
+
+比較基準：`52e4cdb36d6b770a2c73ca89e947c94bcc616562`（`dev`）；允許差分：無。
+
+1. `check-syntax`；`retirement-hof-balance`、`hof-first-ballot-league`、`award-legacy-consumer`、`award-consumer-contract`、`award-identity-policy`、`pitcher-award-integration`、`salary-flow`、`verify-modularization`、`information-architecture`。
+2. `game-view-dom-e2e --baseline=52e4cdb`、`hof-first-ballot-e2e`（新檔 commit 前先 `git add -N`）；Quick。
+3. 負控制（scratchpad，各改一處）：①門檻比較 `>=`→`>`；② MVP 保底 1→2；③ `careerScore` 一個權重；④去除 `defShare` 的投手回傳 0 分支。確認等價 fixture FAIL。
+4. Full 一次（worktree＋`git add -N`，4 組平行）；重跑範圍如實記錄。
+5. reviewer：`52e4cdb..HEAD`。重點：等價（四捨五入位置、保底、呼叫順序）、錨點文字、新 export 無 DOM／`S`／全域 RNG、CRLF（`game.js`）／LF（policy 檔）。
+6. `retirement-hof-analysis`／`report` 會改寫歷史報告，不執行（harness 變更涵蓋之），記為 NOT_RUN。FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2j.5 交付
+
+- 分支：`refactor/hall-of-fame-tier`（自 `dev` `52e4cdb`）。commit 順序：文件（§2j、§3.8）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG（§9.3）。`CURRENT_SPEC:456` 於同行追記新檔（不參照 DOM／`S`／RNG 的純函式）。不修改 `main`。
+
+### 2j.6 待決
+
+1. 範圍：3 函式（`careerScore`／`defShare`／`tierOf`）或 5 函式（＋`posLegendPhrase`／`capTeam`；前者回傳日文文案，後者讀 `window.TEAM_MASTER`，較接近 `retireScene` 的演出）。
+2. 放置：新檔，或併入 `hall-of-fame-policy.js`（在 `allowedB`，凍結斷言不擋；但周圍為 `efd4710` accepted-A 證據測試與 `tools/development-b/*` 的範圍）。
+3. `defense-history-boundaries.mjs`：vm ctx 補一行，或註記為過時。
+4. `CURRENT_SPEC` 追記位置：`:456`（policy 檔一覽，7-B 前例）或殿堂章節 `:413` 附近。
+5. 耦合調查摘要是否記入計畫文件。
+
+使用者決定（2026-10-23）：1 採 3 函式；2 新檔 `hall-of-fame-tier-policy.js`；3 補一行；4 `:456`；5 記入 §3.8。實作待批准。
+
+### 2j.7 實施結果（2026-10-23，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `203f225`＋未 commit 變更）
+
+- 實施前重新掃描（2j.3-4）：除 §2j.1 所列外，另有 `tests/retirement-hof-pilot.mjs:19`、`docs/reviews/pitcher-tc-research/research.mjs`（瀏覽器 hook 於插樁後的 `game.js` 內呼叫全域 `tierOf`／`TIER_TH`）與 `tests/retirement-hof-report.mjs:32`（說明文字）。同名包裝與常數留在 `game.js`，皆不受影響、未修改。
+- 實作：新檔 `hall-of-fame-tier-policy.js`（LF，20 行）；`game.js`（CRLF）`:39` 新增 import，`:1567`／`:1592`／`:1606` 一行委派，2760→2744 行。`CURRENT_SPEC:456` 追加一句。
+- 測試變更：`retirement-hof-test-support` 的 vm ctx 加入 3 個 export（harness）；`defense-history-boundaries.mjs` 新增 import 與 ctx 各一行（計畫寫「補一行」，實為 2 行）；`retirement-hof-balance.test` 新增等價 fixture：`52e4cdb` 舊函式與現行包裝＋新模組，於 vm 以可控 `honorScore` stub 逐格比較，格為最終 `TIER_TH` 全部 6 key（計畫寫 4 職業聯盟，另含 `IND`／`CORP`）×投手／非投手×37 格（門檻 ±1／−0.5／−0.4／0／+0.4、`mvp`／`aceN`／`king` 旗標與組合、`DEF` 負／`undefined`／0／正、`st` 不存在），共 444 格。以 `JSON.stringify` 比較，並以格數、tier 0–4 皆出現、`S` 不變、呼叫順序 `honorScore`→`careerScore` 作守衛。Full 入口數不變（87）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（168 檔） |
+| 相關單元 | `retirement-hof-balance`（160＋20＋531）、`hof-first-ballot-league`（31）、`award-legacy-consumer`、`award-consumer-contract`（19／0）、`award-identity-policy`（135）、`pitcher-award-integration`（29／0）、`salary-flow`（計數不變）、`verify-modularization`、`information-architecture` 皆 PASS；手動工具 `defense-history-boundaries` 264／0 |
+| `game-view-dom-e2e --baseline=52e4cdb` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（直接執行。runner 只對 manifest 有 `comparison` 的入口轉送 `--baseline`，經 runner 執行時比較的是預設基準 `1bc65dfc`） |
+| e2e | `hof-first-ballot-e2e` PASS（新檔 `git add -N`） |
+| 負控制 | ①門檻 `>=`→`>`、② MVP 保底 1→2、③ `careerScore` 權重 `W*13`→`W*12`、④去除 `defenseShareFor` 的投手回傳 0：等價 fixture 皆 FAIL；policy 檔還原後 `cmp` 一致 |
+| Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（與工作樹內容一致，新檔以 `git add -N` 納入；`sourceFingerprint` `ac44ac2bb48d…`，與 Quick 相同；比較基準 `origin/main` `650e4dd`），4 組平行（22／22／22／21），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（379／796／369／315 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（`git diff 52e4cdb` 工作樹），無問題 |
+
+### 2j.8 PR #19 合併 `dev`（2026-10-23）
+
+- 使用者建立 PR #19（`refactor/hall-of-fame-tier` `0cb3ccc` → `dev`），以 merge commit `7940e970954419d9252d8a062a0814e87cce386f` 併入 `dev`。`dev` 另含 `8d4d682`（只改 `BACKLOG.md`），故合併後與 `0cb3ccc` 的差分只有 `BACKLOG.md`，程式碼相同，未重新驗證。
+- 合併後 `dev` push 的 Quick CI（Tests #66，run `39974089520`）：PASS（`tests` job 15 分 41 秒，其中 `Install test-only Playwright` 12 分 13 秒）。
+| NOT_RUN | `retirement-hof-analysis`、`retirement-hof-report`（會改寫歷史報告；harness 變更由 `retirement-hof-balance`／`hof-first-ballot-league` 涵蓋） |
+
+## 2k. 第 9 期：守備位置 policy（細部計畫，2026-10-23；本機完成，見 §2k.7）
+
+第 8 期 PR #19 已提出、未合併。候補選定依據見 §3.9。
+
+### 2k.1 現況（2026-10-23 唯讀確認，基準 `0cb3ccc`，`game.js` 2744 行）
+
+- `game.js` `:76` `dpScore(p)`（讀 `S.ab`）、`:101` `dpBar()`（讀 `S.lv`／`S.age`、`DP_BAR`）、`:106` `dpQual(p)`（讀 `S.lv`／`S.age`／`S.traits.favorite`、`DP_TH`，呼叫 `dpScore`）、`:114` `dpList()`（讀 `S.pos`，`filter(dpQual)` 後加 `'DH'`）、`:121` `dpMult()`（讀 `S.pos`／`S.dpos`、`DP_MULT`）：無 RNG、不寫 `S`、無 UI。
+- 常數：`DP_TH`（`:90`）只被 `dpQual` 使用；`DP_BAR`（`:99`）只被 `dpBar`；`DP_MULT`（`:100`）被 `dpMult` 與 `dposReview`（`:170`／`:175` 年俸係數文案）；`DP_RANK`（`:113`）只被 `dposReview`（`:168`）。JP 覆寫區無 `Object.assign` 改寫。
+- 呼叫者：`dpScore`←`dpQual`、`ovr`（`:350`）；`dpBar`←`dposReview` 內 `cOk`（`:126`）；`dpQual`←`dpList`、`dposReview`（`:131`／`:142`／`:166`）；`dpList`←`dposReview`（`:163`）；`dpMult`←`salaryCandidate` 預設參數（`:2277`）。`dposReview`（`:122`，`choose`／`card` 流程，寫 `S.dpos`／`S.role`）不動。
+- 文字耦合：
+  - `event-integration.test:10`：`game.slice(indexOf('function dpQual('),indexOf('const DP_RANK='))` 於 vm 執行；`:11` fixture 注入 `DP_TH:{SS:{NPB1:50}}` 與 `dpScore` stub（`()=>44`／`()=>47`），`:22–26` 斷言依此值。
+  - `kbo-renewal-floor.test:38`：`dpMult:()=>.92` 僅為 stub，不切原始碼。
+  - `docs/design/MODULE_FUNCTION_INDEX.md`、`STATE_AND_RNG_REFERENCE.md`、`docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md`：說明文字，不改。`CURRENT_SPEC:104–105` 描述 `ovr`／`dpScore` 行為，行為不變，不改。
+  - 全樹掃描：`check-syntax`、`global-contract-market.test:9`（`readdirSync` 檢查 import 解析）會看到新檔；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點的檔案，新檔不受影響。
+
+### 2k.2 設計
+
+分類：L3／R3（能力評價・年俸係數・守備位置轉換）。無 RNG，`salary-flow` 計數不變；但 `dpScore` 經 `ovr` 影響年俸與市場評價，`dpMult` 為年俸係數。
+
+- 新檔 `docs/src/engine/defense-position-policy.js`（LF）的 export（名稱與 `game.js` 函式不同）：
+  - `defenseScoreFor(ability,position)`：原 `dpScore` 本體，`S.ab` 改為參數。
+  - `defenseBarFor({bars,level,age})`：原 `dpBar` 本體。
+  - `defensePositionQualified({position,thresholds,level,age,favorite,scoreOf})`：原 `dpQual` 本體；`scoreOf` 為計分函式，維持原本只在通過 `DH`／門檻存在檢查後才計分。
+  - `defensePositionCandidates(position,qualified)`：原 `dpList` 本體（守備順序陣列照原樣搬入）。
+  - `defensePositionMultiplier({position,defensePosition,multipliers})`：原 `dpMult` 本體。
+- `game.js`（CRLF）新增一行 import；5 函式改為一行委派，函式名稱與錨點文字保留：
+  - `function dpScore(p){return defenseScoreFor(S.ab,p);}`
+  - `function dpBar(){return defenseBarFor({bars:DP_BAR,level:S.lv,age:S.age});}`
+  - `function dpQual(p){return defensePositionQualified({position:p,thresholds:DP_TH,level:S.lv,age:S.age,favorite:S.traits.favorite,scoreOf:dpScore});}`
+  - `function dpList(){return defensePositionCandidates(S.pos,dpQual);}`
+  - `function dpMult(){return defensePositionMultiplier({position:S.pos,defensePosition:S.dpos,multipliers:DP_MULT});}`
+- 常數 `DP_TH`／`DP_BAR`／`DP_MULT`／`DP_RANK` 留在 `game.js`，呼叫時傳入：`const DP_RANK=` 是 `event-integration.test:10` 的終點錨點；該 fixture 以自有 `DP_TH` 與 `dpScore` stub 斷言，若門檻移入模組則改用實值（SS／NPB1＝58），`:23` 不成立。
+- `dposReview`（含其中的捕手判定 `cOk`）、`ovr`、`salaryCandidate` 不變。
+
+### 2k.3 測試變更（需揭露）
+
+1. harness（非期望值變更）：`event-integration.test:11` 的 vm fixture 加入 `defensePositionQualified`。
+2. 等價 fixture（`event-integration.test` 內新增，Full 入口數不變 87）：自 `0cb3ccc` 取出舊 `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 與最終 `DP_TH`／`DP_BAR`／`DP_MULT`，與現行包裝＋新模組逐格比較。格：8 守備位置＋`DH`＋未知值、頂級（`CPBL1`／`NPB1`／`MLB`）與其他等級、`dpBar` 年齡邊界 21／22／24／25／26／27、`dpQual` 年齡邊界 23／24／25／26、`favorite` 有無、`pos` 為 `P`／`C`／`IF`／`OF`、`dpos` 為 `null`／各位置／`DH`、能力值使分數恰等於門檻±。跨 realm 以 `JSON.stringify`＋格數守衛比較，並確認 `S` 不變。
+3. 實作前以新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列者先報告再改。
+
+### 2k.4 驗證（L3／R3）
+
+比較基準：`0cb3ccc`（完整 SHA 於實施時解析；#19 合併後若 `dev` 程式碼不同則改用 `dev`）；允許差分：無。
+
+1. `check-syntax`；`event-integration`、`kbo-renewal-floor`、`global-contract-market`、`award-identity-policy`、`salary-flow`、`verify-modularization`、`information-architecture`。
+2. `game-view-dom-e2e --baseline=<基準>`（直接執行）；新檔 commit 前先 `git add -N`；Quick。
+3. 負控制（scratchpad，各改一處）：①`dpQual` 門檻比較 `>=`→`>`；②`dpBar` 年齡邊界 `<=21`→`<21`；③`dpScore` 一個權重；④`dpMult` 去除投手回傳 1 分支。確認等價 fixture FAIL。
+4. Full 一次（worktree＋`git add -N`，4 組平行）；重跑範圍如實記錄。
+5. reviewer：`<基準>..HEAD`。重點：等價（`scoreOf` 呼叫時機、`filter` 順序、`DH` 附加、`||` fallback）、錨點文字、新 export 無 DOM／`S`／全域 RNG、CRLF（`game.js`）／LF（policy 檔）。
+6. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2k.5 交付
+
+- 分支：`refactor/defense-position`（自 `refactor/hall-of-fame-tier` `0cb3ccc`；計畫原為 #19 合併後將 `dev` 合入。實際 `dev` `7940e97` 與 `0cb3ccc` 只差 `BACKLOG.md`、`git merge-tree` 無衝突，2026-10-23 使用者同意不合入）。commit 順序：文件（§2k、§3.9）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG（§9.3）。`CURRENT_SPEC:456` 於同行追記新檔（不參照 DOM／`S`／RNG 的純函式）。不修改 `main`。
+
+### 2k.6 待決
+
+使用者決定（2026-10-23）：範圍 5 函式，`cOk` 不抽；常數留 `game.js`；等價 fixture 置於 `event-integration.test`；分支自 `0cb3ccc` 先開；調查記入 §3.9。實作待批准。
+
+### 2k.7 實施結果（2026-10-23，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `0f64711`＋未 commit 變更，實作 commit `06bee92`）
+
+- 實施前重新掃描（2k.3-3）：新名稱無既存參照；舊名稱除 §2k.1 所列外無新增（`docs/` 只有 `MODULE_FUNCTION_INDEX.md`、`STAGE5_SPEC_ARCHITECTURE_AUDIT.md` 說明文字）。
+- 實作：新檔 `defense-position-policy.js`（LF，35 行，本體除 `S`／常數改為參數外逐字搬移）；`game.js`（CRLF）`:40` 新增 import，`:77`／`:90`／`:91`／`:93`／`:94` 一行委派，2744→2717 行。`CURRENT_SPEC:456` 追加一句。
+- 測試變更：`event-integration.test:11` 的 vm fixture 加入 `defensePositionQualified`（harness）；同檔新增等價 fixture：分別以 `0cb3ccc` 與現行 `game.js` 的 `function dpScore(`→`function dposReview(` 區塊（含 `DP_*` 常數）於各自 vm 執行，先確認兩邊常數一致，再逐格比較 10 位置（8 守備位置＋`DH`＋未知值）的 `dpScore`／`dpQual`、`dpBar`、`dpList`、`dpMult` 與 `dpScore`／`dpQual` 呼叫紀錄（確認 `scoreOf` 呼叫時機）。格：`pos` 4×等級 6（含 `undefined`）×年齡 9（20–27、30）×`favorite` 2×能力 68 種（各門檻＋`-6.5`～`+0.5` 的均一值＋2 組非均一）＋`dpMult` 用 `pos` 4×`dpos` 11，共 29,420 格；以格數、`dpQual` 真偽兩值皆出現、`S` 不變作守衛。Full 入口數不變（87）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（169 檔） |
+| 相關單元 | `event-integration`、`kbo-renewal-floor`、`global-contract-market`、`award-identity-policy`、`salary-flow`（計數不變）、`verify-modularization`、`information-architecture` 皆 PASS |
+| `game-view-dom-e2e --baseline=0cb3ccc` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（直接執行） |
+| 負控制 | ①`dpQual` 門檻 `>=`→`>`、②`dpBar` 年齡 `<=21`→`<21`、③`dpScore` SS 權重 `0.5`→`0.51`、④`dpMult` 去除投手回傳 1：皆 FAIL。①先被既有斷言 `event-integration.test:23` 攔下，另以 scratchpad 副本（去除既有 `dpQual` 斷言，未變異時 PASS）確認等價 fixture 本身亦 FAIL。policy 檔還原後 `cmp` 一致 |
+| Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（與工作樹逐位元組一致，新檔以 `git add -N` 納入；`sourceFingerprint` `90a379687e33…`，與 Quick 相同；比較基準 `origin/main` `650e4dd`），4 組平行（21／22／22／22），87 入口不重複：**87 PASS／0 FAIL／0 SKIP／0 BLOCKED**（290／835／351／318 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（`git diff 0cb3ccc` 工作樹），無問題 |
+
+### 2k.8 PR #20 合併 `dev`（2026-10-23）
+
+- PR #20（`refactor/defense-position` `9ce9454` → `dev`，以 Playwright 經 Brave 建立）以 merge commit `f4a289422e76591b17106ec07cf87c61170fa246` 併入 `dev`；合併後與 `9ce9454` 的差分只有 `BACKLOG.md`（`dev` 既有的 `8d4d682`），程式碼相同，未重新驗證。
+- 合併後 `dev` push 的 Quick CI（Tests #67，run `39977180332`）：PASS（3 分 56 秒）。
+- 本節以 `ci/full-balance` 分支的文件 commit 提交（第 10 期分支未開）。
+
+## 2l. 第 10 期：能力評價 policy（細部計畫，2026-10-24；本機完成，見 §2l.7）
+
+候補選定依據見 §3.10。
+
+### 2l.1 現況（2026-10-24 唯讀確認，基準 `origin/dev` `f4a2894`，`game.js` 2717 行）
+
+- `game.js` `:223` `toolGap()`（讀 `S.ab`／`S.pos`）、`:315` `ovr()`（讀 `S.ab`／`S.pos`／`S.dpos`／`S.traits.yips`，呼叫 `dpScore`）、`:330` `playerType()`（讀 `S.ab`／`S.pos`／`S.traits.onetool`／`S.toolRole`）、`:348` `abCost(k)`（讀 `S.ab[k]`／`S.pot`／`S.pos`）：無 RNG、不寫 `S`、無 DOM（本體 grep `document`／`canvas`／`querySelector`／`innerHTML`／`choose(`／HTML 字串 0 件）。皆為頂層宣告，不在 JP 覆寫區，無重新賦值。
+- 讀取順序：`ovr` 的投手分支在讀 `S.dpos`／`S.traits` 前即 return；野手分支最後才讀 `S.traits.yips`。`playerType` 第一行即讀 `S.traits.onetool`。
+- 呼叫者：`ovr`←15 處（`:477` 看板 view model、`:623`／`:625` 海外回歸、`:882`、`:933`、`:1302`、`:2226` 社會人年俸、`:2252`／`:2261` 年俸候補、`:2374`／`:2382` 選秀、`:2403`、`:2407`／`:2417` 學生大會、`:2456` 代表選拔）；`playerType`←`:457` 看板、`:1999` `shareImage`；`toolGap`←`:1072`；`abCost`←`:531` 能力配分 UI。
+- `dpScore`（`:77`）已是 `defenseScoreFor(S.ab,p)` 的一行委派（第 9 期）。
+- `addAb`（`:353`，寫 `S.ab`／`S.carry`／`S.lastOverflow`）內有與 `abCost` 相同的成本式；`abCost` 註解要求兩者一致。
+- 文字耦合：
+  - `ability-allocation.test:19–20`：`assert.match(game,/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/)` 與 `/if\(cur>=pk\)cost\*=isP\?4:3/`。前者目前同時命中 `abCost`（`:350`）、`addAb`（`:361`）、`addAbStat`（`:832`），後者只命中 `addAb`；`addAb`／`addAbStat` 不動，搬移後仍 PASS。`:8` `doesNotMatch(game,/…|ability-allocation-policy/)`：新模組名不得為 `ability-allocation-policy`。
+  - `verify-modularization.mjs:58`（2026-10-24 實作前重掃發現）：`assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g)||[]).length,3)` 為精確計數，目前三處即上列 `:350`／`:361`／`:832`。搬移後 `game.js` 剩 2 → FAIL，處理見 §2l.3-3。`:59` `doesNotMatch(game,/cur>=66\?7:cur>=58\?4:…/)` 不受影響。
+  - vm stub（不切原始碼）：`kbo-renewal-floor.test:38` `ovr:()=>44`、`championship-intl.test:42,55,58,61`、`event-integration.test:31,44` `ovr:()=>50`、`full-power-pitching.test:17` `toolGap:()=>({gap:0})`、`tools/development-b/legacy-effect-boundaries.mjs:30` `ovr:()=>52`、`docs/reviews/g1-a-validation/fixtures.mjs:29`／`docs/reviews/award-jp-name-validation/validate.mjs:26` `ovr:()=>overall`。
+  - 瀏覽器全域呼叫：`stage10-risk-e2e:31,33`、`contract-salary-e2e:31` 的 `ovr()`；`tests/support/stage6-browser.mjs:25` 的 `abCost(k)`。函式名留在 `game.js`，不受影響。
+  - `productionFunction`／`indexOf`／`between` 切片：四函式名皆 0 件；測試或工具中對四名稱、`dpScore` 的重新賦值也是 0 件（`event-integration.test:26,53` 只改 vm 內的 `dpScore`，不經 `ovr`）。
+  - 全樹掃描：`check-syntax`（`readdirSync`）、`global-contract-market.test:9`（import 解析）會看到新檔；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點的檔案，新檔不受影響。`index.html` 只載入 `main.js`。
+  - `CURRENT_SPEC:104–105` 描述 `ovr`／`dpScore` 行為，行為不變，不改。
+
+### 2l.2 設計
+
+分類：L3／R3（`ovr` 影響年俸、市場評價、選秀、代表選拔、海外回歸）。無 RNG，`salary-flow` 計數不變。
+
+- 新檔 `docs/src/engine/ability-evaluation-policy.js`（LF）。export 名稱與 `game.js` 的函式名不同：
+  - `toolGapFor(ability,position)`：原 `toolGap` 本體。
+  - `overallRatingFor({ability,position,defensePosition,traits})`：原 `ovr` 本體；`dpScore(x)` 改為 `defenseScoreFor(ability,x)`（自 `./defense-position-policy.js` import，見 §2l.6①）。傳入 `traits` 物件、在原位置讀 `traits.yips`，保留「投手分支不碰 `S.traits`／`S.dpos`」的順序。
+  - `playerTypeFor({ability,position,traits,toolRole})`：原 `playerType` 本體。
+  - `abilityStepCostFor({ability,potential,key,position})`：原 `abCost` 本體；`(potential&&potential[key])||62` 保留原形，註解改為指向 `game.js` 的 `addAb`。
+- `game.js`（CRLF）新增一行 import，四函式改為一行委派，函式名與所在行保留：
+  - `function toolGap(){return toolGapFor(S.ab,S.pos);}`
+  - `function ovr(){return overallRatingFor({ability:S.ab,position:S.pos,defensePosition:S.dpos,traits:S.traits});}`
+  - `function playerType(){return playerTypeFor({ability:S.ab,position:S.pos,traits:S.traits,toolRole:S.toolRole});}`
+  - `function abCost(k){return abilityStepCostFor({ability:S.ab,potential:S.pot,key:k,position:S.pos});}`
+- 委派只讀取 `S` 的屬性參照（不解參照 `S.traits.*`），不新增例外路徑。
+- `addAb`、`dpScore`、`DP_*`、`ovr` 的所有呼叫端不變。
+
+### 2l.3 測試變更（需揭露）
+
+1. 等價 fixture 放在 `tests/ability-allocation.test.mjs`（LF；既有 Quick／Full 入口，不新增入口檔，所以本分支 89 入口不變）。用 `git show f4a2894:docs/src/engine/game.js` 取出舊 `toolGap`／`ovr`／`playerType`／`abCost`，與現行委派＋新模組各在自己的 vm 執行，逐格比較：
+   - 守備：`pos` 為 `P`／`C`／`IF`／`OF`；`dpos` 為 `undefined`／`null`／8 守備位置／`DH`／未知值。
+   - 特性：`yips`／`onetool` 有無；`toolRole` 有無。
+   - 能力：均一值（各分類門檻 52／58／60／62 的 ±1）、`cat`／`sta` 邊界、以固定 LCG 產生的非均一向量（不用 `Math.random`）。
+   - `abCost`：各 key，`cur` 取 54–56／59–61／63–67／71–73，`pot` 為 `undefined`／缺 key／`cur`±1。
+   - 投手且 `S.traits` 為 `undefined` 時，舊新兩側的 `ovr` 結果（或例外）必須一致。
+   - 判定方式：跨 realm 以 `JSON.stringify` 比較，並以格數守衛確認 `S` 不變。
+   - 加入 `execFileSync` 後，manifest 自動推導的 `dependencies` 會變成「＋Git history」，實作時確認無斷言依賴此值。
+2. 實作前用新舊名稱重新掃描 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`。本節未列的耦合，先報告再改。2026-10-24 已重掃（scout＋直接 grep），新發現 `verify-modularization.mjs:58`（§2l.1），其餘與 §2l.1 一致。
+3. `verify-modularization.mjs:58` 期望值變更（§2l.6⑤）：`game.js` 的計數 3→2；新增斷言 `ability-evaluation-policy.js` 內同一式恰好 1 次，三份副本合計仍受文字守護。`:59` 保留。
+
+### 2l.4 驗證（L3／R3）
+
+比較基準：`f4a2894`（實施時解析為完整 SHA）；允許差分：無。
+
+1. `check-syntax`；相關單元：`ability-allocation`、`championship-intl`、`event-integration`、`kbo-renewal-floor`、`full-power-pitching`（.test）、`salary-flow`（計數不變）、`award-identity-policy`、`global-contract-market`、`verify-modularization`、`information-architecture`。
+2. `game-view-dom-e2e --baseline=f4a2894`（直接執行）；`stage6-ability-e2e`（經 `abCost`）；新檔 commit 前先 `git add -N`；Quick。
+3. 負控制（scratchpad，各改一處），確認等價 fixture FAIL：
+   - ①`ovr` 投手權重 `0.42`→`0.43`
+   - ②`ovr` `DH` 的 `-12`→`-11`
+   - ③`playerType` `m<52`→`m<=52`
+   - ④`toolGap` 捕手 `/4`→`/3`
+   - ⑤`abCost` `cur>=66`→`cur>66`
+   - ⑤不會被 `ability-allocation.test:19` 攔下（該斷言命中 `addAb`），但會先被 §2l.3-3 新增的 policy 計數斷言攔下；此時及其他先被既有斷言攔下的情形，另以去除該斷言的 scratchpad 副本確認 fixture 本身 FAIL。
+4. Full 一次（scratchpad worktree＋`git add -N`，本機 4 組平行）；重跑範圍如實記錄。
+5. reviewer：`f4a2894..HEAD` 的程式差分。重點：
+   - 等價：讀取順序、`traits` 延遲解參照、`||62`、排序穩定性。
+   - 錨點文字與 `ability-allocation.test` 的正規表示式。
+   - 新 export 無 DOM／`S`／全域 RNG。
+   - 換行：`game.js` 為 CRLF，policy 檔為 LF。
+6. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2l.5 交付
+
+- 分支：`refactor/ability-evaluation`。2026-10-24 使用者決定自 `ci/pitching-split` `ef78224` 開，因為計畫文件 §2k.8 只存在於 CI 分支鏈；`docs/` 與 `f4a2894` 逐位元組相同。
+- PR → `dev`：須等 PR #21 與 `ci/pitching-split` 合併後，rebase 到 `dev` 再建。
+- commit 順序：文件（§2l、§3.10）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG（§9.3）。`CURRENT_SPEC:456` 於同行追記新檔（不參照 DOM／`S`／RNG 的純函式）。不修改 `main`。
+
+### 2l.6 待決
+
+1. `ovr` 的守備評分：①新模組直接 import `defenseScoreFor`（建議；`dpScore` 本身就是 `defenseScoreFor(S.ab,p)`，且無測試替換 `dpScore` 來影響 `ovr`）；②比照 `dpQual` 注入 `scoreOf:dpScore`（多一個參數，保留 `game.js` 端的替換點）。
+2. `abCost`／`addAb` 的重複成本式：①只搬 `abCost`、`addAb` 不動（建議；`addAb` 寫 `S`，且 `ability-allocation.test:19–20` 以文字鎖定 `addAb` 的式子）；②抽出共用成本函式給兩者使用（`addAb` 也要改，並要變更 `ability-allocation.test` 的期望值）。
+3. 等價 fixture 位置：`ability-allocation.test`（建議；不增加入口）或另開新測試檔（Full 入口 89→90，`ci-full-batches.test` 的入口數斷言要一起改）。
+4. export 名稱：`toolGapFor`／`overallRatingFor`／`playerTypeFor`／`abilityStepCostFor`。
+
+使用者決定（2026-10-24）：四點皆照建議（①直接 import `defenseScoreFor`；②只搬 `abCost`，`addAb` 不動；③fixture 置於 `ability-allocation.test`；④export 名稱如上）。實作待批准。
+
+5. `verify-modularization.mjs:58` 的精確計數（實作前重掃發現）：①`game.js` 計數 3→2，另斷言新模組內恰好 1 次（建議）；②只改 3→2（新模組的副本無文字守護）；③在 `game.js` 留註解副本湊計數（不建議，為測試保留假原始碼）。
+
+使用者決定（2026-10-24）：第 5 點採①。實作待批准。
+
+### 2l.7 實施結果（2026-10-24，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `86203bc`＋未 commit 變更，實作 commit `e75159e`）
+
+- 實施前重新掃描（§2l.3-2）：新名稱無既存參照；新發現 `verify-modularization.mjs:58` 精確計數（§2l.1），以 §2l.6⑤①處理。
+- 實作：新檔 `ability-evaluation-policy.js`（LF，53 行；本體除 `S` 改為參數、`dpScore(x)`→`defenseScoreFor(a,x)` 外逐字搬移，以 sed 置換後與 `f4a2894` 本體逐行 diff 確認）；`game.js`（CRLF，2717→2673 行，CR 行數＝總行數）`:41` 新增 import，`:224` `toolGap`、`:306`–`:308` `ovr`／`playerType`／`abCost` 一行委派。`CURRENT_SPEC:456` 追加一句。
+- 測試變更：
+  - `ability-allocation.test`：新增等價 fixture。以 `f4a2894` 與現行 `game.js` 的 `dpScore` 行＋`function toolGap(`→`function tjAccrue(`＋`function ovr(`→`function addAb(` 區塊，各在自己的 vm 執行（注入 `defense-position-policy`／`ability-evaluation-policy` export），每格輸出 `ovr`／`playerType`／`toolGap`／全 12 鍵 `abCost`（例外以 `E:<型>:<訊息>` 比較）與 `S` 不變旗標，以 JSON 字串比較。
+  - 主格：`pos` 4×`dpos` 12（`undefined`／`null`／8 守備位置／`DH`／`XX`）×特性 10（`traits` 為 `undefined`／`{}`／`yips`／`onetool`／兩者 × `toolRole` 有無）×能力 53（均一 51–63 門檻值 10、`cat` 邊界 6、`sta` 邊界 6、投手主項／全能 4、選球眼／韋駄天／守備職人 3、固定 LCG 24）＝25,440 格。
+  - 成本格：`pos` 4×鍵 12×`cur` 14×`pot` 6（`undefined`／`{}`／`0`／`cur`−1／`cur`／`cur`+1）＝4,032 格。合計 29,472 格。
+  - 守衛：格數、13 種選手タイプ與 3 種一芸役割皆出現、`S` 不變、投手＋`traits` 為 `undefined` 時 `ovr` 回傳數值且 `playerType` 為 `TypeError`。
+  - `verify-modularization.mjs:58`：`game.js` 計數 3→2，新增新模組內恰好 1 次的斷言（使用者批准的期望值變更）。Full 入口數不變（89）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（172 檔） |
+| 相關單元 | `ability-allocation`、`championship-intl`、`event-integration`、`kbo-renewal-floor`、`full-power-pitching`、`salary-flow`（計數不變）、`award-identity-policy`、`global-contract-market`、`information-architecture`、`verify-modularization` 皆 PASS |
+| `game-view-dom-e2e --baseline=f4a2894…` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（直接執行，末行確認基準） |
+| `stage6-ability-e2e` | 89 PASS／0 FAIL |
+| 負控制 | ①`ovr` 投手權重 `0.42`→`0.43`、②`DH` `-12`→`-11`、③`playerType` `m<52`→`m<=52`、④`toolGap` 捕手 `/4`→`/3`、⑤`abCost` `cur>=66`→`cur>66`：皆由等價 fixture 本身 FAIL（scratchpad 副本只改 policy 檔，`game.js` 未變，既有斷言皆通過後才到 fixture）。⑤另會被 `verify-modularization` 的新計數斷言攔下（不同檔） |
+| Quick | 67 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（`git diff HEAD --binary` 與工作樹一致，新檔以 `git add -N` 納入；`sourceFingerprint` `15704f35e621…`，與 Quick 相同；比較基準 `origin/main` `4d2fcfd`），4 組平行（23／19／24／23），89 入口不重複：**89 PASS／0 FAIL／0 SKIP／0 BLOCKED**（550／296／489／384 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（`git diff HEAD` 工作樹），無問題；另以四種 policy 輸出擾動確認 fixture 會 FAIL |
+
+- 未完成：push、PR → `dev`（§2l.5，待 PR #21 與 `ci/pitching-split` 合併後 rebase）、CI。
+
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；計畫中，實作未批准）
+
+候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
+
+### 2m.1 現況（2026-10-24 唯讀確認，基準 `43a38cf`，`game.js` 2673 行；實作前於新基準重掃）
+
+- 11-A 對象：`resumeProfessionalSeason`（`:1046–1062`）只由 `proSeason`（`:963` 重入、`:1044` 首次）呼叫。`:1057` 於 `PIPELINE_PREPARED` 階段執行 `tjGamble(()=>demotionAudit(()=>tradeCheck(()=>maybeIntl(()=>nextStep()))))`，前後將 `entry.phase` 設為 `PIPELINE_STARTED`／`PIPELINE_WAIT`。
+- 鏈上各層（scout 讀本體＋抽查）：
+  - `tjGamble(cont)`（`:232`）：守衛不符直接 `cont()`；否則 `choose` 兩選項，`ri`／`chance` 後經 `afterGamble` 呼叫 `cont`。
+  - `demotionAudit(cont)`（`:871`）：無 RNG，各路徑 `cont()`。
+  - `tradeCheck(cont)`（`:887`）：`chance(p)` 後依分支直接或於 `choose` 回呼內 `cont()`。
+  - `maybeIntl(done)`（`:2458`）＝`processIntlPhase('POST',done)`：逐一處理大會，佇列耗盡時 `done()`。
+  - 各層在所有路徑恰好呼叫後續一次，RNG 皆在呼叫後續前消耗。
+- 11-B 對象（scout 盤點＋抽查，數字為概數，各批開始前重新逐處盤點）：`advance` 約 34 處、`endGame` 14 處，分布於 15 個函式；約三分之二在 `choose` 回呼內。`advance`（`:1482`）以 `yearHandoffs` 保護重入，`:2284` 覆寫先執行 `finalizePendingOffseasonSalary`；`endGame`（`:1625`）於 `:2657` 覆寫加 `setTimeout` 文字改寫；`movement` 為 `:1257`（`LEGACY.movement`）→`:2643`→`:2645` 三層。
+- 文字耦合（11-A）：
+  - `full-power-pitching-e2e.mjs:30`：`productionFunction('resumeProfessionalSeason',current)` 須逐字包含鏈字串（另含 `awards(entry.bucket,entry.st)` 等 4 項，不受影響）。
+  - `championship-intl.test.mjs:76`：`game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('tjGamble(()=>demotionAudit')`。
+  - `full-power-pitching.test.mjs:19`：vm 只以 `productionFunction` 取出 `tjCap`／`tjAccrue`／`proSeason`／`resumeProfessionalSeason`／`phasePre`；新增的分派函式不在 vm 內，`proSeason()` 會 `ReferenceError`。
+  - `championship-intl-e2e.mjs:22`：執行時以 `tjGamble=c=>c()` 等替換五個全域名稱再呼叫 `proSeason()`。
+  - `salary-flow` 計數：不新增、不移動 RNG 呼叫點，不變。`stage10-risk-e2e` 的包裝名單不含鏈上五個名稱。
+- 文字耦合（11-B，§3.11 已列，各批重掃）：`draft-signing-policy:87`、`career-movement-policy:50`、`salary-flow:30`、`npb-return-ui:50–51`、`event-integration:34`、`kbo-renewal-floor:47`、`championship-intl:73,76`、`fixed-seed-v160:22`；執行時替換全域名稱的 e2e：`stage10-risk-e2e`、`contract-salary-e2e`、`npb-return-e2e`、`smallschool-c-e2e`、`trait-system-e2e`。
+
+### 2m.2 設計
+
+分類：L3／R3（年度流程、RNG 順序）。共通原則：
+
+- 分派函式放在 `game.js`（CRLF），不放新模組：測試會在執行時替換全域名稱，ESM 匯入的綁定無法從外部替換。
+- 分派一律在執行當下以名稱呼叫目標函式，不在表中保存函式參照。
+- 同步執行、在原位置、依原順序呼叫原函式；不新增或移動 RNG 呼叫點。
+- `S`、`seasonContinuations` 的階段值、`yearHandoffs` 不新增欄位或狀態（`entry.phase` 不細分）。
+
+**11-A：賽季後處理分派**
+
+- 新增 `function runSeasonPipeline(step)`（暫名，§2m.6①）：步驟名單 `['TJ_GAMBLE','DEMOTION_AUDIT','TRADE_CHECK','INTL_POST']` 寫在函式內，`step` 超出名單時呼叫 `nextStep()`，否則以 `switch` 呼叫 `tjGamble`／`demotionAudit`／`tradeCheck`／`maybeIntl`，傳入 `()=>runSeasonPipeline(step+1)`。
+- `:1057` 的鏈改為 `runSeasonPipeline(0)`；`entry.phase` 的設定位置與值不變。
+- 等價性：原鏈與新分派的呼叫順序、後續呼叫次數、回傳值（皆捨棄）、同步完成時 `nextStep` 早於 `PIPELINE_WAIT` 的時序皆相同。
+
+**11-B：年度層結果回報（各批開始前另立細部）**
+
+- 新增 `function reportFlowOutcome(outcome)`（暫名，§2m.6①）：依 `outcome.kind` 決定呼叫 `advance()` 或 `endGame(outcome.reason)`，在執行當下以名稱呼叫。各領域原本直接呼叫 `advance()`／`endGame()` 的位置改為回報具名結果；領域內部的下一步（如拒絕降格後的 `outOfOrg`）不歸此函式。
+- 結果名稱依領域分組，命名規則見 §2m.6②。
+- 分批（建議順序，§2m.6④）：
+  1. 業餘選路：`enterDraftPath`、`draftFallback`、`pathChoiceHS`、`pathChoiceU4`、`movement`（`:2643`）的 HS／U／CORP／IND 分支。
+  2. 降格：`handleDemotion`、`retireBelowActiveMinimum`。
+  3. FA／市場：`crossOffers`、`renewAndAdvance`、`arbitrationFlow`、`acceptFaOffer`、`showFaMarket`、`outOfOrg`。
+  4. 年度：`movement`（`:1257`）、`phasePre`。
+- 待確認：`:1257` 的 HS／U 分支在 `:2643` 覆寫後是否仍可達（`:2643` 自行處理非 PRO，PRO 才委派 `LEGACY.movement`）。不可達時該批只記錄、不改。
+
+### 2m.3 測試變更（需揭露，期望值變更皆需批准）
+
+11-A：
+
+1. `full-power-pitching-e2e.mjs:30`：鏈字串改為要求 `runSeasonPipeline(0)`，並另以 `productionFunction('runSeasonPipeline',current)` 斷言步驟名單順序與四個 `case` 的呼叫對象（§2m.6③）。
+2. `championship-intl.test.mjs:76`：錨點 `tjGamble(()=>demotionAudit` 改為 `runSeasonPipeline(0)`，維持「冠軍快照在後處理之前」的順序斷言。
+3. `full-power-pitching.test.mjs:19`：比照 `resumeProfessionalSeason` 的條件式，`source.includes('function runSeasonPipeline(')` 時一併取出（舊 SHA 不含此函式）。
+4. 新增行為 fixture（放在既有入口，不增加 Full 入口數）：以 vm 取出現行與基準 SHA 的 `resumeProfessionalSeason`（＋`runSeasonPipeline`），以記錄呼叫順序的 stub 執行，比較兩側的呼叫序列、後續呼叫次數與 `entry.phase` 變化，涵蓋「全部直接續行」「某層延遲續行（模擬 `choose`）」「某層拋出例外」。
+5. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
+
+11-B：各批的斷言變更於該批細部計畫列出。
+
+### 2m.4 驗證（L3／R3）
+
+比較基準：實作開始時的 `origin/dev`（第 10 期合併後），解析為完整 SHA；允許差分：無。
+
+1. `check-syntax`；相關單元：`full-power-pitching`（.test）、`championship-intl`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`、`global-contract-market`。
+2. `game-view-dom-e2e --baseline=<基準>`（直接執行）：8 生涯每一步 DOM／`S`／RNG 完全一致；`full-power-pitching-e2e`、`championship-intl-e2e`、`stage10-risk-e2e`；Quick。
+3. 負控制（scratchpad 副本，各改一處）：①交換 `DEMOTION_AUDIT`／`TRADE_CHECK` 順序、②某 `case` 少呼叫後續、③`step+1`→`step+2`，確認 §2m.3-4 的 fixture 本身 FAIL（先被既有斷言攔下時，另以去除該斷言的副本確認）。
+4. Full 一次（scratchpad worktree＋`git add -N`，本機 4 組平行）。
+5. reviewer：程式差分。重點：呼叫順序與次數、執行當下查名稱、換行（`game.js` CRLF）、無新增 `S` 欄位與 RNG 呼叫點。
+6. 11-B 各批比照 1–5，另加該批相關 e2e（如 `contract-salary-e2e`、`npb-return-e2e`、`smallschool-c-e2e`、`trait-system-e2e`、`draft-income-e2e`）。
+7. FAIL／BLOCKED／SKIP 分別記錄，不標 PASS。
+
+### 2m.5 交付
+
+- 本節（計畫）commit 於 `refactor/ability-evaluation`，隨第 10 期 PR 進 `dev`。
+- 實作：第 10 期併入 `dev` 後，自 `dev` 開 `refactor/flow-state-machine`（暫名）。11-A 一個 PR；11-B 每批一個 PR。
+- commit 順序：文件（各段細部）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
+- 不升 VERSION、不改 CHANGELOG（§9.3）；行為不變，`CURRENT_SPEC` 不改。不修改 `main`。
+
+### 2m.6 待決
+
+1. 函式名稱：`runSeasonPipeline`／`reportFlowOutcome`（建議）或其他。
+2. 11-B 結果名稱的命名規則：①`領域_結果` 大寫蛇形，例如 `DEMOTION_TRANSFER_NPB2`、`AMATEUR_DRAFTED`（建議）；②只用結果，例如 `TRANSFER_NPB2`。
+3. 11-A 等價斷言（§2m.3-1）：①要求 `runSeasonPipeline(0)`＋斷言步驟名單與 `case` 對象（建議）；②只保留行為 fixture，刪除文字斷言。
+4. 11-B 分批順序：照 §2m.2 的 1→4（建議；業餘選路分支最單純，`movement`／`phasePre` 牽涉最廣放最後）或其他。
+
+使用者決定（2026-10-24）：四點皆照建議（①`runSeasonPipeline`／`reportFlowOutcome`；②`領域_結果` 大寫蛇形；③要求 `runSeasonPipeline(0)`＋斷言步驟名單與 `case` 對象；④分批順序 1→4）。實作待第 10 期併入 `dev` 後另行批准。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -1421,7 +1797,7 @@ export class SeasonStats {
 
 ### 3.6 年度流程的狀態機方向（2026-10-23 使用者意見）
 
-- 現況（`3c0f3e1`，唯讀確認）：已是隱含狀態機。年度內位置為 `careerSession.stepQ`（函式參照，`startYear` 設為 `[phasePre,phaseIntlPre,phaseMid,phaseEnd]`，`nextStep` 逐一 shift），生涯階段為 `S.stage`（賦值 32 處），等待輸入為 `choose(`（約 47 處），後續流程與區域旗標存於閉包，無法序列化。
+- 現況（`3c0f3e1`，唯讀確認）：已是隱含狀態機。年度內位置為 `careerSession.stepQ`（函式參照，`startYear` 設為 `[phasePre,phaseIntlPre,phaseMid,phaseEnd]`，`nextStep` 逐一 shift），生涯階段為 `S.stage`（賦值 32 處；2026-10-24 於 `43a38cf` 重查：寫入 6 處、讀寫合計 77 處，見 §3.11），等待輸入為 `choose(`（約 47 處），後續流程與區域旗標存於閉包，無法序列化。
 - 目的：(a) 可讀性／轉移一覽、(c) 測試不依賴原始碼文字切片。不採整體改寫（RNG 順序、文字切片耦合、LEGACY 覆寫的成本過高）。
 - 做法（於 `year_season_flow` 期另立細部計畫）：①年度步驟改為具名資料（如 `PRE`／`INTL_PRE`／`MID`／`END`）＋分派函式；②`S.stage` 轉移抽出為純函式 policy（同 7-B 型）。
 - (b) 年度中途存檔／續玩：將來候補。現階段不將 `choose` 閉包狀態化，但後續拆分避免妨礙其實現的設計。
@@ -1430,6 +1806,111 @@ export class SeasonStats {
 
 - 開始前：①確認 7-B PR 的合併與 CI；②以合併後 `dev` 為基準重新做耦合調查（§3.5 的表為 `097e212`、2904 行時點，已過時），並掃描 `docs/src` 全域的凍結斷言（`award-identity-policy.test:155`，§2i.10）與 `ls-tree`／`ls-files`／`readdirSync` 系掃描；③依內聚度（自有狀態、群內／跨群呼叫比、注入數）選定。
 - 候補（數字為 §3.5 舊值）：`injury_tj`（108 行，8／25，有 RNG；建議：故障機率・TJ 規則抽為純函式 policy，抽取留原處；`tjCap`／`tjAccrue`／`tjGamble` 有 `productionFunction` 與 `full-power-pitching-e2e` 逐字比較）、`amateur_draft_path`（80，11／42）、`events_love`（190，14／35）、`awards_hof`（272，6／27，Receipt 相關 R3 核心）。`year_season_flow` 依 §3.6 最後進行。
+- 使用者決定（2026-10-23）：第 8 期採 `awards_hof` 中的殿堂評分 policy（`careerScore`／`defShare`／`tierOf`），細部計畫見 §2j；調查見 §3.8。
+
+### 3.8 第 8 期候補：耦合調查摘要（2026-10-23，基準 `52e4cdb`，`game.js` 2761 行；scout 唯讀調查＋抽查）
+
+- 方法：acorn＋eslint-scope 解析 `game.js`，依 §3.7 的舊成員清單重新定位，並掃描 `tests/`、`tests/support/`、`scripts/`、`tools/` 的文字耦合。行數與 RNG 為 scout 計數；分類為人工判斷。
+
+| 群 | 行數 | RNG | 主要耦合 | 領域組成 |
+|---|---|---|---|---|
+| `injury_tj` | 108 | chance 6、ri 7、pick 2 | `full-power-pitching-e2e` 逐字比較 `tjAccrue`／`tjCap`；`full-power-pitching.test` 取出 `tjCap`／`tjAccrue`／`tjGamble`；`trait-policy.test:100` 切 `afterGamble→pitcherRole`；`championship-intl.test:76` 錨點 `tjGamble(()=>demotionAudit` | 純規則只有 `injuryProb`（11 行，只讀 `S`）；其餘混有 RNG、`S` 變更與 UI |
+| `amateur_draft_path` | 80 | R 2、ri 9 | 全部在 JP 覆寫區內（縮排兩格），跨群呼叫約 36 個；`event-integration.test:39` 切 `cupOnce→intlEvents`；`domestic-tournament-policy.mjs:87–89` regex；多個 e2e 直接呼叫 `setSchool`／`setAmateur`／`runDraft`／`enterDraftPath`／`amateurSeason` | RNG＋`S` 變更＋UI 混合 |
+| `events_love` | 190 | R 2、pick 11、chance 9 | `event-copy.test:32` 以 `a7fe2e8` 逐字凍結 `evOdds→drawEvents` 與 `resolveEvent→/* シーズン中即時可解鎖的特性。 */`；`event-integration.test:36` 切 `eventChoiceSummary→drawEvents`；`CHEER`／`CHEER_SAFE` 為模組層級可變綁定 | 純規則只有 `partnerJob`／`datePool`／`affairPool`；`loveEvent`（81 行）為 RNG＋`S` 變更＋UI |
+| `awards_hof` | 470（含 `endGame` 205 行） | R 5、ri 2 | `trait-policy.test:106` 切 `awards→maybeIntl\|let applyPromotionSalary=`；`award-journal-native.test:27`、`tools/development-b/award-runtime-support.mjs:37` 取出 `awards`／`renderCheckpointCard`／`collectLegacyAwardPlan`；`retirement-hof-test-support.mjs:21` 取出殿堂函式；Receipt／`journalBridge` | 殿堂評分（`careerScore`／`defShare`／`tierOf`）為純規則；其餘為 Receipt 交易、RNG 與 UI |
+
+- `salary-flow.test` 計數（排除 bridge 後）：`R(` 22、`ri(` 39、`chance(`＋legacy slot 42、`pick(` 14。
+- 全樹掃描：`check-syntax`（`readdirSync` 全部語法檢查）、`verify-modularization`、`information-architecture` 不擋新檔；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點已存在且不在 `allowedB` 的檔案，`docs/src/engine/` 的新檔不受影響。`index.html` 只載入 `main.js`，`game.js` import 的新模組不需改 `index.html`。
+- 結論：四群皆為領域混合，整群搬移不符 §3.7 的內聚度基準；`awards_hof` 中的殿堂評分可依 7-B 型抽為純函式 policy，且不影響 `salary-flow` 計數。
+
+### 3.9 第 9 期候補：純規則函式調查（2026-10-23，基準 `0cb3ccc`，`game.js` 2744 行；scout 唯讀調查＋抽查）
+
+- 方法：§3.8 的結論為整群搬移不適用，故改為對 `game.js` 全部 222 個函式記錄 RNG、`S` 讀寫、UI／DOM、可變綁定與呼叫關係，篩出無 RNG・不寫 `S`・無 UI・非委派的函式，再對應 §3.5 的群並掃描文字耦合。
+- scout 計數：純規則 110、近純（僅一項不符）62。**計數偏高**：UI 判定有漏（抽查發現 `shareImage` 使用 `document`／`canvas`、`bindLatestSalaryDetailLink` 使用 `querySelectorAll`，皆被列為純規則）；下表只列抽查確認者。
+
+| 候補 | 內容 | 內聚度 | 文字耦合 |
+|---|---|---|---|
+| `dp_defense` | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult`＋`DP_*` 常數（`:76–121`） | 單一領域，群內互相呼叫；只讀 `S` | `event-integration.test:10` 切片；`kbo-renewal-floor:38` stub |
+| `salary_helpers` | `serviceYearsFor`／`salaryCandidate` 等（JP 覆寫區） | 集群，但多依賴既有 policy，部分回傳 HTML | `kbo-renewal-floor` 以 `between`／regex 切 `salaryFor`／`salaryCandidate=`／`kboPreviousPackage`；`stage10-risk-e2e` 以全域名使用 `salaryFor` |
+| `ability_traits` | `ovr`（13 呼叫者）／`playerType`／`toolGap`／`abCost`／`injuryProb` | 各自孤立 | 少 |
+| `rng_seed` | `fnv1a32`／`normalizeSeed` 等（約 11 行） | 集群 | `fnv1a32` 被 6 處以上 `productionFunction` 取出；`seedInit→clamp` 切片 |
+| `events_love` 純規則部分 | `evOdds`／`datePool` 等（約 25 行） | 小 | `event-copy.test:32` 以 `a7fe2e8` 逐字凍結 |
+
+- 使用者決定（2026-10-23）：第 9 期採 `dp_defense`，細部計畫見 §2k。
+
+### 3.10 第 10 期候補：純規則函式再調查（2026-10-24，基準 `origin/dev` `f4a2894`，`game.js` 2717 行；scout 唯讀調查＋抽查）
+
+- 方法：依 §3.8／§3.9 未採用的候補，以 acorn＋eslint-scope 重新記錄 RNG、`S` 讀寫、DOM／UI、可變綁定、呼叫關係，並掃描 `tests/`、`tests/support/`、`scripts/`、`tools/` 的文字耦合與 `docs/src` 全樹掃描。
+- 抽查方式：下表各函式本體已直接 grep DOM 關鍵字並讀原始碼確認。scout 腳本的 `S` 寫入計數漏算巢狀欄位（例如 `S.ab.vel=`），所以表中的 `S` 讀寫以原始碼為準。
+
+| 候補 | 內容 | RNG／寫 `S`／UI | 文字耦合 | 判斷 |
+|---|---|---|---|---|
+| `ability_eval` | `ovr`／`playerType`／`toolGap`／`abCost`（`:223`–`:352`，不相鄰） | 無／無／無 | 無切片或 `productionFunction`；只有 vm stub 與瀏覽器全域呼叫；`ability-allocation.test:18–19` 鎖定 `addAb` 的成本式 | 同一領域、輸入相同，彼此不互相呼叫 → **採用（§2l）** |
+| 成績比率 | `slgOf`（`:396`）／`portionOf`（`:965`） | 無／無／無（只吃參數） | 無 | 16 行，價值低 |
+| `injuryProb` | `:368`，11 行 | 無／無／無 | 無 | 單一函式，價值低 |
+| `rng_seed` | `normalizeSeed`／`fnv1a32`／`deriveSeedInt` 等（JP 覆寫區 `:2204–2212`） | 無（`generateSeed` 用 `crypto`） | `fnv1a32` 被 `productionFunction` 取出 5 處（`rng.test:15`、`award-journal-native.test:27`、`retirement-hof-test-support:22`、`tools` 2 處）；`verify-version-metadata:38` 找 `function fnv1a32(` 行 | 排除 |
+| `salary_helpers` | `serviceYearsFor`～`salaryCandidate`（JP 覆寫區 `:2240–2263`） | 無／無／無 | `salary-flow.test:20–27` 斷言 `let … salaryCandidate;` 宣告形式；`kbo-renewal-floor:43`、`npb-return-ui:62` 切片；多個 e2e 以全域使用 | 排除 |
+| 投手角色 | `pitcherRole`／`fmtIP`／`roleN`／`isSP`（`:298–314`） | 無／無／無 | `fmtIP`→`roleN` 被 `international-personal-stats.test:8,79`、`championship-intl.test:42` 切片；`isSP` 被 `productionFunction` 取出 2 處；`pitcherRole` 是 `trait-policy.test:100`、`season-stats.test:16` 的錨點 | 排除 |
+| `events_love` 純規則部分 | `evOdds`／`partnerJob`／`datePool`／`affairPool` | 無／無／無 | `datePool`／`affairPool` 讀可變 `let CHEER`／`CHEER_SAFE`；`event-copy.test:32` 以 `a7fe2e8` 逐字凍結 `evOdds` | 排除 |
+| `injury_tj` 其餘 | `tjAccrue`／`tjGamble`／`tjTwoStrike`／`tjBigInjury`／`afterGamble` | 有 RNG 或寫 `S`／`choose`／HTML | `full-power-pitching-e2e:23` 逐字比較 `tjAccrue`／`tjCap` | 排除 |
+| `amateur_draft_path` | `setSchool`／`setAmateur`／`runDraft`／`amateurSeason` | 寫 `S`、RNG、UI | 多個 e2e 以全域呼叫 | 無純規則 |
+
+- `year_season_flow`：依 §3.6 最後進行，本次不列為候選。
+- 全樹掃描：`check-syntax`、`global-contract-market.test` 會讀到新檔，不擋；`award-identity-policy.test:155` 只凍結 `287dd1a` 時點的檔案；`verify-modularization`、`information-architecture` 只讀指定檔名。`index.html` 只載入 `main.js`。
+- `salary-flow.test` 計數（`R(` 22、`ri(` 39、`chance(`＋legacy slot 42、`pick(` 14）：上表的純規則候補都不含 RNG，搬移不影響計數。
+- 使用者決定（2026-10-24）：第 10 期採 `ability_eval`，成績比率不做。細部計畫見 §2l。
+
+### 3.11 第 11 期候補：領域地圖與流程狀態機（2026-10-24，基準 `43a38cf`，`game.js` 2673 行；scout 唯讀調查＋scratchpad AST 腳本＋抽查；**未決**）
+
+- 視覺化報告：[`.claude/reports/oop-phase11-domain-flow-survey.html`](../.claude/reports/oop-phase11-domain-flow-survey.html)（領域地圖、引用矩陣、event storming 時間線、局部狀態機、路線對比；內容同本節）。
+- 背景：§3.10 後純規則候補已用盡（剩餘者價值低或被文字耦合排除）。§3.6 的①②重新評估：①`stepQ` 只有 `:510`（`nextStep` shift）與 `:2460`（`startYear` 整體指派）兩處，無年度中途插入、無序列化；具名化後 `stage6-browser.mjs:22`、`stage10-risk-e2e.mjs:25`、`tools/development-a/runtime.mjs` 的 `stepQ.map(f=>f.name)` 快照會變，`full-power-pitching-e2e.mjs:38` 直接塞 `[phaseEnd]`。②`S.stage` 寫入只有 6 處（`newState`、`signTo`、`setAmateur`、`draftFallback`、`pathChoiceHS`、`pushAma`），值為常數或參數、條件多為玩家選擇，抽成 policy 無實質內容。→ ①②皆不單獨成期。
+- 方法：acorn AST 將 179 個頂層函式依名稱人工分為 16 領域，計算領域間引用（不重複函式對）與 `S` 欄位寫入（含巢狀）。限制：腳本把物件屬性鍵（如 `{startYear:S.year}`）也算成引用，引用數可能少量高估；分群為人工判斷。
+
+**領域地圖**
+
+| 層 | 領域（行數） | 特徵 |
+|---|---|---|
+| 基礎 | RNG（16）、UI（93） | 只被呼叫 |
+| 葉領域 | 守備（62）、能力・特性（126）、成績模擬（129）、故障・TJ（108）、事件・戀愛（191）、獎項（186）、國際（51）、引退・殿堂（334）、分享圖（286） | 除 RNG／UI／能力輔助外幾乎不呼叫其他業務領域 |
+| 樞紐 | 契約・薪資（214）＋FA・市場・移籍（306）、業餘・選秀（81） | 市場→薪資 46 條引用，寫入欄位幾乎相同（`ct`／`lv`／`org`／`team`／`stage`／`serviceTime`…），實為同一「所屬與契約」領域 |
+| 編排 | 年度流程（200） | 引用 14 個領域 |
+
+- 分享圖 `shareImage`：不用 RNG、不寫 `S`，只讀資料畫 canvas，可比照第 5 期移至 `docs/src/ui/`；文字耦合未掃。
+- 故障、事件、引退、獎項、國際：可比照第 6 期 `SeasonStats`（class＋注入 `R`／UI／`S`），但移動 RNG 呼叫點會改變 `salary-flow` 計數（需批准），且各有文字耦合（`full-power-pitching` 逐字比較、`event-copy` 凍結且 `CHEER` 為可變綁定、`retirement-hof-test-support`／`award-journal-native` 的 `productionFunction`）。
+
+**Event storming 熱點**
+
+1. 決定下一步的入口分散：`advance` 約 34 處、14 個函式（`movement` 兩個定義、`handleDemotion` 6、`pathChoiceHS` 4、`draftFallback` 3、`outOfOrg`、`crossOffers`、FA／仲裁、`phasePre`…）。`startYear` 只由 `advance`（`:1490`）與 `startJapanese`（`:2665`）呼叫。
+2. 結束生涯的入口分散：`endGame` 14 處、9 個函式（`phasePre`、`movement`、`handleDemotion`、`retireBelowActiveMinimum`、`draftFallback`、`pathChoiceU4`、`showFaMarket`、`outOfOrg`）。
+3. `S` 欄位無單一寫入者：`traits` 由 9 領域 17 函式寫入；所屬欄位（`stage`／`stageYr`／`lv`／`org`／`orgTeamId`／`team`）由契約、市場、業餘寫入；`ab`／`pot` 由故障、能力、事件、流程寫入。
+4. Policy（「X 之後做 Y」）寫死在巢狀回呼，例如 `resumeProfessionalSeason` 的 `tjGamble(()=>demotionAudit(()=>tradeCheck(()=>maybeIntl(()=>nextStep()))))`。
+5. 等待中的命令（`choose` 閉包）無法序列化，即 §3.6 (b) 的障礙。
+
+**既存的局部狀態機（重入保護，不決定下一步）**
+
+| 位置 | 狀態 |
+|---|---|
+| `advance`（`:1482`，`yearHandoffs`） | `PREPARED → STARTED → COMMITTED` |
+| `resumeProfessionalSeason`（`:1048–1057`，`seasonContinuations`） | `BUILDING → AWARDS → EVALUATION → CHAMPIONSHIP → TJ_ACCRUAL → PIPELINE_PREPARED → PIPELINE_STARTED → PIPELINE_WAIT` |
+| `settleProfessionalEnd`（`:2575–2607`） | `STARTED → CHAMPIONSHIP_RENDER → PAYMENT_PREPARED → PAYMENT_COMMITTED → RESULT_RENDERED → MOVEMENT → WAIT_CHOICE → WAIT_ALLOCATION → ALLOCATION_STARTED → ALLOCATION_COMMITTED` |
+| `movement` 覆寫（`:2645`，`professionalMoves`） | `STARTED → WAIT_CHOICE` |
+
+- 覆寫：`advance` 於 `:2284` 包一層（先 `finalizePendingOffseasonSalary`）；`endGame` 於 `:2657` 包一層（`setTimeout` 改寫畫面文字）；`movement` 為 `:1257`（`LEGACY.movement`）→ `:2643` → `:2645`（`performMovement`）三層。
+
+**方向：狀態機當 process manager 控制 policy**
+
+- 出口約三分之二在 `choose` 回呼內，領域函式無法同步回傳結果；可行形式為把各處的 `advance()`／`endGame()` 換成單一通用入口（例：`flow.report({kind})`），由狀態機決定下一步。各函式結果種類合計約 50（`movement` 15、FA／仲裁 8、`handleDemotion` 7、`outOfOrg` 4、選路 4–5），但年度層只歸到 2–3 個轉移（下一年／結束生涯／業餘選路）。
+- 不採事件匯流排（pub/sub）：RNG 順序要求同步、固定順序，會退化為函式呼叫而多一層抽象（AGENTS §5）。
+- 限制：分派須同步且在原位置執行原函式（RNG 順序不變）；須於執行當下查名稱，因 `stage10-risk-e2e`、`contract-salary-e2e`、`npb-return-e2e`（整個替換 `advance`）、`smallschool-c-e2e`、`trait-system-e2e` 會替換全域名稱。
+
+| 路線 | 範圍 | 主要成本 |
+|---|---|---|
+| A：年度層 `flow.report` | `advance`／`endGame` 約 48 處、15 函式，多在樞紐領域 | 文字耦合約 8 測試需批准期望值變更（`draft-signing-policy:87`、`career-movement-policy:50`、`salary-flow:30`、`npb-return-ui:50–51`、`event-integration:34`、`kbo-renewal-floor:47`、`championship-intl:73,76`、`fixed-seed-v160:22`）；5 個 e2e 相容；L3／R3 |
+| B：賽季後處理表驅動 | `resumeProfessionalSeason` 的 4 層串接鏈（已有階段標記） | 鏈上各層在所有路徑恰好呼叫後續一次、RNG 皆在呼叫後續前消耗；`resumeProfessionalSeason` 只由 `proSeason` 呼叫。會壞：`full-power-pitching-e2e.mjs:30`（逐字要求鏈字串）、`championship-intl.test.mjs:76`（`captureSeasonChampionship(S);` 須在 `tjGamble(()=>demotionAudit` 之前），需批准改為等價斷言；`championship-intl-e2e.mjs:22` 執行時替換五個名稱，須執行當下查名稱（移到 ESM 模組則壞）；`salary-flow` 計數不變。收益小（5 步線性），價值在驗證 A 的機制。補正（§2m.1）：另有 `full-power-pitching.test.mjs:19` 的 vm 不含新分派函式而會 `ReferenceError`，會壞的測試共 3 個 |
+
+- 建議（未決）：先以 B 驗證同步分派、執行當下查名稱、RNG 順序不變三點，再決定是否投入 A。
+- 使用者決定（2026-10-24）：第 11 期採 A＋B（11-A＝路線 B 先行，11-B＝路線 A），細部計畫見 §2m。
+- 順帶發現（未驗證、與本期無關）：`tools/development-a/runtime.mjs` 寫 `stepQ=[phaseEnd]` 而無 `__cs.` 前綴，第 3 期後疑似只設定無作用的全域變數。
 
 ## 4. 使用者決定（2026-10-18）
 

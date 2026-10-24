@@ -2,9 +2,9 @@
 
 ## CI Full 分批保存
 
-CI 的 Full 透過 `scripts/ci-full-batches.mjs` 依原 inventory 順序拆成8批（目前87入口，每批10～11個），呼叫原 `scripts/test.mjs full --only=...`；不更改 Runner、測試旗標、timeout、斷言或歷史基準。Quick／Audit 保持原命令。`plan` 固定當次 HEAD、Run ID／attempt及已解析的 origin/main；`run 1`～`run 8` 分別輸出到 `test-results/ci-full/batch-N/`，每批後由獨立 upload-artifact step 保存；`aggregate` 嚴格驗證完整集合、來源與環境、exit/status、log SHA256，任一缺失、FAIL／SKIP／BLOCKED或重用結果都不能得到Full PASS。
+CI 的 Full 透過 `scripts/ci-full-batches.mjs` 依 `test-manifest.mjs` 的 `seconds` 預估以 LPT 平衡拆成8批（目前92入口；無預估者以5秒計；批內維持 inventory 順序），呼叫原 `scripts/test.mjs full --only=...`；不更改 Runner、測試旗標、timeout、斷言或歷史基準。Quick／Audit 保持原命令。`plan` 固定當次 HEAD、Run ID／attempt及已解析的 origin/main；`run 1`～`run 8` 分別輸出到 `test-results/ci-full/batch-N/`，每批後由獨立 upload-artifact step 保存；`aggregate` 嚴格驗證完整集合、來源與環境、exit/status、log SHA256，任一缺失、FAIL／SKIP／BLOCKED或重用結果都不能得到Full PASS。
 
-本地工具驗證：`node scripts/ci-full-batches.test.mjs`（合成故障案例＋一個明示原生Runner案例；不是完整Full）。Workflow檢查仍使用 `node scripts/check-workflow.mjs --playwright=<外部模組>`。新工具測試是CI工具的獨立驗證，不新增到遊戲87入口。
+本地工具驗證：`node scripts/ci-full-batches.test.mjs`（合成故障案例＋一個明示原生Runner案例；不是完整Full）。Workflow檢查仍使用 `node scripts/check-workflow.mjs --playwright=<外部模組>`。新工具測試是CI工具的獨立驗證，不新增到遊戲92入口。
 
 每批artifact名稱含Run ID、attempt及批次號，保存14天；保留既有tmp證據allowlist，不將全部大型／可能含敏感資料的tmp自動上傳。既有 `D2-CI-ARTIFACT-01 / ARTIFACT_COVERAGE_BLOCKED` 仍有效；summary／log保存不等於完整原始S/RNG可重播封存。Runner突然關閉時，只有之前已完成上傳的批次可期待保留，正在執行的批次及後續批次仍可能遺失；`always()`不能保證失去runner後仍能執行。正常測試失敗後後續批次仍會執行，原失敗step不會被最終彙整或上傳掩蓋。
 
@@ -18,7 +18,7 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 ## 全力投球callback修正
 
-`full-power-pitching.test`為Quick／Full／Audit原生函式53案（含四聯盟及MiLB適用階層）；`full-power-pitching-e2e`為Full／Audit的真實三強度callback、SP／MR／CL及1280／320／390px、TJ後續操作與完整生涯。基準20920dddd72ab8c91b0e2c71d560492663cd5aec，或明示`--baseline=<SHA>`；套用上節明示的C／COPY正向控制差分後，逐一比較proSeason／tjAccrue／tjCap／phasePre，只允許核准的一行投球callback差異，不再要求整個game.js與加入C前逐字相等。完整S／R斷言保留。可直接`--fixtures-only`做Preview矩陣，不冒充完整生涯。
+`full-power-pitching.test`為Quick／Full／Audit原生函式53案（含四聯盟及MiLB適用階層）；`full-power-pitching-e2e`為Full／Audit的真實三強度callback、SP／MR／CL及1280／320／390px、TJ後續操作與完整生涯。基準20920dddd72ab8c91b0e2c71d560492663cd5aec，或明示`--baseline=<SHA>`；套用上節明示的C／COPY正向控制差分後，逐一比較proSeason／tjAccrue／tjCap／phasePre，只允許核准的一行投球callback差異，不再要求整個game.js與加入C前逐字相等。完整S／R斷言保留。可直接`--fixtures-only`做Preview矩陣，不冒充完整生涯。Full以`--part=`拆為三入口：`full-power-pitching-e2e`（`fixtures`：E01／E03＋S03 IF對照）、`full-power-pitching-yakyo-test-001-e2e`、`full-power-pitching-jp3-pitcher-02-e2e`（各為該seed的S01-S02），後兩者為僅import本檔的薄入口；三入口合計即原36案，直接執行本檔不加`--part`仍跑全部，未知part值丟錯。
 
 契約、draft-income、display、trait-display、international-personal-stats、KBO正向控制及殿堂的歷史一致生涯，修正前後都以真實UI明確選「通常投球」；只改測試操作策略，不改遊戲source／S／舊baseline，不新增狀態排除，完整S、選擇與RNG斷言保持。KBO原2049負面案例為IF，操作策略不受這個投手選項影響。原始全力路線的失敗证据保留；新專項另驗證全力的首個effort差異、首次補正前的完整R前綴、成績／TJ與新版重播。全力路線後續條件抽選可依已批准的連鎖差異改变，不稱完整舊生涯R次數不變。研究100條原始資料不覆寫。
 
@@ -53,7 +53,7 @@ display 的常規 full 執行全部設定／尺寸／DOM 保持矩陣，加 P／
 
 Node.js 24.15.0、Git 完整歷史；瀏覽器入口另需已安裝的 Playwright 1.62.1 及 Chrome 或 Chromium。不會自動安裝套件。
 
-以 `PLAYWRIGHT_MODULE` 指定外部模組，`TEST_BROWSER=chromium` 選擇 Chromium；亦可用 `--playwright=<模組位置>`、`--browser=chrome|chromium`。預設維持現有測試的 Chrome，不加入個人路徑。已授權 CI 在 `$RUNNER_TEMP` 安裝固定版 Playwright 與 Chromium 系統依賴，不是遊戲依賴。
+以 `PLAYWRIGHT_MODULE` 指定外部模組，`TEST_BROWSER=chromium` 選擇 Chromium；亦可用 `--playwright=<模組位置>`、`--browser=chrome|chromium`。預設維持現有測試的 Chrome，不加入個人路徑。CI 的 `tests`、`full-batch`、`full-aggregate`（後者為與各批 log 絕對路徑一致）在以 digest 鎖定的 Playwright 1.62.1 官方 container（`mcr.microsoft.com/playwright`）中執行，系統依賴、字型與瀏覽器來自 image，不經 apt；另在 `$RUNNER_TEMP` 安裝同版 Playwright 模組。皆非遊戲依賴。
 
 現行一致性比較預設 `--baseline=origin/main`，在開始時解析為完整 SHA 並保存。離線 clone 可明確指定 `--baseline=<已取得的 commit>`。不得將未取得基準或未安裝瀏覽器視為 PASS。Git checkout 必須保留歷史；GitHub Actions 使用 fetch-depth 0。
 

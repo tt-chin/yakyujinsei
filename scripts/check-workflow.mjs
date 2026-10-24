@@ -30,7 +30,9 @@ assert.equal(workflow.permissions.contents,'read');
 assert.equal(workflow.concurrency['cancel-in-progress'],true);
 assert.deepEqual(Object.keys(workflow.jobs),['tests','full-plan','full-batch','full-aggregate']);
 const allSteps=Object.values(workflow.jobs).flatMap(j=>j.steps);
+assert.ok(!allSteps.some(s=>(s.run||'').includes('--with-deps')),'No apt installs; use the pinned image');
 for(const s of allSteps.filter(s=>s.uses))assert.match(s.uses,/^actions\/[a-z-]+@[0-9a-f]{40}$/,'Actions must be pinned to a full commit SHA: '+s.uses);
+const pinnedImage=/^mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)-noble@sha256:[0-9a-f]{64}$/;
 const setup=(job,chromium)=>{
  assert.ok(!JSON.stringify(job.env||{}).includes('runner.'),'runner context is unavailable in jobs.<job_id>.env');
  assert.equal(job['runs-on'],'ubuntu-24.04');assert.equal(job['timeout-minutes'],120);
@@ -38,8 +40,14 @@ const setup=(job,chromium)=>{
  assert.ok(job.steps.some(s=>s.with?.['fetch-depth']===0));
  if(chromium!==undefined){
   assert.ok(job.steps.some(s=>s.run?.includes('PLAYWRIGHT_MODULE=')&&s.run.includes('$GITHUB_ENV')));
-  assert.ok(job.steps.some(s=>s.run?.includes('playwright@1.62.1')&&s.run.includes('--with-deps chromium')===chromium));
+  assert.ok(job.steps.some(s=>s.run?.includes('playwright@1.62.1')&&s.run.includes('cli.js" install chromium')===chromium));
  }
+ if(chromium){
+  // System packages, fonts and browsers come from the digest-pinned image, not the live apt mirror.
+  const image=job.container?.image?.match(pinnedImage);assert.ok(image,'Browser jobs must use the digest-pinned Playwright image');
+  assert.equal(image[1],job.steps.find(s=>s.run?.includes('npm install'))?.run.match(/playwright@(\d+\.\d+\.\d+)/)?.[1],'Playwright image and npm versions differ');
+  assert.equal(job.container.options,'--ipc=host');
+ }else if(chromium===false)assert.equal(job.container,undefined,'full-plan stays on the host');
 };
 const job=workflow.jobs.tests;
 assert.equal(job.if,"${{ github.event_name != 'pull_request' && inputs.mode != 'full' }}");
@@ -54,7 +62,7 @@ const isPlanDownload=s=>s.uses?.startsWith('actions/download-artifact@')&&s.with
 const planJob=workflow.jobs['full-plan'];
 assert.equal(planJob.if,"${{ github.event_name == 'pull_request' || inputs.mode == 'full' }}");
 setup(planJob,false);
-assert.ok(!planJob.steps.some(s=>s.run?.includes('--with-deps chromium')),'full-plan must not install Chromium');
+assert.ok(!planJob.steps.some(s=>s.run?.includes('install chromium')),'full-plan must not install Chromium');
 const validate=planJob.steps.findIndex(s=>s.run==='node scripts/check-workflow.mjs');
 const plan=planJob.steps.findIndex(s=>s.run==='node scripts/ci-full-batches.mjs plan');
 const savePlan=planJob.steps.findIndex(s=>s.uses?.startsWith('actions/upload-artifact@')&&s.with?.name===planName);
@@ -80,6 +88,9 @@ const aggJob=workflow.jobs['full-aggregate'];
 assert.deepEqual(aggJob.needs,['full-plan','full-batch']);
 assert.equal(aggJob.if,"${{ always() && needs.full-plan.result == 'success' }}");
 setup(aggJob);
+assert.deepEqual(aggJob.container,batchJob.container,'full-aggregate must share the full-batch container: batch summaries record absolute log paths');
+// actions/checkout's safe.directory does not persist to later steps; git runs as root on a runner-owned workspace.
+for(const [id,j]of Object.entries(workflow.jobs).filter(([,j])=>j.container))assert.ok(j.steps.some(s=>s.run?.includes('git config --global --add safe.directory "$GITHUB_WORKSPACE"')),id+' must trust the container workspace');
 const aggPlan=aggJob.steps.findIndex(isPlanDownload);
 const aggBatches=aggJob.steps.findIndex(s=>s.uses?.startsWith('actions/download-artifact@')&&s.with?.pattern==='tests-full-${{ github.run_id }}-${{ github.run_attempt }}-batch-*');
 assert.equal(aggJob.steps[aggBatches]?.with['merge-multiple'],true);assert.equal(aggJob.steps[aggBatches].with.path,'test-results/ci-full');
@@ -88,6 +99,6 @@ assert.ok(aggPlan>=0&&aggBatches>=0&&Math.max(aggPlan,aggBatches)<aggregate,'ful
 assert.equal(aggJob.steps[aggregate].if,undefined);assert.equal(aggJob.steps[aggregate]['continue-on-error'],undefined);
 assert.ok(aggJob.steps.slice(aggregate+1).some(s=>s.if==='always()'&&s.uses?.startsWith('actions/upload-artifact@')&&s.with.path.includes('test-results/ci-full/summary.json')));
 assert.ok(!allSteps.some(s=>/git push|rsync|DEPLOY_REPO_TOKEN/.test(s.run||'')));
-console.log('PASS workflow YAML parse: dev quick, main PR full, dispatch choices, pinned tools, full history, read-only permissions, artifacts, no deployment');
+console.log('PASS workflow YAML parse: dev quick, main PR full, dispatch choices, pinned tools and Playwright image, full history, read-only permissions, artifacts, no deployment');
 console.log('PASS exact dev evidence allowlist and mixed-change checks; PR and dispatch remain unfiltered (GitHub event execution verified separately)');
 console.log('PASS parallel Full 8 batch jobs: shared attempt-scoped plan, unique batch uploads, fail-fast off, strict final aggregation after all batches; quick/audit unchanged');
