@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 差分已批准，實作於下一個 session 進行）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1776,6 +1776,31 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 使用者決定（2026-10-24）：四點皆照建議（①`runSeasonPipeline`／`reportFlowOutcome`；②`領域_結果` 大寫蛇形；③要求 `runSeasonPipeline(0)`＋斷言步驟名單與 `case` 對象；④分批順序 1→4）。實作待第 10 期併入 `dev` 後另行批准。
 
 使用者決定（2026-10-24，PR #23 合併後）：批准 §2m.2 的 11-A 差分形狀與 §2m.3 的測試變更（含插入點限制、fixture 另建 context＋`'use strict'`、基準 `2e69096`）；實作於下一個 session 在 `refactor/flow-state-machine` 進行。reviewer 於實作後執行；push／PR 另批。
+
+### 2m.7 11-A 實施結果（2026-10-24，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；對象 `64d74cd`＋未 commit 變更，實作 commit `6d70943`）
+
+- 開工：`origin/dev` 已前進至 `ec903fd`，以 merge `64d74cd` 併入，基準改用 `ec903fd`（§2m.4），重掃無新增耦合（§2m.1）。
+- 實作：`game.js`（CRLF，2684→2695 行，CR 行數＝總行數）`:1058` 鏈改為 `runSeasonPipeline(0)`，`:1064`–`:1074` 新增 `runSeasonPipeline`（與 §2m.2 已批准形狀逐字相同），位於 `resumeProfessionalSeason` 結尾與 `function awards(` 之間。
+- 測試變更（§2m.3）：
+  - `full-power-pitching-e2e.mjs:30`：鏈字串改為 `runSeasonPipeline(0)`；`:31`–`:34` 以 `productionFunction('runSeasonPipeline',current)` 斷言步驟名單、四個 `case` 呼叫對象、終端 `nextStep()` 與 `step+1` 續行。
+  - `championship-intl.test.mjs:76`：錨點改為 `runSeasonPipeline(0)`。
+  - `full-power-pitching.test.mjs:19`：含 `function runSeasonPipeline(` 時一併載入 vm。
+  - 行為 fixture（`full-power-pitching.test.mjs`，11 案 `P11A-*`；53→64 案，Full 入口數不變）：現行與 `ec903fd` 各自以 `'use strict';`＋`resumeProfessionalSeason`（＋`runSeasonPipeline`）建 vm，自 `entry.phase='PIPELINE_PREPARED'` 執行；五個 stub 記錄 `[名稱, entry.phase]`。情境：全部直接續行 1、四層各自延遲續行 4（回傳後再續行）、五層各自拋出 5，以 JSON 字串比較兩側並設長度守衛；另 1 案以字面值斷言直接續行的完整序列（五次呼叫皆在 `PIPELINE_STARTED`，回傳後 `PIPELINE_WAIT`）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（176 檔） |
+| 相關單元 | `full-power-pitching`（64／0）、`championship-intl`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`、`global-contract-market` 皆 PASS |
+| `game-view-dom-e2e --baseline=ec903fd…` | PASS：8 生涯每一步 DOM／`S`／RNG 完全一致（直接執行，末行確認基準） |
+| `full-power-pitching-e2e --part=fixtures` | 30 PASS／0 FAIL |
+| `championship-intl-e2e --ui-only` | PASS，Console／JS-CSS 404：0（執行時替換鏈上五個全域名稱，驗證分派於執行當下查名稱） |
+| `stage10-risk-e2e` | 57 PASS／0 FAIL（`errors` 為注入的 `S10_FAULT_*`） |
+| 負控制 | scratchpad worktree（套用未 commit 差分後各改一處）：①交換 `DEMOTION_AUDIT`／`TRADE_CHECK`：10 案 FAIL、②`TRADE_CHECK` 續行改為 `()=>{}`：8 案 FAIL、③`step+1`→`step+2`：10 案 FAIL；三者 FAIL 皆只在 `P11A-*`，既有 53 案皆通過（文字斷言在另一檔，不遮蔽）；還原後 0 FAIL |
+| Quick | 68 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full | scratchpad worktree（`git diff` 與工作樹一致；`sourceFingerprint` `8d4143c5b3d3…`，與 Quick 相同；比較基準 `origin/main` `04decb0`），4 組平行（24／22／24／22），92 入口不重複：**92 PASS／0 FAIL／0 SKIP／0 BLOCKED**（606／359／622／433 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（工作樹差分），無問題；另確認三處文字切片（`trait-policy.test:106`、`championship-intl.test:45`、`pitcher-awards-d2-analysis:54`）與 `ec903fd` 逐 byte 相同 |
+
+- 未完成：push、PR → `dev`、CI（§2m.5，另批）。11-B 各批細部計畫待開始前另立。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
