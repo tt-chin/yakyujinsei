@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1801,6 +1801,65 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | reviewer | 1 次（工作樹差分），無問題；另確認三處文字切片（`trait-policy.test:106`、`championship-intl.test:45`、`pitcher-awards-d2-analysis:54`）與 `ec903fd` 逐 byte 相同 |
 
 - 未完成：push、PR → `dev`、CI（§2m.5，另批）。11-B 各批細部計畫待開始前另立。
+
+### 2m.8 11-B 第 1 批：業餘選路（細部計畫，2026-10-24；計畫已批准，實作待批准）
+
+**現況（唯讀確認，基準 `d39c9ba`，`game.js` 2695 行；scout 唯讀調查＋抽查）**
+
+- 對象 5 個函式、20 處：`advance()` 14、`f:advance` 參照 2、`endGame(...)` 4。
+
+  | 函式 | 位置 | `advance()` | `f:advance` | `endGame` |
+  |---|---|---|---|---|
+  | `enterDraftPath` | `:2349` | 1（`runDraft` 回呼 `signed`） | – | – |
+  | `draftFallback` | `:2350` | 3（大學／社會人／獨立） | – | 1 |
+  | `pathChoiceHS` | `:2359–2380` | 4（大學／社會人／獨立／MiLB `signTo` 後） | – | – |
+  | `pathChoiceU4` | `:2381` | 2 | – | 1 |
+  | `movement` 覆寫 `:2665` 的 HS／U／CORP／IND 分支 | `:2665`（單行） | 4 | 2 | 2 |
+
+- §2m.2 待確認已解：`:2665` 自行處理全部非 PRO 階段，只有 PRO 呼叫 `LEGACY.movement()`（`game.js` 內唯一呼叫處）；外層 `:2667` 對非 PRO 直接 `return performMovement()`。`:1269` 的 HS／U／CORP／IND 分支不可達，第 4 批只記錄、不改。
+- 選項經 `invokeChoiceAction` 以 `action()` 無參數呼叫；`advance`（`:1494`、`:2306` 覆寫）回傳 `undefined`。
+- `f:advance` 改為箭頭函式的差異：①`advance` 的取用從建立選項時改為點擊時；②`careerSession.currentChoiceAction` 由 `advance` 本身變為箭頭函式（`signTo:2331` 以 `signingRenderRetry.action===currentChoiceAction` 判斷重試；這兩個選項不呼叫 `signTo`）。預期無實質影響，以驗證證明。
+- 文字耦合：
+  - 直接失效：`draft-signing-policy.test.mjs:87`（`/if\(result==='signed'\)\{advance\(\);return;\}/`）。
+  - 不受影響：`kbo-renewal-floor.test.mjs:42,47`（切 `:1269` 的 `function movement(){` 至 `\nfunction buyoutRemaining`，及 `  function migrateSalaryV130State` 為終點）、`championship-intl.test.mjs:73,76`（只以 `  movement = function()` 開頭／`:1269`～`function advance()` 為錨點）、`income-summary.test.mjs:25`（`productionFunction('runDraft')` 新舊比較，`runDraft` 不改、插入點不在其後）。`salary-flow` 的 `R(`／`ri(`／`chance(`／`pick(` 計數不變；無 `advance(`／`endGame(`／`^function` 計數斷言。
+  - 不在 `test-manifest` 的歷史審查／工具腳本：`docs/reviews/award-jp-name-validation/validate.mjs:15`、`docs/reviews/g1-a-validation/fixtures.mjs:18`、`tools/development-b/legacy-effect-boundaries.mjs:41` 以 `/^  movement = function\(\)\{[^\n]+/m` 取 `:2665` 整行放入 vm；實作後若執行非 PRO 分支會因缺 `reportFlowOutcome` 而 `ReferenceError`。依 AGENTS.md §6.4 不修改，只記錄。
+  - 執行時替換全域名稱：`contract-salary-e2e:23`、`global-contract-market-e2e:14`、`kbo-renewal-e2e:22`、`npb-return-e2e:18` 替換 `advance`；`stage10-risk-e2e:23` 包裝 `endGame`；`smallschool-c-e2e:16` 暫換 `startYear` 後呼叫 `advance`；`bug-act-01-02-e2e:22` 直接呼叫 `enterDraftPath`。`reportFlowOutcome` 在執行當下以名稱呼叫，替換仍生效。
+
+**設計（L3／R3；使用者決定 2026-10-24：照建議）**
+
+- 結果名稱（`領域_結果`，§2m.6②）：
+
+  | kind | 呼叫 | 處數 |
+  |---|---|---|
+  | `AMATEUR_STAY` | `advance()`（高中／大學升年級、社會人續留、獨立留下） | 4（含 `f:advance` 2） |
+  | `AMATEUR_ENTER_UNIVERSITY` | `advance()` | 2 |
+  | `AMATEUR_JOIN_CORP` | `advance()` | 4 |
+  | `AMATEUR_JOIN_IND` | `advance()` | 4 |
+  | `AMATEUR_SIGNED_MILB` | `advance()` | 1 |
+  | `AMATEUR_DRAFTED` | `advance()` | 1 |
+  | `AMATEUR_RETIRED` | `endGame(outcome.reason)`（4 句原文不變） | 4 |
+
+- `function reportFlowOutcome(outcome)`（`game.js`，CRLF，2 格縮排）：`switch(outcome.kind)` 依上表分派，執行當下以名稱呼叫 `advance`／`endGame` 並回傳其值；未知 kind `throw new Error('UNKNOWN_FLOW_OUTCOME:'+outcome.kind)`（比照 `UNKNOWN_DRAFT_RESULT`）。`outcome` 只有 `kind` 與 `reason`。
+- 插入點：`:2306` `advance=function(){…}` 之後、`:2308` `  function newState(` 之前，保留兩者間空行（`saveSalaryEvaluation` 的 `productionFunction` 切片內容逐字不變；`tests`／`scripts`／`tools`／`docs/reviews`／`docs/designs` 無以 `newState`／`setAmateur`／`enterDraftPath` 為錨點者）。
+- 各處只把末尾的 `advance()`／`endGame(...)` 換成 `reportFlowOutcome({...})`；`S.stage=`、`setSchool`、`setAmateur`、`signTo` 等留在原位、原順序。`f:advance` 改為 `()=>reportFlowOutcome({kind:'AMATEUR_STAY'})`。不新增或移動 RNG 呼叫點，不新增 `S` 欄位。
+
+**測試變更（需揭露）**
+
+1. `draft-signing-policy.test.mjs:87`：正則改為要求 `if(result==='signed'){reportFlowOutcome({kind:'AMATEUR_DRAFTED'});return;}`。
+2. 新增行為 fixture（`draft-signing-policy.test.mjs`，不增加 Full 入口數）：現行與基準各以 `'use strict';`＋5 個函式（`productionFunction` 取 4 個，`:2665` 以整行正則取）建 vm，現行另加 `reportFlowOutcome`；stub 記錄 `advance`／`endGame`／`setAmateur`／`setSchool`／`signTo`／`runDraft` 的呼叫序列與參數，逐一點擊每個 `choose` 選項，涵蓋 20 處；另 1 案斷言未知 kind 拋出 `UNKNOWN_FLOW_OUTCOME:`。兩側以 JSON 字串比較＋長度守衛；基準以 `git show <基準>:docs/src/engine/game.js` 取得。
+3. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
+
+**驗證（比照 §2m.4）**
+
+1. `check-syntax`；相關單元：`draft-signing-policy`、`income-summary`、`kbo-renewal-floor`、`championship-intl`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`。
+2. `game-view-dom-e2e --baseline=<基準>`（直接執行）；`bug-act-01-02-e2e`、`smallschool-c-e2e`、`draft-income-e2e`、`stage10-risk-e2e`、`contract-salary-e2e`、`trait-system-e2e`；Quick。
+3. 負控制（scratchpad 副本，各改一處）：①某處 `AMATEUR_JOIN_CORP`／`AMATEUR_JOIN_IND` 互換、②某處漏呼叫 `reportFlowOutcome`、③分派把某 kind 指向錯誤目標；確認 fixture 本身 FAIL（先被既有斷言攔下時，另以去除該斷言的副本確認）。
+4. Full 一次；reviewer 一次（程式差分）。
+
+**交付**
+
+- 分支：自 `refactor/flow-state-machine` 疊新分支（名稱待定），基準暫用 `d39c9badcfc3fa0b4d3254a113e0d83531db3a1e`；11-A 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃。
+- commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
