@@ -9,14 +9,14 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **31** | 包含D2發布範圍結案、C級高校／弱小校の星、4-A既有條件已滿足的LEGACY清理，以及PR #21／#22合併的CI執行環境鎖定、耗時平衡分批與投球E2E拆分 |
-| 未完成 | **32** | 恢復TJ顯示既有待辦；新增main Full舊期待值修正；UI審查、CI工具路徑與artifact缺口保持未完成 |
+| 未完成 | **33** | 恢復TJ顯示既有待辦；新增main Full舊期待值修正、表示token第1段（字體指定修正）；UI審查、CI工具路徑與artifact缺口保持未完成 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
 | IMPLEMENTED_UNVERIFIED | **9** | 五項UI／支持已實作提交dev，待審查；原4項保留 |
 | DESIGN_PENDING | **7** | C級高校語意已定案並結案；其餘設計待決保持 |
 | 其他候補／保留／混合 | **13** | 包含TJ顯示規則、CI耗時平衡提案、full-power-pitching-e2e耗時提案及CI_PASS但工具路徑待處理；UI-06／07已計入IMPLEMENTED_UNVERIFIED |
 
-以上依唯一正式checkbox重新計算：**31 + 32 = 63**（2026-10-24新增CI-ENV-PIN-01、CI-PITCHING-E2E-01；同日CI-ENV-PIN-01經PR #21合併後勾選；CI-PITCHING-E2E-01經PR #22合併後勾選；CI-FULL-BALANCE-01的實作`cdf0a25`已隨PR #21併dev，經使用者同意一併勾選；同日新增CI-FULL-STALE-01）。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
+以上依唯一正式checkbox重新計算：**31 + 33 = 64**（2026-10-24新增CI-ENV-PIN-01、CI-PITCHING-E2E-01；同日CI-ENV-PIN-01經PR #21合併後勾選；CI-PITCHING-E2E-01經PR #22合併後勾選；CI-FULL-BALANCE-01的實作`cdf0a25`已隨PR #21併dev，經使用者同意一併勾選；同日新增CI-FULL-STALE-01、UI-DESIGN-TOKENS-01）。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
 
 
 ### 1.1 開發階段完成履歷
@@ -133,7 +133,7 @@
 
 - [x] **CONTRACT-LEGACY-01** — `VERIFIED_IN_TESTED_PATHS / CLOSED_SCOPE_LIMITED`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2f.5-2、§2f.7：使用者同意的DEAD_CALL驗證涵蓋23個瀏覽器E2E，舊makeOffers／pickOfferUI無執行期呼叫；4-A刪除舊本體及拆殼，8生涯DOM／S／RNG一致，已由PR #12（d3efd11）併dev。這不是全路徑不可達證明，原Full 84 PASS／1 FAIL及限定修復重測、stage10比較基準造成的預期FAIL均保留在原計畫；第5期後另有確定來源86入口全PASS證據，不回改原FAIL。市場／規則重設、4-B／4-C／4-D與整體重構不在此結案範圍；後續仍由REFACTOR-AUDIT-01追蹤。
 
-## 3. 未完成工作（32 項）
+## 3. 未完成工作（33 項）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（3 項）
 
@@ -158,12 +158,13 @@
 - [ ] **SHARE-111-DEVICE** — `BLOCKED`。iPhone／Android／PC 的原生 share sheet、取消、PNG 主題、圖片分享與儲存驗收。
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。全量可到達日文文案、棒球術語與畫面位置仍待清查；COPY-001～005已於1.12.0完成實作及限定驗收，見[COPY驗收](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)，不再重做這五項。與v1.8.2的92事件翻譯替換分開管理；本輪1.13.3只修送別事件，不能據此結案全量COPY。
 
-### 3.4 P2 — 規格待決與保留（5 項）
+### 3.4 P2 — 規格待決與保留（6 項）
 
 - [ ] **OVR-01** — `DESIGN_PENDING`。野手 OVR 加入 stamina 5% 的提案，先比較現行公式與提案，批准後才能修改。
 - [ ] **TRAIT-NITENICHI** — `承認済み保留`。二天一流；投手三冠已於1.13.0實作（TRAIT-PITCHER-TC），但二刀流制度與本特性接線仍未批准，不因三冠完成自動啟用。
 - [ ] **TRAIT-CHAMPIONMAKER** — `承認済み保留`。優勝請負人，待累計 5 冠、計算範圍、勝率加成及 RNG 政策核准。
 - [ ] **UI-TJ-GAUGE-01** — `未着手・表示規則待ち`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2e.7、§2g.1，使用者已批准列待辦：TJゲージ直接String(S.tj||0)顯示長小數。第5期搬移後現位於docs/src/ui/career-presenter.js的ability()，並未修正。先決定位數及是否顯示50／100上限，只改表示、不改S.tj或RNG；不與重構混合修改。本次恢復漏列，不代表授權實作。
+- [ ] **UI-DESIGN-TOKENS-01** — `APPROVED / NOT_STARTED`（2026-10-24）。依[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2：表示token第1段。`--sans`指定`Noto Sans TC`而`index.html`載入`Noto Sans JP`，實測（macOS＋Brave，`2e69096`）日文以PingFang TC顯示；修正為`Noto Sans JP`起首的日文字體列，並新增圓角／陰影token（computed style不變）與字體載入斷言。只改CSS與測試，不改`game.js`、RNG、`S`；PATCH 1.13.3→1.13.4。第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）未計畫。
 - [ ] **CONTRACT-ASIA-01** — `未実装・仕様待ち`。KBO 亞洲名額及球團整體外國人預算，與現有 `FOREIGN_STANDARD` 不同。
 
 ### 3.5 P2 — 未來功能候補（10 項）
@@ -216,7 +217,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 - [x] **CI-PITCHING-E2E-01** — `MERGED / CI_PASS`（2026-10-24；PR #22併dev（`136aa2c`），dev push Quick Run40070131548 PASS 67／67（[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §11.7）。原狀態：`IMPLEMENTED / CI_PASS / PR_PENDING`；[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §11.6；`ci/pitching-split` `50139d0`：Full Run40055238234 PASS 89／89、11分15秒（前次18分43秒），linux-smoke PASS；最大批537秒，各批仍不均屬manifest秒數校正另案。PR待PR #21合併後建立，合併後勾選）。`full-power-pitching-e2e`為CI Full單一最長入口（Run40038325238：809秒；Run40043897770：976秒；本機約362秒），在§9 LPT分批下獨佔batch 1並決定wall time。結構（`tests/full-power-pitching-e2e.mjs`，52行）：fixture 29件（E01 3寬×3角色×3投球方式、E03 TJ 2件，各1季）＋完整生涯**22次**（S01-S02 2 seed×3投球方式×old／now／repeat＝18、S03 IF 4；manifest記載「20」有誤），全部依序執行；每步一次`page.evaluate`並保存前後完整`S`與SHA256。候選：①測試內2–3個生涯並行（參考`retirement-hof-pilot.mjs:58`；須確認harness並行安全與記憶體峰值）②拆為多個Full入口供LPT分配（須處理一檔一入口的inventory與87入口斷言）。不刪除repeat重現斷言、不減少每步證據。分段耗時（2026-10-24本機macOS＋Brave 156，`ec54253`，36 PASS／363秒；harness `summary.json`的`records[].seconds`）：E01 24.9秒（7%）、E03 1.6秒、S01-S02 290.5秒（80%；`yakyo-test-001` 全力62.8／通常40.2／省エネ48.1＝151.1，`jp3-pitcher-02` 54.8／37.2／47.5＝139.5）、S03 44.3秒（12%）；每次生涯平均約15秒。輸出1.8 GB JSON（15個career檔，88–202 MB，縮排格式），202 MB檔的stringify＋寫入約0.6秒，非主因；主因推定為每步`page.evaluate`往返並傳回前後完整`S`（約530步／生涯，未單獨量測）。CI artifact不含此`summary.json`（輸出目錄不符`tmp/yakyujinsei-*`）。**使用者決定（2026-10-24）：採②，依seed拆分**，例如`yakyo-test-001`（151秒）／`jp3-pitcher-02`（140秒）／fixture＋S03（71秒），本機最大約151秒，依CI倍率2.2–2.7推算約330–410秒；拆分方式、inventory與87入口斷言、manifest `seconds`的處理待計畫批准後實作。預估瓶頸轉為`international-personal-stats-e2e`（392–545秒），Full wall time約10–11分，**未實測**。
 
-> **未完成項目核算：** 3（規格／回歸／歷史細項）＋6（殿堂）＋4（實機／文案）＋5（待決／保留，含TJ顯示）＋10（候補及已實作待審UI）＋4（CI工具路徑／artifact／比較政策／main Full舊期待值）＝**32**；63唯一ID、31完成／32未完（第2節28項含D2-G9-RELEASE，另3項為第3.6節已併dev的CI-FULL-BALANCE-01／CI-ENV-PIN-01／CI-PITCHING-E2E-01）。C級高校與LEGACY清理分別列第2.10／2.11節；D2-G9-RELEASE在第3.6節作已完成發布索引。歷史驗收數字不修改。
+> **未完成項目核算：** 3（規格／回歸／歷史細項）＋6（殿堂）＋4（實機／文案）＋6（待決／保留，含TJ顯示、表示token）＋10（候補及已實作待審UI）＋4（CI工具路徑／artifact／比較政策／main Full舊期待值）＝**33**；64唯一ID、31完成／33未完（第2節28項含D2-G9-RELEASE，另3項為第3.6節已併dev的CI-FULL-BALANCE-01／CI-ENV-PIN-01／CI-PITCHING-E2E-01）。C級高校與LEGACY清理分別列第2.10／2.11節；D2-G9-RELEASE在第3.6節作已完成發布索引。歷史驗收數字不修改。
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
