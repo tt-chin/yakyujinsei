@@ -53,7 +53,7 @@ display 的常規 full 執行全部設定／尺寸／DOM 保持矩陣，加 P／
 
 Node.js 24.15.0、Git 完整歷史；瀏覽器入口另需已安裝的 Playwright 1.62.1 及 Chrome 或 Chromium。不會自動安裝套件。
 
-以 `PLAYWRIGHT_MODULE` 指定外部模組，`TEST_BROWSER=chromium` 選擇 Chromium；亦可用 `--playwright=<模組位置>`、`--browser=chrome|chromium`。預設維持現有測試的 Chrome，不加入個人路徑。已授權 CI 在 `$RUNNER_TEMP` 安裝固定版 Playwright 與 Chromium 系統依賴，不是遊戲依賴。
+以 `PLAYWRIGHT_MODULE` 指定外部模組，`TEST_BROWSER=chromium` 選擇 Chromium；亦可用 `--playwright=<模組位置>`、`--browser=chrome|chromium`。預設維持現有測試的 Chrome，不加入個人路徑。CI 的 `tests`、`full-batch`、`full-aggregate`（後者為與各批 log 絕對路徑一致）在以 digest 鎖定的 Playwright 1.62.1 官方 container（`mcr.microsoft.com/playwright`）中執行，系統依賴、字型與瀏覽器來自 image，不經 apt；另在 `$RUNNER_TEMP` 安裝同版 Playwright 模組。皆非遊戲依賴。
 
 現行一致性比較預設 `--baseline=origin/main`，在開始時解析為完整 SHA 並保存。離線 clone 可明確指定 `--baseline=<已取得的 commit>`。不得將未取得基準或未安裝瀏覽器視為 PASS。Git checkout 必須保留歷史；GitHub Actions 使用 fetch-depth 0。
 

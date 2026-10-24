@@ -25,6 +25,9 @@ jobs:
   tests:
     if: ${{ github.event_name != 'pull_request' && inputs.mode != 'full' }}
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
+      options: --ipc=host
     timeout-minutes: 120
     env:
       TEST_MODE: ${{ github.event_name == 'pull_request' && 'full' || inputs.mode || 'quick' }}
@@ -41,11 +44,12 @@ jobs:
       - name: Install test-only Playwright
         shell: bash
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           mkdir -p test-results/ci-bootstrap
           export PLAYWRIGHT_MODULE="$RUNNER_TEMP/test-tools/node_modules/playwright"
           echo "PLAYWRIGHT_MODULE=$PLAYWRIGHT_MODULE" >> "$GITHUB_ENV"
           npm install --prefix "$RUNNER_TEMP/test-tools" --no-save --no-package-lock --ignore-scripts playwright@1.62.1 2>&1 | tee test-results/ci-bootstrap/playwright-install.log
-          node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium 2>&1 | tee test-results/ci-bootstrap/chromium-install.log
+          node "$PLAYWRIGHT_MODULE/cli.js" install chromium 2>&1 | tee test-results/ci-bootstrap/chromium-install.log
       - name: Validate workflow
         run: node scripts/check-workflow.mjs
       - name: Run test profile
@@ -105,6 +109,9 @@ jobs:
   full-batch:
     needs: full-plan
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
+      options: --ipc=host
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -124,11 +131,12 @@ jobs:
       - name: Install test-only Playwright
         shell: bash
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           mkdir -p test-results/ci-bootstrap
           export PLAYWRIGHT_MODULE="$RUNNER_TEMP/test-tools/node_modules/playwright"
           echo "PLAYWRIGHT_MODULE=$PLAYWRIGHT_MODULE" >> "$GITHUB_ENV"
           npm install --prefix "$RUNNER_TEMP/test-tools" --no-save --no-package-lock --ignore-scripts playwright@1.62.1 2>&1 | tee test-results/ci-bootstrap/playwright-install.log
-          node "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium 2>&1 | tee test-results/ci-bootstrap/chromium-install.log
+          node "$PLAYWRIGHT_MODULE/cli.js" install chromium 2>&1 | tee test-results/ci-bootstrap/chromium-install.log
       - name: Load Full plan
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -155,6 +163,9 @@ jobs:
     needs: [full-plan, full-batch]
     if: ${{ always() && needs.full-plan.result == 'success' }}
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
+      options: --ipc=host
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
