@@ -2626,6 +2626,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - T6 `ui-foundation.test`：`:38` 改對模組（regex 不變）；`:39` 改對模組，`S===state` 改為 `getState\(\)===state`。
 - T7 `domestic-tournament-policy:81–84`：4 項改對模組（regex 不變）。
 - 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
+- T8 `support/stage6-browser.mjs`（實作中發現，使用者已批准 2026-10-26）：`instrument()` 以 `  const touchedKeys={};` 為錨點在 `game.js` 的 `allocUI` 內插入 `window.__s6allocation`，移出後錨點不存在（`assert` 失敗 → `game.js` 404 → `stage6-ability-e2e`／`stage6-state-transaction-e2e` FAIL）。`instrument()` 改為錨點最多 1 次、有則插入（舊 SHA 的 `game.js` 照舊）；新增 `instrumentAbility()` 對 `player-ability.js` 的 `    const touchedKeys={};` 斷言恰好 1 次並插入同一行；harness 伺服器與 preview route 對 `src/engine/player-ability.js` 套用。自行呼叫 `instrument(game)` 的 5 個 e2e 不讀 `.allocation`（`get()` 為 `window.__s6allocation?.()`），不改。scout 與 2u.1 的掃描只以函式名稱 grep，未掃搬移本體的原文錨點；補掃（`touchedKeys`／`sessionStart`／`hist.push`／`choiceGeneration===generation`／`cands.slice`／`S.lastOverflow` 等）僅此一處。
 
 ### 2u.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
 
@@ -2642,6 +2643,29 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2u.5 分支與交付
 
 - `refactor/player-ability`（自 `origin/dev` `727bdd1`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR → `dev` 另批。
+
+### 2u.6 實施結果（2026-10-26，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/player-ability`，實作 commit `c4b9c45`，比較基準 `727bdd1`）
+
+- 行號更正：`addAb` 實為 `:203–217`、`allocUI` 為 `:350–391`（2u.1／2u.2 誤含其後一行註解 `/* 成績シミュレーション。 */`、`/* 年間進出行。 */`；兩行註解留在 `game.js`）。
+- `game.js` 2226 → 2129 行（CRLF 保持）；`player-ability.js` 128 行（LF）。與逐字搬移的差異：`const S=getState()` 4 處（`allocUI`、`addAb`、`addAbStat`、`allocDone` 開頭；`addAb` 為同一行 `{ ` 之後），`live` 的 `S===state`→`getState()===state` 1 處。建構行位於 `allocUI` 包裝之後、`/* 年間進出行。 */` 之前。
+
+| 項目 | 結果 |
+|---|---|
+| `node --check`、`check-syntax`（182 檔）、`verify-modularization` | PASS |
+| T1–T7 對象 7 檔＋`full-power-pitching.test`、`npb-return-ui.test`、`championship-intl.test`、`event-integration.test`、`trait-policy.test`、`award-journal-native.test`、`season-stats.test` | 14／14 PASS |
+| scratchpad regex 預檢（`727bdd1` 原文組裝草稿） | 27 項成立；`choice-action:112`、`ui-foundation:39` 原 regex 不成立（→ T5、T6）；`[R,ri,chance,pick]`＝`[1,0,0,0]` |
+| 等價比較（scratchpad，`727bdd1` 的 `addAb`／`addAbStat`／`allocDone` 於 vm vs 新模組，確定性 RNG） | 20,000 例差分 0（`addAb` 7,091、`addAbStat` 7,501、`allocDone` 5,408；小細工無用解鎖 697、大器晩成 101、溢出 598、`pendStat` 增加 2,906、例外 1 且一致） |
+| 等價負控制：刪 `S.carry[k]=…`／`0.75`→`0.7`／`pot +10`→`+9` | 差分 5,494／305／100。原計畫的 `clamp` 界限突變不可達（候選限 `S.ab<70`，+5 ≤ 74），改用 `pot` |
+| `live` 負控制（scratch hook `swapState`：配分面板開啟中 `S=JSON.parse(JSON.stringify(S))` 後點選，pool／dice 各 1） | `727bdd1` 與新碼一致（`ab` 不變、剩餘 3、`hist` 0、復原 disabled）；`live` 改回快照 `S===state` 的變體配分生效（`sta` +1／+2、剩餘 2、`hist` 1） |
+| 接縫抵達探測（帶標記 `console.log`，舊／新樹各跑） | `stage6-browser` 的 `allocDone` 包裝 76／76 次，`stage6-ability-e2e` 89／89 PASS。`trait-system-e2e` 的 `allocUI=()=>{}`：舊／新皆 0 次（兩次 `pre()` 皆 `rehab:1`，`phasePre` 不呼叫 `allocUI`；呼叫端原文未變） |
+| 繞過負控制（模組 `allocUI` 直接呼叫內部 `allocDone`） | `stage6-ability-e2e` 77 PASS／12 FAIL（`confirm` 步驟斷言） |
+| e2e（Brave）：`event-system`、`trait-system --ui-only`；T8 後 harness 使用者 8 個（`stage6-ability`、`stage6-state-transaction`、`stage7-safety`、`international-personal-stats`、`stage10-risk`、`smallschool-c`、`full-power-pitching`、`trait-display`） | 10／10 PASS（T8 前 `stage6-ability`、`stage6-state-transaction` FAIL，見 T8） |
+| `game-view-dom-e2e --baseline=727bdd14c295d5fb461b104a2a4393e6d847cc6d`（直接執行） | 8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68／68 PASS（147 秒） |
+| Full（scratchpad worktree，`docs`／`tests`／`scripts`／`tools` 與工作樹逐 byte 相同；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，計 93；未傳 `--baseline`） | 93／93 PASS（732／435／660／473 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 無 findings（資訊：`instrument()` 守衛改為 `<=2`，屬 T8 設計，探測由 `instrumentAbility()` 嚴格斷言） |
+
+- 範圍外記錄：`statBonus`（`c4b9c45` `game.js:609`）、`checkTraitsMid`（`:635`）無呼叫端，未處理；是否記入 BACKLOG 待使用者決定。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
