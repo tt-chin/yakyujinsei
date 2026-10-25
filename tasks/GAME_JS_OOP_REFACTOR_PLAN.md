@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，待合併）；第 3 批計畫見 §2m.12、結果見 §2m.13（本機驗證完成，push／PR 待批）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，待合併）；第 3 批計畫見 §2m.12、結果見 §2m.13（本機驗證完成，push／PR 待批）；第 4 批計畫見 §2m.14（計畫已批准，實作待批准）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -2046,6 +2046,65 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | reviewer | 1 次（工作樹差分），無問題（另確認逐字等價、新增 9 行與 10 處替換行皆 CRLF、`f:finish` 回傳值無使用者） |
 
 - 未完成：push／PR（另批；依 §2m.12，PR #28 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準重掃再開新 PR）。
+
+### 2m.14 11-B 第 4 批：年度（細部計畫，2026-10-25；計畫已批准，實作待批准）
+
+**現況（唯讀確認，基準 `026c5cd`，`game.js` 2724 行（本分支，含第 1–3 批）；scout 唯讀調查＋抽查）**
+
+- 對象 2 個函式、4 處：`advance()` 2、`endGame(...)` 2。
+
+  | 位置 | 分支 | 原呼叫 | kind |
+  |---|---|---|---|
+  | `:515` | `phasePre` 48 歲強制引退（`buyoutRemaining(1)` 後） | `endGame(...)` | `PRESEASON_AGE_LIMIT_RETIRED` |
+  | `:583` | `phasePre` 36 歲以上海外所屬「契約を断り、日本球界へ戻る」（`signTo('NPB',returnLv)`＋`日本球界復帰` card 後） | `advance()` | `PRESEASON_RETURNED_NPB` |
+  | `:586` | `phasePre`「引退記者会見を開く」（`daibaFarewell` 回呼內） | `endGame(...)` | `PRESEASON_RETIRED` |
+  | `:1285` | `movement`（`:1269`，`LEGACY.movement`）PRO 段 `S.skipMid` 復健全休年 | `advance()` | `REHAB_YEAR_COMPLETED` |
+
+- 不改：`:1271–1277` 的 HS／U／CORP／IND 分支 5 處（§2m.8 已確認不可達，只記錄）；`movement` 其餘出口皆委派第 2、3 批已轉換的 `handleDemotion`／`extensionOffer`／`faFlow`／`crossOffers`。`:2162` 的 `LEGACY` 物件只保存函式參照，不受影響。
+- 可達性：`:1285` 由 `phasePre` 復健分支設 `S.skipMid=true` 後經 `:2694` 覆寫委派 `LEGACY.movement()` 到達（`kbo-renewal-floor` 亦以 `skipMid:true` 執行此路徑）。
+- RNG：4 處皆為末尾呼叫，其後無 RNG；`phasePre` 的 `R()`／`ri`／`chance` 在 `afterAsk` 內（「もう一年挑戦する」選項），不在對象分支上。
+- 文字耦合：
+  - 直接失效：
+    - `salary-flow.test.mjs:30`：正則逐字要求 `:1285` 的 `...markClubInitiatedRenewal\(1\);advance\(\);return;\}`。
+    - `career-movement-policy.mjs:50,52`：`indexOf` 同一行字面，失效後 `-1` 使順序斷言 FAIL。
+    - `kbo-renewal-floor.test.mjs:47`：`between('function movement(){','\nfunction buyoutRemaining')` 放入 vm 並以 `skipMid:true` 執行，context 無 `reportFlowOutcome` → `ReferenceError`。
+    - `npb-return-ui.test.mjs:73`：`["  if(S.stage==='PRO'&&S.age>=36","/* シーズン中。 */"]` 逐字比較涵蓋 `:583`／`:586`（`:515` 在切片外）。
+    - `full-power-pitching-e2e.mjs:23`：`phasePre` 整個與 `20920dd` 逐字比較（`canonical` 只做 CRLF→LF），涵蓋 3 處；`full-power-pitching-yakyo-test-001-e2e`、`full-power-pitching-jp3-pitcher-02-e2e` 匯入同一檔而一併失效。
+  - 不受影響：`championship-intl.test:73,76`（切片錨點，斷言只看 `teamYears`）；`full-power-pitching.test:19`（vm 執行 `phasePre`，fixture 25 歲不到達對象分支）；`npb-farewell.test`（只執行 `daibaFarewell`）；`npb-return-e2e:45`（36 歲 fixture 只斷言按鈕文字、不點擊）；`trait-system-e2e:101-102`（`rehab:1` 不進老將分支）；`stage10-risk-e2e:9-10`（執行時包裝 `phasePre`／`movement`／`advance`／`endGame`，`reportFlowOutcome` 執行當下以名稱呼叫，包裝仍生效）；`salary-flow` RNG 計數（4 處皆非 RNG 呼叫點）；無 `advance()`／`endGame(` 出現次數的計數斷言。
+  - 不在 `test-manifest` 的工具：`tools/development-b/legacy-effect-boundaries.mjs:34-41` 以 `productionFunction('movement')` 放入 vm，fixture `skipMid:false` 不到達 `:1285`。依 AGENTS.md §6.4 不修改，只記錄。
+
+**設計（L3／R3；使用者決定 2026-10-25：照建議）**
+
+- `reportFlowOutcome` 不新增函式，只在既有 `switch` 的 `FA_RETIRED`／`RELEASE_RETIRED` 之後追加：`PRESEASON_RETURNED_NPB`／`REHAB_YEAR_COMPLETED` → `return advance();`，`PRESEASON_AGE_LIMIT_RETIRED`／`PRESEASON_RETIRED` → `return endGame(outcome.reason);`。
+- 結果名稱前綴依子領域（`PRESEASON_`／`REHAB_`），比照第 3 批不統一前綴。
+- 各處只把末尾的 `advance()`／`endGame(...)` 換成 `reportFlowOutcome({...})`；`buyoutRemaining`、`signTo`、`card`、`daibaFarewell`、`markClubInitiatedRenewal` 留在原位、原順序；`:586` 仍在 `daibaFarewell` 回呼內（比照第 2 批 `DEMOTION_RETIRED`）。不新增或移動 RNG 呼叫點，不新增 `S` 欄位。
+
+**測試變更（需揭露；使用者批准 2026-10-25）**
+
+1. `salary-flow.test.mjs:30`：正則的 `advance\(\)` 改為 `reportFlowOutcome\(\{kind:'REHAB_YEAR_COMPLETED'\}\)`（寫死新 kind，比照第 1 批 `draft-signing-policy:90`）。
+2. `career-movement-policy.mjs:50`：`indexOf` 字面同上改為新 kind；`:52` 順序斷言不改。
+3. `kbo-renewal-floor.test.mjs:47`：`movement` 切片後追加 `productionFunction('reportFlowOutcome',…)`（或等價切片）；`advances===1` 等既有斷言不改（分派仍呼叫 stub `advance`）。
+4. `npb-return-ui.test.mjs:73`：既有「reported→original 還原」清單追加 `:583`、`:586` 兩組（各斷言恰好出現 1 次），不放寬比較。
+5. `full-power-pitching-e2e.mjs:23`：對 `current` 側於 `canonical()` 之後還原 3 組（`:515`／`:583`／`:586`，各斷言恰好出現 1 次）再比較；兩個包裝 e2e 隨之修復。
+6. 新增行為 fixture（`npb-return-ui.test.mjs`，沿用既有 DFS 輔助，不增加 Full 入口數）：
+   - 現行與 `026c5cd` 各以 `'use strict';`＋`phasePre`＋`movement`（`:1269` 切片）建 vm，現行另加 `reportFlowOutcome`；基準以 `git show 026c5cd…:docs/src/engine/game.js` 取得。依賴以兩側相同的決定性 stub 提供。
+   - 情境：48 歲；36 歲 MLB／KBO×`ovr` 達 NPB1／僅達 NPB2；36 歲 NPB 所屬（無復歸選項）；海外所屬但 `ovr` 低於 NPB2；投手開季前選擇一例；`skipMid` 下 `contractNeedsRenewal` 真／假。
+   - 以 DFS 點擊全部 `choose` 選項；比較兩側呼叫紀錄（`advance`／`endGame` 含理由／`buyoutRemaining`／`signTo` 參數／`card`／`daibaFarewell`／`markClubInitiatedRenewal` 等）與各葉 `S` 快照（JSON 字串）＋葉數守衛＋4 處到達斷言＋4 種 kind 覆蓋。
+   - 各葉 kind 一致性斷言：`endGame` 理由前綴「体はもう限界」→ `PRESEASON_AGE_LIMIT_RETIRED`、前一筆 `daibaFarewell`＋理由「功成り名を遂げ」→ `PRESEASON_RETIRED`、前一筆 `signTo('NPB',…)` → `PRESEASON_RETURNED_NPB`、`skipMid` 入口 → `REHAB_YEAR_COMPLETED`。
+7. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
+
+**驗證（比照 §2m.4）**
+
+1. `check-syntax`；相關單元：`salary-flow`（計數不變）、`career-movement-policy`、`kbo-renewal-floor`、`npb-return-ui`、`npb-farewell`、`championship-intl`、`full-power-pitching.test`、`draft-signing-policy`、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`。
+2. `game-view-dom-e2e --baseline=026c5cd…`（直接執行）；`full-power-pitching-e2e`（含 `-yakyo-test-001`、`-jp3-pitcher-02`）、`npb-return-e2e`、`stage10-risk-e2e`、`trait-system-e2e`、`kbo-renewal-e2e`；Quick。
+3. 負控制（scratchpad 副本，各改一處）：①互換 `PRESEASON_AGE_LIMIT_RETIRED`／`PRESEASON_RETIRED`（同分派到 `endGame`）、②互換 `PRESEASON_RETURNED_NPB`／`REHAB_YEAR_COMPLETED`（同分派到 `advance`）、③`PRESEASON_RETURNED_NPB` 分派到 `endGame`；另 4 處各自改為 `endGame('MUT')` 的逐處突變。確認 fixture 本身 FAIL（先被既有斷言攔下或因 context 缺 stub 而 `is not defined` 時，另以「檔首 import＋新 fixture」的變體確認）。
+4. Full 一次；reviewer 一次（程式差分）。
+
+**交付**
+
+- 分支：`refactor/flow-outcome-year`，自 `refactor/flow-outcome-market`（`b8734f6`）疊出；基準暫用 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。PR #28 併入 `dev` 後以新 `origin/dev` 完整 SHA 為基準重掃；第 3、4 批 fixture 內寫死的 `026c5cd…` 字面須一併改為新 SHA（不只 `--baseline` 參數）。
+- commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
+- 本批完成後，`game.js` 內剩餘的直接 `advance()`／`endGame(` 呼叫只有 `:1271–1277` 不可達分支 5 處。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
