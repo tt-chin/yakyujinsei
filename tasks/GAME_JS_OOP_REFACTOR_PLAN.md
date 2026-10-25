@@ -2491,6 +2491,56 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - push `refactor/international-tournament`，PR #36 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
+## 2t. 第 16 期：故障・TJ 判定移至 `docs/src/engine/player-injury.js`（細部計畫，2026-10-25；計畫已批准，實作待批准）
+
+路線見 §3.15（葉領域 7 期之第 3 期）。§3.15 所列範圍 `32261d6:225–288`、`:928–960` 經 §2r／§2s 後為 `:172–235`、`:875–907`；另含範圍外的 `injuryProb`（`:271–282`）。
+
+### 2t.1 現況（2026-10-25 grep 抽查，基準 `refactor/international-tournament` `9eff64c9e48ad154ad4a2662fbf6438783b82e1a`（`docs/src` 與 `d8e0f06` 相同；PR #36 未併入 `origin/dev` `642d4bb`），`docs/src/engine/game.js` 2322 行）
+
+- 區段：`tjAccrue`（`:172–177`）、`tjCap`（`:178`）、`tjGamble`（`:179–197`）、`tjTwoStrike`（`:198–202`）、`tjBigInjury`（`:203–225`）、`afterGamble`（`:226–235`）；`injuryProb`（`:271–282`）；`rollInjury`（`:875–895`）、`injStatLoss`（`:896–907`）。不掛 `window`、不在 `LEGACY`、無 overlay 再賦值。
+- RNG：`R` 0；`ri` 7（`tjGamble` 2、`tjBigInjury` 2、`rollInjury` 2、`injStatLoss` 1）；`chance` 6（`tjGamble` 1、`tjBigInjury` 1、`rollInjury` 3、`injStatLoss` 1）；`pick` 2（`injStatLoss`）。`tjAccrue`／`tjCap`／`injuryProb` 無 RNG。
+- 外部呼叫端（按名稱）：`tjAccrue` `:1002`（`full-power-pitching-e2e:44` 再賦值）；`tjCap` `:517`（`phasePre` 投球プラン）；`tjGamble` `:1015`（`championship-intl-e2e:22` 再賦值）；`rollInjury` `:544`；`afterGamble` `trait-system-e2e:18`。`tjTwoStrike`／`tjBigInjury`／`injuryProb`／`injStatLoss` 只在區段內呼叫。
+- 自由名稱：`S`、`ri`、`chance`、`pick`、`clamp`（`:67`）、`ABL`（`:72`，`:1799` `Object.assign` 原地修改，不重新賦值）、`POS_AB`（`:73`）、`addAb`、`board`、`card`、`choose`、`removeTrait`、`tjCap`。
+- 測試耦合：
+  - `full-power-pitching.test:19` 以 `productionFunction` 將 `tjCap`／`tjAccrue` 載入 vm；`:27` F08 再載入 `productionFunction('tjGamble')`（ctx 有 `POS_AB`、`clamp`，無 `ABL`）；支援 `--source=<ref>`（manifest 未使用）。
+  - `full-power-pitching-e2e:29`：`tjAccrue`／`tjCap` 的 `productionFunction` 與基準 `20920dd` 逐 byte 一致。
+  - `trait-policy.test:100–103`：`afterGamble(`→`pitcherRole(` 切片於 `rubberContext`（`S`、`card`、`board`、`removeTrait`、`checkConfidante`）執行；`game.js` regex `const succP=S\.traits\.rubber\?85:55` 與 `return S\.traits\.rubber\?100:50`。
+  - `ability-allocation.test:27`：`toolGap(`→`tjAccrue(` 切片。
+  - `salary-flow.test`：`gameSites` 的 `ri(` 39、`chance(`＋14 個 Journal slot＝42；`game.js` 排除 `intlBridge` 後 `pick(` 13，`intlBridge='pick:a=>pick(a)'` 唯一。
+  - `productionFunction` 終點為下一個 `\n\s{0,2}function \w+\(`，其前的 `const` 行隨切片進入 vm。
+  - 確認不受影響：`event-integration:11`（`moved` 為真時不執行該切片）、`championship-intl:43`／`international-personal-stats:8`（`fmtIP`→`roleN`）、`npb-return-ui:220`（`tjCap` stub）、`full-power-pitching.test:34`（pipeline 名稱 stub）、`full-power-pitching-e2e:40`（`case 'TJ_GAMBLE':return tjGamble(cont);` 不變）、`docs/index.html`（無引用）、`award-identity-policy` 凍結（新檔不在名單）。
+
+### 2t.2 設計（使用者決定 2026-10-25：D1 `tjAccrue`／`tjCap` 留在 `game.js`；D2 `injuryProb` 一併移出；D3 `afterGamble` 保留薄包裝）
+
+- 新檔 `docs/src/engine/player-injury.js`（LF，不 import）：`class PlayerInjury`，`constructor(deps)` 保存依賴；方法 `tjGamble(cont)`、`afterGamble(kind,cont)`、`rollInjury()`；`tjTwoStrike`、`tjBigInjury`、`injuryProb`、`injStatLoss` 為模組內函式。本體逐字搬移，自由名稱改為依賴；模組內互相呼叫改為直接呼叫（原以全域名稱解析，無任何再賦值，等價）。
+- 注入：getter `getState:()=>S`；參照 `clamp`、`POS_AB`、`ABL`；late-binding lambda `addAb`、`board`、`card`、`choose`、`removeTrait`、`tjCap`；RNG bridge `rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}`（經 `game.js` 的 `ri`／`chance`／`pick`→`R`；參數名 `keys` 避免與 `intlBridge` 字串重疊）。
+- `S` 讀取：`const S=getState()` 共 9 處——`tjGamble` 開頭、其兩個 `choose` 選項 `f`（延遲 closure，讀即時 `S`），及 `tjTwoStrike`、`tjBigInjury`、`afterGamble`、`injuryProb`、`rollInjury`、`injStatLoss` 開頭；為逐字搬移外的唯一差異，實施結果逐處列出。各單元內為同步呼叫，`cont()` 為最後一個呼叫，單元內 `S` 不被重新賦值。
+- `game.js`：`toolGap`、`tjAccrue`、`tjCap` 不動；其後依序為 `function afterGamble(kind,cont){playerInjury.afterGamble(kind,cont);}`、`function tjGamble(cont){playerInjury.tjGamble(cont);}`、`const playerInjury=new PlayerInjury({…});`，再接 `pitcherRole`。建構行隨 `productionFunction('tjGamble')` 與 `trait-policy` 的 `afterGamble`→`pitcherRole` 切片進入 vm，測試執行正式接線；`tjCap`／`tjAccrue` 的切片文字不變。刪除 `injuryProb` 本體；`:875` 改為 `function rollInjury(){playerInjury.rollInjury();}`，刪除 `injStatLoss`。`:874` 的註解 `/* 成績シミュレーション。 */` 不動。
+- TDZ：建構行的參照依賴（`clamp`、`ABL`、`POS_AB`）皆宣告於 `:67–73`；其餘為 lambda，只在執行期解析。
+- `game.js` 為 CRLF：只刪除區段並插入新行，非整檔重寫。
+
+### 2t.3 測試變更（使用者已批准 2026-10-25）
+
+- T1 `full-power-pitching.test`：比照 `seasonStatsSource`，`source` 含 `new PlayerInjury(` 時載入 `PlayerInjury`（`--source=<ref>` 時取該 ref 的模組）；fixture ctx 加 `PlayerInjury`、`ABL`（2 個 key）。舊碼路徑不使用。
+- T2 `trait-policy.test:99–103`：`rubberContext` 加 `PlayerInjury`、`clamp`、`POS_AB`、`ABL`；`succP` regex 改對 `player-injury.js` 原文；`rubber?100:50` 仍對 `game.js`。
+- T3 `salary-flow.test`：新增 `injuryBridge` 並斷言 `game.js` 中只出現一次；`gameSites` 與 `pick` 計數排除該 bridge 後，`ri(` 39 → 32、`chance(`＋slot 42 → 36、`pick(` 13 → 11，`R(` 22 不變；新模組 `R`／`ri`／`chance`／`pick` 計數 `[0,7,6,2]`。註解記錄本期移動。
+- 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
+
+### 2t.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
+
+- `node --check`、`check-syntax`、`verify-modularization`；`full-power-pitching.test`、`trait-policy.test`、`salary-flow.test`、`ability-allocation.test`、`event-integration.test`、`championship-intl.test`、`season-stats.test`。
+- e2e（Brave）：`full-power-pitching-e2e --part=fixtures`、`trait-system-e2e --ui-only`、`championship-intl-e2e --ui-only`。
+- 等價比較（scratchpad 腳本）：基準 `git show 9eff64c:docs/src/engine/game.js` 的 `tjGamble`→`afterGamble`、`injuryProb`、`rollInjury`→`injStatLoss` 於 vm vs 新模組，相同 stub 與確定性 RNG；P／非 P × TJ 未達／達上限 × `rubber` × `tjCount` 0／1／2 × 手術／注射成功／失敗 × `chance(5)` × 年齡 <25／32／35 × `iron`／`glass`／`academy`／`tmpInj`／`injNext` × 輕傷／重傷 × `chance(20)` 翌季全休 × `bigInj≥2` 年齡 <32／≥32 × `injStatLoss` `chance(40)` 與 `!(k in S.ab)` 第 2 次 `pick` × 點選前 `S` 重新賦值、同一按鈕連點；比較 `S`、`card`／`choose` 紀錄、RNG 次數與順序、`cont` 次數、例外。
+- 負控制（scratchpad 變體）：選項 closure 改讀快照 `S`（須僅重新賦值序列出差異）；刪除一處 `S.tjSuccess=0`；改一個 `clamp` 界限。
+- `game-view-dom-e2e --baseline=9eff64c9e48ad154ad4a2662fbf6438783b82e1a`（直接執行）：8 段生涯 DOM／`S`／RNG 一致。
+- Quick；Full（R3，AGENTS §6.5；比照 §2m 的 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+### 2t.5 分支與交付
+
+- `refactor/player-injury`（自 `refactor/international-tournament` `9eff64c`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。PR #36 併入 `dev` 前，本期 PR → `dev` 會連帶 #36 的 commit：待 #36 merge 後開 PR，或以 `refactor/international-tournament` 為 base 後再改 base（另行決定）。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
