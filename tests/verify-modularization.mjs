@@ -15,6 +15,7 @@ const [html, config, data, game, main, baseCss, themeCss] = await Promise.all([
   read('docs/styles/base.css'),
   read('docs/styles/themes.css'),
 ]);
+const shareImage = await read('docs/src/ui/share-image.js');
 
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/jp-theme\.css">/);
@@ -31,7 +32,7 @@ assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
 assert.match(config, /VERSION = '1\.13\.6'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(game, /version:VERSION/);
-assert.match(game, /fillText\(VERSION,W-PAD,H-40\)/);
+assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
 assert.doesNotMatch(html, /id="ver-badge"/);
 assert.match(html, /<h1 id="logo-tap"><em>野球人生シミュレーター<\/em><span id="app-version"[^>]*><\/span><\/h1>/);
@@ -51,7 +52,7 @@ assert.equal((data.match(/"eventKey"/g) || []).length, 2);
 assert.match(themeCss, /--button-detail:#6f303d/);
 assert.match(themeCss, /--primary-button-detail:#fff4f5/);
 assert.match(themeCss, /--bg:#fff8f8/);
-assert.match(game, /imageColor=getSharePalette\(theme\)/);
+assert.match(shareImage, /imageColor=getSharePalette\(theme\)/);
 assert.match(await read('docs/src/ui/share-theme.js'), /standard:\{bg:'#fff8f8'/);
 assert.ok(baseCss.length > 8_000);
 
