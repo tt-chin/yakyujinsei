@@ -2563,6 +2563,10 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | Full（scratchpad worktree，`docs`／`tests`／`scripts`／`tools` 與工作樹逐 byte 相同（含本計畫 commit）；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，聯集＝`fullIds()` 93 項無重複／遺漏；未傳 `--baseline`） | 93／93 PASS（691／385／613／449 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 無 findings |
 
+### 2t.7 交付（2026-10-25）
+
+- 使用者決定（2026-10-25）：第 16 期不另開 PR，併入 PR #36（§3.15「一期一個 PR」的例外；第 15、16 期同一 PR）。`refactor/player-injury` 以 fast-forward push 至 `refactor/international-tournament`（自 `9eff64c`），PR #36 標題與說明更新為涵蓋 §2s＋§2t。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
