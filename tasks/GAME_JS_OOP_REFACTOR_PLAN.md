@@ -2127,7 +2127,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 交付：`refactor/flow-outcome-year` 已 push，第 3、4 批合併為 PR #29 → `dev`（PR → `dev` 不觸發 CI），2026-10-25 已合併為 `b886555b6c2053db605e502f2bb3396c3fc252e4`（merge commit，樹與 `d6c328a` 相同）。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、未修改 `main`。
 
-## 2n. 第 12 期試做：`flowHooks` 接縫（細部計畫，2026-10-25；計畫已批准，實作待批准）
+## 2n. 第 12 期試做：`flowHooks` 接縫（細部計畫，2026-10-25；本機完成，見 §2n.6）
 
 源自 §3.12 方向 ①、§3.13 待決 1–5。目標：以可變命名空間物件取代 e2e 對全域 `advance` 的重新賦值，先以 `npb-return-e2e` 試做。
 
@@ -2169,6 +2169,24 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 只改 `npb-return-e2e`；本期證明接縫可行，不使 `advance` 成為不可重新賦值（其他 4 個 e2e 與 stage10 仍替換／包裝）。推廣另議。
 - 分支：`refactor/flow-hooks`，PR #30 合併後自 `origin/dev` `48f37ae` 以 `--no-track` 開設（push 用明確 refspec）。
 - 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（§9.3：無遊戲行為變更）。commit／push／PR 另批。
+
+### 2n.6 實施結果（2026-10-25，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/flow-hooks`，對象 `7106b4f`＋未 commit 變更，比較基準 `48f37ae14c645d31ea31e19408cbb6c8d1993029`）
+
+- 實作：`game.js`（CRLF，2719→2720 行）`reportFlowOutcome` 分派 8 行改為經 `flowHooks`（§2n.1「進年 5 行、終局 5 行」為誤數，實為各 4 行：進年 `AMATEUR_DRAFTED`／`DEMOTION_REFUSED`／`RELEASE_JOINED_AMATEUR`／`REHAB_YEAR_COMPLETED`，終局 `AMATEUR_RETIRED`／`ACTIVE_MINIMUM_RETIRED`／`RELEASE_RETIRED`／`PRESEASON_RETIRED`）；`const flowHooks={advance:null,endGame:null};` 緊接 `reportFlowOutcome` 結尾（`:2331`）。
+- 測試變更：只有 `npb-return-e2e.mjs:18` fixture（依 §2n.3）。**偏離 §2n.3**：vm context 5 處不修改（使用者決定 2026-10-25）。`productionFunction`（`retirement-hof-test-support.mjs:13`）切至下一個 `\n  function`，切片已含 `const flowHooks` 一行（實測切片末行即該行），未補 context 時相關單元全部 PASS；補上會被切片內的 `const` 遮蔽，屬死碼。期望值變更：無。
+- 既有問題（與本期無關）：`npb-return-e2e` 不加參數的完整模式（`:52`，對 `73d5a58` 的 4 seed 生涯比較）於基準 `48f37ae` 同樣 FAIL（step 0 `championshipResults` 缺漏，`dc5ac87` v1.11.0 起），runner 自 `77507fe` 起只跑 `--quick`。使用者決定另開 `test/npb-return-stale-history`：移除 `/baseline/` 一輪與歷史斷言，保留現行版重播兩次一致檢查。
+
+| 項目 | 結果 |
+|---|---|
+| 等價證明（scratchpad，不 commit；三模式各開新頁、同 seed、同 fixture 序列） | 38 步 old（`advance=` 替換）＝new（`flowHooks.advance`，`advance` 不動）：`S`、RNG `_s`、`calls`、`adv`、`#act` 文字逐步 JSON 相同；19 步經 hook 進年；`S.year` 全程 2032 |
+| 負控制（hook 省略 `finalizePendingOffseasonSalary()`） | 首個分歧於「MLB stay」，`salaryDecisionHistory` 1 對 0 |
+| 相關單元 8 項（直接執行） | 8／8 PASS：`syntax`（176 檔）、`draft-signing-policy.test`、`npb-return-ui.test`（75 案）、`kbo-renewal-floor.test`、`salary-flow.test`、`career-movement-policy`、`verify-modularization`、`overlay-hook.test` |
+| `npb-return-e2e` | `--quick`、`--rng-only` PASS；完整模式 FAIL（既有，見上） |
+| `game-view-dom-e2e --baseline=48f37ae…`（直接執行） | PASS：8 careers，DOM／S／RNG identical |
+| `stage10-risk-e2e`（不加 `--compare`） | 57 PASS／0 FAIL |
+| Quick | 68／68 PASS |
+| Full（scratchpad worktree，與工作樹差分相同；4 組 `splitIds(ids,4,id=>fullSeconds().get(id))`，聯集＝`fullIds()` 92 項無重複／遺漏） | 92／92 PASS（24／22／24／22 項，1064／629／1087／754 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（工作樹差分），無問題（確認載入時無 TDZ、e2e 注入碼位於模組頂層、舊 baseline `typeof` 走 fallback、無測試切片跨越或斷言舊分派文字） |
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
