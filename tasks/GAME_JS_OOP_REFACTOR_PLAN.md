@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，待合併）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1762,7 +1762,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 ### 2m.5 交付
 
 - 本節（計畫）commit 於 `refactor/ability-evaluation`，隨第 10 期 PR 進 `dev`。
-- 實作：第 10 期併入 `dev` 後，自 `dev` 開 `refactor/flow-state-machine`（暫名）。11-A 一個 PR；11-B 每批一個 PR。
+- 實作：第 10 期併入 `dev` 後，自 `dev` 開 `refactor/flow-state-machine`（暫名）。11-A 一個 PR；11-B 每批一個 PR（2026-10-25 使用者決定：第 1、2 批合併為 PR #28）。
 - commit 順序：文件（各段細部）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。
 - 不升 VERSION、不改 CHANGELOG（§9.3）；行為不變，`CURRENT_SPEC` 不改。不修改 `main`。
 
@@ -1801,6 +1801,174 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | reviewer | 1 次（工作樹差分），無問題；另確認三處文字切片（`trait-policy.test:106`、`championship-intl.test:45`、`pitcher-awards-d2-analysis:54`）與 `ec903fd` 逐 byte 相同 |
 
 - 未完成：push、PR → `dev`、CI（§2m.5，另批）。11-B 各批細部計畫待開始前另立。
+
+### 2m.8 11-B 第 1 批：業餘選路（細部計畫，2026-10-24；計畫已批准，實作待批准）
+
+**現況（唯讀確認，基準 `d39c9ba`，`game.js` 2695 行；scout 唯讀調查＋抽查）**
+
+- 對象 5 個函式、20 處：`advance()` 14、`f:advance` 參照 2、`endGame(...)` 4。
+
+  | 函式 | 位置 | `advance()` | `f:advance` | `endGame` |
+  |---|---|---|---|---|
+  | `enterDraftPath` | `:2349` | 1（`runDraft` 回呼 `signed`） | – | – |
+  | `draftFallback` | `:2350` | 3（大學／社會人／獨立） | – | 1 |
+  | `pathChoiceHS` | `:2359–2380` | 4（大學／社會人／獨立／MiLB `signTo` 後） | – | – |
+  | `pathChoiceU4` | `:2381` | 2 | – | 1 |
+  | `movement` 覆寫 `:2665` 的 HS／U／CORP／IND 分支 | `:2665`（單行） | 4 | 2 | 2 |
+
+- §2m.2 待確認已解：`:2665` 自行處理全部非 PRO 階段，只有 PRO 呼叫 `LEGACY.movement()`（`game.js` 內唯一呼叫處）；外層 `:2667` 對非 PRO 直接 `return performMovement()`。`:1269` 的 HS／U／CORP／IND 分支不可達，第 4 批只記錄、不改。
+- 選項經 `invokeChoiceAction` 以 `action()` 無參數呼叫；`advance`（`:1494`、`:2306` 覆寫）回傳 `undefined`。
+- `f:advance` 改為箭頭函式的差異：①`advance` 的取用從建立選項時改為點擊時；②`careerSession.currentChoiceAction` 由 `advance` 本身變為箭頭函式（`signTo:2331` 以 `signingRenderRetry.action===currentChoiceAction` 判斷重試；這兩個選項不呼叫 `signTo`）。預期無實質影響，以驗證證明。
+- 文字耦合：
+  - 直接失效：`draft-signing-policy.test.mjs:87`（`/if\(result==='signed'\)\{advance\(\);return;\}/`）。
+  - 不受影響：`kbo-renewal-floor.test.mjs:42,47`（切 `:1269` 的 `function movement(){` 至 `\nfunction buyoutRemaining`，及 `  function migrateSalaryV130State` 為終點）、`championship-intl.test.mjs:73,76`（只以 `  movement = function()` 開頭／`:1269`～`function advance()` 為錨點）、`income-summary.test.mjs:25`（`productionFunction('runDraft')` 新舊比較，`runDraft` 不改、插入點不在其後）。`salary-flow` 的 `R(`／`ri(`／`chance(`／`pick(` 計數不變；無 `advance(`／`endGame(`／`^function` 計數斷言。
+  - 不在 `test-manifest` 的歷史審查／工具腳本：`docs/reviews/award-jp-name-validation/validate.mjs:15`、`docs/reviews/g1-a-validation/fixtures.mjs:18`、`tools/development-b/legacy-effect-boundaries.mjs:41` 以 `/^  movement = function\(\)\{[^\n]+/m` 取 `:2665` 整行放入 vm；實作後若執行非 PRO 分支會因缺 `reportFlowOutcome` 而 `ReferenceError`。依 AGENTS.md §6.4 不修改，只記錄。
+  - 執行時替換全域名稱：`contract-salary-e2e:23`、`global-contract-market-e2e:14`、`kbo-renewal-e2e:22`、`npb-return-e2e:18` 替換 `advance`；`stage10-risk-e2e:23` 包裝 `endGame`；`smallschool-c-e2e:16` 暫換 `startYear` 後呼叫 `advance`；`bug-act-01-02-e2e:22` 直接呼叫 `enterDraftPath`。`reportFlowOutcome` 在執行當下以名稱呼叫，替換仍生效。
+
+**設計（L3／R3；使用者決定 2026-10-24：照建議）**
+
+- 結果名稱（`領域_結果`，§2m.6②）：
+
+  | kind | 呼叫 | 處數 |
+  |---|---|---|
+  | `AMATEUR_STAY` | `advance()`（高中／大學升年級、社會人續留、獨立留下） | 4（含 `f:advance` 2） |
+  | `AMATEUR_ENTER_UNIVERSITY` | `advance()` | 2 |
+  | `AMATEUR_JOIN_CORP` | `advance()` | 4 |
+  | `AMATEUR_JOIN_IND` | `advance()` | 4 |
+  | `AMATEUR_SIGNED_MILB` | `advance()` | 1 |
+  | `AMATEUR_DRAFTED` | `advance()` | 1 |
+  | `AMATEUR_RETIRED` | `endGame(outcome.reason)`（4 句原文不變） | 4 |
+
+- `function reportFlowOutcome(outcome)`（`game.js`，CRLF，2 格縮排）：`switch(outcome.kind)` 依上表分派，執行當下以名稱呼叫 `advance`／`endGame` 並回傳其值；未知 kind `throw new Error('UNKNOWN_FLOW_OUTCOME:'+outcome.kind)`（比照 `UNKNOWN_DRAFT_RESULT`）。`outcome` 只有 `kind` 與 `reason`。
+- 插入點：`:2306` `advance=function(){…}` 之後、`:2308` `  function newState(` 之前，保留兩者間空行（`saveSalaryEvaluation` 的 `productionFunction` 切片內容逐字不變；`tests`／`scripts`／`tools`／`docs/reviews`／`docs/designs` 無以 `newState`／`setAmateur`／`enterDraftPath` 為錨點者）。
+- 各處只把末尾的 `advance()`／`endGame(...)` 換成 `reportFlowOutcome({...})`；`S.stage=`、`setSchool`、`setAmateur`、`signTo` 等留在原位、原順序。`f:advance` 改為 `()=>reportFlowOutcome({kind:'AMATEUR_STAY'})`。不新增或移動 RNG 呼叫點，不新增 `S` 欄位。
+
+**測試變更（需揭露）**
+
+1. `draft-signing-policy.test.mjs:87`：正則改為要求 `if(result==='signed'){reportFlowOutcome({kind:'AMATEUR_DRAFTED'});return;}`。
+2. 新增行為 fixture（`draft-signing-policy.test.mjs`，不增加 Full 入口數）：現行與基準各以 `'use strict';`＋5 個函式（`productionFunction` 取 4 個，`:2665` 以整行正則取）建 vm，現行另加 `reportFlowOutcome`；stub 記錄 `advance`／`endGame`／`setAmateur`／`setSchool`／`signTo`／`runDraft` 的呼叫序列與參數，逐一點擊每個 `choose` 選項，涵蓋 20 處；另 1 案斷言未知 kind 拋出 `UNKNOWN_FLOW_OUTCOME:`。兩側以 JSON 字串比較＋長度守衛；基準以 `git show <基準>:docs/src/engine/game.js` 取得。
+3. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
+
+**驗證（比照 §2m.4）**
+
+1. `check-syntax`；相關單元：`draft-signing-policy`、`income-summary`、`kbo-renewal-floor`、`championship-intl`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`。
+2. `game-view-dom-e2e --baseline=<基準>`（直接執行）；`bug-act-01-02-e2e`、`smallschool-c-e2e`、`draft-income-e2e`、`stage10-risk-e2e`、`contract-salary-e2e`、`trait-system-e2e`；Quick。
+3. 負控制（scratchpad 副本，各改一處）：①某處 `AMATEUR_JOIN_CORP`／`AMATEUR_JOIN_IND` 互換、②某處漏呼叫 `reportFlowOutcome`、③分派把某 kind 指向錯誤目標；確認 fixture 本身 FAIL（先被既有斷言攔下時，另以去除該斷言的副本確認）。
+4. Full 一次；reviewer 一次（程式差分）。
+
+**交付**
+
+- 分支：自 `refactor/flow-state-machine` 疊新分支（名稱待定），基準暫用 `d39c9badcfc3fa0b4d3254a113e0d83531db3a1e`；11-A 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃。
+- commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
+
+### 2m.9 PR #27 合併與 11-B 第 1 批結果（2026-10-24～25，本機 macOS；分支 `refactor/flow-outcome-amateur`，實作 commit `ab1bc8b`、中間結果文件 commit `2d90a44`；PR #28）
+
+- PR #27（`refactor/flow-state-machine` `d39c9ba` → `dev`，5 commits，以 Playwright 經 Brave 建立）以 merge commit `026c5cd89e3b189cf2a93e9425f344f57fafc208` 併入 `dev`；之前 `dev` 已有 PR #26（design tokens，`7ef43d3`，不涉 `game.js`）。合併後 `dev` push 的 Quick CI（Tests #86）：completed successfully，3 分 31 秒（未展開 log 確認 PASS 數）。
+- 本分支：§2m.8 計畫 commit `1ba3e3c`，merge `origin/dev` 為 `ae04f08`。`game.js` 於 `d39c9ba` 與 `026c5cd` 間無差分，§2m.8 的重掃結果不變；**第 1 批比較基準改為 `026c5cd89e3b189cf2a93e9425f344f57fafc208`**（Case F 的 `git show` 亦用此 SHA）。
+- 實作：`game.js`（CRLF，2695→2708 行，CR 行數＝總行數）20 處替換（`DRAFTED` 1、`ENTER_UNIVERSITY` 2、`JOIN_CORP` 4、`JOIN_IND` 4、`SIGNED_MILB` 1、`STAY` 4、`RETIRED` 4）；`reportFlowOutcome` 位於 `:2308`–`:2319`（`advance=function` 之後、`  function newState(` 之前）；`movement` 覆寫 `:2678` 的 PRO 尾段（`accrueForeignFirstTeamSeason(S);` 起）與基準逐字相同。
+- 測試變更（`draft-signing-policy.test.mjs`）：
+  - `:90`（原 `:87`）正則改為 `reportFlowOutcome({kind:'AMATEUR_DRAFTED'})`。
+  - Case F（新增）：現行與 `026c5cd` 各以 `'use strict';`＋`let movement;`＋4 個 `productionFunction`＋`:2665`／`:2678` 整行建 vm（現行另加 `reportFlowOutcome`）；20 個情境（HS 1／3 年×總合 45／52／56、U 2／4 年、CORP 3 種、IND，各×`runDraft` 結果 `signed`／`fail`）以 DFS 點擊全部 `choose` 選項，共 87 葉；比較兩側呼叫紀錄（JSON 字串）＋葉數守衛 87＋7 種 kind 覆蓋＋未知 kind 拋出 `UNKNOWN_FLOW_OUTCOME:`。
+  - **計畫外追加（需揭露）**：負控制①（`pathChoiceU4` 的 `JOIN_CORP`／`JOIN_IND` 互換）最初 PASS——兩者都分派到 `advance()`，呼叫序列無差異。為滿足 §2m.8 負控制要求，追加各葉的 kind 一致性斷言：由末端 `advance`／`endGame` 前一筆呼叫（`setAmateur`→`JOIN_<stage>`、`setSchool`→`ENTER_UNIVERSITY`、`signTo`→`SIGNED_MILB`、`runDraft`→`DRAFTED`、`endGame`→`RETIRED`，其餘→`STAY`）推導應回報的 kind，與實際回報比對。只改測試。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（176 檔） |
+| 相關單元 | `draft-signing-policy`、`income-summary`、`kbo-renewal-floor`、`championship-intl`（98）、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`（135／0）皆 PASS |
+| 逐處突變（scratchpad worktree） | 20 處各自改為 `endGame('MUT')`：20／20 FAIL；site1（`DRAFTED`）先被 `:90` 正則攔下，另以去除該斷言的副本確認由 Case F FAIL；還原後 PASS |
+| 負控制 | ①`JOIN_CORP`／`JOIN_IND` 互換：FAIL（kind 斷言）、②`draftFallback` 社會人分支漏呼叫：FAIL、③`SIGNED_MILB` 分派到 `endGame`：FAIL |
+| reviewer | 1 次（工作樹差分），無問題（另確認 `f:advance` 改寫不影響 `signTo` 重試判斷、`saveSalaryEvaluation` 切片內容不變） |
+
+以下於 2026-10-25 在 scratchpad worktree（`2d90a44`，`game.js` 同 `ab1bc8b`；對 `026c5cd` 為 +21／−8）以 Brave（Playwright shim）執行，非 CI 的 Linux Chromium：
+
+| 項目 | 結果 |
+|---|---|
+| `game-view-dom-e2e --baseline=026c5cd…`（直接執行） | PASS（8 career，exit 0；末行基準為 `026c5cd89e3b189cf2a93e9425f344f57fafc208`） |
+| e2e 6 項（runner，`--baseline=026c5cd…`） | `bug-act-01-02-e2e`、`smallschool-c-e2e`、`draft-income-e2e`、`stage10-risk-e2e`、`contract-salary-e2e`、`trait-system-e2e` 6／6 PASS；`contract-salary-e2e` 收到 `--compare=026c5cd…`、`draft-income-e2e` 收到 `--baseline=026c5cd…` |
+| Quick | 68／68 PASS |
+| Full（本機 4 組平行，依 manifest `seconds` LPT 分組，未傳 `--baseline`） | 92／92 PASS（4 組聯集＝`fullIds()` 92 項，無重複／遺漏） |
+
+- PR #28（`refactor/flow-outcome-amateur` → `dev`）已建立；第 2 批亦併入此 PR（§2m.11）。
+
+### 2m.10 11-B 第 2 批：降格（細部計畫，2026-10-25；計畫已批准，實作待批准）
+
+**現況（唯讀確認，基準 `026c5cd`，`game.js` 2708 行（本分支，含第 1 批）；scout 唯讀調查＋抽查）**
+
+- 對象 2 個函式、9 處：`advance()` 6、`endGame(...)` 3。第 1 批的插入點在 `:2308` 以後，對象區段的行號與 `026c5cd` 相同。
+
+  | 位置 | 分支 | 原呼叫 | kind |
+  |---|---|---|---|
+  | `:1393` | MiLB 降格時移籍 NPB 一軍 | `advance()` | `DEMOTION_TRANSFER_NPB1` |
+  | `:1396` | MiLB 降格時移籍 NPB 二軍（支配下） | `advance()` | `DEMOTION_TRANSFER_NPB2` |
+  | `:1400` | NPB 降格時移籍 CPBL 一軍 | `advance()` | `DEMOTION_TRANSFER_CPBL1` |
+  | `:1405` | 有其他選項時接受降格 | `advance()` | `DEMOTION_ACCEPTED` |
+  | `:1406` | 沒有其他選項的降格 | `advance()` | `DEMOTION_ACCEPTED` |
+  | `:1419` | 以長約條款拒絕降格 | `advance()` | `DEMOTION_REFUSED` |
+  | `:1420` | 長約面談時引退（`daibaFarewell` 回呼內） | `endGame(...)` | `DEMOTION_RETIRED` |
+  | `:1424` | 33 歲以上面談時引退（`daibaFarewell` 回呼內） | `endGame(...)` | `DEMOTION_RETIRED` |
+  | `:1429` | `retireBelowActiveMinimum` | `endGame(...)` | `ACTIVE_MINIMUM_RETIRED` |
+
+- 呼叫端：`handleDemotion` 由 `movement`（`:1337`、`:1340`）呼叫；`retireBelowActiveMinimum` 由 `movement`（`:1282`）與 `outOfOrg`（`:2576`）呼叫。兩者皆無覆寫。
+- `doDemote` 末尾的 `outOfOrg(o)`、選項 `f:doDemote` 屬領域內部的下一步，不改（§2m.2）。
+- 文字耦合：
+  - 直接失效：
+    - `npb-return-ui.test.mjs:38–42`：以 `function handleDemotion`～`function retireBelowActiveMinimum` 的切片放入 `runInNewContext`，context 無 `reportFlowOutcome`，`:44` 點擊選項時 `ReferenceError`。
+    - `npb-return-ui.test.mjs:62`：`function handleDemotion`～`/* 長期契約/短期契約`（含 `retireBelowActiveMinimum`）與 `73d5a58` 逐字比較。`:49–52` 既有白名單會把 NPB1／NPB2 移籍兩段整段換回舊文字，其餘 7 處（`:1400`／`:1405`／`:1406`／`:1419`／`:1420`／`:1424`／`:1429`）產生差異。
+  - 不受影響：`career-movement-policy.mjs:51,53,54`（只找呼叫處與 `card('bad','現役続行を断念',…)`）；`draft-signing-policy.test.mjs` Case F（`productionFunction('reportFlowOutcome')`，只跑業餘情境，7 種 kind 覆蓋斷言不變，未知 kind 仍拋出）；`contract-salary-e2e:30`、`npb-return-e2e:18`、`global-contract-market-e2e:14`（瀏覽器內實際呼叫 `handleDemotion`）；`salary-flow` 計數不變；無 `advance(`／`endGame(`／`reportFlowOutcome` 計數斷言；理由原文無測試斷言（只出現在 `docs/reviews/*.json` 輸出）。
+  - 不在 `test-manifest` 的工具／歷史審查：`tools/development-b/legacy-effect-boundaries.mjs:34`、`docs/reviews/g1-a-validation/fixtures.mjs:33`、`docs/reviews/award-jp-name-validation/validate.mjs:30` 以 `productionFunction('handleDemotion')` 放入 vm，fixture 只走長約分支且不點擊選項，不會執行到 `reportFlowOutcome`。依 AGENTS.md §6.4 不修改，只記錄。
+
+**設計（L3／R3；使用者決定 2026-10-25：照建議，`retireBelowActiveMinimum` 用 `ACTIVE_MINIMUM_RETIRED`）**
+
+- `reportFlowOutcome` 不新增函式，只在既有 `switch` 的 AMATEUR 各 case 之後追加：`DEMOTION_TRANSFER_NPB1`／`DEMOTION_TRANSFER_NPB2`／`DEMOTION_TRANSFER_CPBL1`／`DEMOTION_ACCEPTED`／`DEMOTION_REFUSED` → `return advance();`，`DEMOTION_RETIRED`／`ACTIVE_MINIMUM_RETIRED` → `return endGame(outcome.reason);`。
+- 各處只把末尾的 `advance()`／`endGame(...)` 換成 `reportFlowOutcome({...})`；`buyoutRemaining`、`signTo`、`applyDemotionSalary`、`board`、`card`、`S.lv=`、`S.demotionRefused=`、特性設定留在原位、原順序。`DEMOTION_RETIRED` 仍在 `daibaFarewell` 回呼內，`reason` 於回呼執行時求值（與原本相同）。
+- `retireBelowActiveMinimum` 用 `ACTIVE_MINIMUM_RETIRED`：它也由 `movement` 與 `outOfOrg`（FA 領域）呼叫，與降格無特定關係。
+- 不新增或移動 RNG 呼叫點，不新增 `S` 欄位。
+
+**測試變更（需揭露）**
+
+1. `npb-return-ui.test.mjs:38–42`：以 `productionFunction('reportFlowOutcome',…)` 將正式的 `reportFlowOutcome` 一併放入 vm；`advance` 仍由原 stub 計數，既有斷言不改。
+2. `npb-return-ui.test.mjs:62`：比照 `:49–52` 的白名單，比較前追加 7 個精確字串的反向替換（`reportFlowOutcome({...})` → 原 `advance()`／`endGame(...)`），每個斷言恰好出現 1 次；其餘文字仍逐字比較。
+3. 新增行為 fixture（`npb-return-ui.test.mjs`，不增加 Full 入口數）：
+   - 現行與 `026c5cd` 各以 `'use strict';`＋`handleDemotion`＋`retireBelowActiveMinimum` 建 vm，現行另加 `reportFlowOutcome`；基準以 `git show 026c5cd…:docs/src/engine/game.js` 取得。
+   - 情境：MiLB 降格（移籍 NPB1／移籍 NPB2／無其他選項）、NPB 降格（有／無 CPBL 選項）、無降格目標（`outOfOrg`）、長約三選項（拒絕降格分「尚無チームの癌」與「已有或被 franchise／intlace 擋下」）、33 歲以上兩選項、觸發イップス、直接呼叫 `retireBelowActiveMinimum`。`chance` 依情境給定結果，`daibaFarewell` stub 同步呼叫後續。
+   - 以 DFS 點擊全部 `choose` 選項；比較兩側呼叫紀錄（`advance`／`endGame` 含理由／`signTo` 參數／`buyoutRemaining`／`applyDemotionSalary`／`board`／`card`／`traitCard`／`outOfOrg`／`daibaFarewell`）與各葉的 `S` 快照（JSON 字串）＋葉數守衛＋9 種 kind 覆蓋。
+   - 各葉 kind 一致性斷言：由前一筆呼叫推導應回報的 kind（`signTo` 目標 → `TRANSFER_*`、`applyDemotionSalary` → `ACCEPTED`、`S.demotionRefused` → `REFUSED`、`daibaFarewell` → `RETIRED`、`現役続行を断念` card → `ACTIVE_MINIMUM_RETIRED`），與實際回報比對（第 1 批教訓：分派到同一目標的 kind 互換時，呼叫序列無差異）。
+4. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
+
+**驗證（比照 §2m.4）**
+
+1. `check-syntax`；相關單元：`npb-return-ui`、`npb-farewell`、`career-movement-policy`、`draft-signing-policy`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`。
+2. `game-view-dom-e2e --baseline=026c5cd…`（直接執行）；`contract-salary-e2e`、`npb-return-e2e`、`global-contract-market-e2e`、`event-fix-e2e`、`stage10-risk-e2e`；Quick。
+3. 負控制（scratchpad 副本，各改一處）：①互換 `DEMOTION_TRANSFER_NPB1`／`DEMOTION_TRANSFER_NPB2`、②拒絕降格分支漏呼叫 `reportFlowOutcome`、③`DEMOTION_RETIRED` 分派到 `advance`；另 9 處各自改為 `endGame('MUT')` 的逐處突變。確認 fixture 本身 FAIL（先被既有斷言攔下時，另以去除該斷言的副本確認）。
+4. Full 一次；reviewer 一次（程式差分）。
+
+**交付**
+
+- 分支：`refactor/flow-outcome-demotion`，自 `refactor/flow-outcome-amateur`（`26ec1bf`）疊出；基準暫用 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。第 1 批併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃。
+- commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
+
+### 2m.11 11-B 第 2 批結果（2026-10-25，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/flow-outcome-demotion`，實作 commit `5cc17c4`；併入 PR #28）
+
+- 開工：`git fetch` 後 `origin/dev` 仍為 `026c5cd`，比較基準維持 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。以新名稱重掃 `tests/`、`scripts/`、`tools/`、`docs/`：耦合與 §2m.10 所列相同，無新增（`docs/reviews/*.json` 只是輸出）。
+- 實作：`game.js`（CRLF，2708→2715 行，CR 行數＝總行數）9 處替換（`TRANSFER_NPB1`／`NPB2`／`CPBL1` 各 1、`ACCEPTED` 2、`REFUSED` 1、`DEMOTION_RETIRED` 2（仍在 `daibaFarewell` 回呼內）、`ACTIVE_MINIMUM_RETIRED` 1（保留 template literal））；`reportFlowOutcome` 於 AMATEUR 各 case 之後追加 7 個 case（`:2317`–`:2323`）。`retireBelowActiveMinimum` 的兩個呼叫端（`:1282`、`:2583`）皆捨棄回傳值。
+- 測試變更（`npb-return-ui.test.mjs`，32→45 案）：
+  - `:39`：`demotionSource` 末尾追加 `productionFunction('reportFlowOutcome',now)`；既有斷言不改。
+  - `:63`–`:72`：與 `73d5a58` 逐字比較前，7 個精確字串反向替換（CPBL1、ACCEPTED×2 以 `board(2);`／`board(2); ` 前後文區分、REFUSED、RETIRED×2 以理由區分、ACTIVE_MINIMUM），各斷言恰好出現 1 次；NPB1／NPB2 由既有 `:50–53` 白名單整段換回。
+  - 行為 fixture（新增）：現行與 `026c5cd` 各以 `'use strict';`＋`handleDemotion`＋`retireBelowActiveMinimum`（現行另加 `reportFlowOutcome`）建 vm。13 情境：MiLB（移籍 NPB1／移籍 NPB2／無選項）、NPB（有／無 CPBL）、無降格目標（`outOfOrg`）、長約×traits（無／`franchise`／`intlace`／`cancer`）、33 歲以上（內含巢狀移籍選項）、イップス、直接呼叫 `retireBelowActiveMinimum`。DFS 點擊全部選項共 27 葉；比較兩側呼叫紀錄＋各葉 `S`（JSON 字串）、葉數守衛 27、各葉 kind 一致性（由 `signTo` 目標、`applyDemotionSalary`、`S.demotionRefused`、`daibaFarewell`、`現役続行を断念` card 推導）、7 種 kind 覆蓋。
+  - **計畫字面修正（需揭露）**：§2m.10 寫「9 種 kind 覆蓋」，實為 7 種 kind 分布於 9 處。測試改為 7 種 kind 集合斷言＋9 處到達斷言（`site()`：ACCEPTED 以有無「降格を受け入れるか、新天地を選ぶか？」選項區分、RETIRED 以理由區分）。屬測試端解讀，計畫內容不變。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（176 檔） |
+| 相關單元 | `npb-return-ui`（45）、`npb-farewell`（384）、`career-movement-policy`、`draft-signing-policy`、`salary-flow`（計數不變）、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`（135／0）皆 PASS |
+| 負控制＋逐處突變（scratchpad worktree） | 確認方式：另建「檔首至 `let cases=0;`＋新 fixture」的變體（去除全部既有斷言，比計畫的「去除該斷言」更嚴）。①互換 `TRANSFER_NPB1`／`NPB2`：FAIL（只由 kind 一致性斷言攔下，呼叫紀錄比較通過，與第 1 批教訓相同）、②拒絕降格分支漏呼叫：FAIL、③`DEMOTION_RETIRED` 分派到 `advance`：FAIL；9 處各自改為 `endGame('MUT')`：9／9 FAIL；還原後 PASS。完整檔案上 12 項亦皆 FAIL，但其中 NPB1／NPB2／ACCEPTED（有選項）3 項為 `endGame is not defined`（既有 `:42` context 無 `endGame` stub 的突變副作用），該 3 項的證據以變體為準 |
+| `game-view-dom-e2e --baseline=026c5cd…`（直接執行） | PASS：8 生涯 DOM／`S`／RNG 完全一致（末行確認基準） |
+| e2e 5 項（runner，`--baseline=026c5cd…`） | `contract-salary-e2e`（收到 `--compare=026c5cd…`）、`npb-return-e2e`、`global-contract-market-e2e`、`event-fix-e2e`、`stage10-risk-e2e` 5／5 PASS |
+| Quick | 68／68 PASS |
+| Full（scratchpad worktree，與工作樹逐 byte 相同；依 manifest `seconds` LPT 分 4 組 24／22／24／22，聯集＝`fullIds()` 92 項無重複／遺漏；未傳 `--baseline`） | 92／92 PASS（625／375／622／436 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（工作樹差分），無問題（另確認 2 格縮排的 `reportFlowOutcome` 為模組頂層、CRLF、回傳值無使用者） |
+
+- push／PR：2026-10-25 使用者決定將第 2 批併入 PR #28：`26ec1bf..70ca598` 以 fast-forward push 至 PR head `refactor/flow-outcome-amateur`（未 force），PR 標題／說明改為涵蓋第 1、2 批。PR → `dev` 不觸發 CI；未合併。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
