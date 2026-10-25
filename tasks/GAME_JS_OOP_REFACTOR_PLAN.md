@@ -2188,6 +2188,113 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | Full（scratchpad worktree，與工作樹差分相同；4 組 `splitIds(ids,4,id=>fullSeconds().get(id))`，聯集＝`fullIds()` 92 項無重複／遺漏） | 92／92 PASS（24／22／24／22 項，1064／629／1087／754 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 1 次（工作樹差分），無問題（確認載入時無 TDZ、e2e 注入碼位於模組頂層、舊 baseline `typeof` 走 fallback、無測試切片跨越或斷言舊分派文字） |
 
+## 2o. 第 12 期推廣：其餘 4 個 e2e 改用 `flowHooks`（細部計畫，2026-10-25；計畫已批准，實作待批准）
+
+源自 §2n.5「推廣另議」。目標：`championship-intl-e2e`、`contract-salary-e2e`、`global-contract-market-e2e`、`kbo-renewal-e2e` 不再對新版 `game.js` 重新賦值全域 `advance`。
+
+### 2o.1 現況（2026-10-25 scout 唯讀調查＋grep 核對，基準 `origin/dev` `6ab2676`，`docs/src` 與 `8049c2a` 相同，`game.js` 2720 行）
+
+- `game.js` 的 `advance(` 呼叫只在 `reportFlowOutcome` 分派內（`:2306`／`:2312`／`:2321`／`:2325`），其他 `docs/src` 模組沒有呼叫。`injectOverlayHook` 對新版原始碼把 hook 接在檔尾，位置在 `:2296–2297` 的 finalize 包裝之後。
+
+| e2e | 現行替換 | 舊 SHA 注入 | 計數斷言 | 測試自己直接呼叫 `advance` |
+|---|---|---|---|---|
+| `championship-intl:18–19` | `advance=()=>window.__adv++`；`restore`／`fixture` 開頭換回 `realAdvance` | 否（`004cd26` 只注入 getter） | `:73`／`:80` | 無（`intl:` 直接傳 callback） |
+| `contract-salary:20–23` | `advance=()=>{window.__adv++;auditAdvance();}`（會呼叫原本的） | 是（`37121fb`） | `:62`／`:72`／`:78`／`:84`／`:87–89` | `:28` `next:()=>advance()` |
+| `global-contract-market:14` | `advance=()=>{}` | 是（`053e7b4`） | 無 | 無 |
+| `kbo-renewal:22` | `advance=()=>{finalizePendingOffseasonSalary();window.__fixtureAdv++;}` | 是（`f3efb0a`） | `:66` | `:22` `choose` 回呼內的 `advance()` |
+
+- 不在本期範圍（`advance` 因此仍須可重新賦值）：`stage10-risk-e2e:9–10` 的 `s10wrap` 包裝（只觀察，仍呼叫原本的）、`game.js:2297` 的正式包裝、`support/stage6-browser.mjs:31` 的直接呼叫（只呼叫，不替換）。
+
+### 2o.2 設計（使用者決定 2026-10-25）
+
+- 各檔在 hook 字串內定義一個具名函式，現行替換的本體原樣搬進去。有 `flowHooks`（`typeof flowHooks!=='undefined'`）時設為 `flowHooks.advance`，否則（舊 SHA）沿用 `advance=` 替換，比照 §2n.3。
+- `championship-intl`：舊 SHA 不注入替換，所以不需要退路。`fixture` 開頭與 `restore` 改為 `flowHooks.advance=null`，移除 `realAdvance`。
+- `contract-salary`：hook 函式為「計數→`auditAdvance()`」，`next` 改呼叫此函式。
+- `kbo-renewal`：`choose` 回呼內的 `advance()` 改呼叫此函式，否則新版會呼叫到真的 `advance` 而換年。
+- `movement`、`R`、`startYear` 等其他替換不改。
+
+### 2o.3 測試變更（需揭露）
+
+- 只改上述 4 個檔案的 hook 字串。斷言、期望值、baseline SHA、manifest 不變。期望值變更：無。
+
+### 2o.4 驗證（只改測試，`game.js` 不變；§6.2 相關入口＋Quick）
+
+- 各檔修改後執行並 PASS：`kbo-renewal-e2e`（`--quick` 與不加參數）、`championship-intl-e2e --ui-only`、`contract-salary-e2e`、`global-contract-market-e2e --quick`（依 manifest 的 args；Full 專屬的 3 項直接執行）。
+- 負控制（scratchpad，不 commit）：拿掉各檔掛載 `flowHooks.advance` 的那一行後，有計數斷言的 3 檔必須 FAIL。`global-contract-market` 若拿掉後仍 PASS，改用 §2n.4 的方式：同一 fixture 序列分別用舊替換和新接縫執行，逐步比較 `S`／RNG 呼叫數是否相同，並斷言新接縫沒有換年。
+- Quick。4 組 Full：**待決**（建議不跑；理由是 `game.js` 不變，而 Full 專屬的 3 項已直接執行）。
+- reviewer：工作樹差分。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+
+### 2o.5 分支
+
+- `refactor/flow-hooks-e2e`，以 `git switch --no-track -c refactor/flow-hooks-e2e origin/dev` 開設。本計畫先單獨 commit；commit、push、PR 另批。
+
+### 2o.6 實施結果（2026-10-25，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/flow-hooks-e2e`，對象 `7a80d92`＋未 commit 變更，`game.js` 不變）
+
+- 實作：4 檔 hook 字串 +7／−7（依 §2o.2）。`kbo-renewal`、`contract-salary` 為 CRLF，未改動其他行的換行。
+- **偏離 §2o.4（使用者決定 2026-10-25）**：負控制（只拿掉新版原始碼上的掛載，保留舊 SHA 退路）只有 `contract-salary` FAIL（`adv` 斷言等）。
+  - `championship-intl` 仍 PASS：新接縫有被呼叫，但 `:73`／`:80` 的 `adv` 計數來自 `intl:` 直接傳入的 callback，真的換年時現有斷言測不出來。屬既有弱點（舊替換同樣如此），本期只記錄，不修。
+  - `kbo-renewal` 仍 PASS：新版與舊 SHA 都沒有遊戲程式呼叫到掛載，唯一的呼叫是 `:22` 回呼內直接呼叫 `fixtureAdvance()`。使用者決定保留掛載（防日後改走 `reportFlowOutcome` 時真的換年）。
+  - `global-contract-market` 仍 PASS（§2o.4 已預期），依 §2o.4 補做逐步比較（下表）。
+
+| 項目 | 結果 |
+|---|---|
+| 4 個 e2e（`test.mjs full --only=…`，manifest args；`contract-salary` 由 runner 帶 `--compare=04decb04f79c3ce39b8316f924e96695b793ce94`） | 4／4 PASS |
+| 修改前後 hook 本體呼叫次數（scratchpad worktree 探針，以 `typeof flowHooks` 區分新版／舊 SHA 原始碼） | 4 檔相同：`championship-intl` 12＋0、`contract-salary` 487＋58、`global-contract-market` 22＋4、`kbo-renewal` 3＋0；呼叫序列（含 `contract-salary` 381 案的 PASS 行穿插）逐行相同 |
+| `global-contract-market` 逐步比較（scratchpad，不 commit；同一 fixture 序列 10 情境，舊替換／新接縫／不掛載三模式各開新頁；點擊前後比較 `S`、RNG `_s`、`calls`、hook 次數、`#act` 文字） | 舊＝新 10／10 步相同，其中 8 步經 hook，新接縫全程 `S.year` 2032；負控制（不掛載）於第 1 步 cross-CPBL 分歧，`S.year` 2032→2033 |
+| Quick | 68／68 PASS（258 秒） |
+| 4 組 Full | NOT_RUN（使用者同意：`game.js` 不變，Full 專屬 3 項已直接執行） |
+| reviewer | 1 次（工作樹差分），無問題（確認全部 `advance(` 呼叫在 `reportFlowOutcome` 內、新名稱無衝突、舊 SHA `typeof` 走退路、無 TDZ、CRLF 無整檔變動） |
+
+## 2p. 第 12 期推廣：`retirement-hof-pilot` 的 `endGame` 改用 `flowHooks`（細部計畫，2026-10-25；計畫已批准，實作已批准）
+
+使用者決定（2026-10-25）：第 12 期後續先做候選 A（`endGame` → `flowHooks.endGame`，只改測試），範圍只含 `retirement-hof-pilot`；`stage10-risk-e2e` 留待 `s10wrap` 一併處理（候選 E）。
+
+### 2p.1 現況（2026-10-25 唯讀確認，分支 `refactor/flow-hooks-e2e` `9f4a6de`，`game.js` 與 `origin/dev` `6ab2676` 相同）
+
+- `game.js:2331` 已有 `flowHooks={advance:null,endGame:null}`；`endGame(` 的呼叫只在 `reportFlowOutcome` 分派內（`:2307`／`:2314`／`:2323`／`:2327`，皆為 `flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason)`），`docs/src` 其他模組沒有呼叫。
+- `game.js:2704` 正式碼自己重新賦值 `endGame`（包裝 `LEGACY.endGame`＋`setTimeout` 更新卡片）。因此 `endGame` 無論如何須維持可重新賦值；本期只消除測試端的替換。
+- `retirement-hof-pilot.mjs:18`（LF）：`observeEnd=endGame;endGame=function(reason){__hofBefore=S 快照;observeEnd(reason);__hofReason=reason;return result;}`，只觀察、仍呼叫原本的。只對現行原始碼注入（`instrumentRng(s)+hook`），沒有舊 SHA 注入，不需 `typeof` 退路。
+- `__hofBefore`／`__hofReason` 只寫入輸出 JSON 的 `retirementRngState`／`retirementReason`，沒有斷言；斷言只有 replay 的 `finalStateDigest`／`actionDigest`／`calls`。故拿掉掛載後預期仍 PASS，負控制須改用輸出 JSON 比較（§2p.4）。
+- manifest：`modes:['audit']`，args `--seeds=hof111-pilot-01,hof111-pilot-04 --strategy=balanced-stay`（不在 Quick／Full）。`retirement-hof-report.mjs:103–104` 引用其輸出（歷史報告，不重新產生）。
+- §3.13 表格漏列：同檔 `:17` 另替換 `accLevelStat`（只觀察）。無對應接縫，不在本期範圍。
+
+### 2p.2 設計
+
+- `:18` 改為 `flowHooks.endGame=function(outcome){window.__hofBefore=…;const result=endGame(outcome.reason);window.__hofReason=outcome.reason;return result;};`：快照、呼叫、記錄、回傳的順序不變；呼叫時取全域 `endGame`，即 `:2704` 包裝後的版本（與現行 `observeEnd` 相同）。
+- 移除 `observeEnd`。`:17` `accLevelStat` 與其他部分不改。
+
+### 2p.3 測試變更（需揭露）
+
+- 只改 `retirement-hof-pilot.mjs:18` 的 hook 字串（+1／−1）。斷言、期望值、manifest、args 不變。期望值變更：無。
+
+### 2p.4 驗證（只改測試，`game.js` 不變；R1：audit 專用入口，未接入 Quick／Full）
+
+- 修改前後各執行一次並比較輸出 JSON（`--output` 寫入 scratchpad）：manifest args（`hof111-pilot-01,04`／`balanced-stay`）＋ `retirement-hof-report.mjs:104` 的投票例（`hof111-pilot-09,11`／`balanced-stay`，涵蓋殿堂投票與 `:2704` 的 `setTimeout`）。比較 `results` 各筆除 `seconds` 以外的欄位（含 `retirementRngState`、`retirementReason`、`voteCards`、各 digest、`calls`），以及 `replay`；`commit`／`seconds`／`environment` 除外。
+- 負控制（scratchpad，不 commit）：拿掉掛載的版本，預期 PASS，但 `retirementRngState`／`retirementReason` 缺漏，與修改前 JSON 比較須出現差異（證明比較能測出未掛載）。
+- Quick：不跑（使用者決定 2026-10-25：本檔不在 Quick 內、`game.js` 不變；偏離 §6.2 原則）。Full：不跑。
+- reviewer：略過（使用者決定 2026-10-25：單檔 <20 行且無邏輯變更）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+
+### 2p.5 分支
+
+- 使用者決定（2026-10-25）：疊在 `refactor/flow-hooks-e2e`（同屬 `flowHooks` 推廣、只改測試，與 §2o 合為一個 PR → `dev`）。本計畫先單獨 commit；實作 commit、push、PR 另批。
+
+### 2p.6 實施結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/flow-hooks-e2e`，對象 `99553e4`＋未 commit 變更，`game.js` 不變）
+
+- 實作：`retirement-hof-pilot.mjs:18` +1／−1（依 §2p.2）。LF，差分無 CR；`node --check` PASS。
+
+| 項目 | 結果 |
+|---|---|
+| 修改前（`99553e4`）：`hof111-pilot-01,04`、`hof111-pilot-09,11`（`balanced-stay`） | exit 0，4／4 完成（`09` 殿堂投票卡 1 張） |
+| 修改後：同上 | exit 0；輸出 JSON 與修改前相同（除 `seconds`／`commit`／`environment`；`results` 各欄位與 `replay` 2＋2 筆皆相同） |
+| 負控制（scratchpad worktree，拿掉掛載） | exit 0（預期仍 PASS）；與修改前比較 4 筆皆差異於 `retirementRngState`／`retirementReason`（`undefined`），證明比較能測出未掛載 |
+| Quick／Full／reviewer | NOT_RUN（使用者決定，§2p.4） |
+
+### 2p.7 交付（2026-10-25）
+
+- 疊在 `refactor/flow-hooks-e2e`，併入既有 PR #33 → `dev`（§2o 同一 PR；標題與內文已更新為 §2o／§2p）。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -2403,6 +2510,21 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
   4. 等價證明：同一次執行中比較舊替換與新接縫的 `S`／RNG／呼叫紀錄，並附負控制。
   5. 範圍：只做 `npb-return-e2e`；其餘 4 個替換 `advance` 的 e2e 依試做結果另議。
 - 使用者決定（2026-10-25）：待決 1–5 定案（方案 A，`flowHooks`），細部計畫見 §2n。
+
+### 3.14 第 12 期後續候選（2026-10-25，分支 `refactor/flow-hooks-e2e` `9f4a6de`，`game.js` 與 `origin/dev` `6ab2676` 相同；grep 抽查；**未決**，A 已做為 §2p）
+
+- 前提：`stage10-risk-e2e:9–10` 的 `s10wrap` 以舊 SHA `--compare` 包裝 14 名稱（含 `advance`、`endGame`、`movement`、`startYear`），且正式碼 `game.js:2704` 自己重新賦值 `endGame`、`:2297` 包裝 `advance`。故個別 e2e 改用接縫只減少替換，「名稱可改為不可重新賦值」須先處理 `stage10`。
+
+| 候選 | 內容 | `game.js` | 成本 |
+|---|---|---|---|
+| A | `endGame` → `flowHooks.endGame`（接縫已存在） | 不變 | 低；`retirement-hof-pilot` 已做（§2p），`stage10-risk-e2e:23` 留給 E |
+| B | `movement`（`contract-salary-e2e`、`kbo-renewal-e2e`、`salary-history-e2e`、`support/stage6-browser.mjs`）；無接縫，`game.js` 檔尾另有覆寫 | 須改（R3） | 中高 |
+| C | `startYear`（`smallschool-c-e2e:16`）；無接縫 | 須改（R3） | 中 |
+| D | `R`（RNG 文字耦合） | — | 不建議 |
+| E | `stage10` 的 `s10wrap`：§3.12 方向 ④（舊 SHA 逐字比較改為固定 seed 行為快照） | 不變 | 高；先 scout 唯讀調查 `s10wrap` 用途與保護對象 |
+
+- 另：`retirement-hof-pilot:17` 替換 `accLevelStat`（只觀察，無接縫；§3.13 表格漏列）。
+- 建議順序（未決）：E 的 scout 調查 → 依結果決定 E 或 B／C。
 
 ## 4. 使用者決定（2026-10-18）
 
