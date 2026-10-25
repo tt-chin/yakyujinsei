@@ -6,7 +6,8 @@ import * as defensePolicy from '../docs/src/engine/defense-position-policy.js';
 import * as abilityPolicy from '../docs/src/engine/ability-evaluation-policy.js';
 
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
-const alloc=game.slice(game.indexOf('function allocUI'),game.indexOf('function nextStep'));
+const ability=fs.readFileSync(new URL('../docs/src/engine/player-ability.js',import.meta.url),'utf8');
+const alloc=ability.slice(ability.indexOf('function allocUI'),ability.indexOf('function abilityRules'));
 for(const text of ["'すべてリセット'",'beforeTouched','sessionStart','beforeDiceIndex'])assert.match(alloc,new RegExp(text));
 assert.doesNotMatch(alloc,/abrow-actions|data-alloc-action|\['\+1'|'\+5'|'MAX'/);
 assert.doesNotMatch(game,/actualAbilitySpend|pointsRequiredToReach80|ability-allocation-policy/);
@@ -20,8 +21,8 @@ assert.match(alloc,/idx=sessionStart\.diceIndex/);
 assert.match(alloc,/hist=\[\];render\(\);board\(0\)/);
 assert.match(alloc,/reset\.disabled=!hist\.length/);
 assert.doesNotMatch(alloc,/\b(?:R|ri|pick|chance)\s*\(/);
-assert.match(game,/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/);
-assert.match(game,/if\(cur>=pk\)cost\*=isP\?4:3/);
+assert.match(ability,/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/);
+assert.match(ability,/if\(cur>=pk\)cost\*=isP\?4:3/);
 // OOP §2l phase 10: f4a2894 toolGap/ovr/playerType/abCost vs current wrappers + ability-evaluation-policy.
 const abBaseline=execFileSync('git',['show','f4a289422e76591b17106ec07cf87c61170fa246:docs/src/engine/game.js'],{encoding:'utf8'});
 const abBlock=source=>[/^function dpScore\(.*$/m.exec(source)[0],source.slice(source.indexOf('function toolGap('),source.indexOf('function tjAccrue(')),source.slice(source.indexOf('function ovr('),source.indexOf('function addAb('))].join('\n');

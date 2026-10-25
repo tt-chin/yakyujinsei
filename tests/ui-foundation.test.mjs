@@ -3,6 +3,7 @@ import fs from 'node:fs';
 
 const html=fs.readFileSync(new URL('../docs/index.html',import.meta.url),'utf8');
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
+const playerAbility=fs.readFileSync(new URL('../docs/src/engine/player-ability.js',import.meta.url),'utf8');
 const navigation=fs.readFileSync(new URL('../docs/src/ui/navigation.js',import.meta.url),'utf8');
 const ability=fs.readFileSync(new URL('../docs/src/ui/ability-view.js',import.meta.url),'utf8');
 const record=fs.readFileSync(new URL('../docs/src/ui/record-view.js',import.meta.url),'utf8');
@@ -35,8 +36,8 @@ assert.match(navigation,/const uiState=\{activeMainView:'home',activePlayerTab:'
 assert.doesNotMatch(navigation,/['"]action['"]|actionPending|actionExecuting|showAction|beginAction|completeAction/);
 assert.match(navigation,/if\(view==='player'\)selectPlayer/);
 assert.match(game,/b\.onclick=\(\)=>\{if\(S!==view\.state\|\|S\.year!==view\.year\|\|view\.accepted\)return;return runWithResultView\(\(\)=>runChoiceAction/);
-assert.match(game,/c\.onclick=\(\)=>\{if\(!live\(c\)\|\|!\(remaining\(\)===0\|\|keys\.every\(k=>S\.ab\[k\]>=80\)\)\)return;completed=true;return runWithResultView\(\(\)=>\{ archiveTraitResults\(\);actClear\(\); allocDone\(touchedKeys,dice\?true:false\); done\(\); \}\);\}/);
-assert.match(game,/const live=element=>!completed&&S===state&&S\.year===year&&careerSession\.choiceGeneration===generation&&element\.isConnected&&a\.contains\(element\)/);
+assert.match(playerAbility,/c\.onclick=\(\)=>\{if\(!live\(c\)\|\|!\(remaining\(\)===0\|\|keys\.every\(k=>S\.ab\[k\]>=80\)\)\)return;completed=true;return runWithResultView\(\(\)=>\{ archiveTraitResults\(\);actClear\(\); allocDone\(touchedKeys,dice\?true:false\); done\(\); \}\);\}/);
+assert.match(playerAbility,/const live=element=>!completed&&getState\(\)===state&&S\.year===year&&careerSession\.choiceGeneration===generation&&element\.isConnected&&a\.contains\(element\)/);
 assert.match(game,/before=\$\('log'\)\.querySelectorAll\('\.card'\)\.length/);
 assert.match(game,/onOpenPlayer:buildPlayerViewModel/);
 assert.match(presenter,/abilities:POS_AB\[S\.pos\]\.map/);

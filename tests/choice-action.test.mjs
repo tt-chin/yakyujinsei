@@ -109,7 +109,8 @@ function nestedHarness() {
 }
 
 const game = fs.readFileSync(new URL('../docs/src/engine/game.js', import.meta.url), 'utf8');
-assert.match(game, /function allocUI\(mode,label,done\)\{\s*actClear\(\); \+\+careerSession\.choiceGeneration;/);
+const ability = fs.readFileSync(new URL('../docs/src/engine/player-ability.js', import.meta.url), 'utf8');
+assert.match(ability, /function allocUI\(mode,label,done\)\{\s*const S=getState\(\);\s*actClear\(\); \+\+careerSession\.choiceGeneration;/);
 assert.match(game, /function escapeDiagnosticHTML\(v\)/);
 assert.doesNotMatch(game, /const val=x=>escapeHTML\(String\(x\?\?'—'\)\)/);
 
