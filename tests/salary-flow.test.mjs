@@ -6,6 +6,7 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
 const seasonStats = await readFile(path.join(root, 'docs/src/engine/season-stats.js'), 'utf8');
+const internationalTournament = await readFile(path.join(root, 'docs/src/engine/international-tournament.js'), 'utf8');
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-period-policy.js'), 'utf8');
@@ -55,7 +56,12 @@ assert.equal((gameSites.match(/\bri\(/g) || []).length, 39);
 const legacyJournalSlots=[...game.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
 assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,42,'existing eligible chance sites moved to one-to-one legacy slots');
-assert.equal((game.match(/\bpick\(/g) || []).length, 14);
+// Phase 15 moved processIntlPhase into InternationalTournament: pick( -1 in game.js, the same 1 in international-tournament.js.
+// Its game.js wiring only forwards to the current pick (late binding) and is not a draw site.
+const intlBridge='pick:a=>pick(a)';
+assert.equal(game.split(intlBridge).length,2,'one InternationalTournament RNG bridge, not a new independent draw');
+assert.equal((game.replace(intlBridge,'intlBridge').match(/\bpick\(/g) || []).length, 13);
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(internationalTournament.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,0,1],'InternationalTournament draw site moved verbatim');
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(game, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);

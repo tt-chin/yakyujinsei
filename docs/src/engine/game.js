@@ -15,6 +15,7 @@ import { ensureEventState, beginEvent, eventDrawPool, applyEvent, beginEventSeas
 import { createSeedShareController, replayURL, shareReplayURL } from '../ui/seed-share.js';
 import { ShareImage } from '../ui/share-image.js';
 import { DefensePositionReview } from './defense-position-review.js';
+import { InternationalTournament } from './international-tournament.js';
 import { applyEventSeason, normalizeEventSeason } from './event-season-policy.js';
 import { JP_DATA } from '../data/jp-data.js';
 import { MARKET_BASELINES } from '../data/salary-market-data.js';
@@ -2101,50 +2102,8 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function intlThreshold(e){return internationalThreshold(e);}
   function intlSelection(e){return internationalSelection(e,{level:S.lv,overall:ovr(),rehab:S.rehab,skipMid:S.skipMid,seasonFactor:S.seasonFactor});}
   function addIntlStats(){return seasonStats.addIntlStats();}
-  function completeIntl(e,status,next){
-    if(S.intlCompletedKeys[e.eventKey])return;
-    if(status==='DECLINED')S.intlDeclinedCount++;
-    S.intlCompletedKeys[e.eventKey]=true;S.intlLastEventKey=e.eventKey;S.intlDispatchStatus=null;next();
-  }
-  function processIntlPhase(phase,done){
-    normalizeInternationalState(S);
-    if(S.stage!=='PRO'){done();return;}
-    const q=intlEvents(S.year).filter(e=>intlPhase(e)===phase&&!S.intlCompletedKeys[e.eventKey]);
-    let i=0;
-    const next=()=>{
-      if(i>=q.length){done();return;}
-      const e=q[i++],threshold=intlThreshold(e),selection=intlSelection(e);
-      if(selection==='DENIED'){completeIntl(e,'DENIED',next);return;}
-      if(selection==='INJURED'){
-        card('info','日本代表招集見送り',`<b class="hl">${e.name}</b>の代表候補に入ったが、負傷またはリハビリ中のため招集は見送られた。`);
-        completeIntl(e,'DENIED',next);return;
-      }
-      S.intlDispatchStatus='PENDING';
-      const entryState=S;
-      let prepared=null,continued=false,resultRendered=false,unlockRendered=false;
-      choose(`日本代表招集・${e.name}`,[
-        {t:'日本代表として出場',main:true,s:`代表基準：総合${threshold}以上`,f:()=>{
-          if(S!==entryState||continued||(S.intlCompletedKeys[e.eventKey]&&!prepared))return;
-          validateInternationalEntry(S);
-          if(!prepared){
-            const beforeStats={...S.intlStat},position=S.pos,role=S.role;
-            const hadIntlace=Boolean(S.traits.intlace),rank=pick(['優勝','準優勝','ベスト4','ベスト8']),stats=addIntlStats();
-            const personalStats=internationalPersonalStats(beforeStats,stats,position,role);
-            prepared=prepareInternationalResult(S,e,{rank,stats,hadIntlace,personalStats});
-          }
-          const {result}=commitInternationalResult(S,prepared);
-          if(!resultRendered){
-            card(result.rank==='優勝'?'gold':'info',e.name,`日本代表は<b class="hl">${result.rank}</b>。能力点+${result.awardedPoints}。${result.injuryAdded?'大会の疲労により次回の故障率+10%。':'大会による故障リスク加算なし。'}`+renderInternationalPersonalStats(result.personalStats,fmtIP));
-            resultRendered=true;
-          }
-          if(result.unlockedIntlace&&!unlockRendered){card('gold','隠し特性解放：'+displayTrait('intlace'),INTLACE_UNLOCK_TEXT);unlockRendered=true;}
-          continued=true;next();
-        }},
-        {t:'コンディションを優先して辞退',warn:true,f:()=>{if(S!==entryState||continued)return;continued=true;completeIntl(e,'DECLINED',next);}}
-      ]);
-    };
-    next();
-  }
+  function processIntlPhase(phase,done){internationalTournament.process(phase,done);}
+  const internationalTournament=new InternationalTournament({getState:()=>S,normalizeInternationalState,validateInternationalEntry,prepareInternationalResult,commitInternationalResult,INTLACE_UNLOCK_TEXT,internationalPersonalStats,renderInternationalPersonalStats,intlEvents:year=>intlEvents(year),intlPhase:e=>intlPhase(e),intlThreshold:e=>intlThreshold(e),intlSelection:e=>intlSelection(e),addIntlStats:()=>addIntlStats(),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),displayTrait:key=>displayTrait(key),fmtIP:ip=>fmtIP(ip),pick:a=>pick(a)});
   function maybeIntl(done){processIntlPhase('POST',done);}
   function phaseIntlPre(){processIntlPhase('PRE',()=>nextStep());}
   function startYear(){careerSession.stepQ=[phasePre,phaseIntlPre,phaseMid,phaseEnd];divider(`${S.year}年・${S.age}歳・${stageLabel()}`);nextStep();}
