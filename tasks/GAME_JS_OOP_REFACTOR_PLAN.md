@@ -2356,7 +2356,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - push `refactor/share-image`，PR #34 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。2026-10-25 已合併為 `32261d62ff0fb1ad187ca14432e0ffccb04c54ac`（merge commit，樹與 `79c5c22` 相同）。
 
-## 2r. 第 14 期：守備位置會議 `dposReview` 移至 `docs/src/engine/defense-position-review.js`（細部計畫，2026-10-25；計畫已批准，實作待批准）
+## 2r. 第 14 期：守備位置會議 `dposReview` 移至 `docs/src/engine/defense-position-review.js`（細部計畫，2026-10-25；計畫已批准，實作已批准）
 
 路線見 §3.15（葉領域 7 期之第 1 期）。
 
@@ -2395,6 +2395,27 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 ### 2r.5 分支與交付
 
 - `refactor/defense-position-review`（自 `origin/dev` `32261d6`，`--no-track`）。本計畫（含 §3.15）先單獨 commit；實作 commit、push、PR → `dev` 另批。
+
+### 2r.6 實施結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/defense-position-review`，實作 commit `b2ecf52`，比較基準 `32261d6`）
+
+- 實作：`docs/src/engine/defense-position-review.js` 新增 70 行（LF）；`game.js` +3／−57（CRLF 維持），2417 → 2363 行、236,488 → 232,100 bytes。測試未變更。
+- 搬移本體與基準 `game.js:96–152` 逐字比對只有 7 處差異，皆為選項延遲 closure 的寫入：`S.dpos='1B'`、`S.dpos='DH'`、`S.dpos='C'`、`S.role='SP'`、`S.role=old`、`S.dpos=best`、`S.dpos=p` → `getState().…`（本體開頭以 `const S=getState(),LV=getLevels()` 取值）。
+- 與 §2r.2 的差異：建構行 `const defensePositionReview=new DefensePositionReview({…})` 放在薄包裝 `function dposReview(cont)` **之後**（`game.js:97–98`）。依計畫順序放在前面時，`event-integration.test:52` 的 `function dpScore(`→`function dposReview(` 切片會包含建構行，於無 import 的 vm 中 `DefensePositionReview is not defined`（FAIL）。`dposReview` 只在執行期呼叫，無 TDZ。
+
+| 項目 | 結果 |
+|---|---|
+| `node --check`、`check-syntax`、`verify-modularization` | PASS |
+| `event-integration`（順序修正後）、`ability-allocation`、`npb-return-ui`、`global-contract-market` | PASS |
+| 等價比較（scratchpad 腳本；`git show 32261d6` 的 `dposReview` 於 vm vs 新模組，相同 stub；捕手／投手 `null`／`SP`／`MR`／`CL`×`SP`／`MR`／`CL`／內外野／early return，於 `CPBL1`／`NPB1`／`MLB`；逐一執行每個選項，各含「點選前 `S` 重新賦值」模式；比較 `choose`／`card`／stub 呼叫紀錄、`cont` 次數、`S`） | 129 情境、186 次選項執行，0 差異 |
+| 負控制（scratchpad 變體） | `DH` 選項寫 `'1B'` → 18 差異；7 處 closure 改回快照 `S` → 69 差異（僅重新賦值模式）；行尾 `cont(); return; }` 5 處改為 `return; }` → 48 差異 |
+| `game-view-dom-e2e --baseline=32261d62ff0fb1ad187ca14432e0ffccb04c54ac`（直接執行） | PASS，8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| reviewer | 無程式 findings；low：`docs/design/STATE_AND_RNG_REFERENCE.md:213,268` 的 `dpos`／`role` 寫入行號（本已過期，§2h／§2q 亦未更新）——範圍外，未修改 |
+| Full | NOT_RUN（§2r.4） |
+
+### 2r.7 交付（2026-10-25）
+
+- push `refactor/defense-position-review`，PR #35 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
