@@ -2295,7 +2295,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 疊在 `refactor/flow-hooks-e2e`，併入既有 PR #33 → `dev`（§2o 同一 PR；標題與內文已更新為 §2o／§2p）。PR → `dev` 不觸發 CI。未修改 `main`。PR #33 已合併至 `dev` `119f6cf`。
 
-## 2q. 第 13 期：分享圖 `shareImage` 移至 `docs/src/ui/share-image.js`（細部計畫，2026-10-25；計畫已批准，實作待批准）
+## 2q. 第 13 期：分享圖 `shareImage` 移至 `docs/src/ui/share-image.js`（細部計畫，2026-10-25；計畫已批准，實作已批准）
 
 使用者方向（2026-10-25）：最終讓 `game.js` 由數個組件構成。順序依 §3.11 領域地圖由低風險開始：分享圖（不用 RNG、不寫 `S`）→ 葉領域逐一（比照 `SeasonStats`）→ 樞紐最後（須先解決 e2e 執行時替換全域名稱，見 §3.14 補記）。本期為第一步。
 
@@ -2336,6 +2336,25 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 ### 2q.5 分支與交付
 
 - `refactor/share-image`（自 `origin/dev` `119f6cf`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR → `dev` 另批。
+
+### 2q.6 實施結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/share-image`，實作 commit `7fd53e0`，比較基準 `119f6cf`）
+
+- 實作：`docs/src/ui/share-image.js` 新增 321 行（LF）；`game.js` +3／−306（CRLF 維持），2720 → 2417 行、252,573 → 236,488 bytes；`verify-modularization.mjs` +3／−2。
+- 搬移本體與基準 `game.js:1843–2136` 逐字比對只有一處差異：分享按鈕延遲執行的 `text:S.name` → `text:getState().name`（本體開頭以 `const S=getState()` 取值，延遲 closure 須改為即時讀取以維持原語意）。
+
+| 項目 | 結果 |
+|---|---|
+| `node --check`、`verify-modularization` | PASS |
+| Quick | 68 PASS／0 FAIL／0 BLOCKED（首次執行漏帶 `--playwright`，3 個 e2e BLOCKED，帶 shim 重跑） |
+| 分享 e2e 6 個（`--only`，full 模式） | 6/6 PASS |
+| 等價比較（scratchpad 腳本；基準 `git show 119f6cf` vs 工作樹，同一瀏覽器同次執行；P／IF × `start`／`rich` fixture × 4 theme 的 `fillText` 紀錄（文字、座標、font、fillStyle、textAlign）與 PNG dataURL、`displaychange` 重畫、`#sh-save` 分享資料） | 24/24 相同；兩版重畫結果皆＝直接 night 繪製且≠standard |
+| 負控制（新碼 `fillText(VERSION,W-PAD,H-41)`） | 比較出現差異（exit 1） |
+| reviewer | 無 findings |
+| Full | NOT_RUN（§2q.4） |
+
+### 2q.7 交付（2026-10-25）
+
+- push `refactor/share-image`，PR #34 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
