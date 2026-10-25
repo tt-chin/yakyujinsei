@@ -45,7 +45,7 @@ node scripts/test.mjs full --only=contract-salary-e2e
 
 quick 執行全部快速原生／單元入口、JS 語法、KBO quick、ACT 入團／listener fixtures、draft-income quick。full 不重複 quick 入口，而是擴大相同入口的測試範圍，並執行其餘瀏覽器、投手／野手生涯和 RNG 比較。audit 包含 full，加兩條 P／IF 自然生涯研究及重播；人工項目明列 SKIP。
 
-六個既有功能 E2E 以 `--ui-only`／`--quick` 執行完整的原生功能 fixture／UI／候選 RNG 矩陣；不在每項重新跑相同的舊版生涯比較。完整生涯由 ACT、contract、draft、display、event 的專門入口覆蓋，保留各自不同的契約／收入／UI重繪／事件斷言。需要重查原歷史生涯時可明確使用 `--legacy-careers --only=<id>`；不刪除或改寫舊斷言。
+五個既有功能 E2E 以 `--ui-only`／`--quick` 執行完整的原生功能 fixture／UI／候選 RNG 矩陣；不在每項重新跑相同的舊版生涯比較。完整生涯由 ACT、contract、draft、display、event 的專門入口覆蓋，保留各自不同的契約／收入／UI重繪／事件斷言。需要重查原歷史生涯時可明確使用 `--legacy-careers --only=<id>`；不刪除或改寫舊斷言。`npb-return-e2e` 例外：其對 `73d5a58` 的生涯比較已經批准移除（`18820f0`），常規 full 執行不帶參數的完整模式（fixture／UI＋現行版 4 seed 各重播兩次一致）；與 `73d5a58` 的 return-gate 路線比較由 `npb-return-rng-e2e`（`--rng-only`）執行。
 
 display 的常規 full 執行全部設定／尺寸／DOM 保持矩陣，加 P／IF 各一條每17操作切換設定的完整生涯。其餘4條不重複，原六條完整設定生涯仍可用 `--legacy-careers --only=display-preferences-e2e` 執行。
 
