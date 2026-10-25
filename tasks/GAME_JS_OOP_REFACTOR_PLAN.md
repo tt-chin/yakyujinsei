@@ -2328,6 +2328,12 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 附帶（本機 Full 分組）：`fullSeconds()` 於 `b886555` 取得 91／92 項秒數（缺 `syntax`，定義於 `scripts/test.mjs:14` 而非 inventory，以 `DEFAULT_SECONDS` 計），`splitIds(ids,4,id=>seconds.get(id))` 為 24／22／24／22（各約 1250 秒）。§2m.15 的 23×4 等同全部同權重，推測當時 scratchpad 分組腳本未傳 `weightOf`（腳本已不存在，未確認）。`ci-full-batches.mjs` 不需修改；本機分組須傳 `id=>fullSeconds().get(id)`。
 - 附帶（`movement` 不可達分支）：`:1271–1279` 的 HS／U／CORP／IND 分支仍不可達（`:2698` 覆寫自行處理非 PRO，`:2701` 非 PRO 直接 `return performMovement()`）。測試影響（靜態）：`kbo-renewal-floor.test.mjs:47` 以 `between('function movement(){','\nfunction buyoutRemaining')` 切片（切片仍成立，內容變）；`npb-return-ui.test.mjs:232` 以 `productionFunction('movement')` 取用，第 4 批 12 情境皆 `stage:'PRO'`，葉數守衛不受影響；`stage10-risk-e2e` 以 `s10wrap` 於 overlay marker（`:2160`）包裝原 `movement`（`legacy.*`）、於檔尾包裝覆寫後 `movement`（`active.*`），只計次與記錄，該分支未執行故不受影響；未找到全檔計數 `advance()`／`endGame(` 的斷言。
 - 使用者決定（2026-10-25）：先以小 PR 刪除該不可達分支（R3，附執行期不可達證據，比照 §2e），分支 `refactor/movement-dead-branch`；之後再立第 12 期試做（`npb-return-e2e`）細部計畫。各項實作另批。
+- 試做細部計畫的待決（**未決**，2026-10-25 列出）：
+  1. 接縫形狀：可變命名空間物件（例如 `flowHooks`，提供 outcome 觀察／攔截點），或維持替換 `reportFlowOutcome`（仍屬全域替換，未達目標）。
+  2. 正式 `game.js` 是否加入該 hook 物件：屬產品碼變更，行為與 RNG 不變仍列 R3（固定 seed 狀態／RNG 比較）。
+  3. `npb-return-e2e:18` 的替換 `advance` 先呼叫 `finalizePendingOffseasonSalary()` 再計數；新接縫攔截時須保留此副作用與順序。
+  4. 等價證明：同一次執行中比較舊替換與新接縫的 `S`／RNG／呼叫紀錄，並附負控制。
+  5. 範圍：只做 `npb-return-e2e`；其餘 4 個替換 `advance` 的 e2e 依試做結果另議。
 
 ## 4. 使用者決定（2026-10-18）
 
