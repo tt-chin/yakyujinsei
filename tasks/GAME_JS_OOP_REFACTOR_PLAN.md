@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，2026-10-25 已合併為 `c2d8bb3`）；第 3 批計畫見 §2m.12、結果見 §2m.13；第 4 批計畫見 §2m.14、結果見 §2m.15（第 3、4 批合併為 PR #29 → `dev`，待合併）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，2026-10-25 已合併為 `c2d8bb3`）；第 3 批計畫見 §2m.12、結果見 §2m.13；第 4 批計畫見 §2m.14、結果見 §2m.15（第 3、4 批合併為 PR #29 → `dev`，2026-10-25 已合併為 `b886555`）；第 11 期完成）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -2125,7 +2125,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | Full（scratchpad worktree；4 組平行，聯集＝`fullIds()` 92 項無重複／遺漏；未傳 `--baseline`） | 92／92 PASS（534／499／121／903 秒）。本次 `fullSeconds()` 未取得各項秒數（全部落到 `DEFAULT_SECONDS`），分組為 23×4 而非 LPT 平衡，原因未查。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 1 次（工作樹差分），無問題（確認逐字等價含理由字串、改動行 CRLF、`kbo-renewal-floor` 切片邊界、還原清單恰好 1 次守衛、kind 一致性由呼叫紀錄推導） |
 
-- 交付：`refactor/flow-outcome-year` 已 push，第 3、4 批合併為 PR #29 → `dev`（待合併；PR → `dev` 不觸發 CI）。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、未修改 `main`。
+- 交付：`refactor/flow-outcome-year` 已 push，第 3、4 批合併為 PR #29 → `dev`（PR → `dev` 不觸發 CI），2026-10-25 已合併為 `b886555b6c2053db605e502f2bb3396c3fc252e4`（merge commit，樹與 `d6c328a` 相同）。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -2307,6 +2307,39 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 行數非良好指標（最長行 3295 字元，`movement` 覆寫為單行）；目標改以 bytes、頂層函式數或 `S` 欄位寫入者結構衡量。
 - 使用者決定（2026-10-25）：第 11 期結束後另立候補調查——分享圖（286 行）與葉領域的文字耦合、改造 e2e 全域替換機制（改為替換可變命名空間物件）的成本——再決定是否以大幅縮減為方向。
 - 範圍擴大（2026-10-25 使用者同意）：改為「測試接縫改造」調查。現況（`tests/*.mjs` 95 檔，regex 粗分）：模組單元測試約 23、`game.js` 原始碼文字斷言約 21、切函式入 vm 約 19、瀏覽器 e2e 約 21、與舊 SHA 差分最多 43（跨類）。方向依序：①第 11 期完成後以 `reportFlowOutcome` 為接縫，e2e 改為觀察／攔截 outcome，不再整個替換 `advance`；②第 11 期之後的新測試不再新增原始碼文字／切片耦合；③抽出模組時同步把 vm 切片測試改為 import；④已完成任務的舊 SHA 逐字比較改為固定 seed 行為快照（歷史報告保留）；⑤`salary-flow` 的 RNG 文字計數須補路徑覆蓋才能改為執行時追蹤（成本最高，最後）。各項皆為同等或更強的斷言替換，逐項批准（AGENTS.md §6.2／§6.5）。調查內容：逐檔盤點文字／切片／舊 SHA 耦合及其保護對象（RNG 順序、UI 文字、結構），挑一領域試做，估算成本。
+
+### 3.13 第 12 期候補調查：測試接縫盤點（2026-10-25，基準 `origin/dev` `b886555`，`game.js` 2728 行；scout 唯讀調查＋grep 抽查；**未決**）
+
+- 範圍：`tests/*.mjs` 95 檔（另 `tests/support/*.mjs` 9 個 helper 不計入）。分類（一檔可屬多類）：模組匯入單元 31、原始碼文字斷言 34、vm 切片 22、瀏覽器 e2e 29、舊 SHA 比較 38；`test-runner.test` 僅測 Runner。分類為 scout 結果，各檔「保護對象」多未附 file:line，估算成本前需逐檔確認。
+- 切片／注入機制：`retirement-hof-test-support.mjs` 的 `productionFunction`（以名稱切函式入 vm）、`support/overlay-hook.mjs` 的 `injectOverlayHook`（hook 字串插入 `game.js` 原始碼）、`support/rng-instrument.mjs`（以文字修補 `R`／`careerRng.onDraw`）、`support/stage6-browser.mjs`、`support/dom-snapshot.mjs`、`support/first-difference.mjs` 與 `support/approved-school-oracle.mjs`（以字串替換套用已批准變更）。
+- e2e 執行時替換全域（grep 補齊；scout 漏列 `salary-history-e2e`、`smallschool-c-e2e` 及 `contract-salary-e2e`／`kbo-renewal-e2e`／`stage6` 的 `movement`）：
+
+| 名稱 | 位置 |
+|---|---|
+| `advance` | `championship-intl-e2e:18`、`contract-salary-e2e:23`、`global-contract-market-e2e:14`、`kbo-renewal-e2e:22`、`npb-return-e2e:18` |
+| `endGame` | `retirement-hof-pilot:18`、`stage10-risk-e2e:23`（包裝觀察） |
+| `movement` | `contract-salary-e2e:33`、`kbo-renewal-e2e:23`、`salary-history-e2e:19`、`support/stage6-browser.mjs:29–30` |
+| `R` | `championship-intl-e2e`、`global-contract-market-e2e`、`smallschool-c-e2e`、`support/stage6-browser.mjs`；另 `support/rng-instrument.mjs` 修補原始碼 |
+| `startYear` | `smallschool-c-e2e:16` |
+| 14 名稱包裝觀察 | `stage10-risk-e2e:9–10` |
+
+- 機制：hook 字串插入 `game.js` 原始碼後供瀏覽器載入，與遊戲程式同一作用域直接重新賦值；因此這些名稱須維持可重新賦值的全域綁定（ESM 匯出綁定無法由外部替換）。
+- 方向 ① 的含意：`reportFlowOutcome`（`game.js:2308`）呼叫點 33 處；其分派以外的直接 `advance(`／`endGame(` 只剩 `:1271–1277` 不可達分支。替換 `advance` 的 5 個 e2e 用途是「攔截」（計數並停止年度推進），不只觀察；改為替換 `reportFlowOutcome` 仍屬全域替換，需改為可變命名空間物件（例如 flow hooks 物件）才能消除，`game.js` 亦需變更。試做候選：`npb-return-e2e`（只替換 `advance`，屬第 11 期領域）。
+- 附帶（本機 Full 分組）：`fullSeconds()` 於 `b886555` 取得 91／92 項秒數（缺 `syntax`，定義於 `scripts/test.mjs:14` 而非 inventory，以 `DEFAULT_SECONDS` 計），`splitIds(ids,4,id=>seconds.get(id))` 為 24／22／24／22（各約 1250 秒）。§2m.15 的 23×4 等同全部同權重，推測當時 scratchpad 分組腳本未傳 `weightOf`（腳本已不存在，未確認）。`ci-full-batches.mjs` 不需修改；本機分組須傳 `id=>fullSeconds().get(id)`。
+- 附帶（`movement` 不可達分支）：`:1271–1279` 的 HS／U／CORP／IND 分支仍不可達（`:2698` 覆寫自行處理非 PRO，`:2701` 非 PRO 直接 `return performMovement()`）。測試影響（靜態）：`kbo-renewal-floor.test.mjs:47` 以 `between('function movement(){','\nfunction buyoutRemaining')` 切片（切片仍成立，內容變）；`npb-return-ui.test.mjs:232` 以 `productionFunction('movement')` 取用，第 4 批 12 情境皆 `stage:'PRO'`，葉數守衛不受影響；`stage10-risk-e2e` 以 `s10wrap` 於 overlay marker（`:2160`）包裝原 `movement`（`legacy.*`）、於檔尾包裝覆寫後 `movement`（`active.*`），只計次與記錄，該分支未執行故不受影響；未找到全檔計數 `advance()`／`endGame(` 的斷言。
+- 使用者決定（2026-10-25）：先以小 PR 刪除該不可達分支（R3，附執行期不可達證據，比照 §2e），分支 `refactor/movement-dead-branch`；之後再立第 12 期試做（`npb-return-e2e`）細部計畫。各項實作另批。
+- 不可達分支刪除結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；基準 `b886555b6c2053db605e502f2bb3396c3fc252e4`；R3）：
+  - 實作：`game.js`（CRLF）刪除原 `:1271–1279` 共 9 行（2728→2719 行）；保留 `const o=ovr();` 與 `/* プロ。 */`。刪除行不含 `R(`／`ri(`／`chance(`／`pick(`。原 `:1280` 以後行號 −9（本節前文行號為 `b886555` 時點，不改寫）。
+  - 靜態證據：原始本體的唯一執行期呼叫為 `:2698` 覆寫尾端的 `LEGACY.movement()`，該覆寫對 HS／U／CORP／IND 先行 `return`，其間的 `migrateSalaryV130State`／`accrueForeignFirstTeamSeason`／`contractStageFor` 不寫 `S.stage`；其他 stage 本不進入該分支。
+  - 執行期證據（scratchpad worktree，不 commit）：將該分支換成記錄 `__deadCalls` 後丟 `DEAD_CALL:movement-amateur` 的探針；負控制（vm 以 `productionFunction('movement')` 取探針版：HS／U／CORP／IND 皆 throw、PRO 不 throw；對未改原始碼則 FAIL）。Full 4 組（`splitIds(ids,4,id=>fullSeconds().get(id))`，24／22／24／22）92／92 PASS，輸出中 `DEAD_CALL` 0 筆：VERIFIED（範圍限 Full 涵蓋的流程）。
+  - 實作驗證：相關單元 9 項 PASS（`syntax`、`career-movement-policy`、`championship-intl.test`、`draft-signing-policy.test`、`kbo-renewal-floor.test`、`npb-return-ui.test`、`overlay-hook.test`、`salary-flow.test`、`verify-modularization`）；`game-view-dom-e2e --baseline=b886555…` 8 段生涯 DOM／`S`／RNG 一致；`stage10-risk-e2e`（不加 `--compare`）PASS；Quick 68／68 PASS；Full 4 組 92／92 PASS（分組執行，非單一 Full 報告；`ci-full-batches` 嚴格彙整未執行）。期望值變更：無。目視：不適用（無 DOM／UI 變更且分支不可達，DOM 由 `game-view-dom-e2e` 涵蓋）。
+  - reviewer：無 finding。VERSION／CHANGELOG／CURRENT_SPEC 不更新（§9.3）。commit／push／PR 另批。
+- 試做細部計畫的待決（**未決**，2026-10-25 列出）：
+  1. 接縫形狀：可變命名空間物件（例如 `flowHooks`，提供 outcome 觀察／攔截點），或維持替換 `reportFlowOutcome`（仍屬全域替換，未達目標）。
+  2. 正式 `game.js` 是否加入該 hook 物件：屬產品碼變更，行為與 RNG 不變仍列 R3（固定 seed 狀態／RNG 比較）。
+  3. `npb-return-e2e:18` 的替換 `advance` 先呼叫 `finalizePendingOffseasonSalary()` 再計數；新接縫攔截時須保留此副作用與順序。
+  4. 等價證明：同一次執行中比較舊替換與新接縫的 `S`／RNG／呼叫紀錄，並附負控制。
+  5. 範圍：只做 `npb-return-e2e`；其餘 4 個替換 `advance` 的 e2e 依試做結果另議。
 
 ## 4. 使用者決定（2026-10-18）
 

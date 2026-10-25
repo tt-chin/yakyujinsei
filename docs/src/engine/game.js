@@ -1268,15 +1268,6 @@ let appendContractExtension=()=>{};
 /* 升降格と去向。 */
 function movement(){
   const o=ovr();
-  if(S.stage==='HS'){ if(S.stageYr<3)advance(); else pathChoiceHS(); return; }
-  if(S.stage==='U'){ if(S.stageYr<4)advance(); else pathChoiceU4(); return; }
-  if((S.stage==='CORP'||S.stage==='IND')){
-    if(S.age>=26){ endGame('何年もドラフト指名を逃し、'+S.year+' 年末に現役を引退し、地域の野球指導者へ転身した。'); return; }
-    choose('アマチュアシーズン終了',[
-      {t:'NPBドラフトへ再挑戦',main:true,f:()=>runDraft(false,()=>advance())},
-      {t:'現役引退',warn:true,f:()=>endGame('アマチュア球界での現役生活に区切りをつけた。')}]);
-    return;
-  }
   /* プロ。 */
   if(isBelowActiveMinimum(o)){
     retireBelowActiveMinimum();
