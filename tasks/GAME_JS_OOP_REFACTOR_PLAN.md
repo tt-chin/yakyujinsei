@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，待合併）；第 3 批計畫見 §2m.12、結果見 §2m.13（本機驗證完成，push／PR 待批）；第 4 批計畫見 §2m.14（計畫已批准，實作待批准）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，2026-10-25 已合併為 `c2d8bb3`）；第 3 批計畫見 §2m.12、結果見 §2m.13；第 4 批計畫見 §2m.14、結果見 §2m.15（第 3、4 批合併為一個 PR → `dev`）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -2047,7 +2047,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 未完成：push／PR（另批；依 §2m.12，PR #28 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準重掃再開新 PR）。
 
-### 2m.14 11-B 第 4 批：年度（細部計畫，2026-10-25；計畫已批准，實作待批准）
+### 2m.14 11-B 第 4 批：年度（細部計畫，2026-10-25；已實作，結果見 §2m.15）
 
 **現況（唯讀確認，基準 `026c5cd`，`game.js` 2724 行（本分支，含第 1–3 批）；scout 唯讀調查＋抽查）**
 
@@ -2105,6 +2105,27 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 分支：`refactor/flow-outcome-year`，自 `refactor/flow-outcome-market`（`b8734f6`）疊出；基準暫用 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。PR #28 併入 `dev` 後以新 `origin/dev` 完整 SHA 為基準重掃；第 3、4 批 fixture 內寫死的 `026c5cd…` 字面須一併改為新 SHA（不只 `--baseline` 參數）。
 - commit 順序：本節 → 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
 - 本批完成後，`game.js` 內剩餘的直接 `advance()`／`endGame(` 呼叫只有 `:1271–1277` 不可達分支 5 處。
+
+### 2m.15 11-B 第 4 批結果（2026-10-25，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/flow-outcome-year`，實作 commit `34d603e`）
+
+- 基準變更：PR #28 於 2026-10-25 併入 `dev`，`origin/dev`＝`c2d8bb3c02b4825d3180f018c93bb97feb8bfbaf`（merge commit，樹與 `4c88f31` 相同；`refactor/flow-outcome-market` 與本分支的 merge-base 皆為 `4c88f31`，不需 rebase）。比較基準由 `026c5cd…` 改為 `c2d8bb3…`。`c2d8bb3` 內呼叫 `reportFlowOutcome` 的只有第 1、2 批的函式，第 3 批 7 函式與 `phasePre`／`movement`（`:1269`）皆無。
+- fixture 內寫死的基準：`npb-return-ui.test.mjs:139`（第 3 批）與 `:211`（第 4 批）改為 `c2d8bb3…`；`:81`（第 2 批）與 `draft-signing-policy.test.mjs:97`（第 1 批）保留 `026c5cd…`（兩者需改動前基準，`c2d8bb3` 已含其改動）。
+- 交付決定（使用者，2026-10-25）：第 3、4 批合併為一個 PR（比照 PR #28），第 3 批不另開 PR。
+- 實作：`game.js`（CRLF，2724→2728 行）4 處替換（`:515` `PRESEASON_AGE_LIMIT_RETIRED`、`:583` `PRESEASON_RETURNED_NPB`、`:586` `PRESEASON_RETIRED`（仍在 `daibaFarewell` 回呼內）、`:1285` `REHAB_YEAR_COMPLETED`）；`reportFlowOutcome` 於 `RELEASE_RETIRED` 之後追加 4 個 case（`:2333`–`:2336`）。替換後直接 `advance()`／`endGame(` 呼叫只剩 `:1271–1277` 不可達分支 5 處（另無以參照傳遞者）。
+- 測試變更：依 §2m.14 1–6。`kbo-renewal-floor` 的 `reportFlowOutcome` 切片以 `game.includes('function reportFlowOutcome(')` 為條件（該 harness 亦以 `--baseline` 舊 SHA 執行）。`npb-return-ui` 行為 fixture 12 情境（§2m.14 所列＋CPBL 37 歲投手、`rehab:2` 30 歲），葉數守衛 28、回報 15 筆、各葉 kind 一致性、4 種 kind 覆蓋（各處 kind 唯一，覆蓋即代表 4 處皆到達）；`npb-return-ui` 63→75 案。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（176 檔） |
+| 相關單元（runner `full --only`，15 項） | 15／15 PASS：`npb-return-ui`、`salary-flow`、`career-movement-policy`、`kbo-renewal-floor`、`npb-farewell`、`championship-intl.test`、`full-power-pitching.test`、`draft-signing-policy`、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`、`global-contract-market.test`、`fa-market-policy.test`、`arbitration-policy.test` |
+| `game-view-dom-e2e --baseline=c2d8bb3…`（直接執行） | PASS：末行 `8 careers vs c2d8bb3c02b4825d3180f018c93bb97feb8bfbaf` |
+| e2e 10 項（runner `full --only --baseline=c2d8bb3…`） | 10／10 PASS：`full-power-pitching-e2e`（含 `-yakyo-test-001`、`-jp3-pitcher-02`）、`npb-return-e2e`、`stage10-risk-e2e`、`trait-system-e2e`、`kbo-renewal-e2e`、`contract-salary-e2e`（確認收到 `--compare=c2d8bb3…`）、`global-contract-market-e2e`、`salary-history-e2e` |
+| Quick | 68／68 PASS |
+| 負控制＋逐處突變（scratchpad worktree，與工作樹逐 byte 相同；完整測試＋「檔首至 `let cases=0;`＋該批 fixture」變體，未突變時兩變體 PASS） | M1 互換 `PRESEASON_AGE_LIMIT_RETIRED`／`PRESEASON_RETIRED`、M2 互換 `PRESEASON_RETURNED_NPB`／`REHAB_YEAR_COMPLETED`：完整測試先由 `:75`／`:76` 還原守衛攔下，變體由 kind 一致性斷言 FAIL；M3 `PRESEASON_RETURNED_NPB` 分派到 `endGame`：兩者皆由新 fixture FAIL；M4–M7 4 處各自改為 `endGame('MUT')`：變體 4／4 FAIL（M5、M6 完整測試先由還原守衛攔下）；M8 第 3 批新基準下互換 `FA_SIGNED`／`CONTRACT_RENEWED`：兩者皆由第 3 批 fixture FAIL |
+| Full（scratchpad worktree；4 組平行，聯集＝`fullIds()` 92 項無重複／遺漏；未傳 `--baseline`） | 92／92 PASS（534／499／121／903 秒）。本次 `fullSeconds()` 未取得各項秒數（全部落到 `DEFAULT_SECONDS`），分組為 23×4 而非 LPT 平衡，原因未查。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（工作樹差分），無問題（確認逐字等價含理由字串、改動行 CRLF、`kbo-renewal-floor` 切片邊界、還原清單恰好 1 次守衛、kind 一致性由呼叫紀錄推導） |
+
+- 未完成：push／PR（第 3、4 批合併，PR 編號待補）。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
