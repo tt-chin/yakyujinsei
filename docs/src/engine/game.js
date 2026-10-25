@@ -2303,31 +2303,32 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
       case 'AMATEUR_JOIN_CORP':
       case 'AMATEUR_JOIN_IND':
       case 'AMATEUR_SIGNED_MILB':
-      case 'AMATEUR_DRAFTED':return advance();
-      case 'AMATEUR_RETIRED':return endGame(outcome.reason);
+      case 'AMATEUR_DRAFTED':return flowHooks.advance?flowHooks.advance(outcome):advance();
+      case 'AMATEUR_RETIRED':return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);
       case 'DEMOTION_TRANSFER_NPB1':
       case 'DEMOTION_TRANSFER_NPB2':
       case 'DEMOTION_TRANSFER_CPBL1':
       case 'DEMOTION_ACCEPTED':
-      case 'DEMOTION_REFUSED':return advance();
+      case 'DEMOTION_REFUSED':return flowHooks.advance?flowHooks.advance(outcome):advance();
       case 'DEMOTION_RETIRED':
-      case 'ACTIVE_MINIMUM_RETIRED':return endGame(outcome.reason);
+      case 'ACTIVE_MINIMUM_RETIRED':return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);
       case 'CROSS_OFFER_RESOLVED':
       case 'CONTRACT_RENEWED':
       case 'ARBITRATION_SETTLED':
       case 'FA_SIGNED':
       case 'FA_NO_BID_RETURNED':
       case 'RELEASE_SIGNED_PRO':
-      case 'RELEASE_JOINED_AMATEUR':return advance();
+      case 'RELEASE_JOINED_AMATEUR':return flowHooks.advance?flowHooks.advance(outcome):advance();
       case 'FA_RETIRED':
-      case 'RELEASE_RETIRED':return endGame(outcome.reason);
+      case 'RELEASE_RETIRED':return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);
       case 'PRESEASON_RETURNED_NPB':
-      case 'REHAB_YEAR_COMPLETED':return advance();
+      case 'REHAB_YEAR_COMPLETED':return flowHooks.advance?flowHooks.advance(outcome):advance();
       case 'PRESEASON_AGE_LIMIT_RETIRED':
-      case 'PRESEASON_RETIRED':return endGame(outcome.reason);
+      case 'PRESEASON_RETIRED':return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);
     }
     throw new Error('UNKNOWN_FLOW_OUTCOME:'+outcome.kind);
   }
+  const flowHooks={advance:null,endGame:null};
 
   function newState(name,pos){
     const ab={};POS_AB[pos].forEach(k=>ab[k]=ri(20,32));if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);}else{ab.con+=ri(0,6);ab.pow+=ri(0,4);}
