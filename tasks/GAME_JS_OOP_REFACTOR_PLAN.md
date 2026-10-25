@@ -2417,6 +2417,54 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - push `refactor/defense-position-review`，PR #35 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
+## 2s. 第 15 期：國際大會參賽流程移至 `docs/src/engine/international-tournament.js`（細部計畫，2026-10-25；計畫已批准，實作待批准）
+
+路線見 §3.15（葉領域 7 期之第 2 期）。§3.15 所列範圍 `32261d6:2153–2203` 經 §2r 後為 `:2099–2149`；本期只移其中的流程本體，一行委派留在原處。
+
+### 2s.1 現況（2026-10-25 grep 抽查，基準 `origin/dev` `642d4bbef3dd6b745addf067759320e78abbe6eb`（PR #35 merge，`docs/src`／`tests`／`scripts`／`tasks` 與 `9aa6850` 相同），`docs/src/engine/game.js` 2363 行）
+
+- 區段 `game.js:2099–2149`（overlay 內，2 空白縮排）：`intlEvents`／`intlPhase`／`intlThreshold`／`intlSelection`／`addIntlStats` 一行委派（`:2099–2103`）、`completeIntl`（`:2104–2108`，5 行）、`processIntlPhase`（`:2109–2147`，39 行）、`maybeIntl`（`:2148`）、`phaseIntlPre`（`:2149`）。不掛 `window`、不在 `LEGACY`、無 overlay 再賦值。
+- RNG：`R`／`ri`／`chance` 0；`pick` 1（`:2131` 名次 `pick(['優勝','準優勝','ベスト4','ベスト8'])`）。
+- `S` 寫入：`intlCompletedKeys`、`intlDeclinedCount`、`intlLastEventKey`、`intlDispatchStatus`（另經 `normalizeInternationalState`／`prepareInternationalResult`／`commitInternationalResult`）。選項延遲 closure 以 `S!==entryState` 防止生涯切換後的誤點，須讀即時 `S`。
+- 自由名稱：`S`（`let`，`:157`）、`card`（`:355`）、`choose`（`:403`）、`pick`（`:64`）、`displayTrait`（`:308`）、`fmtIP`（`:243`）、上述 5 個委派，及 `:49`／`:51` import 的 `normalizeInternationalState`、`validateInternationalEntry`、`prepareInternationalResult`、`commitInternationalResult`、`INTLACE_UNLOCK_TEXT`、`internationalPersonalStats`、`renderInternationalPersonalStats`（這 7 個在 `game.js` 內只於本區段使用）。`DATA`、`ovr`、`seasonStats` 只經委派使用。
+- 測試耦合：
+  - `championship-intl.test:45` 以 vm 執行 `'  function intlEvents('`→`'  function maybeIntl(done)'` 切片，context 提供 policy／stub（`pick` 計數 draws、`card`／`choose` 記錄）；同一 `activeIntl` 也跑 `004cd26` 舊碼做 old/new 比較；UI 重試測試於建構後替換 `f.context.card`，I08 替換 `f.context.DATA`。`:59` 以 `intlEvents`→`'  function addIntlStats('` 切片取 4 個選拔委派。
+  - `international-personal-stats.test:79` 以 `'  function addIntlStats('`→`'  function completeIntl('` 與 `e602174` 逐 byte 比較（`e602174` 中 `addIntlStats` 之後的下一個 2 空白縮排宣告即 `completeIntl`）。
+  - `salary-flow.test:58`：`game.js` 的 `\bpick\(` 為 14。
+  - `championship-intl-e2e:21`、`international-personal-stats-e2e:16` 以名稱呼叫 `processIntlPhase`；`championship-intl-e2e:22` 再賦值 `maybeIntl=c=>c()`。
+  - 確認不受影響：`event-integration:41`（終點 `'  function intlEvents('`）、`trait-policy:106`（`^function maybeIntl\(` 行首無縮排）、`full-power-pitching.test:34`（只用名稱）、`championship-intl:59/61`（`:61` 只對舊碼）、e2e 的 `instrumentRng`（`careerRng.onDraw`／`function R(){`）與 `injectOverlayHook` 錨點、`verify-modularization`（無國際斷言）、`global-contract-market`（新檔無 import）、`award-identity-policy` 凍結（新檔不在名單）。
+
+### 2s.2 設計（使用者決定 2026-10-25：`completeIntl` 一併移出、建構行放在 `championship-intl` 切片內）
+
+- 新檔 `docs/src/engine/international-tournament.js`（LF），比照 §2r：模組層級函式 `processInternationalPhase(deps,phase,done)`、`completeInternationalEvent(deps,e,status,next)` 為原 `processIntlPhase`／`completeIntl` 本體（逐字搬移，自由名稱改為依賴）；輸出 `class InternationalTournament`，`constructor(deps)` 保存依賴，`process(phase,done)` 呼叫前者。模組不 import。
+- 注入：getter `getState:()=>S`；policy 函式與 `INTLACE_UNLOCK_TEXT`、`internationalPersonalStats`、`renderInternationalPersonalStats` 以參照傳入（`game.js` import 不變）；late-binding lambda `intlEvents`、`intlPhase`、`intlThreshold`、`intlSelection`、`addIntlStats`、`card`、`choose`、`displayTrait`、`fmtIP`；RNG bridge `pick:a=>pick(a)`（經 `game.js` 的 `pick`→`R`，消耗順序與 e2e 的 RNG 觀測不變）。
+- `S` 讀取：4 個執行單元（`processInternationalPhase` 開頭、`next`、出場選項 `f`、辭退選項 `f`）及 `completeInternationalEvent` 開頭各加 `const S=getState()`；為逐字搬移外的唯一差異，實施結果逐處列出。各單元內只有同步呼叫，`next()`／`done()`／`choose(…)` 為最後一個呼叫，單元內 `S` 不被重新賦值，故與原本讀全域 `S` 等價。
+- `game.js`：刪除 `completeIntl` 與 `processIntlPhase` 本體，原位置改為 `function processIntlPhase(phase,done){internationalTournament.process(phase,done);}`，其後接 `const internationalTournament=new InternationalTournament({…});`（在 `maybeIntl` 之前，落於 `championship-intl:45` 切片內，vm 測試執行正式接線）；`addIntlStats` 委派後不插入任何行。5 個委派、`maybeIntl`（維持函式宣告，供 e2e 再賦值）、`phaseIntlPre` 不動；`:2097` 與 `:1017` 的 `maybeIntl` 呼叫端不變。不需 `completeIntl` 薄包裝（無其他呼叫端）。
+- TDZ：建構行的依賴皆為 import、`:2099` 前宣告的函式或 lambda；`processIntlPhase` 只在執行期呼叫。
+- `game.js` 為 CRLF：只刪除該區段並插入新行，非整檔重寫。
+
+### 2s.3 測試變更（使用者已批准 2026-10-25）
+
+- T1 `championship-intl.test`：import `InternationalTournament`，加入 `activeIntl` 的 context（1 個 key）。建構行在切片內以 vm 全域名稱執行，lambda 於呼叫時查 `context.card`／`context.pick` 等，UI 重試與 I08 的替換仍生效；舊碼路徑（`004cd26`、`3c0f3e1`）不使用該 key。
+- T2 `salary-flow.test:58`：新增 `intlBridge='pick:a=>pick(a)'`，斷言 `game.js` 中只出現一次；排除 bridge 後 `game.js` 的 `pick(` 14 → 13；新模組 `R`／`ri`／`chance`／`pick` 計數 `[0,0,0,1]`（比照 7-A 的 `seasonStatsBridge`）。註解記錄本期移動。
+- T3 `international-personal-stats.test:79`：`addIntlStats` 的終點 `'  function completeIntl('` 改為 `'\n  function '`（下一個 2 空白縮排宣告）。現行端為 `processIntlPhase` 包裝、`e602174` 端為 `completeIntl`，兩端同樣截至 `addIntlStats` 結尾，比較強度不變；實作時確認重建後的 `addIntlStats` 內不含 `'\n  function '`。
+- 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
+
+### 2s.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
+
+- `node --check`、`check-syntax`、`verify-modularization`；`championship-intl.test`、`salary-flow.test`、`international-personal-stats.test`、`season-stats.test`、`event-integration.test`、`trait-policy.test`、`full-power-pitching.test`、`global-contract-market.test`。
+- e2e：`championship-intl-e2e`、`international-personal-stats-e2e`（Brave）。
+- 等價比較（scratchpad 腳本，同一次執行）：基準 `git show 642d4bb:docs/src/engine/game.js` 的 `intlEvents`→`maybeIntl` 區段於 vm vs 新模組，相同 stub；PRE／POST × 不入選／負傷／入選 × 出場／辭退 × 名次 0–3 × `intlace` 有無 × 解放門檻 × 同一按鈕連點兩次 × `card` 丟例外後重試 × 點選前 `S` 重新賦值 × 同年多場大會；比較 `S`、`choose`／`card` 紀錄、`pick` 次數、`done` 次數。
+- 負控制（scratchpad 變體）：closure 改回快照 `S`（須僅重新賦值模式出差異）；`completeIntl` 某一寫入改值；刪除 `continued=true`。
+- `game-view-dom-e2e --baseline=642d4bbef3dd6b745addf067759320e78abbe6eb`（直接執行）：8 段生涯 DOM／`S`／RNG 一致。
+- Quick；Full（R3，AGENTS §6.5；比照 §2m 的 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變，由等價比較、`game-view-dom-e2e` 與兩個國際 e2e 涵蓋）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+### 2s.5 分支與交付
+
+- `refactor/international-tournament`（自 `origin/dev` `642d4bb`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR → `dev` 另批。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
