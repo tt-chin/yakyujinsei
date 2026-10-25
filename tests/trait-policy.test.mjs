@@ -10,6 +10,7 @@ import {eventOdds,eventCounters,eventTraitUnlocks} from '../docs/src/engine/even
 import {ensureEventState,beginEvent,applyEvent} from '../docs/src/engine/event-state-policy.js';
 import {EVENT_CATALOG} from '../docs/src/data/event-cards-jp.js';
 import {JP_DATA} from '../docs/src/data/jp-data.js';
+import {PlayerInjury} from '../docs/src/engine/player-injury.js';
 
 assert.equal(Object.keys(policy.TRAIT_LABELS).length,38);
 assert.deepEqual(policy.DEFERRED_TRAITS,['championmaker','nitenichi'],'G7 implements the existing pitcherTC definition');
@@ -96,11 +97,12 @@ beginEvent(s,card);applyEvent(s,card,'safe',options);assert.equal(odds[1],65);
 // Run the actual awards binding against the pre-change source: original chance calls must remain in place.
 const current=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const rubberCards=[],rubberState={tjSuccess:1,traits:{},ab:{}};
-const rubberContext=vm.createContext({S:rubberState,card:(...args)=>rubberCards.push(args),board:()=>{},removeTrait:()=>{},checkConfidante:()=>{}});
+// Phase 16: the afterGamble->pitcherRole slice now carries the afterGamble/tjGamble wrappers and the PlayerInjury construction line.
+const rubberContext=vm.createContext({S:rubberState,card:(...args)=>rubberCards.push(args),board:()=>{},removeTrait:()=>{},checkConfidante:()=>{},PlayerInjury,clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),POS_AB:{},ABL:{}});
 vm.runInContext(current.slice(current.indexOf('function afterGamble('),current.indexOf('function pitcherRole(')),rubberContext);
 vm.runInContext("afterGamble('inject',()=>{})",rubberContext);
 assert.equal(rubberState.traits.rubber,true);assert.match(rubberCards[0][2],/上限が50から100に、注射成功率が55%から85%に上昇/);assert.doesNotMatch(rubberCards[0][2],/2倍/);
-assert.match(current,/const succP=S\.traits\.rubber\?85:55/);assert.match(current,/return S\.traits\.rubber\?100:50/);
+assert.match(fs.readFileSync(new URL('../docs/src/engine/player-injury.js',import.meta.url),'utf8'),/const succP=S\.traits\.rubber\?85:55/);assert.match(current,/return S\.traits\.rubber\?100:50/);
 const oldGame=execFileSync('git',['show','9fcb24a:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:3e6});
 // Old sources end at the base maybeIntl; after phase 4-A deletes it (and phaseEnd), the next definition is the salary stub.
 const awards=source=>source.slice(source.indexOf('function awards('),source.search(/^(?:function maybeIntl\(|let applyPromotionSalary=)/m));

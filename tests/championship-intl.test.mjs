@@ -8,6 +8,7 @@ import * as champ from '../docs/src/engine/championship-policy.js';
 import * as intl from '../docs/src/engine/international-trait-policy.js';
 import * as selection from '../docs/src/engine/international-selection-policy.js';
 import {internationalPersonalStats,renderInternationalPersonalStats} from '../docs/src/ui/international-personal-stats.js';
+import {InternationalTournament} from '../docs/src/engine/international-tournament.js';
 import * as contracts from '../docs/src/engine/contract-policy.js';
 import {applyIncentivePayment,createIncentiveTerms} from '../docs/src/engine/incentive-policy.js';
 import {classifyMarketInjury} from '../docs/src/engine/injury-market-policy.js';
@@ -39,9 +40,10 @@ test('structured result overrides ambiguous honor, valid final count retained',(
 // Execute the actual active international functions, not a reimplementation.
 function activeIntl(v={},source=game){
   const s=state({ab:{vel:65,ctl:65,brk:65,sta:65},pos:'P',role:'SP',rehab:0,skipMid:false,seasonFactor:1,intlDeclinedCount:0,...v});let opts,draws=0,done=0,cards=[];
-  const context={...intl,...selection,internationalPersonalStats,renderInternationalPersonalStats,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
+  const context={...intl,...selection,internationalPersonalStats,renderInternationalPersonalStats,InternationalTournament,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
   // OOP plan §2i (7-A): with the addIntlStats delegate, the vm group calls a SeasonStats built from the live context stubs.
   if(source.includes('seasonStats.addIntlStats('))context.seasonStats=new SeasonStats({getState:()=>context.S,levels:null,rng:{R:()=>context.R(),N0:()=>assert.fail('N0'),chance:p=>context.chance(p),ri:(a,b)=>context.ri(a,b)},clamp:(x,a,b)=>context.clamp(x,a,b),isSP:()=>context.isSP(),pitcherRole:()=>assert.fail('pitcherRole'),checkGoldclothSeason:()=>assert.fail('checkGoldclothSeason')});
+  // OOP plan §2s: the slice itself constructs InternationalTournament with lambdas that resolve these context stubs at call time.
   runInNewContext(source.slice(source.indexOf('  function intlEvents('),Math.max(source.indexOf('  function maybeIntl(done)'),source.indexOf('  maybeIntl = function(done)'))),context);
   return {s,context,run:phase=>context.processIntlPhase(phase,()=>done++),options:()=>opts,report:()=>({draws,done,cards})};
 }
