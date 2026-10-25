@@ -2354,7 +2354,68 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 ### 2q.7 交付（2026-10-25）
 
-- push `refactor/share-image`，PR #34 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
+- push `refactor/share-image`，PR #34 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。2026-10-25 已合併為 `32261d62ff0fb1ad187ca14432e0ffccb04c54ac`（merge commit，樹與 `79c5c22` 相同）。
+
+## 2r. 第 14 期：守備位置會議 `dposReview` 移至 `docs/src/engine/defense-position-review.js`（細部計畫，2026-10-25；計畫已批准，實作已批准）
+
+路線見 §3.15（葉領域 7 期之第 1 期）。
+
+### 2r.1 現況（2026-10-25 grep 抽查，基準 `origin/dev` `32261d6`，`docs/src/engine/game.js` 2417 行）
+
+- 範圍 `game.js:96–152`（57 行，連續）：`function dposReview(cont)`。唯一呼叫端 `:564`（訓練選項 closure 內 `dposReview(()=>allocUI(…))`）。不掛 `window`、不在 `LEGACY`、無 overlay 覆寫。
+- 不使用 RNG；寫 `S.dpos`、`S.role`（投手起用）；以 `choose`／`card` 顯示，多數寫入在選項延遲 closure（`f:()=>{…}`）內。
+- 讀取的 `game.js` 名稱：`S`（`let`，`:211`）、`LV`（`const`，`:193`，晚於 `:96`）、`DPN`（`:74`）、`DP_MULT`（`:90`）、`DP_RANK`（`:93`）、`dpBar`／`dpQual`／`dpList`（`:91–94`）、`pitcherRole`（`:289`）、`roleN`（`:304`）、`card`（`:409`）、`choose`（`:457`）。
+- 測試耦合：
+  - `event-integration.test:52` 以 `source.indexOf('function dposReview(')` 為 `dpBlock` 切片終點（含 `0cb3ccc` 基準比較）；`:12` 以 `const DP_RANK=` 為 `qual` 切片終點。
+  - `ability-allocation.test:27` 以 `/^function dpScore\(.*$/m` 取 `dpScore` 單行。
+  - `npb-return-ui.test:225` 於 vm 以 stub 替換 `dposReview`（不讀本體）。
+  - 全樹掃描：`global-contract-market.test:9` 只檢查 `docs/src`、`engine`、`ui` 各檔相對 import 存在；`check-syntax` 只做語法；`award-identity-policy.test` 只凍結 `287dd1a` 時已存在的檔案。新檔不受影響。
+
+### 2r.2 設計
+
+- 新檔 `docs/src/engine/defense-position-review.js`（LF），輸出 `class DefensePositionReview`：`constructor(deps)` 保存依賴；`review(cont)` 為原 `dposReview` 本體（逐字搬移，只把自由名稱改為依賴）。
+- 注入：getter `getState:()=>S`、`getLevels:()=>LV`（`LV` 於 `:193` 宣告，建構於 `:96` 位置時直接傳參照會觸發 TDZ）；參照 `DPN`、`DP_RANK`、`DP_MULT`（皆於 `:96` 前宣告的 `const`）；late-binding lambda `dpBar`、`dpQual`、`dpList`、`pitcherRole`、`roleN`、`choose`、`card`（保留執行時查名稱語意）。
+- `S` 讀取：本體開頭 `const S=getState()`；選項延遲 closure 內改為即時 `getState()`（比照 §2q；為逐字搬移外的唯一差異，實施結果逐處列出）。
+- `game.js` 原位置改為 `const defensePositionReview=new DefensePositionReview({…});function dposReview(cont){defensePositionReview.review(cont);}`：保留 `function dposReview(` 字串，`event-integration:52` 切片終點與 `:564` 呼叫端不變。`dpScore` 等薄包裝與 `DP_*` 表不動。
+- `game.js` 為 CRLF：只刪除該區段並插入新行，`git diff --stat` 須約 57 行刪除，非整檔重寫。
+
+### 2r.3 測試變更
+
+- 預期無。若實作中發現需變更，先停止並請求批准。
+
+### 2r.4 驗證（R2／L2：無 RNG、寫 `S` 與 DOM 的邏輯搬移，行為不變）
+
+- `node --check`、`verify-modularization`、`check-syntax`、`event-integration.test`、`ability-allocation.test`、`npb-return-ui.test`、`global-contract-market.test`、Quick。
+- 等價比較（scratchpad 腳本，同一次執行）：基準 `git show 32261d6:docs/src/engine/game.js` 的 `dposReview` 與新模組，以相同 stub（`choose`／`card` 記錄、`pitcherRole` 等固定回傳）跑捕手（`C` 不合格→`1B`／`DH`、`1B`→`DH`、恢復→再轉捕手／維持）、投手（`MR`／`CL`→`SP` 打診兩選項、自動轉換、首次登錄）、野手（首次登錄、升格打診兩選項、不合格轉換）與非 PRO／非一軍 early return 各分支，並執行每個選項，比較 `choose`／`card` 紀錄、`cont` 呼叫數與 `S`。
+- 負控制：scratchpad 變體（例：某一 `S.dpos` 寫入值改變）須使比較出現差異。
+- `game-view-dom-e2e --baseline=32261d62ff0fb1ad187ca14432e0ffccb04c54ac`：8 段生涯 DOM／`S`／RNG 一致。
+- reviewer：執行（多檔、>20 行）。Full：依風險不跑（使用者可要求）。目視：不適用（DOM 輸出不變，由等價比較與 `game-view-dom-e2e` 涵蓋）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+### 2r.5 分支與交付
+
+- `refactor/defense-position-review`（自 `origin/dev` `32261d6`，`--no-track`）。本計畫（含 §3.15）先單獨 commit；實作 commit、push、PR → `dev` 另批。
+
+### 2r.6 實施結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/defense-position-review`，實作 commit `b2ecf52`，比較基準 `32261d6`）
+
+- 實作：`docs/src/engine/defense-position-review.js` 新增 70 行（LF）；`game.js` +3／−57（CRLF 維持），2417 → 2363 行、236,488 → 232,100 bytes。測試未變更。
+- 搬移本體與基準 `game.js:96–152` 逐字比對只有 7 處差異，皆為選項延遲 closure 的寫入：`S.dpos='1B'`、`S.dpos='DH'`、`S.dpos='C'`、`S.role='SP'`、`S.role=old`、`S.dpos=best`、`S.dpos=p` → `getState().…`（本體開頭以 `const S=getState(),LV=getLevels()` 取值）。
+- 與 §2r.2 的差異：建構行 `const defensePositionReview=new DefensePositionReview({…})` 放在薄包裝 `function dposReview(cont)` **之後**（`game.js:97–98`）。依計畫順序放在前面時，`event-integration.test:52` 的 `function dpScore(`→`function dposReview(` 切片會包含建構行，於無 import 的 vm 中 `DefensePositionReview is not defined`（FAIL）。`dposReview` 只在執行期呼叫，無 TDZ。
+
+| 項目 | 結果 |
+|---|---|
+| `node --check`、`check-syntax`、`verify-modularization` | PASS |
+| `event-integration`（順序修正後）、`ability-allocation`、`npb-return-ui`、`global-contract-market` | PASS |
+| 等價比較（scratchpad 腳本；`git show 32261d6` 的 `dposReview` 於 vm vs 新模組，相同 stub；捕手／投手 `null`／`SP`／`MR`／`CL`×`SP`／`MR`／`CL`／內外野／early return，於 `CPBL1`／`NPB1`／`MLB`；逐一執行每個選項，各含「點選前 `S` 重新賦值」模式；比較 `choose`／`card`／stub 呼叫紀錄、`cont` 次數、`S`） | 129 情境、186 次選項執行，0 差異 |
+| 負控制（scratchpad 變體） | `DH` 選項寫 `'1B'` → 18 差異；7 處 closure 改回快照 `S` → 69 差異（僅重新賦值模式）；行尾 `cont(); return; }` 5 處改為 `return; }` → 48 差異 |
+| `game-view-dom-e2e --baseline=32261d62ff0fb1ad187ca14432e0ffccb04c54ac`（直接執行） | PASS，8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| reviewer | 無程式 findings；low：`docs/design/STATE_AND_RNG_REFERENCE.md:213,268` 的 `dpos`／`role` 寫入行號（本已過期，§2h／§2q 亦未更新）——範圍外，未修改 |
+| Full | NOT_RUN（§2r.4） |
+
+### 2r.7 交付（2026-10-25）
+
+- push `refactor/defense-position-review`，PR #35 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -2591,6 +2652,24 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
   - 名稱改為不可重新賦值時 `s10wrap` 會 TypeError，但它只是阻擋者之一：正式 overlay 自己覆寫 `advance`、`endGame`、`movement`、`salaryFor`、`crossOffers`（後三者另有原始碼錨點 `draft-signing-policy.test:117`、`championship-intl.test:73`、`kbo-renewal-floor.test:42`、`npb-return-ui.test:9`）；`support/stage6-browser.mjs:16, 28–31` 故障注入替換 `startYear`、`salaryFor`、`fixedContract`、`movement`；`bug-act-01-02-e2e:22` 替換 `signTo`；`contract-salary-e2e:22–24, 33` 替換 `fixedContract`、`startYear`、`movement`。
   - 結論：單做 E 不能讓任何名稱變為不可重新賦值，收益近零；模組搬移以 late-binding 處理即可，不以此為前提。
 - 使用者決定（2026-10-25）：E／B／C 暫不做，待樞紐（契約・市場・業餘）拆分時再議。下一步改為組件化，第 13 期分享圖見 §2q。
+
+### 3.15 葉領域組件化路線（2026-10-25，基準 `origin/dev` `32261d6`（樹與 `79c5c22` 相同），`docs/src/engine/game.js` 2417 行；scout 唯讀調查＋grep 抽查）
+
+- 使用者決定（2026-10-25）：7 個葉領域全部移出，依下表順序一期一個 PR；各期開始前另立細部計畫，測試變更逐項批准。合計約 1,100 行，`game.js` 預估降至約 1,300–1,400 行（與 §3.12 下限一致）；剩餘為樞紐（契約・市場・業餘）與年度流程。
+- 共通形式：比照 `SeasonStats`／`ShareImage`（class＋注入；會重新賦值的全域用 getter，原地修改的物件傳參照或於呼叫時傳入，跨領域呼叫用 late-binding lambda）；`game.js` 保留同名薄包裝，維持 e2e hook 字串、`LEGACY`、overlay 覆寫與 `productionFunction` 以外的呼叫端不變。
+
+| 期 | 領域 | 範圍（`32261d6` 行號） | RNG（`R`／`ri`／`chance`／`pick`） | 主要障礙 | 處理方向（需批准） | 等級 |
+|---|---|---|---|---|---|---|
+| 14 | 守備 `dposReview` | `:96–152`（57 行）；`dpScore` 等薄包裝與 `DP_*` 表留在原處 | 0 | 未找到（`event-integration:52` 以 `function dposReview(` 為切片終點，薄包裝保留即成立；`npb-return-ui:225` 只在 vm 替換） | 預期無測試變更 | R2 |
+| 15 | 國際 | `:2153–2203`（overlay 內 2 空白縮排區段） | 0／0／0／1 | `championship-intl` 以縮排字串切片；`salary-flow` pick 計數 | 切片改對模組；計數改為 `game.js` −1＋模組 +1 | R3 |
+| 16 | 故障・TJ | `:225–288`、`:928–960`（不連續） | 0／7／6／2 | `salary-flow` 3 項計數；`full-power-pitching.test:27` `productionFunction('tjGamble')` | 比照 `SeasonStats` 的 RNG bridge 唯一性＋模組計數斷言；vm 測試改 import | R3 |
+| 17 | 能力・特性 | `addAb`（`:309–323`）、`allocUI`（`:467–509`）、`allocDone`（`:823–848`）等 | 1／0／0／0 | `ability-allocation` 的 `allocUI` 切片、`addAb` 公式 regex、`toolGap`→`tjAccrue` 切片範圍；`addAb` 被事件／故障呼叫 | 斷言改對模組；跨領域 late-binding | R3 |
+| 18 | 事件・戀愛 | `:603–821` | 2／0／9／11 | `salary-flow` 3 項計數；`let CHEER`／`CHEER_SAFE`；`event-copy` 凍結 | 計數比照第 16 期；`CHEER` 以 getter 注入或由模組持有 | R3 |
+| 19 | 獎項 | `awards`／`renderCheckpointCard`／`collectLegacyAwardPlan`（`:1074–1259`） | Journal bridge | `salary-flow` 的 `journalBridge` 唯一性與 14 個 `draw('…')` 順序對 `game.js`；`trait-policy` 切片；`championship-intl.test:73` `productionFunction('renderCheckpointCard')` | 斷言改對模組，強度不變 | R3 |
+| 20 | 引退・殿堂 | `:1496–1831`（約 335 行，含 `retireScene`、`endGame`） | ≥4／≥2／0／0 | `endGame` 在 `LEGACY`、overlay 再賦值、e2e 替換；`retirement-hof-test-support:22` 以名稱取 7 函式；`TIER_TH`／`LG_N` 被 `Object.assign` 修改；`primaryPos` 由 `ShareImage` 注入 | `game.js` 保留可再賦值的 `endGame` 薄包裝；test support 改 import；`TIER_TH`／`LG_N` 呼叫時傳入 | R3 |
+
+- 未確認（各期開始前確認）：`CHEER` 是否實際被重新賦值（grep 只見宣告與讀取）及 `event-copy` 凍結範圍；引退區段 `ri` 確切數量；`full-power-pitching` fixture 是否另以切片取 `tjAccrue` 等函式。
+- scout 誤差（已抽查更正）：`dposReview` 另寫 `S.role`（投手起用）；`full-power-pitching` 的 `productionFunction` 只確認 `tjGamble`。表中數字以 scout 為主，未逐一抽查者於各期計畫重新確認。
 
 ## 4. 使用者決定（2026-10-18）
 
