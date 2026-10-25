@@ -133,7 +133,7 @@
 
 - [x] **CONTRACT-LEGACY-01** — `VERIFIED_IN_TESTED_PATHS / CLOSED_SCOPE_LIMITED`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2f.5-2、§2f.7：使用者同意的DEAD_CALL驗證涵蓋23個瀏覽器E2E，舊makeOffers／pickOfferUI無執行期呼叫；4-A刪除舊本體及拆殼，8生涯DOM／S／RNG一致，已由PR #12（d3efd11）併dev。這不是全路徑不可達證明，原Full 84 PASS／1 FAIL及限定修復重測、stage10比較基準造成的預期FAIL均保留在原計畫；第5期後另有確定來源86入口全PASS證據，不回改原FAIL。市場／規則重設、4-B／4-C／4-D與整體重構不在此結案範圍；後續仍由REFACTOR-AUDIT-01追蹤。
 
-## 3. 未完成工作（32 項）
+## 3. 未完成工作（33 項）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（3 項）
 
@@ -158,13 +158,14 @@
 - [ ] **SHARE-111-DEVICE** — `BLOCKED`。iPhone／Android／PC 的原生 share sheet、取消、PNG 主題、圖片分享與儲存驗收。
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。全量可到達日文文案、棒球術語與畫面位置仍待清查；COPY-001～005已於1.12.0完成實作及限定驗收，見[COPY驗收](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)，不再重做這五項。與v1.8.2的92事件翻譯替換分開管理；本輪1.13.3只修送別事件，不能據此結案全量COPY。
 
-### 3.4 P2 — 規格待決與保留（6 項）
+### 3.4 P2 — 規格待決與保留（7 項）
 
 - [ ] **OVR-01** — `DESIGN_PENDING`。野手 OVR 加入 stamina 5% 的提案，先比較現行公式與提案，批准後才能修改。
 - [ ] **TRAIT-NITENICHI** — `承認済み保留`。二天一流；投手三冠已於1.13.0實作（TRAIT-PITCHER-TC），但二刀流制度與本特性接線仍未批准，不因三冠完成自動啟用。
 - [ ] **TRAIT-CHAMPIONMAKER** — `承認済み保留`。優勝請負人，待累計 5 冠、計算範圍、勝率加成及 RNG 政策核准。
 - [ ] **UI-TJ-GAUGE-01** — `未着手・表示規則待ち`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2e.7、§2g.1，使用者已批准列待辦：TJゲージ直接String(S.tj||0)顯示長小數。第5期搬移後現位於docs/src/ui/career-presenter.js的ability()，並未修正。先決定位數及是否顯示50／100上限，只改表示、不改S.tj或RNG；不與重構混合修改。本次恢復漏列，不代表授權實作。
 - [ ] **UI-DESIGN-TOKENS-01** — `IMPLEMENTED / PR_PENDING`（2026-10-24；實作`fcb22a9`，驗證見[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §6；PR合併後勾選）。依[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2：表示token第1段。`--sans`指定`Noto Sans TC`而`index.html`載入`Noto Sans JP`，實測（macOS＋Brave，`2e69096`）日文以PingFang TC顯示；修正為`Noto Sans JP`起首的日文字體列，並新增圓角／陰影token（computed style不變）與字體載入斷言。只改CSS與測試，不改`game.js`、RNG、`S`；PATCH 1.13.5→1.13.6（2026-10-24依`357e852`重掃後修正）。第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）未計畫。
+- [ ] **CODE-DEAD-01** — `未着手・判断待ち`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2u.1、§2u.6：`docs/src/engine/game.js` 的 `statBonus`（`c4b9c45` `:609`）與 `checkTraitsMid`（`:635`）在 `docs`／`tests`／`scripts`／`tools` 無呼叫端。是否刪除待決定；刪除前須確認原文計數類測試（如 `salary-flow` RNG 計數、`phasePre`／`farewell` 原文比對）不受影響。不與重構混合修改；列入不代表授權實作。
 - [ ] **CONTRACT-ASIA-01** — `未実装・仕様待ち`。KBO 亞洲名額及球團整體外國人預算，與現有 `FOREIGN_STANDARD` 不同。
 
 ### 3.5 P2 — 未來功能候補（10 項）
