@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，待合併）
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，待合併）；第 3 批計畫見 §2m.12
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -1970,6 +1970,62 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - push／PR：2026-10-25 使用者決定將第 2 批併入 PR #28：`26ec1bf..70ca598` 以 fast-forward push 至 PR head `refactor/flow-outcome-amateur`（未 force），PR 標題／說明改為涵蓋第 1、2 批。PR → `dev` 不觸發 CI；未合併。
 
+### 2m.12 11-B 第 3 批：FA／市場（細部計畫，2026-10-25；計畫已批准，實作待批准）
+
+**現況（唯讀確認，基準 `026c5cd`，`game.js` 2715 行（本分支，含第 1、2 批）；scout 唯讀調查＋抽查）**
+
+- 對象 6 個函式、10 處：`advance()` 7、`endGame(...)` 3。`faFlow`（`:2551`）、`faMarket`（`:2571`）、`extensionOffer`（`:1460`）本身無 `advance()`／`endGame()`，只委派對象函式，不改。
+
+  | 位置 | 分支 | 原呼叫 | kind |
+  |---|---|---|---|
+  | `:2513` | `crossOffers` 的 `const finish=()=>advance()`（海外移籍經 `overseasOffer` 的 `finish()`、NPB 復歸與殘留經 `complete()`、無報價 `finish()`、殘留選項 `f:finish`） | `advance()` | `CROSS_OFFER_RESOLVED` |
+  | `:2545` | `renewAndAdvance` 結尾（單行函式） | `advance()` | `CONTRACT_RENEWED` |
+  | `:2548` | `arbitrationFlow` 的 `complete`（三選項皆經此） | `advance()` | `ARBITRATION_SETTLED` |
+  | `:2564` | `acceptFaOffer` 結尾（單行函式；FA 報價與宣言殘留） | `advance()` | `FA_SIGNED` |
+  | `:2566` | `showFaMarket` 無報價「元球団と1年契約」 | `advance()` | `FA_NO_BID_RETURNED` |
+  | `:2566` | `showFaMarket` 無報價「現役を退く」 | `endGame(...)` | `FA_RETIRED` |
+  | `:2586` | `outOfOrg` 的 `pushPro`（`signTo(...,'RELEASE_RECONTRACT',...)` 後） | `advance()` | `RELEASE_SIGNED_PRO` |
+  | `:2587` | `outOfOrg` 的 `pushAma`（社會人／獨立） | `advance()` | `RELEASE_JOINED_AMATEUR` |
+  | `:2599` | `outOfOrg` 無報價（template literal 理由） | `endGame(...)` | `RELEASE_RETIRED` |
+  | `:2600` | `outOfOrg`「現役を退く」選項 | `endGame(...)` | `RELEASE_RETIRED` |
+
+- 呼叫端（皆捨棄回傳值）：`crossOffers` ← `movement`（`:1364`）、`extensionOffer`（`:1465`、`:1468`）；`renewAndAdvance`／`arbitrationFlow` ← `faFlow`；`acceptFaOffer` ← `showFaMarket`；`showFaMarket` ← `faMarket`；`outOfOrg` ← `handleDemotion`（`:1408`）。皆無覆寫。`outOfOrg` 開頭的 `retireBelowActiveMinimum()`（第 2 批已轉換）不改。
+- RNG：`overseasOffer`／`outOfOrg` 的 `pickRecord`、`outOfOrg` 的 `chance(30)`×2 在 `choose` 前；`crossOffers` NPB 復歸的 `ri(1,3)`、`arbitrationFlow` 的 `chance(terms.winChance)` 在選項回呼內、`advance()` 之前。無 RNG 位於 `advance()`／`endGame()` 之後。
+- 文字耦合：
+  - 直接失效：`npb-return-ui.test.mjs:9–14`：以 `  function crossOffers(o){`～`  function renewAndAdvance` 的切片放入 `runInNewContext`，context 無 `reportFlowOutcome`，執行 `finish` 時 `ReferenceError`。
+  - 不受影響：`npb-return-ui.test.mjs:73` 的 4 段逐字比較（`:2228–2242`、`handleDemotion`～`/* 長期契約/短期契約`、`buyoutRemaining`～`handleDemotion`、`:577–592`）不含 FA 區段；`salary-flow` 計數與 `:62`／`:69`／`:92` 正則、`career-movement-policy.mjs:83,85` 只比對 `signTo(...)`／RNG 文字；`championship-intl.test:45`、`pitcher-awards-d2-analysis:54` 的切片不跨 FA 區段；`stage10-risk-e2e:31` 直接呼叫 `overseasOffer` 並自帶 `finish`；`stage10-risk-e2e:10,33`、`contract-salary-e2e:30`、`global-contract-market-e2e:14`、`npb-return-e2e:18`（執行時替換 `advance` 或包裝 `crossOffers`）——`reportFlowOutcome` 執行當下以名稱呼叫 `advance`，替換仍生效（第 1、2 批已驗證）。
+  - 不在 `test-manifest` 的工具／歷史審查：`tools/development-b/legacy-effect-boundaries.mjs:30,32`、`docs/reviews/g1-a-validation/fixtures.mjs:30,31`、`docs/reviews/award-jp-name-validation/validate.mjs:27,28` 把 `crossOffers`／`outOfOrg` 換成 stub，本體不執行。依 AGENTS.md §6.4 不修改，只記錄。
+
+**設計（L3／R3；使用者決定 2026-10-25：照建議）**
+
+- `reportFlowOutcome` 不新增函式，只在既有 `switch` 的 DEMOTION 各 case 之後追加：`CROSS_OFFER_RESOLVED`／`CONTRACT_RENEWED`／`ARBITRATION_SETTLED`／`FA_SIGNED`／`FA_NO_BID_RETURNED`／`RELEASE_SIGNED_PRO`／`RELEASE_JOINED_AMATEUR` → `return advance();`，`FA_RETIRED`／`RELEASE_RETIRED` → `return endGame(outcome.reason);`。
+- 結果名稱前綴依子領域（`CROSS_`／`CONTRACT_`／`ARBITRATION_`／`FA_`／`RELEASE_`），不統一為 `MARKET_`。
+- `crossOffers` 只換 `finish` 一處為 `()=>reportFlowOutcome({kind:'CROSS_OFFER_RESOLVED'})`，四條路徑共用一個 kind；不改 `finish`／`complete` 的參數與 `f:finish`（比照前兩批「只換末尾呼叫」）。
+- `renewAndAdvance` 不改名（超出本期範圍；`npb-return-ui:9` 以其為切片終點錨點）。
+- 各處只把末尾的 `advance()`／`endGame(...)` 換成 `reportFlowOutcome({...})`；`signTo`、`saveSalaryDecision`、`card`、`bindLatestSalaryDetailLink`、`S.*=` 等留在原位、原順序。不新增或移動 RNG 呼叫點，不新增 `S` 欄位。
+
+**測試變更（需揭露）**
+
+1. `npb-return-ui.test.mjs:9`：`crossOffers` 切片後追加 `productionFunction('reportFlowOutcome',…)`；`advance` 仍由原 stub 計數，`:18`／`:19`／`:21` 等既有斷言不改。
+2. 新增行為 fixture（`npb-return-ui.test.mjs`，沿用第 2 批 DFS 輔助，不增加 Full 入口數）：
+   - 現行與 `026c5cd` 各以 `'use strict';`＋`overseasOffer`、`crossOffers`、`renewAndAdvance`、`arbitrationFlow`、`acceptFaOffer`、`showFaMarket`、`outOfOrg` 建 vm，現行另加 `reportFlowOutcome`；基準以 `git show 026c5cd…:docs/src/engine/game.js` 取得。依賴以兩側相同的決定性 stub 提供。
+   - 情境：`crossOffers`（NPB 復歸／海外 KBO・CPBL・MiLB／無報價）、`renewAndAdvance`（NORMAL／CONTROL）、`arbitrationFlow` 三選項×`chance` 勝負、`acceptFaOffer`（FA 報價／宣言殘留）、`showFaMarket` 無報價兩選項、`outOfOrg`（職業再簽／業餘／無報價／引退選項；`retireBelowActiveMinimum` 真／假）。
+   - 以 DFS 點擊全部 `choose` 選項；比較兩側呼叫紀錄（`advance`／`endGame` 含理由／`signTo` 參數／`saveSalaryDecision`／`card` 等）與各葉 `S` 快照（JSON 字串）＋葉數守衛＋10 處到達斷言＋9 種 kind 覆蓋。
+   - 各葉 kind 一致性斷言：由前一筆呼叫推導（`signTo` 種類 `OVERSEAS`／`RETURN` 與 cross 殘留 → `CROSS_OFFER_RESOLVED`、`契約更改` card → `CONTRACT_RENEWED`、仲裁 `saveSalaryDecision` → `ARBITRATION_SETTLED`、`signTo(...'FA'...)` → `FA_SIGNED`、`RETURN_NO_BID` → `FA_NO_BID_RETURNED`、`'RELEASE_RECONTRACT'` → `RELEASE_SIGNED_PRO`、`S.stage` 設為 `CORP`／`IND` → `RELEASE_JOINED_AMATEUR`、`endGame` 理由 → `FA_RETIRED`／`RELEASE_RETIRED`），與實際回報比對。
+3. 實作前以新名稱重掃 `tests/`、`tests/support/`、`scripts/`、`tools/`、`docs/`；本節未列的耦合先報告再改。
+
+**驗證（比照 §2m.4）**
+
+1. `check-syntax`；相關單元：`npb-return-ui`、`salary-flow`（計數不變）、`career-movement-policy`、`global-contract-market.test`、`fa-market-policy.test`、`arbitration-policy.test`、`kbo-renewal-floor`、`draft-signing-policy`、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`。
+2. `game-view-dom-e2e --baseline=026c5cd…`（直接執行）；`contract-salary-e2e`、`npb-return-e2e`、`global-contract-market-e2e`、`kbo-renewal-e2e`、`salary-history-e2e`、`stage10-risk-e2e`；Quick。
+3. 負控制（scratchpad 副本，各改一處）：①互換 `FA_SIGNED`／`CONTRACT_RENEWED`（同分派到 `advance`）、②`pushAma` 漏呼叫 `reportFlowOutcome`、③`FA_RETIRED` 分派到 `advance`；另 10 處各自改為 `endGame('MUT')` 的逐處突變。確認 fixture 本身 FAIL（先被既有斷言攔下或因 context 缺 stub 而 `is not defined` 時，另以「檔首至既有斷言前＋新 fixture」的變體確認）。
+4. Full 一次；reviewer 一次（程式差分）。
+
+**交付**
+
+- 分支：`refactor/flow-outcome-market`，自 `refactor/flow-outcome-demotion`（`4c88f31`）疊出；基準暫用 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。PR #28 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃，再開新 PR（不併入 PR #28）。
+- commit 順序：本節（含 §3.12）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -2143,6 +2199,13 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 建議（未決）：先以 B 驗證同步分派、執行當下查名稱、RNG 順序不變三點，再決定是否投入 A。
 - 使用者決定（2026-10-24）：第 11 期採 A＋B（11-A＝路線 B 先行，11-B＝路線 A），細部計畫見 §2m。
 - 順帶發現（未驗證、與本期無關）：`tools/development-a/runtime.mjs` 寫 `stepQ=[phaseEnd]` 而無 `__cs.` 前綴，第 3 期後疑似只設定無作用的全域變數。
+
+### 3.12 第 12 期候補：`game.js` 縮減目標（2026-10-25，基準 `4c88f31`，`game.js` 2715 行／251,721 bytes；**未決**）
+
+- 使用者提問：能否降到 400 行以下。評估（依 §3.11 領域地圖，人工分群、概估）：現行限制下可行下限約 1,200–1,500 行。樞紐（契約・FA・業餘，約 600）與年度流程（約 200）被 e2e 執行時替換全域名稱（ESM 綁定無法替換），葉領域移出受文字耦合限制（`salary-flow` RNG 計數、`event-copy` 凍結、`retirement-hof-test-support` 以名稱取函式、`award-identity-policy` 凍結 `docs/src` 舊檔）。歷來降幅主要來自死碼刪除（−409）與 `SeasonStats`（−144），policy 各期 −16～−44，第 11 期 +20。
+- 行數非良好指標（最長行 3295 字元，`movement` 覆寫為單行）；目標改以 bytes、頂層函式數或 `S` 欄位寫入者結構衡量。
+- 使用者決定（2026-10-25）：第 11 期結束後另立候補調查——分享圖（286 行）與葉領域的文字耦合、改造 e2e 全域替換機制（改為替換可變命名空間物件）的成本——再決定是否以大幅縮減為方向。
+- 範圍擴大（2026-10-25 使用者同意）：改為「測試接縫改造」調查。現況（`tests/*.mjs` 95 檔，regex 粗分）：模組單元測試約 23、`game.js` 原始碼文字斷言約 21、切函式入 vm 約 19、瀏覽器 e2e 約 21、與舊 SHA 差分最多 43（跨類）。方向依序：①第 11 期完成後以 `reportFlowOutcome` 為接縫，e2e 改為觀察／攔截 outcome，不再整個替換 `advance`；②第 11 期之後的新測試不再新增原始碼文字／切片耦合；③抽出模組時同步把 vm 切片測試改為 import；④已完成任務的舊 SHA 逐字比較改為固定 seed 行為快照（歷史報告保留）；⑤`salary-flow` 的 RNG 文字計數須補路徑覆蓋才能改為執行時追蹤（成本最高，最後）。各項皆為同等或更強的斷言替換，逐項批准（AGENTS.md §6.2／§6.5）。調查內容：逐檔盤點文字／切片／舊 SHA 耦合及其保護對象（RNG 順序、UI 文字、結構），挑一領域試做，估算成本。
 
 ## 4. 使用者決定（2026-10-18）
 
