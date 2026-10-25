@@ -2293,7 +2293,68 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 ### 2p.7 交付（2026-10-25）
 
-- 疊在 `refactor/flow-hooks-e2e`，併入既有 PR #33 → `dev`（§2o 同一 PR；標題與內文已更新為 §2o／§2p）。PR → `dev` 不觸發 CI。未修改 `main`。
+- 疊在 `refactor/flow-hooks-e2e`，併入既有 PR #33 → `dev`（§2o 同一 PR；標題與內文已更新為 §2o／§2p）。PR → `dev` 不觸發 CI。未修改 `main`。PR #33 已合併至 `dev` `119f6cf`。
+
+## 2q. 第 13 期：分享圖 `shareImage` 移至 `docs/src/ui/share-image.js`（細部計畫，2026-10-25；計畫已批准，實作已批准）
+
+使用者方向（2026-10-25）：最終讓 `game.js` 由數個組件構成。順序依 §3.11 領域地圖由低風險開始：分享圖（不用 RNG、不寫 `S`）→ 葉領域逐一（比照 `SeasonStats`）→ 樞紐最後（須先解決 e2e 執行時替換全域名稱，見 §3.14 補記）。本期為第一步。
+
+### 2q.1 現況（2026-10-25 scout 唯讀調查＋grep 抽查，基準 `origin/dev` `119f6cf`，`game.js` 2720 行／252,573 bytes）
+
+- 範圍 `game.js:1834–2137`（304 行，連續）：`const shareImagePreviews=new Map()`（`:1834`）、`window.addEventListener('yakyujinsei:displaychange',…)`（`:1835–1841`，theme 變更時重畫仍連接的預覽）、`function shareImage(evals,out)`（`:1842–2137`，內含 `tagColor`／`drawTags`／`hr`／`sectionTitle`／`row`／`rowIntl`／`incomeCell`，他處無引用）。
+- 不使用 RNG；不寫 `S`（含巢狀）。唯一的模組層級寫入是 `shareImagePreviews` 的 `set`／`delete`。
+- 呼叫端只有 `endGame` 內的按鈕（`:1809`）與上述監聽器（`:1839`）。不掛 `window`、不在 `LEGACY`、無 overlay 覆寫。
+- 讀取的 `game.js` 名稱：`S`（`let`，`:212`，會重新賦值）、`SEED`（`let`，`:56`，`:2145`／`:2718` 重新賦值）、`LG_N`（`const`，`:2167` 以 `Object.assign` 原地修改）、`TEAM_COLOR`（`const`）、`teamNick`、`roleN`、`playerType`、`primaryPos`（`:1501`，只有分享圖使用）、`traitNames`、`fmtIP`、`slgOf`、`fmtMoney`。
+- 已 import 而分享圖使用者：`VERSION`、`incomeSummary`、`getDisplayPreferences`、`getSharePalette`／`shareTagPalette`、`removedTraitLabel`。
+- 測試耦合：
+  - 原始碼文字：`verify-modularization.mjs:34`（`fillText\(VERSION,W-PAD,H-40\)`）、`:54`（`imageColor=getSharePalette\(theme\)`）對 `game.js` 比對；搬移後失敗。此檔在 Quick。
+  - e2e 以 `overlay-hook.mjs` 注入 `game.js` 模組頂層並以名稱呼叫 `shareImage([],out)`：`event-system-e2e:13`、`income-display-e2e:13`、`trait-system-e2e:16`、`replay-share-theme-e2e:13`、`championship-intl-e2e:24`、`trait-display-e2e:28`（皆 full／audit）。攔截 `fillText`／`measureText`、檢查 PNG；無像素或 dataURL hash 斷言。
+  - 全樹掃描：`award-identity-policy.test` 只凍結 `287dd1a` 時已存在的檔案，新檔不受影響；`audit-architecture.mjs` 為清單產生、`check-syntax.mjs` 只做語法檢查。`tagColor`／`drawTags`／`incomeCell`／`rowIntl`／`primaryPos`／`displaychange` 在 `tests`／`scripts`／`tools` 無引用。
+
+### 2q.2 設計
+
+- 新檔 `docs/src/ui/share-image.js`（LF），比照 `GameView` 的注入形式，輸出 `class ShareImage`：`constructor(deps)` 保存依賴、建立預覽 `Map`、註冊 `displaychange` 監聽器；`render(evals,out)` 為原 `shareImage` 本體（逐字搬移，只把自由名稱改為依賴）。
+- 注入：getter `getState:()=>S`、`getSeed:()=>SEED`（皆會重新賦值）；物件參照 `LG_N`、`TEAM_COLOR`（原地修改）；函式 `teamNick`、`roleN`、`playerType`、`primaryPos`、`traitNames`、`fmtIP`、`slgOf`、`fmtMoney`。
+- 新模組直接 import：`VERSION`（`../config.js`）、`incomeSummary`（`./income-summary.js`）、`getDisplayPreferences`（`./preferences.js`）、`getSharePalette`／`shareTagPalette`（`./share-theme.js`）、`removedTraitLabel`（`../engine/trait-policy.js`）。
+- `game.js` 原位置改為 `const shareImageView=new ShareImage({…});function shareImage(evals,out){shareImageView.render(evals,out);}`：保留 `shareImage` 名稱，`endGame` 呼叫端與 6 個 e2e hook 字串不變。`game.js` 不再使用的 import 一併移除。
+- `primaryPos` 屬守備判定，本期注入不搬；是否移至 `defense-position-policy.js` 另議。
+- `game.js` 為 CRLF：只刪除該區段並插入新行，`git diff --stat` 須為約 300 行刪除，非整檔重寫。
+
+### 2q.3 測試變更（需揭露，使用者已批准 2026-10-25）
+
+- `verify-modularization.mjs:34`、`:54`：同一 regex 改對 `docs/src/ui/share-image.js` 比對（斷言強度不變）。與搬移同一 commit（Quick 內）。其他測試、期望值、manifest 不變。
+
+### 2q.4 驗證（R2／L2：畫像描畫搬移，`game.js` import 與 Quick 內測試變更，故仍跑 Quick）
+
+- `verify-modularization`、`check-syntax`、Quick。
+- 6 個分享 e2e 逐一直接執行：`replay-share-theme-e2e`、`income-display-e2e`、`trait-system-e2e`、`championship-intl-e2e`、`trait-display-e2e`、`event-system-e2e`。
+- 不變性證明（scratchpad 腳本，同一機器一次執行）：基準 `119f6cf` 與新碼，固定 fixture × 4 theme × P／IF，比較 `fillText` 呼叫紀錄（文字、座標、font、fillStyle）與 `toDataURL` hash；另確認 theme 切換（`displaychange`）重畫結果相同。canvas hash 依字型／機器而異，只做同次比較，不存期望值。
+- 負控制：scratchpad 變體（例：改一個 `fillText` 座標）須使比較出現差異。
+- reviewer：執行（多檔、>20 行）。Full：依風險不跑（使用者可要求）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+### 2q.5 分支與交付
+
+- `refactor/share-image`（自 `origin/dev` `119f6cf`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR → `dev` 另批。
+
+### 2q.6 實施結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/share-image`，實作 commit `7fd53e0`，比較基準 `119f6cf`）
+
+- 實作：`docs/src/ui/share-image.js` 新增 321 行（LF）；`game.js` +3／−306（CRLF 維持），2720 → 2417 行、252,573 → 236,488 bytes；`verify-modularization.mjs` +3／−2。
+- 搬移本體與基準 `game.js:1843–2136` 逐字比對只有一處差異：分享按鈕延遲執行的 `text:S.name` → `text:getState().name`（本體開頭以 `const S=getState()` 取值，延遲 closure 須改為即時讀取以維持原語意）。
+
+| 項目 | 結果 |
+|---|---|
+| `node --check`、`verify-modularization` | PASS |
+| Quick | 68 PASS／0 FAIL／0 BLOCKED（首次執行漏帶 `--playwright`，3 個 e2e BLOCKED，帶 shim 重跑） |
+| 分享 e2e 6 個（`--only`，full 模式） | 6/6 PASS |
+| 等價比較（scratchpad 腳本；基準 `git show 119f6cf` vs 工作樹，同一瀏覽器同次執行；P／IF × `start`／`rich` fixture × 4 theme 的 `fillText` 紀錄（文字、座標、font、fillStyle、textAlign）與 PNG dataURL、`displaychange` 重畫、`#sh-save` 分享資料） | 24/24 相同；兩版重畫結果皆＝直接 night 繪製且≠standard |
+| 負控制（新碼 `fillText(VERSION,W-PAD,H-41)`） | 比較出現差異（exit 1） |
+| reviewer | 無 findings |
+| Full | NOT_RUN（§2q.4） |
+
+### 2q.7 交付（2026-10-25）
+
+- push `refactor/share-image`，PR #34 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -2525,6 +2586,11 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 另：`retirement-hof-pilot:17` 替換 `accLevelStat`（只觀察，無接縫；§3.13 表格漏列）。
 - 建議順序（未決）：E 的 scout 調查 → 依結果決定 E 或 B／C。
+- E 調查結果（2026-10-25，基準 `origin/dev` `119f6cf`；scout 唯讀調查＋grep 抽查）：
+  - `s10wrap`（`stage10-risk-e2e:14–16, 22`）只計次與記錄 trace，引數、回傳值、RNG 不變；`oldNames` 7 名稱插在 overlay marker 前，`activeNames` 14 名稱插在 hook 段。讀取紀錄的斷言只有 D-passive-trace（`legacy.board>0`、`legacy.endGame>0`，以及有無 trace 的操作／state／RNG 相同）。`:23` 的 `s10end` 為另一個會寫 `S` 的 `endGame` 包裝（A-injected 用）。E-original-comparison 須手動 `--compare`（manifest 無 `comparison`，modes `full`／`audit`）。
+  - 名稱改為不可重新賦值時 `s10wrap` 會 TypeError，但它只是阻擋者之一：正式 overlay 自己覆寫 `advance`、`endGame`、`movement`、`salaryFor`、`crossOffers`（後三者另有原始碼錨點 `draft-signing-policy.test:117`、`championship-intl.test:73`、`kbo-renewal-floor.test:42`、`npb-return-ui.test:9`）；`support/stage6-browser.mjs:16, 28–31` 故障注入替換 `startYear`、`salaryFor`、`fixedContract`、`movement`；`bug-act-01-02-e2e:22` 替換 `signTo`；`contract-salary-e2e:22–24, 33` 替換 `fixedContract`、`startYear`、`movement`。
+  - 結論：單做 E 不能讓任何名稱變為不可重新賦值，收益近零；模組搬移以 late-binding 處理即可，不以此為前提。
+- 使用者決定（2026-10-25）：E／B／C 暫不做，待樞紐（契約・市場・業餘）拆分時再議。下一步改為組件化，第 13 期分享圖見 §2q。
 
 ## 4. 使用者決定（2026-10-18）
 
