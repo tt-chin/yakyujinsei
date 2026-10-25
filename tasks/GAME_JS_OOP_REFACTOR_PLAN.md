@@ -2246,6 +2246,40 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | 4 組 Full | NOT_RUN（使用者同意：`game.js` 不變，Full 專屬 3 項已直接執行） |
 | reviewer | 1 次（工作樹差分），無問題（確認全部 `advance(` 呼叫在 `reportFlowOutcome` 內、新名稱無衝突、舊 SHA `typeof` 走退路、無 TDZ、CRLF 無整檔變動） |
 
+## 2p. 第 12 期推廣：`retirement-hof-pilot` 的 `endGame` 改用 `flowHooks`（細部計畫，2026-10-25；計畫已批准，實作已批准）
+
+使用者決定（2026-10-25）：第 12 期後續先做候選 A（`endGame` → `flowHooks.endGame`，只改測試），範圍只含 `retirement-hof-pilot`；`stage10-risk-e2e` 留待 `s10wrap` 一併處理（候選 E）。
+
+### 2p.1 現況（2026-10-25 唯讀確認，分支 `refactor/flow-hooks-e2e` `9f4a6de`，`game.js` 與 `origin/dev` `6ab2676` 相同）
+
+- `game.js:2331` 已有 `flowHooks={advance:null,endGame:null}`；`endGame(` 的呼叫只在 `reportFlowOutcome` 分派內（`:2307`／`:2314`／`:2323`／`:2327`，皆為 `flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason)`），`docs/src` 其他模組沒有呼叫。
+- `game.js:2704` 正式碼自己重新賦值 `endGame`（包裝 `LEGACY.endGame`＋`setTimeout` 更新卡片）。因此 `endGame` 無論如何須維持可重新賦值；本期只消除測試端的替換。
+- `retirement-hof-pilot.mjs:18`（LF）：`observeEnd=endGame;endGame=function(reason){__hofBefore=S 快照;observeEnd(reason);__hofReason=reason;return result;}`，只觀察、仍呼叫原本的。只對現行原始碼注入（`instrumentRng(s)+hook`），沒有舊 SHA 注入，不需 `typeof` 退路。
+- `__hofBefore`／`__hofReason` 只寫入輸出 JSON 的 `retirementRngState`／`retirementReason`，沒有斷言；斷言只有 replay 的 `finalStateDigest`／`actionDigest`／`calls`。故拿掉掛載後預期仍 PASS，負控制須改用輸出 JSON 比較（§2p.4）。
+- manifest：`modes:['audit']`，args `--seeds=hof111-pilot-01,hof111-pilot-04 --strategy=balanced-stay`（不在 Quick／Full）。`retirement-hof-report.mjs:103–104` 引用其輸出（歷史報告，不重新產生）。
+- §3.13 表格漏列：同檔 `:17` 另替換 `accLevelStat`（只觀察）。無對應接縫，不在本期範圍。
+
+### 2p.2 設計
+
+- `:18` 改為 `flowHooks.endGame=function(outcome){window.__hofBefore=…;const result=endGame(outcome.reason);window.__hofReason=outcome.reason;return result;};`：快照、呼叫、記錄、回傳的順序不變；呼叫時取全域 `endGame`，即 `:2704` 包裝後的版本（與現行 `observeEnd` 相同）。
+- 移除 `observeEnd`。`:17` `accLevelStat` 與其他部分不改。
+
+### 2p.3 測試變更（需揭露）
+
+- 只改 `retirement-hof-pilot.mjs:18` 的 hook 字串（+1／−1）。斷言、期望值、manifest、args 不變。期望值變更：無。
+
+### 2p.4 驗證（只改測試，`game.js` 不變；R1：audit 專用入口，未接入 Quick／Full）
+
+- 修改前後各執行一次並比較輸出 JSON（`--output` 寫入 scratchpad）：manifest args（`hof111-pilot-01,04`／`balanced-stay`）＋ `retirement-hof-report.mjs:104` 的投票例（`hof111-pilot-09,11`／`balanced-stay`，涵蓋殿堂投票與 `:2704` 的 `setTimeout`）。比較 `results` 各筆除 `seconds` 以外的欄位（含 `retirementRngState`、`retirementReason`、`voteCards`、各 digest、`calls`），以及 `replay`；`commit`／`seconds`／`environment` 除外。
+- 負控制（scratchpad，不 commit）：拿掉掛載的版本，預期 PASS，但 `retirementRngState`／`retirementReason` 缺漏，與修改前 JSON 比較須出現差異（證明比較能測出未掛載）。
+- Quick：不跑（使用者決定 2026-10-25：本檔不在 Quick 內、`game.js` 不變；偏離 §6.2 原則）。Full：不跑。
+- reviewer：略過（使用者決定 2026-10-25：單檔 <20 行且無邏輯變更）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+
+### 2p.5 分支
+
+- 使用者決定（2026-10-25）：疊在 `refactor/flow-hooks-e2e`（同屬 `flowHooks` 推廣、只改測試，與 §2o 合為一個 PR → `dev`）。本計畫先單獨 commit；實作 commit、push、PR 另批。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
