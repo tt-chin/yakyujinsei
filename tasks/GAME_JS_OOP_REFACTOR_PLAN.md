@@ -1658,7 +1658,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 - 未驗證：→ `main` PR 自動觸發的 Full。
 - 本節以第 11 期分支 `refactor/flow-state-machine` 的文件 commit 提交。
 
-## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，待合併）；第 3 批計畫見 §2m.12
+## 2m. 第 11 期：流程狀態機（細部計畫，2026-10-24；11-A 本機完成，見 §2m.7；11-B 第 1 批計畫見 §2m.8、結果見 §2m.9；第 2 批計畫見 §2m.10、結果見 §2m.11（第 1、2 批合併為 PR #28 → `dev`，待合併）；第 3 批計畫見 §2m.12、結果見 §2m.13（本機驗證完成，push／PR 待批）
 
 候補調查與方向見 §3.11。2026-10-24 使用者決定採路線 A＋B：11-A（路線 B，賽季後處理）先行，驗證機制後進行 11-B（路線 A，年度層）。
 
@@ -2025,6 +2025,27 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 分支：`refactor/flow-outcome-market`，自 `refactor/flow-outcome-demotion`（`4c88f31`）疊出；基準暫用 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。PR #28 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準並重掃，再開新 PR（不併入 PR #28）。
 - commit 順序：本節（含 §3.12）→ 實作（含 fixture）→ 結果文件。commit／push／PR 另批。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、不修改 `main`。
+
+### 2m.13 11-B 第 3 批結果（2026-10-25，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/flow-outcome-market`，實作 commit `af582d6`，未 push）
+
+- 開工：`git fetch` 後 `origin/dev` 仍為 `026c5cd`（PR #28 未合併），比較基準維持 `026c5cd89e3b189cf2a93e9425f344f57fafc208`。以新名稱重掃 `tests/`、`scripts/`、`tools/`、`docs/`：新 kind 名稱零命中；引用 7 個對象函式的檔案與 §2m.12 所列相同，無新增。
+- 實作：`game.js`（CRLF，2715→2724 行，CR 行數＝總行數）10 處替換（`CROSS_OFFER_RESOLVED`（`finish`）、`CONTRACT_RENEWED`、`ARBITRATION_SETTLED`、`FA_SIGNED`、`FA_NO_BID_RETURNED`、`FA_RETIRED`、`RELEASE_SIGNED_PRO`、`RELEASE_JOINED_AMATEUR` 各 1、`RELEASE_RETIRED` 2（無報價者保留 template literal））；`reportFlowOutcome` 於 DEMOTION 各 case 之後追加 9 個 case（`:2324`–`:2332`）。替換後 `overseasOffer`～`outOfOrg` 區段內無直接 `advance()`／`endGame(`。
+- 測試變更（`npb-return-ui.test.mjs`，45→63 案）：
+  - `:9`：`crossOffers` 切片末尾追加 `productionFunction('reportFlowOutcome',game)`；既有斷言不改。
+  - 行為 fixture（新增，`:132`–`:203`）：現行與 `026c5cd` 各以 `'use strict';`＋7 函式（現行另加 `reportFlowOutcome`）建 vm。`outOfOrg` 以 `const professionalEnds` 為終點手動切片（`productionFunction` 的結尾正則找下一個 ≤2 格縮排的 `function`，會越過其後的非函式程式碼）。18 情境：`crossOffers` 6（NPB1 三海外／僅 CPBL／無報價、MLB 與 KBO 復歸 NPB1／NPB2、契約未到期）、`renewAndAdvance` 2（CONTROL／NORMAL）、`arbitrationFlow` 2（`chance` 勝／負）、`showFaMarket` 3（有報價＋宣言殘留、無報價 NPB／KBO）、`outOfOrg` 5（低於現役最低、職業＋業餘、`chance` 假／真、無報價）。DFS 點擊全部選項共 44 葉；比較兩側呼叫紀錄＋各葉 `S` 與 `careerSession.pendingOffseasonSalary`（JSON 字串）、葉數守衛 44、10 處到達（`RELEASE_RETIRED` 以理由區分）、9 種 kind 覆蓋、各葉 kind 一致性（由 `signTo` 種類、`契約更改`／`MLB年俸調停` card、`acceptedOfferId==='RETURN_NO_BID'`、`S.stage` 為 `CORP`／`IND`、`endGame` 理由前綴、`crossOffers` 入口推導）。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax` | PASS（176 檔） |
+| 相關單元 | `npb-return-ui`（63）、`salary-flow`（計數不變）、`career-movement-policy`、`global-contract-market.test`、`fa-market-policy.test`、`arbitration-policy.test`、`kbo-renewal-floor`、`draft-signing-policy`、`choice-action`、`verify-modularization`、`information-architecture`、`award-identity-policy`（135／0）皆 PASS |
+| 負控制＋逐處突變（scratchpad，`GAME` 環境變數指向突變副本） | 直接以「檔首 import＋`let cases=0;`＋新 fixture」變體確認（未在完整檔案上跑）；未突變時變體 PASS。①互換 `FA_SIGNED`／`CONTRACT_RENEWED`：FAIL（由 kind 一致性斷言攔下：actual `FA_SIGNED`／expected `CONTRACT_RENEWED`）、②`pushAma` 漏呼叫：FAIL、③`FA_RETIRED` 分派到 `advance`：FAIL；10 處各自改為 `endGame('MUT')`：10／10 FAIL |
+| `game-view-dom-e2e --baseline=026c5cd…`（直接執行） | PASS：8 生涯 DOM／`S`／RNG 完全一致（末行確認基準） |
+| e2e 6 項（runner `full --only`） | `contract-salary-e2e`、`npb-return-e2e`、`global-contract-market-e2e`、`kbo-renewal-e2e`、`salary-history-e2e`、`stage10-risk-e2e` 6／6 PASS。首輪未傳 `--baseline`，`contract-salary-e2e` 收到 runner 預設 `--compare=04decb0…`；另以 `--baseline=026c5cd…` 單獨重跑（確認收到 `--compare=026c5cd…`）：PASS |
+| Quick | 68／68 PASS |
+| Full（scratchpad worktree，與工作樹逐 byte 相同；依 manifest `seconds` LPT 分 4 組 24／22／24／22，聯集＝`fullIds()` 92 項無重複／遺漏；未傳 `--baseline`） | 92／92 PASS（629／373／624／436 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（工作樹差分），無問題（另確認逐字等價、新增 9 行與 10 處替換行皆 CRLF、`f:finish` 回傳值無使用者） |
+
+- 未完成：push／PR（另批；依 §2m.12，PR #28 併入 `dev` 後改以新 `origin/dev` 完整 SHA 為基準重掃再開新 PR）。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
