@@ -2127,6 +2127,67 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 交付：`refactor/flow-outcome-year` 已 push，第 3、4 批合併為 PR #29 → `dev`（PR → `dev` 不觸發 CI），2026-10-25 已合併為 `b886555b6c2053db605e502f2bb3396c3fc252e4`（merge commit，樹與 `d6c328a` 相同）。不升 VERSION、不改 CHANGELOG、`CURRENT_SPEC` 不改、未修改 `main`。
 
+## 2n. 第 12 期試做：`flowHooks` 接縫（細部計畫，2026-10-25；本機完成，見 §2n.6）
+
+源自 §3.12 方向 ①、§3.13 待決 1–5。目標：以可變命名空間物件取代 e2e 對全域 `advance` 的重新賦值，先以 `npb-return-e2e` 試做。
+
+### 2n.1 現況（2026-10-25 唯讀確認，基準 `origin/dev` `48f37ae`（樹與 `c4b0a97` 相同），`game.js` 2719 行）
+
+- `npb-return-e2e.mjs:18` 的 `fixture` 設 `advance=()=>{finalizePendingOffseasonSalary();window.__adv++;}`，即正式包裝 `game.js:2296–2297`（`advance=function(){finalizePendingOffseasonSalary();advanceWithoutSalaryFinalization();}`）去掉實際換年。同一 fixture 情境中 `release`／`demote`／`pre` 走 `endGame` 或選項畫面，不受該替換影響。
+- `--rng-only` 對舊 baseline `73d5a58` 亦呼叫 `fixture()`（hook 同樣注入舊版 `game.js`）。
+- `reportFlowOutcome`（`:2299`）的分派：進年 5 行 `return advance();`、終局 5 行 `return endGame(outcome.reason);`；無測試以文字斷言這 10 行（呼叫點 `reportFlowOutcome({kind:…})` 的字面斷言另有多處，不動）。
+- 以 `productionFunction('reportFlowOutcome')` 切入 vm 的 context：`npb-return-ui.test` 4 個（`:40` 附近的 `runInNewContext` 物件、`:86`、`:147`、`:217`）、`draft-signing-policy.test:102`；`draft-signing-policy.test:162` 為未知 kind 直接 throw，不讀分派；`kbo-renewal-floor.test:47` 以 `between('  function reportFlowOutcome(','\n  function newState')` 切片。
+- 其他替換／包裝全域 `advance` 者（本期不改）：`championship-intl-e2e`、`contract-salary-e2e`、`global-contract-market-e2e`（其中有不呼叫 finalize 者）、`kbo-renewal-e2e`、`stage10-risk-e2e`（`oldNames`／`activeNames` 包裝觀察）。
+
+### 2n.2 設計（使用者決定 2026-10-25：方案 A，outcome 層接縫）
+
+- 正式 `game.js`：於 `reportFlowOutcome` 之後、`function newState` 之前新增 `const flowHooks={advance:null,endGame:null};`（位於 `kbo-renewal-floor` 切片範圍內，該測試不需修改）。
+- `reportFlowOutcome` 只改 switch 內 10 行分派，呼叫點不動：
+  - 進年：`return flowHooks.advance?flowHooks.advance(outcome):advance();`
+  - 終局：`return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);`
+  - 全域 `advance`／`endGame` 於呼叫當下解析，stage10 與其他 4 個 e2e 的全域替換／包裝照常生效；hook 為 `null` 時行為與現行相同。
+- 命名：物件 `flowHooks`，欄位 `advance`／`endGame`，hook 收 `outcome`。
+- 不採方案 B（`advance` 包裝層的換年步驟）的理由：A 可日後斷言 outcome kind，且能涵蓋不呼叫 finalize 的 e2e；代價為 vm context 修改（§2n.3）。
+
+### 2n.3 測試變更（需揭露）
+
+- `npb-return-e2e.mjs:18`：fixture 改為 `typeof flowHooks!=='undefined'` 時設 `flowHooks.advance=()=>{finalizePendingOffseasonSalary();window.__adv++;}`，否則（舊 baseline）沿用原 `advance=` 替換。斷言不變。
+- vm context 5 處各補 `flowHooks:{advance:null,endGame:null}`：`npb-return-ui.test` 4 處、`draft-signing-policy.test:102`。分派落回 context 內的 `advance`／`endGame` 替身，斷言、期望值、通過條件不變。
+- 期望值變更：無。
+
+### 2n.4 驗證（R3：產品碼變更，行為與 RNG 不變）
+
+- 等價證明（scratchpad 腳本，不 commit）：同一頁同一 fixture，每情境以舊替換（`advance=`）與新接縫（`flowHooks.advance`，`advance` 不動）各執行一次，`get()`（`S`、RNG `calls`、`adv`）deepEqual；新接縫模式斷言 `S.year` 維持 2032（hook 未生效則實際換年為 2033）。
+- 負控制：新接縫 hook 省略 `finalizePendingOffseasonSalary()` 須分歧（`salaryDecisionHistory` 0 對 1）。finalize 對 `pendingOffseasonSalary===null` 提前 return，證明的是順序而非次數。
+- 相關單元：`syntax`、`draft-signing-policy.test`、`npb-return-ui.test`、`kbo-renewal-floor.test`、`salary-flow.test`、`career-movement-policy`、`verify-modularization`、`overlay-hook.test`。
+- e2e：`npb-return-e2e`（含 `--rng-only`）、`game-view-dom-e2e --baseline=<基準完整 SHA>`、`stage10-risk-e2e`（不加 `--compare`）。
+- Quick、Full（本機分組 `splitIds(ids,4,id=>fullSeconds().get(id))`）。
+- reviewer：工作樹差分。
+
+### 2n.5 範圍與交付
+
+- 只改 `npb-return-e2e`；本期證明接縫可行，不使 `advance` 成為不可重新賦值（其他 4 個 e2e 與 stage10 仍替換／包裝）。推廣另議。
+- 分支：`refactor/flow-hooks`，PR #30 合併後自 `origin/dev` `48f37ae` 以 `--no-track` 開設（push 用明確 refspec）。
+- 不升 VERSION、不改 CHANGELOG／CURRENT_SPEC（§9.3：無遊戲行為變更）。commit／push／PR 另批。
+
+### 2n.6 實施結果（2026-10-25，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/flow-hooks`，對象 `7106b4f`＋未 commit 變更，比較基準 `48f37ae14c645d31ea31e19408cbb6c8d1993029`）
+
+- 實作：`game.js`（CRLF，2719→2720 行）`reportFlowOutcome` 分派 8 行改為經 `flowHooks`（§2n.1「進年 5 行、終局 5 行」為誤數，實為各 4 行：進年 `AMATEUR_DRAFTED`／`DEMOTION_REFUSED`／`RELEASE_JOINED_AMATEUR`／`REHAB_YEAR_COMPLETED`，終局 `AMATEUR_RETIRED`／`ACTIVE_MINIMUM_RETIRED`／`RELEASE_RETIRED`／`PRESEASON_RETIRED`）；`const flowHooks={advance:null,endGame:null};` 緊接 `reportFlowOutcome` 結尾（`:2331`）。
+- 測試變更：只有 `npb-return-e2e.mjs:18` fixture（依 §2n.3）。**偏離 §2n.3**：vm context 5 處不修改（使用者決定 2026-10-25）。`productionFunction`（`retirement-hof-test-support.mjs:13`）切至下一個 `\n  function`，切片已含 `const flowHooks` 一行（實測切片末行即該行），未補 context 時相關單元全部 PASS；補上會被切片內的 `const` 遮蔽，屬死碼。期望值變更：無。
+- 既有問題（與本期無關）：`npb-return-e2e` 不加參數的完整模式（`:52`，對 `73d5a58` 的 4 seed 生涯比較）於基準 `48f37ae` 同樣 FAIL（step 0 `championshipResults` 缺漏，`dc5ac87` v1.11.0 起），runner 自 `77507fe` 起只跑 `--quick`。使用者決定另開 `test/npb-return-stale-history`：移除 `/baseline/` 一輪與歷史斷言，保留現行版重播兩次一致檢查。
+
+| 項目 | 結果 |
+|---|---|
+| 等價證明（scratchpad，不 commit；三模式各開新頁、同 seed、同 fixture 序列） | 38 步 old（`advance=` 替換）＝new（`flowHooks.advance`，`advance` 不動）：`S`、RNG `_s`、`calls`、`adv`、`#act` 文字逐步 JSON 相同；19 步經 hook 進年；`S.year` 全程 2032 |
+| 負控制（hook 省略 `finalizePendingOffseasonSalary()`） | 首個分歧於「MLB stay」，`salaryDecisionHistory` 1 對 0 |
+| 相關單元 8 項（直接執行） | 8／8 PASS：`syntax`（176 檔）、`draft-signing-policy.test`、`npb-return-ui.test`（75 案）、`kbo-renewal-floor.test`、`salary-flow.test`、`career-movement-policy`、`verify-modularization`、`overlay-hook.test` |
+| `npb-return-e2e` | `--quick`、`--rng-only` PASS；完整模式 FAIL（既有，見上） |
+| `game-view-dom-e2e --baseline=48f37ae…`（直接執行） | PASS：8 careers，DOM／S／RNG identical |
+| `stage10-risk-e2e`（不加 `--compare`） | 57 PASS／0 FAIL |
+| Quick | 68／68 PASS |
+| Full（scratchpad worktree，與工作樹差分相同；4 組 `splitIds(ids,4,id=>fullSeconds().get(id))`，聯集＝`fullIds()` 92 項無重複／遺漏） | 92／92 PASS（24／22／24／22 項，1064／629／1087／754 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 1 次（工作樹差分），無問題（確認載入時無 TDZ、e2e 注入碼位於模組頂層、舊 baseline `typeof` 走 fallback、無測試切片跨越或斷言舊分派文字） |
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -2334,12 +2395,14 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
   - 執行期證據（scratchpad worktree，不 commit）：將該分支換成記錄 `__deadCalls` 後丟 `DEAD_CALL:movement-amateur` 的探針；負控制（vm 以 `productionFunction('movement')` 取探針版：HS／U／CORP／IND 皆 throw、PRO 不 throw；對未改原始碼則 FAIL）。Full 4 組（`splitIds(ids,4,id=>fullSeconds().get(id))`，24／22／24／22）92／92 PASS，輸出中 `DEAD_CALL` 0 筆：VERIFIED（範圍限 Full 涵蓋的流程）。
   - 實作驗證：相關單元 9 項 PASS（`syntax`、`career-movement-policy`、`championship-intl.test`、`draft-signing-policy.test`、`kbo-renewal-floor.test`、`npb-return-ui.test`、`overlay-hook.test`、`salary-flow.test`、`verify-modularization`）；`game-view-dom-e2e --baseline=b886555…` 8 段生涯 DOM／`S`／RNG 一致；`stage10-risk-e2e`（不加 `--compare`）PASS；Quick 68／68 PASS；Full 4 組 92／92 PASS（分組執行，非單一 Full 報告；`ci-full-batches` 嚴格彙整未執行）。期望值變更：無。目視：不適用（無 DOM／UI 變更且分支不可達，DOM 由 `game-view-dom-e2e` 涵蓋）。
   - reviewer：無 finding。VERSION／CHANGELOG／CURRENT_SPEC 不更新（§9.3）。commit／push／PR 另批。
+  - 交付：PR #30 → `dev`，2026-10-25 已合併為 `48f37ae14c645d31ea31e19408cbb6c8d1993029`（merge commit，樹與 `c4b0a97` 相同）。未修改 `main`。
 - 試做細部計畫的待決（**未決**，2026-10-25 列出）：
   1. 接縫形狀：可變命名空間物件（例如 `flowHooks`，提供 outcome 觀察／攔截點），或維持替換 `reportFlowOutcome`（仍屬全域替換，未達目標）。
   2. 正式 `game.js` 是否加入該 hook 物件：屬產品碼變更，行為與 RNG 不變仍列 R3（固定 seed 狀態／RNG 比較）。
   3. `npb-return-e2e:18` 的替換 `advance` 先呼叫 `finalizePendingOffseasonSalary()` 再計數；新接縫攔截時須保留此副作用與順序。
   4. 等價證明：同一次執行中比較舊替換與新接縫的 `S`／RNG／呼叫紀錄，並附負控制。
   5. 範圍：只做 `npb-return-e2e`；其餘 4 個替換 `advance` 的 e2e 依試做結果另議。
+- 使用者決定（2026-10-25）：待決 1–5 定案（方案 A，`flowHooks`），細部計畫見 §2n。
 
 ## 4. 使用者決定（2026-10-18）
 
