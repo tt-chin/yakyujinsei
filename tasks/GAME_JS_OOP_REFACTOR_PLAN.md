@@ -2491,7 +2491,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - push `refactor/international-tournament`，PR #36 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
-## 2t. 第 16 期：故障・TJ 判定移至 `docs/src/engine/player-injury.js`（細部計畫，2026-10-25；計畫已批准，實作待批准）
+## 2t. 第 16 期：故障・TJ 判定移至 `docs/src/engine/player-injury.js`（細部計畫，2026-10-25；計畫已批准，實作已批准）
 
 路線見 §3.15（葉領域 7 期之第 3 期）。§3.15 所列範圍 `32261d6:225–288`、`:928–960` 經 §2r／§2s 後為 `:172–235`、`:875–907`；另含範圍外的 `injuryProb`（`:271–282`）。
 
@@ -2540,6 +2540,28 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 ### 2t.5 分支與交付
 
 - `refactor/player-injury`（自 `refactor/international-tournament` `9eff64c`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。PR #36 併入 `dev` 前，本期 PR → `dev` 會連帶 #36 的 commit：待 #36 merge 後開 PR，或以 `refactor/international-tournament` 為 base 後再改 base（另行決定）。
+
+### 2t.6 實施結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/player-injury`，實作 commit `5595b17`，比較基準 `9eff64c`）
+
+- 實作：`docs/src/engine/player-injury.js` 新增 124 行（LF，8,629 bytes）；`game.js` +5／−101（CRLF 維持），2322 → 2226 行、230,121 → 223,230 bytes。測試依 §2t.3 變更 T1（+4／−1）、T2（+4／−2）、T3（+10／−4）。
+- 與 §2t.1／§2t.2 的差異：
+  - `injuryProb` 實為 `:271–281`；`/* 成績シミュレーション。 */` 位於 `:282`（`simSeason` 之前），不屬本區段，未移動（§2t.2 記為 `:874`，有誤）。
+  - 7 個模組內函式置於 `injuryRules(deps)` factory 內（依賴解構一次，本體 +2 空白縮排），`PlayerInjury` 以私有欄位 `#rules` 保存其回傳的 `tjGamble`／`afterGamble`／`rollInjury`。模組內互相呼叫維持原文（不改為帶 `deps` 的呼叫）。
+  - `const S=getState()` 共 9 處：各函式開頭 7 處（模組 `:16` `tjGamble`、`:36` `tjTwoStrike`、`:42` `tjBigInjury`、`:66` `afterGamble`、`:77` `injuryProb`、`:89` `rollInjury`、`:111` `injStatLoss`）與 `tjGamble` 兩個選項 `f:()=>{const S=getState();`（`:22`、`:29`，同一行內插入）。
+  - 模組本體由 scratchpad 腳本自 `game.js` 原文產生（逐字複製後套用上列差異）；搬移區段無跨行 template literal，縮排不改變字串內容。
+- 搬移本體與基準 `9eff64c` `game.js:179–235`、`:271–281`、`:875–907` 比對：差異僅為 +2 縮排與上列 9 處 `getState()`（reviewer 以重建後逐 byte 比較確認）。
+
+| 項目 | 結果 |
+|---|---|
+| `node --check`（`game.js`、`player-injury.js`）、`check-syntax`、`verify-modularization` | PASS |
+| `full-power-pitching`（64 cases，F08 經切片內建構行）、`trait-policy`、`salary-flow`、`ability-allocation`、`event-integration`、`championship-intl`、`season-stats`、`international-personal-stats`、`global-contract-market`、`npb-return-ui`、`award-identity-policy` | PASS |
+| 等價比較（scratchpad 腳本；`9eff64c` 的 `tjCap`→`pitcherRole`、`injuryProb`、`rollInjury`→`proSeason` 區段於 vm vs 現行 `game.js` 的 `tjCap`→`pitcherRole`（含包裝與建構行）＋`rollInjury` 包裝＋新模組，相同 stub、LCG 確定性 RNG、40 seeds；TJ：P／IF × `tj` 10／50／100 × `rubber` × `tjCount` 0／1／2 × `tjSuccess` 0／1 × 缺 `brk` × 11 種操作序列（不點、手術、注射、連點、手術後注射、點選前 `S` 重新賦值、第 1／第 2 張 `card` 丟例外）；`afterGamble` inject／surgery／fail；故障：P／C／IF／OF × 年齡 22／33／36 × `iron`／`glass`／兩者／`academy` × `injNext` × `tmpInj` × `bigInj` 0／1 × 缺 1 個能力 key × 4 種序列（1 次、連續 2 次、重新賦值、`card` 丟例外）；比較 `S`、`card`／`choose`／`board`／`addAb`／`removeTrait`／`pick` 紀錄、RNG 值序列、`cont` 次數、例外） | 234,240 情境、474,240 次操作，0 差異；13 種卡片標題全部出現（含 `最悪の結末`），`!(k in S.ab)` 第 2 次 `pick` 736 情境 |
+| 負控制（8 seeds，46,848 情境） | 選項 closure 改讀快照 `S` → 432 差異，僅 `reassign+o0`／`reassign+o1`；刪除 surgery 的 `S.tjSuccess=0` → 1,128；`tjBigInjury` 的 `vel` clamp 上限 80→30 → 616 |
+| `game-view-dom-e2e --baseline=9eff64c9e48ad154ad4a2662fbf6438783b82e1a`（直接執行） | PASS，8 段生涯 DOM／`S`／RNG 一致 |
+| `full-power-pitching-e2e --part=fixtures`、`trait-system-e2e --ui-only`、`championship-intl-e2e --ui-only`（runner `full --only`） | 3／3 PASS（114.5／6.5／6.7 秒） |
+| Quick | 68 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full（scratchpad worktree，`docs`／`tests`／`scripts`／`tools` 與工作樹逐 byte 相同（含本計畫 commit）；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，聯集＝`fullIds()` 93 項無重複／遺漏；未傳 `--baseline`） | 93／93 PASS（691／385／613／449 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 無 findings |
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
