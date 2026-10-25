@@ -2188,6 +2188,47 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | Full（scratchpad worktree，與工作樹差分相同；4 組 `splitIds(ids,4,id=>fullSeconds().get(id))`，聯集＝`fullIds()` 92 項無重複／遺漏） | 92／92 PASS（24／22／24／22 項，1064／629／1087／754 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
 | reviewer | 1 次（工作樹差分），無問題（確認載入時無 TDZ、e2e 注入碼位於模組頂層、舊 baseline `typeof` 走 fallback、無測試切片跨越或斷言舊分派文字） |
 
+## 2o. 第 12 期推廣：其餘 4 個 e2e 改用 `flowHooks`（細部計畫，2026-10-25；計畫已批准，實作待批准）
+
+源自 §2n.5「推廣另議」。目標：`championship-intl-e2e`、`contract-salary-e2e`、`global-contract-market-e2e`、`kbo-renewal-e2e` 不再對新版 `game.js` 重新賦值全域 `advance`。
+
+### 2o.1 現況（2026-10-25 scout 唯讀調查＋grep 核對，基準 `origin/dev` `6ab2676`，`docs/src` 與 `8049c2a` 相同，`game.js` 2720 行）
+
+- `game.js` 的 `advance(` 呼叫只在 `reportFlowOutcome` 分派內（`:2306`／`:2312`／`:2321`／`:2325`），其他 `docs/src` 模組沒有呼叫。`injectOverlayHook` 對新版原始碼把 hook 接在檔尾，位置在 `:2296–2297` 的 finalize 包裝之後。
+
+| e2e | 現行替換 | 舊 SHA 注入 | 計數斷言 | 測試自己直接呼叫 `advance` |
+|---|---|---|---|---|
+| `championship-intl:18–19` | `advance=()=>window.__adv++`；`restore`／`fixture` 開頭換回 `realAdvance` | 否（`004cd26` 只注入 getter） | `:73`／`:80` | 無（`intl:` 直接傳 callback） |
+| `contract-salary:20–23` | `advance=()=>{window.__adv++;auditAdvance();}`（會呼叫原本的） | 是（`37121fb`） | `:62`／`:72`／`:78`／`:84`／`:87–89` | `:28` `next:()=>advance()` |
+| `global-contract-market:14` | `advance=()=>{}` | 是（`053e7b4`） | 無 | 無 |
+| `kbo-renewal:22` | `advance=()=>{finalizePendingOffseasonSalary();window.__fixtureAdv++;}` | 是（`f3efb0a`） | `:66` | `:22` `choose` 回呼內的 `advance()` |
+
+- 不在本期範圍（`advance` 因此仍須可重新賦值）：`stage10-risk-e2e:9–10` 的 `s10wrap` 包裝（只觀察，仍呼叫原本的）、`game.js:2297` 的正式包裝、`support/stage6-browser.mjs:31` 的直接呼叫（只呼叫，不替換）。
+
+### 2o.2 設計（使用者決定 2026-10-25）
+
+- 各檔在 hook 字串內定義一個具名函式，現行替換的本體原樣搬進去。有 `flowHooks`（`typeof flowHooks!=='undefined'`）時設為 `flowHooks.advance`，否則（舊 SHA）沿用 `advance=` 替換，比照 §2n.3。
+- `championship-intl`：舊 SHA 不注入替換，所以不需要退路。`fixture` 開頭與 `restore` 改為 `flowHooks.advance=null`，移除 `realAdvance`。
+- `contract-salary`：hook 函式為「計數→`auditAdvance()`」，`next` 改呼叫此函式。
+- `kbo-renewal`：`choose` 回呼內的 `advance()` 改呼叫此函式，否則新版會呼叫到真的 `advance` 而換年。
+- `movement`、`R`、`startYear` 等其他替換不改。
+
+### 2o.3 測試變更（需揭露）
+
+- 只改上述 4 個檔案的 hook 字串。斷言、期望值、baseline SHA、manifest 不變。期望值變更：無。
+
+### 2o.4 驗證（只改測試，`game.js` 不變；§6.2 相關入口＋Quick）
+
+- 各檔修改後執行並 PASS：`kbo-renewal-e2e`（`--quick` 與不加參數）、`championship-intl-e2e --ui-only`、`contract-salary-e2e`、`global-contract-market-e2e --quick`（依 manifest 的 args；Full 專屬的 3 項直接執行）。
+- 負控制（scratchpad，不 commit）：拿掉各檔掛載 `flowHooks.advance` 的那一行後，有計數斷言的 3 檔必須 FAIL。`global-contract-market` 若拿掉後仍 PASS，改用 §2n.4 的方式：同一 fixture 序列分別用舊替換和新接縫執行，逐步比較 `S`／RNG 呼叫數是否相同，並斷言新接縫沒有換年。
+- Quick。4 組 Full：**待決**（建議不跑；理由是 `game.js` 不變，而 Full 專屬的 3 項已直接執行）。
+- reviewer：工作樹差分。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+
+### 2o.5 分支
+
+- `refactor/flow-hooks-e2e`，以 `git switch --no-track -c refactor/flow-hooks-e2e origin/dev` 開設。本計畫先單獨 commit；commit、push、PR 另批。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
