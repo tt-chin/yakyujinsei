@@ -2280,6 +2280,17 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 使用者決定（2026-10-25）：疊在 `refactor/flow-hooks-e2e`（同屬 `flowHooks` 推廣、只改測試，與 §2o 合為一個 PR → `dev`）。本計畫先單獨 commit；實作 commit、push、PR 另批。
 
+### 2p.6 實施結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/flow-hooks-e2e`，對象 `99553e4`＋未 commit 變更，`game.js` 不變）
+
+- 實作：`retirement-hof-pilot.mjs:18` +1／−1（依 §2p.2）。LF，差分無 CR；`node --check` PASS。
+
+| 項目 | 結果 |
+|---|---|
+| 修改前（`99553e4`）：`hof111-pilot-01,04`、`hof111-pilot-09,11`（`balanced-stay`） | exit 0，4／4 完成（`09` 殿堂投票卡 1 張） |
+| 修改後：同上 | exit 0；輸出 JSON 與修改前相同（除 `seconds`／`commit`／`environment`；`results` 各欄位與 `replay` 2＋2 筆皆相同） |
+| 負控制（scratchpad worktree，拿掉掛載） | exit 0（預期仍 PASS）；與修改前比較 4 筆皆差異於 `retirementRngState`／`retirementReason`（`undefined`），證明比較能測出未掛載 |
+| Quick／Full／reviewer | NOT_RUN（使用者決定，§2p.4） |
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook

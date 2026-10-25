@@ -15,7 +15,7 @@ const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright')
 const hook=`
 window.__hofSeasons=[];window.__hofActions=[];
 const observeLevelStat=accLevelStat;accLevelStat=function(lv,st){window.__hofSeasons.push({year:S.year,age:S.age,lv,role:S.role,pos:S.pos,seasonFactor:S.seasonFactor,rehab:S.rehab,st:JSON.parse(JSON.stringify(st))});return observeLevelStat(lv,st);};
-const observeEnd=endGame;endGame=function(reason){window.__hofBefore=JSON.parse(JSON.stringify(S));const result=observeEnd(reason);window.__hofReason=reason;return result;};
+flowHooks.endGame=function(outcome){window.__hofBefore=JSON.parse(JSON.stringify(S));const result=endGame(outcome.reason);window.__hofReason=outcome.reason;return result;};
 window.__hofAudit={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seasons:window.__hofSeasons,before:window.__hofBefore,reason:window.__hofReason,actions:window.__hofActions,voteCards:[...document.querySelectorAll('#log .card')].filter(c=>c.querySelector('h4')?.textContent==='殿堂入り投票').map(c=>c.textContent),tiers:Object.fromEntries(['CPBL','KBO','NPB','MLB','IND','CORP'].filter(b=>S.stats[b]).map(b=>[b,tierOf(b)])),thresholds:TIER_TH}),action:strategy=>{
  if(S.done)return 'done';
  const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped'));
