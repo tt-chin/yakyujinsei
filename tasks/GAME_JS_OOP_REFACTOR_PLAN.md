@@ -2417,7 +2417,7 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - push `refactor/defense-position-review`，PR #35 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
-## 2s. 第 15 期：國際大會參賽流程移至 `docs/src/engine/international-tournament.js`（細部計畫，2026-10-25；計畫已批准，實作待批准）
+## 2s. 第 15 期：國際大會參賽流程移至 `docs/src/engine/international-tournament.js`（細部計畫，2026-10-25；計畫已批准，實作已批准）
 
 路線見 §3.15（葉領域 7 期之第 2 期）。§3.15 所列範圍 `32261d6:2153–2203` 經 §2r 後為 `:2099–2149`；本期只移其中的流程本體，一行委派留在原處。
 
@@ -2464,6 +2464,32 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 ### 2s.5 分支與交付
 
 - `refactor/international-tournament`（自 `origin/dev` `642d4bb`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR → `dev` 另批。
+
+### 2s.6 實施結果（2026-10-25，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/international-tournament`，實作 commit `d8e0f06`，比較基準 `642d4bb`）
+
+- 實作：`docs/src/engine/international-tournament.js` 新增 62 行（LF，4,342 bytes）；`game.js` +3／−44（CRLF 維持），2363 → 2322 行、232,100 → 230,121 bytes。測試依 §2s.3 變更 T1（+2／−1）、T2（+7／−1）、T3（+2／−1）。
+- 與 §2s.2 的差異：
+  - 模組本體整體去除 2 空白縮排（原位於 overlay 內）。逐字比對以去縮排後為準。
+  - `processInternationalPhase` 內加局部別名 `const completeIntl=(e,status,next)=>completeInternationalEvent(deps,e,status,next)`，使原 3 處 `completeIntl(e,…)` 呼叫保持原文。
+  - `const S=getState()` 共 5 處（模組 `:14` complete 開頭、`:22` 階段入口、`:28` `next`、`:41` 出場選項、`:58` 辭退選項）；§2s.2 記為「4 個執行單元及 complete」。
+- 搬移本體與基準 `game.js:2104–2147` 去縮排後比對：差異僅為上列 3 項、函式簽名（`deps` 參數）與依賴解構行（reviewer 機械比對確認）。
+
+| 項目 | 結果 |
+|---|---|
+| `node --check`、`check-syntax`、`verify-modularization` | PASS |
+| `championship-intl`、`salary-flow`、`international-personal-stats`、`season-stats`、`event-integration`、`trait-policy`、`full-power-pitching`、`global-contract-market` | PASS |
+| T3 抽查 | `e602174` 端新終點切片＝舊終點切片去掉結尾換行（637 → 636 字元，完整 `addIntlStats`） |
+| 等價比較（scratchpad 腳本；`git show 642d4bb` 的 `intlEvents`→`maybeIntl` 區段於 vm vs 現行區段＋新模組，相同 stub；投手 `SP`／`MR`／野手 × `intlace` × 代表次數／決賽次數 × 名次 0–3 × PRE／POST／同年 3 大會 × 不入選（`NPB2`／低總合）／負傷（`rehab`／`skipMid`／`seasonFactor`）／非 PRO／已完成 key × 18 種操作序列：出場、辭退、同一按鈕連點、出場後辭退、點選前 `S` 重新賦值、第 1／第 2 張 `card` 丟例外後重試等；比較 `S`、`choose`／`card` 紀錄、`pick` 與 RNG 次數、`done` 次數、例外） | 8,532 情境、19,908 次操作（3,402 情境含 `pick`），0 差異 |
+| 負控制（scratchpad 變體） | `next`／兩個選項的 `const S=getState()` 移除（改讀階段入口快照）→ 1,296 差異，僅 `S` 重新賦值的 4 種序列；`S.intlLastEventKey=null` → 3,660；刪除 `continued=true` → 870 |
+| `game-view-dom-e2e --baseline=642d4bbef3dd6b745addf067759320e78abbe6eb`（直接執行） | PASS，8 段生涯 DOM／`S`／RNG 一致 |
+| `championship-intl-e2e --ui-only`、`international-personal-stats-e2e`（runner `full --only`） | 2／2 PASS（8.9／380.5 秒） |
+| Quick | 68 PASS／0 FAIL／0 SKIP／0 BLOCKED |
+| Full（scratchpad worktree，與工作樹逐 byte 相同（含本計畫 commit）；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，聯集＝`fullIds()` 93 項無重複／遺漏；未傳 `--baseline`） | 93／93 PASS（885／587／779／642 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 無 findings |
+
+### 2s.7 交付（2026-10-25）
+
+- push `refactor/international-tournament`，PR #36 → `dev`。PR → `dev` 不觸發 CI。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
