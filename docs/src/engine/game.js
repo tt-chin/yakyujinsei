@@ -512,7 +512,7 @@ function nextStep(){ if(S.done){ careerSession.stepQ=[]; return; } /* 已引退�
 /* シーズン開幕前。 */
 function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S._majorInjuryThisSeason=false; S.prevD=S.lastD||0; S.lastD=0; /* 先保持上季 d 供投手定位判定。 */
-  if(S.age>=48){ buyoutRemaining(1); endGame('体はもう限界。'+S.year+' 年の春季キャンプ後に引退を発表した。'); return; }
+  if(S.age>=48){ buyoutRemaining(1); reportFlowOutcome({kind:'PRESEASON_AGE_LIMIT_RETIRED',reason:'体はもう限界。'+S.year+' 年の春季キャンプ後に引退を発表した。'}); return; }
   const declAge=S.age-(S.traits.disc?2:0); /* 自律狂：衰えの開始を2年遅らせる。 */
   if(declAge>=32){ const dec=declineForSeason(S,declAge>=35?5+(declAge-35):2);
     POS_AB[S.pos].forEach(k=>S.ab[k]=clamp(S.ab[k]-dec,1,80));
@@ -580,10 +580,10 @@ function phasePre(){
     if(['MLB','MiLB','KBO','CPBL'].includes(S.org)&&ovr()>=LV.NPB2.min){
       oldOpts.push({t:'契約を断り、日本球界へ戻る',s:'全盛期は過ぎた。それでも最後のプレーを故郷のファンに見せたい',f:()=>{
         const returnLv=ovr()>=LV.NPB1.min?'NPB1':'NPB2';
-        buyoutRemaining();signTo('NPB',returnLv);card('good','日本球界復帰',`海外で積み上げた経験を携え、<b class="hl">${S.teamName()}</b>で日本球界へ復帰した。`);advance();
+        buyoutRemaining();signTo('NPB',returnLv);card('good','日本球界復帰',`海外で積み上げた経験を携え、<b class="hl">${S.teamName()}</b>で日本球界へ復帰した。`);reportFlowOutcome({kind:'PRESEASON_RETURNED_NPB'});
       }});
     }
-    oldOpts.push({t:'引退記者会見を開く',warn:true,s:'現役を引退する',f:()=>{buyoutRemaining();daibaFarewell(()=>endGame('功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'));}});
+    oldOpts.push({t:'引退記者会見を開く',warn:true,s:'現役を引退する',f:()=>{buyoutRemaining();daibaFarewell(()=>reportFlowOutcome({kind:'PRESEASON_RETIRED',reason:'功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'}));}});
     choose('今年も春季キャンプを迎えたが、体は明らかに衰えている',oldOpts);
     return;
   }
@@ -1282,7 +1282,7 @@ function movement(){
     retireBelowActiveMinimum();
     return;
   }
-  if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);advance();return;} /* リハビリ全休年も満了契約の来季更新を飛ばさない。 */
+  if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);reportFlowOutcome({kind:'REHAB_YEAR_COMPLETED'});return;} /* リハビリ全休年も満了契約の来季更新を飛ばさない。 */
   if(S.org==='NPB')S.npbYears++;
   if(LV[S.lv].top){ /* 轉換リーグ：直接解除球団 5 年控制期制限、往後のみ要契約満了就是自由球員。 */
     if(S.svcOrg && S.svcOrg!==S.org){ S.faElig=true; }
@@ -2330,6 +2330,10 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
       case 'RELEASE_JOINED_AMATEUR':return advance();
       case 'FA_RETIRED':
       case 'RELEASE_RETIRED':return endGame(outcome.reason);
+      case 'PRESEASON_RETURNED_NPB':
+      case 'REHAB_YEAR_COMPLETED':return advance();
+      case 'PRESEASON_AGE_LIMIT_RETIRED':
+      case 'PRESEASON_RETIRED':return endGame(outcome.reason);
     }
     throw new Error('UNKNOWN_FLOW_OUTCOME:'+outcome.kind);
   }

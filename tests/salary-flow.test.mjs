@@ -27,7 +27,7 @@ assert.doesNotMatch(game, /const salaryCandidate=/);
 assert.match(game, /salaryCandidate\(\{sourceLevel:fromLv,targetLevel:toLv/);
 assert.match(game, /applyDemotionSalary\(fromLv,targetLevel\)/);
 assert.match(game, /applyDemotionSalary=function\(fromLv,toLv\)\{const renewalRequired=contractNeedsRenewal\(S\.ct\);applyLevelSalary\(fromLv,toLv,false\);if\(renewalRequired\)markClubInitiatedRenewal\(1\);\}/);
-assert.match(game, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\)\)markClubInitiatedRenewal\(1\);advance\(\);return;\}/);
+assert.match(game, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\)\)markClubInitiatedRenewal\(1\);reportFlowOutcome\(\{kind:'REHAB_YEAR_COMPLETED'\}\);return;\}/);
 assert.match(game, /const sourceLevel=S\.lv,sourceStage=S\.stage,sourceOrg=S\.org/);
 assert.match(game, /sourceLevel:LV\[sourceLevel\]\?sourceLevel:lv/);
 assert.match(game, /rating:sourceStage==='PRO'\?currentMarketRating\(\):0/);
