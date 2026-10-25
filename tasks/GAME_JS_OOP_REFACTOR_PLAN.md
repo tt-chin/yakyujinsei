@@ -2291,6 +2291,10 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 | 負控制（scratchpad worktree，拿掉掛載） | exit 0（預期仍 PASS）；與修改前比較 4 筆皆差異於 `retirementRngState`／`retirementReason`（`undefined`），證明比較能測出未掛載 |
 | Quick／Full／reviewer | NOT_RUN（使用者決定，§2p.4） |
 
+### 2p.7 交付（2026-10-25）
+
+- 疊在 `refactor/flow-hooks-e2e`，併入既有 PR #33 → `dev`（§2o 同一 PR；標題與內文已更新為 §2o／§2p）。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -2506,6 +2510,21 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
   4. 等價證明：同一次執行中比較舊替換與新接縫的 `S`／RNG／呼叫紀錄，並附負控制。
   5. 範圍：只做 `npb-return-e2e`；其餘 4 個替換 `advance` 的 e2e 依試做結果另議。
 - 使用者決定（2026-10-25）：待決 1–5 定案（方案 A，`flowHooks`），細部計畫見 §2n。
+
+### 3.14 第 12 期後續候選（2026-10-25，分支 `refactor/flow-hooks-e2e` `9f4a6de`，`game.js` 與 `origin/dev` `6ab2676` 相同；grep 抽查；**未決**，A 已做為 §2p）
+
+- 前提：`stage10-risk-e2e:9–10` 的 `s10wrap` 以舊 SHA `--compare` 包裝 14 名稱（含 `advance`、`endGame`、`movement`、`startYear`），且正式碼 `game.js:2704` 自己重新賦值 `endGame`、`:2297` 包裝 `advance`。故個別 e2e 改用接縫只減少替換，「名稱可改為不可重新賦值」須先處理 `stage10`。
+
+| 候選 | 內容 | `game.js` | 成本 |
+|---|---|---|---|
+| A | `endGame` → `flowHooks.endGame`（接縫已存在） | 不變 | 低；`retirement-hof-pilot` 已做（§2p），`stage10-risk-e2e:23` 留給 E |
+| B | `movement`（`contract-salary-e2e`、`kbo-renewal-e2e`、`salary-history-e2e`、`support/stage6-browser.mjs`）；無接縫，`game.js` 檔尾另有覆寫 | 須改（R3） | 中高 |
+| C | `startYear`（`smallschool-c-e2e:16`）；無接縫 | 須改（R3） | 中 |
+| D | `R`（RNG 文字耦合） | — | 不建議 |
+| E | `stage10` 的 `s10wrap`：§3.12 方向 ④（舊 SHA 逐字比較改為固定 seed 行為快照） | 不變 | 高；先 scout 唯讀調查 `s10wrap` 用途與保護對象 |
+
+- 另：`retirement-hof-pilot:17` 替換 `accLevelStat`（只觀察，無接縫；§3.13 表格漏列）。
+- 建議順序（未決）：E 的 scout 調查 → 依結果決定 E 或 B／C。
 
 ## 4. 使用者決定（2026-10-18）
 
