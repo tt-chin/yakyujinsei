@@ -2667,6 +2667,10 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 範圍外記錄：`statBonus`（`c4b9c45` `game.js:609`）、`checkTraitsMid`（`:635`）無呼叫端，未處理；是否記入 BACKLOG 待使用者決定。
 
+### 2u.7 交付（2026-10-26）
+
+- `refactor/player-ability` push（`a613b25`），PR #37 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
