@@ -2229,6 +2229,23 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - `refactor/flow-hooks-e2e`，以 `git switch --no-track -c refactor/flow-hooks-e2e origin/dev` 開設。本計畫先單獨 commit；commit、push、PR 另批。
 
+### 2o.6 實施結果（2026-10-25，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/flow-hooks-e2e`，對象 `7a80d92`＋未 commit 變更，`game.js` 不變）
+
+- 實作：4 檔 hook 字串 +7／−7（依 §2o.2）。`kbo-renewal`、`contract-salary` 為 CRLF，未改動其他行的換行。
+- **偏離 §2o.4（使用者決定 2026-10-25）**：負控制（只拿掉新版原始碼上的掛載，保留舊 SHA 退路）只有 `contract-salary` FAIL（`adv` 斷言等）。
+  - `championship-intl` 仍 PASS：新接縫有被呼叫，但 `:73`／`:80` 的 `adv` 計數來自 `intl:` 直接傳入的 callback，真的換年時現有斷言測不出來。屬既有弱點（舊替換同樣如此），本期只記錄，不修。
+  - `kbo-renewal` 仍 PASS：新版與舊 SHA 都沒有遊戲程式呼叫到掛載，唯一的呼叫是 `:22` 回呼內直接呼叫 `fixtureAdvance()`。使用者決定保留掛載（防日後改走 `reportFlowOutcome` 時真的換年）。
+  - `global-contract-market` 仍 PASS（§2o.4 已預期），依 §2o.4 補做逐步比較（下表）。
+
+| 項目 | 結果 |
+|---|---|
+| 4 個 e2e（`test.mjs full --only=…`，manifest args；`contract-salary` 由 runner 帶 `--compare=04decb04f79c3ce39b8316f924e96695b793ce94`） | 4／4 PASS |
+| 修改前後 hook 本體呼叫次數（scratchpad worktree 探針，以 `typeof flowHooks` 區分新版／舊 SHA 原始碼） | 4 檔相同：`championship-intl` 12＋0、`contract-salary` 487＋58、`global-contract-market` 22＋4、`kbo-renewal` 3＋0；呼叫序列（含 `contract-salary` 381 案的 PASS 行穿插）逐行相同 |
+| `global-contract-market` 逐步比較（scratchpad，不 commit；同一 fixture 序列 10 情境，舊替換／新接縫／不掛載三模式各開新頁；點擊前後比較 `S`、RNG `_s`、`calls`、hook 次數、`#act` 文字） | 舊＝新 10／10 步相同，其中 8 步經 hook，新接縫全程 `S.year` 2032；負控制（不掛載）於第 1 步 cross-CPBL 分歧，`S.year` 2032→2033 |
+| Quick | 68／68 PASS（258 秒） |
+| 4 組 Full | NOT_RUN（使用者同意：`game.js` 不變，Full 專屬 3 項已直接執行） |
+| reviewer | 1 次（工作樹差分），無問題（確認全部 `advance(` 呼叫在 `reportFlowOutcome` 內、新名稱無衝突、舊 SHA `typeof` 走退路、無 TDZ、CRLF 無整檔變動） |
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
