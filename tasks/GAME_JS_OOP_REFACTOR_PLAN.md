@@ -2567,6 +2567,110 @@ PR #17（7-B）已合併至 `dev` `52e4cdb`，`dev` push 的 Quick CI（Tests #6
 
 - 使用者決定（2026-10-25）：第 16 期不另開 PR，併入 PR #36（§3.15「一期一個 PR」的例外；第 15、16 期同一 PR）。`refactor/player-injury` 以 fast-forward push 至 `refactor/international-tournament`（自 `9eff64c`），PR #36 標題與說明更新為涵蓋 §2s＋§2t。PR → `dev` 不觸發 CI。未修改 `main`。
 
+## 2u. 第 17 期：能力成長・配分移至 `docs/src/engine/player-ability.js`（細部計畫，2026-10-26；計畫已批准）
+
+路線見 §3.15（葉領域 7 期之第 4 期）。§3.15 所列 `addAb`（`32261d6:309–323`）、`allocUI`（`:467–509`）、`allocDone`（`:823–848`）於基準為 `:203–218`、`:350–392`、`:706–731`；另含 `addAbStat`（`:661–680`）。§3.15 的「`toolGap`→`tjAccrue` 切片範圍」障礙已不成立（該切片現為 `:172–173`，不含本期區段）。
+
+### 2u.1 現況（2026-10-26 grep 抽查＋scout 唯讀調查（抽查更正見末項），基準 `origin/dev` `727bdd1`（PR #36 merge；`docs/src`／`tests`／`scripts` 與 `daf7e79` 相同），`docs/src/engine/game.js` 2226 行）
+
+- 區段：`addAb`（`:203–218`）、`allocUI`（`:350–392`）、`addAbStat`（`:661–680`）、`allocDone`（`:706–731`）。不掛 `window`、不在 `LEGACY`、`docs/src` 無 overlay 再賦值。
+- RNG：`R` 1（`allocDone:725`「大器晩成」候選 Fisher-Yates）；`ri`／`chance`／`pick` 0。
+- 外部呼叫端（按名稱）：`addAb` `:182`（`PlayerInjury` 注入）、`:372`（`allocUI` 內）、`:423`（`phasePre` 小細工無用自動ダイス）、`:528`／`:601`／`:614`／`:632`／`:645`（戀愛・事件）、`:662`（`addAbStat` 負值）；`addAbStat` 只由 `loveGainTxt` `:654`；`allocUI` `:447`（`phasePre`）、`:2160`（季末配分）；`allocDone` 只由 `allocUI` `:386`。
+- 自由名稱：
+  - `addAb`：`S`、`clamp`（`:68`）。`addAbStat`：`S`、`addAb`。
+  - `allocDone`：`S`、`R`、`clamp`、`ABL`（`:73`）、`POS_AB`（`:74`）、`ovr`、`traitCard`、`card`、`board`。
+  - `allocUI`：`S`、`$`、`careerSession`（`:160`）、`choiceViews`（`:322`）、`POS_AB`、`ABL`、`abCost`、`addAb`、`allocDone`、`archiveTraitResults`、`board`、`actClear`、`actToggleSync`、`runWithResultView`、`document`。
+- `allocUI` 的延遲 closure（`allocate`、`u.onclick`、`reset.onclick`、`c.onclick`、及其呼叫的 `render`）讀寫 `S` 前皆先通過 `live(el)`（`S===state&&S.year===year&&…`）；初次 `render()` 為同步。
+- 重新賦值接縫（e2e）：`support/stage6-browser:20` 以 overlay 將 `allocDone` 包裝（記錄 `confirm` 步驟）；`trait-system-e2e:16` 將 `allocUI` 換成 `()=>{}` 後呼叫 `phasePre`；`support/stage6-browser:24–25` 由頁面呼叫 `allocUI`、`abCost`。
+- 測試耦合（原文斷言）：
+  - `ability-allocation.test:9` 與 `fixed-seed-v160.test:22`：`'function allocUI'`→`'function nextStep'` 切片；前者 `:10–22` 13 項 regex，後者 `:23` 無 RNG 斷言。`ability-allocation.test:23–24`：成本公式與 `if(cur>=pk)cost*=isP?4:3` 對 `game.js`。
+  - `choice-action.test:112`：`function allocUI\(mode,label,done\)\{\s*actClear\(\); \+\+careerSession\.choiceGeneration;` 對 `game.js`。
+  - `ui-foundation.test:38`：`c.onclick=…allocDone(touchedKeys,dice?true:false); done(); });}` 對 `game.js`；`:39`：`const live=element=>!completed&&S===state&&S\.year===year&&…` 對 `game.js`。
+  - `domestic-tournament-policy:81–84`：`allocDone` 的 `if(isDice&&S.stage!=='HS'&&keys.length)`、`touched[mk]/tot>=0.75`、`S.samePick>=3&&!S.traits.combo`、註解原文 對 `game.js`。
+  - `verify-modularization:59`：成本公式 `cur>=66?7:cur>=60?4:cur>=55?2:1` 在 `game.js` 出現 2 次（`addAb`、`addAbStat`）；`:60` 在 `ability-evaluation-policy.js` 1 次；`:61` 舊公式不存在。
+  - `salary-flow.test:56`：`gameSites` 的 `R(` 22（含 `allocDone:725`）。
+  - `ability-allocation.test:27`：`'function ovr('`→`'function addAb('` 切片（`ovr`／`playerType`／`abCost`），以 `function addAb(` 為終點。
+  - 確認不受影響：`traitCard`／`removeTrait` 留在原處（`productionFunction` 於 `legacy-effect-boundaries:34`、`award-runtime-support:37`、`award-journal-native:27` 切進無模組的 vm）；vm stub `full-power-pitching.test:20`（`addAb`）、`npb-return-ui:222`／`:225`（`addAb`／`allocUI`）、`championship-intl.test:74`（`allocUI`）、`event-integration:44`（`traitCard`）；`npb-return-ui:232` `productionFunction('phasePre')`；`event-integration:11`（`moved` 為真時不執行該切片）；`trait-policy:100` 的 `afterGamble(`→`pitcherRole(` 切片；`award-identity-policy` 凍結（新檔不在名單）。
+- 範圍外（不動，記錄）：`statBonus`（`:681`）、`checkTraitsMid`（`:732`）在 `docs`／`tests`／`scripts`／`tools` 無呼叫端；`loveGainTxt` 屬第 18 期；`traitCard`／`removeTrait` 為跨領域通知原語，留在 `game.js`。
+- scout 誤差（已抽查更正）：漏報 `verify-modularization:59`、`ability-allocation.test:23–24`、`domestic-tournament-policy:81–84`、`ui-foundation.test:39`。
+
+### 2u.2 設計（使用者決定 2026-10-26：D1 `allocUI` 一併移出；D2 `addAbStat` 一併移出；D3 `player-ability.js`／`PlayerAbility`，函式宣告形式）
+
+- 新檔 `docs/src/engine/player-ability.js`（LF，不 import）：`class PlayerAbility`，方法 `addAb(k,v)`、`addAbStat(k,amt)`、`allocDone(touched,isDice)`、`allocUI(mode,label,done)`。模組內兩個工廠，依序為：
+  - `allocationView({getState,$,careerSession,choiceViews,POS_AB,ABL,abCost,addAb,allocDone,archiveTraitResults,board,actClear,actToggleSync,runWithResultView})` 內含 `function allocUI(mode,label,done){…}`；
+  - `abilityRules({getState,clamp,POS_AB,ABL,ovr,traitCard,card,board,rng:{R}})` 內含 `addAb`、`addAbStat`、`allocDone`。
+  - 本體逐字搬移（縮排加 2 空白）；保留函式宣告形式與名稱，使原文斷言可改對模組而不改 regex。`addAbStat` 呼叫同工廠的 `addAb`（原為全域名稱，無任何再賦值，等價）。
+- `allocDone` 回呼：`allocUI` 呼叫注入的 `allocDone`（`game.js` 的 late-binding lambda `(t,d)=>allocDone(t,d)`），**不**直接呼叫 `abilityRules` 的 `allocDone`，以保留 `stage6-browser:20` 的 overlay 包裝。`allocUI` 的 `addAb` 由 class 接到 `abilityRules.addAb`。
+- `S` 讀取：
+  - `addAb`、`addAbStat`、`allocDone` 開頭 `const S=getState()`（同步單元，單元內 `S` 不被重新賦值）。
+  - `allocUI` 開頭 `const S=getState()`；`live` 的 `S===state` 改為 `getState()===state`（唯一的 token 變更）。依據 2u.1：延遲 closure 讀寫 `S` 前皆先通過 `live`；`live` 成立時 `getState()===state===` 快照 `S`，故快照與原本的即時 `S` 相同；`S.year===year` 在 `getState()===state` 成立後與原式等價。
+  - 合計 4 處 `const S=getState()`＋1 處 `live` 變更，為逐字搬移外的唯一差異，實施結果逐處列出。
+- `game.js`：
+  - `:203–218` 改為 `function addAb(k,v){return playerAbility.addAb(k,v);}`（維持 `ability-allocation.test:27` 的終點 `function addAb(`）。
+  - `:350–392` 改為 `function allocUI(mode,label,done){playerAbility.allocUI(mode,label,done);}`，其後接建構行 `const playerAbility=new PlayerAbility({…});`，再接 `/* 年間進出行。 */` 與 `nextStep`。
+  - `:661–680` 改為 `function addAbStat(k,amt){return playerAbility.addAbStat(k,amt);}`；`:706–731` 改為 `function allocDone(touched,isDice){playerAbility.allocDone(touched,isDice);}`。
+  - `import { PlayerAbility } from './player-ability.js';` 加在 `PlayerInjury` import 之後。
+- 注入：getter `getState:()=>S`；參照 `clamp`、`POS_AB`、`ABL`、`careerSession`、`choiceViews`；late-binding lambda `$`、`abCost`、`ovr`、`traitCard`、`card`、`board`、`allocDone`、`archiveTraitResults`、`actClear`、`actToggleSync`、`runWithResultView`；RNG bridge `rng:{R:()=>R()}`（不為 `seasonStatsBridge` 子字串）。
+- TDZ：建構行以參照傳入的 `choiceViews` 宣告於 `:322`，故建構行放在 `allocUI` 包裝之後（`:350` 附近）而非 `addAb` 包裝旁；其餘參照（`:68–74`、`:160`）皆在前。建構行在 `nextStep` 之前，不進入任何既有 `productionFunction` 切片（無 `productionFunction('allocUI')`）。
+- `game.js` 為 CRLF：只刪除區段並插入新行，非整檔重寫。
+
+### 2u.3 測試變更（使用者已批准 2026-10-26）
+
+scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實跑下列 regex：`ability-allocation:10–24`、`fixed-seed-v160:23`、`ui-foundation:38`、`domestic-tournament-policy:81–84`、`verify-modularization:59` 計數 2 對草稿全部成立；`choice-action:112`、`ui-foundation:39` 原 regex 不成立（見 T5、T6）；草稿 `[R,ri,chance,pick]`＝`[1,0,0,0]`；`allocUI` 切片不含 `R()`。
+
+- T1 `salary-flow.test`：新增 `abilityBridge='rng:{R:()=>R()}'` 並斷言 `game.js` 中只出現一次；`gameSites` 排除該 bridge 後 `R(` 22 → 21，`ri(` 32、`chance(`＋slot 36、`pick(` 11 不變；新模組計數 `[1,0,0,0]`。註解記錄本期移動。
+- T2 `verify-modularization:59`：`game.js` 成本公式 2 → 0；新增 `player-ability.js` 為 2。`:60–61` 不變。
+- T3 `ability-allocation.test`：`:9` 切片改為 `player-ability.js` 的 `'function allocUI'`→`'function abilityRules'`（不含 `allocDone` 的 `R()`，`:22` 非空斷言）；`:23–24` 改對模組。`:12` 的 `doesNotMatch(game,…)` 不變。
+- T4 `fixed-seed-v160.test:22`：切片同 T3 改對模組。
+- T5 `choice-action.test:112`：改對模組，regex 改為 `function allocUI\(mode,label,done\)\{\s*const S=getState\(\);\s*actClear\(\); \+\+careerSession\.choiceGeneration;`（仍要求 `actClear` 與 generation 遞增為最先的動作）。
+- T6 `ui-foundation.test`：`:38` 改對模組（regex 不變）；`:39` 改對模組，`S===state` 改為 `getState\(\)===state`。
+- T7 `domestic-tournament-policy:81–84`：4 項改對模組（regex 不變）。
+- 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
+- T8 `support/stage6-browser.mjs`（實作中發現，使用者已批准 2026-10-26）：`instrument()` 以 `  const touchedKeys={};` 為錨點在 `game.js` 的 `allocUI` 內插入 `window.__s6allocation`，移出後錨點不存在（`assert` 失敗 → `game.js` 404 → `stage6-ability-e2e`／`stage6-state-transaction-e2e` FAIL）。`instrument()` 改為錨點最多 1 次、有則插入（舊 SHA 的 `game.js` 照舊）；新增 `instrumentAbility()` 對 `player-ability.js` 的 `    const touchedKeys={};` 斷言恰好 1 次並插入同一行；harness 伺服器與 preview route 對 `src/engine/player-ability.js` 套用。自行呼叫 `instrument(game)` 的 5 個 e2e 不讀 `.allocation`（`get()` 為 `window.__s6allocation?.()`），不改。scout 與 2u.1 的掃描只以函式名稱 grep，未掃搬移本體的原文錨點；補掃（`touchedKeys`／`sessionStart`／`hist.push`／`choiceGeneration===generation`／`cands.slice`／`S.lastOverflow` 等）僅此一處。
+
+### 2u.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
+
+- `node --check`、`check-syntax`、`verify-modularization`；`ability-allocation.test`、`fixed-seed-v160.test`、`choice-action.test`、`ui-foundation.test`、`domestic-tournament-policy`、`salary-flow.test`、`full-power-pitching.test`、`npb-return-ui.test`、`championship-intl.test`、`event-integration.test`、`trait-policy.test`。
+- e2e（Brave）：`stage6-ability-e2e`、`stage6-state-transaction-e2e`、`trait-system-e2e --ui-only`、`event-system-e2e`。
+- 接縫抵達探測（scratchpad 變體，不 commit）：`stage6-browser` 的 `allocDone` 包裝與 `trait-system-e2e` 的 `allocUI` 替換各加帶標記 `console.log`，確認新碼下仍被呼叫；負控制：模組 `allocUI` 改為直接呼叫內部 `allocDone`，須使 `stage6` 的 `confirm` 步驟消失（探測無輸出）。
+- 等價比較（scratchpad 腳本）：基準 `727bdd1` 的 `addAb`／`addAbStat`／`allocDone` 於 vm vs 新模組，相同 stub 與確定性 RNG；P／非 P × 正／負值 × `cur` 跨成本段與 `pot` 上下 × `carry` 有無 × 到達 80 溢出；`addAbStat` `cur>=pk`／途中達上限／負值；`allocDone` HS／非 HS × dice／pool × 集中 75% 上下 × `samePickKey` 連續 × `combo` 已有 × 大器晩成條件（`late`／`genius`／`ovr<47`／年齡 25／31／32／`gain` 15／16）× C 守備排除 × 候選 0／1／≥2；比較 `S`、`card`／`traitCard` 紀錄、`R` 次數與順序、回傳值、例外。
+- 負控制（scratchpad 變體）：`live` 保留 `S===state`（以快照 `S`）須使「`S` 重新賦值後點選」序列出差異；刪除一處 `S.carry[k]=…`；改 `0.75` 為 `0.7`。
+- `game-view-dom-e2e --baseline=727bdd1…`（完整 SHA，直接執行）：8 段生涯 DOM／`S`／RNG 一致。
+- Quick；Full（R3，AGENTS §6.5；比照 §2m 的 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。`statBonus`／`checkTraitsMid` 無呼叫端一事於完成後提請是否記入 BACKLOG。
+
+### 2u.5 分支與交付
+
+- `refactor/player-ability`（自 `origin/dev` `727bdd1`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR → `dev` 另批。
+
+### 2u.6 實施結果（2026-10-26，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/player-ability`，實作 commit `c4b9c45`，比較基準 `727bdd1`）
+
+- 行號更正：`addAb` 實為 `:203–217`、`allocUI` 為 `:350–391`（2u.1／2u.2 誤含其後一行註解 `/* 成績シミュレーション。 */`、`/* 年間進出行。 */`；兩行註解留在 `game.js`）。
+- `game.js` 2226 → 2129 行（CRLF 保持）；`player-ability.js` 128 行（LF）。與逐字搬移的差異：`const S=getState()` 4 處（`allocUI`、`addAb`、`addAbStat`、`allocDone` 開頭；`addAb` 為同一行 `{ ` 之後），`live` 的 `S===state`→`getState()===state` 1 處。建構行位於 `allocUI` 包裝之後、`/* 年間進出行。 */` 之前。
+
+| 項目 | 結果 |
+|---|---|
+| `node --check`、`check-syntax`（182 檔）、`verify-modularization` | PASS |
+| T1–T7 對象 7 檔＋`full-power-pitching.test`、`npb-return-ui.test`、`championship-intl.test`、`event-integration.test`、`trait-policy.test`、`award-journal-native.test`、`season-stats.test` | 14／14 PASS |
+| scratchpad regex 預檢（`727bdd1` 原文組裝草稿） | 27 項成立；`choice-action:112`、`ui-foundation:39` 原 regex 不成立（→ T5、T6）；`[R,ri,chance,pick]`＝`[1,0,0,0]` |
+| 等價比較（scratchpad，`727bdd1` 的 `addAb`／`addAbStat`／`allocDone` 於 vm vs 新模組，確定性 RNG） | 20,000 例差分 0（`addAb` 7,091、`addAbStat` 7,501、`allocDone` 5,408；小細工無用解鎖 697、大器晩成 101、溢出 598、`pendStat` 增加 2,906、例外 1 且一致） |
+| 等價負控制：刪 `S.carry[k]=…`／`0.75`→`0.7`／`pot +10`→`+9` | 差分 5,494／305／100。原計畫的 `clamp` 界限突變不可達（候選限 `S.ab<70`，+5 ≤ 74），改用 `pot` |
+| `live` 負控制（scratch hook `swapState`：配分面板開啟中 `S=JSON.parse(JSON.stringify(S))` 後點選，pool／dice 各 1） | `727bdd1` 與新碼一致（`ab` 不變、剩餘 3、`hist` 0、復原 disabled）；`live` 改回快照 `S===state` 的變體配分生效（`sta` +1／+2、剩餘 2、`hist` 1） |
+| 接縫抵達探測（帶標記 `console.log`，舊／新樹各跑） | `stage6-browser` 的 `allocDone` 包裝 76／76 次，`stage6-ability-e2e` 89／89 PASS。`trait-system-e2e` 的 `allocUI=()=>{}`：舊／新皆 0 次（兩次 `pre()` 皆 `rehab:1`，`phasePre` 不呼叫 `allocUI`；呼叫端原文未變） |
+| 繞過負控制（模組 `allocUI` 直接呼叫內部 `allocDone`） | `stage6-ability-e2e` 77 PASS／12 FAIL（`confirm` 步驟斷言） |
+| e2e（Brave）：`event-system`、`trait-system --ui-only`；T8 後 harness 使用者 8 個（`stage6-ability`、`stage6-state-transaction`、`stage7-safety`、`international-personal-stats`、`stage10-risk`、`smallschool-c`、`full-power-pitching`、`trait-display`） | 10／10 PASS（T8 前 `stage6-ability`、`stage6-state-transaction` FAIL，見 T8） |
+| `game-view-dom-e2e --baseline=727bdd14c295d5fb461b104a2a4393e6d847cc6d`（直接執行） | 8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68／68 PASS（147 秒） |
+| Full（scratchpad worktree，`docs`／`tests`／`scripts`／`tools` 與工作樹逐 byte 相同；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，計 93；未傳 `--baseline`） | 93／93 PASS（732／435／660／473 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 無 findings（資訊：`instrument()` 守衛改為 `<=2`，屬 T8 設計，探測由 `instrumentAbility()` 嚴格斷言） |
+
+- 範圍外記錄：`statBonus`（`c4b9c45` `game.js:609`）、`checkTraitsMid`（`:635`）無呼叫端，未處理；是否記入 BACKLOG 待使用者決定。
+
+### 2u.7 交付（2026-10-26）
+
+- `refactor/player-ability` push（`a613b25`），PR #37 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
