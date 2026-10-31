@@ -3081,6 +3081,11 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
   - 先做草稿的價值：計畫階段的「不改測試跑 Quick」已列出全部 4 檔，regex 掃描另補上 Quick 第一個斷言擋住的 `event-integration:30–31`。
   - 未解：本期不驗證模組內呼叫繞過 e2e 替換的問題（見 §2y.4 末項），契約・市場・移籍判定的成本不能由本期外推。
 
+### 2y.7 交付（2026-10-31）
+
+- `refactor/amateur-draft` push（`eca1490`），PR #42 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
+- PR #42 已合併，`dev` merge commit `f8c675b`（樹與 `eca1490` 相同）。`dev` push 的 Quick CI（Tests #105，run `41207988919`）顯示成功。手動 Full CI（`workflow_dispatch`，`dev`，Tests #106，run `41208798216`，13 分 19 秒）PASS：`full-aggregate` 回報 `expected 93`、`acceptedPass 93`、`issues []`，8 批皆 PASS。補上 §2y.6 本機分組未執行的 `ci-full-batches` 嚴格彙整。`main` 維持 `9fe741d`，第 21 期尚未發布。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
