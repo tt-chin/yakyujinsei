@@ -3328,6 +3328,86 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 實作 commit `d350c58`，結果紀錄 `ab25d60`，T11 `f5f1632`，於本機 `refactor/career-movement` 完成後以 fast-forward push 至 `refactor/career-contract`，併入 PR #43 → `dev`。不另開 PR。PR → `dev` 不觸發 CI，合併與 Full CI 待 code owner。未修改 `main`。
 
+## 2bb. 第 24 期：`movement` 第一層移至 `docs/src/engine/career-movement.js`（細部計畫，2026-11-01；計畫已批准，實作已批准）
+
+路線見 §3.18。本期只搬 L1，`movement` L2、L3 與年度流程留在 `game.js`。
+
+### 2bb.1 現況（基準 `169ec85`，`game.js` 與 `fbb2129` 相同）
+
+- 區段：`docs/src/engine/game.js:606–693`（`function movement(){` 至 `}`），CRLF，0 縮排，88 行／6,832 bytes，每行反引號數皆為偶數。
+- RNG 文字呼叫點：`chance` 3；`R`、`ri`、`pick` 0。無 `choose`，`reportFlowOutcome` 1 處。
+- `S` 引用 72 處，無 `S=` 賦值，無延遲讀 `S` 的 closure，所以開頭一行 `const S=getState();` 涵蓋全部讀取。
+- 呼叫端：`LEGACY.movement`（`:749` 擷取、`:992` 呼叫）；L2、L3 與結算的 `go()` 都留在 `game.js`，既有 e2e 重綁 `movement` 的路徑不變。
+- 自由名稱分三類：
+  - 已在 `careerMovementRules`：`LV`、`board`、`card`、`chance`、`ovr`、`removeTrait`、`reportFlowOutcome`、`faFlow`、`handleDemotion`、`retireBelowActiveMinimum`、`contractNeedsRenewal`、`isBelowActiveMinimum`。
+  - 新注入 8 個：`PATHS`（傳參考）、`crossOffers`（late-binding）、`applyPromotionSalary`、`markClubInitiatedRenewal`、`extensionOffer`、`displayTrait`、`slgOf`、`teamNick`。
+  - 新 import 3 個：`TRAIT_TEXT`、`goldclothEligible`（`trait-policy.js`），`hasCurrentAwardEffect`（`award-consumer-policy.js`）。
+- 範圍外（不動，記錄）：`tools/development-b/legacy-effect-boundaries.mjs`（§3.18）；`game.js` import 行中搬移後不再使用的名稱；`settlePhaseEnd` 不可達分支（CODE-DEAD-01）。
+
+### 2bb.2 設計（使用者決定 2026-11-01：批准 T1–T9 與 D1–D3，D3 採併入 PR #43；push 另批）
+
+- `career-movement.js`：
+  - `careerMovementRules` 內新增 `function movement(){`，放在 `return {` 之前。本體逐字 +2 縮排，只在開頭加 `const S=getState();`。
+  - 類別新增 `movement(){return this.#rules.movement();}`，回傳物件加 `movement`。
+  - `crossOffers` 採 Shadow：實作改名 `crossOffersRule`，同名參數為 late-binding，回傳 `crossOffers:crossOffersRule`。L1 結尾的 `crossOffers(o);` 逐字保留，經 `game.js` 名稱繞回，`stage10-risk-e2e` 的 trace 重綁才看得到。
+  - 檔頭註解補上 `crossOffers` 的理由。
+- `game.js`：
+  - `:606–693` 換成 `function movement(){return careerMovement.movement();}`，同一位置，故 `LEGACY`、L2、L3 不動。
+  - `CareerMovement` 建構式加 `PATHS` 與 7 個 lambda，建構式位置不動。
+- 決定：
+  - D1 命名：模組內 `movement`、實作 `crossOffersRule`（比照 `faMarketRule`）。
+  - D2 邊界：只搬 L1。
+  - D3 分支與 PR：新分支 `refactor/movement-first-layer`（自 `169ec85`，無 upstream）。併入 PR #43（尚無 review，一次合併、一次 Full CI，與第 23 期相同）。
+
+### 2bb.3 測試變更（harness 與錨點變更，需揭露；最後一項為計數變更）
+
+| # | 檔案 | 變更 | 類型 |
+|---|---|---|---|
+| T1 | `tests/career-movement-policy.mjs:50–54` | 新增 `movementBody`（`function movement(){` 至 `\n  return {`），`forcedCheck`、`injuryYearCheck`、`demotionCheck` 與 `retireBelowActiveMinimum` 斷言改查它 | 目標搬移。後兩者原查 `game` 搬移後仍會 PASS，已失去意義 |
+| T2 | 同檔新增 | `movementBody` 以 `  crossOffers(o);\n  }` 結尾且不含 `crossOffersRule`；`new CareerMovement(` 該行含 `crossOffers:o=>crossOffers(o)`；`game.js` 含薄包裝 | 新增接縫斷言，繞過不會讓其他測試 FAIL |
+| T3 | `tests/championship-intl.test.mjs:78`（CRLF） | L1 文字斷言的切片改取 `career-movement.js` | 目標搬移 |
+| T4 | `tests/kbo-renewal-floor.test.mjs:57` | 新增 `movementSource`、`movementBetween`，vm 改跑模組真實本體 | vm 組裝 |
+| T5 | `tests/npb-return-ui.test.mjs:13`、`:161` | `crossOffers` 改切 `crossOffersRule`，再以 `var crossOffers=crossOffersRule` 接回 | Shadow 改名 |
+| T6 | `tests/npb-return-ui.test.mjs:238`、`:253` | 目前版本的 `movement` 改用 `movementFunction('movement')`，舊 SHA 仍用 `productionFunction`；context 加 `getState` | vm 組裝 |
+| T7 | `tests/salary-flow.test.mjs:30`、`:41` | 由 `game` 改查 `careerMovement`。`:30` 原查 `game` 搬移後只剩 `settlePhaseEnd` 不可達分支撐著 | 目標搬移 |
+| T8 | `tests/salary-promotion-policy.mjs:98`、`:102` | 由 `game` 改查 `careerMovement` | 目標搬移 |
+| T9 | `tests/salary-flow.test.mjs:105`、`:120` | `chance` 由 18 改 15；`CareerMovement` 由 `[0,2,8,0]` 改 `[0,2,11,0]`。3 處搬移，總數不變 | **計數變更，須批准** |
+
+### 2bb.4 驗證（L3／R3）
+
+草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；不是實作驗收）：
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（套 T1–T9） | 68／68 PASS |
+| 分組 Full（`--baseline=fbb2129…`） | 22＋24＋22＋25＝93／93 PASS，含 `stage10-risk-e2e`、`contract-salary-e2e`、`kbo-renewal-e2e`、`npb-return-e2e`、`game-view-dom-e2e` |
+| `game-view-dom-e2e --baseline=fbb2129…` | 8 段 DOM／`S`／RNG 一致 |
+| 逐字比對（去掉 `getState` 行與 2 格縮排） | 88 行與 `fbb2129` 相同；竄改一字的反向對照可偵測 |
+| 遞迴與抵達探測 | §3.18：`movement` 三處皆 23 次，`crossOffers` 18 次，繞過負控制為 0 次 |
+| 突變 10 組 | 全部被目標測試抓到（下表） |
+
+| 突變 | 抓到的測試 |
+|---|---|
+| L1 直接呼叫 `crossOffersRule` | `career-movement-policy` |
+| 移除 `CareerMovement` 的 `crossOffers` lambda | `career-movement-policy` |
+| `S.teamYears>=7` 改 8 | `championship-intl.test` |
+| `teamYears` 遞增改 2 | `championship-intl.test` |
+| 最低能力檢查移到 `skipMid` 之後 | `career-movement-policy` |
+| 移除 `skipMid` 的續約呼叫 | `salary-flow.test`、`npb-return-ui.test`（`kbo-renewal-floor.test` 未抓到） |
+| outcome `kind` 打錯 | `npb-return-ui.test`、`kbo-renewal-floor.test` |
+| `applyPromotionSalary` 引數對調 | `salary-promotion-policy` |
+| 移除 `PRO_PLAYER_WITHOUT_CONTRACT` 檢查 | `salary-flow.test` |
+| 多一次 `chance` | `salary-flow.test` |
+
+- 限制：T2 的建構式斷言在 Full 後收窄過，收窄版本只重跑 `career-movement-policy`（PASS）與該突變，未重跑 Quick／Full。`movement` 重綁的呼叫端留在 `game.js`，結構上不繞過，未另做抵達探測。
+- 實作時須重做：Quick、分組 Full、`game-view-dom-e2e --baseline`、逐字比對、抵達探測、突變；reviewer。
+- 未做：Linux CI、Preview。
+
+### 2bb.5 交付
+
+- 內部重構不升 VERSION（AGENTS §9.3），不更新 CHANGELOG、CURRENT_SPEC。
+- commit 分兩個：實作＋T1–T9、結果紀錄。push 與 PR 依 D3，另批。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -3734,6 +3814,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 修法方向：`kbo-renewal-floor.test:57` 改由 `career-movement.js` 切片，比照 `npb-return-ui.test:12`，保持執行真實本體。
 - 範圍外（不動，記錄）：`tools/development-b/legacy-effect-boundaries.mjs` 的 `productionFunction('movement',src)` 搬移後只會切到薄包裝；`tools/development-*` 不在 manifest。
 - 未做：修測試後的 Quick、Full、Linux CI、Preview、`stage10-risk-e2e`（實際重綁 `crossOffers` 的測試）、`contract-salary-e2e` 的 `movement` 重綁抵達探測。`kbo-renewal-e2e` 含 `movement` 重綁，Quick 為 PASS，但未做抵達探測。`crossOffers` 若不改名可少一項 `npb-return-ui` 變更，但需要另一種 late-binding 寫法，未實測。
+- 後續：L1 細部計畫與套用測試變更後的 Quick、Full、突變結果見 §2bb；上列「未做」已由 §2bb.4 更新，本節保留調查當時的原文。
 
 ## 4. 使用者決定（2026-10-18）
 
