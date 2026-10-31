@@ -2972,6 +2972,89 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - PR #40 已合併，`dev` merge commit `be3f8ae`（樹與 `2a760f1` 相同）。`dev` push 的 Quick CI PASS（run `41189308929`）。手動 Full CI（`workflow_dispatch`，`dev`，Tests #100，run `41189895822`）PASS：`full-aggregate` 回報 `expected 93`、`acceptedPass 93`、`issues []`，8 批皆 success。含 §2x.6 的 T2 追加行，補上該表 Full 早於此行的缺口。`main` 維持 `04decb0`。
 - 正式發布（2026-10-31）：PR #41（`dev` → `main`）已合併，`main` merge commit `9fe741d`（樹與 `c6d9c9f` 相同）。PR 觸發的 Full CI（Tests #102，run `41196168506`）PASS：`expected 93`、`acceptedPass 93`、`issues []`，8 批皆 success。`Publish website #29`（run `41197144452`）success；本番 `docs/index.html`＋`docs/src` 共 72 檔 SHA-256 與 `main` 一致，顯示 v1.13.6。本番只確認到起始畫面，未跑完整生涯。第 11～20 期重構隨此次發布上線。
 
+## 2y. 第 21 期：業餘路線與國內大會移至 `docs/src/engine/amateur-career.js`（細部計畫，2026-10-31；計畫已批准）
+
+路線見 §3.16。本期是樞紐領域的試做：驗證以注入方式把 `reportFlowOutcome` 留作唯一的年度流程出口，並量測實際成本，再決定是否處理契約・市場・移籍判定。
+
+### 2y.1 現況（2026-10-31 grep 抽查＋scratchpad 18 字元 n-gram 掃描＋eslint-scope 自由名稱分析＋regex 對應掃描＋scratchpad worktree 草稿實測，基準 `origin/dev` `0f44dc80dfe7d2da5a6a1f0e1161581d9b2d4623`，`docs/src/engine/game.js` 1453 行）
+
+- 區段（皆 CRLF，overlay 內 2 空白縮排）：`setSchool`（`:1147`）、`setAmateur`（`:1148`）、`enterDraftPath`（`:1149`）、`draftFallback`（`:1150`）、`runDraft`（`:1152–1157`）、`pathChoiceHS`（`:1159–1180`）、`pathChoiceU4`（`:1181`）、`cupOnce`（`:1183–1192`）、`qualifierOnce`（`:1193–1199`）、`amateurSeason`（`:1200–1229`）。緊接 `:1231` `intlEvents`。`newState` 在 `:1108–1124`。區段內每行反引號數皆為偶數，無跨行 template。
+- RNG：`runDraft` `ri` 5；`pathChoiceHS` `ri` 2、`R` 1；`cupOnce`、`qualifierOnce` 各 `ri` 1；`amateurSeason` 0；`chance`／`pick` 0。
+- 外部呼叫端：`setSchool`、`setAmateur`（`movement` 覆寫層、`stage6-browser`、`smallschool-c-e2e`、`stage10-risk-e2e`）；`enterDraftPath`、`pathChoiceHS`、`pathChoiceU4`（`movement` 覆寫層 `:1423`）；`amateurSeason`（`phaseMid`、`stage10-risk-e2e` 包裝名單、`stage6-browser`、`trait-system-e2e`）；`runDraft`（`draft-income-e2e`、`global-contract-market-e2e`）。`cupOnce`、`qualifierOnce` 只在區段內。
+- `S`：`let`，`game.js` 只於 `startJapanese` 重新賦值；`stage6-browser`、`trait-system-e2e` 的 hook 也會替換 `S`。延遲 closure 讀寫 `S` 只有 2 處：`draftFallback` 與 `pathChoiceHS` 的「大学へ進学」選項。其餘 `S` 讀寫在同步路徑（`cupOnce`、`qualifierOnce`、`amateurSeason`，`maybeIntl(()=>nextStep())` 不讀 `S`）。
+- 測試耦合：
+  - vm 切片：`draft-signing-policy.test:98,117` 以變數 `amateurNames` 呼叫 `productionFunction`，取 `enterDraftPath`、`draftFallback`、`pathChoiceHS`、`pathChoiceU4`，並對基準 `026c5cd` 與現行碼做行為比較；vm 內 `setAmateur`、`setSchool`、`runDraft`、`signTo` 為記錄呼叫的 stub。`event-integration.test:42` 切 `cupOnce`→`intlEvents`，4 階段各跑 `amateurSeason`。
+  - 舊基準比較：`income-summary.test:25` 以變數比較 `runDraft`（`phaseEnd`、`buyoutRemaining`、`finalizePendingOffseasonSalary` 同行）。
+  - 文字斷言：`domestic-tournament-policy:86–90`；`event-integration.test:30,31,35`；`draft-signing-policy.test:90`；`salary-flow.test:42`，及其 RNG 計數。`draft-bonus-display.test:32`、`draft-signing-policy.test:91–92` 指向 `runDraft`／`signTo`，本期留在 `game.js`，不受影響。
+  - e2e：`stage10-risk-e2e:10` 包裝 `amateurSeason`（包裝層保留，仍會計次）；`bug-act-01-02-e2e:22`、`stage10-risk-e2e:35` 替換 `signTo`。
+  - 確認不受影響（n-gram 命中逐筆開啟）：`support/approved-school-oracle:12`（只改基準文字）；`career-movement-policy:50`、`full-power-pitching-e2e:25–27`、`npb-return-ui:65–76`、`kbo-renewal-floor:47`（區段外的 `reportFlowOutcome` 呼叫端）；其餘命中為 policy 模組本身與共用語法。tree-wide：新檔不在 `award-identity-policy` 走訪清單。
+- 補正 §3.16：`productionFunction` 表漏了 `draft-signing-policy.test:117` 與 `income-summary.test:25`（皆為變數名稱，`productionFunction\('…'` grep 抓不到）。範圍：§3.16「業餘不含 `newState`」為 80 行／`R` 1／`ri` 9；本期搬移 74 行／`R` 1／`ri` 4（`runDraft` 的 `ri` 5 留在 `game.js`）。
+- 範圍外（不動，記錄）：`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再於產品碼使用的名稱（保留，hook 亦可能引用）。
+
+### 2y.2 設計（使用者決定 2026-10-31：D1 命名 `amateur-career.js`／`AmateurCareer`；D2 範圍 7 函式，`setSchool`、`setAmateur`、`runDraft`、`newState` 留在 `game.js`；D3 薄包裝 5 個；D4 延遲 closure 改即時讀取；D5 `event-integration` 改用真實類別）
+
+- D2 理由：`setSchool`、`setAmateur`、`runDraft` 寫所屬與契約欄位（§3.16 發現 2），屬將來的「所屬與契約」領域，本期以 late-binding 注入。好處是 `draft-signing-policy` 的 vm stub 全部保留，呼叫紀錄仍與 `026c5cd` 比較，該測試等於直接驗證注入接縫；`income-summary:25` 也不必動。`newState` 被多處切片與替換（§3.16），不屬本期。
+- 新檔 `docs/src/engine/amateur-career.js`（LF）：
+  - 直接 import（§2v D4；無 harness 需替換）：`isDraftFallbackResult`、`createSigningBonusTerms`、`schoolCompetitionBonus`、`TRAIT_TEXT`、`highSchoolChampionCount`、`beginEventSeason`、`consumeEventSeason`，及 `domestic-tournament-policy.js` 的 8 個函式。`game.js` import 行不動。
+  - `class AmateurCareer`，方法 `enterDraftPath(from)`、`draftFallback(from)`、`pathChoiceHS()`、`pathChoiceU4()`、`amateurSeason()`。
+  - 工廠 `amateurCareerRules({getState,DATA,LV,ovr,fmtMoney,salaryFor,listByOrg,signTo,choose,card,traitCard,displayTrait,setSchool,setAmateur,runDraft,reportFlowOutcome,nextStep,maybeIntl,recordIndependentSalaryEvaluation,rng:{R,ri}})`，本體依原順序逐字（原為 2 空白縮排，不需再縮排）；含 `cupOnce`、`qualifierOnce`，不匯出。
+- 逐字搬移外的差異（共 5 處）：
+  - `cupOnce`、`qualifierOnce` 開頭各插入一行 `const S=getState();`。
+  - `amateurSeason` 同一行開頭插入 `const S=getState();`。
+  - D4：`draftFallback`、`pathChoiceHS` 的「大学へ進学」closure 開頭插入 `const S=getState();`（比照 `player-romance.js`）。
+- `game.js`：
+  - `:1149–1150` → `function enterDraftPath(from){amateurCareer.enterDraftPath(from);}`、`function draftFallback(from){amateurCareer.draftFallback(from);}`。
+  - `:1159–1181` → `pathChoiceHS`、`pathChoiceU4` 薄包裝，其後接建構行。
+  - `:1183–1229` → `function amateurSeason(){amateurCareer.amateurSeason();}`。
+  - `import { AmateurCareer } from './amateur-career.js';` 加在 `CareerRetirement` import 之後。
+- D3：`draftFallback` 的產品呼叫端只在模組內，留包裝是因 `draft-signing-policy.test:98` 以名稱切片；`cupOnce`、`qualifierOnce` 無外部呼叫端，不留包裝。
+- 建構行位置：`pathChoiceU4` 包裝之後、`amateurSeason` 包裝之前，使 `productionFunction('pathChoiceU4')` 帶入 vm（比照 §2s、§2x）。
+- 注入：getter `getState:()=>S`；參照 `DATA`、`LV`（皆為 `const`，overlay 原地修改）；其餘 16 個名稱為 late-binding lambda，含 `reportFlowOutcome:outcome=>reportFlowOutcome(outcome)`、`signTo:(...args)=>signTo(...args)`，e2e 替換全域名稱仍有效；RNG bridge `amateurBridge='rng:{ri:(a,b)=>ri(a,b),R:()=>R()}'`，鍵序不同於 `retirementBridge`，與現有 bridge 兩兩無子字串。
+- TDZ：`DATA`（`:927`）、`LV`（`:146`）都在建構行之前；lambda 延遲解析。
+- 模組內 `enterDraftPath` 直接呼叫模組內 `draftFallback`，`amateurSeason` 直接呼叫 `cupOnce`、`qualifierOnce`；這三個名稱無 e2e 替換。
+- `game.js` 為 CRLF：以 scratchpad 腳本從 `git show` 原文逐字組裝，先斷言錨點行與每行反引號數，每個插入點斷言恰好一次（比照 §2v、§2x），非整檔重寫。一個實作 commit。
+- 預期：`game.js` 1453 → 1388 行（`+7／−72`）；模組 101 行（草稿實測）。
+
+### 2y.3 測試變更（使用者已批准 2026-10-31；皆已於 scratchpad 草稿驗證，無放寬斷言或 golden 變更）
+
+- T1 `salary-flow.test`：讀 `amateur-career.js`；`:42` 改對模組；新增 `amateurBridge` 於 `game.js` 只出現一次，`gameSites` 排除之；`R(` 15 → 14、`ri(` 30 → 26；新模組計數 `[1,4,0,0]`。總呼叫點不變，只是移動。
+- T2 `domestic-tournament-policy`：`:86–90` 5 個斷言改對模組；`:80` 的否定斷言 `includes('優勝')` 另對模組加一行，避免保護範圍隨搬移縮小。
+- T3 `event-integration.test`：`:30,31,35` 改對模組；`:42–49` 的 vm 切片改為建構真實 `AmateurCareer` 後呼叫 `amateurSeason()`，斷言不變（§3.12 方向 ③）；移除只供該 vm context 使用的 import（4 行、6 個名稱）。
+- T4 `draft-signing-policy.test`：`:90` 改對模組；vm context 加 `AmateurCareer`、`DATA:{}`。與 `026c5cd` 的行為比較、kind 斷言不動。
+- 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
+
+### 2y.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
+
+草稿已先取得（scratchpad worktree，`0f44dc8`＋本計畫變更，非正式結果）：
+
+| 項目 | 結果 |
+|---|---|
+| 未改測試的 Quick | 64 PASS／4 FAIL，FAIL 恰為 T1～T4 |
+| 自由名稱 | 只有 `Error`、`Math`；無未用 import、無未用注入 |
+| 逐字比對 | 74 行，去除 5 處插入後無差異 |
+| 套用 T1～T4 後的 Quick | 68／68 PASS（139 秒） |
+| e2e 12 項（Brave） | `bug-act-01-02`、`championship-intl`、`contract-salary`、`draft-income`、`event-system`、`global-contract-market`、`npb-return`、`smallschool-c`、`stage10-risk`、`stage6-ability`、`stage6-state-transaction`、`trait-system` 全部 PASS |
+| `game-view-dom-e2e --baseline=0f44dc8` | 8 段生涯 DOM／`S`／RNG 一致 |
+| 負控制 5 項 | 同目標 kind 對調、繞過 `runDraft`、拿掉 `consumeEventSeason`、拿掉 `domesticCompletedKeys` 防重入、多一次 `ri` 全部被抓到 |
+
+實作時：
+
+- 逐字比對：新模組去除 5 處插入後，與 `0f44dc8` 對應區段逐位元組相同。
+- `node --check`、`check-syntax`、`verify-modularization`；T1～T4；`income-summary.test`、`award-identity-policy.test`、`career-movement-policy`、`kbo-renewal-floor.test`、`npb-return-ui.test`。
+- 等價比較（scratchpad 腳本）：`0f44dc8` 本區於 vm vs 真實 `AmateurCareer`，相同 stub 與真實 `Rng`；4 階段 × 學校階級 × 大會結果分支（選抜、甲子園、神宮直接／預選、都市對抗、日本選手權）× 全休 × 重入；`pathChoiceHS` 的 `o` 門檻 49／50／53／54 × 全選項；比較 `S`、卡片序列、`reportFlowOutcome` 序列、RNG 次數與前後值、例外。另測 render 後替換 `S`，再觸發 2 個延遲 closure。
+- 負控制（scratchpad 變體）：上表 5 項，另加 closure 改 render 時快照（D4 反向控制）、`ri(-8,8)` 改 `ri(-8,9)`、對調 `pathChoiceHS` 內 `ri(2,3)` 與 `R()` 順序。
+- 接縫抵達探測（帶標記 `console.log`，舊／新樹各跑）：`smallschool-c-e2e`、`stage6-state-transaction-e2e`。
+- `game-view-dom-e2e --baseline=0f44dc80dfe7d2da5a6a1f0e1161581d9b2d4623`（直接執行）。
+- Quick；Full（比照 §2w 的 scratchpad 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變，由上列比較證明）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+- 試做結論：記錄實際測試變更數、未預期的耦合與耗時，作為是否處理契約・市場・移籍判定的依據。
+- 本期不驗證 §3.16 的推論（被 e2e 替換的名稱搬入同一模組後，模組內呼叫會繞過替換）：搬移範圍內被替換的名稱只有 `amateurSeason`，它保留薄包裝且模組內無呼叫；`setSchool`、`setAmateur`、`runDraft`、`signTo` 留在 `game.js`，以 lambda 注入。本期 PASS 不代表 `movement`、`salaryFor`、`fixedContract` 等可比照搬移。
+
+### 2y.5 分支與交付
+
+- `refactor/amateur-draft`（自 `origin/dev` `0f44dc8`，`--no-track`，已建立，無 commit，未 push）。本計畫先單獨 commit；實作 commit、push、PR 另批。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
