@@ -3427,7 +3427,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 ### 2bb.7 交付（2026-11-01）
 
-- 實作 commit `2201aee`，結果紀錄另一個 commit，皆在本機 `refactor/movement-first-layer`。未 push，未併 `dev`。未修改 `main`。依 D3 併入 PR #43 須另批 push，並更新 PR 標題與說明。
+- 實作 commit `2201aee`，結果紀錄 `2878778`，於本機 `refactor/movement-first-layer` 完成後以 fast-forward push 至 `refactor/career-contract`，併入 PR #43 → `dev`。不另開 PR。PR → `dev` 不觸發 CI，合併與 Full CI 待 code owner。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
