@@ -3226,6 +3226,53 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 未確認（各期開始前確認）：`CHEER` 是否實際被重新賦值（grep 只見宣告與讀取）及 `event-copy` 凍結範圍；引退區段 `ri` 確切數量；`full-power-pitching` fixture 是否另以切片取 `tjAccrue` 等函式。
 - scout 誤差（已抽查更正）：`dposReview` 另寫 `S.role`（投手起用）；`full-power-pitching` 的 `productionFunction` 只確認 `tjGamble`。表中數字以 scout 為主，未逐一抽查者於各期計畫重新確認。
 
+### 3.16 樞紐與年度流程耦合調查（2026-10-31，基準 `c6d9c9f`，`docs/src/engine/game.js` 1453 行／153,654 bytes；**未決**，不授權實作）
+
+- 方法：scratchpad 腳本以 acorn＋eslint-scope 解析全部頂層語句（解析名稱遮蔽，略過非 computed 的屬性鍵與成員屬性），另做 RNG 文字計數（`salary-flow.test` 同單位）、18 字元 n-gram sweep 與 regex 掃描。腳本不保留。scout 回報未採用：要求的 AST 呼叫圖與 n-gram 未執行，矩陣失真（`market→contract` 3，實測 22；`flow→contract` 5，實測 13），另漏列 `productionFunction` 使用者並有未讀來源。
+- 分組（人工，與 §3.11 不同：`movement` 自市場獨立，`newState` 歸業餘）：
+  - 年度流程：`nextStep`、`phasePre`、`phaseMid`、`proSeason`、`resumeProfessionalSeason`、`runSeasonPipeline`、`advance`、`advanceWithoutSalaryFinalization`、`reportFlowOutcome`、`flowHooks`、`startYear`、`phaseEnd`、`settleProfessionalEnd`、`settlePhaseEnd`、`resumeSeasonEnd`、`phaseIntlPre`、`checkTraitsMid`、`professionalEnds`、`yearHandoffs`、`seasonContinuations`、`startJapanese`。
+  - 契約：`nextContractId`、`fixedContract`、`signTo`、`signingRenderRetry`、`doTradeExec`、`salaryFor`、`migrateSalaryV130State`、`migrateSalaryV140State`、`serviceYearsFor`、`contractStageFor`、`currentMarketResult`、`currentMarketRating`、`previousSalaryForOffer`、`hadAmericanContract`、`kboPreviousPackage`、`salaryCandidate`、`saveSalaryDecision`、`salaryDecisionLink`、`salaryDecisionSummary`、`bindLatestSalaryDetailLink`、`salaryDForContract`、`finalizePendingOffseasonSalary`、`applyLevelSalary`、`applyPromotionSalary`、`applyDemotionSalary`、`markClubInitiatedRenewal`、`appendContractExtension`、`saveSalaryEvaluation`、`recordSalaryEvaluation`、`recordIndependentSalaryEvaluation`、`termParams`、`termChoice`、`extensionOffer`、`ageGateUSA`、`ageGateJP`、`renewAndAdvance`、`arbitrationFlow`、`stageLabel`。
+  - 市場：`faYears`、`demotionAudit`、`tradeCheck`、`portionOf`、`faFlow`、`faOfferText`、`priceFaOffer`、`acceptFaOffer`、`showFaMarket`、`faMarket`、`outOfOrg`、`crossOffers`、`overseasOffer`、`teamChampRate`、`teamListOf`。
+  - 移籍判定：`movement`（三層）、`performMovement`、`professionalMoves`、`buyoutRemaining`、`handleDemotion`、`retireBelowActiveMinimum`、`daibaFarewell`。
+  - 業餘：`setSchool`、`setAmateur`、`enterDraftPath`、`draftFallback`、`runDraft`、`pathChoiceHS`、`pathChoiceU4`、`cupOnce`、`qualifierOnce`、`amateurSeason`、`newState`。
+
+| 領域 | 語句 | 行 | bytes | `R` | `ri` | `chance` | `pick` | 含 `choose` 的函式 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 年度流程 | 22 | 338 | 24,475 | 3 | 6 | 1 | 0 | 4 |
+| 契約 | 45 | 184 | 25,858 | 0 | 0 | 1 | 0 | 2 |
+| 市場 | 15 | 159 | 17,198 | 0 | 2 | 5 | 0 | 5 |
+| 移籍判定 | 8 | 166 | 12,171 | 0 | 0 | 6 | 0 | 2 |
+| 業餘 | 11 | 97 | 12,552 | 3 | 22 | 0 | 0 | 4 |
+| 業餘（不含 `newState`） | 10 | 80 | 8,451 | 1 | 9 | 0 | 0 | 4 |
+
+- RNG 對帳：`ri` 30 與 `chance` 13（＋ legacy slot 14 ＝ 27）與 `salary-flow.test` 斷言相符；`R` 斷言 15，上表合計 6，其餘 9 處不在五領域內（未逐一歸類）。`ri` 全部在五領域內，搬移任一領域皆須改該測試的計數。
+- 五領域合計 944 行，佔 `game.js` bytes 約 60%。
+
+領域間引用（不重複的「語句 > 被呼叫名」；同名語句合併，故 `movement` 兩層對流程記 3）：
+
+| 呼叫方 \ 被呼叫 | 流程 | 契約 | 市場 | 移籍 | 業餘 |
+|---|---:|---:|---:|---:|---:|
+| 流程 | 27 | 13 | 3 | 4 | 2 |
+| 契約 | 2 | 72 | 2 | 0 | 0 |
+| 市場 | 4 | 22 | 6 | 3 | 0 |
+| 移籍 | 3 | 9 | 3 | 7 | 4 |
+| 業餘 | 5 | 6 | 0 | 0 | 11 |
+
+- 往流程的引用除 `amateurSeason>nextStep` 外全為 `reportFlowOutcome`（43 呼叫點、26 種 `kind`）；`advance(`／`endGame(` 只出現於定義與分派內。
+- 反向／循環：`termParams>faYears`、`extensionOffer>crossOffers`（契約→市場）；市場 `overseasOffer`／`outOfOrg` → `buyoutRemaining`、`retireBelowActiveMinimum`；移籍 `movement`／`handleDemotion` → `crossOffers`、`faFlow`、`outOfOrg`。移籍→業餘 4 對全在覆寫層 `:1423`。
+- 流程→契約 13 對中 7 對來自 `settlePhaseEnd`。
+- `S` 欄位：共 77 個頂層欄位有寫入，24 個由兩個以上領域寫入，其中 `ct`／`currentSalary` 4 領域；`lv` 4 領域；`org`／`orgTeamId`／`team`／`stage`／`stageYr` 為契約＋業餘＋市場。佐證 §3.11「所屬與契約」同一領域的判斷。限制：只算語句內直接寫入，不含遞移呼叫、參數別名及已搬出模組。
+- 覆寫：`LEGACY`（`:928`）擷取 `board`、`movement`、`phasePre`、`phaseMid`、`proSeason`、`endGame`。`advance` `:884` → `:1072`；`movement` `:668` → `:1423` → `:1425`；`endGame` `:909` → `:1437`；`board` `:285` → `:1145`。9 個 `let` stub（`:314`、`:660–666`）由覆寫區賦值。
+- 凍結：`award-identity-policy.test` 走訪 `287dd1a` 時的 `docs/src`，`allowedB` 以外的檔案須等於 `efd4710`。engine 內 19 檔受凍結，含 `contract-policy.js`、`market-policy.js`、`cross-league-market-policy.js`、`draft-signing-policy.js`、`injury-market-policy.js`、`salary-explanation-policy.js`（皆確認自 `efd4710` 未變更）。`salary-evaluation-policy.js`、`salary-promotion-policy.js` 在 `allowedB`。新檔案不被走訪，故拆分須開新模組。
+- 文字耦合：
+  - `productionFunction`：`npb-return-ui`（`phasePre`、`movement`、`handleDemotion`、`retireBelowActiveMinimum`、`reportFlowOutcome`）、`full-power-pitching-e2e`（`proSeason`、`resumeProfessionalSeason`、`runSeasonPipeline`）、`draft-signing-policy`（`reportFlowOutcome`）。
+  - e2e 全域替換（regex，未逐行開啟）：`movement`（`contract-salary-e2e:33`、`kbo-renewal-e2e:23`、`salary-history-e2e:19`、`support/stage6-browser:29–30`）、`advance`（`contract-salary-e2e:23`、`global-contract-market-e2e:14`、`kbo-renewal-e2e:22`、`npb-return-e2e:18`）、`fixedContract`（`contract-salary-e2e:22`、`stage10-risk-e2e:35`、`support/stage6-browser:31`）、`signTo`（`bug-act-01-02-e2e:22`、`stage10-risk-e2e:35`）、`salaryCandidate`（`contract-salary-e2e:21`、`stage10-risk-e2e:21`）、`startYear`（`contract-salary-e2e:24`、`smallschool-c-e2e:16`）、`demotionAudit`／`tradeCheck`／`nextStep`（`championship-intl-e2e:22`）。
+  - 原始碼斷言：契約最重（`salary-flow.test` 18 行、`career-movement-policy` 7 行）。
+  - n-gram 命中（上限值，未分類，含共用語法雜訊）：`npb-return-ui` 140、`kbo-renewal-floor` 95、`full-power-pitching-e2e` 78、`salary-flow` 76、`stage10-risk-e2e` 70。逐筆分類留給各期細部計畫。
+- 推論（未驗證）：被 e2e 替換的名稱若搬入同一模組，模組內互相呼叫會繞過替換，可能須全部經 late-binding 注入；成本集中在契約與市場。
+- 未做：scratch 組裝＋Quick；純函式清單（語句內判定無法排除遞移副作用，避免重犯 §3.9 的高估）。
+- 建議（未決）：若立計畫，先試做業餘（不含 `newState`）並以注入 `reportFlowOutcome` 驗證接縫；契約・市場・移籍判定視為同一領域，依試做實際成本再決定；年度流程依 §3.6 最後。
+
 ## 4. 使用者決定（2026-10-18）
 
 1. 前置 1：D2-G9-RELEASE 殘項未結案，仍可開始第 1 期的本機實作與驗證；重構 PR 併入 `dev` 的時機另行決定。
