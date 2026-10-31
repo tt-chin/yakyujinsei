@@ -2747,6 +2747,29 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2v.5 分支與交付
 
 - `refactor/event-romance`（自 `refactor/player-ability` `1f796b2`，本機分支無 upstream）。本計畫先單獨 commit；實作 commit、push、PR 另批。PR 的 base 視 PR #37 合併狀態決定（未合併時 PR #37 合併後再開，或以 `refactor/player-ability` 為 base，屆時請使用者決定）。
+- 2026-10-31 更新：PR #37 已併入 `dev`（`218565e`），`origin/dev` 的 tree 與 `1f796b2` 相同（`87fad30`），本期 PR base 為 `dev`。
+
+### 2v.6 實施結果（2026-10-31，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/event-romance`，實作 commit `f569039`（戀愛）、`63fc0ec`（事件卡），比較基準 `1f796b2`）
+
+- 行號更正：無。scratchpad 組裝腳本自 `1f796b2` 原文取行，對 `:433`、`:441`、`:451`、`:462`、`:607`、`:608`、`:613`、`:632`、`:633` 的斷言全部成立；區段 200 行皆 CRLF，無跨行 template。
+- `game.js` 2129 → 1942 行（CRLF 保持；numstat 第 1 個 commit `+3／−157`，第 2 個 `+5／−38`）；`player-romance.js` 179 行、`season-events.js` 59 行（LF）。與逐字搬移的差異只有 `getState` 讀取 14 處（`season-events.js` 4、`player-romance.js` 10），形式 3 種：獨立一行 `const S=getState();`、`f:()=>{const S=getState();`、單行函式 `{const S=getState();return …`（`evOdds`）；`divorceRec` 為同一行 `{ const S=getState(); `。
+- 第 1 個 commit 單獨通過 2v.3 對應測試：T1 暫定值 `pick(` 11 → 1（`drawEvents` 仍在 `game.js`），第 2 個 commit 改為 0 並完成 T2、T3。其他測試變更：無。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax`（184 檔）、`verify-modularization` | PASS（兩個 commit 各跑一次，`check-syntax` 第 1 個 commit 為 183 檔） |
+| 2v.4 所列 11 個單元測試 | 兩個 commit 各 11／11 PASS |
+| scratchpad 預檢（`1f796b2` 原文組裝草稿） | 新模組計數 `[2,0,9,10]`、`[0,0,0,1]`；`getState` 10＋4；6 個 bridge 兩兩無子字串（30 對）；T2、T3 切片成立 |
+| 等價比較（scratchpad，`1f796b2` 本區於 vm vs 新模組，相同 stub 與確定性 RNG；比較 `S`、`card`／`choose`／`board` 紀錄、RNG 次數與順序、例外、`dataset`） | 差分 0：戀愛 60,000 例（含達 `PRO`＋20 歲門檻 50,700；一半含「開選項後重新賦值 `S` 再呼叫 `f`」）、`eventChoiceSummary` 88,320 例（92 卡 × 3 mode × 64 特性組合 × 5 stage）、`drawEvents` 30,000 例（空池 1,486、重複選擇 18,946、`applied` 真偽與 stale 例外）、`renderEventResult` 20,000 例。92 張卡與戀愛各卡片標題皆抵達 |
+| 等價負控制：閉包改讀快照／刪一處 `L.affairs++`／`chance(55)`→`chance(56)`／刪 `dataset.cardId` | 差分：戀愛 800 與抽卡 6,700（皆只在重新賦值序列）／戀愛 228／戀愛 304／抽卡 18,863 與顯示 17,979 |
+| 接縫抵達探測（帶標記 `console.log`，舊／新樹各跑；探測置於函式本體開頭） | `event-system-e2e` 5906／5906 次、`event-fix-e2e` 81／81 次，序列相同，兩樹 exit 0 |
+| e2e（Brave）：`event-system`、`event-fix`、`trait-display`、`stage6-ability`、`stage6-state-transaction` | 5／5 PASS（85／15／93／38／2 秒） |
+| `game-view-dom-e2e --baseline=1f796b2cebc3a01585ccf338c93ab9467f148148`（直接執行） | 8 段生涯 DOM／`S`／RNG 一致（161 秒） |
+| Quick | 68／68 PASS（135 秒） |
+| Full（scratchpad worktree `63fc0ec`，乾淨 checkout；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，計 93；未傳 `--baseline`） | 93／93 PASS（719／401／637／458 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 無 findings（逐行比對與原文一致、14 處 `getState`、自由名稱、TDZ、T1–T3 未弱化） |
+
+- 範圍外記錄（不動）：`event-fix-e2e:22` 的 `--preview` 比對清單未含新模組；`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再於產品碼使用的名稱。BACKLOG：CODE-DEAD-01 已補記 `CHEER_DEFAULT`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
