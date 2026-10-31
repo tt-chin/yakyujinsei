@@ -32,6 +32,8 @@ const between=(start,end)=>{const a=game.indexOf(start),b=game.indexOf(end,a+sta
 // Phase 22 moved the contract functions into career-contract.js; the *Rule definitions run here under their game.js names.
 const contractMoved=game.includes("from './career-contract.js'"),contractSource=contractMoved?read('docs/src/engine/career-contract.js'):'';
 const moduleBetween=(start,end)=>{const a=contractSource.indexOf(start),b=contractSource.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,start);return contractSource.slice(a,b);};
+const movementSource=read('docs/src/engine/career-movement.js');
+const movementBetween=(start,end)=>{const a=movementSource.indexOf(start),b=movementSource.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,start);return movementSource.slice(a,b);};
 const contractFunctions=()=>contractMoved?
   moduleBetween('  function salaryForRule(','\n  function migrateSalaryV130State')+';var salaryFor=salaryForRule;let careerSession={pendingOffseasonSalary:null};'+
   contractSource.match(/  const kboPreviousPackage=[^\n]+/)[0]+moduleBetween('  const salaryCandidateRule=','\n  function saveSalaryDecision')+';var salaryCandidate=salaryCandidateRule;'+
@@ -54,7 +56,7 @@ function harness(){
   card:()=>{},board:()=>{},bindLatestSalaryDetailLink:()=>{},fmtMoney:String,salaryDecisionSummary:()=>'',salaryDecisionLink:()=>'',isBelowActiveMinimum:()=>false,
   saveSalaryDecision:(type,candidate,previousSalary,finalSalary)=>S.salaryDecisionHistory.push({type,candidate,previousSalary,finalSalary}),advances:0});
  vm.runInContext('const LV='+game.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';const PATHS={KBO:["KBO2","KBO1"]};'+contractFunctions()+
-  'function advance(){finalizePendingOffseasonSalary();advances++;}'+between('function movement(){','\nfunction buyoutRemaining')+(game.includes('function reportFlowOutcome(')?'\n'+between('  function reportFlowOutcome(','\n  function newState'):''),context);
+  'function advance(){finalizePendingOffseasonSalary();advances++;}'+movementBetween('  function movement(){','\n  return {')+(game.includes('function reportFlowOutcome(')?'\n'+between('  function reportFlowOutcome(','\n  function newState'):''),context);
  return{S,old,run:code=>vm.runInContext(code,context),context};
 }
 test('native candidate and fixedContract floor without RNG',()=>{const h=harness();h.S.lv='KBO2';const c=h.run('salaryCandidate()');assert.equal(c.baseSalary,8_000_000);assert.equal(c.positionMult,.92);assert.equal(c.annualSalary,8_000_000);h.context.candidate=c;const signed=h.run('fixedContract({org:S.org,teamId:S.orgTeamId,years:1,annualSalary:7_360_000,candidate})');assert.equal(signed.annualSalary,8_000_000);assert.equal(signed.incentive.rate,.07);assert.deepEqual(h.S.ct,h.old);});

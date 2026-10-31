@@ -603,94 +603,7 @@ function renderCheckpointCard(owner,key,args){
   }
 }
 /* 升降格と去向。 */
-function movement(){
-  const o=ovr();
-  /* プロ。 */
-  if(isBelowActiveMinimum(o)){
-    retireBelowActiveMinimum();
-    return;
-  }
-  if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);reportFlowOutcome({kind:'REHAB_YEAR_COMPLETED'});return;} /* リハビリ全休年も満了契約の来季更新を飛ばさない。 */
-  if(S.org==='NPB')S.npbYears++;
-  if(LV[S.lv].top){ /* 轉換リーグ：直接解除球団 5 年控制期制限、往後のみ要契約満了就是自由球員。 */
-    if(S.svcOrg && S.svcOrg!==S.org){ S.faElig=true; }
-    S.svcOrg=S.org;
-    S.svc=(S.svc||0)+1; if(S.svc>=5)S.faElig=true;
-  }
-  /* 神主牌：同一球団での連続在籍年数(移籍でリセット、見 doTrade/signTo)。 */
-  if(S.stage==='PRO'&&LV[S.lv].top){ S.teamYears=(S.teamYears||0)+1;
-    if(goldclothEligible(S)){ S.traits.goldcloth=true;
-      card('gold','隠し特性解放：黄金のユニフォーム',TRAIT_TEXT.goldcloth); board(1); }
-    if(!S.traits.franchise&&S.teamYears>=7&&S.champThisTeam&&S.champTeam===S.orgTeamId){ S.traits.franchise=true;
-      card('gold','隠し特性解放：神カード','この街のファンはあなたの成長を見守ってきた。放出すれば本拠地が炎上することをフロントも分かっている――<b class="hl">所属球団との再契約の評価に補正が入り、引退評価にも加点。球団はトレードを拒否する</b>。'); }
-    /* ◯◯先生：同じ支球団效力滿 15 年且成績安定。 */
-    if(!S.traits.mrteam&&S.teamYears>=15&&(S.lastD||0)>=0){ S.traits.mrteam=true; S.mrTeamName=S.orgTeamId;
-      const nick=teamNick(S.orgTeamId);
-      card('gold','隠しタイトル:'+nick+'ミスター',`15年間、同じユニフォーム。ファンは名前ではなく「<b class="hl">ミスター${nick}</b>」と呼ぶ――あなたこそ、この球団の代名詞だ。`); board(1); }
-    /* ◯◯七彩球衣：同じリーグキャリア效力球団数超標(CPBL>3、NPB>5、MLB>5)。 */
-    if(!S.traits.rainbow){
-      const RB={CPBL:['台湾プロ野球',3],NPB:['NPB',5],MLB:['メジャーリーグ',5]};
-      for(const lg in RB){
-        const n=Object.keys((S.teamTally&&S.teamTally[lg])||{}).length;
-        if(n>RB[lg][1]){ S.traits.rainbow=true; S.rainbowLg=RB[lg][0];
-          card('info','隠しタイトル:'+displayTrait('rainbow'),`クローゼットには${n}着の異なるユニフォーム――${RB[lg][0]}の球団をほぼ一巡した。ファンからは「<b class="hl">渡り鳥</b>」と呼ばれる。どこでも生き残れるのも立派な能力だ。`); board(1); break; }
-      }
-    } }
-  const path=PATHS[S.org], idx=path.indexOf(S.lv);
-  let minReq=LV[S.lv].min;
-  if(S.org==='NPB'&&S.npbYears>=8){ minReq-=4; }
-  const perf=(S.seasonFactor>=0.5)?(S.lastD||0):null; /* 傷缺季不確認成績。 */
-  /* 受賞による降格保護：当該シーズンに個人タイトルを獲得(MVP/王/最優秀投手、オールスターを除く)→降格・戦力外にしない。 */
-  // Separate exact protection set; Gold Glove is not a phoenix title. Old current-year cross-league scope remains.
-  const wonAward = hasCurrentAwardEffect(S,'demotion',S.org);
-  /* Fix C：実成績による降格保護。当該シーズンの実成績を使い、能力評価dは参照しない、好成績なら降格させない。 */
-  let goodReal=false;
-  { const st=S.lastSt;
-    if(st&&S.seasonFactor>=0.5){
-      if(S.pos==='P'){
-        const era=st.IP>0?st.ER*9/st.IP:99, whip=st.IP>0?(st.H+st.BB)/st.IP:99;
-        /* 投手：ERA または WHIP 達リーグ一線水準、または有一定セーブ/セットアッパー產能。 */
-        if(era<=4.20||whip<=1.35||(st.SV||0)>=15||(st.HLD||0)>=15)goodReal=true;
-      }else{
-        const obp=st.PA>0?(st.H+st.BB)/st.PA:0, slg=slgOf(st), ops=obp+slg;
-        /* 野手：OPS がリーグのレギュラー水準へ到達(.720+)、または二桁本塁打・盗塁などの実績。 */
-        if(ops>=0.720||st.HR>=12||st.SB>=15||st.RBI>=(LV[S.lv].g>=150?70:55))goodReal=true;
-      }
-    }
-  }
-  if(wonAward||goodReal){ /* 受賞 または 実成績が基準到達 → 球団放出しない。 */ }
-  else if(o<minReq){
-    if(perf!==null&&perf>=0){ /* 帳面成績十分好、球団継続留觀察。 */
-      card('info','球団の評価',`体力測定は危険水域。それでも<b class="hl">結果</b>で黙らせた――今季はリーグ水準の成績を残し、球団は現レベルで様子を見ることにした。`);
-    }else{ handleDemotion(o,path,idx); return; }
-  }else if(perf!==null&&perf<=-6&&chance(55)){ /* 能力が残っていても成績が急落、降格対象。 */
-    card('bad','球団の評価','数字はリーグ水準を大きく下回り、首脳陣の我慢も限界に達した。');
-    handleDemotion(o,path,idx); return;
-  }
-  /* 昇格(圧倒的成績なら2段階昇格可能)。 */
-  if(idx<path.length-1){ const nx=path[idx+1];
-    if(o>=LV[nx].min&&((S.lastD||0)>=0||chance(50))){
-      let to=nx;
-      if(idx<path.length-2){ const nx2=path[idx+2];
-        if(o>=LV[nx2].min+2&&(S.lastD||0)>=4)to=nx2; }
-      const fromLv=S.lv;
-      S.lv=to; applyPromotionSalary(fromLv,to); card('good','昇格通知',`活躍が評価され、${to!==nx?'<b class="hl">二段階昇格</b>':'昇格'}！ 新天地は<b class="hl">${LV[to].n}</b>。`); board(2);
-      if(S.traits.yips){ removeTrait('yips','イップス'); card('good','イップス克服','本来の階級へ戻り、自分のリズムを取り戻した――<b class="hl">イップスを克服した</b>。'); } } }
-  if(!S.ct)throw new Error('PRO_PLAYER_WITHOUT_CONTRACT');
-  /* 所属球団との延長交渉は複数年契約の残り2年時点、または最終契約の残り1年で行う。 */
-  if(S.ct.remainingYears===1&&LV[S.lv].top&&!S.ct.extOffered&&S.faElig&&(S.lastD||0)>=1&&chance(45)){
-    S.ct.extOffered=true; extensionOffer(o); return;
-  }
-  if(S.ct.remainingYears<=0){
-    if(LV[S.lv].top){
-      if(S.faElig){ faFlow(o); return; }
-      /* プロ5年目までは球団が保有権を行使して短期更新し、年俸は所属階級の基準額を下回らない。 */
-      const renewalYears=1;if(S.org==='NPB')S.ct=null;markClubInitiatedRenewal(renewalYears);
-      card('info','チーム契約更新',`まだ球団保有期間（在籍${S.svc}/5年）。球団が契約更新権を行使し、<b class="hl">${renewalYears}年</b>契約を提示。年俸は所属レベル基準となる。`); board(1);
-    } else { const renewalYears=1;if(S.org==='NPB')S.ct=null;markClubInitiatedRenewal(renewalYears); } /* 海外の満了契約は進路確定まで保持する。 */
-  }
-  crossOffers(o);
-}
+function movement(){return careerMovement.movement();}
 function buyoutRemaining(rate){return careerMovement.buyoutRemaining(rate);}
 function handleDemotion(o,path,idx){return careerMovement.handleDemotion(o,path,idx);}
 function retireBelowActiveMinimum(){return careerMovement.retireBelowActiveMinimum();}
@@ -906,7 +819,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function faFlow(o){return careerMovement.faFlow(o);}
   function faMarket(o,d){return careerMovement.faMarket(o,d);}
   function outOfOrg(o){return careerMovement.outOfOrg(o);}
-  const careerMovement=new CareerMovement({getState:()=>S,LV,careerSession,faMarket:(o,d)=>faMarket(o,d),applyKboForeignPackageCap:input=>applyKboForeignPackageCap(input),salaryCandidate:input=>salaryCandidate(input),salaryFor:(lv,d)=>salaryFor(lv,d),fixedContract:input=>fixedContract(input),signTo:(org,lv,teamId,years,mult,reason,options)=>signTo(org,lv,teamId,years,mult,reason,options),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),renewAndAdvance:(mult,allowDecrease,contractType)=>renewAndAdvance(mult,allowDecrease,contractType),arbitrationFlow:()=>arbitrationFlow(),kboPreviousPackage:()=>kboPreviousPackage(),currentMarketRating:()=>currentMarketRating(),contractStageFor:org=>contractStageFor(org),serviceYearsFor:org=>serviceYearsFor(org),migrateSalaryV130State:()=>migrateSalaryV130State(),migrateSalaryV140State:()=>migrateSalaryV140State(),applyDemotionSalary:(fromLv,toLv)=>applyDemotionSalary(fromLv,toLv),ageGateJP:()=>ageGateJP(),doTradeExec:()=>doTradeExec(),dpMult:()=>dpMult(),ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),card:(cls,title,html)=>card(cls,title,html),board:phase=>board(phase),choose:(title,opts)=>choose(title,opts),escapeHTML:v=>escapeHTML(v),teamRec:id=>teamRec(id),listByOrg:org=>listByOrg(org),pickRecord:a=>pickRecord(a),removeTrait:(key,name)=>removeTrait(key,name),traitCard:(key,name,text,cls)=>traitCard(key,name,text,cls),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}});
+  const careerMovement=new CareerMovement({getState:()=>S,LV,PATHS,careerSession,faMarket:(o,d)=>faMarket(o,d),crossOffers:o=>crossOffers(o),applyPromotionSalary:(fromLv,toLv)=>applyPromotionSalary(fromLv,toLv),markClubInitiatedRenewal:years=>markClubInitiatedRenewal(years),extensionOffer:o=>extensionOffer(o),displayTrait:key=>displayTrait(key),slgOf:st=>slgOf(st),teamNick:id=>teamNick(id),applyKboForeignPackageCap:input=>applyKboForeignPackageCap(input),salaryCandidate:input=>salaryCandidate(input),salaryFor:(lv,d)=>salaryFor(lv,d),fixedContract:input=>fixedContract(input),signTo:(org,lv,teamId,years,mult,reason,options)=>signTo(org,lv,teamId,years,mult,reason,options),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),renewAndAdvance:(mult,allowDecrease,contractType)=>renewAndAdvance(mult,allowDecrease,contractType),arbitrationFlow:()=>arbitrationFlow(),kboPreviousPackage:()=>kboPreviousPackage(),currentMarketRating:()=>currentMarketRating(),contractStageFor:org=>contractStageFor(org),serviceYearsFor:org=>serviceYearsFor(org),migrateSalaryV130State:()=>migrateSalaryV130State(),migrateSalaryV140State:()=>migrateSalaryV140State(),applyDemotionSalary:(fromLv,toLv)=>applyDemotionSalary(fromLv,toLv),ageGateJP:()=>ageGateJP(),doTradeExec:()=>doTradeExec(),dpMult:()=>dpMult(),ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),card:(cls,title,html)=>card(cls,title,html),board:phase=>board(phase),choose:(title,opts)=>choose(title,opts),escapeHTML:v=>escapeHTML(v),teamRec:id=>teamRec(id),listByOrg:org=>listByOrg(org),pickRecord:a=>pickRecord(a),removeTrait:(key,name)=>removeTrait(key,name),traitCard:(key,name,text,cls)=>traitCard(key,name,text,cls),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}});
 
   const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();
   resumeSeasonEnd=()=>{

@@ -47,11 +47,17 @@ const [game, careerMovement, baseCss] = await Promise.all([
   readFile(path.join(root, 'docs/src/engine/career-movement.js'), 'utf8'),
   readFile(path.join(root, 'docs/styles/base.css'), 'utf8'),
 ]);
-const forcedCheck = game.indexOf('if(isBelowActiveMinimum(o)){');
-const injuryYearCheck = game.indexOf("if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);reportFlowOutcome({kind:'REHAB_YEAR_COMPLETED'});return;}");
-const demotionCheck = game.indexOf('handleDemotion(o,path,idx)');
+// Phase 24: the first movement layer lives in career-movement.js; its body is the last function before the return line.
+const movementBody = careerMovement.slice(careerMovement.indexOf('  function movement(){'),careerMovement.indexOf('\n  return {',careerMovement.indexOf('  function movement(){')));
+assert.ok(movementBody.endsWith('  crossOffers(o);\n  }'));
+assert.doesNotMatch(movementBody, /crossOffersRule/);
+assert.match(game.slice(game.indexOf('new CareerMovement(')), /^new CareerMovement\([^\n]*crossOffers:o=>crossOffers\(o\)/);
+assert.match(game, /function movement\(\)\{return careerMovement\.movement\(\);\}/);
+const forcedCheck = movementBody.indexOf('if(isBelowActiveMinimum(o)){');
+const injuryYearCheck = movementBody.indexOf("if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);reportFlowOutcome({kind:'REHAB_YEAR_COMPLETED'});return;}");
+const demotionCheck = movementBody.indexOf('handleDemotion(o,path,idx)');
 assert.ok(forcedCheck >= 0 && forcedCheck < injuryYearCheck && forcedCheck < demotionCheck);
-assert.match(game, /retireBelowActiveMinimum\(\)/);
+assert.match(movementBody, /retireBelowActiveMinimum\(\)/);
 assert.match(careerMovement, /card\('bad','現役続行を断念','総合力が現役続行の最低基準を下回ったため、ユニフォームを脱ぐことを決断した。'\)/);
 assert.doesNotMatch(game + careerMovement, /権限移譲を受け入れる/);
 assert.match(careerMovement, /LV\[targetLevel\]\.n\+'への降格を受け入れる'/);

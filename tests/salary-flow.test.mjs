@@ -27,7 +27,7 @@ assert.match(game, /lastSalaryPaidYear:null/);
 assert.match(game, /salaryEvaluationHistory:\[\],lastSalaryEvaluation:null,lastSalaryDecision:null,salaryDecisionHistory:\[\]/);
 assert.match(game, /salaryDueForYear\(S\.ct,S\.year\)/);assert.match(game,/contractContinuationForNextYear\(S\.ct,S\.year\)/);
 assert.match(game, /markSalaryPaid\(S\.ct,S\.year\)/);
-assert.match(game, /PRO_PLAYER_WITHOUT_CONTRACT/);
+assert.match(careerMovement, /PRO_PLAYER_WITHOUT_CONTRACT/);
 assert.match(game, /stage==='IND'.*salaryCandidate\(\{sourceLevel:'IND',targetLevel:'IND'/s);
 assert.match(game, /S\.ct=null;if\(S\.lastSalaryPaidYear===S\.year\)/);
 
@@ -38,7 +38,7 @@ assert.doesNotMatch(gameAndModules, /const salaryCandidate=/);
 assert.match(careerContract, /salaryCandidate\(\{sourceLevel:fromLv,targetLevel:toLv/);
 assert.match(careerMovement, /applyDemotionSalary\(fromLv,targetLevel\)/);
 assert.match(careerContract, /const applyDemotionSalary=function\(fromLv,toLv\)\{const S=getState\(\);const renewalRequired=contractNeedsRenewal\(S\.ct\);applyLevelSalary\(fromLv,toLv,false\);if\(renewalRequired\)markClubInitiatedRenewal\(1\);\}/);
-assert.match(game, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\)\)markClubInitiatedRenewal\(1\);reportFlowOutcome\(\{kind:'REHAB_YEAR_COMPLETED'\}\);return;\}/);
+assert.match(careerMovement, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\)\)markClubInitiatedRenewal\(1\);reportFlowOutcome\(\{kind:'REHAB_YEAR_COMPLETED'\}\);return;\}/);
 assert.match(careerContract, /const sourceLevel=S\.lv,sourceStage=S\.stage,sourceOrg=S\.org/);
 assert.match(careerContract, /sourceLevel:LV\[sourceLevel\]\?sourceLevel:lv/);
 assert.match(careerContract, /rating:sourceStage==='PRO'\?currentMarketRating\(\):0/);
@@ -102,7 +102,7 @@ assert.equal((gameSites.match(/\bri\(/g) || []).length, 24);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 const legacyJournalSlots=[...seasonAwards.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
-assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,18,'existing eligible chance sites moved to one-to-one legacy slots');
+assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,15,'existing eligible chance sites moved to one-to-one legacy slots');
 // Phase 15 moved processIntlPhase into InternationalTournament: pick( -1 in game.js, the same 1 in international-tournament.js.
 // Its game.js wiring only forwards to the current pick (late binding) and is not a draw site.
 const intlBridge='pick:a=>pick(a)';
@@ -117,7 +117,7 @@ assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonAwards.match(new RegEx
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerRetirement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[4,2,0,0],'CareerRetirement draw sites moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(amateurCareer.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,4,0,0],'AmateurCareer draw sites moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerContract.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,1,0],'CareerContract draw site moved verbatim');
-assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerMovement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,2,8,0],'CareerMovement draw sites moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerMovement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,2,11,0],'CareerMovement draw sites moved verbatim');
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(careerMovement, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);
