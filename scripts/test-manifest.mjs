@@ -26,7 +26,8 @@ const browserProfiles = {
   'global-contract-market-e2e': {args:['--quick'], seconds:30},
   'hof-first-ballot-e2e': {seconds:50},
   'game-view-dom-e2e': {seconds:300,reason:'OOP phase 2 GameView guard: P/IF fixed-seed careers at 1280/390, per-step #log/#act/#board DOM, S and RNG count identical to fixed baseline 2a11a64. No Quick profile.'},
-  'npb-return-e2e': {args:['--quick'], seconds:60},
+  'npb-return-e2e': {seconds:90},
+  'npb-return-rng-e2e': {args:['--rng-only'], seconds:10},
   'replay-share-theme-e2e': {args:['--ui-only'], seconds:30},
   'salary-history-e2e': {args:['--ui-only'], seconds:20},
   'trait-system-e2e': {args:['--ui-only'], seconds:30},
@@ -67,7 +68,7 @@ export function inventory(root) {
   return entries.map(e=>({...e,historicalRefs:e.file.endsWith('.mjs')?[...new Set([...readFileSync(new URL(e.file,root),'utf8').matchAll(/(?:baseline\w*\s*=\s*|\|\|\s*|git[^\n]*?show[^\n]*?)['"`]([0-9a-f]{7,40})(?::docs)?['"`:]?/gi)].map(m=>m[1]))]:[]}));
 }
 export const manual = [
-  {id:'legacy-career-benchmarks',reason:'Original unflagged historical careers remain individually runnable. Routine full uses focused UI/fixture flags for six overlapping feature suites; contemporary complete-state/RNG careers run in ACT, contract, draft, display and event suites, not repeated in every old feature benchmark.'},
+  {id:'legacy-career-benchmarks',reason:'Original unflagged historical careers remain individually runnable. Routine full uses focused UI/fixture flags for five overlapping feature suites; contemporary complete-state/RNG careers run in ACT, contract, draft, display and event suites, not repeated in every old feature benchmark.'},
   {id:'hof-4000-careers',reason:'Explicit opt-in research only; requires reaching all league buckets and hours/days of sampling. The current 25-seed pilot is NOT a 4,000-career generator.'},
   {id:'real-devices-and-share-sheet',reason:'Physical iPhone/Android and native share permissions required; Chromium widths cannot substitute.'},
   {id:'cloudflare-preview',reason:'Separate explicit --preview=<URL> E2E invocation and deployment content verification; automatic CI uses loopback, not an unverified mutable URL.'},

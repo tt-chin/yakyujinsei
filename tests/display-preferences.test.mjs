@@ -30,4 +30,8 @@ for(const block of css.matchAll(/:root\[data-theme="([^"]+)"\]\s*\{([^}]+)\}/g))
   for(const bg of ['panel','panel2'])for(const fg of ['control-edge','focus-ring'])assert.ok(ratio(tokens[fg],tokens[bg])>=3,`${block[1]} UI ${fg}/${bg}`);
   for(const bg of ['primary-button-start','primary-button-end'])assert.ok(ratio(tokens['primary-button-text'],tokens[bg])>=4.5,`${block[1]} primary button`);
 }
-console.log('Display preferences: 24 combinations, validation, storage failures, isolation and contrast passed.');
+// Each font stack must start with a family that index.html actually loads from Google Fonts.
+const base=readFileSync(new URL('../docs/styles/base.css',import.meta.url),'utf8');
+const loaded=[...html.matchAll(/fonts\.googleapis\.com\/css2\?([^"]+)"/g)].flatMap(m=>[...m[1].matchAll(/family=([^:&]+)/g)].map(f=>decodeURIComponent(f[1].replace(/\+/g,' '))));
+for(const name of ['sans','mono']){const first=base.match(new RegExp(`--${name}:'([^']+)'`))?.[1];assert.ok(loaded.includes(first),`--${name} first family ${first} is not loaded (${loaded.join(', ')})`);}
+console.log('Display preferences: 24 combinations, validation, storage failures, isolation, contrast and font loading passed.');

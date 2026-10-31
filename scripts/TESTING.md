@@ -18,7 +18,7 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 ## 全力投球callback修正
 
-`full-power-pitching.test`為Quick／Full／Audit原生函式53案（含四聯盟及MiLB適用階層）；`full-power-pitching-e2e`為Full／Audit的真實三強度callback、SP／MR／CL及1280／320／390px、TJ後續操作與完整生涯。基準20920dddd72ab8c91b0e2c71d560492663cd5aec，或明示`--baseline=<SHA>`；套用上節明示的C／COPY正向控制差分後，逐一比較proSeason／tjAccrue／tjCap／phasePre，只允許核准的一行投球callback差異，不再要求整個game.js與加入C前逐字相等。完整S／R斷言保留。可直接`--fixtures-only`做Preview矩陣，不冒充完整生涯。Full以`--part=`拆為三入口：`full-power-pitching-e2e`（`fixtures`：E01／E03＋S03 IF對照）、`full-power-pitching-yakyo-test-001-e2e`、`full-power-pitching-jp3-pitcher-02-e2e`（各為該seed的S01-S02），後兩者為僅import本檔的薄入口；三入口合計即原36案，直接執行本檔不加`--part`仍跑全部，未知part值丟錯。
+`full-power-pitching.test`為Quick／Full／Audit原生函式64案（含四聯盟及MiLB適用階層，以及第11期11-A賽季後處理分派與`ec903fd`的等價fixture 11案）；`full-power-pitching-e2e`為Full／Audit的真實三強度callback、SP／MR／CL及1280／320／390px、TJ後續操作與完整生涯。基準20920dddd72ab8c91b0e2c71d560492663cd5aec，或明示`--baseline=<SHA>`；套用上節明示的C／COPY正向控制差分後，逐一比較proSeason／tjAccrue／tjCap／phasePre，只允許核准的一行投球callback差異，不再要求整個game.js與加入C前逐字相等。完整S／R斷言保留。可直接`--fixtures-only`做Preview矩陣，不冒充完整生涯。Full以`--part=`拆為三入口：`full-power-pitching-e2e`（`fixtures`：E01／E03＋S03 IF對照）、`full-power-pitching-yakyo-test-001-e2e`、`full-power-pitching-jp3-pitcher-02-e2e`（各為該seed的S01-S02），後兩者為僅import本檔的薄入口；三入口合計即原36案，直接執行本檔不加`--part`仍跑全部，未知part值丟錯。
 
 契約、draft-income、display、trait-display、international-personal-stats、KBO正向控制及殿堂的歷史一致生涯，修正前後都以真實UI明確選「通常投球」；只改測試操作策略，不改遊戲source／S／舊baseline，不新增狀態排除，完整S、選擇與RNG斷言保持。KBO原2049負面案例為IF，操作策略不受這個投手選項影響。原始全力路線的失敗证据保留；新專項另驗證全力的首個effort差異、首次補正前的完整R前綴、成績／TJ與新版重播。全力路線後續條件抽選可依已批准的連鎖差異改变，不稱完整舊生涯R次數不變。研究100條原始資料不覆寫。
 
@@ -45,7 +45,7 @@ node scripts/test.mjs full --only=contract-salary-e2e
 
 quick 執行全部快速原生／單元入口、JS 語法、KBO quick、ACT 入團／listener fixtures、draft-income quick。full 不重複 quick 入口，而是擴大相同入口的測試範圍，並執行其餘瀏覽器、投手／野手生涯和 RNG 比較。audit 包含 full，加兩條 P／IF 自然生涯研究及重播；人工項目明列 SKIP。
 
-六個既有功能 E2E 以 `--ui-only`／`--quick` 執行完整的原生功能 fixture／UI／候選 RNG 矩陣；不在每項重新跑相同的舊版生涯比較。完整生涯由 ACT、contract、draft、display、event 的專門入口覆蓋，保留各自不同的契約／收入／UI重繪／事件斷言。需要重查原歷史生涯時可明確使用 `--legacy-careers --only=<id>`；不刪除或改寫舊斷言。
+五個既有功能 E2E 以 `--ui-only`／`--quick` 執行完整的原生功能 fixture／UI／候選 RNG 矩陣；不在每項重新跑相同的舊版生涯比較。完整生涯由 ACT、contract、draft、display、event 的專門入口覆蓋，保留各自不同的契約／收入／UI重繪／事件斷言。需要重查原歷史生涯時可明確使用 `--legacy-careers --only=<id>`；不刪除或改寫舊斷言。`npb-return-e2e` 例外：其對 `73d5a58` 的生涯比較已經批准移除（`18820f0`），常規 full 執行不帶參數的完整模式（fixture／UI＋現行版 4 seed 各重播兩次一致）；與 `73d5a58` 的 return-gate 路線比較由 `npb-return-rng-e2e`（`--rng-only`）執行。
 
 display 的常規 full 執行全部設定／尺寸／DOM 保持矩陣，加 P／IF 各一條每17操作切換設定的完整生涯。其餘4條不重複，原六條完整設定生涯仍可用 `--legacy-careers --only=display-preferences-e2e` 執行。
 

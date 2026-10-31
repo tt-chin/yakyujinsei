@@ -20,14 +20,24 @@ const current=await readFile(new URL('../docs/src/engine/game.js',import.meta.ur
 const canonical=s=>s.replaceAll('\r\n','\n');
 // Phase 4-A deleted phasePre's unreachable college-path block (comment + if(false){...}); drop it from the prior side only.
 const withoutDeadBlock=(fn,text)=>{if(fn!=='phasePre')return text;const a=text.indexOf('  /* 大學季前'),b=text.indexOf("  if(S.stage==='PRO'&&S.age>=36",a);assert.ok(a>0&&b>a&&text.slice(a,b).includes('if(false){'),'dead block in prior phasePre');return text.slice(0,a)+text.slice(b);};
-for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(canonical(productionFunction(fn,current)),withoutDeadBlock(fn,canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();")),'pitching rules unchanged except approved callback'+(fn==='phasePre'?' and deleted dead block':'')+': '+fn);
+// Phase 11-B batch 4: phasePre's year endings report through reportFlowOutcome; restore only these exact calls on the current side.
+const withOriginalEndings=(fn,text)=>{if(fn!=='phasePre')return text;for(const [reported,original] of [
+ ["reportFlowOutcome({kind:'PRESEASON_AGE_LIMIT_RETIRED',reason:'体はもう限界。'+S.year+' 年の春季キャンプ後に引退を発表した。'})","endGame('体はもう限界。'+S.year+' 年の春季キャンプ後に引退を発表した。')"],
+ ["で日本球界へ復帰した。`);reportFlowOutcome({kind:'PRESEASON_RETURNED_NPB'});","で日本球界へ復帰した。`);advance();"],
+ ["daibaFarewell(()=>reportFlowOutcome({kind:'PRESEASON_RETIRED',reason:'功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'}))","daibaFarewell(()=>endGame('功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'))"]
+]){assert.equal(text.split(reported).length,2,reported);text=text.replace(reported,()=>original);}return text;};
+for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(withOriginalEndings(fn,canonical(productionFunction(fn,current))),withoutDeadBlock(fn,canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();")),'pitching rules unchanged except approved callback'+(fn==='phasePre'?' and deleted dead block':'')+': '+fn);
 // Calculation and accumulation body stays byte-exact; only authorized continuation wiring differs.
 const seasonBody=src=>canonical(productionFunction('proSeason',src));
 const oldSeason=seasonBody(prior),newSeason=seasonBody(current);
 assert.equal(newSeason.slice(newSeason.indexOf(' const st=simSeason'),newSeason.indexOf('  Object.assign(continuation,')),
  oldSeason.slice(oldSeason.indexOf(' const st=simSeason'),oldSeason.indexOf('  awards(bucket,st);')),'full native season calculations, RNG and accumulation unchanged');
 const continuationBody=productionFunction('resumeProfessionalSeason',current);
-for(const call of ['awards(entry.bucket,entry.st)','recordSalaryEvaluation(entry.st)','captureSeasonChampionship(S)','tjAccrue()','tjGamble(()=>demotionAudit(()=>tradeCheck(()=>maybeIntl(()=>nextStep()))))'])assert(continuationBody.includes(call),'required original continuation '+call);
+for(const call of ['awards(entry.bucket,entry.st)','recordSalaryEvaluation(entry.st)','captureSeasonChampionship(S)','tjAccrue()','runSeasonPipeline(0)'])assert(continuationBody.includes(call),'required original continuation '+call);
+// Phase 11-A: the post-season chain runs through runSeasonPipeline; step order and dispatch targets stay the original chain.
+const pipelineBody=productionFunction('runSeasonPipeline',current);
+assert(pipelineBody.includes("const steps=['TJ_GAMBLE','DEMOTION_AUDIT','TRADE_CHECK','INTL_POST'];"),'post-season step order unchanged');
+for(const call of ["case 'TJ_GAMBLE':return tjGamble(cont);","case 'DEMOTION_AUDIT':return demotionAudit(cont);","case 'TRADE_CHECK':return tradeCheck(cont);","case 'INTL_POST':return maybeIntl(cont);",'if(step>=steps.length)return nextStep();','const cont=()=>runSeasonPipeline(step+1);'])assert(pipelineBody.includes(call),'required pipeline dispatch '+call);
 const hook=`
 window.__effortInputs=[];window.__effortSeasons=[];window.__effortTJ=[];
 const observedAcc=accLevelStat;accLevelStat=(lv,st)=>{window.__effortSeasons.push({year:S.year,lv,role:S.role,effort:S.effort,st:JSON.parse(JSON.stringify(st)),calls:window.__stage6.get().rng.length});return observedAcc(lv,st);};

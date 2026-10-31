@@ -19,8 +19,9 @@ const expected={
   'jp3-outfielder-01':[2977884693,['0.3409292928','0.5346552909','0.5718218323'],['0.3876580282','0.9362110393','0.7323834505']],
 };
 for(const [seed,[state,head,tail]] of Object.entries(expected))assert.deepEqual(sample(seed),{state,head,tail});
-const alloc=game.slice(game.indexOf('function allocUI'),game.indexOf('function nextStep'));
+const ability=fs.readFileSync(new URL('../docs/src/engine/player-ability.js',import.meta.url),'utf8');
+const alloc=ability.slice(ability.indexOf('function allocUI'),ability.indexOf('function abilityRules'));
 assert.doesNotMatch(alloc,/\b(?:R|ri|pick|chance)\s*\(/);
-assert.match(game,/replayURL\(S.seed\|\|SEED,location.href\)/);
+assert.match(fs.readFileSync(new URL('../docs/src/engine/career-retirement.js',import.meta.url),'utf8'),/replayURL\(getState\(\)\.seed\|\|getSeed\(\),location\.href\)/);
 assert.doesNotMatch(game,/[?&](?:rv|rules)=/);
 console.log('v1.6.2 six-seed RNG and seed-only URL checks passed.');

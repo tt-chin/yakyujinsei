@@ -76,6 +76,7 @@ test('existing addIntlStats and fmtIP implementations remain byte-equivalent',()
   const at=seasonStats.indexOf(header)+header.length;
   current=current.replace(delegate,'  function addIntlStats(){'+seasonStats.slice(at,seasonStats.indexOf('\n  }\n',at))+'}\n');
  }
- for(const [start,end]of [['  function addIntlStats(', '  function completeIntl('],['function fmtIP(', 'function roleN(']])assert.equal(current.slice(current.lastIndexOf(start),current.indexOf(end,current.lastIndexOf(start))),baseline.slice(baseline.lastIndexOf(start),baseline.indexOf(end,baseline.lastIndexOf(start))));
+ // OOP plan §2s: completeIntl moved into InternationalTournament, so addIntlStats ends at the next 2-space declaration.
+ for(const [start,end]of [['  function addIntlStats(', '\n  function '],['function fmtIP(', 'function roleN(']])assert.equal(current.slice(current.lastIndexOf(start),current.indexOf(end,current.lastIndexOf(start))),baseline.slice(baseline.lastIndexOf(start),baseline.indexOf(end,baseline.lastIndexOf(start))));
 });
 console.log(cases+' cases PASS');

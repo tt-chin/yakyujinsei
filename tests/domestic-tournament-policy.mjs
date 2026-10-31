@@ -72,15 +72,16 @@ assert.equal(qualifiesForCorporateJapan(localRunnerUp, localRunnerUp, qualified)
 assert.equal(qualifiesForCorporateJapan(localRunnerUp, localRunnerUp, eliminated), false);
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const [game, data] = await Promise.all([
+const [game, data, playerAbility] = await Promise.all([
   readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8'),
   readFile(path.join(root, 'docs/src/data/jp-data.js'), 'utf8'),
+  readFile(path.join(root, 'docs/src/engine/player-ability.js'), 'utf8'),
 ]);
 assert.doesNotMatch(game, /includes\('優勝'\)/);
-assert.match(game, /if\(isDice&&S\.stage!=='HS'&&keys\.length\)/);
-assert.match(game, /touched\[mk\]\/tot>=0\.75/);
-assert.match(game, /S\.samePick>=3&&!S\.traits\.combo/);
-assert.match(game, /高校以外（大学・社会人・独立・プロ）の開幕前ダイスだけを集中育成判定へ使用/);
+assert.match(playerAbility, /if\(isDice&&S\.stage!=='HS'&&keys\.length\)/);
+assert.match(playerAbility, /touched\[mk\]\/tot>=0\.75/);
+assert.match(playerAbility, /S\.samePick>=3&&!S\.traits\.combo/);
+assert.match(playerAbility, /高校以外（大学・社会人・独立・プロ）の開幕前ダイスだけを集中育成判定へ使用/);
 assert.match(game, /senbatsuEligibleYear:null/);
 assert.match(game, /S\.senbatsuEligibleYear=null/);
 assert.match(game, /pointMode:'UNIVERSITY'/);

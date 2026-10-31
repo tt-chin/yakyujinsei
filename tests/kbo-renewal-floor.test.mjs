@@ -44,7 +44,7 @@ function harness(){
   game.match(/  const nextContractId=[^\n]+/)[0]+game.match(/  function fixedContract[^\n]+/)[0]+
   between('  function finalizePendingOffseasonSalary','\n  function applyLevelSalary')+
   between('  function applyLevelSalary','\n  appendContractExtension=')+
-  'function advance(){finalizePendingOffseasonSalary();advances++;}'+between('function movement(){','\nfunction buyoutRemaining'),context);
+  'function advance(){finalizePendingOffseasonSalary();advances++;}'+between('function movement(){','\nfunction buyoutRemaining')+(game.includes('function reportFlowOutcome(')?'\n'+between('  function reportFlowOutcome(','\n  function newState'):''),context);
  return{S,old,run:code=>vm.runInContext(code,context),context};
 }
 test('native candidate and fixedContract floor without RNG',()=>{const h=harness();h.S.lv='KBO2';const c=h.run('salaryCandidate()');assert.equal(c.baseSalary,8_000_000);assert.equal(c.positionMult,.92);assert.equal(c.annualSalary,8_000_000);h.context.candidate=c;const signed=h.run('fixedContract({org:S.org,teamId:S.orgTeamId,years:1,annualSalary:7_360_000,candidate})');assert.equal(signed.annualSalary,8_000_000);assert.equal(signed.incentive.rate,.07);assert.deepEqual(h.S.ct,h.old);});

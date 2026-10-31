@@ -13,10 +13,10 @@ const arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 // These hooks are injected by this test server/route only, never into shipped files.
 const getter=`get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0})`;
-const hook=`const realR=R,realAdvance=advance;
+const hook=`const realR=R;
 window.__champTest={${getter},
- fixture:v=>{R=realR;advance=realAdvance;actClear();S=newState('優勝検証','P');Object.assign(S,{year:2035,age:25,stage:'PRO',stageYr:6,org:'NPB',lv:'NPB1',orgTeamId:'NPB_CL_HAN',lastD:4,lastSt:null,ab:{vel:58,ctl:58,brk:58,sta:58},teamYears:6,seasonFactor:1,skipMid:false,rehab:0,careerEarnings:111,careerBaseSalary:0,yearOutsideIncome:111,currentSalary:100000000,...v});S.ct=createContract({contractId:'fixture',org:S.org,teamId:S.orgTeamId,signedYear:2034,startYear:S.year,years:3,annualSalary:100000000,incentive:null});window.__adv=0;advance=()=>window.__adv++;board(1);},
- force:v=>{R=()=>{realR();return v;};},restore:()=>{R=realR;advance=realAdvance;},
+ fixture:v=>{R=realR;flowHooks.advance=null;actClear();S=newState('優勝検証','P');Object.assign(S,{year:2035,age:25,stage:'PRO',stageYr:6,org:'NPB',lv:'NPB1',orgTeamId:'NPB_CL_HAN',lastD:4,lastSt:null,ab:{vel:58,ctl:58,brk:58,sta:58},teamYears:6,seasonFactor:1,skipMid:false,rehab:0,careerEarnings:111,careerBaseSalary:0,yearOutsideIncome:111,currentSalary:100000000,...v});S.ct=createContract({contractId:'fixture',org:S.org,teamId:S.orgTeamId,signedYear:2034,startYear:S.year,years:3,annualSalary:100000000,incentive:null});window.__adv=0;flowHooks.advance=()=>window.__adv++;board(1);},
+ force:v=>{R=()=>{realR();return v;};},restore:()=>{R=realR;flowHooks.advance=null;},
  capture:()=>captureSeasonChampionship(S),end:()=>phaseEnd(),move:()=>movement(),
  change:v=>Object.assign(S,v),intl:phase=>processIntlPhase(phase,()=>window.__adv++),adv:()=>window.__adv,
  season:()=>{const saved=[tjGamble,demotionAudit,tradeCheck,maybeIntl,nextStep];tjGamble=c=>c();demotionAudit=c=>{S.lv='NPB2';c();};tradeCheck=c=>c();maybeIntl=c=>c();nextStep=()=>{};try{proSeason();}finally{[tjGamble,demotionAudit,tradeCheck,maybeIntl,nextStep]=saved;}},

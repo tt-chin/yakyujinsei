@@ -131,7 +131,7 @@ try{
       const snapshots=[];
       for(const variant of ['baseline','candidate']){
         const ctx=await browser.newContext({viewport:{width:390,height:844}}),p=await ctx.newPage();wire(p);
-        await p.goto(`${local}/${variant==='baseline'?'baseline/':''}?seed=${seed}`);await p.locator('#btn-start').waitFor();await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#in-name').fill('回帰テスト');await p.locator('#btn-start').click();
+        await p.goto(`${local}/${variant==='baseline'?'baseline/':''}?seed=${seed}`);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#in-name').fill('回帰テスト');await p.locator('#btn-start').click();
         const records=[];
         for(let step=0;step<2000;step++){
           if(variant==='candidate'&&step%17===0){

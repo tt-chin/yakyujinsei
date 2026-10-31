@@ -8,6 +8,7 @@ import * as champ from '../docs/src/engine/championship-policy.js';
 import * as intl from '../docs/src/engine/international-trait-policy.js';
 import * as selection from '../docs/src/engine/international-selection-policy.js';
 import {internationalPersonalStats,renderInternationalPersonalStats} from '../docs/src/ui/international-personal-stats.js';
+import {InternationalTournament} from '../docs/src/engine/international-tournament.js';
 import * as contracts from '../docs/src/engine/contract-policy.js';
 import {applyIncentivePayment,createIncentiveTerms} from '../docs/src/engine/incentive-policy.js';
 import {classifyMarketInjury} from '../docs/src/engine/injury-market-policy.js';
@@ -39,9 +40,10 @@ test('structured result overrides ambiguous honor, valid final count retained',(
 // Execute the actual active international functions, not a reimplementation.
 function activeIntl(v={},source=game){
   const s=state({ab:{vel:65,ctl:65,brk:65,sta:65},pos:'P',role:'SP',rehab:0,skipMid:false,seasonFactor:1,intlDeclinedCount:0,...v});let opts,draws=0,done=0,cards=[];
-  const context={...intl,...selection,internationalPersonalStats,renderInternationalPersonalStats,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
+  const context={...intl,...selection,internationalPersonalStats,renderInternationalPersonalStats,InternationalTournament,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
   // OOP plan §2i (7-A): with the addIntlStats delegate, the vm group calls a SeasonStats built from the live context stubs.
   if(source.includes('seasonStats.addIntlStats('))context.seasonStats=new SeasonStats({getState:()=>context.S,levels:null,rng:{R:()=>context.R(),N0:()=>assert.fail('N0'),chance:p=>context.chance(p),ri:(a,b)=>context.ri(a,b)},clamp:(x,a,b)=>context.clamp(x,a,b),isSP:()=>context.isSP(),pitcherRole:()=>assert.fail('pitcherRole'),checkGoldclothSeason:()=>assert.fail('checkGoldclothSeason')});
+  // OOP plan §2s: the slice itself constructs InternationalTournament with lambdas that resolve these context stubs at call time.
   runInNewContext(source.slice(source.indexOf('  function intlEvents('),Math.max(source.indexOf('  function maybeIntl(done)'),source.indexOf('  maybeIntl = function(done)'))),context);
   return {s,context,run:phase=>context.processIntlPhase(phase,()=>done++),options:()=>opts,report:()=>({draws,done,cards})};
 }
@@ -73,7 +75,7 @@ test('C09 actual active phaseEnd: champion, maintenance, salary/incentive/progre
   runInNewContext(productionFunction('renderCheckpointCard',game)+'\n'+game.slice(game.indexOf('  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();'),game.indexOf('  movement = function()',game.indexOf('  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();'))),c);
   c.phaseEnd();const saved=JSON.stringify(s);c.phaseEnd();assert.equal(JSON.stringify(s),saved);assert.deepEqual([draws,moved,cards],[1,1,2]);assert.equal(s.careerBaseSalary,100000000);assert.equal(s.careerEarnings,100000111);assert.deepEqual([s.tradeRefuse,s.tradeHeat],[1,3]);
 });
-test('snapshot placement and franchise hookup use unchanged actual path',()=>{assert.ok(game.indexOf('captureSeasonChampionship(S);')>game.indexOf('recordSalaryEvaluation(entry.st);'));assert.ok(game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('tjGamble(()=>demotionAudit'));const source=game.slice(game.indexOf('function movement(){'),game.indexOf('function advance()'));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});
+test('snapshot placement and franchise hookup use unchanged actual path',()=>{assert.ok(game.indexOf('captureSeasonChampionship(S);')>game.indexOf('recordSalaryEvaluation(entry.st);'));assert.ok(game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('runSeasonPipeline(0)'));const source=game.slice(game.indexOf('function movement(){'),game.indexOf('function advance()'));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});
 test('out-of-scope data and rules unchanged except approved KBO floor fix',()=>{
   for(const file of ['src/data/event-cards-jp.js','src/data/jp-data.js','src/data/salary-market-data.js','src/engine/market-policy.js','src/engine/cross-league-market-policy.js','src/engine/contract-policy.js','src/engine/event-policy.js','src/engine/event-state-policy.js','src/engine/incentive-policy.js']){
     let current=readFileSync(new URL('../docs/'+file,import.meta.url),'utf8').replace(/\r\n/g,'\n');

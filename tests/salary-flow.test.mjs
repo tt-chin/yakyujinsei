@@ -6,6 +6,13 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
 const seasonStats = await readFile(path.join(root, 'docs/src/engine/season-stats.js'), 'utf8');
+const internationalTournament = await readFile(path.join(root, 'docs/src/engine/international-tournament.js'), 'utf8');
+const playerInjury = await readFile(path.join(root, 'docs/src/engine/player-injury.js'), 'utf8');
+const playerAbility = await readFile(path.join(root, 'docs/src/engine/player-ability.js'), 'utf8');
+const playerRomance = await readFile(path.join(root, 'docs/src/engine/player-romance.js'), 'utf8');
+const seasonEvents = await readFile(path.join(root, 'docs/src/engine/season-events.js'), 'utf8');
+const seasonAwards = await readFile(path.join(root, 'docs/src/engine/season-awards.js'), 'utf8');
+const careerRetirement = await readFile(path.join(root, 'docs/src/engine/career-retirement.js'), 'utf8');
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-period-policy.js'), 'utf8');
@@ -27,7 +34,7 @@ assert.doesNotMatch(game, /const salaryCandidate=/);
 assert.match(game, /salaryCandidate\(\{sourceLevel:fromLv,targetLevel:toLv/);
 assert.match(game, /applyDemotionSalary\(fromLv,targetLevel\)/);
 assert.match(game, /applyDemotionSalary=function\(fromLv,toLv\)\{const renewalRequired=contractNeedsRenewal\(S\.ct\);applyLevelSalary\(fromLv,toLv,false\);if\(renewalRequired\)markClubInitiatedRenewal\(1\);\}/);
-assert.match(game, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\)\)markClubInitiatedRenewal\(1\);advance\(\);return;\}/);
+assert.match(game, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\)\)markClubInitiatedRenewal\(1\);reportFlowOutcome\(\{kind:'REHAB_YEAR_COMPLETED'\}\);return;\}/);
 assert.match(game, /const sourceLevel=S\.lv,sourceStage=S\.stage,sourceOrg=S\.org/);
 assert.match(game, /sourceLevel:LV\[sourceLevel\]\?sourceLevel:lv/);
 assert.match(game, /rating:sourceStage==='PRO'\?currentMarketRating\(\):0/);
@@ -39,23 +46,59 @@ assert.doesNotMatch(game, /Math\.floor\(Number\(d\)\|\|0\)/);
 assert.equal((game.match(/baseSalary\*\(cross\?1:contractMult\)\*positionMult/g) || []).length, 1, '守備位置倍率は候補年俸へ一度だけ適用');
 assert.doesNotMatch(evaluationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 const journalBridge='captureAwardSlot(tx,id,p,()=>R(),()=>realState.rngState)';
-assert.equal(game.split(journalBridge).length,2,'one native Journal bridge, not a new independent draw');
+assert.equal(seasonAwards.split(journalBridge).length,2,'one native Journal bridge, not a new independent draw');
+assert.equal(game.split(journalBridge).length,1,'Journal bridge left game.js in phase 19');
 // Phase 4-A deleted unreachable base bodies: R( -7 (35->28), ri( -31 (74->43), chance( -12 (57->45), pick( -9 (23->14); no site added.
 // Phase 6 moved simSeason/applySeasonForm into SeasonStats: R( -5, ri( -1, chance( -1 in game.js, the same 5/1/1 in season-stats.js.
 // Phase 7-A moved addIntlStats into SeasonStats: R( -1, ri( -3, chance( -2 in game.js, the same 1/3/2 in season-stats.js.
 // Its game.js wiring only forwards to the current R/ri/chance (late binding) and is not a draw site.
 const seasonStatsBridge='rng:{R:()=>R(),N0:sd=>N0(sd),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}';
 assert.equal(game.split(seasonStatsBridge).length,2,'one SeasonStats RNG bridge, not new independent draws');
-const gameSites=game.replace(seasonStatsBridge,'rng:{seasonStatsBridge}');
-assert.equal((gameSites.replace(journalBridge,'captureAwardSlot(nativeBridge)').match(/\bR\(/g) || []).length,22,'all other native RNG call sites unchanged');
+// Phase 16 moved tjGamble/tjBigInjury/rollInjury/injStatLoss into PlayerInjury: ri( -7, chance( -6, pick( -2 in game.js, the same 0/7/6/2 in player-injury.js.
+// Its game.js wiring only forwards to the current ri/chance/pick (late binding) and is not a draw site.
+const injuryBridge='rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}';
+assert.equal(game.split(injuryBridge).length,2,'one PlayerInjury RNG bridge, not new independent draws');
+// Phase 17 moved allocDone into PlayerAbility: R( -1 in game.js, the same 1 in player-ability.js.
+// Its game.js wiring only forwards to the current R (late binding) and is not a draw site.
+const abilityBridge='rng:{R:()=>R()}';
+assert.equal(game.split(abilityBridge).length,2,'one PlayerAbility RNG bridge, not a new independent draw');
+// Phase 18 moved the love events into PlayerRomance: R( -2, chance( -9, pick( -10 in game.js, the same 2/0/9/10 in player-romance.js.
+// Its game.js wiring only forwards to the current R/chance/pick (late binding) and is not a draw site.
+const romanceBridge='rng:{R:()=>R(),chance:p=>chance(p),pick:list=>pick(list)}';
+assert.equal(game.split(romanceBridge).length,2,'one PlayerRomance RNG bridge, not new independent draws');
+// Phase 18 moved drawEvents into SeasonEvents: pick( -1 in game.js, the same 1 in season-events.js.
+// Its game.js wiring only forwards to the current chance/pick (late binding) and is not a draw site.
+const eventsBridge='rng:{chance:p=>chance(p),pick:pool=>pick(pool)}';
+assert.equal(game.split(eventsBridge).length,2,'one SeasonEvents RNG bridge, not a new independent draw');
+// Phase 19 moved awards/collectLegacyAwardPlan into SeasonAwards: the Journal bridge R( and the 14 draw('…') slots now live in season-awards.js.
+// Its game.js wiring only forwards to the current R (late binding) and is not a draw site.
+const awardsBridge='journalRng:{R:()=>R()}';
+assert.equal(game.split(awardsBridge).length,2,'one SeasonAwards RNG bridge, not a new independent draw');
+// Phase 20 moved retireScene/endGame into CareerRetirement: R( -4, ri( -2 in game.js, the same 4/2/0/0 in career-retirement.js.
+// Its game.js wiring only forwards to the current R/ri (late binding) and is not a draw site.
+const retirementBridge='rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}';
+assert.equal(game.split(retirementBridge).length,2,'one CareerRetirement RNG bridge, not new independent draws');
+const gameSites=game.replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}').replace(awardsBridge,'journalRng:{awardsBridge}').replace(retirementBridge,'rng:{retirementBridge}');
+assert.equal((gameSites.match(/\bR\(/g) || []).length,15,'all other native RNG call sites unchanged');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonStats.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[6,4,3,0],'SeasonStats draw sites moved verbatim');
 // Six round-specific bonus sites are consolidated; each draft still consumes one ri.
-assert.equal((gameSites.match(/\bri\(/g) || []).length, 39);
+assert.equal((gameSites.match(/\bri\(/g) || []).length, 30);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
-const legacyJournalSlots=[...game.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
+const legacyJournalSlots=[...seasonAwards.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
-assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,42,'existing eligible chance sites moved to one-to-one legacy slots');
-assert.equal((game.match(/\bpick\(/g) || []).length, 14);
+assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,27,'existing eligible chance sites moved to one-to-one legacy slots');
+// Phase 15 moved processIntlPhase into InternationalTournament: pick( -1 in game.js, the same 1 in international-tournament.js.
+// Its game.js wiring only forwards to the current pick (late binding) and is not a draw site.
+const intlBridge='pick:a=>pick(a)';
+assert.equal(game.split(intlBridge).length,2,'one InternationalTournament RNG bridge, not a new independent draw');
+assert.equal((gameSites.replace(intlBridge,'intlBridge').match(/\bpick\(/g) || []).length, 0);
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(internationalTournament.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,0,1],'InternationalTournament draw site moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerInjury.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,7,6,2],'PlayerInjury draw sites moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerAbility.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,0,0,0],'PlayerAbility draw site moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerRomance.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[2,0,9,10],'PlayerRomance draw sites moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonEvents.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,0,1],'SeasonEvents draw site moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonAwards.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,0,0,0],'SeasonAwards draw site moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerRetirement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[4,2,0,0],'CareerRetirement draw sites moved verbatim');
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(game, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);

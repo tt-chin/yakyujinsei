@@ -15,6 +15,7 @@ const [html, config, data, game, main, baseCss, themeCss] = await Promise.all([
   read('docs/styles/base.css'),
   read('docs/styles/themes.css'),
 ]);
+const shareImage = await read('docs/src/ui/share-image.js');
 
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/jp-theme\.css">/);
@@ -28,10 +29,10 @@ assert.match(html, /href="https:\/\/x\.com\/dog_cat_150"[^>]*>犬猫（@dog_cat_
 assert.match(main, /initializeDisplayPreferences\(\);[\s\S]*await import\('\.\/engine\/game\.js'\)/);
 assert.match(game, /import \{ VERSION \} from '\.\.\/config\.js';/);
 assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
-assert.match(config, /VERSION = '1\.13\.5'/);
+assert.match(config, /VERSION = '1\.13\.6'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(game, /version:VERSION/);
-assert.match(game, /fillText\(VERSION,W-PAD,H-40\)/);
+assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
 assert.doesNotMatch(html, /id="ver-badge"/);
 assert.match(html, /<h1 id="logo-tap"><em>野球人生シミュレーター<\/em><span id="app-version"[^>]*><\/span><\/h1>/);
@@ -42,7 +43,7 @@ const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}`;
 assert.doesNotMatch(forbidden, /UNSUPPORTED_REPLAY_VERSION/);
 assert.doesNotMatch(forbidden, /[?&]rv=/);
 assert.doesNotMatch(forbidden, /[?&]rules=/);
-assert.match(game, /replayURL\(S.seed\|\|SEED,location.href\)/);
+assert.match(await read('docs/src/engine/career-retirement.js'), /replayURL\(getState\(\)\.seed\|\|getSeed\(\),location\.href\)/);
 assert.match(game, /history\.replaceState\(null,'',`\?seed=\$\{encodeURIComponent\(SEED\)\}`\)/);
 
 assert.equal((data.match(/"teamId"/g) || []).length, 90);
@@ -51,11 +52,12 @@ assert.equal((data.match(/"eventKey"/g) || []).length, 2);
 assert.match(themeCss, /--button-detail:#6f303d/);
 assert.match(themeCss, /--primary-button-detail:#fff4f5/);
 assert.match(themeCss, /--bg:#fff8f8/);
-assert.match(game, /imageColor=getSharePalette\(theme\)/);
+assert.match(shareImage, /imageColor=getSharePalette\(theme\)/);
 assert.match(await read('docs/src/ui/share-theme.js'), /standard:\{bg:'#fff8f8'/);
 assert.ok(baseCss.length > 8_000);
 
-assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 2);
+assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 0);
+assert.equal(((await read('docs/src/engine/player-ability.js')).match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 2);
 assert.equal(((await read('docs/src/engine/ability-evaluation-policy.js')).match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 1);
 assert.doesNotMatch(game, /cur>=66\?7:cur>=58\?4:cur>=55\?2:1/);
 
