@@ -2970,6 +2970,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - `refactor/retirement-hof` push（`d771213`），PR #40 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
 - PR #40 已合併，`dev` merge commit `be3f8ae`（樹與 `2a760f1` 相同）。`dev` push 的 Quick CI PASS（run `41189308929`）。手動 Full CI（`workflow_dispatch`，`dev`，Tests #100，run `41189895822`）PASS：`full-aggregate` 回報 `expected 93`、`acceptedPass 93`、`issues []`，8 批皆 success。含 §2x.6 的 T2 追加行，補上該表 Full 早於此行的缺口。`main` 維持 `04decb0`。
+- 正式發布（2026-10-31）：PR #41（`dev` → `main`）已合併，`main` merge commit `9fe741d`（樹與 `c6d9c9f` 相同）。PR 觸發的 Full CI（Tests #102，run `41196168506`）PASS：`expected 93`、`acceptedPass 93`、`issues []`，8 批皆 success。`Publish website #29`（run `41197144452`）success；本番 `docs/index.html`＋`docs/src` 共 72 檔 SHA-256 與 `main` 一致，顯示 v1.13.6。本番只確認到起始畫面，未跑完整生涯。第 11～20 期重構隨此次發布上線。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 

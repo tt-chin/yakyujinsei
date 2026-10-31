@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+正式發布（2026-10-31，1.13.6）：PR #41將dev `c6d9c9f`合併至main，merge commit `9fe741d`（樹與`c6d9c9f`相同），含1.13.6字型修正與game.js重構第11～20期。[CI Full Tests #102](https://github.com/tt-chin/yakyujinsei/actions/runs/41196168506) 93／93 PASS（`full-aggregate`：`expected 93`、`acceptedPass 93`、`issues []`）；[Publish website #29](https://github.com/tt-chin/yakyujinsei/actions/runs/41197144452) success。本番`yakyujinsei.com`實測：`docs/index.html`＋`docs/src`共72檔SHA-256與main一致，顯示v1.13.6，起始畫面Console 0則、資源無4xx／5xx。未驗證：本番完整生涯、手機表示、`docs/`其他檔案、Cloudflare Preview部署狀態與Preview驗收紀錄。本次發布不代表個別UI項目的使用者驗收，既有未完成項目不因此結案。
+
 收入顯示統一（2026-10-24，開發版1.13.4，待使用者審查）：R2／L2；年俸・報酬合計careerBaseSalary與corpIncome，總額直接顯示careerEarnings，不改取得／支給規則或資料欄位。最終本機Quick 68 PASS／0 FAIL／0 SKIP／0 BLOCKED（300.233秒，test-results/income-display-quick-final/summary.json）；收入專項30組及6組退休版型PASS，PC1280／手機模擬320・390px；8條自然生涯逐步比較基準2e690969a6db14826aa87e85e94e78819acd8e17，除逐項驗證的核准收入呈現及版本metadata外，S／選擇／RNG與其他DOM一致。初回Quick65 PASS／3 FAIL保留於income-display-quick：兩項舊分類期待值、一項測試替換字串組裝錯誤，限定修正後重跑全Quick通過；歷史golden未改。Full／CI／Preview／實機NOT_RUN，未提交、推送或部署；既有未完成項目及artifact缺口不結案。
 
 2026-10-22限定修正（1.13.3，待使用者審查）：使用者明確批准將原CPBL送別資格與文案改為NPB年資＋目前海外（MLB／MiLB／KBO／CPBL），保留_daiba一次性旗標，既有true不補發。R2／L2，僅送別卡片與其旗標；不改金錢、能力、honors、引退續行或RNG。基準6e06b1b64abc5f8be1a1a42d68e44c4d1944a16d加本輪工作樹；384原生函式fixture及PC／320／390px共24原生卡片fixture PASS，其他S／RNG精確一致。初回Quick63 PASS／1 FAIL（npb-return-ui的歷史整段比較包含本次批准的送別變更），原報告npb-farewell-quick保留；只對送別函式新增逐字精確期待值，其他契約／復歸嚴格比較保留，限定重測通過。最終Quick64 PASS／0 FAIL／0 SKIP／0 BLOCKED，237.775秒，test-results/npb-farewell-quick-final/summary.json；最終UI入口PASS，npb-farewell-final-render/summary.json。提交前當輪Full／CI／實機NOT_RUN（後續CI狀態見下節）；本輪局部事件不涉及核心計算，不冒充完整生涯或Full驗收。歷史golden不改。已於`4cb4c987792f6d1291fb76b73af4e9eb332931ec`提交至遠端dev；使用者審查待確認，正式main／公開倉庫仍為1.13.0，後續已核對此SHA的Quick CI與Cloudflare部署success（見第1.3節），不代表使用者UI驗收或正式發布。
@@ -222,7 +224,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
-1. **dev發布確認**：1.13.1～1.13.3的UI及送別修正已隨1.13.5併入main（`04decb0`），保留各自驗收限制。dev `be3f8ae`含1.13.6及後續重構，CI Full 93／93 PASS（Tests #100）；使用者確認Preview並明示批准前不合併main。C級高校／弱小校語意已定案，不再列為下一步待決。
+1. **發布後驗收**：dev至`c6d9c9f`的內容（1.13.6及重構至第20期）已由PR #41併入main（`9fe741d`）並上線，發布紀錄見頁首；1.13.1～1.13.6各項UI保留各自驗收限制。C級高校／弱小校語意已定案，不再列為下一步待決。
 2. **CI殘項及稽核**：Linux Full僅各指定SHA已PASS，舊工具路徑、artifact原件保存與跨版本比較政策仍待完成；8批平行化、CI-FULL-BALANCE-01耗時平衡分批及CI-PITCHING-E2E-01投球E2E拆分均已併dev。重構至第20期已併dev（`be3f8ae`），§3.15葉領域全部完成；樞紐（契約・市場・業餘）與年度流程尚無細部計畫，方向見計畫§3.14、§3.15、§3.6。本條不授權新重構、顯示修正、存檔或刪除LEGACY。AUD-02／REFACTOR-AUDIT-01仍未全面結案。
 3. **HIST-SPEC-CLAUSE-01**：原定義／未完狀態保持；第九階段只提出改為「歷史保留與按需追溯」的建議與可能失去的意圖證據，尚未批准。CURRENT_SPEC來源說明補充須先審查，不自動採納歷史政策。
 4. **HOF-NATURAL-SAMPLE-01**：補足自然到達四聯盟的研究樣本，之後再討論殿堂規則決策。
