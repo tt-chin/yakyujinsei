@@ -3209,6 +3209,93 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 實作 commit `0ef5737`，結果紀錄另一個 commit，皆在本機 `refactor/career-contract`。未 push、未建 PR、未併 `dev`。未修改 `main`。
 
+## 2aa. 第 23 期：市場・移籍判定移至 `docs/src/engine/career-movement.js`（細部計畫，2026-11-01；計畫已批准，實作未批准）
+
+路線見 §3.17。本期搬市場與移籍判定的輔助函式，`movement` 三層留在 `game.js`。
+
+### 2aa.1 現況（2026-11-01 eslint-scope 自由名稱分析＋AST 斷言掃描＋18 字元 n-gram 掃描＋scratchpad worktree 草稿實測，基準 `refactor/career-contract` `099cb7010c85dece06ae720ce4820f8dc2e3571d`，`docs/src/engine/game.js` 1225 行）
+
+- 區段（皆 CRLF，每行反引號數皆為偶數）：`:474–523`（`demotionAudit`、`tradeCheck`，0 縮排）；`:751–815`（`buyoutRemaining`、`handleDemotion`、`retireBelowActiveMinimum`，0 縮排）；`:1018`（`daibaFarewell`）；`:1020–1057`（`overseasOffer`、`crossOffers`）；`:1061–1112`（`faFlow`、`faOfferText`、`priceFaOffer`、`acceptFaOffer`、`showFaMarket`、`faMarket`、`outOfOrg`）。
+- 規模：15 語句／206 行。RNG 文字呼叫點：`ri` 2、`chance` 8；另經 `pickRecord` 4 處，`generateBidJitters` 以值接收 `R`。
+- 自由名稱：`game.js` 本地 35 個，import 24 個。`S` 讀取 159 處，無 `S=` 賦值；預設參數與無區塊箭頭函式都沒有讀 `S`。
+- 外部呼叫端：11 個名稱有 `game.js` 或 e2e hook 引用；`faOfferText`、`priceFaOffer`、`acceptFaOffer`、`showFaMarket` 只在區段內。
+- 更正 §3.17：`stage10-risk-e2e` 的 `activeNames` 在 trace 模式重綁 `faMarket`、`crossOffers`，§3.17 判為切片誤判不正確；瀏覽器 hook 實際重綁的名稱為 9 個。`D-passive-trace` 只斷言 `legacy.board`、`legacy.endGame`，繞過不會 FAIL。
+- 更正 §3.17：`LEGACY.movement` 只有在薄包裝指向最外層時才遞迴。第一層改為呼叫模組實作的薄包裝不會遞迴（最小重現 `L3>L2>L1`，未以真實程式碼實跑），本期不採用，留給後續。
+- 延遲 closure 讀 `S` 共 10 個：`tradeCheck` 2、`handleDemotion` 5（`doDemote` 及 4 個選項）、`faFlow` 的 `declareFA`、`showFaMarket` 的重簽選項、`outOfOrg` 的 `pushAma` 選項；另有 `crossOffers` 的 `complete`，含點擊時守衛 `context.state!==S`。`faMarket` 的 `filter`／`forEach`、`pushPro` 同步執行，由函式本體的讀取涵蓋。
+- `career-session-access`：`npbReturnOfferContext` 的文字只在 `crossOffers`，搬走後 `contract-salary-e2e` 丟 `CAREER_SESSION_FIELD_MISSING`（草稿實測）。
+- 留在 `game.js`／不搬：`movement` 三層、`performMovement`、`professionalMoves`；`portionOf`（唯一呼叫端 `proSeason`，屬統計）；`teamChampRate`、`teamListOf`（無呼叫端，記入 CODE-DEAD-01）。
+- 範圍外（不動，記錄）：`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再使用的名稱；`tools/development-*`（不在 manifest）。
+
+### 2aa.2 設計（使用者決定 2026-11-01：D1 命名 `career-movement.js`／`CareerMovement`；D2 `movement` 三層留 `game.js`；D3 `faYears` 併入 `CareerContract`，`portionOf` 與 2 個死碼不搬；D4 只有 `faMarket` 用 Shadow，4 個重綁名稱皆做抵達探測與負控制；D5 `career-session-access` 以執行期檢查補足；D6 新分支自 `099cb70`，PR 待 #43 合併）
+
+- 新檔 `docs/src/engine/career-movement.js`（LF，草稿 250 行）：
+  - 直接 import：23 個 policy／標籤名稱，來自 8 個模組。
+  - `class CareerMovement`，11 個方法，每個只轉呼叫 `#rules`。
+  - 工廠 `careerMovementRules({getState,LV,careerSession,faMarket,applyKboForeignPackageCap,salaryCandidate,salaryFor,fixedContract,signTo,saveSalaryDecision,renewAndAdvance,arbitrationFlow,kboPreviousPackage,currentMarketRating,contractStageFor,serviceYearsFor,migrateSalaryV130State,migrateSalaryV140State,applyDemotionSalary,ageGateJP,doTradeExec,dpMult,ovr,fmtMoney,card,board,choose,escapeHTML,teamRec,listByOrg,pickRecord,removeTrait,traitCard,reportFlowOutcome,rng:{R,ri,chance}})`，共 37 個依賴，本體依原順序。
+- D4 Shadow：實作名為 `faMarketRule`；裸名稱是注入的 lambda，`faFlow` 的 2 處呼叫不改。`crossOffers`、`demotionAudit`、`tradeCheck` 在模組內沒有呼叫端，一般薄包裝即可。
+- `applyKboForeignPackageCap` 由建構子注入，理由同 §2z D5。
+- `const S=getState();` 自有行 11 處、行內 13 處（函式 3、closure 10）；`complete` 內 3 處改為直接 `getState()`，不做快照。
+- `game.js`：11 個同名薄包裝就地取代；`faYears` 刪除；`import` 加在 `CareerContract` 之後；建構行放在 `outOfOrg` 薄包裝之後（所有薄包裝之後，§2r 教訓）；RNG bridge `movementBridge='rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}'`，與現有 bridge 兩兩無子字串。
+- `career-contract.js`：`faYears` 本體移入工廠開頭，加 1 行 `const S=getState();`；移除 `faYears` 依賴與 `game.js` 的 lambda。
+- 載入順序：`careerContract`（`:982`）的 `crossOffers` lambda 先於 `careerMovement` 建構，只在執行期呼叫；Full 與 8 段生涯未發生 TDZ，草稿確認載入期間無包裝呼叫。
+- 以 scratchpad 腳本從 `git show` 原文組裝，所有非逐字修改斷言恰好一次。
+- 預期：`game.js` 1225 → 1022 行（`+14／−217`，CRLF，無裸 LF）；`career-contract.js` `+12／−1`。
+
+### 2aa.3 測試變更（使用者已批准 2026-11-01；皆已於 scratchpad 草稿驗證，無放寬斷言或 golden 變更）
+
+| 編號 | 檔案 | 行數 | 內容 |
+|---|---|---:|---|
+| T1 | `salary-flow.test` | `+32／−26` | 讀模組；搬走的 `assert.match` 改對模組；`gameAndContract` 改名 `gameAndModules` 並納入模組；新增 `movementBridge`；`ri` 26 → 24、`chance` 合計 26 → 18；新模組計數 `[0,2,8,0]` |
+| T2 | `salary-promotion-policy` | `+5／−4` | 1 個斷言改對模組；否定斷言範圍納入模組 |
+| T3 | `ui-foundation.test` | `+3／−2` | 2 個斷言改對模組 |
+| T4 | `income-summary.test` | `+3／−1` | `buyoutRemaining` 改從模組取；移除 1 處插入並還原縮排後，仍與 `2e69096` 逐字比較 |
+| T5 | `npb-farewell.test` | `+2／−2` | `active()` 改切模組；vm context 加 `getState` |
+| T6 | `career-movement-policy` | `+21／−20` | 讀模組；搬走的斷言改對模組；`:71` 改對模組後驗 `crossOffers` 的呼叫，`movement` 的同一呼叫仍由 `:50` 鎖定；`:55` 否定斷言納入模組；`:79` 的 regex 加 `const S=getState();` |
+| T7 | `npb-return-ui.test` | `+22／−7` | harness 改跑模組真實本體，context 加 `getState`；文字比較以明確字串移除插入、還原 4 個本體後逐字比對，呼叫紀錄比較不動 |
+| T8 | `draft-bonus-display.test` | `+1／−1` | 否定斷言範圍納入模組 |
+| T9 | `draft-signing-policy.test` | `+1／−1` | 否定斷言範圍納入模組 |
+| T10 | `tests/support/career-session-access.mjs` | `+10／−3` | D5：既有兩種判斷不變；兩者皆無、且來源含 `careerSession=new CareerSession(` 時，於 getter 內以 `in careerSession` 檢查，缺欄位仍丟 `CAREER_SESSION_FIELD_MISSING`；`has()` 同步 |
+
+- 斷言內容有變的 1 個：`career-movement-policy:79`（閉包開頭多一處 `getState`）。
+- 其他測試變更：預期無。Full 專屬入口已於草稿確認不需變更。若實作中發現需變更，先停止並請求批准。
+
+### 2aa.4 驗證（R3／L3：RNG 呼叫點與移籍規則搬移，行為與 RNG 消耗不變；允許差分：無）
+
+草稿已先取得（scratchpad worktree，`099cb70`＋本計畫變更，非正式結果；本機 macOS，Brave）：
+
+| 項目 | 結果 |
+|---|---|
+| 未改測試的 Quick | 61 PASS／7 FAIL，全為文字或切片耦合（`career-movement-policy`、`income-summary`、`npb-farewell`、`npb-return-ui`、`salary-flow`、`salary-promotion-policy`、`ui-foundation`） |
+| 自由名稱 | 只有語言內建；無未用 import |
+| 逐字比對（獨立還原腳本） | `career-movement.js` 206 行、`career-contract.js` 的 `faYears` 10 行，還原宣告差異後與 `099cb70` 逐位元組相同 |
+| 套用 T1～T10 後的 Quick | 68／68 PASS（146 秒） |
+| Full（4 組，分組執行，`splitIds` 22／24／22／25） | 93／93 PASS（769／407／667／512 秒；報告 `head` 為 worktree 基準 `099cb70`；`ci-full-batches` 嚴格彙整未執行） |
+| `game-view-dom-e2e --baseline=099cb70…` | 8 段生涯 DOM／`S`／RNG 一致 |
+| 抵達探測（與 `stage10` 同一重綁機制，`stage10` 自身的 `active.*` 計數未比較） | 8 段生涯新舊逐步命中序列一致；`crossOffers` 60、`demotionAudit` 86、`tradeCheck` 86、`faMarket` 2（單一視窗各半） |
+| 接縫負控制 | 4 個名稱改為繞過：探測 4／4 抓到，而 `game-view-dom-e2e` 仍 PASS |
+| `contract-salary-e2e --compare=099cb70…` | 381／0 |
+| 延遲 closure | 11 情境於 render 後替換 `S`，`099cb70` 本體 vs 真實 `CareerMovement` 差異 0；反向控制（改讀快照）11／11 有差異 |
+| D5 負控制 | 舊 helper 在草稿上丟 `CAREER_SESSION_FIELD_MISSING`；新 helper 正常；拿掉 `CareerSession` 欄位後仍丟同一錯誤。三種來源形式皆實跑：舊 baseline（Full 預設 `--compare=37121fb`）、文字形式（`--compare=099cb70`）、執行期形式（草稿，走執行期路徑的欄位只有 `npbReturnOfferContext`） |
+| 測試負控制（10 支單元測試） | 14 個變異抓到 10 個；存活 4 個見下 |
+
+- 存活的 4 個變異：`tradeCheck` 基礎機率、不滿發言機率、`demotionAudit` 門檻、FA 路線門檻。同 4 個變異在 `099cb70` 基準樹的同 10 支測試同樣存活（實測），是既有缺口，不是本期造成；本期由逐字比對保護，不補測試。
+
+實作時：
+
+- 逐字比對（含 `faYears`）；自由名稱；`node --check`、`check-syntax`、`verify-modularization`；T1～T10；`award-identity-policy.test`。
+- 延遲 closure 比較與反向控制、抵達探測、接縫負控制、D5 負控制在實作樹重跑。
+- `kbo-renewal-e2e`：確認 `applyKboForeignPackageCap` 改直接 import 時 FAIL（草稿未做）。
+- `game-view-dom-e2e --baseline=099cb7010c85dece06ae720ce4820f8dc2e3571d`（直接執行）。
+- Quick；Full（比照 §2w 的 scratchpad 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變，由上列比較證明）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+未驗證：`--preview` 路由、Linux CI 未執行。
+
+### 2aa.5 分支與交付
+
+- `refactor/career-movement`（自 `099cb70`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。PR 待 #43 合併後建立。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -3562,6 +3649,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 執行限制：直接執行的 e2e 為 Full 形式（無 `--quick`／`--fixtures-only`），`--ui-only`／`--quick` 依 manifest `args`；`draft-income-e2e` 未帶 `--baseline`；`contract-salary-e2e` 只有 H1 修補後帶 `--compare`。第一輪漏帶 manifest `args` 的 `championship-intl`、`global-contract-market`、`trait-system` FAIL 在乾淨 HEAD 同樣發生，補參數後 C1／H1 皆 PASS。
 - 未做：Full、Linux CI、Preview；`movement`／`performMovement` 的繞過；C1／H1 修測試後的 Quick。草稿用 getter 接線，不是 §2y 的解構 deps＋`getState`，結果只證明接縫可行，不是實作驗收。
 - 建議（未決）：第 22 期只搬契約，採 Shadow 配置處理 `fixedContract`、`salaryCandidate`、`salaryFor`，並為每個名稱加抵達探測或負控制；`signTo` 在契約內無呼叫端，留一般 lambda。市場與移籍判定另立一期，與 `career-session-access` 修法一起處理；這取代 §3.16「三者視為同一領域」。年度流程維持最後。
+- 後續：重綁名稱數（7 → 9）與 `movement` 遞迴條件已由 §2aa.1 更正；本節保留調查當時的原文。
 
 ## 4. 使用者決定（2026-10-18）
 
