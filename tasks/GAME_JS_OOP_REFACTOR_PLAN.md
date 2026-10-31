@@ -3408,6 +3408,27 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 內部重構不升 VERSION（AGENTS §9.3），不更新 CHANGELOG、CURRENT_SPEC。
 - commit 分兩個：實作＋T1–T9、結果紀錄。push 與 PR 依 D3，另批。未修改 `main`。
 
+### 2bb.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/movement-first-layer`，計畫 commit `96dccf5`，實作 commit `2201aee`，比較基準 `fbb2129`）
+
+- 規模：`game.js` 1022 行／98,687 bytes → 935 行／92,197 bytes；`career-movement.js` 250 行 → 342 行。CRLF／LF 維持。實作與草稿只差檔頭 2 行註解。
+
+| 檢查（皆在 `2201aee` 乾淨 worktree） | 結果 |
+|---|---|
+| Quick | 68／68 PASS |
+| 分組 Full（`--baseline=fbb2129…`） | 22＋24＋22＋25＝93／93 PASS，FAIL／BLOCKED／SKIP 皆 0 |
+| `game-view-dom-e2e --baseline=fbb2129…` | 8 段 DOM／`S`／RNG 一致 |
+| 逐字比對 | 88 行與 `fbb2129` 相同，反向對照可偵測 |
+| 突變 10 組 | 與 §2bb.4 相同，全部被抓到；`kbo-renewal-floor.test` 仍未抓到「移除 `skipMid` 續約」 |
+| reviewer | 無 findings（7 項檢查） |
+
+- 抵達探測（seed `20261101`、`20261102`、`20261104` × P／IF，6 段生涯全部結束，無 pageerror；5 段抵達 `movement`，4 段抵達 `crossOffers`）：`movement` 薄包裝、`LEGACY.movement` 呼叫、L1 本體皆 35 次，無遞迴。`crossOffers` 的 `game.js` 名稱與實作皆 28 次；繞過負控制為 0 次與 28 次。
+- 執行紀錄：第一次 Full 因 scratch 腳本的 `sed` 改壞模組路徑而未執行，背景工作仍回報 exit 0；修正後重跑，上表為重跑結果，已確認 4 組共 93 個入口都有 PASS 紀錄。
+- 未做：Linux CI、Preview。
+
+### 2bb.7 交付（2026-11-01）
+
+- 實作 commit `2201aee`，結果紀錄另一個 commit，皆在本機 `refactor/movement-first-layer`。未 push，未併 `dev`。未修改 `main`。依 D3 併入 PR #43 須另批 push，並更新 PR 標題與說明。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
