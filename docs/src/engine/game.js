@@ -22,6 +22,7 @@ import { SeasonEvents } from './season-events.js';
 import { PlayerRomance } from './player-romance.js';
 import { SeasonAwards } from './season-awards.js';
 import { CareerRetirement } from './career-retirement.js';
+import { AmateurCareer } from './amateur-career.js';
 import { applyEventSeason, normalizeEventSeason } from './event-season-policy.js';
 import { JP_DATA } from '../data/jp-data.js';
 import { MARKET_BASELINES } from '../data/salary-market-data.js';
@@ -1146,8 +1147,8 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
 
   function setSchool(kind){const a=kind==='U'?DATA.universities:DATA.highSchools,r=pickRecord(a);S.schoolId=r.schoolId;S.schoolTier=r.tier;S.team=r.name;S.lv=kind;S.org='AMATEUR';}
   function setAmateur(stage){S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=pickRecord(listByOrg(stage)).teamId;S.team=teamRec(S.orgTeamId).name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;}
-  function enterDraftPath(from){runDraft(false,result=>{if(result==='signed'){reportFlowOutcome({kind:'AMATEUR_DRAFTED'});return;}if(isDraftFallbackResult(result)){draftFallback(from);return;}throw new Error('UNKNOWN_DRAFT_RESULT:'+result);});}
-  function draftFallback(from){const opts=[];if(from==='HS')opts.push({t:'大学へ進学',main:true,f:()=>{S.stage='U';S.stageYr=0;setSchool('U');reportFlowOutcome({kind:'AMATEUR_ENTER_UNIVERSITY'});}});opts.push({t:'社会人野球へ',f:()=>{setAmateur('CORP');reportFlowOutcome({kind:'AMATEUR_JOIN_CORP'});}},{t:'独立リーグへ',f:()=>{setAmateur('IND');reportFlowOutcome({kind:'AMATEUR_JOIN_IND'});}},{t:'野球をやめる',warn:true,f:()=>reportFlowOutcome({kind:'AMATEUR_RETIRED',reason:'ドラフト指名漏れを機に現役を退いた。'})});choose('指名漏れ、その後',opts);}
+  function enterDraftPath(from){amateurCareer.enterDraftPath(from);}
+  function draftFallback(from){amateurCareer.draftFallback(from);}
 
   function runDraft(fromSchool,cb){const o=ovr(),score=o+Math.max(0,22-S.age)*2+ri(-4,4);let rd=0,type='ROSTER';if(score>=60)rd=1;else if(score>=55)rd=2;else if(score>=50)rd=3;else if(score>=46)rd=4;else if(score>=42)rd=ri(5,6);else if(score>=37){rd=ri(1,3);type='DEVELOPMENT';}
     if(!rd){card('bad','NPBドラフト指名漏れ',`最後まで名前は呼ばれなかった（総合${o}）。`);cb('fail');return;}
@@ -1156,77 +1157,11 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
     choose(`NPBドラフト会議・${escapeHTML(rec.name)}が${type==='DEVELOPMENT'?'育成':''}${rd}巡目で指名`,[{t:'指名を受けて入団',main:true,f:accept},{t:'指名を拒否する',warn:true,s:'交渉権を放棄して別の進路へ',f:()=>cb(declineDraftSelection(S))}]);
   }
 
-  function pathChoiceHS(){
-    const o=ovr(),opts=[
-      {t:'NPBドラフトへ',main:true,f:()=>enterDraftPath('HS')},
-      {t:'大学へ進学',f:()=>{S.stage='U';S.stageYr=0;setSchool('U');reportFlowOutcome({kind:'AMATEUR_ENTER_UNIVERSITY'});}},
-      {t:'社会人野球へ',f:()=>{setAmateur('CORP');reportFlowOutcome({kind:'AMATEUR_JOIN_CORP'});}},
-      {t:'独立リーグへ',f:()=>{setAmateur('IND');reportFlowOutcome({kind:'AMATEUR_JOIN_IND'});}}
-    ];
-    if(o>=50){
-      const lv=o>=54?'A1':'R';
-      opts.push({t:'米国プロ組織と契約する',s:`MLB球団傘下の${LV[lv].n}から挑戦`,f:()=>{
-        const pool=listByOrg('MiLB').slice(),offers=[];
-        const count=ri(2,3);
-        while(offers.length<count&&pool.length)offers.push(pool.splice(Math.floor(R()*pool.length),1)[0]);
-        choose('MiLB国際契約オファー',offers.map(rec=>({
-          t:`${rec.name}（${LV[lv].n}）`,
-          s:`高校卒業後、米国の育成組織からスタート｜年俸${fmtMoney(salaryFor(lv,0))}｜契約金${fmtMoney(createSigningBonusTerms({route:'INTERNATIONAL_AMATEUR',overall:o}).signingBonus)}`,
-          f:()=>{signTo('MiLB',lv,rec.teamId,ri(3,4),1,'NEW_CONTRACT',{contractType:'ROOKIE'});reportFlowOutcome({kind:'AMATEUR_SIGNED_MILB'});}
-        })));
-      }});
-    }
-    choose(`高校卒業・総合能力${o}――人生最初の分岐点`,opts);
-  }
-  function pathChoiceU4(){choose(`大学卒業・総合能力${ovr()}`,[{t:'NPBドラフトへ',main:true,f:()=>enterDraftPath('U')},{t:'社会人野球へ',f:()=>{setAmateur('CORP');reportFlowOutcome({kind:'AMATEUR_JOIN_CORP'});}},{t:'独立リーグへ',f:()=>{setAmateur('IND');reportFlowOutcome({kind:'AMATEUR_JOIN_IND'});}},{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'AMATEUR_RETIRED',reason:'大学卒業を機に現役を退いた。'})}]);}
+  function pathChoiceHS(){amateurCareer.pathChoiceHS();}
+  function pathChoiceU4(){amateurCareer.pathChoiceU4();}
+  const amateurCareer=new AmateurCareer({getState:()=>S,DATA,LV,ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),salaryFor:(lv,d)=>salaryFor(lv,d),listByOrg:org=>listByOrg(org),signTo:(...args)=>signTo(...args),choose:(title,opts)=>choose(title,opts),card:(cls,title,html)=>card(cls,title,html),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),displayTrait:key=>displayTrait(key),setSchool:kind=>setSchool(kind),setAmateur:stage=>setAmateur(stage),runDraft:(fromSchool,cb)=>runDraft(fromSchool,cb),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),nextStep:()=>nextStep(),maybeIntl:done=>maybeIntl(done),recordIndependentSalaryEvaluation:results=>recordIndependentSalaryEvaluation(results),rng:{ri:(a,b)=>ri(a,b),R:()=>R()}});
 
-  function cupOnce(key,name,klass,{pointMode='STANDARD'}={}){
-    const doneKey=key+':'+S.year;if(S.domesticCompletedKeys[doneKey])return null;
-    const bonus=schoolCompetitionBonus(S.stage,S.schoolTier),overall=ovr(),power=overall+beginEventSeason(S).form+bonus+ri(-8,8),national=klass.startsWith('NATIONAL');
-    const result=tournamentResult({power,national,overall,pointMode});
-    S.pool+=result.points;S.domesticCompletedKeys[doneKey]=true;
-    S.domesticTournamentLog.push({year:S.year,key,result:result.result,deemedGames:result.deemedGames,points:result.points,amaD:result.amaD,injury:false});
-    if(result.isChampion)S.honors.push(`${S.year} ${name}優勝`);
-    if(S.stage==='HS'&&!S.traits.miraclegen&&highSchoolChampionCount(S)>=4)traitCard('miraclegen',displayTrait('miraclegen'),TRAIT_TEXT.miraclegen);
-    return {...result,key,html:`${name}：<b class="hl">${result.result}</b>（能力点+${result.points}）`};
-  }
-  function qualifierOnce(key,name){
-    const doneKey=key+':'+S.year;if(S.domesticCompletedKeys[doneKey])return null;
-    const bonus=schoolCompetitionBonus(S.stage,S.schoolTier),result=qualificationResult(ovr()+beginEventSeason(S).form+bonus+ri(-8,8));
-    S.domesticCompletedKeys[doneKey]=true;
-    S.domesticTournamentLog.push({year:S.year,key,result:result.result,deemedGames:result.deemedGames,points:0,amaD:0,injury:false});
-    return {...result,html:`${name}：<b class="hl">${result.result}</b>（能力点なし）`};
-  }
-  function amateurSeason(){beginEventSeason(S);if(S.seasonFactor===0){consumeEventSeason(S);card('bad','','今季はリハビリに専念した。');S.log.push({y:S.year,age:S.age,tm:S.team,line:'全休',inj:true});nextStep();return;}const results=[];
-    const add=result=>{if(result)results.push(result);return result;};
-    if(S.stage==='HS'){
-      if(canPlaySenbatsu(S.stageYr,S.senbatsuEligibleYear,S.year)){add(cupOnce('HS_SENBATSU','選抜高校野球大会','NATIONAL6'));S.senbatsuEligibleYear=null;}
-      const summer=add(cupOnce('HS_SUMMER_LOCAL','夏の地方大会','LOCAL'));
-      if(qualifiesForChampionship(summer))add(cupOnce('HS_KOSHIEN','全国高校野球選手権大会','NATIONAL6'));
-      if(canPlayHighSchoolFall(S.stageYr)){const fall=add(cupOnce('HS_FALL','秋季地区大会','LOCAL'));S.senbatsuEligibleYear=nextSenbatsuEligibleYear(fall,S.year);}
-    }else if(S.stage==='U'){
-      const spring=add(cupOnce('U_SPRING','春季リーグ戦','LEAGUE10',{pointMode:'UNIVERSITY'}));
-      if(qualifiesForChampionship(spring))add(cupOnce('U_CHAMP','全日本大学野球選手権大会','NATIONAL5',{pointMode:'UNIVERSITY'}));
-      const autumn=add(cupOnce('U_AUTUMN','秋季リーグ戦','LEAGUE10',{pointMode:'UNIVERSITY'}));
-      if(qualifiesForChampionship(autumn)){
-        const university=DATA.universities.find(record=>record.schoolId===S.schoolId),route=university?.jinguRoute;
-        if(qualifiesForUniversityJingu(autumn,route,null))add(cupOnce('U_JINGU','明治神宮大会・大学の部','NATIONAL4',{pointMode:'UNIVERSITY'}));
-        else if(route==='PLAYOFF'){const qualifier=add(qualifierOnce('U_JINGU_QUAL','明治神宮大会地区代表決定戦'));if(qualifiesForUniversityJingu(autumn,route,qualifier))add(cupOnce('U_JINGU','明治神宮大会・大学の部','NATIONAL4',{pointMode:'UNIVERSITY'}));}
-      }
-    }else if(S.stage==='CORP'){
-      const jaba=add(cupOnce('JABA_REGIONAL','JABA地区大会','NATIONAL5'));
-      const cityQualifier=add(qualifierOnce('CORP_CITY_QUAL','都市対抗地区予選'));
-      const city=cityQualifier?.isQualified?add(cupOnce('CORP_CITY','都市対抗野球大会','NATIONAL5')):null;
-      let japanQualified=qualifiesForCorporateJapan(jaba,city,null);
-      if(!japanQualified){const japanQualifier=add(qualifierOnce('CORP_JAPAN_QUAL','日本選手権地区最終予選'));japanQualified=qualifiesForCorporateJapan(jaba,city,japanQualifier);}
-      if(japanQualified)add(cupOnce('CORP_JAPAN','社会人野球日本選手権大会','NATIONAL5'));
-    }else{
-      const regular=add(cupOnce('IND_REGULAR','独立リーグ公式戦','LEAGUE70'));
-      if(qualifiesForChampionship(regular))add(cupOnce('IND_CHAMP','グランドチャンピオンシップ','NATIONAL5'));
-    }
-    if(S.stage==='IND')recordIndependentSalaryEvaluation(results);
-    consumeEventSeason(S);
-    const rows=results.map(result=>result.html);S.log.push({y:S.year,age:S.age,tm:S.team,line:rows.map(x=>x.replace(/<[^>]+>/g,'')).join('、'),inj:false});card('','国内大会',rows.join('<br>'));maybeIntl(()=>nextStep());}
+  function amateurSeason(){amateurCareer.amateurSeason();}
 
   function intlEvents(year){return internationalEvents(year,DATA.intlEvents);}
   function intlPhase(e){return internationalPhase(e);}
