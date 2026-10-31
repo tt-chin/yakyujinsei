@@ -3086,7 +3086,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - `refactor/amateur-draft` push（`eca1490`），PR #42 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
 - PR #42 已合併，`dev` merge commit `f8c675b`（樹與 `eca1490` 相同）。`dev` push 的 Quick CI（Tests #105，run `41207988919`）顯示成功。手動 Full CI（`workflow_dispatch`，`dev`，Tests #106，run `41208798216`，13 分 19 秒）PASS：`full-aggregate` 回報 `expected 93`、`acceptedPass 93`、`issues []`，8 批皆 PASS。補上 §2y.6 本機分組未執行的 `ci-full-batches` 嚴格彙整。`main` 維持 `9fe741d`，第 21 期尚未發布。
 
-## 2z. 第 22 期：契約・年俸移至 `docs/src/engine/career-contract.js`（細部計畫，2026-11-01；計畫已批准，實作未批准）
+## 2z. 第 22 期：契約・年俸移至 `docs/src/engine/career-contract.js`（細部計畫，2026-11-01；計畫已批准，實作已批准）
 
 路線見 §3.17。本期只搬契約領域（§3.16 的 38 個名稱），市場與移籍判定留在 `game.js`，另立一期。
 
@@ -3177,6 +3177,37 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2z.5 分支與交付
 
 - `refactor/career-contract`（自 `origin/dev` `9f27e89`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。未修改 `main`。
+
+### 2z.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/career-contract`，計畫 commit `0e428de`，實作 commit `0ef5737`，比較基準 `9f27e89`）
+
+- 實作：新檔 `docs/src/engine/career-contract.js` 257 行（LF）；`game.js` 1388 → 1225 行（`+28／−191`，CRLF，無裸 LF）。測試變更只有 T1～T11，行數與 §2z.3 相同。Full 專屬入口未帶來額外測試變更。
+
+| 驗證 | 結果 |
+|---|---|
+| 逐字比對（獨立還原腳本） | 184 行，還原宣告差異後與 `9f27e89` 逐位元組相同 |
+| 自由名稱 | 只有瀏覽器與語言內建；無未用 import、無未用注入 |
+| 定向 | `check-syntax`、`verify-modularization`、T1～T10、`award-identity-policy`、`career-movement-policy`、`npb-farewell` 全部 PASS |
+| 延遲 closure | `9f27e89` 本體於 vm vs 真實 `CareerContract`：render 後替換 `S` 再觸發，`extensionOffer`、`arbitrationFlow` 結果相同；`signTo` 首次 render 故障後重試成功，合約序號不再增加 |
+| 延遲 closure 反向控制 | 改讀 render 時快照後，`extensionOffer`、`arbitrationFlow` 恰 2 項差異；`signTo` 無差異，因重試前有 `signingRenderRetry.state===S` 守衛，快照與即時值必相同 |
+| 抵達探測 | 8 段生涯新舊逐步命中序列一致；`signTo` 9、`salaryCandidate` 48、`salaryFor` 169、`fixedContract` 34、`applyKboForeignPackageCap` 13（單一視窗寬度合計，4 段重複於另一寬度） |
+| 紀錄數 | `contract-salary` 381 案例：`fixed` 719＝719、`candidates` 1323＝1323，差異 0 |
+| 接縫負控制 | 3 個 Shadow 名稱改直接呼叫、`applyKboForeignPackageCap` 改直接 import：探測 4／4 抓到，`applyKboForeignPackageCap` 另使 `kbo-renewal-e2e` FAIL |
+| T11 反向控制 | `kbo-renewal-e2e` caps 含 `candidate`：基準 16／16、實作 16／16；拿掉 T11 模組注入後 7／16，測試仍 PASS（確認不改會無聲流失） |
+| 16 支相關 e2e | 全部 PASS，含 `contract-salary --compare`、`draft-income --baseline` |
+| `game-view-dom-e2e --baseline=9f27e89…` | 8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68／68 PASS（140 秒） |
+| Full（scratchpad worktree，`docs`、`tests`、`scripts` 與工作樹逐檔相同；報告的 `head` 為 worktree 基準 `9f27e89`；`splitIds(fullIds(),4,…)` 22／24／22／25，計 93 不重複） | 93／93 PASS（716／401／620／468 秒；分組執行，非單一 Full 報告；`ci-full-batches` 嚴格彙整未執行） |
+
+- 過程紀錄：T11 反向控制第一版以全文 `sourceLevel` 計數，三組皆 2，因該字也在 state 內，不算證據；改計 caps 的 `candidate` 欄位後得到上表結果。`--preview` 路由未執行。
+- 期望值變更：T1 的 RNG 計數搬移（`chance` 合計 27 → 26，模組 `[0,0,1,0]`），總呼叫點不變。golden 未改。
+- reviewer：7 個審查面向無 finding（只跑單檔測試，未跑 Quick／Full／瀏覽器）。兩項資訊：`ageGateUSA`、`nextContractId` 是搬移前就無呼叫端的死碼，逐字保留，補記於 CODE-DEAD-01。目視：不適用。VERSION／CHANGELOG／CURRENT_SPEC 不更新（§9.3）。
+- 結論：
+  - 成本：測試 11 檔，與草稿相同；實作後無未預期 FAIL。§3.17 的推論成立，但 Shadow 把成本限制在 4 個定義 token，呼叫點不變。
+  - 未解：`event-integration.test` 間歇 `SIGSEGV`（本次 Quick／Full 未發生）；市場・移籍判定的 `career-session-access` 修法與 `movement` 三層仍待下一期處理。
+
+### 2z.7 交付（2026-11-01）
+
+- 實作 commit `0ef5737`，結果紀錄另一個 commit，皆在本機 `refactor/career-contract`。未 push、未建 PR、未併 `dev`。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
