@@ -2863,6 +2863,113 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - `refactor/season-awards` push（`fc2b060`），PR #39 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
 
+## 2x. 第 20 期：引退・殿堂移至 `docs/src/engine/career-retirement.js`（細部計畫，2026-10-31；計畫已批准）
+
+路線見 §3.15（葉領域 7 期之第 7 期，最後一期）。§3.15 所列 `32261d6:1496–1831` 於基準為 `:894–1230`。
+
+### 2x.1 現況（2026-10-31 grep 抽查＋scout 唯讀調查（抽查更正見末項）＋scratchpad 18 字元 n-gram 掃描＋eslint-scope 自由名稱分析＋scratchpad clone 草稿實測，基準 `origin/dev` `8905f8f8a999dc6dbbf7aa9e1b9d87009aa1cb35`，`docs/src/engine/game.js` 1774 行）
+
+- 區段：`TIER_TH`（`:895`）、`LG_N`（`:896`）、`careerScore`（`:897`）、`roleName3`（`:898`）、`primaryPos`（`:899–916`）、`capTeam`（`:917–921`）、`defShare`（`:922`）、`posLegendPhrase`（`:923–932`）、`honorScore`（`:933–935`）、`tierOf`（`:936`）、`statTable`（`:937–957`）、`FAN`（`:958–964`）、`retireScene`（`:965–1025`）、`endGame`（`:1026–1230`）；緊接 `:1231` 註解與 `shareImageView`（`:1232`）。337 行皆 CRLF。
+- **跨行 template（與 §2w 不同）**：`:943–944`、`:952–953`、`:1196–1200` 各一個，內容進 `innerHTML`。續行 `:944`、`:953`、`:1197–1200` 共 6 行加縮排會改變輸出，必須保持原縮排。
+- RNG：`R` 4（`:1011`、`:1017`、`:1059`、`:1162`）、`ri` 2（`:1008`、`:1017`）、`chance`／`pick` 0；前 4 個屬 `retireScene`（`R` 2、`ri` 2），後 2 個 `R` 屬 `endGame`。
+- 外部呼叫端：`statTable`、`roleName3`、`FAN` 只在區段內；`primaryPos` 只有 `ShareImage` 建構行（`:1232`）；`capTeam`、`posLegendPhrase` 只有 `retireScene`；`retireScene` 只有 `endGame`；`endGame` 在 `LEGACY`（`:1249`）、overlay 再賦值（`:1758`）、`reportFlowOutcome` 4 處（`:1403`、`:1410`、`:1419`、`:1423`）。`TIER_TH`／`LG_N`／`LV`／`DPN`／`POSN` 皆為 `const`，由 overlay 以 `Object.assign` 原地修改（`:1252–1264`）；`TEAM_COLOR` 為 `const`，無重新賦值。
+- `S` 與 `SEED`：`S`、`SEED` 為 `let`，區段內不重新賦值。延遲 closure：`:1215`（`#sh-url` 點擊，`S.seed`、`SEED`）、`:1224`（`f:()=>…SEED`）；`:1224` 的 `s:'seed: '+SEED` 為 render 時讀取。其餘 `addEventListener`、`requestAnimationFrame`、`setTimeout` 內無 `S`／`SEED` 讀取。
+- 自由名稱（eslint-scope）：`LV`、`DPN`、`POSN`、`TIER_TH`、`LG_N`、`TEAM_COLOR`、`$`、`fmtMoney`、`fmtIP`、`slgOf`、`card`、`divider`、`choose`、`actClear`、`defShare`、`tierOf`、`traitNames`、`teamNick`、`archiveTraitResults`、`shareImage`、`R`、`ri`；import 的 `VERSION`、`JP_DATA`、`incomeSummary`、`replayURL`、`shareReplayURL`、`smallSchoolEligibility`、`removedTraitLabel`、`hasHistoricalDefenseAward`。
+- 測試耦合：
+  - vm 切片：`tests/retirement-hof-test-support.mjs:22` 以 `productionFunction` 取 `careerScore`、`capTeam`、`defShare`、`posLegendPhrase`、`honorScore`、`tierOf`、`retireScene` 等，其中 `retireScene` 可由 `retirementSource` 改取舊 SHA，其餘恆取現行 `game.js`；`:18`、`:21` 以 regex 取 `TIER_TH`／`LG_N`／`DPN` 宣告與 `Object.assign` 行。
+  - 舊基準比較：`retirement-hof-balance.test:31–34` 從 `52e4cdb` 取 `careerScore`、`defShare`、`tierOf`，於 vm 重新賦值 `careerScore`；`hof-first-ballot-league.test:4,12` 以 `925987dc` 的 `retireScene` 在 vm 執行，它呼叫全域 `capTeam`、`posLegendPhrase`。
+  - 手動工具：`tools/development-b/defense-history-boundaries.mjs:10–11` 切 `defShare`＋`posLegendPhrase`（不在 manifest；基準 264／264 PASS）。
+  - 文字斷言：`salary-flow.test:47–84`（`R(` 19、`ri(` 32 對 `game.js`）；`verify-modularization:46`、`fixed-seed-v160.test:25`（`replayURL(S.seed||SEED,location.href)`，seed-only URL 保護）；`career-movement-policy:93–95`（`career-table-scroll`、`fin career-table`、`career-team`）。
+  - e2e hook（在 `game.js` 作用域）：`stage10-risk-e2e:23` 重新賦值 `endGame`，`:9–10` 以名稱包裝；`retirement-hof-pilot:18–19`（audit）用 `flowHooks.endGame`、`tierOf`、`TIER_TH`；`event-fix`、`draft-income`、`income-display`、`trait-system`、`hof-first-ballot`、`championship-intl`、`replay-share-theme`、`smallschool-c`、`trait-display`（`-e2e`）及 `tools/development-b/runtime.mjs` 直接呼叫 `endGame`。保留同名包裝即成立。
+  - 確認不受影響：`draft-signing-policy.test`、`npb-return-ui.test`（vm 內 `endGame` 為 stub）；`full-power-pitching-e2e:25,27`（改寫區段外的 `reportFlowOutcome` 呼叫端）；`support/dom-snapshot:6`（註解）；`support/approved-school-oracle`（只改 baseline 文字）；`retirement-hof-report`、`retirement-hof-analysis`（註解或自有資料）；tree-wide 掃描 `award-identity-policy`（新檔不在 `287dd1a` 清單）、`global-contract-market.test`、`check-syntax`、`audit-architecture`。無切片跨越本區段。
+- scout 誤差（已抽查更正）：報告稱區段無 `R(`／`ri(`，實為 4／2；稱 `replayURL(S.seed||SEED…)` 在區段外，實為 `:1215`；漏列 `career-movement-policy:93–95`、`full-power-pitching-e2e`、`support/dom-snapshot`；稱包裝會使 `retirement-hof-balance` 失敗，但 `careerScore`／`defShare`／`tierOf` 本期留在原處，不適用。
+- 範圍外（不動，記錄）：`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再於產品碼使用的名稱（保留，hook 亦可能引用）。
+
+### 2x.2 設計（使用者決定 2026-10-31：D1 命名 `career-retirement.js`／`CareerRetirement`；D2 `capTeam`、`posLegendPhrase` 移出，`careerScore`、`defShare`、`honorScore`、`tierOf` 留在 `game.js`；D3 `roleName3`、`primaryPos` 移入；D4 延遲 closure 改即時讀取）
+
+- 新檔 `docs/src/engine/career-retirement.js`（LF）：
+  - 直接 import（§2v D4；無 harness 替換）：`VERSION`、`JP_DATA`、`incomeSummary`、`replayURL`、`shareReplayURL`、`hasHistoricalDefenseAward`、`smallSchoolEligibility`、`removedTraitLabel`。`game.js` import 行不動。
+  - `class CareerRetirement`，方法 `primaryPos()`、`capTeam(bucket)`、`posLegendPhrase(bucket)`、`retireScene(tiers)`、`endGame(reason)`。
+  - 工廠 `careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,rng:{R,ri}})`，內依原順序含 `roleName3`、`primaryPos`、`capTeam`、`posLegendPhrase`、`statTable`、`FAN`、`retireScene`、`endGame`，本體逐字（+2 縮排；2x.1 的 6 行跨行 template 續行不加縮排）。
+- 逐字搬移外的差異（共 8 行）：
+  - 6 行插入 `const S=getState();`：`primaryPos`、`capTeam`、`posLegendPhrase`、`statTable`、`retireScene`、`endGame` 開頭。
+  - 2 行修改（D4，比照 §2q／§2t）：`:1215` 改 `replayURL(getState().seed||getSeed(),location.href)`；`:1224` 兩處 `SEED` 改 `getSeed()`（含 render 時的 `s:`，模組不宣告 `SEED`，3 處一致）。
+- D2 理由：`careerScore`、`defShare`、`honorScore`、`tierOf` 是 policy 單行轉接，比照 `dpScore` 留在原處；`retirement-hof-balance.test` 以名稱取前述 3 個並於 vm 重新賦值 `careerScore`。修正 §3.15「全部移出」。
+- `TIER_TH`、`LG_N` 留在 `game.js`（harness regex 取宣告），以參照傳入；overlay 為原地修改，與 `:1232` 傳 `LG_N` 給 `ShareImage` 相同。修正 §3.15「呼叫時傳入」的寫法，§3.15 所防範的模組拷貝不存在。
+- `game.js`：
+  - `:898–916` → `function primaryPos(){return careerRetirement.primaryPos();}`。
+  - `:917–921` → `function capTeam(bucket){return careerRetirement.capTeam(bucket);}`。
+  - `:923–932` → `function posLegendPhrase(bucket){return careerRetirement.posLegendPhrase(bucket);}`，其後接建構行。
+  - `:937–1230` → `function retireScene(tiers){careerRetirement.retireScene(tiers);}`、`function endGame(reason){careerRetirement.endGame(reason);}`。維持函式宣告以容納 `endGame=` 再賦值。
+  - `import { CareerRetirement } from './career-retirement.js';` 加在 `SeasonAwards` import 之後。
+- 建構行位置：放在 `posLegendPhrase` 包裝之後，使 `productionFunction('posLegendPhrase')` 帶入 vm。harness 恆從現行 `game.js` 取此函式，故 `hof-first-ballot-league` 的舊基準 `retireScene` 路徑也有 `careerRetirement`（比照 §2s／§2w，但錨點不是被搬移的 `retireScene`）。
+- 注入：getter `getState:()=>S`、`getSeed:()=>SEED`；參照 `LV`、`DPN`、`POSN`、`TIER_TH`、`LG_N`、`TEAM_COLOR`；其餘 14 個名稱為 late-binding lambda（harness vm 沒有 `$`、`fmtMoney` 等，以參照傳入會在建構時 `ReferenceError`）；RNG bridge `retirementBridge='rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}'`，與現有 7 個 bridge 兩兩無子字串（草稿已檢查）。
+- TDZ：建構行引用的參照皆在 `:903`（草稿行號）之前宣告；lambda 延遲解析。
+- 模組內 `endGame` 直接呼叫模組內 `retireScene`、`statTable`；grep 確認 `retireScene`、`statTable` 無再賦值（`stage10` 包裝名單只有 `endGame`）。
+- `game.js` 為 CRLF：只刪除區段並插入新行，非整檔重寫。一個實作 commit。
+- 預期：`game.js` 1774 → 1453 行；模組 360 行（草稿實測）。
+
+### 2x.3 測試變更（使用者已批准 2026-10-31；皆已於 scratchpad 草稿驗證）
+
+- T1 `salary-flow.test`：讀 `career-retirement.js`；新增 `retirementBridge` 於 `game.js` 只出現一次，`gameSites` 排除之；`R(` 19 → 15、`ri(` 32 → 30；新模組計數 `[4,2,0,0]`。總呼叫點不變，只是移動。註解記錄本期移動。
+- T2 `tests/retirement-hof-test-support.mjs`（CRLF）：import `CareerRetirement`；vm context 加 `CareerRetirement`、`TEAM_COLOR:{}`、`POSN:{}`（後兩者只供建構行解析，vm 不執行 `endGame`／`primaryPos`）。
+- T3 `verify-modularization:46`：改對 `career-retirement.js`，regex 文字改 `replayURL(getState().seed||getSeed(),location.href)`。
+- T4 `fixed-seed-v160.test:25`：同 T3。T3／T4 為 AGENTS §6.3-5 的斷言文字變更，理由是 D4：讀取來源改為 getter，保護的「URL 只由 seed 組成」不變，`:26` 的 `rv`／`rules` 否定斷言不動。
+- T5 `career-movement-policy:93–95`：3 個 class 斷言改對 `career-retirement.js`，regex 不變。
+- T6 `tools/development-b/defense-history-boundaries.mjs`：import `CareerRetirement`；vm context 加 `CareerRetirement`、`LV:{}`、`POSN:{}`、`TIER_TH:{}`、`LG_N:{}`、`TEAM_COLOR:{}`。不加入 manifest，仍為手動工具。
+- 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
+
+### 2x.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
+
+草稿已先取得（scratchpad clone，`8905f8f`＋本計畫變更，非正式結果）：逐字比對 328 行差異 0、Quick 68／68、9 個 e2e 9／9、手動工具 264／264。
+
+- 逐字比對：新模組去除 6 行插入、還原 2 行修改、去除 2 空白縮排（6 行續行除外）後，與 `8905f8f` 對應區段逐位元組相同。
+- `node --check`、`check-syntax`、`verify-modularization`；`salary-flow`、`fixed-seed-v160`、`career-movement-policy`、`retirement-hof-balance`、`hof-first-ballot-league`、`award-identity-policy`、`global-contract-market`、`draft-signing-policy`、`npb-return-ui`（`.test`）；`defense-history-boundaries`（手動）。
+- 等價比較（scratchpad 腳本）：`8905f8f` 本區於 vm vs 真實 `CareerRetirement`，相同 stub DOM 與真實 `Rng`；4 聯盟＋跨聯盟 × `P`／野手 × 評價階級 × 25 歲前引退 × 特性組合（`legend`、`mrteam`、`smallschool`、`grinder` 等）×榮譽字串 ×連續呼叫；比較 `S`、卡片序列、RNG 次數與前後值、例外、`primaryPos` 回傳值；另測 render 後改變 `S`／`SEED`，再觸發 `#sh-url` 與 `choose` 的延遲 closure。
+- 負控制（scratchpad 變體）：`ri(2,6)` 改 `ri(2,7)`；調換 `:1017` 的 `R` 與 `ri` 順序；`fbMult` 改一個係數；刪除 `S.hofInfo` 寫入；`getSeed` 改回傳固定值；延遲 closure 改 render 時快照（D4 的反向控制）。
+- 接縫抵達探測（帶標記 `console.log`，舊／新樹各跑）：`hof-first-ballot-e2e`、`trait-display-e2e`。
+- e2e（Brave）：`hof-first-ballot`、`smallschool-c`、`replay-share-theme`、`trait-display`、`trait-system`、`event-fix`、`income-display`、`championship-intl`、`stage10-risk`（`-e2e`）。
+- `game-view-dom-e2e --baseline=8905f8f8a999dc6dbbf7aa9e1b9d87009aa1cb35`（直接執行）：8 段生涯 DOM／`S`／RNG 一致。
+- Quick；Full（比照 §2w 的 scratchpad clone 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變，由上列比較證明）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+### 2x.5 分支與交付
+
+- `refactor/retirement-hof`（自 `origin/dev` `8905f8f`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。
+
+### 2x.6 實施結果（2026-10-31，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/retirement-hof`，實作 commit `fd51e0a`，比較基準 `8905f8f`）
+
+- 行號更正：無。scratchpad 組裝腳本自 `8905f8f` 原文取行，錨點斷言全部成立；區段內奇數反引號行正好是 2x.1 所列的 `:943`、`:944`、`:952`、`:953`、`:1196`、`:1200`。
+- `game.js` 1774 → 1453 行（CRLF 保持，numstat `+7／−328`）；`career-retirement.js` 360 行（LF）。測試變更 T1–T6（numstat `+9／−3`、`+3／−1`、`+1／−1`、`+1／−1`、`+4／−3`、`+2／−1`）。
+
+| 項目 | 結果 |
+|---|---|
+| 逐字比對（新模組去除 6 行插入、還原 2 行修改、去除 2 空白縮排 vs `8905f8f`；6 行 template 續行不去縮排） | 328 行差異 0；6 行續行與原文逐位元組相同 |
+| `check-syntax`（186 檔）、`verify-modularization` | PASS |
+| 2x.4 所列單元測試（`salary-flow`、`fixed-seed-v160`、`career-movement-policy`、`retirement-hof-balance`、`hof-first-ballot-league`、`award-identity-policy`、`global-contract-market`、`draft-signing-policy`、`npb-return-ui`） | 9／9 PASS |
+| `tools/development-b/defense-history-boundaries.mjs`（手動，T6 後） | 264／264 PASS。不在 manifest，下列 Quick／Full 未執行此檔 |
+| 等價比較（scratchpad，`8905f8f` 本區於 vm vs 現行 `game.js` 區段＋真實 `CareerRetirement`，相同 stub DOM 與真實 `Rng`；比較 `S`、卡片序列、RNG 值與順序、例外、`primaryPos`／`capTeam`／`posLegendPhrase` 回傳值、延遲 closure） | 60,000 例差分 0。評價階級 0–4 各 3,378／19,954／17,387／10,066／45,221；投票 19,116、落選 17,113、初回投票 1,624 例；新解放 `legend` 1,423、`smallschool` 3,905、`grinder` 11,668 例；守備敘述 5,722＋5,095 例；`card` 故障等拋例外 3,392 例；重入 5,959 例 |
+| 等價負控制（每項 20,000 例）：`ri(2,6)`→`ri(2,7)`／調換 `pct`、`tries` 順序／`fbMult` NPB／刪 `S.hofInfo` 寫入／`share` 門檻 0.34→0.35／手套門檻 0.12→0.13（計畫外加項）／`#sh-url` 改 render 時 `S`／`choose` 改 render 時 seed／縮排 `:944`（加項）／縮排 `:1197`（加項）／`getSeed` 固定值 | 差分 285／5,639／8／987／102／256／2,533／18,920／7,190／19,016／19,016；基準重跑 20,000 例差分 0 |
+| 接縫抵達探測（帶標記 `console.log`，舊樹置於 `game.js`、新樹置於模組；`primaryPos`、`capTeam`、`posLegendPhrase`、`retireScene`、`endGame`；`hof-first-ballot-e2e`、`trait-display-e2e`） | 舊／新各 114 次，序列逐位元組相同，兩樹 PASS |
+| `game-view-dom-e2e --baseline=8905f8f8a999dc6dbbf7aa9e1b9d87009aa1cb35`（直接執行） | 8 段生涯 DOM／`S`／RNG 一致 |
+| Full（scratchpad clone 臨時 commit `204dee4`，產品碼與 `fd51e0a` 逐位元組相同；`--baseline=04decb04f79c3ce39b8316f924e96695b793ce94`；`splitIds(fullIds(),4,…)` 22／24／22／25，計 93） | 93／93 PASS（715／403／645／465 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium。2x.4 所列 9 個 e2e 皆含於其中 |
+| Quick（`fd51e0a` 同內容的工作樹，基準 `04decb0`） | 68／68 PASS（136 秒） |
+| `full-power-pitching-e2e`（Full 專屬項目中唯一引用 harness 者，加 `window` stub 後補跑） | PASS（106 秒） |
+| reviewer | 0 項缺陷；自由名稱、late binding、TDZ、延遲 closure、template、import 副作用、斷言強度、行尾皆無問題 |
+
+- 與計畫的差異：
+  - Full 第一次為 92／93，非最終結果。`display-preferences-e2e` FAIL：scratchpad clone 以 `git clone --local .` 建立，其 `origin/main` 解析為過期的本機 `main`（`650e4dd`），早於收入顯示統一（`b0a82a1`），`キャリアプロフィール` 的收入欄位與基準不同。未改動的 `8905f8f` 以同基準亦穩定 FAIL，非本期造成。改傳完整 SHA `04decb0` 後該項 `exact match`，Quick／Full 全部重跑得上表結果。本機 `main` 已 fast-forward 至 `04decb0`。
+  - 負控制 `share` 門檻於初版資料生成器差分為 0（資料未抵達該分支）；加入偏守備案例後為 102。表中等價比較與負控制皆為補強後的結果。
+  - T2 追加（使用者於實作後另行批准 2026-10-31，選項 A）：`tests/retirement-hof-test-support.mjs` 加 `globalThis.window??={TEAM_MASTER:{}}`。`capTeam` 移入模組後於 Node 主 realm 解析 `window`，vm stub 不再適用；`teamTally` 非空時舊樹回傳球團、新樹拋 `ReferenceError`。現有 fixture 皆為 `teamTally:{}`，未踩到；產品瀏覽器不受影響。追加後實測回傳與舊樹相同。上表 Full 早於此行（臨時 commit 無此行），之後以 Quick 與 `full-power-pitching-e2e` 補跑全部引用 harness 的 manifest 項目。
+  - 負控制 11 項（計畫 6 項）；等價比較另含 `capTeam`、`posLegendPhrase` 直接呼叫。
+- NOT_RUN：`retirement-hof-pilot`（audit）、`retirement-hof-analysis`（手動，會改寫報告）、`tools/development-b/runtime.mjs`（手動）。依賴的 `endGame`、`tierOf`、`TIER_TH` 於 `game.js` 作用域仍在，屬靜態判斷，未實跑。
+- CI：未執行（尚未 push；PR → `dev` 不觸發 CI）。
+
+### 2x.7 交付（2026-10-31）
+
+- `refactor/retirement-hof` push（`d771213`），PR #40 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook

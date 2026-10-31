@@ -12,6 +12,7 @@ const playerAbility = await readFile(path.join(root, 'docs/src/engine/player-abi
 const playerRomance = await readFile(path.join(root, 'docs/src/engine/player-romance.js'), 'utf8');
 const seasonEvents = await readFile(path.join(root, 'docs/src/engine/season-events.js'), 'utf8');
 const seasonAwards = await readFile(path.join(root, 'docs/src/engine/season-awards.js'), 'utf8');
+const careerRetirement = await readFile(path.join(root, 'docs/src/engine/career-retirement.js'), 'utf8');
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-period-policy.js'), 'utf8');
@@ -73,11 +74,15 @@ assert.equal(game.split(eventsBridge).length,2,'one SeasonEvents RNG bridge, not
 // Its game.js wiring only forwards to the current R (late binding) and is not a draw site.
 const awardsBridge='journalRng:{R:()=>R()}';
 assert.equal(game.split(awardsBridge).length,2,'one SeasonAwards RNG bridge, not a new independent draw');
-const gameSites=game.replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}').replace(awardsBridge,'journalRng:{awardsBridge}');
-assert.equal((gameSites.match(/\bR\(/g) || []).length,19,'all other native RNG call sites unchanged');
+// Phase 20 moved retireScene/endGame into CareerRetirement: R( -4, ri( -2 in game.js, the same 4/2/0/0 in career-retirement.js.
+// Its game.js wiring only forwards to the current R/ri (late binding) and is not a draw site.
+const retirementBridge='rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}';
+assert.equal(game.split(retirementBridge).length,2,'one CareerRetirement RNG bridge, not new independent draws');
+const gameSites=game.replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}').replace(awardsBridge,'journalRng:{awardsBridge}').replace(retirementBridge,'rng:{retirementBridge}');
+assert.equal((gameSites.match(/\bR\(/g) || []).length,15,'all other native RNG call sites unchanged');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonStats.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[6,4,3,0],'SeasonStats draw sites moved verbatim');
 // Six round-specific bonus sites are consolidated; each draft still consumes one ri.
-assert.equal((gameSites.match(/\bri\(/g) || []).length, 32);
+assert.equal((gameSites.match(/\bri\(/g) || []).length, 30);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 const legacyJournalSlots=[...seasonAwards.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
@@ -93,6 +98,7 @@ assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerAbility.match(new RegE
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerRomance.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[2,0,9,10],'PlayerRomance draw sites moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonEvents.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,0,1],'SeasonEvents draw site moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonAwards.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,0,0,0],'SeasonAwards draw site moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerRetirement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[4,2,0,0],'CareerRetirement draw sites moved verbatim');
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(game, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);
