@@ -2938,6 +2938,34 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - `refactor/retirement-hof`（自 `origin/dev` `8905f8f`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。
 
+### 2x.6 實施結果（2026-10-31，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/retirement-hof`，實作 commit `fd51e0a`，比較基準 `8905f8f`）
+
+- 行號更正：無。scratchpad 組裝腳本自 `8905f8f` 原文取行，錨點斷言全部成立；區段內奇數反引號行正好是 2x.1 所列的 `:943`、`:944`、`:952`、`:953`、`:1196`、`:1200`。
+- `game.js` 1774 → 1453 行（CRLF 保持，numstat `+7／−328`）；`career-retirement.js` 360 行（LF）。測試變更 T1–T6（numstat `+9／−3`、`+3／−1`、`+1／−1`、`+1／−1`、`+4／−3`、`+2／−1`）。
+
+| 項目 | 結果 |
+|---|---|
+| 逐字比對（新模組去除 6 行插入、還原 2 行修改、去除 2 空白縮排 vs `8905f8f`；6 行 template 續行不去縮排） | 328 行差異 0；6 行續行與原文逐位元組相同 |
+| `check-syntax`（186 檔）、`verify-modularization` | PASS |
+| 2x.4 所列單元測試（`salary-flow`、`fixed-seed-v160`、`career-movement-policy`、`retirement-hof-balance`、`hof-first-ballot-league`、`award-identity-policy`、`global-contract-market`、`draft-signing-policy`、`npb-return-ui`） | 9／9 PASS |
+| `tools/development-b/defense-history-boundaries.mjs`（手動，T6 後） | 264／264 PASS。不在 manifest，下列 Quick／Full 未執行此檔 |
+| 等價比較（scratchpad，`8905f8f` 本區於 vm vs 現行 `game.js` 區段＋真實 `CareerRetirement`，相同 stub DOM 與真實 `Rng`；比較 `S`、卡片序列、RNG 值與順序、例外、`primaryPos`／`capTeam`／`posLegendPhrase` 回傳值、延遲 closure） | 60,000 例差分 0。評價階級 0–4 各 3,378／19,954／17,387／10,066／45,221；投票 19,116、落選 17,113、初回投票 1,624 例；新解放 `legend` 1,423、`smallschool` 3,905、`grinder` 11,668 例；守備敘述 5,722＋5,095 例；`card` 故障等拋例外 3,392 例；重入 5,959 例 |
+| 等價負控制（每項 20,000 例）：`ri(2,6)`→`ri(2,7)`／調換 `pct`、`tries` 順序／`fbMult` NPB／刪 `S.hofInfo` 寫入／`share` 門檻 0.34→0.35／手套門檻 0.12→0.13（計畫外加項）／`#sh-url` 改 render 時 `S`／`choose` 改 render 時 seed／縮排 `:944`（加項）／縮排 `:1197`（加項）／`getSeed` 固定值 | 差分 285／5,639／8／987／102／256／2,533／18,920／7,190／19,016／19,016；基準重跑 20,000 例差分 0 |
+| 接縫抵達探測（帶標記 `console.log`，舊樹置於 `game.js`、新樹置於模組；`primaryPos`、`capTeam`、`posLegendPhrase`、`retireScene`、`endGame`；`hof-first-ballot-e2e`、`trait-display-e2e`） | 舊／新各 114 次，序列逐位元組相同，兩樹 PASS |
+| `game-view-dom-e2e --baseline=8905f8f8a999dc6dbbf7aa9e1b9d87009aa1cb35`（直接執行） | 8 段生涯 DOM／`S`／RNG 一致 |
+| Full（scratchpad clone 臨時 commit `204dee4`，產品碼與 `fd51e0a` 逐位元組相同；`--baseline=04decb04f79c3ce39b8316f924e96695b793ce94`；`splitIds(fullIds(),4,…)` 22／24／22／25，計 93） | 93／93 PASS（715／403／645／465 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium。2x.4 所列 9 個 e2e 皆含於其中 |
+| Quick（`fd51e0a` 同內容的工作樹，基準 `04decb0`） | 68／68 PASS（136 秒） |
+| `full-power-pitching-e2e`（Full 專屬項目中唯一引用 harness 者，加 `window` stub 後補跑） | PASS（106 秒） |
+| reviewer | 0 項缺陷；自由名稱、late binding、TDZ、延遲 closure、template、import 副作用、斷言強度、行尾皆無問題 |
+
+- 與計畫的差異：
+  - Full 第一次為 92／93，非最終結果。`display-preferences-e2e` FAIL：scratchpad clone 以 `git clone --local .` 建立，其 `origin/main` 解析為過期的本機 `main`（`650e4dd`），早於收入顯示統一（`b0a82a1`），`キャリアプロフィール` 的收入欄位與基準不同。未改動的 `8905f8f` 以同基準亦穩定 FAIL，非本期造成。改傳完整 SHA `04decb0` 後該項 `exact match`，Quick／Full 全部重跑得上表結果。本機 `main` 已 fast-forward 至 `04decb0`。
+  - 負控制 `share` 門檻於初版資料生成器差分為 0（資料未抵達該分支）；加入偏守備案例後為 102。表中等價比較與負控制皆為補強後的結果。
+  - T2 追加（使用者於實作後另行批准 2026-10-31，選項 A）：`tests/retirement-hof-test-support.mjs` 加 `globalThis.window??={TEAM_MASTER:{}}`。`capTeam` 移入模組後於 Node 主 realm 解析 `window`，vm stub 不再適用；`teamTally` 非空時舊樹回傳球團、新樹拋 `ReferenceError`。現有 fixture 皆為 `teamTally:{}`，未踩到；產品瀏覽器不受影響。追加後實測回傳與舊樹相同。上表 Full 早於此行（臨時 commit 無此行），之後以 Quick 與 `full-power-pitching-e2e` 補跑全部引用 harness 的 manifest 項目。
+  - 負控制 11 項（計畫 6 項）；等價比較另含 `capTeam`、`posLegendPhrase` 直接呼叫。
+- NOT_RUN：`retirement-hof-pilot`（audit）、`retirement-hof-analysis`（手動，會改寫報告）、`tools/development-b/runtime.mjs`（手動）。依賴的 `endGame`、`tierOf`、`TIER_TH` 於 `game.js` 作用域仍在，屬靜態判斷，未實跑。
+- CI：未執行（尚未 push；PR → `dev` 不觸發 CI）。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
