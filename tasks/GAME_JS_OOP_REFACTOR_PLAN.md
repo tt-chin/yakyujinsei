@@ -3208,6 +3208,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2z.7 交付（2026-11-01）
 
 - 實作 commit `0ef5737`，結果紀錄另一個 commit，皆在本機 `refactor/career-contract`。未 push、未建 PR、未併 `dev`。未修改 `main`。
+- 後續：已 push，PR #43 → `dev`（標題與說明為繁體中文）；第 23 期併入同一 PR（§2aa.7）。
 
 ## 2aa. 第 23 期：市場・移籍判定移至 `docs/src/engine/career-movement.js`（細部計畫，2026-11-01；計畫已批准，實作已批准）
 
@@ -3226,7 +3227,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 留在 `game.js`／不搬：`movement` 三層、`performMovement`、`professionalMoves`；`portionOf`（唯一呼叫端 `proSeason`，屬統計）；`teamChampRate`、`teamListOf`（無呼叫端，記入 CODE-DEAD-01）。
 - 範圍外（不動，記錄）：`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再使用的名稱；`tools/development-*`（不在 manifest）。
 
-### 2aa.2 設計（使用者決定 2026-11-01：D1 命名 `career-movement.js`／`CareerMovement`；D2 `movement` 三層留 `game.js`；D3 `faYears` 併入 `CareerContract`，`portionOf` 與 2 個死碼不搬；D4 只有 `faMarket` 用 Shadow，4 個重綁名稱皆做抵達探測與負控制；D5 `career-session-access` 以執行期檢查補足；D6 新分支自 `099cb70`，PR 待 #43 合併）
+### 2aa.2 設計（使用者決定 2026-11-01：D1 命名 `career-movement.js`／`CareerMovement`；D2 `movement` 三層留 `game.js`；D3 `faYears` 併入 `CareerContract`，`portionOf` 與 2 個死碼不搬；D4 只有 `faMarket` 用 Shadow，4 個重綁名稱皆做抵達探測與負控制；D5 `career-session-access` 以執行期檢查補足；D6 新分支自 `099cb70`，PR 待 #43 合併；2026-11-01 使用者改為併入 PR #43，見 §2aa.5）
 
 - 新檔 `docs/src/engine/career-movement.js`（LF，草稿 250 行）：
   - 直接 import：23 個 policy／標籤名稱，來自 8 個模組。
@@ -3295,7 +3296,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 ### 2aa.5 分支與交付
 
-- `refactor/career-movement`（自 `099cb70`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。PR 待 #43 合併後建立。未修改 `main`。
+- `refactor/career-movement`（自 `099cb70`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。未修改 `main`。原定 PR 待 #43 合併後建立；2026-11-01 使用者改為把本期 commit 併入 PR #43（尚無 review），一次合併、一次 Full CI。
 
 ### 2aa.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/career-movement`，計畫 commit `40ffeee`，實作 commit `d350c58`，比較基準 `099cb70`）
 
@@ -3325,7 +3326,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 ### 2aa.7 交付（2026-11-01）
 
-- 實作 commit `d350c58`，結果紀錄另一個 commit，皆在本機 `refactor/career-movement`。未 push、未建 PR、未併 `dev`。未修改 `main`。PR 待 #43 合併後建立。
+- 實作 commit `d350c58`，結果紀錄 `ab25d60`，T11 `f5f1632`，於本機 `refactor/career-movement` 完成後以 fast-forward push 至 `refactor/career-contract`，併入 PR #43 → `dev`。不另開 PR。PR → `dev` 不觸發 CI，合併與 Full CI 待 code owner。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
