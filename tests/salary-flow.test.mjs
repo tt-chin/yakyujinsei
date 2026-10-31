@@ -9,6 +9,8 @@ const seasonStats = await readFile(path.join(root, 'docs/src/engine/season-stats
 const internationalTournament = await readFile(path.join(root, 'docs/src/engine/international-tournament.js'), 'utf8');
 const playerInjury = await readFile(path.join(root, 'docs/src/engine/player-injury.js'), 'utf8');
 const playerAbility = await readFile(path.join(root, 'docs/src/engine/player-ability.js'), 'utf8');
+const playerRomance = await readFile(path.join(root, 'docs/src/engine/player-romance.js'), 'utf8');
+const seasonEvents = await readFile(path.join(root, 'docs/src/engine/season-events.js'), 'utf8');
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-period-policy.js'), 'utf8');
@@ -57,23 +59,33 @@ assert.equal(game.split(injuryBridge).length,2,'one PlayerInjury RNG bridge, not
 // Its game.js wiring only forwards to the current R (late binding) and is not a draw site.
 const abilityBridge='rng:{R:()=>R()}';
 assert.equal(game.split(abilityBridge).length,2,'one PlayerAbility RNG bridge, not a new independent draw');
-const gameSites=game.replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}');
-assert.equal((gameSites.replace(journalBridge,'captureAwardSlot(nativeBridge)').match(/\bR\(/g) || []).length,21,'all other native RNG call sites unchanged');
+// Phase 18 moved the love events into PlayerRomance: R( -2, chance( -9, pick( -10 in game.js, the same 2/0/9/10 in player-romance.js.
+// Its game.js wiring only forwards to the current R/chance/pick (late binding) and is not a draw site.
+const romanceBridge='rng:{R:()=>R(),chance:p=>chance(p),pick:list=>pick(list)}';
+assert.equal(game.split(romanceBridge).length,2,'one PlayerRomance RNG bridge, not new independent draws');
+// Phase 18 moved drawEvents into SeasonEvents: pick( -1 in game.js, the same 1 in season-events.js.
+// Its game.js wiring only forwards to the current chance/pick (late binding) and is not a draw site.
+const eventsBridge='rng:{chance:p=>chance(p),pick:pool=>pick(pool)}';
+assert.equal(game.split(eventsBridge).length,2,'one SeasonEvents RNG bridge, not a new independent draw');
+const gameSites=game.replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}');
+assert.equal((gameSites.replace(journalBridge,'captureAwardSlot(nativeBridge)').match(/\bR\(/g) || []).length,19,'all other native RNG call sites unchanged');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonStats.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[6,4,3,0],'SeasonStats draw sites moved verbatim');
 // Six round-specific bonus sites are consolidated; each draft still consumes one ri.
 assert.equal((gameSites.match(/\bri\(/g) || []).length, 32);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 const legacyJournalSlots=[...game.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
-assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,36,'existing eligible chance sites moved to one-to-one legacy slots');
+assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,27,'existing eligible chance sites moved to one-to-one legacy slots');
 // Phase 15 moved processIntlPhase into InternationalTournament: pick( -1 in game.js, the same 1 in international-tournament.js.
 // Its game.js wiring only forwards to the current pick (late binding) and is not a draw site.
 const intlBridge='pick:a=>pick(a)';
 assert.equal(game.split(intlBridge).length,2,'one InternationalTournament RNG bridge, not a new independent draw');
-assert.equal((gameSites.replace(intlBridge,'intlBridge').match(/\bpick\(/g) || []).length, 11);
+assert.equal((gameSites.replace(intlBridge,'intlBridge').match(/\bpick\(/g) || []).length, 0);
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(internationalTournament.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,0,1],'InternationalTournament draw site moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerInjury.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,7,6,2],'PlayerInjury draw sites moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerAbility.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,0,0,0],'PlayerAbility draw site moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerRomance.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[2,0,9,10],'PlayerRomance draw sites moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonEvents.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,0,1],'SeasonEvents draw site moved verbatim');
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(game, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);

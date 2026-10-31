@@ -2671,6 +2671,110 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - `refactor/player-ability` push（`a613b25`），PR #37 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
 
+## 2v. 第 18 期：事件卡移至 `docs/src/engine/season-events.js`、戀愛移至 `docs/src/engine/player-romance.js`（細部計畫，2026-10-26；計畫已批准）
+
+路線見 §3.15（葉領域 7 期之第 5 期）。§3.15 所列 `32261d6:603–821` 於基準為 `:433–632`。PR #37（第 17 期）未併入 `dev`，故本期疊在 `refactor/player-ability` 之上。
+
+### 2v.1 現況（2026-10-26 grep 抽查＋scout 唯讀調查＋scratchpad 原文片段掃描，基準 `refactor/player-ability` `1f796b2cebc3a01585ccf338c93ab9467f148148`（`docs/src` 與 `c4b9c45` 相同），`docs/src/engine/game.js` 2129 行）
+
+- 區段內為兩組互不呼叫的函式：
+  - 事件卡：`evOdds`（`:433`）、`eventChoiceSummary`（`:434–440`）、`drawEvents`（`:441–450`）、`renderEventResult`（`:613–626`）、`resolveEvent`（`:627–632`）。
+  - 戀愛：註解 `:451`、`CHEER`（`:452`）、`PARTNER_JOB`（`:453`）、`partnerJob`（`:454`）、`CHEER_DEFAULT`（`:455`）、`CHEER_SAFE`（`:456`）、`datePool`（`:457–460`）、`affairPool`（`:461`）、`loveEvent`（`:462–542`）、`divorceRec`（`:543–545`）、`loveCaught`（`:546–566`）、`proposalAsk`（`:567–576`）、`loveCaughtDating`（`:577–598`）、`loveGainTxt`（`:599–607`）。
+  - 區段內留在原處：`addAbStat` 薄包裝（`:608`）、`statBonus`（`:609–612`，CODE-DEAD-01）、`:633` 註解 `/* シーズン中即時可解鎖的特性。 */`。
+- RNG（直接呼叫點）：事件卡 `pick` 1（`drawEvents:446`）；戀愛 `R` 2（`:481`、`:523`）、`chance` 9（`:473`、`:480`、`:486`、`:499`、`:506`、`:518`、`:529`、`:559`、`:590`）、`pick` 10（`:474`×2、`:482`、`:502`、`:519`、`:525`、`:548`、`:561`、`:579`、`:592`）；`ri` 0。`resolveEvent:628` 以 `{chance,pick,…}` 傳函式參照給 `applyEvent`（非呼叫點）；`applyEvent`（`event-state-policy.js:32`、`:34`）只以單一參數呼叫 `chance(x)`／`pick(x)`。
+- 外部呼叫端：範圍外只有 `phaseMid:426` 的 `loveEvent(()=>drawEvents(…))`。不掛 `window`、不在 `LEGACY`（`:1604`）、`docs/src` 無 overlay 再賦值。`CHEER`／`CHEER_SAFE` 在 `docs`／`tests`／`scripts`／`tools` 無重新賦值或修改；`CHEER_DEFAULT` 只有宣告、無讀取。
+- 自由名稱：
+  - 事件卡：`S`、`EVENTS`（`:158`）、`POS_AB`（`:75`）、`ABL`（`:74`）、`choose`、`card`、`board`、`fmtMoney`（`:231` const）、`logTarget`、`displayTrait`、`pick`、`chance`（僅參照）；import 的 `eventOdds`、`effectiveCategory`、`eventTier`、`eventPlan`、`eventInjury`、`eventIncome`、`EVENT_MODES`、`EVENT_TRAIT_TEXT`（`event-policy.js`）、`eventDrawPool`、`beginEvent`、`applyEvent`（`event-state-policy.js`）。
+  - 戀愛：`S`、`POS_AB`、`ABL`、`clamp`（`:69`）、`addAb`、`addAbStat`、`choose`、`card`、`board`、`R`、`chance`、`pick`；import 的 `confidanteEligible`（`trait-policy.js`）。
+- 延遲 closure 直接讀寫 `S` 者 5 處：`drawEvents` 的抽卡選項 `f`（`:443`，`eventDrawPool(S,…)`、`beginEvent(S,…)`）、`loveEvent` 單身「堂々と認める」`f`（`:505`，`confidanteEligible(S)`、`S.traits.confidante`）、`loveCaught`「土下座」`f`（`:558`，`POS_AB[S.pos]`）、`proposalAsk`「プロポーズ」`f`（`:570`，`S.tmpInj`）、`loveCaughtDating`「謝罪」`f`（`:589`，`POS_AB[S.pos]`）。其餘選項 `f` 只經 `L`（函式開頭的 `S.love` 快照，原碼亦同）或呼叫其他單元。產品中選項只由 `choose` 的 `onclick`（`:333` `S!==view.state` 守衛）及 `invokeAnnualChoice`（`:319`）執行。
+- e2e 接縫（在 `game.js` 末尾附加 hook 字串，引用 `game.js` 作用域名稱）：`event-system-e2e:13` 用 `renderEventResult`、`eventChoiceSummary`、`drawEvents`、`EVENT_MODES`、`EVENTS`、`beginEvent`、`applyEvent`、`POS_AB`、`pick`、`resetEventYear`、`S`；`event-fix-e2e:12` 用 `drawEvents`、`renderEventResult`、`EVENTS`、`beginEvent`、`applyEvent`、`pick`、`POS_AB`、`R`、`S`、`board`。RNG 計數以 `support/rng-instrument` 的 `careerRng.onDraw` 計算，不依呼叫點原文。
+- 測試耦合（原文斷言）：
+  - `event-copy.test:32`：`'function evOdds'`→`'function drawEvents'`、`'function resolveEvent'`→`'/* シーズン中即時可解鎖的特性。 */'` 兩段切片，對 `a7fe2e817ee5afec2c42c9298263f4853d83a15e` 的 `game.js` 逐字比較（只替換 `latepractice` 與 `displayTrait(key)` 兩項）。
+  - `event-integration.test:38`：`'function eventChoiceSummary'`→`'function drawEvents'` 切片無 `R|ri|pick|chance` 呼叫。
+  - `salary-flow.test:58–72`：`gameSites` 的 `R(` 21（含本區 2）、`ri(` 32、`chance(`＋14 slot＝36（`chance(` 22，含本區 9）、`pick(` 11（全部在本區）；bridge 唯一性以 `game.split(bridge).length===2` 斷言，`intlBridge` 為 `pick:a=>pick(a)`（新 bridge 不得含此子字串）。
+  - 確認不受影響：`productionFunction` 無本區目標（`phaseMid` 切片終點為下一個 `function` 行，搬移後為 `eventChoiceSummary` 包裝）；`support/approved-school-oracle:27` 的文案 `replace` 只對舊 SHA 原文有效，對現行碼本來就是 no-op；`trait-display-e2e:19` 的 `displayTrait` 留在 `game.js`；`event-fix.test`、`event-policy.test`、`trait-policy.test`、`support/stage6-browser:27` 直接呼叫 policy 模組；`verify-modularization` 與 `award-identity-policy` 凍結（新檔不在名單）無本區斷言。
+  - `event-fix-e2e:22` 的 `--preview` 比對清單只列既有檔，不含新模組（只影響 Preview 模式的覆蓋範圍，不 FAIL；本期不改，記錄）。
+- 範圍外（不動，記錄）：`docs/design/MODULE_FUNCTION_INDEX.md` 的行號自 1.11.x 起未隨重構更新，本期不改；`game.js` import 行中搬移後不再於產品碼使用的名稱（`eventOdds` 等）保留。
+
+### 2v.2 設計（使用者決定 2026-10-26：D1 兩個模組、同一 PR 兩個實作 commit；D2 名簿由模組持有、`CHEER_DEFAULT` 逐字搬並補記 CODE-DEAD-01；D3 只為外部引用名稱留薄包裝、`game.js` import 行不動；D4 純 policy 由模組直接 import，`game.js` 函式以 late-binding lambda 注入；D5 延遲 closure 的 `S` 讀取比照 §2t）
+
+- 新檔 `docs/src/engine/season-events.js`（LF）：
+  - `import { EVENT_MODES, eventOdds, effectiveCategory, eventTier, eventPlan, eventInjury, eventIncome, EVENT_TRAIT_TEXT } from './event-policy.js';`、`import { eventDrawPool, beginEvent, applyEvent } from './event-state-policy.js';`
+  - `class SeasonEvents`，方法 `eventChoiceSummary(ev,mode)`、`drawEvents(n,done)`、`renderEventResult(ev,result)`。
+  - 工廠 `seasonEventRules({getState,EVENTS,POS_AB,ABL,choose,card,board,fmtMoney,logTarget,displayTrait,rng:{chance,pick}})` 內依原順序含 `evOdds`、`eventChoiceSummary`、`drawEvents`、`renderEventResult`、`resolveEvent`，本體逐字（+2 縮排），模組內互相呼叫（原為全域名稱，無再賦值，等價）。
+- 新檔 `docs/src/engine/player-romance.js`（LF）：
+  - `import { confidanteEligible } from './trait-policy.js';`
+  - 模組頂層逐字（不縮排）：註解 `:451`、`CHEER`、`PARTNER_JOB`、`partnerJob`、`CHEER_DEFAULT`、`CHEER_SAFE`、`datePool`、`affairPool`（不讀 `S`、無注入依賴）。
+  - `class PlayerRomance`，方法 `loveEvent(next)`。
+  - 工廠 `romanceRules({getState,clamp,POS_AB,ABL,addAb,addAbStat,card,board,choose,rng:{R,chance,pick}})` 內依原順序含 `loveEvent`、`divorceRec`、`loveCaught`、`proposalAsk`、`loveCaughtDating`、`loveGainTxt`，本體逐字（+2 縮排）。
+- `S` 讀取（逐字搬移外的唯一差異，實施結果逐處列出）：
+  - 函式開頭 `const S=getState()`：`evOdds`、`eventChoiceSummary`、`resolveEvent`、`loveEvent`、`divorceRec`、`loveCaught`、`proposalAsk`、`loveCaughtDating`、`loveGainTxt`（9 處；單行函式於 `{` 後同一行插入）。`drawEvents` 開頭不讀 `S`，不插入；`renderEventResult` 不讀 `S`。
+  - 2v.1 的 5 個延遲 closure 開頭 `const S=getState();`（同一行插入，比照 §2t `tjGamble` 選項）。理由：產品中 `choose` 守衛使選項只在 `S===view.state` 時執行，快照與即時 `S` 相同；插入後等價性不依賴該守衛（直接呼叫 `f` 的 harness 亦同），§2t 的負控制已顯示快照在重新賦值序列會出差異。
+  - 合計 14 處（`season-events.js` 4、`player-romance.js` 10）。
+- `game.js`：
+  - `:433–450` → `function eventChoiceSummary(ev,mode){return seasonEvents.eventChoiceSummary(ev,mode);}`、`function drawEvents(n,done){seasonEvents.drawEvents(n,done);}`。
+  - `:451–607` → `function loveEvent(next){playerRomance.loveEvent(next);}`，其後接建構行 `const seasonEvents=new SeasonEvents({…});`、`const playerRomance=new PlayerRomance({…});`，再接 `addAbStat` 包裝。
+  - `:613–632` → `function renderEventResult(ev,result){seasonEvents.renderEventResult(ev,result);}`；`:633` 註解保留。
+  - `evOdds`、`resolveEvent` 及戀愛內部函式無外部引用，不留包裝。
+  - `import { SeasonEvents } from './season-events.js';`、`import { PlayerRomance } from './player-romance.js';` 加在 `PlayerAbility` import 之後。
+- 注入：getter `getState:()=>S`；參照 `EVENTS`、`POS_AB`、`ABL`、`clamp`、`fmtMoney`；late-binding lambda `choose`、`card`、`board`、`logTarget`、`displayTrait`、`addAb`、`addAbStat`；RNG bridge：
+  - `romanceBridge='rng:{R:()=>R(),chance:p=>chance(p),pick:list=>pick(list)}'`
+  - `eventsBridge='rng:{chance:p=>chance(p),pick:pool=>pick(pool)}'`
+  - 兩者互不為子字串，也不含既有 `seasonStatsBridge`、`injuryBridge`、`abilityBridge`、`intlBridge` 任一者，既有 bridge 也不含新者；實作時以 scratchpad 檢查 6 個 bridge 兩兩關係。
+- TDZ：建構行引用的 `EVENTS`（`:158`）、`POS_AB`、`ABL`、`clamp`、`fmtMoney`（`:231`）皆在前；其餘為 lambda。建構行不在任何 `productionFunction` 切片內（`loveEvent` 非切片目標）。
+- `game.js` 為 CRLF：只刪除區段並插入新行，非整檔重寫。
+- commit：第 1 個 `player-romance.js`（戀愛）、第 2 個 `season-events.js`（事件卡）；各 commit 單獨可通過 2v.3 對應測試。
+
+### 2v.3 測試變更（使用者已批准 2026-10-26）
+
+- T1 `salary-flow.test`：新增 `romanceBridge`、`eventsBridge` 並各斷言在 `game.js` 只出現一次；`gameSites` 排除兩者。`R(` 21 → 19、`ri(` 32 不變、`chance(`＋slot 36 → 27、`pick(` 11 → 0；新模組計數 `player-romance.js` `[2,0,9,10]`、`season-events.js` `[0,0,0,1]`。註解記錄本期移動。
+- T2 `event-copy.test:32`：兩段切片改從 `season-events.js` 取（`'function evOdds'`→`'function drawEvents'`；`'function resolveEvent'`→工廠的 `return {` 行）；以明確字串刪除 `getState` 插入處（第 1 段 2 處、第 2 段 1 處，各斷言恰好 1 次）並去除 2 空白縮排後，套用既有兩項替換，與 `a7fe2e8` `game.js` 的原切片比較。`a7fe2e8` 側不變。
+- T3 `event-integration.test:38`：切片改從 `season-events.js` 取，regex 不變。
+- 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准（§2u T8 之例）。
+
+### 2v.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
+
+- `node --check`、`check-syntax`、`verify-modularization`；`salary-flow.test`、`event-copy.test`、`event-integration.test`、`event-fix.test`、`event-policy.test`、`trait-policy.test`、`ability-allocation.test`、`full-power-pitching.test`、`npb-return-ui.test`、`championship-intl.test`、`award-identity-policy.test`。
+- e2e（Brave）：`event-system-e2e`、`event-fix-e2e`、`trait-display-e2e`，及 `stage6-browser` harness 使用者（`stage6-ability`、`stage6-state-transaction`）。
+- 等價比較（scratchpad 腳本）：基準 `1f796b2` 的本區函式於 vm vs 新模組，相同 stub（`choose` 記錄選項並可直接呼叫 `f`、`card`／`board` 記錄）與確定性 RNG；戀愛：`stage`／年齡門檻 × `L.st`（single／divorced／dating／married）× `dyrs` 與 `cheatYr` 破局率 × 30% 小事件三分支 × 浮氣 55% 成敗 × `caught` 1／≥2 與 `scum` 有無 × 和解 40% 成敗 × 交際成立 65% × `confidante` 條件 × `kids` 0～4 出產 × 既婚三分支 × 選項全路徑；事件卡：`eventChoiceSummary` 全 92 卡 × 3 mode × 特性組合、`drawEvents` 空池／非空池、`resolveEvent` `applied` 真偽與解鎖特性；比較 `S`、`card`／`choose` 紀錄、RNG 次數與順序、回傳值、例外。含「開選項後重新賦值 `S` 再呼叫 `f`」序列。
+- 負控制（scratchpad 變體）：閉包改讀快照 `S`（須僅重新賦值序列出差異）；刪除一處 `L.affairs++`；`chance(55)` 改 `chance(56)`；事件卡刪除 `renderEventResult` 的 `dataset.cardId` 設定。
+- 接縫抵達探測（帶標記 `console.log`，舊／新樹各跑）：`event-system-e2e`、`event-fix-e2e` hook 經 `drawEvents`／`renderEventResult`／`eventChoiceSummary` 包裝抵達模組。
+- `game-view-dom-e2e --baseline=1f796b2cebc3a01585ccf338c93ab9467f148148`（直接執行）：8 段生涯 DOM／`S`／RNG 一致。
+- Quick；Full（R3；比照 §2u 的 scratchpad worktree 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。BACKLOG：CODE-DEAD-01 補記 `CHEER_DEFAULT`（新位置 `player-romance.js`）。
+
+### 2v.5 分支與交付
+
+- `refactor/event-romance`（自 `refactor/player-ability` `1f796b2`，本機分支無 upstream）。本計畫先單獨 commit；實作 commit、push、PR 另批。PR 的 base 視 PR #37 合併狀態決定（未合併時 PR #37 合併後再開，或以 `refactor/player-ability` 為 base，屆時請使用者決定）。
+- 2026-10-31 更新：PR #37 已併入 `dev`（`218565e`），`origin/dev` 的 tree 與 `1f796b2` 相同（`87fad30`），本期 PR base 為 `dev`。
+
+### 2v.6 實施結果（2026-10-31，本機 macOS，Brave 156＋`--disable-features=BraveFarbling`；分支 `refactor/event-romance`，實作 commit `f569039`（戀愛）、`63fc0ec`（事件卡），比較基準 `1f796b2`）
+
+- 行號更正：無。scratchpad 組裝腳本自 `1f796b2` 原文取行，對 `:433`、`:441`、`:451`、`:462`、`:607`、`:608`、`:613`、`:632`、`:633` 的斷言全部成立；區段 200 行皆 CRLF，無跨行 template。
+- `game.js` 2129 → 1942 行（CRLF 保持；numstat 第 1 個 commit `+3／−157`，第 2 個 `+5／−38`）；`player-romance.js` 179 行、`season-events.js` 59 行（LF）。與逐字搬移的差異只有 `getState` 讀取 14 處（`season-events.js` 4、`player-romance.js` 10），形式 3 種：獨立一行 `const S=getState();`、`f:()=>{const S=getState();`、單行函式 `{const S=getState();return …`（`evOdds`）；`divorceRec` 為同一行 `{ const S=getState(); `。
+- 第 1 個 commit 單獨通過 2v.3 對應測試：T1 暫定值 `pick(` 11 → 1（`drawEvents` 仍在 `game.js`），第 2 個 commit 改為 0 並完成 T2、T3。其他測試變更：無。
+
+| 項目 | 結果 |
+|---|---|
+| `check-syntax`（184 檔）、`verify-modularization` | PASS（兩個 commit 各跑一次，`check-syntax` 第 1 個 commit 為 183 檔） |
+| 2v.4 所列 11 個單元測試 | 兩個 commit 各 11／11 PASS |
+| scratchpad 預檢（`1f796b2` 原文組裝草稿） | 新模組計數 `[2,0,9,10]`、`[0,0,0,1]`；`getState` 10＋4；6 個 bridge 兩兩無子字串（30 對）；T2、T3 切片成立 |
+| 等價比較（scratchpad，`1f796b2` 本區於 vm vs 新模組，相同 stub 與確定性 RNG；比較 `S`、`card`／`choose`／`board` 紀錄、RNG 次數與順序、例外、`dataset`） | 差分 0：戀愛 60,000 例（含達 `PRO`＋20 歲門檻 50,700；一半含「開選項後重新賦值 `S` 再呼叫 `f`」）、`eventChoiceSummary` 88,320 例（92 卡 × 3 mode × 64 特性組合 × 5 stage）、`drawEvents` 30,000 例（空池 1,486、重複選擇 18,946、`applied` 真偽與 stale 例外）、`renderEventResult` 20,000 例。92 張卡與戀愛各卡片標題皆抵達 |
+| 等價負控制：閉包改讀快照／刪一處 `L.affairs++`／`chance(55)`→`chance(56)`／刪 `dataset.cardId` | 差分：戀愛 800 與抽卡 6,700（皆只在重新賦值序列）／戀愛 228／戀愛 304／抽卡 18,863 與顯示 17,979 |
+| 接縫抵達探測（帶標記 `console.log`，舊／新樹各跑；探測置於函式本體開頭） | `event-system-e2e` 5906／5906 次、`event-fix-e2e` 81／81 次，序列相同，兩樹 exit 0 |
+| e2e（Brave）：`event-system`、`event-fix`、`trait-display`、`stage6-ability`、`stage6-state-transaction` | 5／5 PASS（85／15／93／38／2 秒） |
+| `game-view-dom-e2e --baseline=1f796b2cebc3a01585ccf338c93ab9467f148148`（直接執行） | 8 段生涯 DOM／`S`／RNG 一致（161 秒） |
+| Quick | 68／68 PASS（135 秒） |
+| Full（scratchpad worktree `63fc0ec`，乾淨 checkout；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，計 93；未傳 `--baseline`） | 93／93 PASS（719／401／637／458 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| reviewer | 無 findings（逐行比對與原文一致、14 處 `getState`、自由名稱、TDZ、T1–T3 未弱化） |
+
+- 範圍外記錄（不動）：`event-fix-e2e:22` 的 `--preview` 比對清單未含新模組；`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再於產品碼使用的名稱。BACKLOG：CODE-DEAD-01 已補記 `CHEER_DEFAULT`。
+
+### 2v.7 交付（2026-10-31）
+
+- `refactor/event-romance` push（`560ed13`），PR #38 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook

@@ -35,7 +35,8 @@ assert.match(game,/try\{resetEventYear\(state\);startYear\(\);handoff\.status='C
 assert.match(game,/consumeEventSeason\(S\);card\('bad'/);
 assert.equal(TRAIT_LABELS.favorite,'監督のお気に入り');
 assert.match(game,/eventPoints!==0[\s\S]*applyEventSeason[\s\S]*recordSalaryEvaluation\(entry\.st\)/);
-const eventDisplay=game.slice(game.indexOf('function eventChoiceSummary'),game.indexOf('function drawEvents'));
+const seasonEvents=fs.readFileSync(new URL('../docs/src/engine/season-events.js',import.meta.url),'utf8');
+const eventDisplay=seasonEvents.slice(seasonEvents.indexOf('function eventChoiceSummary'),seasonEvents.indexOf('function drawEvents'));
 assert.doesNotMatch(eventDisplay,/\b(?:R|ri|pick|chance)\s*\(/);
 assert.match(fs.readFileSync(new URL('../docs/src/engine/event-policy.js',import.meta.url),'utf8'),/cntSocialBoldFail>10/);
 const amateur=game.slice(game.indexOf('  function cupOnce('),game.indexOf('  function intlEvents('));
