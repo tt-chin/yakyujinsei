@@ -2817,6 +2817,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - T2 `award-journal-native.test`：vm context 加 `SeasonAwards`；`renderCheckpointCard` 改無條件切片，`collectLegacyAwardPlan` 維持條件式（`efd4710` 側仍需要）。
 - T3 `tools/development-b/award-runtime-support.mjs`：同 T2。
 - T4 `trait-policy.test`：`journalFixture` 的 context 加 `SeasonAwards`；切片與舊 SHA 側不變。
+- T5 `tools/development-b/legacy-slot-source-check.mjs`（使用者於實作後另行批准 2026-10-31，更正 §2w.1 的「範圍外」；reviewer 同樣指出此檔）：獎項區塊改讀 `season-awards.js` 並去除 2 空白縮排；`seedInit`／`R` 改為比對 `rng.js` 的種子與步進原文，並固定 `game.js` 的兩行委派。`efd4710` 側不變。不加入 manifest，仍為手動工具。
 - 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
 
 ### 2w.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
@@ -2835,6 +2836,28 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2w.5 分支與交付
 
 - `refactor/season-awards`（自 `origin/dev` `9f8664a`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。
+
+### 2w.6 實施結果（2026-10-31，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/season-awards`，實作 commit `bbaac33`，T5 commit `3674ccd`，比較基準 `9f8664a`）
+
+- 行號更正：無。scratchpad 組裝腳本自 `9f8664a` 原文取行，對 `:641`、`:657`、`:658`、`:672`、`:673`、`:826`、`:827` 的斷言全部成立；區段每行反引號數為偶數。
+- `game.js` 1942 → 1774 行（CRLF 保持，numstat `+3／−171`）；`season-awards.js` 189 行（LF）。測試變更只有 T1–T4（numstat `+11／−4`、`+3／−2`、`+2／−1`、`+3／−2`）及 T5（`+9／−2`）。
+
+| 項目 | 結果 |
+|---|---|
+| 逐字比對（新模組去除 2 行插入與 2 空白縮排 vs `9f8664a`） | 171 行差異 0；`game.js` 其餘行相同，新增只有 `:23`、`:642`、`:643` |
+| `check-syntax`（185 檔）、`verify-modularization` | PASS |
+| 2w.4 所列 14 個單元測試 | 14／14 PASS |
+| 等價比較（scratchpad，`9f8664a` 本區於 vm vs 真實 `SeasonAwards`，相同 stub 與真實 `Rng`；比較 `S`、卡片、RNG 前後值、例外、`traitPresentation`；每例連跑 2 次） | 60,000 例差分 0。4 聯盟 × 投手 3 角色／野手；5 種故障（`captureAwardSlot`、`prepareD2AwardDecisions`、`commitAwardReceipt`、`completeAwardDecisions`、`card`）各約 6,000 例；提前返回 9,054 例；決定 263,191 筆，18 種 `awardId` 皆有得獎；`phoenix` 解放 8,642、三冠 2,471、`yips` 克服 19,410 例 |
+| 等價負控制（每項 20,000 例）：調換 `BATTING_HR`／`BATTING_SB` 槽／`RBI` 機率係數 2→3／刪 `traitPresentation` 清除／`SEED` 固定值／`commitAwardReceipt` 與 `completeAwardDecisions` 順序對調（計畫外加項） | 差分 4,573／1,450／8,078／16,999／16,999；基準重跑 20,000 例差分 0 |
+| 接縫抵達探測（帶標記 `console.log`，舊樹置於 `awards` 開頭、新樹置於模組 `awards` 開頭；`trait-system-e2e`、`international-personal-stats-e2e`） | 舊／新各 131 次，序列相同，兩樹 PASS |
+| e2e（Brave）：`trait-system`、`international-personal-stats`、`full-power-pitching`（manifest `--part=fixtures`） | 3／3 PASS（8／268／95 秒） |
+| `game-view-dom-e2e --baseline=9f8664af38034055f1c1ba1450519ce535e44efe`（直接執行） | 8 段生涯 DOM／`S`／RNG 一致（167 秒） |
+| Quick | 68／68 PASS（155 秒） |
+| Full（scratchpad clone 臨時 commit `3eb637b`，與 `bbaac33` 的 6 個變更檔逐位元組相同；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，計 93；未傳 `--baseline`，解析為 `04decb0`） | 93／93 PASS（743／399／647／470 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| `legacy-slot-source-check.mjs`（T5 後） | 4／4 PASS；改公式係數、改 `t|61` 的變體皆 FAIL。不在 manifest，上列 Quick／Full 未執行此檔 |
+| reviewer | 1 項：`legacy-slot-source-check.mjs` 未更新（已由 T5 處理）；自由名稱、`isSP` 綁定、TDZ、參照注入、斷言強度、harness 舊基準皆無問題 |
+
+- 與計畫的差異：Full 用 scratchpad clone（非 worktree）；負控制多 1 項。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
