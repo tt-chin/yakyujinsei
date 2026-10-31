@@ -3209,7 +3209,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 實作 commit `0ef5737`，結果紀錄另一個 commit，皆在本機 `refactor/career-contract`。未 push、未建 PR、未併 `dev`。未修改 `main`。
 
-## 2aa. 第 23 期：市場・移籍判定移至 `docs/src/engine/career-movement.js`（細部計畫，2026-11-01；計畫已批准，實作未批准）
+## 2aa. 第 23 期：市場・移籍判定移至 `docs/src/engine/career-movement.js`（細部計畫，2026-11-01；計畫已批准，實作已批准）
 
 路線見 §3.17。本期搬市場與移籍判定的輔助函式，`movement` 三層留在 `game.js`。
 
@@ -3295,6 +3295,36 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2aa.5 分支與交付
 
 - `refactor/career-movement`（自 `099cb70`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。PR 待 #43 合併後建立。未修改 `main`。
+
+### 2aa.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/career-movement`，計畫 commit `40ffeee`，實作 commit `d350c58`，比較基準 `099cb70`）
+
+- 實作：新檔 `docs/src/engine/career-movement.js` 250 行（LF）；`game.js` 1225 → 1022 行（`+14／−217`，CRLF，無裸 LF）；`career-contract.js` `+12／−1`。測試變更只有 T1～T10，行數與 §2aa.3 相同。
+
+| 驗證 | 結果 |
+|---|---|
+| 逐字比對（獨立還原腳本） | `career-movement.js` 206 行、`faYears` 10 行，還原宣告差異後與 `099cb70` 逐位元組相同 |
+| 自由名稱 | 只有語言內建；無未用 import |
+| 定向 | `check-syntax`、`verify-modularization`、T1～T9、`award-identity-policy` 全部 PASS |
+| 延遲 closure | 11 情境於 render 後替換 `S`，`099cb70` 本體 vs 真實 `CareerMovement` 差異 0；反向控制（改讀快照）11／11 有差異 |
+| 抵達探測 | 8 段生涯新舊逐步命中序列一致；`faMarket` 2、`crossOffers` 60、`demotionAudit` 86、`tradeCheck` 86（兩個視窗寬度合計）。與 `stage10` 同一重綁機制，`stage10` 自身的 `active.*` 計數未比較 |
+| 接縫負控制 | 4 個名稱改為繞過：探測 4／4 抓到（`crossOffers` 餘 2 次來自 `extensionOffer` 的 lambda），`game-view-dom-e2e` 仍 PASS |
+| `applyKboForeignPackageCap` 接縫 | 模組內呼叫點只有 `showFaMarket` 的無報價分支。改直接 import 時 `kbo-renewal-e2e` 仍 PASS，**與 §2aa.4 預期的 FAIL 不符**：該測試未走此分支。改以 scratch 探測觸發此分支，hook 命中數：`099cb70` 1、實作 1、直接 import 0 |
+| D5 負控制 | `contract-salary-e2e --only=state`：舊 helper 216 項丟 `CAREER_SESSION_FIELD_MISSING`；新 helper 216／0；拿掉 `CareerSession` 欄位後 216 項丟同一錯誤 |
+| `contract-salary-e2e --compare=099cb70…` | 381／0 |
+| `game-view-dom-e2e --baseline=099cb70…` | 8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68／68 PASS（135 秒） |
+| Full（scratchpad worktree，`docs`、`tests`、`scripts` 與工作樹逐檔相同；報告的 `head` 為 worktree 基準 `40ffeee`；`splitIds(fullIds(),4,…)` 22／24／22／25，計 93 不重複） | 93／93 PASS（723／389／626／470 秒；分組執行，非單一 Full 報告；`ci-full-batches` 嚴格彙整未執行） |
+
+- 期望值變更：T1 的 RNG 計數搬移（`ri` 26 → 24、`chance` 合計 26 → 18，模組 `[0,2,8,0]`），總呼叫點不變。golden 未改。
+- reviewer：6 個審查面向無 finding（只跑單檔測試，未跑 Quick／Full／瀏覽器）。目視：不適用。VERSION／CHANGELOG／CURRENT_SPEC 不更新（§9.3）。
+- 結論：
+  - 成本：測試 10 檔，與草稿相同；實作後無未預期 FAIL。草稿階段先跑 Full，確認 Full 專屬入口不需變更。
+  - 測試缺口：`kbo-renewal-e2e` 沒有走到模組內的 `applyKboForeignPackageCap` 呼叫點，改壞此接縫不會 FAIL。本期以 scratch 探測確認接縫有效，未補 repo 測試。§2aa.4 的 4 個存活變異同為既有缺口。
+  - 未解：`--preview` 路由、Linux CI 未執行；`event-integration.test` 間歇 `SIGSEGV`（本次 Quick／Full 未發生）；`movement` 三層與年度流程尚無細部計畫。
+
+### 2aa.7 交付（2026-11-01）
+
+- 實作 commit `d350c58`，結果紀錄另一個 commit，皆在本機 `refactor/career-movement`。未 push、未建 PR、未併 `dev`。未修改 `main`。PR 待 #43 合併後建立。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
