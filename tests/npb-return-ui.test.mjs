@@ -6,11 +6,15 @@ import {createContract,markSalaryPaid,appendExtension,contractNeedsRenewal} from
 import {productionFunction} from './retirement-hof-test-support.mjs';
 
 const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
-const source=game.slice(Math.max(game.indexOf('  function crossOffers(o){'),game.indexOf('  crossOffers = function(o){')),game.indexOf('  function renewAndAdvance'))+'\n'+productionFunction('reportFlowOutcome',game);
+const contractSource=readFileSync(new URL('../docs/src/engine/career-contract.js',import.meta.url),'utf8');
+const movementSource=readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8');
+// Phase 23: the factory's return line ends the last slice. Harnesses run these real bodies; getState comes from the vm context.
+const movementFunction=name=>productionFunction(name,movementSource).split('\n  return {')[0];
+const source=movementFunction('crossOffersRule')+';var crossOffers=crossOffersRule;\n'+productionFunction('reportFlowOutcome',game);
 function fixture(org,level,years=1){
   const original=createContract({contractId:'test',org,teamId:'team',signedYear:2035,startYear:2035,years,annualSalary:120_000_000});
   const s={year:2035,org,lv:level,ct:markSalaryPaid(original,2035).contract},calls={draw:0,advance:0,sign:0,years:0,buyout:0};let buttons;
-  const context={S:s,careerSession:{npbReturnOfferContext:null},contractNeedsRenewal,crossOffers:null,advance:()=>calls.advance++,crossOfferType:()=> 'return',crossOfferTitle:()=> '復帰',pickRecord:a=>{calls.draw++;return a[0];},listByOrg:()=>[{teamId:'npb',name:'球団'}],salaryCandidate:()=>({annualSalary:35_470_000}),LV:{NPB1:{n:'NPB一軍'},NPB2:{n:'NPB二軍'}},fmtMoney:n=>n/10000+'万円',choose:(_title,b)=>{buttons=b;},ri:()=>{calls.years++;return 2;},signTo:(...args)=>{calls.sign++;calls.options=args.at(-1);},buyoutRemaining:()=>calls.buyout++};
+  const context={S:s,getState:()=>s,careerSession:{npbReturnOfferContext:null},contractNeedsRenewal,crossOffers:null,advance:()=>calls.advance++,crossOfferType:()=> 'return',crossOfferTitle:()=> '復帰',pickRecord:a=>{calls.draw++;return a[0];},listByOrg:()=>[{teamId:'npb',name:'球団'}],salaryCandidate:()=>({annualSalary:35_470_000}),LV:{NPB1:{n:'NPB一軍'},NPB2:{n:'NPB二軍'}},fmtMoney:n=>n/10000+'万円',choose:(_title,b)=>{buttons=b;},ri:()=>{calls.years++;return 2;},signTo:(...args)=>{calls.sign++;calls.options=args.at(-1);},buyoutRemaining:()=>calls.buyout++};
   runInNewContext(source,context);return {s,calls,draw:o=>context.crossOffers(o),buttons:()=>buttons};
 }
 let cases=0;
@@ -36,10 +40,21 @@ for(const file of ['docs/src/engine/cross-league-market-policy.js','docs/src/eng
 }
 const oldGame=execFileSync('git',['show','73d5a58:docs/src/engine/game.js'],{encoding:'utf8'}).replace(/\r\n/g,'\n');
 let now=game.replace(/\r\n/g,'\n');
-const demotionSource=now.slice(now.indexOf('function handleDemotion'),now.indexOf('function retireBelowActiveMinimum'))+'\n'+productionFunction('reportFlowOutcome',now);
+// Phase 23: restore the moved bodies over their game.js wrappers, removing each inserted state read by exact string, so the text compares below stay verbatim.
+for(const [name,wrapper,reads,indent] of [
+ ['buyoutRemaining','function buyoutRemaining(rate){return careerMovement.buyoutRemaining(rate);}',['\n    const S=getState();'],true],
+ ['handleDemotion','function handleDemotion(o,path,idx){return careerMovement.handleDemotion(o,path,idx);}',['\n    const S=getState();',...Array(5).fill('const S=getState();')],true],
+ ['retireBelowActiveMinimum','function retireBelowActiveMinimum(){return careerMovement.retireBelowActiveMinimum();}',['\n    const S=getState();'],true],
+ ['daibaFarewell','function daibaFarewell(cont){return careerMovement.daibaFarewell(cont);}',['const S=getState();'],false]
+]){
+  let moved=movementFunction(name);
+  for(const read of new Set(reads)){const count=reads.filter(x=>x===read).length;assert.equal(moved.split(read).length,count+1,name+' state reads');moved=moved.replaceAll(read,'');}
+  assert.equal(now.split(wrapper).length,2,wrapper);now=now.replace(wrapper,()=>indent?moved.replace(/^  /gm,''):moved);
+}
+const demotionSource=movementFunction('handleDemotion')+'\n'+productionFunction('reportFlowOutcome',game);
 for(const sourceLevel of ['A3','A2'])for(const [overall,targetLevel,title]of [[54,'NPB1','NPB一軍への移籍'],[50,'NPB2','日本の二軍（支配下）へ移籍']])for(const transfer of [false,true]){
   const S={org:'MiLB',lv:sourceLevel,age:25,lastD:0,seasonFactor:1,traits:{},ct:{remainingYears:1},currentSalary:10_000_000},input=[],draws=[],signed=[],candidate=Object.freeze({annualSalary:41_370_000,targetLevel});let choices,advances=0,buyouts=0;
-  const context={S,LV:{NPB1:{min:53},NPB2:{min:47},A3:{n:'3A'},A2:{n:'2A'},A1:{n:'1A'}},findDemotionTarget:()=> 'A1',demotionChoiceText:()=> '降格',ageGateJP:()=>1,chance:p=>{draws.push(p);return true;},salaryCandidate:v=>{input.push({...v});return candidate;},fmtMoney:v=>v/10000+'万円',card:()=>{},board:()=>{},choose:(_t,opts)=>{choices=opts;},applyDemotionSalary:()=>{},advance:()=>advances++,buyoutRemaining:()=>{buyouts++;S.currentSalary=0;},signTo:(...args)=>signed.push(args)};
+  const context={S,getState:()=>S,LV:{NPB1:{min:53},NPB2:{min:47},A3:{n:'3A'},A2:{n:'2A'},A1:{n:'1A'}},findDemotionTarget:()=> 'A1',demotionChoiceText:()=> '降格',ageGateJP:()=>1,chance:p=>{draws.push(p);return true;},salaryCandidate:v=>{input.push({...v});return candidate;},fmtMoney:v=>v/10000+'万円',card:()=>{},board:()=>{},choose:(_t,opts)=>{choices=opts;},applyDemotionSalary:()=>{},advance:()=>advances++,buyoutRemaining:()=>{buyouts++;S.currentSalary=0;},signTo:(...args)=>signed.push(args)};
   runInNewContext(demotionSource+';handleDemotion('+overall+',[],0);',context);
   assert.deepEqual(draws,[targetLevel==='NPB1'?60:50]);assert.deepEqual(input,[{sourceLevel,targetLevel,contractMult:1}]);assert.equal(choices.length,2);assert.equal(choices[1].t,title);assert.match(choices[1].s,/年俸4137万円/);assert.equal(S.lv,sourceLevel);assert.equal(advances,0);assert.equal(buyouts,0);
   choices[transfer?1:0].f();assert.equal(advances,1);assert.equal(buyouts,transfer?1:0);assert.equal(signed.length,transfer?1:0);
@@ -75,7 +90,10 @@ for(const [reported,original] of [
  ["で日本球界へ復帰した。`);reportFlowOutcome({kind:'PRESEASON_RETURNED_NPB'});","で日本球界へ復帰した。`);advance();"],
  ["daibaFarewell(()=>reportFlowOutcome({kind:'PRESEASON_RETIRED',reason:'功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'}))","daibaFarewell(()=>endGame('功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'))"]
 ]){assert.equal(now.split(reported).length,2,reported);now=now.replace(reported,()=>original);}
-for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision'],['function handleDemotion','/* 再契約'],['function buyoutRemaining','function handleDemotion'],["  if(S.stage==='PRO'&&S.age>=36","/* シーズン中。 */"]]){assert.ok(now.includes(start));const finish=end==='/* 再契約'? 'function outOfOrg':end,finishNow=end==='/* 再契約'? '/* 長期契約/短期契約':end;assert.ok(now.includes(finishNow));assert.equal(now.slice(now.indexOf(start),now.indexOf(finishNow,now.indexOf(start))),approvedOldGame.slice(approvedOldGame.indexOf(start),approvedOldGame.indexOf(finish,approvedOldGame.indexOf(start))),start+' unchanged except deleted base farewell');}
+{const start='  const salaryCandidateRule=',end='\n  function saveSalaryDecision',moved=contractSource.slice(contractSource.indexOf(start),contractSource.indexOf(end));
+ const params='sourceLevel=getState().lv,targetLevel=getState().lv,',read='\n    const S=getState();';assert.equal(moved.split(params).length,2);assert.equal(moved.split(read).length,2);
+ assert.equal(moved.replace(start,'  salaryCandidate=').replace(params,'sourceLevel=S.lv,targetLevel=S.lv,').replace(read,''),approvedOldGame.slice(approvedOldGame.indexOf('  salaryCandidate='),approvedOldGame.indexOf('  function saveSalaryDecision')).replace(/\r\n/g,'\n').trimEnd(),'salaryCandidate unchanged');}
+for(const [start,end] of [['function handleDemotion','/* 再契約'],['function buyoutRemaining','function handleDemotion'],["  if(S.stage==='PRO'&&S.age>=36","/* シーズン中。 */"]]){assert.ok(now.includes(start));const finish=end==='/* 再契約'? 'function outOfOrg':end,finishNow=end==='/* 再契約'? '/* 長期契約/短期契約':end;assert.ok(now.includes(finishNow));assert.equal(now.slice(now.indexOf(start),now.indexOf(finishNow,now.indexOf(start))),approvedOldGame.slice(approvedOldGame.indexOf(start),approvedOldGame.indexOf(finish,approvedOldGame.indexOf(start))),start+' unchanged except deleted base farewell');}
 // Phase 11-B batch 2: demotion endings report named outcomes; every clicked path keeps the baseline call log and S.
 {
   const baseSource=execFileSync('git',['show','026c5cd89e3b189cf2a93e9425f344f57fafc208:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
@@ -83,7 +101,7 @@ for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision']
   function demotionRun(source,{state,overall,target,hit,entry},picks){
     const log=[],choices=[],reported=[];
     const S={year:2040,age:25,org:'MiLB',lv:'A3',lastD:0,seasonFactor:1,traits:{},ct:{remainingYears:1},...structuredClone(state)};
-    const context=createContext({S,LV:levels,reported,
+    const context=createContext({S,getState:()=>S,LV:levels,reported,
       findDemotionTarget:()=>target,demotionChoiceText:lv=>'降格:'+lv,ageGateJP:()=>1,fmtMoney:String,
       chance:p=>{log.push(['chance',p]);return hit;},
       salaryCandidate:v=>{log.push(['salaryCandidate',v]);return {annualSalary:41_370_000,targetLevel:v.targetLevel};},
@@ -93,7 +111,8 @@ for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision']
       signTo:(...args)=>log.push(['signTo',...args]),outOfOrg:o=>log.push(['outOfOrg',o]),daibaFarewell:cont=>{log.push(['daibaFarewell']);cont();},
       advance:()=>log.push(['advance',S.lv,!!S.demotionRefused]),endGame:reason=>log.push(['endGame',reason])});
     const reporter=source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
-    runInContext("'use strict';\n"+[...reporter,productionFunction('handleDemotion',source),productionFunction('retireBelowActiveMinimum',source)].join('\n'),context);
+    const demotionFunction=name=>source.includes("from './career-movement.js'")?movementFunction(name):productionFunction(name,source);
+    runInContext("'use strict';\n"+[...reporter,demotionFunction('handleDemotion'),demotionFunction('retireBelowActiveMinimum')].join('\n'),context);
     if(reporter.length)runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};",context);
     runInContext(entry==='minimum'?'retireBelowActiveMinimum()':'handleDemotion('+overall+',[],0)',context);
     for(let k=0;k<picks.length;k++)choices[k][picks[k]].f();
@@ -137,14 +156,16 @@ for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision']
 // Phase 11-B batch 3: FA/market endings report named outcomes; every clicked path keeps the baseline call log and S.
 {
   const baseSource=execFileSync('git',['show','c2d8bb3c02b4825d3180f018c93bb97feb8bfbaf:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
-  const marketFunction=(name,source)=>name==='outOfOrg'?source.slice(source.indexOf('function outOfOrg('),source.indexOf('const professionalEnds')).trim():productionFunction(name,source);
+  // Phase 22: current sources keep renewAndAdvance/arbitrationFlow in career-contract.js; the factory's return line ends the last slice.
+  const contractFunction=name=>productionFunction(name,contractSource).split('\n  return {')[0];
+  const marketFunction=(name,source)=>source.includes("from './career-contract.js'")&&['renewAndAdvance','arbitrationFlow'].includes(name)?contractFunction(name):source.includes("from './career-movement.js'")?(name==='crossOffers'?movementFunction('crossOffersRule')+';var crossOffers=crossOffersRule;':movementFunction(name)):name==='outOfOrg'?source.slice(source.indexOf('function outOfOrg('),source.indexOf('const professionalEnds')).trim():productionFunction(name,source);
   const levels=Object.fromEntries([['NPB1',90],['NPB2',70],['NPB_DEV',40],['KBO1',75],['KBO2',55],['CPBL1',72],['CPBL2',52],['MLB',95],['A3',80],['A2',65],['A1',50],['R',35],['CORP',45],['IND',30]].map(([lv,par])=>[lv,{n:'L:'+lv,par}]));
   const offer=(teamId,years)=>({offerId:'FA:2040:'+teamId,teamId,org:'NPB',level:'NPB1',years,annualSalary:80_000_000,contractType:years>1?'LONG':'RETURN',incentive:{annualMax:1_000_000},breakdown:{marketSalary:70_000_000},priceCandidate:{annualSalary:80_000_000},guaranteedTotal:80_000_000*years,incentiveAnnualMax:1_000_000});
   function marketRun(source,{state,entry,hit,below},picks){
     const log=[],choices=[],reported=[];
     const S={year:2040,age:25,stage:'PRO',org:'NPB',lv:'NPB1',orgTeamId:'T0',lastD:0,currentSalary:50_000_000,marketInjury:null,salaryEvaluationHistory:[],npbYears:0,traits:{},ct:{expired:false},...structuredClone(state)};
     const careerSession={npbReturnOfferContext:null,pendingOffseasonSalary:'pending'};
-    const context=createContext({S,LV:levels,careerSession,reported,
+    const context=createContext({S,getState:()=>S,LV:levels,careerSession,reported,
       fmtMoney:String,escapeHTML:String,dpMult:()=>1,isRecentStar:()=>false,kboPreviousPackage:()=>null,currentMarketRating:()=>55,serviceYearsFor:()=>4,
       roundToTenThousandYen:v=>Math.round(v/1e4)*1e4,injurySalaryMultiplier:()=>0.95,salaryFor:(lv,rating)=>10_000_000+rating*100_000,
       contractNeedsRenewal:ct=>!!ct?.expired,crossOfferType:(from,to)=>from+'>'+to,crossOfferTitle:type=>'title:'+type,
@@ -214,7 +235,7 @@ for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision']
     const log=[],choices=[],reported=[];let draws=0;
     const S={year:2040,age:36,pos:'IF',stage:'PRO',org:'NPB',lv:'NPB1',lastD:2,rehab:0,six:0,tj:0,traits:{},ab:{con:50,pow:50,spd:50,vel:50,ctl:50,sta:50},pot:{},log:[],ct:{remainingYears:1},...structuredClone(state)};
     S.teamName=()=>'球団:'+S.org+':'+S.lv;
-    const context=createContext({S,LV:levels,reported,
+    const context=createContext({S,getState:()=>S,LV:levels,reported,
       POS_AB:{IF:['con','pow','spd'],P:['vel','ctl','sta']},ABL:{con:'ミート',pow:'パワー',spd:'走力',vel:'球速',ctl:'制球',sta:'スタミナ'},
       clamp:(v,a,b)=>Math.min(b,Math.max(a,v)),declineForSeason:(_s,base)=>{log.push(['declineForSeason',base]);return base;},
       stageLabel:()=>'stage',tjCap:()=>100,ovr:()=>{log.push(['ovr']);return overall;},
@@ -229,7 +250,7 @@ for(const [start,end] of [['  salaryCandidate=','  function saveSalaryDecision']
       contractNeedsRenewal:ct=>{log.push(['contractNeedsRenewal',ct]);return !!renewal;},markClubInitiatedRenewal:years=>log.push(['markClubInitiatedRenewal',years]),
       advance:()=>log.push(['advance',S.org,S.lv]),endGame:reason=>log.push(['endGame',reason])});
     const reporter=source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
-    runInContext("'use strict';\n"+[...reporter,productionFunction('phasePre',source),productionFunction('movement',source)].join('\n'),context);
+    runInContext("'use strict';\n"+[...reporter,productionFunction('phasePre',source),source===game?movementFunction('movement'):productionFunction('movement',source)].join('\n'),context);
     if(reporter.length)runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};",context);
     runInContext(entry||'phasePre()',context);
     for(let k=0;k<picks.length;k++)choices[k][picks[k]].f();

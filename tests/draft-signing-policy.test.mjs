@@ -89,10 +89,11 @@ assert.equal(safeErrorCode(new Error('PRO_PLAYER_WITHOUT_CONTRACT')), 'PRO_PLAYE
 assert.equal(safeErrorCode(new TypeError('Cannot read private data')), 'UNEXPECTED_ERROR');
 const game = fs.readFileSync(new URL('../docs/src/engine/game.js', import.meta.url), 'utf8');
 const amateurSource = fs.readFileSync(new URL('../docs/src/engine/amateur-career.js', import.meta.url), 'utf8');
+const contractSource = fs.readFileSync(new URL('../docs/src/engine/career-contract.js', import.meta.url), 'utf8');
 assert.match(amateurSource, /if\(result==='signed'\)\{reportFlowOutcome\(\{kind:'AMATEUR_DRAFTED'\}\);return;\}/);
 assert.match(game, /cb\(result\)/); assert.match(game, /cb\(declineDraftSelection\(S\)\)/);
-assert.match(game, /S\.stage='PRO';S\.stageYr=0/);
-assert.doesNotMatch(game, /buildSalaryDecision\([^;]+;\s*decision\.org=/s);
+assert.match(contractSource, /S\.stage='PRO';S\.stageYr=0/);
+assert.doesNotMatch(game + '\n' + contractSource + '\n' + fs.readFileSync(new URL('../docs/src/engine/career-movement.js', import.meta.url), 'utf8'), /buildSalaryDecision\([^;]+;\s*decision\.org=/s);
 
 // Case F: アマチュア進路の結果回報は、基準 SHA と同じ呼び出し列を保つ（第 11-B 期第 1 批）。
 {

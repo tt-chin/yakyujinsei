@@ -3086,6 +3086,349 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - `refactor/amateur-draft` push（`eca1490`），PR #42 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
 - PR #42 已合併，`dev` merge commit `f8c675b`（樹與 `eca1490` 相同）。`dev` push 的 Quick CI（Tests #105，run `41207988919`）顯示成功。手動 Full CI（`workflow_dispatch`，`dev`，Tests #106，run `41208798216`，13 分 19 秒）PASS：`full-aggregate` 回報 `expected 93`、`acceptedPass 93`、`issues []`，8 批皆 PASS。補上 §2y.6 本機分組未執行的 `ci-full-batches` 嚴格彙整。`main` 維持 `9fe741d`，第 21 期尚未發布。
 
+## 2z. 第 22 期：契約・年俸移至 `docs/src/engine/career-contract.js`（細部計畫，2026-11-01；計畫已批准，實作已批准）
+
+路線見 §3.17。本期只搬契約領域（§3.16 的 38 個名稱），市場與移籍判定留在 `game.js`，另立一期。
+
+### 2z.1 現況（2026-11-01 eslint-scope 自由名稱分析＋AST 斷言掃描＋scratchpad worktree 草稿實測，基準 `origin/dev` `9f27e890260388c7386ca3203ee17fdcb1a80428`，`docs/src/engine/game.js` 1388 行）
+
+- 區段（皆 CRLF）：stub `:661–667`（7 行 `let`）；`:823–879`（`termParams`～`ageGateJP`，0 縮排）；`:969–1070`（`salaryFor`～`recordIndependentSalaryEvaluation`，2 空白）；`:1127–1145`（`nextContractId`～`stageLabel`）；`:1218–1223`（`renewAndAdvance`、`arbitrationFlow`）。區段內每行反引號數皆為偶數，無跨行 template。`:822` 註解留在 `game.js`（`npb-return-ui` 以它為切片尾）。
+- 規模：45 語句／184 行。RNG 文字呼叫點只有 `arbitrationFlow` 的 `chance` 1 處；`signTo`、`doTradeExec` 另經 `pickRecord`（留在 `game.js`，注入）。
+- 自由名稱：`game.js` 本地 21 個，import 37＋`applyKboForeignPackageCap`。`S` 在區段內讀取 265 次，無 `S=` 賦值。
+- 外部呼叫端：26 個名稱有 `game.js` 其他領域或 e2e hook 引用（`appendContractExtension` 只有 `npb-return-e2e` hook）；12 個只在區段內（`termParams`、`termChoice`、`ageGateUSA`、`currentMarketResult`、`previousSalaryForOffer`、`hadAmericanContract`、`salaryDForContract`、`salaryDecisionSummary`、`applyLevelSalary`、`saveSalaryEvaluation`、`nextContractId`、`signingRenderRetry`）。
+- 延遲 closure 讀 `S` 只有 3 處：`extensionOffer` 的同意 callback、`signTo` 的 `render`（`signingRenderRetry` 重試時再呼叫）、`arbitrationFlow` 的 `complete`。`extensionOffer` 的拒絕 callback、`termChoice` 的選項不讀 `S`；`termChoice` 的 `est` 同步執行。
+- 預設參數讀 `S` 共 4 處（`salaryCandidate` 2、`saveSalaryDecision` 1、`fixedContract` 1）：函式本體的 `const S` 不在參數作用域內。§3.17 的草稿用 getter 接線，未暴露這點。
+- 無區塊箭頭函式讀 `S` 共 5 個（`serviceYearsFor`、`contractStageFor`、`previousSalaryForOffer`、`hadAmericanContract`、`salaryDForContract`）。
+- `applyKboForeignPackageCap`：`kbo-renewal-e2e:25` 將 `game.js` import 改名，再於 hook 宣告同名函式。模組若直接 import 會繞過它（負控制證實 FAIL）。§3.17 的 getter 草稿同樣未測到這點。
+- `career-session-access`：10 個欄位中，本期搬走的 `pendingOffseasonSalary`、`currentChoiceAction` 在 `game.js` 仍有引用（流程 2 處、`invokeChoiceAction` 1 處），不觸發 `CAREER_SESSION_FIELD_MISSING`。
+- 測試耦合（AST 掃描，非 n-gram）：`assert.match` 目標搬走 20 個；`doesNotMatch` 保護範圍會無聲縮小 12 個；靠 import 行繼續通過而空洞化 3 個（`salary-flow:123–125`）。
+- 範圍外（不動，記錄）：`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再於產品碼使用的名稱（保留，hook 亦可能引用）；`tools/development-*`（不在 manifest）。
+
+### 2z.2 設計（使用者決定 2026-11-01：D1 命名 `career-contract.js`／`CareerContract`；D2 §3.16 的 38 個名稱全搬，市場函式留 `game.js` 以 lambda 注入；D3 `fixedContract`、`salaryCandidate`、`salaryFor` 用 Shadow，`signTo` 用一般 lambda；D4 每個名稱抵達探測＋負控制＋紀錄數比較，只當驗證、不進 repo；D5～D8 見下）
+
+- 新檔 `docs/src/engine/career-contract.js`（LF，草稿 257 行）：
+  - 直接 import：37 個 policy／資料名稱，來自 12 個模組。無 vm harness 須替換：改用切片的 harness 在 vm context 提供 stub，不經模組 import（§2z.3）。
+  - `class CareerContract`，26 個方法，每個只轉呼叫 `#rules`。
+  - 工廠 `careerContractRules({getState,LV,PATHS,careerSession,salaryDetailController,fixedContract,salaryCandidate,salaryFor,applyKboForeignPackageCap,clamp,dpMult,ovr,slgOf,fmtMoney,card,board,choose,faYears,escapeHTML,teamRec,listByOrg,pickRecord,reportFlowOutcome,crossOffers,rng:{chance}})`，本體依原順序；回傳 26 個名稱，3 個 Shadow 名稱對應 `*Rule`。
+- D3 Shadow：實作名為 `fixedContractRule`、`salaryCandidateRule`、`salaryForRule`；裸名稱是注入的 lambda，呼叫點不改。模組內呼叫因此經 `game.js` 薄包裝，e2e 重綁有效。`signTo` 在模組內沒有呼叫端，不需注入，只有實作搬入與 `game.js` 薄包裝；外部模組（如 `AmateurCareer`）維持既有 lambda。
+- 草稿階段新增的決定（使用者已批准 2026-11-01）：
+  - D5 `applyKboForeignPackageCap` 由建構子注入，不直接 import，理由見 §2z.1。
+  - D6 預設參數 4 處改讀 `getState()`；5 個無區塊箭頭函式改為 `{const S=getState();return …;}`。
+  - D7 7 行 stub 全刪；8 個覆寫賦值改為 `const` 宣告（`salaryCandidate` 併為 `const salaryCandidateRule=`）。
+  - D8 建構行取代 `:1127`（`nextContractId`）。此處晚於 `LV`、`PATHS`、`careerSession`；其餘名稱為 lambda。`salaryDetailController`（`:1383`）傳 `{open:()=>salaryDetailController.open()}`，保持本體文字不變。草稿確認載入期間無包裝呼叫。
+- 逐字搬移外的差異（獨立還原腳本確認，184 行與基準逐位元組相同）：`const S=getState();` 自有行 18 處（含 closure 1）、行內 11 處（含 closure 2）、箭頭區塊 5 處；預設參數 4 處；`*Rule` 改名 3 處；`const` 前綴 7 處。`:823–879` 加 2 空白縮排。
+- `game.js`：
+  - 26 個同名薄包裝，就地取代各區段。`salaryCandidate`、`fixedContract` 收單一 `input`；其餘列出參數。呼叫形式不變（`undefined` 仍觸發模組內預設值）。
+  - 注入：getter `getState:()=>S`；參照 `LV`、`PATHS`、`careerSession`；其餘 late-binding lambda；RNG bridge `contractBridge='rng:{chance:p=>chance(p)}'`，與現有 bridge 兩兩無子字串。
+  - `import { CareerContract } from './career-contract.js';` 加在 `AmateurCareer` import 之後。其餘 import 行不動。
+- 以 scratchpad 腳本從 `git show` 原文組裝：先斷言錨點行與反引號數，44 個插入點各斷言恰好一次；非整檔重寫。一個實作 commit。
+- 預期：`game.js` 1388 → 1225 行（`+28／−191`，CRLF）。
+
+### 2z.3 測試變更（使用者已批准 2026-11-01；皆已於 scratchpad 草稿驗證，無放寬斷言或 golden 變更）
+
+| 編號 | 檔案 | 行數 | 內容 |
+|---|---|---:|---|
+| T1 | `salary-flow.test` | `+34／−27` | 讀模組；搬走的 `assert.match` 改對模組；`doesNotMatch`、倍率次數改對 `game`＋模組；`contractBridge` 於 `game.js` 只出現一次，`gameSites` 排除之；`chance` 合計 27 → 26；新模組計數 `[0,0,1,0]` |
+| T2 | `salary-promotion-policy` | `+9／−7` | 5 個斷言改對模組；2 個否定斷言改對 `game`＋模組 |
+| T3 | `draft-bonus-display.test` | `+1／−1` | 1 個斷言改對模組；否定斷言改對 `game`＋模組 |
+| T4 | `draft-signing-policy.test` | `+3／−2` | 同上 |
+| T5 | `income-summary.test` | `+3／−1` | `finalizePendingOffseasonSalary` 改從模組取；以明確字串移除 1 處插入、斷言恰好一次後，仍與 `2e69096` 逐字比較 |
+| T6 | `kbo-renewal-floor.test` | `+17／−7` | 同一 vm harness 與 stub，現行碼改切模組，`*Rule` 以原名執行；context 加 `getState`；`--baseline` 舊原始碼路徑保留（已實測） |
+| T7 | `npb-return-ui.test` | `+9／−3` | `salaryCandidate` 還原插入後與核准基準逐字比較；market harness 的 `renewAndAdvance`、`arbitrationFlow` 改取模組，與 `c2d8bb3` 的呼叫紀錄比較不動；context 加 `getState` |
+| T8 | `salary-evaluation-receipt.test` | `+3／−3` | 切片來源改模組；context 改 `getState`；故障注入不動 |
+| T9 | `school-policy.test` | `+1／−1` | 切片尾同時接受 `nextContractId`、`careerContract` |
+| T10 | `trait-policy.test`（CRLF） | `+1／−1` | 切片尾增加 `/* 升降格と去向。 */` |
+| T11 | `kbo-renewal-e2e`（CRLF） | `+6／−2` | `__kboCandidate` 觀察文字改注入模組，並斷言錨點恰好一次；不改會無聲 no-op。新增 2 條 `--preview` 路由 |
+
+- 斷言內容有變的 3 個（皆 `salary-flow`）：`:32`（stub 消失，改驗模組的 `const salaryDForContract`）、`:33`（改驗 `salaryCandidateRule` 與 `getState()` 預設參數）、`:37`（加 `const` 與 `getState`）。
+- 收緊：`salary-flow:123–125` 原本靠 import 行通過，改對模組。
+- 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
+
+### 2z.4 驗證（R3／L3：RNG 呼叫點與契約規則搬移，行為與 RNG 消耗不變；允許差分：無）
+
+草稿已先取得（scratchpad worktree，`9f27e89`＋本計畫變更，非正式結果；本機 macOS，Brave）：
+
+| 項目 | 結果 |
+|---|---|
+| 未改測試的 Quick | 57 PASS／11 FAIL：10 檔恰為 T1～T10，另 1 項為 `event-integration.test` 既有 `SIGSEGV`（§3.17） |
+| 未改測試的 16 支 e2e | 全部 PASS（`kbo-renewal-e2e` 含無聲 no-op，由 T11 處理） |
+| 自由名稱 | 只有瀏覽器與語言內建；無未用 import、無未用注入 |
+| 逐字比對 | 184 行，還原宣告差異後與 `9f27e89` 逐位元組相同 |
+| 套用 T1～T11 後的 Quick | 68／68 PASS（143 秒） |
+| 套用後的 16 支 e2e | 全部 PASS，含 `contract-salary --compare`、`draft-income --baseline`、`game-view-dom --baseline` 8 段生涯 DOM／`S`／RNG 一致 |
+| 抵達探測 | 8 段生涯新舊兩側的逐步命中序列完全一致；`fixedContract`、`salaryCandidate`、`salaryFor`、`signTo`、`applyKboForeignPackageCap` 皆有命中 |
+| 紀錄數 | `contract-salary` 381 案例：`fixed` 719＝719、`candidates` 1323＝1323，差異 0；`kbo-renewal-e2e` 的 `candidate` 紀錄新舊皆有 |
+| 接縫負控制 | 3 個 Shadow 名稱改直接呼叫、`applyKboForeignPackageCap` 改直接 import：探測 4／4 抓到，`applyKboForeignPackageCap` 另使 `kbo-renewal-e2e` FAIL |
+| 測試負控制 | 多一次 `chance`、換算引數對調、`salaryCandidate` 本體、`renewAndAdvance` kind、移除仲裁 `chance`、`finalize` 控制年俸、略過 receipt commit、KBO 下限、昇格路徑條件、契約金預設：10／10 FAIL |
+
+實作時：
+
+- 逐字比對（獨立還原腳本）；自由名稱；`node --check`、`check-syntax`、`verify-modularization`；T1～T11；`award-identity-policy.test`、`career-movement-policy`、`npb-farewell.test`。
+- 延遲 closure（草稿未做）：scratchpad 比較 render 後替換 `S`，再觸發 3 個 closure；另做反向控制（closure 改讀 render 時快照）。
+- 抵達探測、紀錄數比較、接縫負控制 4 項（D4）在實作樹重跑。
+- `kbo-renewal-e2e`：另以拿掉 T11 模組注入確認 `candidate` 紀錄會消失。
+- `game-view-dom-e2e --baseline=9f27e890260388c7386ca3203ee17fdcb1a80428`（直接執行）。
+- Quick；Full（比照 §2w 的 scratchpad 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變，由上列比較證明）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+未驗證：Full 尚未在草稿執行，Full 專屬入口的耦合可能再帶來測試變更；T11 的 `--preview` 路由未執行；Linux CI 未執行。
+
+### 2z.5 分支與交付
+
+- `refactor/career-contract`（自 `origin/dev` `9f27e89`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。未修改 `main`。
+
+### 2z.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/career-contract`，計畫 commit `0e428de`，實作 commit `0ef5737`，比較基準 `9f27e89`）
+
+- 實作：新檔 `docs/src/engine/career-contract.js` 257 行（LF）；`game.js` 1388 → 1225 行（`+28／−191`，CRLF，無裸 LF）。測試變更只有 T1～T11，行數與 §2z.3 相同。Full 專屬入口未帶來額外測試變更。
+
+| 驗證 | 結果 |
+|---|---|
+| 逐字比對（獨立還原腳本） | 184 行，還原宣告差異後與 `9f27e89` 逐位元組相同 |
+| 自由名稱 | 只有瀏覽器與語言內建；無未用 import、無未用注入 |
+| 定向 | `check-syntax`、`verify-modularization`、T1～T10、`award-identity-policy`、`career-movement-policy`、`npb-farewell` 全部 PASS |
+| 延遲 closure | `9f27e89` 本體於 vm vs 真實 `CareerContract`：render 後替換 `S` 再觸發，`extensionOffer`、`arbitrationFlow` 結果相同；`signTo` 首次 render 故障後重試成功，合約序號不再增加 |
+| 延遲 closure 反向控制 | 改讀 render 時快照後，`extensionOffer`、`arbitrationFlow` 恰 2 項差異；`signTo` 無差異，因重試前有 `signingRenderRetry.state===S` 守衛，快照與即時值必相同 |
+| 抵達探測 | 8 段生涯新舊逐步命中序列一致；`signTo` 9、`salaryCandidate` 48、`salaryFor` 169、`fixedContract` 34、`applyKboForeignPackageCap` 13（單一視窗寬度合計，4 段重複於另一寬度） |
+| 紀錄數 | `contract-salary` 381 案例：`fixed` 719＝719、`candidates` 1323＝1323，差異 0 |
+| 接縫負控制 | 3 個 Shadow 名稱改直接呼叫、`applyKboForeignPackageCap` 改直接 import：探測 4／4 抓到，`applyKboForeignPackageCap` 另使 `kbo-renewal-e2e` FAIL |
+| T11 反向控制 | `kbo-renewal-e2e` caps 含 `candidate`：基準 16／16、實作 16／16；拿掉 T11 模組注入後 7／16，測試仍 PASS（確認不改會無聲流失） |
+| 16 支相關 e2e | 全部 PASS，含 `contract-salary --compare`、`draft-income --baseline` |
+| `game-view-dom-e2e --baseline=9f27e89…` | 8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68／68 PASS（140 秒） |
+| Full（scratchpad worktree，`docs`、`tests`、`scripts` 與工作樹逐檔相同；報告的 `head` 為 worktree 基準 `9f27e89`；`splitIds(fullIds(),4,…)` 22／24／22／25，計 93 不重複） | 93／93 PASS（716／401／620／468 秒；分組執行，非單一 Full 報告；`ci-full-batches` 嚴格彙整未執行） |
+
+- 過程紀錄：T11 反向控制第一版以全文 `sourceLevel` 計數，三組皆 2，因該字也在 state 內，不算證據；改計 caps 的 `candidate` 欄位後得到上表結果。`--preview` 路由未執行。
+- 期望值變更：T1 的 RNG 計數搬移（`chance` 合計 27 → 26，模組 `[0,0,1,0]`），總呼叫點不變。golden 未改。
+- reviewer：7 個審查面向無 finding（只跑單檔測試，未跑 Quick／Full／瀏覽器）。兩項資訊：`ageGateUSA`、`nextContractId` 是搬移前就無呼叫端的死碼，逐字保留，補記於 CODE-DEAD-01。目視：不適用。VERSION／CHANGELOG／CURRENT_SPEC 不更新（§9.3）。
+- 結論：
+  - 成本：測試 11 檔，與草稿相同；實作後無未預期 FAIL。§3.17 的推論成立，但 Shadow 把成本限制在 4 個定義 token，呼叫點不變。
+  - 未解：`event-integration.test` 間歇 `SIGSEGV`（本次 Quick／Full 未發生）；市場・移籍判定的 `career-session-access` 修法與 `movement` 三層仍待下一期處理。
+
+### 2z.7 交付（2026-11-01）
+
+- 實作 commit `0ef5737`，結果紀錄另一個 commit，皆在本機 `refactor/career-contract`。未 push、未建 PR、未併 `dev`。未修改 `main`。
+- 後續：已 push，PR #43 → `dev`（標題與說明為繁體中文）；第 23 期併入同一 PR（§2aa.7）。
+
+## 2aa. 第 23 期：市場・移籍判定移至 `docs/src/engine/career-movement.js`（細部計畫，2026-11-01；計畫已批准，實作已批准）
+
+路線見 §3.17。本期搬市場與移籍判定的輔助函式，`movement` 三層留在 `game.js`。
+
+### 2aa.1 現況（2026-11-01 eslint-scope 自由名稱分析＋AST 斷言掃描＋18 字元 n-gram 掃描＋scratchpad worktree 草稿實測，基準 `refactor/career-contract` `099cb7010c85dece06ae720ce4820f8dc2e3571d`，`docs/src/engine/game.js` 1225 行）
+
+- 區段（皆 CRLF，每行反引號數皆為偶數）：`:474–523`（`demotionAudit`、`tradeCheck`，0 縮排）；`:751–815`（`buyoutRemaining`、`handleDemotion`、`retireBelowActiveMinimum`，0 縮排）；`:1018`（`daibaFarewell`）；`:1020–1057`（`overseasOffer`、`crossOffers`）；`:1061–1112`（`faFlow`、`faOfferText`、`priceFaOffer`、`acceptFaOffer`、`showFaMarket`、`faMarket`、`outOfOrg`）。
+- 規模：15 語句／206 行。RNG 文字呼叫點：`ri` 2、`chance` 8；另經 `pickRecord` 4 處，`generateBidJitters` 以值接收 `R`。
+- 自由名稱：`game.js` 本地 35 個，import 24 個。`S` 讀取 159 處，無 `S=` 賦值；預設參數與無區塊箭頭函式都沒有讀 `S`。
+- 外部呼叫端：11 個名稱有 `game.js` 或 e2e hook 引用；`faOfferText`、`priceFaOffer`、`acceptFaOffer`、`showFaMarket` 只在區段內。
+- 更正 §3.17：`stage10-risk-e2e` 的 `activeNames` 在 trace 模式重綁 `faMarket`、`crossOffers`，§3.17 判為切片誤判不正確；瀏覽器 hook 實際重綁的名稱為 9 個。`D-passive-trace` 只斷言 `legacy.board`、`legacy.endGame`，繞過不會 FAIL。
+- 更正 §3.17：`LEGACY.movement` 只有在薄包裝指向最外層時才遞迴。第一層改為呼叫模組實作的薄包裝不會遞迴（最小重現 `L3>L2>L1`，未以真實程式碼實跑），本期不採用，留給後續。
+- 延遲 closure 讀 `S` 共 10 個：`tradeCheck` 2、`handleDemotion` 5（`doDemote` 及 4 個選項）、`faFlow` 的 `declareFA`、`showFaMarket` 的重簽選項、`outOfOrg` 的 `pushAma` 選項；另有 `crossOffers` 的 `complete`，含點擊時守衛 `context.state!==S`。`faMarket` 的 `filter`／`forEach`、`pushPro` 同步執行，由函式本體的讀取涵蓋。
+- `career-session-access`：`npbReturnOfferContext` 的文字只在 `crossOffers`，搬走後 `contract-salary-e2e` 丟 `CAREER_SESSION_FIELD_MISSING`（草稿實測）。
+- 留在 `game.js`／不搬：`movement` 三層、`performMovement`、`professionalMoves`；`portionOf`（唯一呼叫端 `proSeason`，屬統計）；`teamChampRate`、`teamListOf`（無呼叫端，記入 CODE-DEAD-01）。
+- 範圍外（不動，記錄）：`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再使用的名稱；`tools/development-*`（不在 manifest）。
+
+### 2aa.2 設計（使用者決定 2026-11-01：D1 命名 `career-movement.js`／`CareerMovement`；D2 `movement` 三層留 `game.js`；D3 `faYears` 併入 `CareerContract`，`portionOf` 與 2 個死碼不搬；D4 只有 `faMarket` 用 Shadow，4 個重綁名稱皆做抵達探測與負控制；D5 `career-session-access` 以執行期檢查補足；D6 新分支自 `099cb70`，PR 待 #43 合併；2026-11-01 使用者改為併入 PR #43，見 §2aa.5）
+
+- 新檔 `docs/src/engine/career-movement.js`（LF，草稿 250 行）：
+  - 直接 import：23 個 policy／標籤名稱，來自 8 個模組。
+  - `class CareerMovement`，11 個方法，每個只轉呼叫 `#rules`。
+  - 工廠 `careerMovementRules({getState,LV,careerSession,faMarket,applyKboForeignPackageCap,salaryCandidate,salaryFor,fixedContract,signTo,saveSalaryDecision,renewAndAdvance,arbitrationFlow,kboPreviousPackage,currentMarketRating,contractStageFor,serviceYearsFor,migrateSalaryV130State,migrateSalaryV140State,applyDemotionSalary,ageGateJP,doTradeExec,dpMult,ovr,fmtMoney,card,board,choose,escapeHTML,teamRec,listByOrg,pickRecord,removeTrait,traitCard,reportFlowOutcome,rng:{R,ri,chance}})`，共 37 個依賴，本體依原順序。
+- D4 Shadow：實作名為 `faMarketRule`；裸名稱是注入的 lambda，`faFlow` 的 2 處呼叫不改。`crossOffers`、`demotionAudit`、`tradeCheck` 在模組內沒有呼叫端，一般薄包裝即可。
+- `applyKboForeignPackageCap` 由建構子注入，理由同 §2z D5。
+- `const S=getState();` 自有行 11 處、行內 13 處（函式 3、closure 10）；`complete` 內 3 處改為直接 `getState()`，不做快照。
+- `game.js`：11 個同名薄包裝就地取代；`faYears` 刪除；`import` 加在 `CareerContract` 之後；建構行放在 `outOfOrg` 薄包裝之後（所有薄包裝之後，§2r 教訓）；RNG bridge `movementBridge='rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}'`，與現有 bridge 兩兩無子字串。
+- `career-contract.js`：`faYears` 本體移入工廠開頭，加 1 行 `const S=getState();`；移除 `faYears` 依賴與 `game.js` 的 lambda。
+- 載入順序：`careerContract`（`:982`）的 `crossOffers` lambda 先於 `careerMovement` 建構，只在執行期呼叫；Full 與 8 段生涯未發生 TDZ，草稿確認載入期間無包裝呼叫。
+- 以 scratchpad 腳本從 `git show` 原文組裝，所有非逐字修改斷言恰好一次。
+- 預期：`game.js` 1225 → 1022 行（`+14／−217`，CRLF，無裸 LF）；`career-contract.js` `+12／−1`。
+
+### 2aa.3 測試變更（使用者已批准 2026-11-01；皆已於 scratchpad 草稿驗證，無放寬斷言或 golden 變更）
+
+| 編號 | 檔案 | 行數 | 內容 |
+|---|---|---:|---|
+| T1 | `salary-flow.test` | `+32／−26` | 讀模組；搬走的 `assert.match` 改對模組；`gameAndContract` 改名 `gameAndModules` 並納入模組；新增 `movementBridge`；`ri` 26 → 24、`chance` 合計 26 → 18；新模組計數 `[0,2,8,0]` |
+| T2 | `salary-promotion-policy` | `+5／−4` | 1 個斷言改對模組；否定斷言範圍納入模組 |
+| T3 | `ui-foundation.test` | `+3／−2` | 2 個斷言改對模組 |
+| T4 | `income-summary.test` | `+3／−1` | `buyoutRemaining` 改從模組取；移除 1 處插入並還原縮排後，仍與 `2e69096` 逐字比較 |
+| T5 | `npb-farewell.test` | `+2／−2` | `active()` 改切模組；vm context 加 `getState` |
+| T6 | `career-movement-policy` | `+21／−20` | 讀模組；搬走的斷言改對模組；`:71` 改對模組後驗 `crossOffers` 的呼叫，`movement` 的同一呼叫仍由 `:50` 鎖定；`:55` 否定斷言納入模組；`:79` 的 regex 加 `const S=getState();` |
+| T7 | `npb-return-ui.test` | `+22／−7` | harness 改跑模組真實本體，context 加 `getState`；文字比較以明確字串移除插入、還原 4 個本體後逐字比對，呼叫紀錄比較不動 |
+| T8 | `draft-bonus-display.test` | `+1／−1` | 否定斷言範圍納入模組 |
+| T9 | `draft-signing-policy.test` | `+1／−1` | 否定斷言範圍納入模組 |
+| T10 | `tests/support/career-session-access.mjs` | `+10／−3` | D5：既有兩種判斷不變；兩者皆無、且來源含 `careerSession=new CareerSession(` 時，於 getter 內以 `in careerSession` 檢查，缺欄位仍丟 `CAREER_SESSION_FIELD_MISSING`；`has()` 同步 |
+| T11（2026-11-01 實作後追加，使用者已批准） | `kbo-renewal-e2e`（CRLF） | `+5／−0` | hook 新增 `noBid`，走 `showFaMarket` 無報價分支；斷言 cap hook 命中 1 次、`isRenewal`、RNG 不增加、`#act` 標題，再重建 fixture |
+
+- 斷言內容有變的 1 個：`career-movement-policy:79`（閉包開頭多一處 `getState`）。
+- 其他測試變更：預期無。Full 專屬入口已於草稿確認不需變更。若實作中發現需變更，先停止並請求批准。
+
+### 2aa.4 驗證（R3／L3：RNG 呼叫點與移籍規則搬移，行為與 RNG 消耗不變；允許差分：無）
+
+草稿已先取得（scratchpad worktree，`099cb70`＋本計畫變更，非正式結果；本機 macOS，Brave）：
+
+| 項目 | 結果 |
+|---|---|
+| 未改測試的 Quick | 61 PASS／7 FAIL，全為文字或切片耦合（`career-movement-policy`、`income-summary`、`npb-farewell`、`npb-return-ui`、`salary-flow`、`salary-promotion-policy`、`ui-foundation`） |
+| 自由名稱 | 只有語言內建；無未用 import |
+| 逐字比對（獨立還原腳本） | `career-movement.js` 206 行、`career-contract.js` 的 `faYears` 10 行，還原宣告差異後與 `099cb70` 逐位元組相同 |
+| 套用 T1～T10 後的 Quick | 68／68 PASS（146 秒） |
+| Full（4 組，分組執行，`splitIds` 22／24／22／25） | 93／93 PASS（769／407／667／512 秒；報告 `head` 為 worktree 基準 `099cb70`；`ci-full-batches` 嚴格彙整未執行） |
+| `game-view-dom-e2e --baseline=099cb70…` | 8 段生涯 DOM／`S`／RNG 一致 |
+| 抵達探測（與 `stage10` 同一重綁機制，`stage10` 自身的 `active.*` 計數未比較） | 8 段生涯新舊逐步命中序列一致；`crossOffers` 60、`demotionAudit` 86、`tradeCheck` 86、`faMarket` 2（單一視窗各半） |
+| 接縫負控制 | 4 個名稱改為繞過：探測 4／4 抓到，而 `game-view-dom-e2e` 仍 PASS |
+| `contract-salary-e2e --compare=099cb70…` | 381／0 |
+| 延遲 closure | 11 情境於 render 後替換 `S`，`099cb70` 本體 vs 真實 `CareerMovement` 差異 0；反向控制（改讀快照）11／11 有差異 |
+| D5 負控制 | 舊 helper 在草稿上丟 `CAREER_SESSION_FIELD_MISSING`；新 helper 正常；拿掉 `CareerSession` 欄位後仍丟同一錯誤。三種來源形式皆實跑：舊 baseline（Full 預設 `--compare=37121fb`）、文字形式（`--compare=099cb70`）、執行期形式（草稿，走執行期路徑的欄位只有 `npbReturnOfferContext`） |
+| 測試負控制（10 支單元測試） | 14 個變異抓到 10 個；存活 4 個見下 |
+
+- 存活的 4 個變異：`tradeCheck` 基礎機率、不滿發言機率、`demotionAudit` 門檻、FA 路線門檻。同 4 個變異在 `099cb70` 基準樹的同 10 支測試同樣存活（實測），是既有缺口，不是本期造成；本期由逐字比對保護，不補測試。
+
+實作時：
+
+- 逐字比對（含 `faYears`）；自由名稱；`node --check`、`check-syntax`、`verify-modularization`；T1～T10；`award-identity-policy.test`。
+- 延遲 closure 比較與反向控制、抵達探測、接縫負控制、D5 負控制在實作樹重跑。
+- `kbo-renewal-e2e`：確認 `applyKboForeignPackageCap` 改直接 import 時 FAIL（草稿未做）。
+- `game-view-dom-e2e --baseline=099cb7010c85dece06ae720ce4820f8dc2e3571d`（直接執行）。
+- Quick；Full（比照 §2w 的 scratchpad 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變，由上列比較證明）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+未驗證：`--preview` 路由、Linux CI 未執行。
+
+### 2aa.5 分支與交付
+
+- `refactor/career-movement`（自 `099cb70`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。未修改 `main`。原定 PR 待 #43 合併後建立；2026-11-01 使用者改為把本期 commit 併入 PR #43（尚無 review），一次合併、一次 Full CI。
+
+### 2aa.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/career-movement`，計畫 commit `40ffeee`，實作 commit `d350c58`，比較基準 `099cb70`）
+
+- 實作：新檔 `docs/src/engine/career-movement.js` 250 行（LF）；`game.js` 1225 → 1022 行（`+14／−217`，CRLF，無裸 LF）；`career-contract.js` `+12／−1`。測試變更只有 T1～T10，行數與 §2aa.3 相同。
+
+| 驗證 | 結果 |
+|---|---|
+| 逐字比對（獨立還原腳本） | `career-movement.js` 206 行、`faYears` 10 行，還原宣告差異後與 `099cb70` 逐位元組相同 |
+| 自由名稱 | 只有語言內建；無未用 import |
+| 定向 | `check-syntax`、`verify-modularization`、T1～T9、`award-identity-policy` 全部 PASS |
+| 延遲 closure | 11 情境於 render 後替換 `S`，`099cb70` 本體 vs 真實 `CareerMovement` 差異 0；反向控制（改讀快照）11／11 有差異 |
+| 抵達探測 | 8 段生涯新舊逐步命中序列一致；`faMarket` 2、`crossOffers` 60、`demotionAudit` 86、`tradeCheck` 86（兩個視窗寬度合計）。與 `stage10` 同一重綁機制，`stage10` 自身的 `active.*` 計數未比較 |
+| 接縫負控制 | 4 個名稱改為繞過：探測 4／4 抓到（`crossOffers` 餘 2 次來自 `extensionOffer` 的 lambda），`game-view-dom-e2e` 仍 PASS |
+| `applyKboForeignPackageCap` 接縫 | 模組內呼叫點只有 `showFaMarket` 的無報價分支。改直接 import 時 `kbo-renewal-e2e` 仍 PASS，**與 §2aa.4 預期的 FAIL 不符**：該測試未走此分支。改以 scratch 探測觸發此分支，hook 命中數：`099cb70` 1、實作 1、直接 import 0。其後以 T11 補進 `kbo-renewal-e2e`：實作於 `--quick` 與完整模式 PASS，直接 import 時 FAIL（`FA no-bid cap reaches the hook`） |
+| D5 負控制 | `contract-salary-e2e --only=state`：舊 helper 216 項丟 `CAREER_SESSION_FIELD_MISSING`；新 helper 216／0；拿掉 `CareerSession` 欄位後 216 項丟同一錯誤 |
+| `contract-salary-e2e --compare=099cb70…` | 381／0 |
+| `game-view-dom-e2e --baseline=099cb70…` | 8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68／68 PASS（135 秒） |
+| Full（scratchpad worktree，`docs`、`tests`、`scripts` 與工作樹逐檔相同；報告的 `head` 為 worktree 基準 `40ffeee`；`splitIds(fullIds(),4,…)` 22／24／22／25，計 93 不重複） | 93／93 PASS（723／389／626／470 秒；分組執行，非單一 Full 報告；`ci-full-batches` 嚴格彙整未執行） |
+
+- 期望值變更：T1 的 RNG 計數搬移（`ri` 26 → 24、`chance` 合計 26 → 18，模組 `[0,2,8,0]`），總呼叫點不變。golden 未改。
+- reviewer：6 個審查面向無 finding（只跑單檔測試，未跑 Quick／Full／瀏覽器）。目視：不適用。VERSION／CHANGELOG／CURRENT_SPEC 不更新（§9.3）。
+- 結論：
+  - 成本：測試 10 檔，與草稿相同；實作後無未預期 FAIL。草稿階段先跑 Full，確認 Full 專屬入口不需變更。
+  - 測試缺口：`kbo-renewal-e2e` 原本走不到模組內的 `applyKboForeignPackageCap` 呼叫點，已由 T11 補上。T11 只改測試，加入後 Quick 68／68 PASS，Full 未重跑。§2aa.4 的 4 個存活變異仍是既有缺口。
+  - 未解：`--preview` 路由、Linux CI 未執行；`event-integration.test` 間歇 `SIGSEGV`（本次 Quick／Full 未發生）；`movement` 三層與年度流程尚無細部計畫。
+
+### 2aa.7 交付（2026-11-01）
+
+- 實作 commit `d350c58`，結果紀錄 `ab25d60`，T11 `f5f1632`，於本機 `refactor/career-movement` 完成後以 fast-forward push 至 `refactor/career-contract`，併入 PR #43 → `dev`。不另開 PR。PR → `dev` 不觸發 CI，合併與 Full CI 待 code owner。未修改 `main`。
+
+## 2bb. 第 24 期：`movement` 第一層移至 `docs/src/engine/career-movement.js`（細部計畫，2026-11-01；計畫已批准，實作已批准）
+
+路線見 §3.18。本期只搬 L1，`movement` L2、L3 與年度流程留在 `game.js`。
+
+### 2bb.1 現況（基準 `169ec85`，`game.js` 與 `fbb2129` 相同）
+
+- 區段：`docs/src/engine/game.js:606–693`（`function movement(){` 至 `}`），CRLF，0 縮排，88 行／6,832 bytes，每行反引號數皆為偶數。
+- RNG 文字呼叫點：`chance` 3；`R`、`ri`、`pick` 0。無 `choose`，`reportFlowOutcome` 1 處。
+- `S` 引用 72 處，無 `S=` 賦值，無延遲讀 `S` 的 closure，所以開頭一行 `const S=getState();` 涵蓋全部讀取。
+- 呼叫端：`LEGACY.movement`（`:749` 擷取、`:992` 呼叫）；L2、L3 與結算的 `go()` 都留在 `game.js`，既有 e2e 重綁 `movement` 的路徑不變。
+- 自由名稱分三類：
+  - 已在 `careerMovementRules`：`LV`、`board`、`card`、`chance`、`ovr`、`removeTrait`、`reportFlowOutcome`、`faFlow`、`handleDemotion`、`retireBelowActiveMinimum`、`contractNeedsRenewal`、`isBelowActiveMinimum`。
+  - 新注入 8 個：`PATHS`（傳參考）、`crossOffers`（late-binding）、`applyPromotionSalary`、`markClubInitiatedRenewal`、`extensionOffer`、`displayTrait`、`slgOf`、`teamNick`。
+  - 新 import 3 個：`TRAIT_TEXT`、`goldclothEligible`（`trait-policy.js`），`hasCurrentAwardEffect`（`award-consumer-policy.js`）。
+- 範圍外（不動，記錄）：`tools/development-b/legacy-effect-boundaries.mjs`（§3.18）；`game.js` import 行中搬移後不再使用的名稱；`settlePhaseEnd` 不可達分支（CODE-DEAD-01）。
+
+### 2bb.2 設計（使用者決定 2026-11-01：批准 T1–T9 與 D1–D3，D3 採併入 PR #43；push 另批）
+
+- `career-movement.js`：
+  - `careerMovementRules` 內新增 `function movement(){`，放在 `return {` 之前。本體逐字 +2 縮排，只在開頭加 `const S=getState();`。
+  - 類別新增 `movement(){return this.#rules.movement();}`，回傳物件加 `movement`。
+  - `crossOffers` 採 Shadow：實作改名 `crossOffersRule`，同名參數為 late-binding，回傳 `crossOffers:crossOffersRule`。L1 結尾的 `crossOffers(o);` 逐字保留，經 `game.js` 名稱繞回，`stage10-risk-e2e` 的 trace 重綁才看得到。
+  - 檔頭註解補上 `crossOffers` 的理由。
+- `game.js`：
+  - `:606–693` 換成 `function movement(){return careerMovement.movement();}`，同一位置，故 `LEGACY`、L2、L3 不動。
+  - `CareerMovement` 建構式加 `PATHS` 與 7 個 lambda，建構式位置不動。
+- 決定：
+  - D1 命名：模組內 `movement`、實作 `crossOffersRule`（比照 `faMarketRule`）。
+  - D2 邊界：只搬 L1。
+  - D3 分支與 PR：新分支 `refactor/movement-first-layer`（自 `169ec85`，無 upstream）。併入 PR #43（尚無 review，一次合併、一次 Full CI，與第 23 期相同）。
+
+### 2bb.3 測試變更（harness 與錨點變更，需揭露；最後一項為計數變更）
+
+| # | 檔案 | 變更 | 類型 |
+|---|---|---|---|
+| T1 | `tests/career-movement-policy.mjs:50–54` | 新增 `movementBody`（`function movement(){` 至 `\n  return {`），`forcedCheck`、`injuryYearCheck`、`demotionCheck` 與 `retireBelowActiveMinimum` 斷言改查它 | 目標搬移。後兩者原查 `game` 搬移後仍會 PASS，已失去意義 |
+| T2 | 同檔新增 | `movementBody` 以 `  crossOffers(o);\n  }` 結尾且不含 `crossOffersRule`；`new CareerMovement(` 該行含 `crossOffers:o=>crossOffers(o)`；`game.js` 含薄包裝 | 新增接縫斷言，繞過不會讓其他測試 FAIL |
+| T3 | `tests/championship-intl.test.mjs:78`（CRLF） | L1 文字斷言的切片改取 `career-movement.js` | 目標搬移 |
+| T4 | `tests/kbo-renewal-floor.test.mjs:57` | 新增 `movementSource`、`movementBetween`，vm 改跑模組真實本體 | vm 組裝 |
+| T5 | `tests/npb-return-ui.test.mjs:13`、`:161` | `crossOffers` 改切 `crossOffersRule`，再以 `var crossOffers=crossOffersRule` 接回 | Shadow 改名 |
+| T6 | `tests/npb-return-ui.test.mjs:238`、`:253` | 目前版本的 `movement` 改用 `movementFunction('movement')`，舊 SHA 仍用 `productionFunction`；context 加 `getState` | vm 組裝 |
+| T7 | `tests/salary-flow.test.mjs:30`、`:41` | 由 `game` 改查 `careerMovement`。`:30` 原查 `game` 搬移後只剩 `settlePhaseEnd` 不可達分支撐著 | 目標搬移 |
+| T8 | `tests/salary-promotion-policy.mjs:98`、`:102` | 由 `game` 改查 `careerMovement` | 目標搬移 |
+| T9 | `tests/salary-flow.test.mjs:105`、`:120` | `chance` 由 18 改 15；`CareerMovement` 由 `[0,2,8,0]` 改 `[0,2,11,0]`。3 處搬移，總數不變 | **計數變更，須批准** |
+
+### 2bb.4 驗證（L3／R3）
+
+草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；不是實作驗收）：
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（套 T1–T9） | 68／68 PASS |
+| 分組 Full（`--baseline=fbb2129…`） | 22＋24＋22＋25＝93／93 PASS，含 `stage10-risk-e2e`、`contract-salary-e2e`、`kbo-renewal-e2e`、`npb-return-e2e`、`game-view-dom-e2e` |
+| `game-view-dom-e2e --baseline=fbb2129…` | 8 段 DOM／`S`／RNG 一致 |
+| 逐字比對（去掉 `getState` 行與 2 格縮排） | 88 行與 `fbb2129` 相同；竄改一字的反向對照可偵測 |
+| 遞迴與抵達探測 | §3.18：`movement` 三處皆 23 次，`crossOffers` 18 次，繞過負控制為 0 次 |
+| 突變 10 組 | 全部被目標測試抓到（下表） |
+
+| 突變 | 抓到的測試 |
+|---|---|
+| L1 直接呼叫 `crossOffersRule` | `career-movement-policy` |
+| 移除 `CareerMovement` 的 `crossOffers` lambda | `career-movement-policy` |
+| `S.teamYears>=7` 改 8 | `championship-intl.test` |
+| `teamYears` 遞增改 2 | `championship-intl.test` |
+| 最低能力檢查移到 `skipMid` 之後 | `career-movement-policy` |
+| 移除 `skipMid` 的續約呼叫 | `salary-flow.test`、`npb-return-ui.test`（`kbo-renewal-floor.test` 未抓到） |
+| outcome `kind` 打錯 | `npb-return-ui.test`、`kbo-renewal-floor.test` |
+| `applyPromotionSalary` 引數對調 | `salary-promotion-policy` |
+| 移除 `PRO_PLAYER_WITHOUT_CONTRACT` 檢查 | `salary-flow.test` |
+| 多一次 `chance` | `salary-flow.test` |
+
+- 限制：T2 的建構式斷言在 Full 後收窄過，收窄版本只重跑 `career-movement-policy`（PASS）與該突變，未重跑 Quick／Full。`movement` 重綁的呼叫端留在 `game.js`，結構上不繞過，未另做抵達探測。
+- 實作時須重做：Quick、分組 Full、`game-view-dom-e2e --baseline`、逐字比對、抵達探測、突變；reviewer。
+- 未做：Linux CI、Preview。
+
+### 2bb.5 交付
+
+- 內部重構不升 VERSION（AGENTS §9.3），不更新 CHANGELOG、CURRENT_SPEC。
+- commit 分兩個：實作＋T1–T9、結果紀錄。push 與 PR 依 D3，另批。未修改 `main`。
+
+### 2bb.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/movement-first-layer`，計畫 commit `96dccf5`，實作 commit `2201aee`，比較基準 `fbb2129`）
+
+- 規模：`game.js` 1022 行／98,687 bytes → 935 行／92,197 bytes；`career-movement.js` 250 行 → 342 行。CRLF／LF 維持。實作與草稿只差檔頭 2 行註解。
+
+| 檢查（皆在 `2201aee` 乾淨 worktree） | 結果 |
+|---|---|
+| Quick | 68／68 PASS |
+| 分組 Full（`--baseline=fbb2129…`） | 22＋24＋22＋25＝93／93 PASS，FAIL／BLOCKED／SKIP 皆 0 |
+| `game-view-dom-e2e --baseline=fbb2129…` | 8 段 DOM／`S`／RNG 一致 |
+| 逐字比對 | 88 行與 `fbb2129` 相同，反向對照可偵測 |
+| 突變 10 組 | 與 §2bb.4 相同，全部被抓到；`kbo-renewal-floor.test` 仍未抓到「移除 `skipMid` 續約」 |
+| reviewer | 無 findings（7 項檢查） |
+
+- 抵達探測（seed `20261101`、`20261102`、`20261104` × P／IF，6 段生涯全部結束，無 pageerror；5 段抵達 `movement`，4 段抵達 `crossOffers`）：`movement` 薄包裝、`LEGACY.movement` 呼叫、L1 本體皆 35 次，無遞迴。`crossOffers` 的 `game.js` 名稱與實作皆 28 次；繞過負控制為 0 次與 28 次。
+- 執行紀錄：第一次 Full 因 scratch 腳本的 `sed` 改壞模組路徑而未執行，背景工作仍回報 exit 0；修正後重跑，上表為重跑結果，已確認 4 組共 93 個入口都有 PASS 紀錄。
+- 未做：Linux CI、Preview。
+
+### 2bb.7 交付（2026-11-01）
+
+- 實作 commit `2201aee`，結果紀錄 `2878778`，於本機 `refactor/movement-first-layer` 完成後以 fast-forward push 至 `refactor/career-contract`，併入 PR #43 → `dev`。不另開 PR。PR → `dev` 不觸發 CI，合併與 Full CI 待 code owner。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -3439,6 +3782,60 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 執行限制：直接執行的 e2e 為 Full 形式（無 `--quick`／`--fixtures-only`），`--ui-only`／`--quick` 依 manifest `args`；`draft-income-e2e` 未帶 `--baseline`；`contract-salary-e2e` 只有 H1 修補後帶 `--compare`。第一輪漏帶 manifest `args` 的 `championship-intl`、`global-contract-market`、`trait-system` FAIL 在乾淨 HEAD 同樣發生，補參數後 C1／H1 皆 PASS。
 - 未做：Full、Linux CI、Preview；`movement`／`performMovement` 的繞過；C1／H1 修測試後的 Quick。草稿用 getter 接線，不是 §2y 的解構 deps＋`getState`，結果只證明接縫可行，不是實作驗收。
 - 建議（未決）：第 22 期只搬契約，採 Shadow 配置處理 `fixedContract`、`salaryCandidate`、`salaryFor`，並為每個名稱加抵達探測或負控制；`signTo` 在契約內無呼叫端，留一般 lambda。市場與移籍判定另立一期，與 `career-session-access` 修法一起處理；這取代 §3.16「三者視為同一領域」。年度流程維持最後。
+- 後續：重綁名稱數（7 → 9）與 `movement` 遞迴條件已由 §2aa.1 更正；本節保留調查當時的原文。
+
+### 3.18 第 24 期候補：`movement` 三層與年度流程再盤點（2026-11-01，基準 `refactor/career-movement` `fbb2129`，`docs/src/engine/game.js` 1022 行／98,687 bytes；**未決**，不授權實作）
+
+- 方法：scratchpad 腳本以 acorn＋eslint-scope 解析頂層語句（解析名稱遮蔽，略過非 computed 的屬性鍵），計算自由名稱、`S` 引用與延遲讀 `S` 的 closure；RNG 為呼叫文字計數。18 字元 n-gram 範圍為 `tests`、`scripts`、`tools`、`docs/src`（不含 `game.js`），共 217 檔。腳本不保留。
+- 分組（語句起始行）：`movement` L1 `:606`；L2 `:992`；L3 `:993–994`；`proSeason`＋`resumeProfessionalSeason` `:475`、`:560`；`phasePre` `:349`；結算 `:911`、`:912`、`:917`、`:966`、`:975`；流程骨架 `:347`、`:705`、`:808`、`:809`、`:811`、`:843`、`:897`。
+
+| 群組 | 行 | bytes | 自由名稱（本地＋import） | `S` 引用 | 延遲讀 `S` 的 closure | RNG | `choose` | `reportFlowOutcome` |
+|---|---:|---:|---:|---:|---:|---|---:|---:|
+| `movement` L1 | 88 | 6,832 | 18＋5 | 72 | 0 | `chance` 3 | 0 | 1 |
+| `movement` L2 | 1 | 1,992 | 10＋1 | 44 | 1 | 無 | 2 | 8 |
+| `movement` L3 | 11 | 503 | 3＋0 | 6 | 1 | 無 | 0 | 0 |
+| `proSeason`＋`resumeProfessionalSeason` | 102 | 7,625 | 23＋5 | 76 | 0 | `R` 1 | 0 | 0 |
+| `phasePre` | 79 | 6,877 | 22＋1 | 78 | 12 | `R` 2、`ri` 6、`chance` 1 | 3 | 3 |
+| 結算（含下述死碼） | 79 | 9,030 | 22＋13 | 118 | 4 | 文字計數 0 | 2 | 0 |
+| 流程骨架 | 48 | 3,307 | 11＋1 | 6 | 0 | 無 | 0 | 僅定義 |
+
+- `game.js` 組成：import 60 語句 5,997 bytes；一行薄包裝 86 個 6,515 bytes；其他頂層函式 79 個 60,362 bytes；組件建構 20 語句 7,325 bytes；其餘語句 15,653 bytes。資料表另以語句分組量得 26 語句 8,447 bytes，與上列分類重疊，不可相加。
+- 不可達分支（靜態判斷，未實跑）：`settlePhaseEnd` `:976` 對 PRO 提前 return，`:977`（115 bytes）、`:980`（519 bytes）、`:990`（2,914 bytes）的 PRO 分支共 3,548 bytes 走不到；`S.stage` 寫入者都不在 `:976–990` 路徑上。已記入 CODE-DEAD-01，不與重構混合。n-gram 須把此區獨立計算：活的結算 5,420 bytes 命中 58 檔，不可達區 3,550 bytes 命中 71 檔，後者多為共用語法，未逐筆分類。
+- `LEGACY` 擷取 6 個名稱，`game.js` 只讀 `board`、`movement`、`endGame`；`phasePre`、`phaseMid`、`proSeason` 無讀取點。
+- L1 搬移成本（靜態）：
+  - 新增注入 7 個：`PATHS`、`applyPromotionSalary`、`displayTrait`、`extensionOffer`、`markClubInitiatedRenewal`、`slgOf`、`teamNick`。
+  - `crossOffers`：`stage10-risk-e2e` trace 重綁，L1 搬入後是模組內呼叫，須走 late-binding，否則繞過不會 FAIL。
+  - `salary-flow.test:105` 由 18 改為 15。
+  - 切片：`kbo-renewal-floor.test:57`、`npb-return-ui.test:253` 只會切到薄包裝；`championship-intl.test:78` 的 L1 文字斷言會 FAIL；`tests/career-movement-policy.mjs` 約 7 行命中，未分類。
+- 流程層耦合：`full-power-pitching-e2e:29–38` 以名稱抽取 `phasePre`、`proSeason`、`resumeProfessionalSeason`、`runSeasonPipeline`；`stage10-risk-e2e:9–10` 重綁 `movement`、`phasePre`、`phaseMid`、`proSeason`、`advance`、`startYear`；`championship-intl.test:75` 切片 `:911` 至 `:992`，L2 搬移會失去結束錨點。`phasePre` 搬移時 `salary-flow.test` `:98` 由 14 改為 12、`:101` 由 24 改為 18、`:105` 再減 1。
+- 建議（未決）：
+  - 第 24 期只搬 L1 至 `CareerMovement`，`function movement()` 留在 `:606` 當薄包裝，`LEGACY`、L2、L3 與既有 e2e 重綁不動。
+  - L2 不同期搬：混合業餘選路、服務年限累計與 `faElig`，業餘分支應歸 `amateurCareer`。
+  - L3、結算與骨架持有 `game.js` 僅存的流程狀態（`professionalMoves`、`professionalEnds`、`seasonContinuations`、`yearHandoffs`、`stepQ`），留到年度流程處理。
+  - `phasePre`、`proSeason` 成本明顯較高，暫不動；資料表無行為，不列候補。
+
+L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）：
+
+- 草稿內容：L1 本體 86 行 +2 縮排移入 `careerMovementRules`，開頭加 `const S=getState();`，`game.js` 留 `function movement(){return careerMovement.movement();}`。新增注入 8 個（靜態清單 7 個＋`crossOffers`），並 import `TRAIT_TEXT`、`goldclothEligible`、`hasCurrentAwardEffect`。`crossOffers` 採 Shadow：實作改名 `crossOffersRule`，同名參數為 late-binding。`game.js` 1022 行／98,687 bytes → 935 行／92,197 bytes；`career-movement.js` 342 行。
+- 未修改測試的 Quick：62 PASS／6 FAIL，全為文字或切片耦合。測試停在第一個失敗，斷言數是下限。
+
+| 入口 | 第一個失敗 | 原因 |
+|---|---|---|
+| `career-movement-policy` | `:53` | `game` 上找不到 `isBelowActiveMinimum`、`S.skipMid` 分支文字的順序 |
+| `championship-intl.test` | `:78` | `teamYears` 文字斷言切到薄包裝 |
+| `kbo-renewal-floor.test` | `:57` 的 vm 案例 | 切到薄包裝後 `careerMovement is not defined` |
+| `npb-return-ui.test` | `:13` | Shadow 改名使 `movementFunction('crossOffers')` 找不到函式 |
+| `salary-flow.test` | `:41` | `S.skipMid` 文字斷言在 `game` 上找不到；`:105` 尚未執行到 |
+| `salary-promotion-policy` | `:98` | 升級文字斷言在 `game` 上找不到 |
+
+- `game-view-dom-e2e --baseline=fbb2129…`：8 段生涯（4 組 seed，1280／390）DOM／`S`／RNG 一致。
+- 遞迴與抵達探測（`S`、RNG 未比較；3 組 seed × P／IF，6 段真實生涯全部走到結束，無 pageerror；其中 `20261103` 的 2 段未進職業，實際抵達接縫的是 4 段，`crossOffers` 為 3 段）：
+  - 第一層薄包裝經 `LEGACY.movement` 實跑：`movement` 薄包裝、`LEGACY.movement` 呼叫、L1 本體皆 23 次，無遞迴。§2aa.1 的最小重現判斷在真實程式碼成立。
+  - `crossOffers`：`game.js` 名稱 18 次、`crossOffersRule` 18 次。負控制（L1 直接呼叫 `crossOffersRule`）為 0 次與 18 次，生涯仍正常結束，確認繞過無聲。
+- 修法方向：`kbo-renewal-floor.test:57` 改由 `career-movement.js` 切片，比照 `npb-return-ui.test:12`，保持執行真實本體。
+- 範圍外（不動，記錄）：`tools/development-b/legacy-effect-boundaries.mjs` 的 `productionFunction('movement',src)` 搬移後只會切到薄包裝；`tools/development-*` 不在 manifest。
+- 未做：修測試後的 Quick、Full、Linux CI、Preview、`stage10-risk-e2e`（實際重綁 `crossOffers` 的測試）、`contract-salary-e2e` 的 `movement` 重綁抵達探測。`kbo-renewal-e2e` 含 `movement` 重綁，Quick 為 PASS，但未做抵達探測。`crossOffers` 若不改名可少一項 `npb-return-ui` 變更，但需要另一種 late-binding 寫法，未實測。
+- 後續：L1 細部計畫與套用測試變更後的 Quick、Full、突變結果見 §2bb；上列「未做」已由 §2bb.4 更新，本節保留調查當時的原文。
 
 ## 4. 使用者決定（2026-10-18）
 
