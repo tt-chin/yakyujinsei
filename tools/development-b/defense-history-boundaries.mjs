@@ -5,9 +5,10 @@ import {oldSource,source} from './award-runtime-support.mjs';
 import {productionFunction} from '../../tests/retirement-hof-test-support.mjs';
 import {hasHistoricalDefenseAward} from '../../docs/src/engine/award-consumer-policy.js';
 import {defenseShareFor} from '../../docs/src/engine/hall-of-fame-tier-policy.js';
+import {CareerRetirement} from '../../docs/src/engine/career-retirement.js';
 function phrase(src,text,bucket){
  const S={pos:'IF',dpos:'SS',honors:[text],stats:{[bucket]:{H:80,HR:0,SB:0,RBI:0,BB:0,DEF:4}}};
- const c=vm.createContext({S,DPN:{SS:'遊撃手'},hasHistoricalDefenseAward,defenseShareFor,bucket});
+ const c=vm.createContext({S,DPN:{SS:'遊撃手'},hasHistoricalDefenseAward,defenseShareFor,bucket,CareerRetirement,LV:{},POSN:{},TIER_TH:{},LG_N:{},TEAM_COLOR:{}});
  vm.runInContext(productionFunction('defShare',src)+'\n'+productionFunction('posLegendPhrase',src),c);
  const before=structuredClone(S),result=vm.runInContext('posLegendPhrase(bucket)',c);assert.deepEqual(S,before);return result;
 }

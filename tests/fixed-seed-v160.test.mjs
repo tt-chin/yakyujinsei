@@ -22,6 +22,6 @@ for(const [seed,[state,head,tail]] of Object.entries(expected))assert.deepEqual(
 const ability=fs.readFileSync(new URL('../docs/src/engine/player-ability.js',import.meta.url),'utf8');
 const alloc=ability.slice(ability.indexOf('function allocUI'),ability.indexOf('function abilityRules'));
 assert.doesNotMatch(alloc,/\b(?:R|ri|pick|chance)\s*\(/);
-assert.match(game,/replayURL\(S.seed\|\|SEED,location.href\)/);
+assert.match(fs.readFileSync(new URL('../docs/src/engine/career-retirement.js',import.meta.url),'utf8'),/replayURL\(getState\(\)\.seed\|\|getSeed\(\),location\.href\)/);
 assert.doesNotMatch(game,/[?&](?:rv|rules)=/);
 console.log('v1.6.2 six-seed RNG and seed-only URL checks passed.');

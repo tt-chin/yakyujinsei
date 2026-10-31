@@ -90,9 +90,10 @@ for (const route of [
 ]) assert.ok(game.includes(route), route);
 
 // 長い球団名はチーム列だけ最大2行とし、成績列は横スクロール内で改行させない。
-assert.match(game, /class="career-table-scroll"/);
-assert.match(game, /class="fin career-table"/);
-assert.match(game, /class="career-team"><span>/);
+const careerRetirement = await readFile(path.join(root, 'docs/src/engine/career-retirement.js'), 'utf8');
+assert.match(careerRetirement, /class="career-table-scroll"/);
+assert.match(careerRetirement, /class="fin career-table"/);
+assert.match(careerRetirement, /class="career-team"><span>/);
 assert.match(baseCss, /\.career-table-scroll\{[^}]*overflow-x:auto/);
 assert.match(baseCss, /table\.fin\.career-table th,table\.fin\.career-table td\{white-space:nowrap\}/);
 assert.match(baseCss, /\.career-team\{[^}]*max-width:220px[^}]*white-space:normal/);

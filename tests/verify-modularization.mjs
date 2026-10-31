@@ -43,7 +43,7 @@ const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}`;
 assert.doesNotMatch(forbidden, /UNSUPPORTED_REPLAY_VERSION/);
 assert.doesNotMatch(forbidden, /[?&]rv=/);
 assert.doesNotMatch(forbidden, /[?&]rules=/);
-assert.match(game, /replayURL\(S.seed\|\|SEED,location.href\)/);
+assert.match(await read('docs/src/engine/career-retirement.js'), /replayURL\(getState\(\)\.seed\|\|getSeed\(\),location\.href\)/);
 assert.match(game, /history\.replaceState\(null,'',`\?seed=\$\{encodeURIComponent\(SEED\)\}`\)/);
 
 assert.equal((data.match(/"teamId"/g) || []).length, 90);
