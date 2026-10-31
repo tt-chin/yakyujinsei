@@ -3055,6 +3055,32 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - `refactor/amateur-draft`（自 `origin/dev` `0f44dc8`，`--no-track`，已建立，無 commit，未 push）。本計畫先單獨 commit；實作 commit、push、PR 另批。
 
+### 2y.6 實施結果（2026-10-31，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/amateur-draft`，計畫 commit `bde78ee`＋未提交的實作）
+
+- 實作：新檔 `docs/src/engine/amateur-career.js` 101 行（LF）；`game.js` 1453 → 1388 行（`+7／−72`，CRLF，無裸 LF）。測試變更只有 T1～T4（`salary-flow` `+10／−4`、`domestic-tournament-policy` `+8／−6`、`event-integration` `+10／−11`、`draft-signing-policy` `+4／−2`）。
+
+| 驗證 | 結果 |
+|---|---|
+| 逐字比對 | 74 行，去除 5 處插入後與 `0f44dc8` 逐位元組相同 |
+| 自由名稱 | 只有 `Error`、`Math`；無未用 import、無未用注入 |
+| 定向 | `check-syntax`、`verify-modularization`、T1～T4、`income-summary`、`award-identity-policy`、`career-movement-policy`、`kbo-renewal-floor`、`npb-return-ui` 全部 PASS |
+| 等價比較（`0f44dc8` 本體於 vm vs 真實 `AmateurCareer`） | 121,766 組差異 0（比較 `S`、呼叫紀錄、RNG 次數與值、例外）；22 個必要分支皆有覆蓋 |
+| 負控制（等價腳本） | 延遲 closure 改 render 時快照 2 組差異（恰為 2 個 closure）；`ri(-8,9)` 57,024 組；RNG 順序 561 組；同目標 kind 對調 1,538 組 |
+| 負控制（測試） | kind 對調、繞過 `runDraft`、拿掉 `consumeEventSeason`、拿掉防重入、多一次 `ri` 全部 FAIL |
+| 接縫抵達探測 | `smallschool-c`、`stage6-state-transaction`、`draft-income`（`-e2e`）舊／新樹皆 3／3 PASS；2,777 筆 `HIT_` 序列逐位元組相同，7 個函式皆有抵達，`reportFlowOutcome` 涵蓋 12 種 `kind` |
+| `game-view-dom-e2e --baseline=0f44dc8…` | 8 段生涯 DOM／`S`／RNG 一致 |
+| Quick | 68／68 PASS（152 秒） |
+| Full（scratchpad worktree，與工作樹逐位元組相同；`splitIds(fullIds(),4,…)` 22／24／22／25，計 93 不重複） | 93／93 PASS（731／427／674／472 秒；分組執行，非單一 Full 報告；`ci-full-batches` 嚴格彙整未執行） |
+
+- 過程紀錄：負控制 `closure-snapshot` 第一版只拿掉 closure 內的 `getState()`，FAIL 只是 `ReferenceError`（770 組），不算語意證據；改為方法開頭快照後得到上表結果。
+- 期望值變更：T1 的 RNG 計數搬移（`R(` 15 → 14、`ri(` 30 → 26，模組 `[1,4,0,0]`），總呼叫點不變。golden 未改。
+- reviewer：無 finding（7 個審查面向皆無；未重跑 Quick／Full／瀏覽器）。目視：不適用。VERSION／CHANGELOG／CURRENT_SPEC 不更新（§9.3）。
+- 試做結論：
+  - 成本：測試變更 4 檔，與未改測試的 Quick 預測相符；實作後無未預期 FAIL。文字與切片耦合實際比 §3.16 n-gram 上限輕，且 `git diff` 後無其他檔案需要處理。
+  - 接縫：`reportFlowOutcome` 注入可行。`draft-signing-policy` 的 stub 全部保留，呼叫紀錄仍與 `026c5cd` 一致。
+  - 先做草稿的價值：計畫階段的「不改測試跑 Quick」已列出全部 4 檔，regex 掃描另補上 Quick 第一個斷言擋住的 `event-integration:30–31`。
+  - 未解：本期不驗證模組內呼叫繞過 e2e 替換的問題（見 §2y.4 末項），契約・市場・移籍判定的成本不能由本期外推。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
