@@ -2771,6 +2771,10 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 範圍外記錄（不動）：`event-fix-e2e:22` 的 `--preview` 比對清單未含新模組；`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再於產品碼使用的名稱。BACKLOG：CODE-DEAD-01 已補記 `CHEER_DEFAULT`。
 
+### 2v.7 交付（2026-10-31）
+
+- `refactor/event-romance` push（`560ed13`），PR #38 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
