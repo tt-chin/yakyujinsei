@@ -20,6 +20,7 @@ function applyKboForeignPackageCap(input){
 window.__kboCaps=[];
 window.__kboTest={get:()=>({state:JSON.parse(JSON.stringify(S)),calls:window.__rngCalls||0,failure:window.__kboFailure||null,caps:window.__kboCaps}),
  fixture:()=>{actClear();S=newState('契約検証','IF');Object.assign(S,{year:2049,age:39,stage:'PRO',org:'KBO',lv:'KBO1',orgTeamId:'KBO_GWANGJU_TIGERS',currentSalary:168210000,contractSequence:9,marketInjury:'HEALTHY',lastD:-5.75,serviceTime:{KBO:8},ab:{sta:45,con:45,pow:45,spd:45,eye:45,rng:45,fld:45,arm:45},dpos:'DH',seasonFactor:1});S.ct=createContract({contractId:'KBO-FIXTURE',org:'KBO',teamId:S.orgTeamId,signedYear:2048,startYear:2049,years:1,annualSalary:S.currentSalary,incentive:createIncentiveTerms({org:'KBO',annualSalary:S.currentSalary})});S.ct=markSalaryPaid(S.ct,2049).contract;__cs.pendingOffseasonSalary=null;window.__fixtureAdv=0;const fixtureAdvance=()=>{finalizePendingOffseasonSalary();window.__fixtureAdv++;};if(typeof flowHooks!=='undefined')flowHooks.advance=fixtureAdvance;else advance=fixtureAdvance;choose('満了年度の降格',[{t:'KBO二軍へ降格',f:()=>{const from=S.lv;S.lv='KBO2';applyDemotionSalary(from,S.lv);fixtureAdvance();}}]);},
+ noBid:()=>{S.faType='OVERSEAS';S.lastFaMarket={marketKey:'FA:'+S.year+':OVERSEAS',offers:[],marketRating:0,injuryStatus:'HEALTHY'};faMarket(50,0);},
  pay:()=>{S.year=2050;S.pool=0;movement=()=>{window.__fixtureMoves=(window.__fixtureMoves||0)+1;};phaseEnd();},adv:()=>window.__fixtureAdv};`;
 const candidateAnchor="if(targetOrg==='KBO'){const cap=",candidateObserver="if(targetOrg==='KBO'){window.__kboCandidate={sourceLevel,targetLevel,rating,convertedRating,baseSalary,raw,contractMult,positionMult,transferType,previousSalary,cross,injury};const cap=";
 function instrumentContract(source){assert.equal(source.split(candidateAnchor).length,2,'candidate observer anchor');return source.replace(candidateAnchor,candidateObserver);}
@@ -62,6 +63,10 @@ try{
   if(arg('preview'))await p.route('**/src/engine/game.js',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:instrument(await r.text())});});
   if(arg('preview'))await p.route('**/src/engine/career-contract.js',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:instrumentContract(await r.text())});});
   await start(p,target+'/?seed=kbo-renewal-fixture','IF');await p.evaluate(()=>window.__kboTest.fixture());
+  // showFaMarket's no-bid branch calls the cap inside career-movement.js; a direct import there would silently skip the hook above.
+  {const capsBefore=await p.evaluate(()=>window.__kboTest.get());await p.evaluate(()=>window.__kboTest.noBid());const capsAfter=await p.evaluate(()=>window.__kboTest.get());
+   assert.equal(capsAfter.caps.length-capsBefore.caps.length,1,'FA no-bid cap reaches the hook');assert.equal(capsAfter.caps.at(-1).input.isRenewal,true);assert.equal(capsAfter.calls,capsBefore.calls);assert.equal(capsAfter.failure,null);
+   assert.match(await p.locator('#act').innerText(),/FA市場・獲得オファーなし/);await p.evaluate(()=>window.__kboTest.fixture());}
   const before=await p.evaluate(()=>window.__kboTest.get());
   await p.locator('#act button').evaluate(b=>{b.click();b.click();});
   const after=await p.evaluate(()=>window.__kboTest.get());

@@ -3255,6 +3255,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 | T8 | `draft-bonus-display.test` | `+1／−1` | 否定斷言範圍納入模組 |
 | T9 | `draft-signing-policy.test` | `+1／−1` | 否定斷言範圍納入模組 |
 | T10 | `tests/support/career-session-access.mjs` | `+10／−3` | D5：既有兩種判斷不變；兩者皆無、且來源含 `careerSession=new CareerSession(` 時，於 getter 內以 `in careerSession` 檢查，缺欄位仍丟 `CAREER_SESSION_FIELD_MISSING`；`has()` 同步 |
+| T11（2026-11-01 實作後追加，使用者已批准） | `kbo-renewal-e2e`（CRLF） | `+5／−0` | hook 新增 `noBid`，走 `showFaMarket` 無報價分支；斷言 cap hook 命中 1 次、`isRenewal`、RNG 不增加、`#act` 標題，再重建 fixture |
 
 - 斷言內容有變的 1 個：`career-movement-policy:79`（閉包開頭多一處 `getState`）。
 - 其他測試變更：預期無。Full 專屬入口已於草稿確認不需變更。若實作中發現需變更，先停止並請求批准。
@@ -3308,7 +3309,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 | 延遲 closure | 11 情境於 render 後替換 `S`，`099cb70` 本體 vs 真實 `CareerMovement` 差異 0；反向控制（改讀快照）11／11 有差異 |
 | 抵達探測 | 8 段生涯新舊逐步命中序列一致；`faMarket` 2、`crossOffers` 60、`demotionAudit` 86、`tradeCheck` 86（兩個視窗寬度合計）。與 `stage10` 同一重綁機制，`stage10` 自身的 `active.*` 計數未比較 |
 | 接縫負控制 | 4 個名稱改為繞過：探測 4／4 抓到（`crossOffers` 餘 2 次來自 `extensionOffer` 的 lambda），`game-view-dom-e2e` 仍 PASS |
-| `applyKboForeignPackageCap` 接縫 | 模組內呼叫點只有 `showFaMarket` 的無報價分支。改直接 import 時 `kbo-renewal-e2e` 仍 PASS，**與 §2aa.4 預期的 FAIL 不符**：該測試未走此分支。改以 scratch 探測觸發此分支，hook 命中數：`099cb70` 1、實作 1、直接 import 0 |
+| `applyKboForeignPackageCap` 接縫 | 模組內呼叫點只有 `showFaMarket` 的無報價分支。改直接 import 時 `kbo-renewal-e2e` 仍 PASS，**與 §2aa.4 預期的 FAIL 不符**：該測試未走此分支。改以 scratch 探測觸發此分支，hook 命中數：`099cb70` 1、實作 1、直接 import 0。其後以 T11 補進 `kbo-renewal-e2e`：實作於 `--quick` 與完整模式 PASS，直接 import 時 FAIL（`FA no-bid cap reaches the hook`） |
 | D5 負控制 | `contract-salary-e2e --only=state`：舊 helper 216 項丟 `CAREER_SESSION_FIELD_MISSING`；新 helper 216／0；拿掉 `CareerSession` 欄位後 216 項丟同一錯誤 |
 | `contract-salary-e2e --compare=099cb70…` | 381／0 |
 | `game-view-dom-e2e --baseline=099cb70…` | 8 段生涯 DOM／`S`／RNG 一致 |
@@ -3319,7 +3320,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - reviewer：6 個審查面向無 finding（只跑單檔測試，未跑 Quick／Full／瀏覽器）。目視：不適用。VERSION／CHANGELOG／CURRENT_SPEC 不更新（§9.3）。
 - 結論：
   - 成本：測試 10 檔，與草稿相同；實作後無未預期 FAIL。草稿階段先跑 Full，確認 Full 專屬入口不需變更。
-  - 測試缺口：`kbo-renewal-e2e` 沒有走到模組內的 `applyKboForeignPackageCap` 呼叫點，改壞此接縫不會 FAIL。本期以 scratch 探測確認接縫有效，未補 repo 測試。§2aa.4 的 4 個存活變異同為既有缺口。
+  - 測試缺口：`kbo-renewal-e2e` 原本走不到模組內的 `applyKboForeignPackageCap` 呼叫點，已由 T11 補上。T11 只改測試，加入後 Quick 68／68 PASS，Full 未重跑。§2aa.4 的 4 個存活變異仍是既有缺口。
   - 未解：`--preview` 路由、Linux CI 未執行；`event-integration.test` 間歇 `SIGSEGV`（本次 Quick／Full 未發生）；`movement` 三層與年度流程尚無細部計畫。
 
 ### 2aa.7 交付（2026-11-01）
