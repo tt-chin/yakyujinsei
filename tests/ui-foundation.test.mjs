@@ -3,6 +3,7 @@ import fs from 'node:fs';
 
 const html=fs.readFileSync(new URL('../docs/index.html',import.meta.url),'utf8');
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
+const careerMovement=fs.readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8');
 const playerAbility=fs.readFileSync(new URL('../docs/src/engine/player-ability.js',import.meta.url),'utf8');
 const navigation=fs.readFileSync(new URL('../docs/src/ui/navigation.js',import.meta.url),'utf8');
 const ability=fs.readFileSync(new URL('../docs/src/ui/ability-view.js',import.meta.url),'utf8');
@@ -30,8 +31,8 @@ assert.doesNotMatch(navigation,/\b(?:localStorage|sessionStorage|indexedDB)\b/);
 assert.doesNotMatch(game,/uiState\s*:/);
 assert.match(css,/#main-nav\{position:sticky;top:var\(--board-height,0px\);z-index:19/);
 assert.match(navigation,/ResizeObserver\(syncBoardHeight\)/);
-assert.match(game,/createIncentiveTerms\(\{org:S\.org,annualSalary:annual\}\)/);
-assert.match(game,/candidate=\{\.\.\.base,contractMult:\.9\*injury,annualSalary:annual\}/);
+assert.match(careerMovement,/createIncentiveTerms\(\{org:S\.org,annualSalary:annual\}\)/);
+assert.match(careerMovement,/candidate=\{\.\.\.base,contractMult:\.9\*injury,annualSalary:annual\}/);
 assert.match(navigation,/const uiState=\{activeMainView:'home',activePlayerTab:'ability',activeCareerTab:'stats'\}/);
 assert.doesNotMatch(navigation,/['"]action['"]|actionPending|actionExecuting|showAction|beginAction|completeAction/);
 assert.match(navigation,/if\(view==='player'\)selectPlayer/);

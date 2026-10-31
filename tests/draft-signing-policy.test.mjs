@@ -93,7 +93,7 @@ const contractSource = fs.readFileSync(new URL('../docs/src/engine/career-contra
 assert.match(amateurSource, /if\(result==='signed'\)\{reportFlowOutcome\(\{kind:'AMATEUR_DRAFTED'\}\);return;\}/);
 assert.match(game, /cb\(result\)/); assert.match(game, /cb\(declineDraftSelection\(S\)\)/);
 assert.match(contractSource, /S\.stage='PRO';S\.stageYr=0/);
-assert.doesNotMatch(game + '\n' + contractSource, /buildSalaryDecision\([^;]+;\s*decision\.org=/s);
+assert.doesNotMatch(game + '\n' + contractSource + '\n' + fs.readFileSync(new URL('../docs/src/engine/career-movement.js', import.meta.url), 'utf8'), /buildSalaryDecision\([^;]+;\s*decision\.org=/s);
 
 // Case F: アマチュア進路の結果回報は、基準 SHA と同じ呼び出し列を保つ（第 11-B 期第 1 批）。
 {

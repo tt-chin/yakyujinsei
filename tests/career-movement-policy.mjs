@@ -42,8 +42,9 @@ assert.equal(fromNpb1, 'NPB2');
 assert.equal(demotionChoiceText(fromNpb1, levels), '二軍降格を受け入れ、再起を目指す');
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const [game, baseCss] = await Promise.all([
+const [game, careerMovement, baseCss] = await Promise.all([
   readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8'),
+  readFile(path.join(root, 'docs/src/engine/career-movement.js'), 'utf8'),
   readFile(path.join(root, 'docs/styles/base.css'), 'utf8'),
 ]);
 const forcedCheck = game.indexOf('if(isBelowActiveMinimum(o)){');
@@ -51,9 +52,9 @@ const injuryYearCheck = game.indexOf("if(S.skipMid){if(contractNeedsRenewal(S.ct
 const demotionCheck = game.indexOf('handleDemotion(o,path,idx)');
 assert.ok(forcedCheck >= 0 && forcedCheck < injuryYearCheck && forcedCheck < demotionCheck);
 assert.match(game, /retireBelowActiveMinimum\(\)/);
-assert.match(game, /card\('bad','現役続行を断念','総合力が現役続行の最低基準を下回ったため、ユニフォームを脱ぐことを決断した。'\)/);
-assert.doesNotMatch(game, /権限移譲を受け入れる/);
-assert.match(game, /LV\[targetLevel\]\.n\+'への降格を受け入れる'/);
+assert.match(careerMovement, /card\('bad','現役続行を断念','総合力が現役続行の最低基準を下回ったため、ユニフォームを脱ぐことを決断した。'\)/);
+assert.doesNotMatch(game + careerMovement, /権限移譲を受け入れる/);
+assert.match(careerMovement, /LV\[targetLevel\]\.n\+'への降格を受け入れる'/);
 
 // NPBから海外、海外からNPBへの復帰を明示的な種別で区別する。
 assert.equal(crossOfferType('NPB', 'MiLB'), 'overseas_transfer');
@@ -64,30 +65,30 @@ for (const org of ['KBO', 'CPBL', 'MiLB', 'MLB']) {
 }
 assert.equal(crossOfferType('MiLB', 'KBO'), 'overseas_to_overseas');
 assert.equal(crossOfferTitle(crossOfferType('MiLB', 'KBO')), '移籍オファー');
-assert.match(game, /t:`NPBへ復帰：\$\{rec\.name\}`/);
-assert.match(game, /\['KBO','CPBL','MiLB','MLB'\]\.includes\(S\.org\)/);
-assert.match(game, /lv=o>=53\?'NPB1':'NPB2',candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);
-assert.match(game, /s:`\$\{LV\[lv\]\.n\}契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
-assert.match(game, /contractNeedsRenewal\(S\.ct\)/);
-assert.match(game, /complete\(\(\)=>\{context\.years\?\?=ri\(1,3\);signTo\('NPB',lv,rec\.teamId,context\.years,1,'RETURN',\{annualSalary,candidate,transaction:context\.transaction\}\)/);
-assert.match(game, /t:'現在の球団に残留',main:true,f:finish/);
+assert.match(careerMovement, /t:`NPBへ復帰：\$\{rec\.name\}`/);
+assert.match(careerMovement, /\['KBO','CPBL','MiLB','MLB'\]\.includes\(S\.org\)/);
+assert.match(careerMovement, /lv=o>=53\?'NPB1':'NPB2',candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);
+assert.match(careerMovement, /s:`\$\{LV\[lv\]\.n\}契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
+assert.match(careerMovement, /contractNeedsRenewal\(S\.ct\)/);
+assert.match(careerMovement, /complete\(\(\)=>\{context\.years\?\?=ri\(1,3\);signTo\('NPB',lv,rec\.teamId,context\.years,1,'RETURN',\{annualSalary,candidate,transaction:context\.transaction\}\)/);
+assert.match(careerMovement, /t:'現在の球団に残留',main:true,f:finish/);
 
 // v1.4.5追加回帰: NPB降格時のCPBLオファーは、移籍前階層から計算した表示年俸を契約へ引き継ぐ。
-assert.match(game, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:'CPBL1',contractMult:1\}\)\.annualSalary/);
-assert.match(game, /s:`台湾プロ野球一軍契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
-assert.match(game, /signTo\('CPBL','CPBL1',undefined,undefined,undefined,undefined,\{annualSalary\}\)/);
-assert.match(game, /\{t:LV\[targetLevel\]\.n\+'への降格を受け入れる',main:true,f:\(\)=>\{const fromLv=S\.lv;S\.lv=targetLevel;applyDemotionSalary\(fromLv,targetLevel\)/);
+assert.match(careerMovement, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:'CPBL1',contractMult:1\}\)\.annualSalary/);
+assert.match(careerMovement, /s:`台湾プロ野球一軍契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
+assert.match(careerMovement, /signTo\('CPBL','CPBL1',undefined,undefined,undefined,undefined,\{annualSalary\}\)/);
+assert.match(careerMovement, /\{t:LV\[targetLevel\]\.n\+'への降格を受け入れる',main:true,f:\(\)=>\{const S=getState\(\);const fromLv=S\.lv;S\.lv=targetLevel;applyDemotionSalary\(fromLv,targetLevel\)/);
 
 // 再契約の資格・並びは保持し、NPB育成も同じ候補価格スナップショットを使用する。
-assert.match(game, /pushPro\('NPB','NPB_DEV','NPB育成再契約'\)/);
-assert.match(game, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1,transferType:'RELEASE_RECONTRACT'\}\)/);
-assert.match(game, /s:`\$\{LV\[lv\]\.n\}契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
-assert.match(game, /signTo\(org,lv,rec\.teamId,1,1,'RELEASE_RECONTRACT',\{annualSalary,candidate\}\)/);
+assert.match(careerMovement, /pushPro\('NPB','NPB_DEV','NPB育成再契約'\)/);
+assert.match(careerMovement, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1,transferType:'RELEASE_RECONTRACT'\}\)/);
+assert.match(careerMovement, /s:`\$\{LV\[lv\]\.n\}契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
+assert.match(careerMovement, /signTo\(org,lv,rec\.teamId,1,1,'RELEASE_RECONTRACT',\{annualSalary,candidate\}\)/);
 for (const route of [
   "pushPro('KBO','KBO1'", "pushPro('KBO','KBO2'",
   "pushPro('CPBL','CPBL1'", "pushPro('CPBL','CPBL2'",
   "pushPro('MiLB','A3'", "pushPro('MiLB','A2'", "pushPro('MiLB','A1'", "pushPro('MiLB','R'",
-]) assert.ok(game.includes(route), route);
+]) assert.ok(careerMovement.includes(route), route);
 
 // 長い球団名はチーム列だけ最大2行とし、成績列は横スクロール内で改行させない。
 const careerRetirement = await readFile(path.join(root, 'docs/src/engine/career-retirement.js'), 'utf8');

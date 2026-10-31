@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {execFileSync} from 'node:child_process';
-const current=fs.readFileSync('docs/src/engine/game.js','utf8');
+const current=fs.readFileSync('docs/src/engine/career-movement.js','utf8');
 const baseline=execFileSync('git',['show','6e06b1b64abc5f8be1a1a42d68e44c4d1944a16d:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
 // Phase 4-A deleted the base definition; current sources declare the overlay version, the baseline assigns it.
 function active(source){return source.match(/^  (?:function daibaFarewell\(cont\)|daibaFarewell = function\(cont\)).*$/m)?.[0]??assert.fail('missing active definition');}
 function run(source,state){
-  const cards=[],ctx=vm.createContext({S:structuredClone(state),card:(...v)=>cards.push(v),calls:0,R:()=>assert.fail('farewell consumed main RNG')});
+  const cards=[],ctx=vm.createContext({S:structuredClone(state),getState:()=>ctx.S,card:(...v)=>cards.push(v),calls:0,R:()=>assert.fail('farewell consumed main RNG')});
   vm.runInContext(source+';daibaFarewell(()=>calls++);daibaFarewell(()=>calls++);',ctx);
   return {state:JSON.parse(JSON.stringify(ctx.S)),calls:ctx.calls,cards};
 }

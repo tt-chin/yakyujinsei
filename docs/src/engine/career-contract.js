@@ -47,7 +47,18 @@ export class CareerContract {
   arbitrationFlow(){return this.#rules.arbitrationFlow();}
 }
 
-function careerContractRules({getState,LV,PATHS,careerSession,salaryDetailController,fixedContract,salaryCandidate,salaryFor,applyKboForeignPackageCap,clamp,dpMult,ovr,slgOf,fmtMoney,card,board,choose,faYears,escapeHTML,teamRec,listByOrg,pickRecord,reportFlowOutcome,crossOffers,rng:{chance}}){
+function careerContractRules({getState,LV,PATHS,careerSession,salaryDetailController,fixedContract,salaryCandidate,salaryFor,applyKboForeignPackageCap,clamp,dpMult,ovr,slgOf,fmtMoney,card,board,choose,escapeHTML,teamRec,listByOrg,pickRecord,reportFlowOutcome,crossOffers,rng:{chance}}){
+  function faYears(d,cap){ /* FA契約年数は成績が安定し故障が少ないほど長くし、上限は野手15年・投手7年。 */
+    const S=getState();
+    const perf=Math.max(0,Math.min(1,(d+2)/8)); /* d=-2→0、 d=6→1 */
+    const injPenalty=(S.bigInj||0)*0.12+(S.tjCount||0)*0.15;
+    let yrs=Math.round(2+perf*(cap-2)-injPenalty*cap);
+    /* 球団は引退年齢と衰えを考慮し、ベテランへ長期契約を提示しない。 */
+    let ageCap=cap;
+    if(S.age>=36)ageCap=2; else if(S.age>=34)ageCap=3; else if(S.age>=32)ageCap=5; else if(S.age>=30)ageCap=8;
+    yrs=Math.min(yrs,ageCap);
+    return Math.max(1,Math.min(cap,yrs));
+  }
   function termParams(d,lv){ /* 長期契約 >2 年、短期契約 1-2 年;年齢大または成績爛 → 不十分格長期契約。 */
     const S=getState();
     const cap=S.pos==='P'?7:15;
