@@ -3386,6 +3386,59 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 推論（未驗證）：被 e2e 替換的名稱若搬入同一模組，模組內互相呼叫會繞過替換，可能須全部經 late-binding 注入；成本集中在契約與市場。
 - 未做：scratch 組裝＋Quick；純函式清單（語句內判定無法排除遞移副作用，避免重犯 §3.9 的高估）。
 - 建議（未決）：若立計畫，先試做業餘（不含 `newState`）並以注入 `reportFlowOutcome` 驗證接縫；契約・市場・移籍判定視為同一領域，依試做實際成本再決定；年度流程依 §3.6 最後。
+- 後續：上方「推論」與「視為同一領域」已由 §3.17 實測更新；本節保留調查當時的原文。
+
+### 3.17 e2e 重綁與模組內呼叫實測（2026-10-31，基準 `2cc1c80`，`docs/src/engine/game.js` 1388 行；**未決**，不授權實作）
+
+- 方法：scratchpad 腳本以 acorn＋eslint-scope 盤點頂層語句、呼叫端與測試字串；另以 AST 組裝腳本在 scratchpad worktree 把指定語句搬入 scratch 模組（本體逐字，自由名稱全經 late-binding getter），再實跑測試。腳本與草稿不進 repo。本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14。
+- 更正 §3.16：e2e 替換清單與賦值掃描含字串切片誤判。`crossOffers`、`daibaFarewell`、`professionalMoves`、`recordSalaryEvaluation`、`appendContractExtension`、`applyDemotionSalary` 的命中只是 vm 切片或 regex，不是執行期重綁。
+
+瀏覽器 hook 實際重綁、屬於契約・市場・移籍判定的名稱共 7 個，其中 4 個有模組內呼叫（模組內讀取點，定義與寫入不計）：
+
+| 名稱 | 只搬契約 | 契約＋市場＋移籍判定 |
+|---|---:|---:|
+| `salaryFor` | 9 | 15 |
+| `salaryCandidate` | 6 | 14 |
+| `fixedContract` | 4 | 5 |
+| `signTo` | 0 | 7 |
+| 合計 | 19 | 41 |
+
+- `demotionAudit`、`tradeCheck` 只由流程層 `runSeasonPipeline` 呼叫，流程留在 `game.js` 時無繞過。`movement` 的呼叫端在流程層與覆寫層，唯一內部讀取點是 `performMovement`（`const performMovement=movement`），本次未實測。
+
+繞過實測：
+
+| 變體 | 搬移 | 模組內呼叫 | `stage10-risk` | `stage6-state-transaction` | `stage7-safety` | `contract-salary` |
+|---|---|---|---:|---:|---:|---:|
+| P0 | `nextContractId`、`fixedContract`、`signingRenderRetry`、`signTo` | 直接 | 54／3 FAIL | 4／1 FAIL | 16／1 FAIL | 381／0 |
+| P1 | 同 P0 | `fixedContract` 1 處走 late-binding | 57／0 | 5／0 | 17／0 | 381／0 |
+| C0 | 契約全部（45 語句） | 全部直接 | 54／3 FAIL | 4／1 FAIL | 16／1 FAIL | 381／0 |
+| Shadow | 契約全部 | `fixedContract`、`salaryCandidate`、`salaryFor` 走 late-binding | 57／0 | 5／0 | 17／0 | 381／0 |
+
+- 結論：§3.16 的推論成立，且分兩類。故障注入類 hook 會 FAIL（3 支共 5 項，皆為 `fixedContract` 注入：`C-*-after-create`、`sign-fault-atomicity`、`sign-validation-before-commit`）；觀察類 hook 會無聲失效。
+- 無聲失效量測：P0／P1 的 `contract-salary-e2e` 都 381 PASS，但 47 個案例的 `fixed` 紀錄不同（遞迴計數 578 vs 719，例如 `cross-A1-NPB` 0 vs 3）；`__fixed` 有收集，未見斷言。
+- C0 與 P0 的 FAIL 完全相同，且 C0 的 `kbo-renewal-e2e` 也 PASS：`salaryCandidate`、`salaryFor` 的繞過在這 5 支測試中沒有任何 FAIL。不得以測試 PASS 證明沒有繞過，須另做專用負控制。
+
+配置（已實測）：實作函式改用內部名稱，同名 late-binding lambda 保留原名，由模組回傳實作。呼叫點不變，本體只差定義 token（3 個名稱共 4 處，`salaryCandidate` 含宣告與賦值）。Shadow 的 `game-view-dom-e2e --baseline=2cc1c80…` 8 段生涯 DOM／`S`／RNG 一致。
+
+邊界比較（皆為走 late-binding 的草稿；另一欄 H1 不含 `movement`、`performMovement`、`professionalMoves`，走 late-binding 的名稱為全部 4 個）：
+
+| | C1：只搬契約 | H1：契約＋市場＋移籍判定 |
+|---|---|---|
+| 搬移 | 45 語句／184 行 | 64 語句／409 行 |
+| `game.js`（草稿，含全部薄包裝） | 1250 行 | 1044 行 |
+| 自由名稱 | 62（`game.js` 本地 24；import 38） | 83（本地 28；import 55） |
+| Quick | 58 PASS／10 FAIL | 54 PASS／14 FAIL（含 1 項 SIGSEGV，見下） |
+| `game-view-dom-e2e --baseline=2cc1c80…` | 8 段一致 | 8 段一致 |
+| 其他 15 支相關 e2e | PASS | PASS（`contract-salary-e2e` 須先處理輔助檔，見下） |
+
+- Quick FAIL 全為文字或切片耦合，無行為差異。C1 10 檔：改錨點或 regex 目標的 `draft-bonus-display`、`draft-signing-policy`、`income-summary`、`salary-flow`、`salary-promotion-policy`、`school-policy`（切片尾 `\n  const nextContractId`）、`trait-policy`（切片尾 `let applyPromotionSalary=`）；須改 vm 組裝的 `kbo-renewal-floor`、`npb-return-ui`、`salary-evaluation-receipt`。H1 另加 `career-movement-policy`、`npb-farewell`、`ui-foundation`。測試停在第一個失敗，檔數是準確的下限，斷言數未實測。
+- 字面上限（未去雜訊）：契約 16 字串＋28 regex、市場 15＋21、移籍判定 26＋42；移籍判定 regex 含多支 e2e 各 1 筆的共用雜訊。
+- `career-session-access.mjs`：以 `source.includes('careerSession.<欄位>')` 判斷欄位。`npbReturnOfferContext` 的文字只在市場領域（`crossOffers`），搬走後 H1 的 `contract-salary-e2e` 丟 `CAREER_SESSION_FIELD_MISSING`；C1 不觸發。scratch 修補（改判斷 `careerSession`）後含 `--compare=2cc1c80…` 381／0，但該修補拿掉欄位檢查，不可採用；正式修法須保留舊 baseline 判斷，影響 6 支使用此輔助檔的 e2e。
+- `movement` 不可機械搬移：`LEGACY` 於載入時擷取第一層，`performMovement` 再包第二層；換成薄包裝會使 `LEGACY.movement` 指回最外層而遞迴。
+- `event-integration.test` 間歇 `SIGSEGV`（exit 139）：乾淨 `2cc1c80` 2／40，C1 1／40，H1 0／40（另有 Quick 當次 1 次、先前 5 次重跑中 1 次）。乾淨樹同樣發生，判定非草稿造成，CI 是否發生未確認，不列入 H1 的耦合檔數。
+- 執行限制：直接執行的 e2e 為 Full 形式（無 `--quick`／`--fixtures-only`），`--ui-only`／`--quick` 依 manifest `args`；`draft-income-e2e` 未帶 `--baseline`；`contract-salary-e2e` 只有 H1 修補後帶 `--compare`。第一輪漏帶 manifest `args` 的 `championship-intl`、`global-contract-market`、`trait-system` FAIL 在乾淨 HEAD 同樣發生，補參數後 C1／H1 皆 PASS。
+- 未做：Full、Linux CI、Preview；`movement`／`performMovement` 的繞過；C1／H1 修測試後的 Quick。草稿用 getter 接線，不是 §2y 的解構 deps＋`getState`，結果只證明接縫可行，不是實作驗收。
+- 建議（未決）：第 22 期只搬契約，採 Shadow 配置處理 `fixedContract`、`salaryCandidate`、`salaryFor`，並為每個名稱加抵達探測或負控制；`signTo` 在契約內無呼叫端，留一般 lambda。市場與移籍判定另立一期，與 `career-session-access` 修法一起處理；這取代 §3.16「三者視為同一領域」。年度流程維持最後。
 
 ## 4. 使用者決定（2026-10-18）
 
