@@ -2966,6 +2966,10 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - NOT_RUN：`retirement-hof-pilot`（audit）、`retirement-hof-analysis`（手動，會改寫報告）、`tools/development-b/runtime.mjs`（手動）。依賴的 `endGame`、`tierOf`、`TIER_TH` 於 `game.js` 作用域仍在，屬靜態判斷，未實跑。
 - CI：未執行（尚未 push；PR → `dev` 不觸發 CI）。
 
+### 2x.7 交付（2026-10-31）
+
+- `refactor/retirement-hof` push（`d771213`），PR #40 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
