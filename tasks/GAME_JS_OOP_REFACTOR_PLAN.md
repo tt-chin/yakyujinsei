@@ -2774,6 +2774,94 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2v.7 交付（2026-10-31）
 
 - `refactor/event-romance` push（`560ed13`），PR #38 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
+- PR #38 已併入 `dev`（`9f8664a`，2026-10-31）；該 merge commit 的 `dev` push Quick CI 結果未確認。
+
+## 2w. 第 19 期：獎項移至 `docs/src/engine/season-awards.js`（細部計畫，2026-10-31；計畫已批准）
+
+路線見 §3.15（葉領域 7 期之第 6 期）。§3.15 所列 `32261d6:1074–1259` 於基準為 `:641–826`。
+
+### 2w.1 現況（2026-10-31 grep 抽查＋scout 唯讀調查＋scratchpad 18 字元 n-gram 掃描＋跨區切片機械掃描，基準 `origin/dev` `9f8664af38034055f1c1ba1450519ce535e44efe`，`docs/src/engine/game.js` 1942 行）
+
+- 區段：`awards`（`:641–657`）、`renderCheckpointCard`（`:658–672`）、`collectLegacyAwardPlan`（`:673–826`）；緊接 `let applyPromotionSalary`（`:827`）。區段 186 行皆 CRLF，每行反引號數為偶數，無跨行 template。
+- RNG：直接呼叫點只有 `collectLegacyAwardPlan:684` 的 `const draw=(id,p)=>captureAwardSlot(tx,id,p,()=>R(),()=>realState.rngState);`（`R` 1、`ri`／`chance`／`pick` 0）；14 個 `draw('…')` 全經此行。
+- 外部呼叫端：`awards` 只有 `resumeProfessionalSeason:616`；`renderCheckpointCard` 另有 `phaseEnd` 的 `:1853`（冠軍）、`:1864`（付款）；`collectLegacyAwardPlan` 無外部引用。不在 `LEGACY`（`:1417`）。
+- `S` 與 `SEED`：`awards` 讀全域 `S`（`:642`、`:643`、`:655`）；`collectLegacyAwardPlan` 以參數 `realState` 讀取並自宣告 `const S=structuredClone(before)`（`:682`），`:794` 讀全域 `SEED`（`let`，會重新賦值）；`isSP()` 讀全域 `S`。本區無延遲 closure：`awardPlan`／`awardInputs`（`award-transaction-policy.js:88–89`）同步呼叫 `create()`。
+- 自由名稱：`LV`（`:144`）、`clamp`（`:71`）、`traitPresentation`（`:253`）、`isSP`（`:202`）、`teamNick`（`:452`，無重新賦值）、`R`、`renderCheckpointCard`；import 的 `annualAwardTransaction`、`preallocateAwardSlots`、`captureAwardSlot`、`prepareAwardReceipt`、`commitAwardReceipt`、`awardPlan`、`awardInputs`、`prepareD2AwardDecisions`、`recordAwardDecisions`、`completeAwardDecisions`（`award-transaction-policy.js`）、`getAwardDefinition`（`award-identity-policy.js`）、`hasCurrentAwardEffect`（`award-consumer-policy.js`）、`TRAIT_TEXT`、`traitLabel`、`awardTraitUnlocks`（`trait-policy.js`）。
+- 測試耦合：
+  - vm 切片：`award-journal-native.test:27`、`tools/development-b/award-runtime-support.mjs:37`（供 `pitcher-award-integration.test`、`award-history-b-comparison.test`）以 `productionFunction` 取三函式；`trait-policy.test:108` 以 `function awards(`→`let applyPromotionSalary=` 切片；`championship-intl.test:75` 取 `renderCheckpointCard`。
+  - 這些 harness 於 vm context 以包裝函式做故障注入或記錄：`captureAwardSlot`（三處）、`prepareD2AwardDecisions`、`commitAwardReceipt`、`completeAwardDecisions`；`card` 亦為 stub。
+  - `salary-flow.test:46–47`、`:71`、`:76–78`：`journalBridge` 唯一性、`R(` 19、14 槽順序、`chance(`＋槽數 27，皆對 `game.js`。`abilityBridge='rng:{R:()=>R()}'` 要求在 `game.js` 只出現一次。
+  - 原文斷言（不受影響，呼叫留在 `resumeProfessionalSeason`）：`full-power-pitching-e2e:34–36`。
+  - e2e hook（在 `game.js` 作用域）：`support/first-difference` 的 `phoenixAwardProbe` 重新賦值 `awards`（`full-power-pitching-e2e`、`international-personal-stats-e2e`）；`trait-system-e2e:16` 直接呼叫 `awards`；`tools/development-a|b/careers.mjs`（`awards=`）、`tools/development-b/runtime.mjs`（`awards`、`card=`、`annualAwardTransaction`）不在 manifest，由 `receipt-careers.mjs` 等獨立執行。
+  - 確認不受影響：`verify-modularization` 無模組清單斷言；`check-syntax` 掃描新檔；`award-identity-policy` 凍結名單不含新檔；`docs/reviews/development-a/before-hashes.json` 為歷史雜湊；其餘 n-gram 命中為共通語法或測試自有副本（抽查）。跨區切片掃描：無起點在區段前、終點在區段後的切片。
+- 範圍外（不動，記錄）：`tools/development-b/legacy-slot-source-check.mjs` 不在 manifest，於基準已 FAIL（`seedInit`／`R` 文字比對 `efd4710`，第 1 期 `Rng` 後即不成立），搬移後改於切片處失敗；`docs/design/MODULE_FUNCTION_INDEX.md` 行號；`game.js` import 行中搬移後不再於產品碼使用的名稱（保留，`tools/development-b/runtime.mjs` 等 hook 亦引用）。
+
+### 2w.2 設計（使用者決定 2026-10-31：D1 命名 `season-awards.js`／`SeasonAwards`；D2 `renderCheckpointCard` 留在 `game.js`，修正 §3.15；D3 award transaction／identity／consumer 共 12 個 policy 由建構子注入，修正 §2v D4 的直接 import 慣例）
+
+- 新檔 `docs/src/engine/season-awards.js`（LF）：
+  - `import { TRAIT_TEXT, traitLabel, awardTraitUnlocks } from './trait-policy.js';`
+  - `class SeasonAwards`，方法 `awards(bucket,st)`。
+  - 工廠 `seasonAwardRules({getState,getSeed,LV,clamp,traitPresentation,isSP,teamNick,renderCheckpointCard,journalRng:{R},…12 個 policy})` 內依原順序含 `awards`、`collectLegacyAwardPlan`，本體逐字（+2 縮排）。
+- 逐字搬移外的差異只有 2 行：`awards` 開頭 `const S=getState();`、`collectLegacyAwardPlan` 開頭 `const SEED=getSeed();`。後者不插 `getState`（`:682` 已宣告 `S`）。
+- D2 理由：`renderCheckpointCard` 是通用的收據式卡片繪製，3 個呼叫端中 2 個屬季末流程。D3 理由：§2w.1 的 harness 故障注入須經 vm context 取得 policy，直接 import 會繞過；注入後舊／新比較經真實 class 與建構行執行。`trait-policy` 3 名稱未被 harness 替換，直接 import。
+- `game.js`：
+  - `:641–657` → `function awards(bucket,st){seasonAwards.awards(bucket,st);}`，其後接建構行（隨 `productionFunction('awards')` 進入 vm，比照 §2s）。維持函式宣告以容納 `awards=` 再賦值。
+  - `:658–672` 不動；`:673–826` 刪除；`import { SeasonAwards } from './season-awards.js';` 加在 `PlayerRomance` import 之後。
+- 注入：getter `getState:()=>S`、`getSeed:()=>SEED`；參照 `LV`、`clamp`、`traitPresentation`、`teamNick` 及 12 個 policy；late-binding lambda `isSP`、`renderCheckpointCard`；RNG bridge `awardsBridge='journalRng:{R:()=>R()}'`（8 個 bridge 兩兩無子字串，草稿已檢查）。
+- TDZ：建構行引用的名稱皆在 `:641` 之前宣告或為 hoisted 函式。
+- `game.js` 為 CRLF：只刪除區段並插入新行，非整檔重寫。一個實作 commit。
+
+### 2w.3 測試變更（使用者已批准 2026-10-31；皆已於 scratchpad 草稿驗證）
+
+- T1 `salary-flow.test`：`journalBridge` 改斷言於 `season-awards.js` 出現一次、於 `game.js` 不出現；新增 `awardsBridge` 於 `game.js` 只出現一次，`gameSites` 排除之；`legacyJournalSlots` 改讀新模組；新模組計數 `[1,0,0,0]`。期望值不變：`R(` 19、`ri(` 32、`chance(`＋槽數 27、14 槽順序。註解記錄本期移動。
+- T2 `award-journal-native.test`：vm context 加 `SeasonAwards`；`renderCheckpointCard` 改無條件切片，`collectLegacyAwardPlan` 維持條件式（`efd4710` 側仍需要）。
+- T3 `tools/development-b/award-runtime-support.mjs`：同 T2。
+- T4 `trait-policy.test`：`journalFixture` 的 context 加 `SeasonAwards`；切片與舊 SHA 側不變。
+- T5 `tools/development-b/legacy-slot-source-check.mjs`（使用者於實作後另行批准 2026-10-31，更正 §2w.1 的「範圍外」；reviewer 同樣指出此檔）：獎項區塊改讀 `season-awards.js` 並去除 2 空白縮排；`seedInit`／`R` 改為比對 `rng.js` 的種子與步進原文，並固定 `game.js` 的兩行委派。`efd4710` 側不變。不加入 manifest，仍為手動工具。
+- 其他測試變更：預期無。若實作中發現需變更，先停止並請求批准。
+
+### 2w.4 驗證（R3／L3：RNG 呼叫點搬移，行為與 RNG 消耗不變；允許差分：無）
+
+- 逐字比對：新模組去除 2 行插入與 2 空白縮排後，與 `9f8664a` 對應區段逐位元組相同。
+- `node --check`、`check-syntax`、`verify-modularization`；`salary-flow`、`trait-policy`、`award-journal-native`、`pitcher-award-integration`、`award-history-b-comparison`、`award-identity-policy`、`award-consumer-contract`、`award-legacy-consumer`、`award-transaction-policy`、`championship-intl`、`full-power-pitching`、`event-integration`、`kbo-renewal-floor`、`npb-return-ui`（`.test`）。
+- 等價比較（scratchpad 腳本）：`9f8664a` 本區於 vm vs 真實 `SeasonAwards`，相同 stub 與確定性 RNG；4 聯盟 × `P`（`SP`／`MR`／`CL`）／野手 × 成績門檻 × `seasonFactor` × 特性組合（`yips`／`glass`／`phoenix`）×重入；比較 `S`、卡片、RNG 次數與順序、例外。
+- 負控制（scratchpad 變體）：調換兩個 `draw` 槽順序；改一個機率常數；刪除 `traitPresentation` 清除；`getSeed` 改回傳固定值。
+- 接縫抵達探測（帶標記 `console.log`，舊／新樹各跑）：`trait-system-e2e`、`international-personal-stats-e2e`。
+- e2e（Brave）：`trait-system-e2e`、`international-personal-stats-e2e`、`full-power-pitching-e2e --part=fixtures`。
+- `game-view-dom-e2e --baseline=9f8664af38034055f1c1ba1450519ce535e44efe`（直接執行）：8 段生涯 DOM／`S`／RNG 一致。
+- Quick；Full（比照 §2u 的 scratchpad worktree 4 組平行）。
+- reviewer：執行（多檔、>20 行）。目視：不適用（DOM 輸出不變）。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為的內部重構）。
+
+### 2w.5 分支與交付
+
+- `refactor/season-awards`（自 `origin/dev` `9f8664a`，`--no-track`）。本計畫先單獨 commit；實作 commit、push、PR 另批。
+
+### 2w.6 實施結果（2026-10-31，本機 macOS，Brave＋`--disable-features=BraveFarbling`；分支 `refactor/season-awards`，實作 commit `bbaac33`，T5 commit `3674ccd`，比較基準 `9f8664a`）
+
+- 行號更正：無。scratchpad 組裝腳本自 `9f8664a` 原文取行，對 `:641`、`:657`、`:658`、`:672`、`:673`、`:826`、`:827` 的斷言全部成立；區段每行反引號數為偶數。
+- `game.js` 1942 → 1774 行（CRLF 保持，numstat `+3／−171`）；`season-awards.js` 189 行（LF）。測試變更只有 T1–T4（numstat `+11／−4`、`+3／−2`、`+2／−1`、`+3／−2`）及 T5（`+9／−2`）。
+
+| 項目 | 結果 |
+|---|---|
+| 逐字比對（新模組去除 2 行插入與 2 空白縮排 vs `9f8664a`） | 171 行差異 0；`game.js` 其餘行相同，新增只有 `:23`、`:642`、`:643` |
+| `check-syntax`（185 檔）、`verify-modularization` | PASS |
+| 2w.4 所列 14 個單元測試 | 14／14 PASS |
+| 等價比較（scratchpad，`9f8664a` 本區於 vm vs 真實 `SeasonAwards`，相同 stub 與真實 `Rng`；比較 `S`、卡片、RNG 前後值、例外、`traitPresentation`；每例連跑 2 次） | 60,000 例差分 0。4 聯盟 × 投手 3 角色／野手；5 種故障（`captureAwardSlot`、`prepareD2AwardDecisions`、`commitAwardReceipt`、`completeAwardDecisions`、`card`）各約 6,000 例；提前返回 9,054 例；決定 263,191 筆，18 種 `awardId` 皆有得獎；`phoenix` 解放 8,642、三冠 2,471、`yips` 克服 19,410 例 |
+| 等價負控制（每項 20,000 例）：調換 `BATTING_HR`／`BATTING_SB` 槽／`RBI` 機率係數 2→3／刪 `traitPresentation` 清除／`SEED` 固定值／`commitAwardReceipt` 與 `completeAwardDecisions` 順序對調（計畫外加項） | 差分 4,573／1,450／8,078／16,999／16,999；基準重跑 20,000 例差分 0 |
+| 接縫抵達探測（帶標記 `console.log`，舊樹置於 `awards` 開頭、新樹置於模組 `awards` 開頭；`trait-system-e2e`、`international-personal-stats-e2e`） | 舊／新各 131 次，序列相同，兩樹 PASS |
+| e2e（Brave）：`trait-system`、`international-personal-stats`、`full-power-pitching`（manifest `--part=fixtures`） | 3／3 PASS（8／268／95 秒） |
+| `game-view-dom-e2e --baseline=9f8664af38034055f1c1ba1450519ce535e44efe`（直接執行） | 8 段生涯 DOM／`S`／RNG 一致（167 秒） |
+| Quick | 68／68 PASS（155 秒） |
+| Full（scratchpad clone 臨時 commit `3eb637b`，與 `bbaac33` 的 6 個變更檔逐位元組相同；`splitIds(fullIds(),4,id=>fullSeconds().get(id))` 22／24／22／25，計 93；未傳 `--baseline`，解析為 `04decb0`） | 93／93 PASS（743／399／647／470 秒）。本機 macOS＋Brave，非 CI 的 Linux Chromium |
+| `legacy-slot-source-check.mjs`（T5 後） | 4／4 PASS；改公式係數、改 `t|61` 的變體皆 FAIL。不在 manifest，上列 Quick／Full 未執行此檔 |
+| reviewer | 1 項：`legacy-slot-source-check.mjs` 未更新（已由 T5 處理）；自由名稱、`isSP` 綁定、TDZ、參照注入、斷言強度、harness 舊基準皆無問題 |
+
+- 與計畫的差異：Full 用 scratchpad clone（非 worktree）；負控制多 1 項。
+
+### 2w.7 交付（2026-10-31）
+
+- `refactor/season-awards` push（`fc2b060`），PR #39 → `dev`（標題與說明為繁體中文）。PR → `dev` 不觸發 CI。未修改 `main`。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 

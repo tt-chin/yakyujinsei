@@ -11,6 +11,7 @@ import {ensureEventState,beginEvent,applyEvent} from '../docs/src/engine/event-s
 import {EVENT_CATALOG} from '../docs/src/data/event-cards-jp.js';
 import {JP_DATA} from '../docs/src/data/jp-data.js';
 import {PlayerInjury} from '../docs/src/engine/player-injury.js';
+import {SeasonAwards} from '../docs/src/engine/season-awards.js';
 
 assert.equal(Object.keys(policy.TRAIT_LABELS).length,38);
 assert.deepEqual(policy.DEFERRED_TRAITS,['championmaker','nitenichi'],'G7 implements the existing pitcherTC definition');
@@ -108,7 +109,7 @@ const oldGame=execFileSync('git',['show','9fcb24a:docs/src/engine/game.js'],{enc
 const awards=source=>source.slice(source.indexOf('function awards('),source.search(/^(?:function maybeIntl\(|let applyPromotionSalary=)/m));
 function journalFixture(ctx,chances,state){
  Object.assign(state,{seed:'trait-award-fixture',pool:0,removed:[],rngState:0});
- Object.assign(ctx,transactions,{SEED:state.seed,getAwardDefinition,structuredClone,hasCurrentAwardEffect,teamNick:x=>x,traitPresentation:new WeakMap(),R:()=>{state.rngState++;return .9999999999;},
+ Object.assign(ctx,transactions,{SeasonAwards,SEED:state.seed,getAwardDefinition,structuredClone,hasCurrentAwardEffect,teamNick:x=>x,traitPresentation:new WeakMap(),R:()=>{state.rngState++;return .9999999999;},
  captureAwardSlot:(...args)=>{chances.push(args[2]);return transactions.captureAwardSlot(...args);}});
 }
 function historicalResult(state,ctx){
