@@ -42,4 +42,24 @@ test('state is read on every call (new career after S is reassigned)',()=>{
   let S=fixtures['P minimal'];const presenter=new CareerPresenter({getState:()=>S,labels,...helpers});
   assert.equal(presenter.ability().positionLabel,labels.POSN.P);S=fixtures['IF contract without schedule'];assert.equal(presenter.ability().positionLabel,labels.POSN.IF);
 });
+// OOP plan §2ff: board() must return exactly what game.js boardModel of 9d25b096c1a7560d1ad32475bdaeab287aa74f90 returned. Every branch has a fixture.
+const boardGame=execFileSync('git',['show','9d25b096c1a7560d1ad32475bdaeab287aa74f90:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}).replace(/\r\n/g,'\n');
+const boardStart=boardGame.indexOf('\nfunction boardModel('),boardEnd=boardGame.indexOf('\nfunction actClear(');
+assert.ok(boardStart>0&&boardEnd>boardStart);const oldBoard=boardGame.slice(boardStart,boardEnd);
+const boardDeps={DPN:{SS:'DP:SS',CF:'DP:CF'},POSN:{P:'PN:P',IF:'PN:IF'},TEAM_COLOR:{red:'#AA0000',white:'#FFFFFF',shortWhite:'#fff'},roleN:role=>'R:'+role,playerType:()=>'TYPE',ovr:()=>77};
+const {DPN,POSN,TEAM_COLOR,...boardHelpers}=boardDeps;
+const boardState=over=>({name:'選手',pos:'IF',dpos:null,role:null,traits:{},stage:'PRO',stageYr:1,team:'高校',orgTeamId:null,age:20,year:2030,currentSalary:12345678,teamName:()=>'球団',...over});
+const boardFixtures={
+  ...Object.fromEntries([1,2,3].map(n=>['HS year '+n,{stage:'HS',stageYr:n}])),...Object.fromEntries([1,2,3,4].map(n=>['U year '+n,{stage:'U',stageYr:n}])),
+  CORP:{stage:'CORP'},IND:{stage:'IND'},'amateur with team color':{stage:'CORP',orgTeamId:'red'},
+  'PRO colored':{orgTeamId:'red'},'PRO white':{orgTeamId:'white'},'PRO short white':{orgTeamId:'shortWhite'},'PRO no color':{orgTeamId:'none'},
+  'position label':{dpos:'SS'},'pitcher role':{pos:'P',role:'SP'},genius:{traits:{genius:true}},'no salary':{currentSalary:undefined},
+};
+for(const [name,over] of Object.entries(boardFixtures))for(const phase of [0,1,2])test('board '+name+' phase '+phase,()=>{
+  const state=boardState(over);
+  const presenter=new CareerPresenter({getState:()=>state,labels:{...labels,POSN,DPN},TEAM_COLOR,...helpers,...boardHelpers});
+  const expected=vm.runInContext(oldBoard+'\nboardModel(phase)',vm.createContext({S:boardState(over),phase,...boardDeps}));
+  assert.deepEqual(shape(presenter.board(phase)),shape(expected));
+});
+assert.equal(Object.keys(boardFixtures).length,18);
 console.log(`career-presenter: ${pass} cases PASS.`);
