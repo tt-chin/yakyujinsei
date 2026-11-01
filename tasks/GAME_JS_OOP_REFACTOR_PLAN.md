@@ -3657,6 +3657,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 實作 commit `92959a1`、結果紀錄皆在 `refactor/run-draft`。已 push，PR #45 → `dev` 待合併，未修改 `main`。
 - 未驗證：Preview。Linux Full CI 結果記於 PR #45。
+- PR #45 已由使用者併入 `dev`（`9d25b09`，樹與 `436f1cc` 相同），Tests #114（Quick）success。
 
 ## 2ff. 第 27 期：`boardModel` 移至 `CareerPresenter`（細部計畫，2026-11-01；計畫已批准，實作已批准）
 
@@ -3711,6 +3712,23 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較與上表突變；reviewer。
 - 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。`docs/design/*.md` 行號不動。
 - 使用者已批准 push 與 PR → `dev`；`main` 不動。
+
+### 2ff.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/board-model`，計畫 commit `ee2eb78`，實作 commit `405d152`，比較基準 `9d25b09`）
+
+`game.js` 901 → 878 行，84,181 → 82,605 bytes。`career-presenter.js` 21 → 45 行，4,837 → 6,754 bytes。測試 1 檔，與 §2ff.3 相同；比 §2ff.4 的草稿多了 fixture 取名整理與舊本體 SHA 改為 `9d25b09`，涵蓋不變。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，`405d152`） | 68／68 PASS，已核對實際入口數 |
+| 分組 Full（`405d152`，`--baseline=9d25b09…`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | `405d152` 對 `9d25b09`：8 段 DOM／`S`／RNG 一致 |
+| 突變：`board()` 本體 20 項 | 結果與 §2ff.4 相同：19 項由 T1 抓到，1 項等價突變存活 |
+| 突變：`game.js` 接線 5 項 | 全部在 `$.dom.board` 抓到（`5e7090c`） |
+| reviewer | 1 項 low：開頭註解第三行仍只提 `build*ViewModel`，已修正（`5e7090c`）。逐字比對、自由名稱、建構式接線、TDZ、`S` 即時讀取、測試非空轉皆無問題 |
+
+- `5e7090c` 只改一行註解，重跑 `career-presenter`、`ui-foundation`、`record-condition-fix`、`information-architecture` 4 個入口 PASS，不重跑 Full。上表 Quick、Full、DOM 比較的受驗 SHA 是 `405d152`。
+- 本輪 `event-integration.test` 未發生 SIGSEGV。
+- 未做：Linux CI、Preview。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
