@@ -3473,6 +3473,26 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 分支 `refactor/code-dead-01`（自 `a0ad197`，無 upstream）。commit 留在本機，push 與 PR 另批。
 - 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3 不改行為）。BACKLOG：CODE-DEAD-01 結案條件見實施結果。
 
+### 2cc.5 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/code-dead-01`，計畫 commit `0ef8e6b`，實作 commit `45cccd7`，比較基準 `a0ad197`）
+
+- 規模：`game.js` 935 → 906 行，92,197 → 86,885 bytes，`+2／−31`。`+2` 為 `:657` 與 `:903` 兩行就地刪去片段，逐字元比對確認沒有新增文字。`career-contract.js` −12 行，`player-romance.js` −1 行。CRLF／LF 維持。
+
+| 檢查（皆在 `45cccd7` 乾淨 worktree） | 結果 |
+|---|---|
+| Quick | 68／68 PASS |
+| 分組 Full（`--baseline=a0ad197…`，含 `game-view-dom-e2e`） | 22＋24＋22＋25＝93／93 PASS，FAIL／BLOCKED／SKIP 皆 0，已核對實際入口數 |
+| 突變（`season-payment-policy.js` 改 `salaryDueForYear`、`markSalaryPaid` 引數文字，改名 `applyIncentivePayment`） | 3 組 `salary-flow.test` 全部 exit 1 |
+| reviewer | 無 blocking；確認唯一的 `S.stage='PRO'` 寫入者是 `signTo`，非 PRO 路徑逐位元組不變，無 RNG 變化 |
+
+- 更正：§3.18 的不可達 3,548 bytes 偏高。`:990`（2,914 bytes）把存活的 `else if(S.stage==='IND')` 分支也算進去了，實際刪除的 `:903` 片段是 1,744 bytes，三處合計 2,390 bytes。n-gram 的「不可達區命中 71 檔」同樣含 IND 分支，不可沿用。
+- 資訊（不動）：`kbo-renewal-floor.test:46` 的 `!contractMoved` 分支仍寫 `game.match(/  const nextContractId=…/)`。`contractMoved` 為真時不會走到，第 22 期起已是如此，非本期迴歸。
+- 未做：Linux CI、Preview。`throw` 變體的 Full 未跑（§2cc.3）。
+
+### 2cc.6 交付（2026-11-01）
+
+- 實作 commit `45cccd7`、結果紀錄皆在本機 `refactor/code-dead-01`。未 push，未開 PR，未併 `dev`，未修改 `main`。
+- `dev` `a0ad197`（第 22～24 期）的 Linux Full CI：Tests #110（`workflow_dispatch`，run `41255259730`）8 批全 success，`full-aggregate` `expected 93`、`acceptedPass 93`、`issues []`。本機 macOS＋Brave 另有同等結果；Preview 未確認。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
