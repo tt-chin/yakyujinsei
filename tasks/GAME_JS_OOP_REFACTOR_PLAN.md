@@ -3914,6 +3914,14 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - `kbo-renewal-e2e` 的 SIGKILL 未查原因，不算該入口抓到；這 3 項都另有入口抓到。
 - 未做：Linux CI、Preview。
 
+### 2hh.7 交付（2026-11-01）
+
+- 實作 commit `a274def` 與結果紀錄皆在 `refactor/initial-state`。[PR #50](https://github.com/tt-chin/yakyujinsei/pull/50) 已併入 `dev`（`7c50eb8`，樹與 `ce9e5e2` 相同），未修改 `main`。
+- [Tests #121](https://github.com/tt-chin/yakyujinsei/actions/runs/41318884454)（`ce9e5e2`，手動 dispatch）Linux Full：8 批全 PASS，`full-aggregate` 為 `expected 94`、`acceptedPass 94`、`issues []`。
+- [Tests #122](https://github.com/tt-chin/yakyujinsei/actions/runs/41320750159)（`7c50eb8`，dev push）Quick：success。
+- Preview（`7c50eb8`）：`docs/index.html` 與 `docs/src` 共 77 檔與 `dev` 相同，Console 0 則，資源無 4xx／5xx，`initial-state.js` 已載入；投手開局（seed `phase29`）正常。
+- 未驗證：捕手、內野手、外野手開局，手機表示，完整生涯，實機。使用者的 Preview 驗收待確認。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
