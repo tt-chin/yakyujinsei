@@ -3733,7 +3733,8 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2ff.7 交付（2026-11-01）
 
 - 實作 commit `405d152`、註解修正 `5e7090c` 與結果紀錄皆在 `refactor/board-model`。已 push，[PR #46](https://github.com/tt-chin/yakyujinsei/pull/46) → `dev` 待合併，未修改 `main`。
-- 未驗證：Linux Full CI（PR → `dev` 不觸發，未手動 dispatch）、Preview。
+- [Tests #115](https://github.com/tt-chin/yakyujinsei/actions/runs/41290421736)（`0de0bac`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 93`、`acceptedPass 93`、`issues []`。
+- 未驗證：Preview。
 - `boardModel` 本體的全形頓號 `rgba` 經使用者同意列入 BACKLOG `UI-BOARD-SHADOW-01`；`CSS.supports` 確認該寫法無效，未修正。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
