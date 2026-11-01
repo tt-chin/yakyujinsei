@@ -3493,6 +3493,57 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 實作 commit `45cccd7`、結果紀錄皆在本機 `refactor/code-dead-01`。未 push，未開 PR，未併 `dev`，未修改 `main`。
 - `dev` `a0ad197`（第 22～24 期）的 Linux Full CI：Tests #110（`workflow_dispatch`，run `41255259730`）8 批全 success，`full-aggregate` `expected 93`、`acceptedPass 93`、`issues []`。本機 macOS＋Brave 另有同等結果；Preview 未確認。
 
+## 2dd. 第 25 期：`movement` L2 業餘分支移至 `AmateurCareer`（細部計畫，2026-11-01；待批准，未授權實作）
+
+基準 `9ad6ef4`（`refactor/code-dead-01`），`game.js` 906 行／86,885 bytes，`amateur-career.js` 101 行／9,151 bytes。路線見 §3.19。
+
+### 2dd.1 現況
+
+- 區段：`docs/src/engine/game.js:876` 單行 `movement = function(){…}` 內，`if(S.stage==='HS')` 至 `accrueForeignFirstTeamSeason(S);` 之前，1,274 bytes，含 4 個 `return;`。
+- RNG 文字呼叫點 0。`S` 直接引用 11 處，closure 8 個都不讀 `S`，所以開頭一行 `const S=getState();` 涵蓋全部讀取。
+- 自由名稱 `reportFlowOutcome`、`pathChoiceHS`、`pathChoiceU4`、`choose`、`setAmateur`、`enterDraftPath` 都已在 `amateurCareerRules` 內，新注入 0、新 import 0。
+- 留在 `game.js`：`migrateSalaryV130State()`、職業尾段（672 bytes，依賴 `LEGACY.movement()`）、`movement = function()` 外殼、L3。
+
+### 2dd.2 設計
+
+- `amateur-career.js`：
+  - `amateurCareerRules` 新增 `function seasonEndMovement(){const S=getState();…return false;}`，放在 `return {` 之前。本體逐字搬入，四個 `if(S.stage===…){…}` 守衛不改寫，只把 4 個 `return;` 改為 `return true;`。
+  - 類別新增 `seasonEndMovement(){return this.#rules.seasonEndMovement();}`，回傳物件加 `seasonEndMovement`。
+- `game.js`：`:876` 的區段換成 `if(amateurCareer.seasonEndMovement())return;`，其他文字不動。
+- `pathChoiceHS`、`pathChoiceU4` 薄包裝保留：`draft-signing-policy.test` 以名稱切片，且切片尾端帶著 `amateurCareer` 建構式。
+- 待決定：
+  - D1 命名：`seasonEndMovement`（回傳「業餘階段已處理」）。
+  - D2 邊界：只搬業餘分支，`runDraft` 下一期。
+  - D3 分支：建議接在 `refactor/code-dead-01` 之後、同一 PR，一次合併、一次 Full CI。
+
+### 2dd.3 測試變更
+
+無。未改測試的 Quick 與 Full 都通過，無錨點、計數或 golden 變更。`salary-flow` 的 RNG 計數不變。
+
+### 2dd.4 草稿實測（2026-11-01，scratch worktree，基準 `9ad6ef4`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 未改測試的 Quick | 68／68 PASS |
+| 分組 Full（`--baseline=9ad6ef4…`，含 `game-view-dom-e2e`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數 |
+| 逐字比對 | 1,274 bytes，還原 `return true;` 後與基準相同，反向對照可偵測 |
+| 抵達探測（seed `20261101`–`20261103` × P／IF，6 段生涯全部結束，無 pageerror） | `movement` L2 與 `seasonEndMovement` 皆 169 次：HS 18、U 20、CORP 106、IND 1、PRO 24 |
+
+| 突變 | 抓到的入口 |
+|---|---|
+| `S.corpYears>=3` → `>=4`；移除 `S.corpYears++`；移除 `game.js` 的呼叫 | `draft-signing-policy.test` |
+| `S.stageYr<3` → `<2`；`S.stageYr<4` → `<3`；移除 `S.indYears++` | `game-view-dom-e2e` |
+| `return false` → `return true` | Quick 的 `bug-act-01-02-e2e`、`kbo-renewal-e2e` |
+| `S.corpYears>=2` → `>=3` | 未抓到（`draft-signing-policy.test`、`game-view-dom-e2e`）；其他 Full 入口未測 |
+
+- `S.corpYears>=2` 是既有缺口：同一突變放在搬移前的 `game.js`，`draft-signing-policy.test` 也不會 FAIL。本期靠逐字比對保護，不擴充測試。
+- 執行紀錄：探測腳本第一次因生涯結束後點到重新開始而中斷，修正後重跑。未測：`movement` 重綁路徑的抵達探測、Linux CI、Preview。
+
+### 2dd.5 驗證與交付（L3／R3：動到進路分岐的確定處理；允許差分為無）
+
+- 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做逐字比對、抵達探測與上表突變；reviewer。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC。push 與 PR 另批。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
