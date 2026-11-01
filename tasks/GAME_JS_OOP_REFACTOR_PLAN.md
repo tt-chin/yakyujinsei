@@ -3920,7 +3920,78 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - [Tests #121](https://github.com/tt-chin/yakyujinsei/actions/runs/41318884454)（`ce9e5e2`，手動 dispatch）Linux Full：8 批全 PASS，`full-aggregate` 為 `expected 94`、`acceptedPass 94`、`issues []`。
 - [Tests #122](https://github.com/tt-chin/yakyujinsei/actions/runs/41320750159)（`7c50eb8`，dev push）Quick：success。
 - Preview（`7c50eb8`）：`docs/index.html` 與 `docs/src` 共 77 檔與 `dev` 相同，Console 0 則，資源無 4xx／5xx，`initial-state.js` 已載入；投手開局（seed `phase29`）正常。
-- 未驗證：捕手、內野手、外野手開局，手機表示，完整生涯，實機。使用者的 Preview 驗收待確認。
+- 未驗證：捕手、內野手、外野手開局，手機表示，完整生涯，實機。
+- 使用者已確認 Preview 驗收（2026-11-02）。
+
+## 2ii. 第 30 期：`choose` 一族移至 `ChoicePrompt`（細部計畫，2026-11-02；計畫已批准，實作已批准）
+
+基準 `319be98`（`origin/dev`，PR #51），`game.js` 841 行／76,009 bytes。路線見 §3.20。
+
+### 2ii.1 現況
+
+- 區段：`docs/src/engine/game.js:265–292`，含 `restorePendingChoice`、`invokeAnnualChoice`、`invokeChoiceAction`、`runWithResultView`、`choose`、`escapeDiagnosticHTML`，RNG 0，`S` 寫入 0。`game.js` 的 `runWithResultView` 另傳給 `PlayerAbility`，`restorePendingChoice` 另有 4 個呼叫點。
+- `S` 引用 24 處。AST 確認須在執行當下讀 `S` 的延遲 closure 是 `onclick`、`restore`、`errorContext` 3 個；§3.20 的 7 個另含同步 callback（`forEach`、`.some`、`.find`）與包住 `runChoiceAction` 的外層 closure。
+- `choiceViews` 由 `PlayerAbility` 共用，`game.js` 的年度續行也直接讀，§3.20 所稱「自己的狀態」實際不歸這一族獨有。
+- `tests`、`tools` 沒有重新賦值這些名稱。`invokeAnnualChoice`、`invokeChoiceAction` 除 `bug-act-01-02-e2e` 的文字錨點外沒有引用。
+- `resultViewDepth`、`currentChoiceAction` 搬移後在 `game.js` 不再有文字，`career-session-access` 改走 live instance（§2aa 機制）。
+
+### 2ii.2 設計（使用者決定 2026-11-02：批准 D1–D8 與 T1–T5）
+
+- D1 新檔 `docs/src/ui/choice-prompt.js`，類別 `ChoicePrompt`，實例 `choicePrompt`。
+- D2 公開 `choose`、`restorePendingChoice`、`runWithResultView`；`#invokeAnnualChoice`、`#invokeChoiceAction` 為私有；`escapeDiagnosticHTML` 為模組內函式，不匯出。
+- D3 `choiceViews`、`yearHandoffs` 留在 `game.js` 傳參考，與 `traitPresentation`（§2gg D3）相同。
+- D4 `scrollAction` 留在 `game.js`（`ui-foundation:21`），以 lambda 注入。
+- D5 本體逐字搬移，+2 縮排。方法開頭取 `S` 與 `#deps`；`onclick`、`restore`、`errorContext` 各自 `const S=getState()`；模組內互呼加 `this.`。
+- D6 `game.js` 留 3 個薄包裝，`state=S` 預設值在包裝內，建構行緊接 `choose` 包裝。`actClear`、`actToggleSync`、`archiveTraitResults`、`card`、`scrollAction`、`scrollBottom`、`$` 用 lambda，`gameView`、`careerSession` 傳參考。
+- D7 `game.js` 的 `createChoiceActionToken`、`runChoiceAction` import 轉為未使用，不刪，總數由 96 增為 98。`game-view.js:40` 註解改指 `ChoicePrompt`。
+- D8 分支 `refactor/choice-prompt`，自 `origin/dev` 以 `--no-track` 開出。不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+
+### 2ii.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 位置 | 變更 | 性質 |
+|---|---|---|---|
+| T1 | `tests/ui-foundation.test.mjs:12,39` | 斷言改查 `choice-prompt.js`，`:39` 隨 D5 更新 | 目標搬移 |
+| T2 | `tests/choice-action.test.mjs:114–115` | `match` 改查模組，`doesNotMatch` 擴大為 `game`＋模組 | 目標搬移＋擴大 |
+| T3 | `tests/bug-act-01-02-e2e.mjs` | `__actionCalls` 錨點改注入模組並斷言恰好一次；移除舊版原始碼分支（此入口無 baseline 比較）；新增 `--preview` 路由 | 目標搬移 |
+| T4 | `tests/choice-prompt.test.mjs` | 新檔。43 情境與 `319be98` 逐項對照，含新 `S` 與錯誤復原，另有固定斷言 | 新增涵蓋 |
+| T5 | `tests/verify-modularization.mjs` | 3 個薄包裝與建構行的全文斷言 | 收緊 |
+
+T4 使 Quick 由 69 增為 70、Full 由 94 增為 95，manifest 依檔名自動分類，不需修改。
+
+### 2ii.4 草稿實測（2026-11-02，scratch worktree，基準 `319be98`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 未改測試的 Quick | 65／69，FAIL 為 `bug-act-01-02-e2e`、`choice-action.test`、`ui-foundation.test`，由 T1–T3 涵蓋；`test-runner.test` 是 `choice-action.test` 的連帶失敗 |
+| 改測試後 Quick（含 T1–T5） | 70／70 PASS |
+| 分組 Full（`--baseline=319be98…`，含 T1–T3，未含 T4、T5 與 `game-view.js` 註解） | 22＋25＋22＋25＝94／94 PASS，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | 草稿對 `319be98`：8 段 DOM／`S`／RNG 一致 |
+| 模組 AST | 未解析名稱只有 `String`、`Error`、`Array`、`Number`、`Boolean`；`S` 讀取 23 處加包裝預設值 1 處，共 24，與 §3.20 相符；寫入 0 |
+| acorn 掃描 `tests`、`scripts`、`tools` 共 145 檔字面值 | 749 regex、11,273 字串，477 個對 `game.js` 的命中數改變。regex 與 14 字以上的字串逐項判定：T1–T3 列入，其餘為通用 pattern 或非對 `game` 的斷言；較短字串依內容判定，未逐項讀 |
+| 突變：模組本體 67 項 | 62 項由 T4 抓到，5 項等價突變存活 |
+
+- 等價突變：A1、A2、A4 為 `#invokeAnnualChoice` 的 3 個檢查，唯一呼叫點 `onclick` 已先以同條件擋下；V5 將 `scrollBottom` 換成 `scrollAction`，後者本來就只呼叫前者；C27 改 `currentMarkup`，`runChoiceAction` 未使用該參數。
+
+| 接線突變 | Quick 的執行期入口 | Full 專屬入口 | T5 |
+|---|---|---|---|
+| W1 `getState` 固定 | `bug-act-01-02-e2e`、`draft-income-e2e`、`kbo-renewal-e2e` | 未跑 | 抓到 |
+| W2 `card` 改傳值 | 無 | `stage6-state-transaction`、`stage7-safety`、`stage10-risk` 無 | 抓到 |
+| W3 `archiveTraitResults` 失效 | 無 | `trait-display-e2e` 抓到 | 抓到 |
+| W4 另開 `yearHandoffs` | 無 | NOT_RUN | 抓到 |
+| W5 另開 `choiceViews` | 無 | `stage6-ability`、`stage6-state-transaction`、`stage7-safety` 無 | 抓到 |
+| W6 漏傳 `expected` | 無 | `stage6-state-transaction`、`stage7-safety` 無 | 抓到 |
+| W7 `runWithResultView` 不回傳 | 無 | NOT_RUN | 抓到 |
+| W8 `scrollBottom` 失效 | 無 | NOT_RUN | 抓到 |
+| W9 `scrollAction` 失效 | 無 | NOT_RUN | 抓到 |
+
+- W1、W3 以外的接線只由 T5 全文斷言與 reviewer 把關，保護程度低於 §2gg（接線突變全由 `game-view-dom-e2e` 抓到）。
+- 本輪 `event-integration.test` 未發生 SIGSEGV。
+- 未測：含 T4、T5 的 Full、`--preview` 路由、Linux CI、Preview。
+
+### 2ii.5 驗證與交付（L3／R3：所有選擇的確定處理都走這段；允許差分為無）
+
+- 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較與突變；reviewer。
+- push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -4369,6 +4440,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - `phasePre`、`proSeason`、結算屬流程本體，先定 §3.6 的方向再搬。`reportFlowOutcome` 已是 27 個 kind 對 `advance`／`endGame` 的分派表，是狀態機的現成入口。
 - 第 30 期之後 `game.js` 大致只剩年度流程與組裝碼，須另行決定進入 §3.6 或停止重構。
 - 使用者決定（2026-11-01）：第 29 期採 `newState`，細部計畫見 §2hh。`choose` 一族為第 30 期候補，未授權實作。
+- 使用者決定（2026-11-02）：第 30 期採 `choose` 一族，細部計畫見 §2ii。
 
 ## 4. 使用者決定（2026-10-18）
 
