@@ -33,6 +33,12 @@ assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
 assert.match(config, /VERSION = '1\.13\.6'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(initialState, /version:VERSION/);
+for(const line of [
+  'function restorePendingChoice(state=S,expected){return choicePrompt.restorePendingChoice(state,expected);}',
+  'function runWithResultView(action){return choicePrompt.runWithResultView(action);}',
+  'function choose(title,opts){choicePrompt.choose(title,opts);}',
+  'const choicePrompt=new ChoicePrompt({getState:()=>S,careerSession,choiceViews,yearHandoffs,gameView,$:id=>$(id),actClear:()=>actClear(),actToggleSync:()=>actToggleSync(),archiveTraitResults:()=>archiveTraitResults(),card:(cls,title,html)=>card(cls,title,html),scrollAction:()=>scrollAction(),scrollBottom:()=>scrollBottom()});',
+])assert.ok(game.includes(line),'choice prompt wiring: '+line.slice(0,40));
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
