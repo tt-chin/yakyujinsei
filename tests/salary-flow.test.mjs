@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
+const initialState = await readFile(path.join(root, 'docs/src/engine/initial-state.js'), 'utf8');
 const seasonPayment = await readFile(path.join(root, 'docs/src/engine/season-payment-policy.js'), 'utf8');
 const seasonStats = await readFile(path.join(root, 'docs/src/engine/season-stats.js'), 'utf8');
 const internationalTournament = await readFile(path.join(root, 'docs/src/engine/international-tournament.js'), 'utf8');
@@ -24,8 +25,8 @@ const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-pe
 const injuryPolicy = await readFile(path.join(root, 'docs/src/engine/injury-market-policy.js'), 'utf8');
 const arbitrationPolicy = await readFile(path.join(root, 'docs/src/engine/arbitration-policy.js'), 'utf8');
 
-assert.match(game, /lastSalaryPaidYear:null/);
-assert.match(game, /salaryEvaluationHistory:\[\],lastSalaryEvaluation:null,lastSalaryDecision:null,salaryDecisionHistory:\[\]/);
+assert.match(initialState, /lastSalaryPaidYear:null/);
+assert.match(initialState, /salaryEvaluationHistory:\[\],lastSalaryEvaluation:null,lastSalaryDecision:null,salaryDecisionHistory:\[\]/);
 assert.match(seasonPayment, /salaryDueForYear\(contract,state\.year\)/);assert.match(game,/contractContinuationForNextYear\(S\.ct,S\.year\)/);
 assert.match(seasonPayment, /markSalaryPaid\(contract,state\.year\)/);
 assert.match(careerMovement, /PRO_PLAYER_WITHOUT_CONTRACT/);
@@ -97,10 +98,10 @@ assert.equal(game.split(contractBridge).length,2,'one CareerContract RNG bridge,
 const movementBridge='rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}';
 assert.equal(game.split(movementBridge).length,2,'one CareerMovement RNG bridge, not new independent draws');
 const gameSites=game.replace(movementBridge,'rng:{movementBridge}').replace(contractBridge,'rng:{contractBridge}').replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}').replace(awardsBridge,'journalRng:{awardsBridge}').replace(retirementBridge,'rng:{retirementBridge}').replace(amateurBridge,'rng:{amateurBridge}');
-assert.equal((gameSites.match(/\bR\(/g) || []).length,14,'all other native RNG call sites unchanged');
+assert.equal((gameSites.match(/\bR\(/g) || []).length,12,'all other native RNG call sites unchanged');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonStats.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[6,4,3,0],'SeasonStats draw sites moved verbatim');
 // Six round-specific bonus sites are consolidated; each draft still consumes one ri.
-assert.equal((gameSites.match(/\bri\(/g) || []).length, 19);
+assert.equal((gameSites.match(/\bri\(/g) || []).length, 6);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 const legacyJournalSlots=[...seasonAwards.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
@@ -119,6 +120,8 @@ assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonAwards.match(new RegEx
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerRetirement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[4,2,0,0],'CareerRetirement draw sites moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(amateurCareer.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,9,0,0],'AmateurCareer draw sites moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerContract.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,1,0],'CareerContract draw site moved verbatim');
+// Phase 29 moved newState into initial-state.js: R( -2, ri( -13 in game.js, the same 2/13/0/0 there. Its wrapper passes the current R and ri as values, so no bridge.
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(initialState.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[2,13,0,0],'initial state draw sites moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerMovement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,2,11,0],'CareerMovement draw sites moved verbatim');
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
@@ -156,7 +159,7 @@ assert.doesNotMatch(controlPolicy+injuryPolicy+arbitrationPolicy, /\b(?:R|ri|cha
 assert.equal((careerContract.match(/chance\(terms\.winChance\)/g)||[]).length,1,'仲裁結果のRNGは選択後の1回だけ');
 assert.match(careerContract,/contractType:'CONTROL'/);assert.match(careerContract,/contractType:'ARBITRATION'/);assert.match(careerMovement,/proof\?'PROOF'/);
 assert.match(game,/S\.serviceTime\.MLB\+\+/);assert.doesNotMatch(gameAndModules,/S\.serviceTime\.MLB.*MINOR/);
-assert.match(game,/careerBaseSalary:0/);assert.match(game,/careerIncentive:0/);assert.match(game,/yearlyIncentivePaid:\{\}/);assert.match(game,/lastFaMarket:null/);
+assert.match(initialState,/careerBaseSalary:0/);assert.match(initialState,/careerIncentive:0/);assert.match(initialState,/yearlyIncentivePaid:\{\}/);assert.match(initialState,/lastFaMarket:null/);
 assert.match(careerMovement,/generateBidJitters\(selected\.map\(x=>x\.team\.teamId\),R\)/);assert.match(careerMovement,/S\.lastFaMarket\?\.marketKey===key/);assert.match(seasonPayment,/applyIncentivePayment/);
 assert.match(game,/現契約を継続/);assert.match(game,/来季年俸/);assert.match(game,/契約残り/);assert.match(game,/年俸の再計算はありません/);assert.match(game,/今季の実績は次回の契約評価へ反映されます/);assert.doesNotMatch(gameAndModules,/今季の好成績は次回の契約評価へ反映されます/);
 assert.match(careerContract,/floorApplied:contractType==='CONTROL'&&control\.floorApplied/);
