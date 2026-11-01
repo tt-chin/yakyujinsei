@@ -3544,6 +3544,34 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做逐字比對、抵達探測與上表突變；reviewer。
 - 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC。push 與 PR 另批。
 
+### 2dd.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/amateur-movement`，實作 commit `c568952`，比較基準 `02aa0a3`）
+
+`game.js` 906 行不變，86,885 → 85,655 bytes。`amateur-career.js` 101 → 103 行，9,151 → 10,591 bytes。測試未改。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree） | 68／68 PASS |
+| 分組 Full（`--baseline=02aa0a3…`，含 `game-view-dom-e2e`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數 |
+| 逐字比對 | 舊區段 1,274 bytes，新本體 1,294 bytes（4 個 `return;` → `return true;`），還原後相同，反向對照可偵測 |
+| 抵達探測（seed `20261101`–`20261103` × P／IF，6 段生涯全部結束，無 pageerror） | `movement` L2 與 `seasonEndMovement` 各 169 次，逐階段相等：HS 18、U 20、CORP 106、IND 1、PRO 24 |
+| reviewer | 無 blocking：控制流程、closure 內 `return`、自由名稱、繞過 `game.js` 薄包裝、RNG 五項皆無問題 |
+
+| 突變 | 結果 |
+|---|---|
+| `S.stageYr<3` → `<2`；`S.stageYr<4` → `<3`；移除 `S.indYears++` | `game-view-dom-e2e` FAIL |
+| `S.corpYears>=3` → `>=4`；移除 `S.corpYears++` | `draft-signing-policy.test` FAIL |
+| 移除 `game.js` 的呼叫 | `draft-signing-policy.test` FAIL（`accrueForeignFirstTeamSeason is not defined`：流程掉進職業尾段，而 vm 沒有該函式） |
+| `return false` → `return true` | `bug-act-01-02-e2e`、`kbo-renewal-e2e` FAIL |
+| `S.corpYears>=2` → `>=3` | 未抓到（`draft-signing-policy.test`、`game-view-dom-e2e`）；與 §2dd.4 相同的既有缺口，靠逐字比對保護 |
+
+- 重綁掃描：`tests`、`scripts` 沒有重綁 `pathChoiceHS`、`pathChoiceU4`、`enterDraftPath`。本體改為直接呼叫 rules 內部函式，不再經過 `game.js` 薄包裝，行為相同。`reportFlowOutcome`、`choose`、`setAmateur` 由建構式 late-binding 注入。
+- 執行紀錄：背景包裝指令 exit 1，原因是腳本的 `rm -f i-*.log` 刪掉自己的 `i-run.log`，最後的 `tail` 失敗。測試結果以各 log 的入口數與 exit 行為準。
+
+### 2dd.7 交付（2026-11-01）
+
+- 實作 commit `c568952` 在本機 `refactor/amateur-movement`，接在 PR #44 的 `a51d7ad` 之後。未 push，未開 PR，未併 `dev`，未修改 `main`。
+- 未驗證：Linux Full CI、Preview。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
