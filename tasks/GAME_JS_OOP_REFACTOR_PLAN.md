@@ -3732,10 +3732,85 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 ### 2ff.7 交付（2026-11-01）
 
-- 實作 commit `405d152`、註解修正 `5e7090c` 與結果紀錄皆在 `refactor/board-model`。已 push，[PR #46](https://github.com/tt-chin/yakyujinsei/pull/46) → `dev` 待合併，未修改 `main`。
+- 實作 commit `405d152`、註解修正 `5e7090c` 與結果紀錄皆在 `refactor/board-model`。[PR #46](https://github.com/tt-chin/yakyujinsei/pull/46) 已併入 `dev`（`9e6129f`），未修改 `main`。
 - [Tests #115](https://github.com/tt-chin/yakyujinsei/actions/runs/41290421736)（`0de0bac`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 93`、`acceptedPass 93`、`issues []`。
+- [Tests #116](https://github.com/tt-chin/yakyujinsei/actions/runs/41292145567)（`9e6129f`，dev push）Quick：success。
 - 未驗證：Preview。
 - `boardModel` 本體的全形頓號 `rgba` 經使用者同意列入 BACKLOG `UI-BOARD-SHADOW-01`；`CSS.supports` 確認該寫法無效，未修正。
+
+## 2gg. 第 28 期：`traitResultMarkup` 移至 `TraitResultCard`（細部計畫，2026-11-01；計畫已批准，實作已批准）
+
+基準 `9e6129f`（PR #46 併入 `dev`），`game.js` 878 行／82,605 bytes。路線見 §3.19。
+
+### 2gg.1 現況
+
+- 區段：`docs/src/engine/game.js:255–279`，本體 23 行，無奇數反引號行，無延遲執行的 closure。
+- 自由名稱：`S`、`displayTrait`、`TRAIT_LABELS`、`TRAIT_TEXT`、`EVENT_TRAIT_TEXT`、`traitPresentation`。`S` 寫入 0、RNG 0。
+- 這個函式不是唯讀：會寫 `node.dataset.traitResult`／`traitName`，並在 `traitPresentation` 缺條目時用 `S.traits` 建立。
+- 唯一呼叫端是 `game.js:253` 的 `decorateCard:traitResultMarkup`，靠 hoisting 成立。`tests`、`scripts`、`tools` 沒有引用這個名稱，也沒有 e2e 重綁 `displayTrait`。`card` 的重綁與 `bug-act-01-02` 的 `function card(` 替換都留在 `game.js`，不受影響。
+- `TRAIT_TEXT`、`EVENT_TRAIT_TEXT` 在 `game.js` 只有這個本體使用。
+
+### 2gg.2 設計（使用者決定 2026-11-01：批准 D1–D6 與 T1）
+
+- D1 位置：新模組 `docs/src/ui/trait-result-card.js`，類別 `TraitResultCard`，方法 `decorate(node,title,html)`。不放 `CareerPresenter`：其開頭定位為唯讀 view model，且建構於 `traitPresentation` 宣告之前，會有 TDZ。不放 `GameView`：其定位是不碰 `S`。
+- D2 方法：本體逐字搬入，僅 +2 縮排，開頭由 `getState` 與 `#deps` 取得名稱。
+- D3 注入：`getState`、`traitPresentation`、`displayTrait`。`traitPresentation` 傳參考，WeakMap 留在 `game.js`，與 `SeasonAwards` 相同。
+- D4 文字表：`TRAIT_LABELS`、`TRAIT_TEXT`、`EVENT_TRAIT_TEXT` 由新模組直接 import。`game.js` 的 `TRAIT_TEXT`、`EVENT_TRAIT_TEXT` 成為未使用 import，總數由 91 增為 93，不刪。
+- D5 薄包裝：`game.js` 保留一行 `traitResultMarkup`，`game.js:253` 不用改；`const traitResultCard=new TraitResultCard(…)` 緊接在包裝之後。
+- D6 分支：新分支 `refactor/trait-result-card`，自 `9e6129f` 開出，比較基準同為 `9e6129f`。
+
+### 2gg.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 位置 | 變更 | 性質 |
+|---|---|---|---|
+| T1 | `tests/trait-result-card.test.mjs` | 新檔。57,506 例與 `9e6129f` 的 `traitResultMarkup` 逐項對照回傳值、`node.dataset`、`traitPresentation` 條目，並確認 `S` 未被寫入；另 1 例確認換生涯後讀到新的 `S` | 新增涵蓋 |
+
+既有測試不需修改。T1 使 Quick 由 68 增為 69、Full 由 93 增為 94，manifest 依檔名自動分類，不需修改。
+
+### 2gg.4 草稿實測（2026-11-01，scratch worktree，基準 `9e6129f`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 未改測試的 Quick | 68／68 PASS |
+| 加 T1 後 Quick | 69／69 PASS |
+| 分組 Full（`--baseline=9e6129f…`，含 T1） | 22＋25＋22＋25＝94／94 PASS，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | 草稿對 `9e6129f`：8 段 DOM／`S`／RNG 一致 |
+| 18 字元 n-gram 掃描（`tests`、`scripts`、`tools`、`docs/src`） | 測試端命中為 `display-preferences-e2e` 瀏覽器內正規化、其他函式的相似文字，以及 `bug-act-01-02` 對 `function card(` 的替換；無需修改的文字耦合 |
+| 測試字面值掃描（748 regex、6,341 字串） | 88 個對 `game.js` 的命中數改變，皆非針對被搬移內容的斷言；其中換行、空白類通用 pattern 依 pattern 判定，未逐行讀 |
+| 突變：`decorate` 本體 60 項 | 54 項由 T1 抓到，6 項等價突變存活 |
+| 突變：`game.js` 接線 3 項（`getState`、`traitPresentation`、`displayTrait`） | 全部由 `game-view-dom-e2e` 抓到；`trait-display-e2e` 抓到前 2 項 |
+
+- 等價突變：`latepractice` 是唯一同時在 `TRAIT_TEXT` 與 `EVENT_TRAIT_TEXT` 的鍵，兩邊文字相同，對調查表順序不改變結果；`confidante`、`goldcloth`、`miraclegen`、`strongpitch`、`stronghit` 的效果文字本身含「追加効果」或「記念称号」，從 `memorial` 移除不改變結果。
+- 本輪 `event-integration.test` 未發生 SIGSEGV。
+- 未測：Linux CI、Preview。
+
+### 2gg.5 驗證與交付（L2／R2：無 RNG、無 `S` 寫入的顯示搬移；允許差分為無）
+
+- 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較與上表突變；reviewer。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+- 使用者已批准 push 與 PR → `dev`；`main` 不動。
+
+### 2gg.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/trait-result-card`，計畫 commit `264346f`，實作 commit `a1a2377`，比較基準 `9e6129f`）
+
+`game.js` 878 → 856 行，82,605 → 79,893 bytes。`trait-result-card.js` 新增 37 行／3,677 bytes。測試 1 檔，與 §2gg.3 相同。實作 commit 的 `game.js` 與新模組與 §2gg.4 草稿逐位元組相同。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，`a1a2377`） | 69／69 PASS，已核對實際入口數 |
+| 分組 Full（`a1a2377`，`--baseline=9e6129f…`） | 22＋25＋22＋25＝94 入口：93 PASS／1 FAIL，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | `a1a2377` 對 `9e6129f`：8 段 DOM／`S`／RNG 一致 |
+| 突變：`decorate` 本體 60 項 | 結果與 §2gg.4 相同：54 項由 T1 抓到，6 項等價突變存活 |
+| 突變：`game.js` 接線 3 項 | 結果與 §2gg.4 相同：全部由 `game-view-dom-e2e` 抓到 |
+| reviewer | 無問題。逐字比對、自由名稱、初始化順序、import 副作用、測試非空轉、開頭註解皆已檢查 |
+
+- 唯一 FAIL 是 `event-integration.test`，`signal: SIGSEGV`、log 為空、1.6 秒。單獨重跑 PASS；40 次重跑 `a1a2377` 0、乾淨樹 `9e6129f` 0。與 §2ff.4 相同現象，判定與本期無關，但該輪仍記為 FAIL。
+- 未做：Linux CI、Preview。
+
+### 2gg.7 交付（2026-11-01）
+
+- 實作 commit `a1a2377` 與結果紀錄皆在 `refactor/trait-result-card`。已 push，[PR #47](https://github.com/tt-chin/yakyujinsei/pull/47) → `dev` 待合併，未修改 `main`。
+- [Tests #117](https://github.com/tt-chin/yakyujinsei/actions/runs/41300962129)（`4e2a517`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 94`、`acceptedPass 94`、`issues []`。
+- 未驗證：Preview。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -4164,6 +4239,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 使用者決定（2026-11-01）：第 25 期採 L2 業餘分支，CODE-DEAD-01（§2cc）先做，再寫細部計畫。`runDraft` 留到下一期。不授權實作。
 - 使用者決定（2026-11-01）：第 26 期採 `runDraft`，細部計畫見 §2ee。
 - 使用者決定（2026-11-01）：第 27 期採 `boardModel`，細部計畫見 §2ff。`traitResultMarkup` 留到下一期以後。
+- 使用者決定（2026-11-01）：第 28 期採 `traitResultMarkup`，細部計畫見 §2gg。
 
 ## 4. 使用者決定（2026-10-18）
 
