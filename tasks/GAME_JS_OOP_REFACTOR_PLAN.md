@@ -3491,7 +3491,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 ### 2cc.6 交付（2026-11-01）
 
-- 實作 commit `45cccd7`、結果紀錄皆在 `refactor/code-dead-01`（`a51d7ad`）。已 push，PR #44 → `dev` 待合併，未修改 `main`。本分支未跑 Linux Full CI。
+- 實作 commit `45cccd7`、結果紀錄皆在 `refactor/code-dead-01`。已 push，PR #44 → `dev` 待合併，未修改 `main`。第 25 期併入同一 PR，見 §2dd.7。
 - `dev` `a0ad197`（第 22～24 期）的 Linux Full CI：Tests #110（`workflow_dispatch`，run `41255259730`）8 批全 success，`full-aggregate` `expected 93`、`acceptedPass 93`、`issues []`。本機 macOS＋Brave 另有同等結果；Preview 未確認。
 
 ## 2dd. 第 25 期：`movement` L2 業餘分支移至 `AmateurCareer`（細部計畫，2026-11-01；計畫已批准，實作已批准）
@@ -3515,7 +3515,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 決定（使用者 2026-11-01 批准）：
   - D1 命名：`seasonEndMovement`（回傳「業餘階段已處理」）。
   - D2 邊界：只搬業餘分支，`runDraft` 下一期。
-  - D3 分支：第二個 PR，不併入 PR #44。BACKLOG 原有「不與重構混合修改」，所以刪除與搬移分開審查、分開回退。分支 `refactor/amateur-movement` 接在 `a51d7ad` 之後，PR #44 合併後目標才會只顯示本期差異。
+  - D3 分支：併入 PR #44（使用者 2026-11-01 決定，取代先前的第二個 PR）。這是「不與重構混合修改」的例外：兩期都未合併，刪除與搬移各有獨立 commit，以 merge commit 合併後仍可單獨 revert，只需一次 Full CI。
 
 ### 2dd.3 測試變更
 
@@ -3571,8 +3571,8 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 ### 2dd.7 交付（2026-11-01）
 
-- 實作 commit `c568952` 在本機 `refactor/amateur-movement`，接在 PR #44 的 `a51d7ad` 之後。未 push，未開 PR，未併 `dev`，未修改 `main`。
-- 未驗證：Linux Full CI、Preview。
+- 實作 commit `c568952` 由本機 `refactor/amateur-movement` fast-forward 併入 `refactor/code-dead-01`，PR #44 → `dev` 待合併，未修改 `main`。
+- 未驗證：Preview。Linux Full CI 結果記於 PR #44。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
