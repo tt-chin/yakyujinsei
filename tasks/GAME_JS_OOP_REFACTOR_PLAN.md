@@ -3573,7 +3573,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 實作 commit `c568952` 由本機 `refactor/amateur-movement` fast-forward 併入 `refactor/code-dead-01`，PR #44 → `dev` 待合併，未修改 `main`。
 - 未驗證：Preview。Linux Full CI 結果記於 PR #44。
-- 合併（2026-11-01）：PR #44 併入 `dev`（`7de1fd1`，樹與 `17b271b` 相同）。Tests #111（`17b271b`）的 `full-plan`、8 個 `full-batch`、`full-aggregate` 皆 success，入口數未自 log 核對。`7de1fd1` 的 `tests` 與 Cloudflare Pages 皆 success。
+- 合併（2026-11-01）：PR #44 併入 `dev`（`7de1fd1`，樹與 `17b271b` 相同）。Tests #111（`17b271b`，run `41275581402`）8 批全 success，`full-aggregate` `expected 93`、`acceptedPass 93`、`issues []`（記於 PR #44）。CODE-DEAD-01 依 BACKLOG 條件結案，移至 BACKLOG §2.12。`7de1fd1` 的 `tests` 與 Cloudflare Pages 皆 success。
 
 ## 2ee. 第 26 期：`runDraft` 移至 `AmateurCareer`（細部計畫，2026-11-01；計畫已批准，實作已批准）
 
