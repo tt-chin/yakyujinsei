@@ -102,17 +102,6 @@ function careerContractRules({getState,LV,PATHS,careerSession,salaryDetailContro
       crossOffers(o);
     });
   }
-  function ageGateUSA(o,minReq){ /* MLB挑戦：年齢とともに難化、28 歳以降はほぼ不可能。 */
-    const S=getState();
-    const age=S.age;
-    if(age<=22)return 1.0;
-    if(age<=24)return 0.75;
-    if(age<=26)return 0.5;
-    if(age<=27)return 0.3;
-    if(age<=28)return 0.15;
-    /* 28 歳以降：能力が基準を大幅に超える（+5）の怪物級即戦力だけにわずかな可能性。 */
-    return o>=minReq+5 ? 0.08 : 0;
-  }
   function ageGateJP(){ /* NPB挑戦：年齢条件は緩め、31 歳（衰え前）まで可能性あり。 */
     const S=getState();
     const age=S.age;
@@ -236,7 +225,6 @@ function careerContractRules({getState,LV,PATHS,careerSession,salaryDetailContro
     saveSalaryEvaluation(entry);
   };
 
-  const nextContractId=(org,teamId,signedYear)=>{const S=getState();S.contractSequence=(Number(S.contractSequence)||0)+1;return`${org}:${teamId}:${signedYear}:${String(S.contractSequence).padStart(3,'0')}`;};
   function fixedContractRule({org,teamId,years,annualSalary,contractType='NORMAL',signingBonus=0,signingBonusType='NONE',developmentStipend=0,postingFee=0,postingFeeRecipient=null,candidate,startYear=getState().year+1,incentive,offerBreakdown,transaction}){const S=getState();let breakdown=offerBreakdown??candidate?.crossLeague??null;if(org==='KBO'){const cap=applyKboForeignPackageCap({annualSalary,signingBonus,postingFee,isRenewal:candidate?.sourceOrg==='KBO'||S.ct?.org==='KBO',previousPackage:kboPreviousPackage(),levelMinimum:salaryFor(candidate?.targetLevel||S.lv,0)});annualSalary=cap.annualSalary;breakdown={...breakdown,...cap,finalAnnualSalary:annualSalary};if(incentive)incentive=createIncentiveTerms({org,annualSalary});}const sequence=(Number(S.contractSequence)||0)+1,contractId=`${org}:${teamId}:${S.year}:${String(sequence).padStart(3,'0')}`;const contract=createContract({contractId,org,teamId,signedYear:S.year,startYear,years,annualSalary,contractType,signingBonus,signingBonusType,developmentStipend,postingFee,postingFeeRecipient,signedMarketRating:candidate?.convertedRating??currentMarketRating(),positionMultiplierAtSigning:candidate?.positionMult??dpMult(),contractMultiplier:candidate?.contractMult??1,incentive:incentive===undefined?createIncentiveTerms({org,annualSalary}):incentive,offerBreakdown:breakdown});S.contractSequence=sequence;if(org==='KBO')S.lastKboPackage=annualSalary+(contract.incentive?.annualMax||0)+signingBonus+postingFee;if(transaction)transaction.contract=contract;return contract;}
 
   let signingRenderRetry=null;

@@ -37,7 +37,7 @@ const movementBetween=(start,end)=>{const a=movementSource.indexOf(start),b=move
 const contractFunctions=()=>contractMoved?
   moduleBetween('  function salaryForRule(','\n  function migrateSalaryV130State')+';var salaryFor=salaryForRule;let careerSession={pendingOffseasonSalary:null};'+
   contractSource.match(/  const kboPreviousPackage=[^\n]+/)[0]+moduleBetween('  const salaryCandidateRule=','\n  function saveSalaryDecision')+';var salaryCandidate=salaryCandidateRule;'+
-  contractSource.match(/  const nextContractId=[^\n]+/)[0]+contractSource.match(/  function fixedContractRule[^\n]+/)[0]+';var fixedContract=fixedContractRule;'+
+  contractSource.match(/  function fixedContractRule[^\n]+/)[0]+';var fixedContract=fixedContractRule;'+
   moduleBetween('  function finalizePendingOffseasonSalary','\n  function applyLevelSalary')+
   moduleBetween('  function applyLevelSalary','\n  const appendContractExtension='):
   'let '+(salaryForDeclared?'':'salaryFor,')+'salaryCandidate,applyDemotionSalary,markClubInitiatedRenewal;'+
