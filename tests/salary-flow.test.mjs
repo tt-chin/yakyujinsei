@@ -84,7 +84,8 @@ assert.equal(game.split(awardsBridge).length,2,'one SeasonAwards RNG bridge, not
 const retirementBridge='rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}';
 assert.equal(game.split(retirementBridge).length,2,'one CareerRetirement RNG bridge, not new independent draws');
 // Phase 21 moved the amateur path and tournaments into AmateurCareer: R( -1, ri( -4 in game.js, the same 1/4/0/0 in amateur-career.js.
-// Its game.js wiring only forwards to the current R/ri (late binding) and is not a draw site. runDraft's ri( sites stay in game.js.
+// Its game.js wiring only forwards to the current R/ri (late binding) and is not a draw site.
+// Phase 26 moved runDraft into AmateurCareer: ri( -5 in game.js, +5 in amateur-career.js, through the same bridge.
 const amateurBridge='rng:{ri:(a,b)=>ri(a,b),R:()=>R()}';
 assert.equal(game.split(amateurBridge).length,2,'one AmateurCareer RNG bridge, not new independent draws');
 // Phase 22 moved arbitrationFlow into CareerContract: chance( -1 in game.js, the same 0/0/1/0 in career-contract.js.
@@ -99,7 +100,7 @@ const gameSites=game.replace(movementBridge,'rng:{movementBridge}').replace(cont
 assert.equal((gameSites.match(/\bR\(/g) || []).length,14,'all other native RNG call sites unchanged');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonStats.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[6,4,3,0],'SeasonStats draw sites moved verbatim');
 // Six round-specific bonus sites are consolidated; each draft still consumes one ri.
-assert.equal((gameSites.match(/\bri\(/g) || []).length, 24);
+assert.equal((gameSites.match(/\bri\(/g) || []).length, 19);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 const legacyJournalSlots=[...seasonAwards.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
@@ -116,7 +117,7 @@ assert.deepEqual(['R','ri','chance','pick'].map(f=>(playerRomance.match(new RegE
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonEvents.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,0,1],'SeasonEvents draw site moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonAwards.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,0,0,0],'SeasonAwards draw site moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerRetirement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[4,2,0,0],'CareerRetirement draw sites moved verbatim');
-assert.deepEqual(['R','ri','chance','pick'].map(f=>(amateurCareer.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,4,0,0],'AmateurCareer draw sites moved verbatim');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(amateurCareer.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,9,0,0],'AmateurCareer draw sites moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerContract.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,1,0],'CareerContract draw site moved verbatim');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerMovement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,2,11,0],'CareerMovement draw sites moved verbatim');
 
