@@ -3993,6 +3993,22 @@ T4 使 Quick 由 69 增為 70、Full 由 94 增為 95，manifest 依檔名自動
 - 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較與突變；reviewer。
 - push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
 
+### 2ii.6 實施結果（2026-11-02，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/choice-prompt`，計畫 commit `5eba9bb`，實作 commit `4133a1b`，比較基準 `319be98`）
+
+`game.js` 841 → 821 行，76,009 → 72,281 bytes。`choice-prompt.js` 新增 34 行／5,286 bytes。測試 4 檔修改、1 檔新增，與 §2ii.3 相同。實作 commit 的全部 8 檔與 §2ii.4 草稿逐位元組相同。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，`4133a1b`） | 70／70 PASS，已核對實際入口數 |
+| 分組 Full（`4133a1b`，`--baseline=319be98…`，含 T1–T5） | 22＋25＋22＋26＝95／95 PASS，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | `4133a1b` 對 `319be98`：8 段 DOM／`S`／RNG 一致 |
+| 突變：模組本體 67 項 | 結果與 §2ii.4 相同：62 項由 T4 抓到，5 項等價突變存活 |
+| 突變：`game.js` 接線 9 項 | 結果與 §2ii.4 相同：全部由 T5 抓到；W1 另由 3 個 e2e、W3 另由 `trait-display-e2e` 抓到；W2、W5、W6 在針對性的 Full 專屬入口存活 |
+| reviewer | 無問題。逐字比對、延遲讀 `S`、`this` 綁定、接線與初始化順序、包裝語意、測試非空轉、換行皆已檢查 |
+
+- W4、W7、W8、W9 未對 Full 專屬入口執行，維持 NOT_RUN。
+- 未做：`--preview` 路由、Linux CI、Preview。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
