@@ -3653,6 +3653,11 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 未做：Linux CI、Preview。
 - 基準狀態：驗證期間 PR #44 由使用者合併，`dev` 為 `7de1fd1`，樹與 `17b271b` 相同，所以上述比較基準仍對應 `dev`。`git merge-tree` 確認本分支對 `dev` 無衝突，合併後的樹等於 `92959a1` 之後的分支樹。
 
+### 2ee.7 交付（2026-11-01）
+
+- 實作 commit `92959a1`、結果紀錄皆在 `refactor/run-draft`。已 push，PR #45 → `dev` 待合併，未修改 `main`。
+- 未驗證：Preview。Linux Full CI 結果記於 PR #45。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
