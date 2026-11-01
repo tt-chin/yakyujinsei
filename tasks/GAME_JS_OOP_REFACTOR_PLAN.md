@@ -3734,7 +3734,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 實作 commit `405d152`、註解修正 `5e7090c` 與結果紀錄皆在 `refactor/board-model`。已 push，[PR #46](https://github.com/tt-chin/yakyujinsei/pull/46) → `dev` 待合併，未修改 `main`。
 - 未驗證：Linux Full CI（PR → `dev` 不觸發，未手動 dispatch）、Preview。
-- `game.js:298`、`:300` 的全形頓號 `rgba` 尚未列入 BACKLOG，待使用者決定。
+- `boardModel` 本體的全形頓號 `rgba` 經使用者同意列入 BACKLOG `UI-BOARD-SHADOW-01`；`CSS.supports` 確認該寫法無效，未修正。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
