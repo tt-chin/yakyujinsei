@@ -9,7 +9,6 @@ import { confidanteEligible } from './trait-policy.js';
 let CHEER=['高橋美咲','佐藤彩花','中村ひなた','小林結衣','山本玲奈','伊藤七海','渡辺さくら','加藤真央','松本葵','吉田莉子','岡田美月','清水楓'];
 const PARTNER_JOB={'高橋美咲':'チアリーダー','佐藤彩花':'スポーツアナウンサー','中村ひなた':'タレント','小林結衣':'女優','山本玲奈':'歌手','伊藤七海':'スポーツキャスター','渡辺さくら':'モデル','加藤真央':'お笑いタレント','松本葵':'チアリーダー','吉田莉子':'アイドル','岡田美月':'フリーアナウンサー','清水楓':'俳優','森川あかり':'スポーツキャスター'};
 function partnerJob(name){return PARTNER_JOB[name]||'タレント';}
-const CHEER_DEFAULT=CHEER.slice();
 let CHEER_SAFE=['森川あかり']; /* 不倫相手にしない名簿：交際・結婚は可能、不倫候補には出さない。 */
 function datePool(){ /* 交往/結婚名單。 */
   if(CHEER_SAFE.length>=CHEER.length) return CHEER_SAFE.slice();      /* 安全名單より長：直接整組替換。 */
