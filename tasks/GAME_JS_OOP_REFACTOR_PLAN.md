@@ -3813,6 +3813,76 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - [Tests #118](https://github.com/tt-chin/yakyujinsei/actions/runs/41302492020)（`294e4be`，dev push）Quick：success。
 - Preview：新模組已部署（HTTP 200），畫面未驗證。
 - §2gg.6 的 `event-integration.test` FAIL 已查明為 macOS arm64 的 V8 崩潰，乾淨基準同樣發生，見 BACKLOG `TEST-EVENT-SIGSEGV-01`。
+- [Tests #119](https://github.com/tt-chin/yakyujinsei/actions/runs/41304303852)（`4116389`，PR #48 併 `dev`）Quick：success。
+- Preview（`4116389`）：76 檔與 `dev` 相同，起始畫面 Console 0 則，使用者已確認驗收。
+- [Tests #120](https://github.com/tt-chin/yakyujinsei/actions/runs/41305843248)（PR #49）Linux Full 94／94 PASS，由 code owner 合併至 `main`（`2fe5b25`），Publish website #30 success，本番 76 檔與 `main` 相同，發布紀錄見 BACKLOG 頁首。
+
+## 2hh. 第 29 期：`newState` 移至 `initial-state.js`（細部計畫，2026-11-01；計畫已批准，實作已批准）
+
+基準 `4116389`（`origin/dev`，樹與 `main` `2fe5b25` 相同），`game.js` 856 行／79,893 bytes。路線見 §3.20。
+
+### 2hh.1 現況
+
+- 區段：`docs/src/engine/game.js:695–711`，4,107 bytes。
+- RNG 呼叫：`R(` 2、`ri(` 13、`pickRecord` 1。`S` 只有 `rngState:S.rngState` 一處，在 16 次抽亂數之後才讀。
+- 延遲讀 `S` 的 closure 0 個。`state.teamName` 與 `orgTeam` setter 在建立後仍會呼叫 `teamDisplay`、`teamRec`；這兩個名稱在 `game.js` 與測試中都沒有重新賦值。
+- 留在 `game.js`：一行薄包裝。e2e 的 `S=newState(...)` 不改。
+
+### 2hh.2 設計（使用者決定 2026-11-01：批准 D1–D5 與 T1–T8）
+
+- D1 新檔 `docs/src/engine/initial-state.js`，匯出 `createInitialState(name,pos,deps)`。採函式不採類別：沒有自己的狀態，每段生涯只呼叫一次，不適合用建構式持有注入。
+- D2 `function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}`。
+- D3 `getState`、`getSeed` 用 lambda，`rngState` 維持在抽亂數後讀取。`R`、`ri`、`pickRecord` 等在每次呼叫時傳當下的值，因此不需要 RNG bridge，也沒有新的 `R(` 文字。`VERSION`、`highSchoolTier`、`installBirthHighSchool`、`TRAIT_LABELS`、`ensureEventState` 由模組自行 import。
+- D4 本體 15 行逐字搬移，只去掉 2 格縮排。唯一新增一行：`const S=getState(),SEED=getSeed();`。
+- D5 分支 `refactor/initial-state`，自 `origin/dev` 以 `--no-track` 開出。不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+
+### 2hh.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 位置 | 變更 | 性質 |
+|---|---|---|---|
+| T1 | `tests/domestic-tournament-policy.mjs:87` | 斷言改查 `initial-state.js` | 目標搬移 |
+| T2 | `tests/event-integration.test.mjs:33` | 同上 | 目標搬移 |
+| T3 | `tests/information-architecture.test.mjs:14` | 同上 | 目標搬移 |
+| T4 | `tests/salary-flow.test.mjs:27,28,159` | 共 6 個斷言改查 `initial-state.js` | 目標搬移 |
+| T5 | `tests/salary-flow.test.mjs` | `R(` 14 → 12、`ri(` 19 → 6，新增模組計數 `[2,13,0,0]` | 計數變更（AGENTS §6.3-5） |
+| T6 | `tests/verify-modularization.mjs:34` | 斷言改查 `initial-state.js` | 目標搬移 |
+| T7 | `tests/school-policy.test.mjs` | 現行側直接執行 `createInitialState`，舊 SHA 側不變；移除未使用的 `fs`；新增 `traitPresentation` 註冊斷言 | 比對對象搬移＋收緊 |
+| T8 | `tests/verify-modularization.mjs` | 新增薄包裝全文斷言 | 收緊 |
+
+### 2hh.4 草稿實測（2026-11-01，scratch worktree，基準 `4116389`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 未改測試的 Quick | 63／69，FAIL 為 `domestic-tournament-policy`、`event-integration.test`、`information-architecture.test`、`salary-flow.test`、`school-policy.test`、`verify-modularization`，皆由 T1–T7 涵蓋 |
+| 改測試後 Quick（含 T7、T8） | 69／69 PASS |
+| 分組 Full（`--baseline=4116389…`，未含 T7 的 `traitPresentation` 斷言與 T8） | 22＋24＋22＋25＝93 PASS／1 FAIL，共 94 入口，已核對實際入口數 |
+| 新舊 `newState` 直接比較（真實 `Rng`，4 守位共 10,000 案） | 0 差異，含 JSON、鍵順序、`salary`／`orgTeam` 存取子、`teamName`、`traitPresentation`、抽取次數與最終 `rngState` |
+| acorn 掃描 `tests`、`scripts`、`tools` 共 145 檔的 `match`／`doesNotMatch`／`includes`／`indexOf` | 以 `game` 為對象且命中搬移本體的都列入 T 表；`approved-school-oracle` 的命中只在舊 baseline 分支 |
+
+- FAIL 為 `display-preferences-e2e:87`（`retained row listener works`），按 Enter 後 5 秒等待逾時，發生於 4 組平行負載；單獨重跑 3／3 PASS。未在基準做同負載對照。見 BACKLOG `TEST-DISPLAY-ENTER-TIMEOUT-01`。
+
+| 突變 | 抓到的入口 | 新舊比較差異 |
+|---|---|---|
+| M1 `ri(20,32)` → `ri(20,33)` | `school-policy`、`draft-income-e2e`、`kbo-renewal-e2e` | 1,969／2,000 |
+| M2 `ab.vel` 不抽亂數 | `school-policy`、`salary-flow`、`draft-income-e2e`、`bug-act-01-02-e2e` | 500／2,000 |
+| M3 `rngState` 在抽亂數前讀 | `draft-income-e2e`、`bug-act-01-02-e2e`、`kbo-renewal-e2e` | 2,000／2,000 |
+| M4 薄包裝傳錯 seed | `kbo-renewal-e2e`（`Career did not complete`，弱證據）；另由 T8 保護 | 不經薄包裝 |
+| M5 薄包裝漏 `traitPresentation` | `draft-income-e2e`、`bug-act-01-02-e2e`、`kbo-renewal-e2e` | 不經薄包裝 |
+| M6 薄包裝用初始化時的 `R` | `draft-income-e2e`、`bug-act-01-02-e2e`、`kbo-renewal-e2e` | 不經薄包裝 |
+| M7 移除 `traitPresentation.set` | 原 Quick 無；T7 新斷言抓到 | 比較腳本在 harness 內崩潰 |
+| M8 移除 `potSum0` | `school-policy`、`event-integration` | 2,000／2,000 |
+| M9 `teamName` 回空字串 | `kbo-renewal-e2e` | 2,000／2,000 |
+| M10 `teamRec` 固定回 null | 原 Quick 無（`event-integration` 的 FAIL 為 SIGSEGV，不算抓到）；T8 抓到 | 不經薄包裝 |
+
+- 比較腳本的反向控制：M1、M2、M3、M8、M9 都產生差異。突變的新舊比較每守位 500 案。
+- 範圍外（不動，記錄）：`scripts/audit-architecture.mjs:29` 依名稱 `newState` 蒐集 `initializers`，搬移後為空且不會失敗，manifest 與其他腳本未使用；`docs/design/*.md` 行號不動。
+- 未做：含 T7、T8 的 Full、`game-view-dom-e2e` 直接比較、Linux CI、Preview。
+
+### 2hh.5 驗證與交付（L3／R3：動到 RNG 呼叫點與生涯初始化；允許差分為無）
+
+- 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較、新舊比較與上表突變；reviewer。
+- `game.js` import 行不動。`highSchoolTier`、`installBirthHighSchool`、`ensureEventState` 轉為未使用，實作後補記於 BACKLOG CODE-DEAD-01；e2e hook 可能依名稱取用，不刪除。
+- commit、push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -4242,6 +4312,25 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 使用者決定（2026-11-01）：第 26 期採 `runDraft`，細部計畫見 §2ee。
 - 使用者決定（2026-11-01）：第 27 期採 `boardModel`，細部計畫見 §2ff。`traitResultMarkup` 留到下一期以後。
 - 使用者決定（2026-11-01）：第 28 期採 `traitResultMarkup`，細部計畫見 §2gg。
+
+### 3.20 第 29 期候補盤點（2026-11-01，基準 `4116389`，`game.js` 856 行／79,893 bytes；靜態分析）
+
+- 方法：scratchpad 腳本以 acorn＋eslint-scope 計算自由名稱與 `S` 引用；RNG 為解析到的呼叫計數；`--word` 文字搜尋 `tests`、`scripts` 計檔數。腳本不保留。
+
+| 候選 | bytes | 自由名稱（本地＋import，含 `S`） | `S` 引用 | 延遲讀 `S` 的 closure | RNG 呼叫 | 測試／腳本引用檔數 |
+|---|---:|---:|---:|---:|---:|---:|
+| `newState` | 4,107 | 10＋5 | 1 | 0 | 16 | 12 |
+| `choose` 一族（5 函式） | 4,217 | 13＋2 | 24 | 7 | 0 | `choose` 10 |
+| 純函式（`teamNick`、`fmtIP`、`slgOf`、`portionOf`） | 1,980 | 0 | 0 | 0 | 0 | 最多 5 |
+| `phasePre` | 6,877 | 23＋1 | 78 | 12 | 9 | 9 |
+| `proSeason`＋`resumeProfessionalSeason` | 7,625 | 24＋5 | 76 | 0 | 1 | `proSeason` 6 |
+| `settleProfessionalEnd` | 4,225 | 16＋9 | 36 | 2 | 1 | 0 |
+
+- `choose` 一族有自己的狀態（`choiceViews`），7 個延遲 closure 須即時讀 `getState()`；`ui-foundation.test:39`、`bug-act-01-02-e2e:17` 綁文字。測試內未見替換 `choose` 的做法。
+- 純函式 4 個成本最低，但只省 2 KB，也不改善結構，不單獨成期。
+- `phasePre`、`proSeason`、結算屬流程本體，先定 §3.6 的方向再搬。`reportFlowOutcome` 已是 27 個 kind 對 `advance`／`endGame` 的分派表，是狀態機的現成入口。
+- 第 30 期之後 `game.js` 大致只剩年度流程與組裝碼，須另行決定進入 §3.6 或停止重構。
+- 使用者決定（2026-11-01）：第 29 期採 `newState`，細部計畫見 §2hh。`choose` 一族為第 30 期候補，未授權實作。
 
 ## 4. 使用者決定（2026-10-18）
 
