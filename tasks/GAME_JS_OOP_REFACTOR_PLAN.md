@@ -3574,6 +3574,68 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 實作 commit `c568952` 由本機 `refactor/amateur-movement` fast-forward 併入 `refactor/code-dead-01`，PR #44 → `dev` 待合併，未修改 `main`。
 - 未驗證：Preview。Linux Full CI 結果記於 PR #44。
 
+## 2ee. 第 26 期：`runDraft` 移至 `AmateurCareer`（細部計畫，2026-11-01；計畫已批准，實作已批准）
+
+基準 `17b271b`（`refactor/code-dead-01`，PR #44 head，未合併），`game.js` 906 行／85,655 bytes，`amateur-career.js` 103 行／10,591 bytes。路線見 §3.19。
+
+### 2ee.1 現況
+
+- 區段：`docs/src/engine/game.js:770–775`，1,710 bytes（§3.19 估 1,706）。
+- RNG 文字呼叫點：`ri(` 5、`R(` 0。`pickRecord` 留在 `game.js`，由注入呼叫，抽取位置不變。
+- §3.19 的 8 個新名稱分成 4 個 late-binding 注入（`pickRecord`、`escapeHTML`、`salaryDecisionLink`、`bindLatestSalaryDetailLink`）與 4 個 policy import（`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`）。`createSigningBonusTerms` 已在模組內。
+- `S.draftRights` 在 `game.js:746` 還有引用，不觸發 `career-session-access` 的欄位檢查（`draftRights` 也不是 `careerSession` 欄位）。
+- 留在 `game.js`：`function runDraft` 一行薄包裝、建構式。
+
+### 2ee.2 設計（使用者決定 2026-11-01：批准 D1–D3 與 T1–T6）
+
+- D1 Shadow：實作名為 `runDraftRule`，放在 `draftFallback` 之後；`runDraft` 保留為注入的 late-binding 名稱，`enterDraftPath` 呼叫點不改，經 `game.js` 薄包裝回到類別方法 `AmateurCareer.runDraft`。沒有 e2e 重綁 `runDraft`；這樣配置是因為 `draft-signing-policy` Case F 在 vm 內 stub 它，`draft-income-e2e` 的 hook 也直接呼叫它。
+- D2 三處非逐字改動：開頭加 `const S=getState();`；`accept` closure 內再加一次；拒絕選項改為 `cb(declineDraftSelection(getState()))`。後兩處是延遲執行，須讀即時狀態（§2y 的慣例）。
+- D3 分支：新分支 `refactor/run-draft`，自 `17b271b` 開出，不併入 PR #44，避免 #44 已通過的 CI 失效。PR 待 #44 合併後開立。
+
+### 2ee.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 位置 | 變更 | 性質 |
+|---|---|---|---|
+| T1 | `tests/salary-flow.test.mjs:101` | `ri(` 計數 24 → 19，更新 `:87` 註解 | 計數變更（AGENTS §6.3-5） |
+| T2 | `tests/salary-flow.test.mjs:119` | `[1,4,0,0]` → `[1,9,0,0]` | 計數變更（AGENTS §6.3-5） |
+| T3 | `tests/income-summary.test.mjs:25` | `runDraft` 改比對 `runDraftRule`，還原 D2 三處與函式名（各斷言剛好一次）後，與 `2e69096` 比較 | 比對對象搬移，嚴格度不變 |
+| T4 | `tests/draft-signing-policy.test.mjs:94` | `cb(result)` 與拒絕斷言改查 `amateur-career.js`，拒絕 regex 配合 D2 改為 `getState()` | 目標搬移 |
+| T5 | `tests/draft-bonus-display.test.mjs:32` | `signingBonus:bonus…` 斷言改查 `amateur-career.js`，`game` 變數保留（後段 `doesNotMatch` 仍用） | 目標搬移 |
+| T6 | `tests/draft-signing-policy.test.mjs:96`、`tests/draft-bonus-display.test.mjs:32` | 兩個 `doesNotMatch` 掃描加入 `amateur-career.js` | 收緊，避免範圍因搬移變窄 |
+
+### 2ee.4 草稿實測（2026-11-01，scratch worktree，基準 `17b271b`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 未改測試的 Quick | 64／68，FAIL 為 `draft-bonus-display`、`draft-signing-policy`、`income-summary`、`salary-flow`，與 T 表相同 |
+| 改測試後 Quick | 68／68 PASS |
+| 分組 Full（`--baseline=17b271b…`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | 草稿對 `17b271b`：8 段 DOM／`S`／RNG 一致 |
+| 抵達探測（seed `20261101`–`20261104` × P／IF × 接受／拒絕，16 段生涯全部結束，無 pageerror） | 抵達序列、最終 `S`、RNG 全部一致；抵達 137：指名漏れ 129、接受 4、拒絕 4；每段的薄包裝通過次數等於抵達次數 |
+| 18 字元 n-gram 掃描（`tests`、`scripts`、`tools`） | 命中皆為 import 或其他函式的相似文字，無新文字耦合 |
+| `game`／`*.includes` 斷言掃描（133 個） | 只有 `salary-flow` 的 `\bri\(` 同時命中搬移本體與新 `game.js`，即 T1 |
+
+| 突變 | 抓到的入口 |
+|---|---|
+| `ri(-4,4)` → `ri(-4,5)` | `income-summary`、`draft-income-e2e --quick` |
+| 育成的 `ri(200,500)` 不消耗 | `income-summary`、`salary-flow`、`draft-income-e2e --quick` |
+| `startYear:S.year+1` → `S.year` | `income-summary`、`draft-bonus-display`、`draft-income-e2e --quick` |
+| 拒絕選項改讀快照 | `income-summary`、`draft-signing-policy` |
+| 建構式移除 `pickRecord`、`salaryDecisionLink` | `draft-income-e2e --quick` |
+| `enterDraftPath` 改直接呼叫 `runDraftRule` | `draft-signing-policy`（`card is not defined`） |
+| `score>=60` → `>=61`；`cb('fail')` → `cb('declined')`；移除 `bindLatestSalaryDetailLink()`；`accept` 改讀快照 | 只有 `income-summary` |
+
+- 最後一列 4 項只靠逐字比對保護，沒有行為入口抓到；未量測搬移前的基準，不判定為既有缺口。
+- `enterDraftPath` 突變是 vm 內的 crash，只算弱證據；接縫的主要證據是抵達探測的薄包裝次數。
+- 限制：接受、拒絕各只有 4 次樣本。突變的 `draft-income-e2e` 只跑 `--quick`。未測：Linux CI、Preview。
+- 執行紀錄：探測腳本第一次因生涯結束後點到重新開始而中斷，修正後重跑。突變腳本第一次因 `pickRecord` 錨點出現兩次而中止，已完成項目保留，剩餘 3 項以唯一錨點重跑。
+
+### 2ee.5 驗證與交付（L3／R3：動到 RNG 呼叫點與進路分岐的確定處理；允許差分為無）
+
+- 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較、抵達探測與上表突變；reviewer。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。`game.js` import 行不動，`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms` 轉為未使用，實作後補記於 BACKLOG CODE-DEAD-01。`docs/design/*.md` 行號不動。
+- push 與 PR 另批。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -3999,6 +4061,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - `  movement = function()` 外殼留在 `game.js` 時，`championship-intl:75` 的切片結束錨點與 `stage10-risk-e2e` 的 `movement` 重綁不受影響。§3.18「L2 搬移會失去結束錨點」只適用整行搬走。
 - `phasePre`、`proSeason`、`settleProfessionalEnd` 依 §3.18、§3.6 留到年度流程。
 - 使用者決定（2026-11-01）：第 25 期採 L2 業餘分支，CODE-DEAD-01（§2cc）先做，再寫細部計畫。`runDraft` 留到下一期。不授權實作。
+- 使用者決定（2026-11-01）：第 26 期採 `runDraft`，細部計畫見 §2ee。
 
 ## 4. 使用者決定（2026-10-18）
 
