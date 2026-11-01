@@ -3809,7 +3809,8 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 ### 2gg.7 交付（2026-11-01）
 
 - 實作 commit `a1a2377` 與結果紀錄皆在 `refactor/trait-result-card`。已 push，[PR #47](https://github.com/tt-chin/yakyujinsei/pull/47) → `dev` 待合併，未修改 `main`。
-- 未驗證：Linux CI、Preview。
+- [Tests #117](https://github.com/tt-chin/yakyujinsei/actions/runs/41300962129)（`4e2a517`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 94`、`acceptedPass 94`、`issues []`。
+- 未驗證：Preview。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
