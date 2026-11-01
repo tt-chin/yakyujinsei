@@ -4,6 +4,7 @@ import fs from 'node:fs';
 const read=path=>fs.readFileSync(new URL(path,import.meta.url),'utf8');
 const html=read('../docs/index.html');
 const game=read('../docs/src/engine/game.js');
+const initialState=read('../docs/src/engine/initial-state.js');
 const ability=read('../docs/src/ui/ability-view.js');
 const record=read('../docs/src/ui/record-view.js');
 const career=read('../docs/src/ui/player-detail.js');
@@ -11,7 +12,7 @@ const presenter=read('../docs/src/ui/career-presenter.js');
 
 assert.equal((html.match(/data-main-view=/g)||[]).length,3);
 for(const label of ['ホーム','選手','キャリア'])assert.match(html,new RegExp(`>${label}<`));
-assert.match(game,/statsByLevel:\{NPB1:null,NPB2:null,NPB_DEV:null,KBO1:null,KBO2:null,CPBL1:null,CPBL2:null,MLB:null,A3:null,A2:null,A1:null,R:null,IND:null,CORP:null\}/);
+assert.match(initialState,/statsByLevel:\{NPB1:null,NPB2:null,NPB_DEV:null,KBO1:null,KBO2:null,CPBL1:null,CPBL2:null,MLB:null,A3:null,A2:null,A1:null,R:null,IND:null,CORP:null\}/);
 assert.match(game,/const levelKey=S\.lv,bucket=bucketOf\(levelKey\); accStat\(bucket,st\); accLevelStat\(levelKey,st\);/);
 assert.match(game,/function addStatTotal\(t,st\)/);
 const seasonStats=game.includes('seasonStats.accLevelStat(')?read('../docs/src/engine/season-stats.js'):null;
