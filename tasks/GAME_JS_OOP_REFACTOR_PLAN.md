@@ -3658,6 +3658,60 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 實作 commit `92959a1`、結果紀錄皆在 `refactor/run-draft`。已 push，PR #45 → `dev` 待合併，未修改 `main`。
 - 未驗證：Preview。Linux Full CI 結果記於 PR #45。
 
+## 2ff. 第 27 期：`boardModel` 移至 `CareerPresenter`（細部計畫，2026-11-01；計畫已批准，實作已批准）
+
+基準 `9d25b09`（PR #45 併入 `dev`，樹與 `436f1cc` 相同），`game.js` 901 行／84,181 bytes，`career-presenter.js` 21 行／4,837 bytes。路線見 §3.19。
+
+### 2ff.1 現況
+
+- 區段：`docs/src/engine/game.js:283–306`，含外框 1,715 bytes（§3.19 估 1,692）。本體 22 行，無奇數反引號行。
+- `S` 引用 25 處、寫入 0、RNG 0、DOM 0。
+- 自由名稱：`S`、`DPN`、`POSN`、`TEAM_COLOR`、`roleN`、`playerType`、`ovr`。`POSN` 已是注入，其餘為新注入。
+- `boardModel` 只有 `game.js:282` 的 `board` 一個呼叫端。`tests`、`scripts`、`tools` 沒有引用這個名稱，也沒有 e2e 重綁 `ovr`、`playerType`、`roleN`。
+- `board` 在 `game.js:740` 被覆寫為 `LEGACY.board` 加 `patchBoard`，`LEGACY.board` 仍走原本的 `board` → `boardModel` 路徑，本期不動。
+- `career-presenter.js` 與 `game-view.js` 建立於 `287dd1a` 之後，不受 `award-identity-policy` 的 `docs/src` 凍結檢查影響。
+- 本體第 298、300 行的 `rgba(0、0、0、…)` 使用全形頓號，屬既有內容，本期逐字保留，不修正。
+
+### 2ff.2 設計（使用者決定 2026-11-01：批准 D1–D5 與 T1）
+
+- D1 分支：新分支 `refactor/board-model`，自 `9d25b09` 開出，比較基準同為 `9d25b09`。
+- D2 方法：`CareerPresenter.board(phase)`，放在 `traits()` 與 `player()` 之間；本體逐字搬入，僅 +2 縮排，開頭由 `getState` 與 `#deps` 取得名稱。回傳值維持未凍結，與舊本體相同。
+- D3 注入：`DPN` 放進 `labels`，`TEAM_COLOR` 直接傳，`roleN`、`playerType`、`ovr` 為 late-binding lambda（`game.js:240` 建構式）。
+- D4 薄包裝：`game.js` 保留一行 `boardModel`，與 5 個 `build*ViewModel` 一致，`game-view.js:30` 註解不用改。
+- D5 註解：更新 `career-presenter.js` 開頭的模組範圍說明。
+
+### 2ff.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 位置 | 變更 | 性質 |
+|---|---|---|---|
+| T1 | `tests/career-presenter.test.mjs` | 新增 18 組 fixture × 3 個 phase，共 54 例，與 `9d25b09` 的 `boardModel` 逐項對照 | 新增涵蓋 |
+
+既有測試不需修改。
+
+### 2ff.4 草稿實測（2026-11-01，scratch worktree，基準 `436f1cc`，樹與 `9d25b09` 相同；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 未改測試的 Quick | 68／68 PASS |
+| 改測試後 Quick（含 T1、D5） | 68／68 PASS |
+| 分組 Full（僅程式改動，未含 T1、D5） | 22＋24＋22＋25＝93 入口：92 PASS／1 FAIL，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | 草稿對 `436f1cc`：8 段 DOM／`S`／RNG 一致 |
+| 18 字元 n-gram 掃描（`tests`、`scripts`、`tools`） | 4 檔各 1 行，皆為其他函式的相似文字，無文字耦合 |
+| `game`／`*.includes` 斷言掃描（113 個） | 1 個命中，`display-preferences.test:23` 檢查的不是 `game.js`，不受影響 |
+| 突變：`board()` 本體 20 項 | 19 項由 T1 抓到；存活的 `'var(--amber)'` fallback 為等價突變，fallback 生效時 `isProColored` 為 false，`tc` 不進入輸出 |
+| 突變：`game.js` 接線 5 項（`DPN`、`TEAM_COLOR`、`roleN`、`playerType`、`ovr`） | 全部由 `game-view-dom-e2e` 在 `$.dom.board` 抓到 |
+
+- 唯一 FAIL 是 `event-integration.test`，SIGSEGV、log 為空、0.38 秒。單獨重跑 PASS；40 次重跑草稿 0、乾淨樹 0。§3.17 之後的本機紀錄曾有相同現象，判定與本期無關，但該輪仍記為 FAIL。
+- Full 內的 `game-view-dom-e2e` 比較預設基準 `1bc65df`（Runner 不轉送 `--baseline`），本期等價證明以上表直接比較為準。
+- 執行紀錄：突變判定第一次以標籤字串比對，首個 fixture 就失敗的 6 項被誤判為存活，改為比對 `ERR_ASSERTION` 並排除 `is not defined` 後重跑。分組腳本在 `set -e` 下，第 3 組失敗時未寫入結束碼，FAIL 改由該組 log 與 summary 確認。
+- 限制：接線突變在 T1、D5 之前的草稿上執行。未測：Linux CI、Preview。
+
+### 2ff.5 驗證與交付（L2／R2：無 RNG、無 `S` 寫入的唯讀顯示搬移；允許差分為無）
+
+- 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較與上表突變；reviewer。
+- 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。`docs/design/*.md` 行號不動。
+- 使用者已批准 push 與 PR → `dev`；`main` 不動。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -4084,6 +4138,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - `phasePre`、`proSeason`、`settleProfessionalEnd` 依 §3.18、§3.6 留到年度流程。
 - 使用者決定（2026-11-01）：第 25 期採 L2 業餘分支，CODE-DEAD-01（§2cc）先做，再寫細部計畫。`runDraft` 留到下一期。不授權實作。
 - 使用者決定（2026-11-01）：第 26 期採 `runDraft`，細部計畫見 §2ee。
+- 使用者決定（2026-11-01）：第 27 期採 `boardModel`，細部計畫見 §2ff。`traitResultMarkup` 留到下一期以後。
 
 ## 4. 使用者決定（2026-10-18）
 
