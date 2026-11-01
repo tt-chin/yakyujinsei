@@ -29,22 +29,34 @@ test('genuine floor/package and fixed-cost conflicts still throw',()=>{for(const
 // Phase 4-A turns the overlay's salaryFor assignment into a declaration; --baseline sources keep the assignment.
 const salaryForDeclared=game.includes('\n  function salaryFor(');
 const between=(start,end)=>{const a=game.indexOf(start),b=game.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,start);return game.slice(a,b);};
+// Phase 22 moved the contract functions into career-contract.js; the *Rule definitions run here under their game.js names.
+const contractMoved=game.includes("from './career-contract.js'"),contractSource=contractMoved?read('docs/src/engine/career-contract.js'):'';
+const moduleBetween=(start,end)=>{const a=contractSource.indexOf(start),b=contractSource.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,start);return contractSource.slice(a,b);};
+const movementSource=read('docs/src/engine/career-movement.js');
+const movementBetween=(start,end)=>{const a=movementSource.indexOf(start),b=movementSource.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,start);return movementSource.slice(a,b);};
+const contractFunctions=()=>contractMoved?
+  moduleBetween('  function salaryForRule(','\n  function migrateSalaryV130State')+';var salaryFor=salaryForRule;let careerSession={pendingOffseasonSalary:null};'+
+  contractSource.match(/  const kboPreviousPackage=[^\n]+/)[0]+moduleBetween('  const salaryCandidateRule=','\n  function saveSalaryDecision')+';var salaryCandidate=salaryCandidateRule;'+
+  contractSource.match(/  function fixedContractRule[^\n]+/)[0]+';var fixedContract=fixedContractRule;'+
+  moduleBetween('  function finalizePendingOffseasonSalary','\n  function applyLevelSalary')+
+  moduleBetween('  function applyLevelSalary','\n  const appendContractExtension='):
+  'let '+(salaryForDeclared?'':'salaryFor,')+'salaryCandidate,applyDemotionSalary,markClubInitiatedRenewal;'+
+  between(salaryForDeclared?'  function salaryFor(':'  salaryFor = function','\n  function migrateSalaryV130State')+';let careerSession={pendingOffseasonSalary:null};'+
+  game.match(/  const kboPreviousPackage=[^\n]+/)[0]+between('  salaryCandidate=','\n  function saveSalaryDecision')+
+  game.match(/  const nextContractId=[^\n]+/)[0]+game.match(/  function fixedContract[^\n]+/)[0]+
+  between('  function finalizePendingOffseasonSalary','\n  function applyLevelSalary')+
+  between('  function applyLevelSalary','\n  appendContractExtension=');
 function harness(){
  const S={year:2049,age:39,pos:'IF',stage:'PRO',org:'KBO',lv:'KBO1',orgTeamId:'KBO_GWANGJU_TIGERS',currentSalary:168_210_000,contractSequence:9,marketInjury:'HEALTHY',serviceTime:{KBO:8},salaryEvaluationHistory:[],salaryDecisionHistory:[],stats:{},skipMid:true};
  let old=contract.createContract({contractId:'KBO:KBO_DAEGU_LIONS:2041:009',org:'KBO',teamId:S.orgTeamId,signedYear:2041,startYear:2042,years:3,annualSalary:140_180_000,contractType:'OVERSEAS_FA'});
  old=contract.appendExtension(old,{signedYear:2043,startYear:2045,years:5,annualSalary:168_210_000,incentive:createIncentiveTerms({org:'KBO',annualSalary:168_210_000})});
  for(let year=2042;year<=2049;year++)old=contract.markSalaryPaid(old,year).contract;S.ct=old;
- const context=vm.createContext({S,...policy,...contract,calculateControlOffer,calculateSalaryCurve,convertRatingBetweenLevels,roundToTenThousandYen,createIncentiveTerms,createSigningBonusTerms,
+ const context=vm.createContext({S,getState:()=>S,...policy,...contract,calculateControlOffer,calculateSalaryCurve,convertRatingBetweenLevels,roundToTenThousandYen,createIncentiveTerms,createSigningBonusTerms,
   currentMarketRating:()=>-5.75,dpMult:()=>.92,ovr:()=>44,injurySalaryMultiplier:()=>1,isRecentStar:()=>false,serviceYearsFor:org=>S.serviceTime[org]||0,previousSalaryForOffer:()=>S.currentSalary,hadAmericanContract:()=>false,migrateSalaryV130State:()=>{},
   card:()=>{},board:()=>{},bindLatestSalaryDetailLink:()=>{},fmtMoney:String,salaryDecisionSummary:()=>'',salaryDecisionLink:()=>'',isBelowActiveMinimum:()=>false,
   saveSalaryDecision:(type,candidate,previousSalary,finalSalary)=>S.salaryDecisionHistory.push({type,candidate,previousSalary,finalSalary}),advances:0});
- vm.runInContext('const LV='+game.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';const PATHS={KBO:["KBO2","KBO1"]};let '+(salaryForDeclared?'':'salaryFor,')+'salaryCandidate,applyDemotionSalary,markClubInitiatedRenewal;'+
-  between(salaryForDeclared?'  function salaryFor(':'  salaryFor = function','\n  function migrateSalaryV130State')+';let careerSession={pendingOffseasonSalary:null};'+
-  game.match(/  const kboPreviousPackage=[^\n]+/)[0]+between('  salaryCandidate=','\n  function saveSalaryDecision')+
-  game.match(/  const nextContractId=[^\n]+/)[0]+game.match(/  function fixedContract[^\n]+/)[0]+
-  between('  function finalizePendingOffseasonSalary','\n  function applyLevelSalary')+
-  between('  function applyLevelSalary','\n  appendContractExtension=')+
-  'function advance(){finalizePendingOffseasonSalary();advances++;}'+between('function movement(){','\nfunction buyoutRemaining')+(game.includes('function reportFlowOutcome(')?'\n'+between('  function reportFlowOutcome(','\n  function newState'):''),context);
+ vm.runInContext('const LV='+game.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';const PATHS={KBO:["KBO2","KBO1"]};'+contractFunctions()+
+  'function advance(){finalizePendingOffseasonSalary();advances++;}'+movementBetween('  function movement(){','\n  return {')+(game.includes('function reportFlowOutcome(')?'\n'+between('  function reportFlowOutcome(','\n  function newState'):''),context);
  return{S,old,run:code=>vm.runInContext(code,context),context};
 }
 test('native candidate and fixedContract floor without RNG',()=>{const h=harness();h.S.lv='KBO2';const c=h.run('salaryCandidate()');assert.equal(c.baseSalary,8_000_000);assert.equal(c.positionMult,.92);assert.equal(c.annualSalary,8_000_000);h.context.candidate=c;const signed=h.run('fixedContract({org:S.org,teamId:S.orgTeamId,years:1,annualSalary:7_360_000,candidate})');assert.equal(signed.annualSalary,8_000_000);assert.equal(signed.incentive.rate,.07);assert.deepEqual(h.S.ct,h.old);});

@@ -6,6 +6,7 @@ import { createContract } from '../docs/src/engine/contract-policy.js';
 import { acceptDraftSelection, declineDraftSelection, draftSigningTerms, isDraftFallbackResult } from '../docs/src/engine/draft-signing-policy.js';
 import { runChoiceAction, safeErrorCode } from '../docs/src/ui/choice-action.js';
 import { productionFunction } from './retirement-hof-test-support.mjs';
+import { AmateurCareer } from '../docs/src/engine/amateur-career.js';
 
 function initialState({ stage = 'HS', stageYr = 3, age = 18, year = 2028 } = {}) {
   return {
@@ -87,10 +88,12 @@ assert.deepEqual(draftSigningTerms('ROSTER', 2), { level: 'NPB2', contractType: 
 assert.equal(safeErrorCode(new Error('PRO_PLAYER_WITHOUT_CONTRACT')), 'PRO_PLAYER_WITHOUT_CONTRACT');
 assert.equal(safeErrorCode(new TypeError('Cannot read private data')), 'UNEXPECTED_ERROR');
 const game = fs.readFileSync(new URL('../docs/src/engine/game.js', import.meta.url), 'utf8');
-assert.match(game, /if\(result==='signed'\)\{reportFlowOutcome\(\{kind:'AMATEUR_DRAFTED'\}\);return;\}/);
-assert.match(game, /cb\(result\)/); assert.match(game, /cb\(declineDraftSelection\(S\)\)/);
-assert.match(game, /S\.stage='PRO';S\.stageYr=0/);
-assert.doesNotMatch(game, /buildSalaryDecision\([^;]+;\s*decision\.org=/s);
+const amateurSource = fs.readFileSync(new URL('../docs/src/engine/amateur-career.js', import.meta.url), 'utf8');
+const contractSource = fs.readFileSync(new URL('../docs/src/engine/career-contract.js', import.meta.url), 'utf8');
+assert.match(amateurSource, /if\(result==='signed'\)\{reportFlowOutcome\(\{kind:'AMATEUR_DRAFTED'\}\);return;\}/);
+assert.match(amateurSource, /cb\(result\)/); assert.match(amateurSource, /cb\(declineDraftSelection\(getState\(\)\)\)/);
+assert.match(contractSource, /S\.stage='PRO';S\.stageYr=0/);
+assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' + fs.readFileSync(new URL('../docs/src/engine/career-movement.js', import.meta.url), 'utf8'), /buildSalaryDecision\([^;]+;\s*decision\.org=/s);
 
 // Case F: アマチュア進路の結果回報は、基準 SHA と同じ呼び出し列を保つ（第 11-B 期第 1 批）。
 {
@@ -100,7 +103,7 @@ assert.doesNotMatch(game, /buildSalaryDecision\([^;]+;\s*decision\.org=/s);
     const log = [], choices = [], reported = [];
     const S = { entryRoute: 'HS', corpYears: 0, indYears: 0, ...state };
     const context = vm.createContext({
-      S, LV: { A1: { n: 'A+' }, R: { n: 'ルーキー' } }, isDraftFallbackResult, reported,
+      S, LV: { A1: { n: 'A+' }, R: { n: 'ルーキー' } }, isDraftFallbackResult, reported, AmateurCareer, DATA: {},
       ovr: () => overall, ri: low => low, R: () => 0, fmtMoney: String, salaryFor: () => 0,
       createSigningBonusTerms: () => ({ signingBonus: 0 }),
       listByOrg: () => [{ name: 'MiLB-A', teamId: 'MILB-A' }, { name: 'MiLB-B', teamId: 'MILB-B' }, { name: 'MiLB-C', teamId: 'MILB-C' }],
