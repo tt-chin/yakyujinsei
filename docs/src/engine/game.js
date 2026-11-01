@@ -237,7 +237,7 @@ function checkGoldclothSeason(){
   recordFirstTeamSeason(S);
   if(goldclothEligible(S))traitCard('goldcloth',displayTrait('goldcloth'),'阪神ストライプス一軍で通算10年。虎党の声援を背に、甲子園で戦い続けてきた。その縦縞は、もはやお前の誇りだ。');
 }
-const careerPresenter=new CareerPresenter({getState:()=>S,labels:{ABL,POS_AB,POSN},fmtMoney,fmtIP,displayTrait,teamNick});
+const careerPresenter=new CareerPresenter({getState:()=>S,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN:r=>roleN(r),playerType:()=>playerType(),ovr:()=>ovr()});
 function buildRecordViewModel(){return careerPresenter.record();}
 function buildAbilityViewModel(){return careerPresenter.ability();}
 function buildTraitsViewModel(){return careerPresenter.traits();}
@@ -280,30 +280,7 @@ function traitResultMarkup(node,title,html){
 function card(cls,title,html){ gameView.card(cls,title,html); }
 function divider(t){ _curYearBody=gameView.divider(t,MAX_YEARS); }
 function board(phase){ gameView.renderBoard(boardModel(phase)); }
-function boardModel(phase){
-  const nameHtml=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
-  let t;
-  if(S.stage==='HS')t=S.team+'（高'+['一','二','三'][S.stageYr-1]+'）';
-  else if(S.stage==='U')t=S.team+'（大'+['一','二','三','四'][S.stageYr-1]+'）';
-  else if((S.stage==='CORP'||S.stage==='IND'))t=S.team+'（アマチュア）';
-  else t=S.teamName();
-  let teamHtml;
-  { const tc = (S.orgTeamId && TEAM_COLOR[S.orgTeamId]) || 'var(--amber)';
-    /* 白色か判定し、白背景に白文字となるのを防ぐ。 */
-    const isWhite = (tc.toLowerCase() === '#ffffff' || tc.toLowerCase() === '#fff');
-    
-    /* プロ入り済みで球団色が設定されている場合、白背景ラベルを適用。 */
-    const isProColored = (S.stage === 'PRO' && TEAM_COLOR[S.orgTeamId]);
-    const txtColor = isProColored ? (isWhite ? '#000000' : tc) : 'var(--amber)';
-    const bgStyle = isProColored ? 'background:#ffffff; padding:2px 8px; border-radius:6px; box-shadow:0 2px 4px rgba(0、0、0、0.4);' : '';
-    
-    const dot = isProColored ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isWhite ? '#cccccc' : tc};margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba(0、0、0、0.2);"></span>` : '';
-    
-    teamHtml = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
-  const age=S.age, year=S.year;
-  const ovrValue=ovr(), clearTj=S.pos==='P', salaryText=Math.round((S.currentSalary||0)/10000).toLocaleString();
-  return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase};
-}
+function boardModel(phase){return careerPresenter.board(phase);}
 function actClear(){ gameView.actClear(); }
 function actToggleSync(){ gameView.actToggleSync(); }
 function escapeDiagnosticHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
