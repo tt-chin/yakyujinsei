@@ -18,6 +18,7 @@ export class AmateurCareer {
   pathChoiceHS(){this.#rules.pathChoiceHS();}
   pathChoiceU4(){this.#rules.pathChoiceU4();}
   amateurSeason(){this.#rules.amateurSeason();}
+  seasonEndMovement(){return this.#rules.seasonEndMovement();}
 }
 
 function amateurCareerRules({getState,DATA,LV,ovr,fmtMoney,salaryFor,listByOrg,signTo,choose,card,traitCard,displayTrait,setSchool,setAmateur,runDraft,reportFlowOutcome,nextStep,maybeIntl,recordIndependentSalaryEvaluation,rng:{R,ri}}){
@@ -97,5 +98,6 @@ function amateurCareerRules({getState,DATA,LV,ovr,fmtMoney,salaryFor,listByOrg,s
     if(S.stage==='IND')recordIndependentSalaryEvaluation(results);
     consumeEventSeason(S);
     const rows=results.map(result=>result.html);S.log.push({y:S.year,age:S.age,tm:S.team,line:rows.map(x=>x.replace(/<[^>]+>/g,'')).join('、'),inj:false});card('','国内大会',rows.join('<br>'));maybeIntl(()=>nextStep());}
-  return {enterDraftPath,draftFallback,pathChoiceHS,pathChoiceU4,amateurSeason};
+  function seasonEndMovement(){const S=getState();if(S.stage==='HS'){if(S.stageYr<3)reportFlowOutcome({kind:'AMATEUR_STAY'});else pathChoiceHS();return true;}if(S.stage==='U'){if(S.stageYr<4)reportFlowOutcome({kind:'AMATEUR_STAY'});else pathChoiceU4();return true;}if(S.stage==='CORP'){S.corpYears++;const eligible=(S.entryRoute==='HS'?S.corpYears>=3:S.corpYears>=2);const opts=[{t:'社会人野球を続ける',main:true,f:()=>reportFlowOutcome({kind:'AMATEUR_STAY'})},{t:'独立リーグへ移籍',f:()=>{setAmateur('IND');reportFlowOutcome({kind:'AMATEUR_JOIN_IND'});}},{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'AMATEUR_RETIRED',reason:'社会人野球で現役生活を終えた。'})}];if(eligible)opts.unshift({t:'NPBドラフトへ再挑戦',main:true,f:()=>enterDraftPath('CORP')});choose('社会人シーズン終了',opts);return true;}if(S.stage==='IND'){S.indYears++;choose('独立リーグシーズン終了',[{t:'NPBドラフトへ再挑戦',main:true,f:()=>enterDraftPath('IND')},{t:'独立リーグに残留',f:()=>reportFlowOutcome({kind:'AMATEUR_STAY'})},{t:'社会人野球へ',f:()=>{setAmateur('CORP');reportFlowOutcome({kind:'AMATEUR_JOIN_CORP'});}},{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'AMATEUR_RETIRED',reason:'独立リーグで現役生活を終えた。'})}]);return true;}return false;}
+  return {enterDraftPath,draftFallback,pathChoiceHS,pathChoiceU4,amateurSeason,seasonEndMovement};
 }
