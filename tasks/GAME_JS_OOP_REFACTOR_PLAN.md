@@ -3573,6 +3573,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 實作 commit `c568952` 由本機 `refactor/amateur-movement` fast-forward 併入 `refactor/code-dead-01`，PR #44 → `dev` 待合併，未修改 `main`。
 - 未驗證：Preview。Linux Full CI 結果記於 PR #44。
+- 合併（2026-11-01）：PR #44 併入 `dev`（`7de1fd1`，樹與 `17b271b` 相同）。Tests #111（`17b271b`）的 `full-plan`、8 個 `full-batch`、`full-aggregate` 皆 success，入口數未自 log 核對。`7de1fd1` 的 `tests` 與 Cloudflare Pages 皆 success。
 
 ## 2ee. 第 26 期：`runDraft` 移至 `AmateurCareer`（細部計畫，2026-11-01；計畫已批准，實作已批准）
 
@@ -3635,6 +3636,22 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較、抵達探測與上表突變；reviewer。
 - 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。`game.js` import 行不動，`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms` 轉為未使用，實作後補記於 BACKLOG CODE-DEAD-01。`docs/design/*.md` 行號不動。
 - push 與 PR 另批。
+
+### 2ee.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/run-draft`，計畫 commit `248f586`，實作 commit `92959a1`，比較基準 `17b271b`）
+
+`game.js` 906 → 901 行，85,655 → 84,181 bytes。`amateur-career.js` 103 → 111 行，10,591 → 12,691 bytes。測試 4 檔，與 §2ee.3 相同。`docs`、`tests` 與草稿零差異。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree） | 68／68 PASS，已核對實際入口數 |
+| 分組 Full（`--baseline=17b271b…`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | `92959a1` 對 `17b271b`：8 段 DOM／`S`／RNG 一致 |
+| 抵達探測（同 §2ee.4 的 16 段） | 抵達序列、最終 `S`、RNG 全部一致；抵達 137：指名漏れ 129、接受 4、拒絕 4；每段的薄包裝通過次數等於抵達次數 |
+| 突變 11 項 | 結果與 §2ee.4 相同：全部被抓到，其中 4 項只有 `income-summary` |
+| reviewer | 無 finding：逐字比對（僅 D2 三處與函式名）、自由名稱、延遲 closure、Shadow 路徑、RNG、測試未放寬、標頭註解 7 項皆無問題 |
+
+- 未做：Linux CI、Preview。
+- 基準狀態：驗證期間 PR #44 由使用者合併，`dev` 為 `7de1fd1`，樹與 `17b271b` 相同，所以上述比較基準仍對應 `dev`。`git merge-tree` 確認本分支對 `dev` 無衝突，合併後的樹等於 `92959a1` 之後的分支樹。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
