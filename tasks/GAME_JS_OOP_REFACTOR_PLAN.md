@@ -3790,6 +3790,22 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
 - 使用者已批准 push 與 PR → `dev`；`main` 不動。
 
+### 2gg.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/trait-result-card`，計畫 commit `264346f`，實作 commit `a1a2377`，比較基準 `9e6129f`）
+
+`game.js` 878 → 856 行，82,605 → 79,893 bytes。`trait-result-card.js` 新增 37 行／3,677 bytes。測試 1 檔，與 §2gg.3 相同。實作 commit 的 `game.js` 與新模組與 §2gg.4 草稿逐位元組相同。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，`a1a2377`） | 69／69 PASS，已核對實際入口數 |
+| 分組 Full（`a1a2377`，`--baseline=9e6129f…`） | 22＋25＋22＋25＝94 入口：93 PASS／1 FAIL，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | `a1a2377` 對 `9e6129f`：8 段 DOM／`S`／RNG 一致 |
+| 突變：`decorate` 本體 60 項 | 結果與 §2gg.4 相同：54 項由 T1 抓到，6 項等價突變存活 |
+| 突變：`game.js` 接線 3 項 | 結果與 §2gg.4 相同：全部由 `game-view-dom-e2e` 抓到 |
+| reviewer | 無問題。逐字比對、自由名稱、初始化順序、import 副作用、測試非空轉、開頭註解皆已檢查 |
+
+- 唯一 FAIL 是 `event-integration.test`，`signal: SIGSEGV`、log 為空、1.6 秒。單獨重跑 PASS；40 次重跑 `a1a2377` 0、乾淨樹 `9e6129f` 0。與 §2ff.4 相同現象，判定與本期無關，但該輪仍記為 FAIL。
+- 未做：Linux CI、Preview。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
