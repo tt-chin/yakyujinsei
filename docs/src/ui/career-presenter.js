@@ -5,7 +5,7 @@ import {removedTraitLabel} from '../engine/trait-policy.js';
 
 // Read-only player/career view models for navigation, the desktop overview (OOP plan §2g) and the scoreboard (§2ff).
 // The career state is read on every call through getState, so a new career (S reassigned) is seen at once.
-// Method bodies are the former game.js build*ViewModel bodies; game.js helpers and labels are injected.
+// Method bodies are the former game.js build*ViewModel and boardModel bodies; game.js helpers and labels are injected.
 export class CareerPresenter {
   #getState;#deps;
   constructor({getState,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN,playerType,ovr}){
