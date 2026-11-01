@@ -3465,7 +3465,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 執行紀錄：
   - `throw` 變體第一次因探針接在無大括號的 `if(...)return;` 之後，`return` 變成無條件，3 個 E2E FAIL，與死碼無關；修正後重跑。
   - 第一次 Full 因多刪 5 個 import 有 7 個入口 FAIL；`contract-salary-e2e`、`stage10-risk-e2e` 的 log 明確為 `markSalaryPaid is not defined`，其餘 5 個是還原 import 後通過，原因屬推定（log 已刪）。
-- 實作驗證：實作 commit 的乾淨 worktree 跑 Quick、分組 Full（`--baseline=a0ad197…`，含 `game-view-dom-e2e`）；diff 確認 `game.js` 只有刪除；突變 T3 三個斷言；reviewer。
+- 實作驗證：實作 commit 的乾淨 worktree 跑 Quick、分組 Full（`--baseline=a0ad197…`）；`game-view-dom-e2e` 另對 `a0ad197` 直接比較；diff 確認 `game.js` 只有刪除；突變 T3 三個斷言；reviewer。
 - 未做：Linux CI、Preview。
 
 ### 2cc.4 交付
@@ -3480,7 +3480,8 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 | 檢查（皆在 `45cccd7` 乾淨 worktree） | 結果 |
 |---|---|
 | Quick | 68／68 PASS |
-| 分組 Full（`--baseline=a0ad197…`，含 `game-view-dom-e2e`） | 22＋24＋22＋25＝93／93 PASS，FAIL／BLOCKED／SKIP 皆 0，已核對實際入口數 |
+| 分組 Full（`--baseline=a0ad197…`） | 22＋24＋22＋25＝93／93 PASS，FAIL／BLOCKED／SKIP 皆 0，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | `45cccd7` 對 `a0ad197`：8 段 DOM／`S`／RNG 一致（2026-11-01 補跑）。更正：原寫 Full 含此比較，但 runner 不把 `--baseline` 轉給此入口，Full 內比對的是預設基準 `1bc65dfc` |
 | 突變（`season-payment-policy.js` 改 `salaryDueForYear`、`markSalaryPaid` 引數文字，改名 `applyIncentivePayment`） | 3 組 `salary-flow.test` 全部 exit 1 |
 | reviewer | 無 blocking；確認唯一的 `S.stage='PRO'` 寫入者是 `signTo`，非 PRO 路徑逐位元組不變，無 RNG 變化 |
 
@@ -3525,7 +3526,7 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 | 檢查 | 結果 |
 |---|---|
 | 未改測試的 Quick | 68／68 PASS |
-| 分組 Full（`--baseline=9ad6ef4…`，含 `game-view-dom-e2e`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數 |
+| 分組 Full（`--baseline=9ad6ef4…`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數。Full 內的 `game-view-dom-e2e` 比對預設基準 `1bc65dfc`；對實際基準的直接比較見 §2dd.6 |
 | 逐字比對 | 1,274 bytes，還原 `return true;` 後與基準相同，反向對照可偵測 |
 | 抵達探測（seed `20261101`–`20261103` × P／IF，6 段生涯全部結束，無 pageerror） | `movement` L2 與 `seasonEndMovement` 皆 169 次：HS 18、U 20、CORP 106、IND 1、PRO 24 |
 
@@ -3551,7 +3552,8 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 | 檢查 | 結果 |
 |---|---|
 | Quick（乾淨 worktree） | 68／68 PASS |
-| 分組 Full（`--baseline=02aa0a3…`，含 `game-view-dom-e2e`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數 |
+| 分組 Full（`--baseline=02aa0a3…`） | 22＋24＋22＋25＝93／93 PASS，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | `c568952` 對 `02aa0a3`：8 段 DOM／`S`／RNG 一致。Full 內的此入口比對預設基準 `1bc65dfc`，所以另外直接跑 |
 | 逐字比對 | 舊區段 1,274 bytes，新本體 1,294 bytes（4 個 `return;` → `return true;`），還原後相同，反向對照可偵測 |
 | 抵達探測（seed `20261101`–`20261103` × P／IF，6 段生涯全部結束，無 pageerror） | `movement` L2 與 `seasonEndMovement` 各 169 次，逐階段相等：HS 18、U 20、CORP 106、IND 1、PRO 24 |
 | reviewer | 無 blocking：控制流程、closure 內 `return`、自由名稱、繞過 `game.js` 薄包裝、RNG 五項皆無問題 |
