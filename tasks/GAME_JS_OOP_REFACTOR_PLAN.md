@@ -3490,10 +3490,10 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 ### 2cc.6 交付（2026-11-01）
 
-- 實作 commit `45cccd7`、結果紀錄皆在本機 `refactor/code-dead-01`。未 push，未開 PR，未併 `dev`，未修改 `main`。
+- 實作 commit `45cccd7`、結果紀錄皆在 `refactor/code-dead-01`（`a51d7ad`）。已 push，PR #44 → `dev` 待合併，未修改 `main`。本分支未跑 Linux Full CI。
 - `dev` `a0ad197`（第 22～24 期）的 Linux Full CI：Tests #110（`workflow_dispatch`，run `41255259730`）8 批全 success，`full-aggregate` `expected 93`、`acceptedPass 93`、`issues []`。本機 macOS＋Brave 另有同等結果；Preview 未確認。
 
-## 2dd. 第 25 期：`movement` L2 業餘分支移至 `AmateurCareer`（細部計畫，2026-11-01；待批准，未授權實作）
+## 2dd. 第 25 期：`movement` L2 業餘分支移至 `AmateurCareer`（細部計畫，2026-11-01；計畫已批准，實作已批准）
 
 基準 `9ad6ef4`（`refactor/code-dead-01`），`game.js` 906 行／86,885 bytes，`amateur-career.js` 101 行／9,151 bytes。路線見 §3.19。
 
@@ -3511,10 +3511,10 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
   - 類別新增 `seasonEndMovement(){return this.#rules.seasonEndMovement();}`，回傳物件加 `seasonEndMovement`。
 - `game.js`：`:876` 的區段換成 `if(amateurCareer.seasonEndMovement())return;`，其他文字不動。
 - `pathChoiceHS`、`pathChoiceU4` 薄包裝保留：`draft-signing-policy.test` 以名稱切片，且切片尾端帶著 `amateurCareer` 建構式。
-- 待決定：
+- 決定（使用者 2026-11-01 批准）：
   - D1 命名：`seasonEndMovement`（回傳「業餘階段已處理」）。
   - D2 邊界：只搬業餘分支，`runDraft` 下一期。
-  - D3 分支：建議接在 `refactor/code-dead-01` 之後、同一 PR，一次合併、一次 Full CI。
+  - D3 分支：第二個 PR，不併入 PR #44。BACKLOG 原有「不與重構混合修改」，所以刪除與搬移分開審查、分開回退。分支 `refactor/amateur-movement` 接在 `a51d7ad` 之後，PR #44 合併後目標才會只顯示本期差異。
 
 ### 2dd.3 測試變更
 
