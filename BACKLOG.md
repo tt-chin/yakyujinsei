@@ -16,7 +16,7 @@
 | BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
 | IMPLEMENTED_UNVERIFIED | **9** | 五項UI／支持已實作提交dev，待審查；原4項保留 |
 | DESIGN_PENDING | **7** | C級高校語意已定案並結案；其餘設計待決保持 |
-| 其他候補／保留／混合 | **13** | 包含TJ顯示規則、CI耗時平衡提案、full-power-pitching-e2e耗時提案及CI_PASS但工具路徑待處理；UI-06／07已計入IMPLEMENTED_UNVERIFIED |
+| 其他候補／保留／混合 | **12** | 5項無狀態標籤候補（INJ-UI-01、EVT-01、INT-01、PLY-01、PLY-02）、承認済み保留2項、CI_PASS但工具路徑待處理、表示token PR待處理、TJ顯示規則、HIST-SPEC-CLAUSE-01及CONTRACT-ASIA-01；UI-06／07已計入IMPLEMENTED_UNVERIFIED |
 
 以上依唯一正式checkbox重新計算：**33 + 32 = 65**（2026-11-01 CODE-DEAD-01經PR #44併dev、Tests #111 Full通過後結案；該項補列時未計入總數，故總數由64更正為65；2026-10-24新增CI-ENV-PIN-01、CI-PITCHING-E2E-01；同日CI-ENV-PIN-01經PR #21合併後勾選；CI-PITCHING-E2E-01經PR #22合併後勾選；CI-FULL-BALANCE-01的實作`cdf0a25`已隨PR #21併dev，經使用者同意一併勾選；同日新增CI-FULL-STALE-01、UI-DESIGN-TOKENS-01；CI-FULL-STALE-01經PR #24／#25併dev、dev Full Run40093614384 92／92 PASS後勾選）。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
 
