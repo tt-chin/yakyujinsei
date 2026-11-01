@@ -3806,6 +3806,11 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 - 唯一 FAIL 是 `event-integration.test`，`signal: SIGSEGV`、log 為空、1.6 秒。單獨重跑 PASS；40 次重跑 `a1a2377` 0、乾淨樹 `9e6129f` 0。與 §2ff.4 相同現象，判定與本期無關，但該輪仍記為 FAIL。
 - 未做：Linux CI、Preview。
 
+### 2gg.7 交付（2026-11-01）
+
+- 實作 commit `a1a2377` 與結果紀錄皆在 `refactor/trait-result-card`。已 push，[PR #47](https://github.com/tt-chin/yakyujinsei/pull/47) → `dev` 待合併，未修改 `main`。
+- 未驗證：Linux CI、Preview。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
