@@ -3882,7 +3882,37 @@ scratchpad 草稿（`727bdd1` 原文逐字組裝＋2u.2 的 5 處差異）已實
 
 - 實作 commit 的乾淨 worktree 跑 Quick、分組 Full；重做 `game-view-dom-e2e` 直接比較、新舊比較與上表突變；reviewer。
 - `game.js` import 行不動。`highSchoolTier`、`installBirthHighSchool`、`ensureEventState` 轉為未使用，實作後補記於 BACKLOG CODE-DEAD-01；e2e hook 可能依名稱取用，不刪除。
-- commit、push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
+- push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
+
+### 2hh.6 實施結果（2026-11-01，本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；分支 `refactor/initial-state`，計畫 commit `3147271`，實作 commit `a274def`，比較基準 `4116389`）
+
+`game.js` 856 → 841 行，79,893 → 76,009 bytes。`initial-state.js` 新增 23 行／4,427 bytes。測試 6 檔，與 §2hh.3 相同。實作 commit 的全部 8 檔與 §2hh.4 草稿逐位元組相同。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，`a274def`） | 69／69 PASS，由 `summary.json` 核對 |
+| 分組 Full（`a274def`，`--baseline=4116389…`） | 22＋25＋22＋25＝94／94 PASS，由 `summary.json` 核對；`display-preferences-e2e` 本輪 PASS |
+| `game-view-dom-e2e` 直接比較 | `a274def` 對 `4116389`：8 段 DOM／`S`／RNG 一致 |
+| 新舊 `newState` 直接比較 | 4 守位共 10,000 案，0 差異 |
+| reviewer | 無問題。逐字比對、自由名稱、綁定時機、初始化順序、測試未放寬皆已檢查 |
+
+| 突變 | 抓到的入口（含 T7、T8，以 `summary.json` 判定） |
+|---|---|
+| M1 `ri(20,32)` → `ri(20,33)` | `school-policy`、`draft-income-e2e`；`kbo-renewal-e2e` 為 SIGKILL |
+| M2 `ab.vel` 不抽亂數 | `school-policy`、`salary-flow`、`draft-income-e2e`、`bug-act-01-02-e2e` |
+| M3 `rngState` 在抽亂數前讀 | `draft-income-e2e`、`bug-act-01-02-e2e`；`kbo-renewal-e2e` 為 SIGKILL |
+| M4 薄包裝傳錯 seed | `verify-modularization`、`kbo-renewal-e2e` |
+| M5 薄包裝漏 `traitPresentation` | `verify-modularization`、`draft-income-e2e`、`bug-act-01-02-e2e`、`kbo-renewal-e2e` |
+| M6 薄包裝用初始化時的 `R` | `verify-modularization`、`draft-income-e2e`、`bug-act-01-02-e2e`；`kbo-renewal-e2e` 為 SIGKILL |
+| M7 移除 `traitPresentation.set` | `school-policy` |
+| M8 移除 `potSum0` | `school-policy`、`event-integration` |
+| M9 `teamName` 回空字串 | `kbo-renewal-e2e` |
+| M10 `teamRec` 固定回 null | `verify-modularization` |
+
+- M1、M2、M3、M8、M9 在新舊比較都產生差異，比較腳本有效。
+- M9 只有 `kbo-renewal-e2e` 一個入口。M7、M10 只有本期新增的斷言抓到，沒有生涯行為入口；新舊比較涵蓋 M7，M10 不經薄包裝。
+- `kbo-renewal-e2e` 的 SIGKILL 未查原因，不算該入口抓到；這 3 項都另有入口抓到。
+- 未做：Linux CI、Preview。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
