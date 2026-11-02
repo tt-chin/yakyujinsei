@@ -4458,6 +4458,35 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 使用者決定（2026-11-01）：第 29 期採 `newState`，細部計畫見 §2hh。`choose` 一族為第 30 期候補，未授權實作。
 - 使用者決定（2026-11-02）：第 30 期採 `choose` 一族，細部計畫見 §2ii。
 
+### 3.21 第 31 期候補盤點：§3.6 年度流程（2026-11-02，基準 `4133a1b`，`game.js` 821 行／72,281 bytes；靜態分析，未做草稿；**未決**，不授權實作）
+
+- 方法：同 §3.20（scratchpad 腳本以 acorn＋eslint-scope 計算，腳本不保留）。本地名稱含 `Math`、`Error` 等內建；RNG 只計函式本體內對 `R`／`ri`／`pick`／`chance` 的直接呼叫；檔數為 `tests`、`scripts`、`tools` 的 `-w` 文字搜尋。
+- §3.6 已完成部分：第 11 期路線 B（賽季後處理表驅動）與路線 A（`reportFlowOutcome`）。未做：①年度步驟具名化、②`S.stage` 轉移 policy、流程本體搬移。(b) 年度中途存檔維持將來候補。
+
+| 候選 | bytes | 自由名稱（本地＋import，不含 `S`） | `S` 引用 | 延遲讀 `S` 的 closure | RNG 呼叫 | 測試／腳本引用檔數 |
+|---|---:|---:|---:|---:|---:|---|
+| ① `nextStep`＋`startYear`（`stepQ`） | 295 | 7＋0 | 3 | 0 | 0 | `stepQ` 5、`nextStep` 7、`startYear` 28 |
+| `advance` | 1,152 | 6＋1 | 3 | 0 | 0 | 16 |
+| `reportFlowOutcome` | 1,608 | 4＋0 | 0 | 0 | 0 | 6 |
+| `phasePre` | 5,077 | 23＋1 | 78 | 12 | 9 | 9 |
+| `phaseMid` | 375 | 8＋0 | 4 | 4 | 0 | 1 |
+| `proSeason`＋`resumeProfessionalSeason`＋`runSeasonPipeline` | 6,312 | 30＋5 | 76 | 0 | 1 | 5／2／3 |
+| `settleProfessionalEnd` | 3,951 | 16＋9 | 36 | 2 | 0（`R` 以參數傳入） | 0（`professionalEnds` 3） |
+| `phaseEnd`＋`settlePhaseEnd` | 2,004 | 17＋2 | 35 | 0 | 0 | `phaseEnd` 12、`settlePhaseEnd` 0 |
+| `startJapanese` | 743 | 17＋0 | 7 | 0 | 0 | 1 |
+
+- ①：`stepQ` 只有 `startYear` 整體指派與 `nextStep` 的 shift／清空兩處。改為具名步驟後，`stage6-browser:22`、`stage10-risk-e2e:25` 的 `stepQ.map(f=>f.name)` 快照會變（`stage10` 與舊 SHA 比較），`full-power-pitching-e2e:48` 直接塞 `__cs.stepQ=[phaseEnd]`，`career-session-access` 的 `FIELDS` 也列 `stepQ`。`choose` 閉包仍無法序列化，單做 ① 不會讓 (b) 成立，收益只有轉移一覽。
+- ②：`S.stage` 寫入現為 5 處，另有 `initial-state.js` 的初值：`game.js:686`（`setAmateur`，參數）、`career-movement.js:236`（參數）、`amateur-career.js:28,39`（`'U'`）、`career-contract.js:232`（`'PRO'`）。各寫入已在所屬領域模組，值為常數或參數；抽成 policy 只是包一層賦值，屬 AGENTS §5 的不必要抽象。
+- `phasePre`：耦合最重。`full-power-pitching-e2e:29` 以 `productionFunction` 對舊 SHA 逐字比較，`full-power-pitching.test:22,25` 與 `npb-return-ui.test:253` 切片進 vm，`stage10-risk-e2e:9–10` 執行時替換 `phasePre`、`phaseMid`、`proSeason`、`advance`、`startYear` 等名稱（搬到模組須依 §3.17 保留延遲綁定）。
+- `proSeason` 一組：`full-power-pitching.test:22,42` 切片，`full-power-pitching-e2e:36` 逐字要求 continuation 內的呼叫字串，`championship-intl-e2e:22` 替換 `tjGamble`、`demotionAudit`、`tradeCheck`、`maybeIntl`、`nextStep` 後呼叫 `proSeason`。
+- 結算（`settleProfessionalEnd`、`phaseEnd`、`settlePhaseEnd`、`professionalEnds`／`professionalMoves`、`performMovement`）：自有狀態機（§3.11 的 `STARTED → … → ALLOCATION_COMMITTED`）。沒有測試以名稱引用 `settleProfessionalEnd`，但 `championship-intl.test:75`（C09）以文字從 `  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();` 切到 `  movement = function()` 放進 vm 執行；`income-summary.test:25` 以 `productionFunction('phaseEnd')` 與 `2e69096` 逐字比較；`npb-return-ui.test` 引用 `professionalEnds`。搬移須批准改這兩處斷言。
+- 年度骨架（`nextStep`、`startYear`、`advance`、`reportFlowOutcome`＋①）：bytes 小、無 RNG，但被替換最多：`advance` 由 `npb-return-e2e` 等整個替換（§3.11），`startYear` 有 28 檔引用；`kbo-renewal-floor.test:59` 從 `  function reportFlowOutcome(` 切到 `  function newState`，`npb-return-ui.test:54` 以 `productionFunction` 取 `reportFlowOutcome`。
+- 建議（未決）：
+  1. ② 不做。
+  2. ① 不單獨成期，與年度骨架一起處理。
+  3. 第 31 期候補為結算：有自己的狀態、本體無 RNG 呼叫點、以名稱引用的測試最少；C09 從文字切片改為匯入模組，符合 §3.6 目的 (c)。屬 L3／R3（付款、Receipt），須批准修改 C09 與 `income-summary.test:25` 的斷言。
+  4. 年度骨架其次，`phasePre`、`proSeason` 最後；或於第 30 期後停止重構（§3.20）。
+
 ## 4. 使用者決定（2026-10-18）
 
 1. 前置 1：D2-G9-RELEASE 殘項未結案，仍可開始第 1 期的本機實作與驗證；重構 PR 併入 `dev` 的時機另行決定。
