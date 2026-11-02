@@ -30,7 +30,7 @@ assert.match(html, /href="https:\/\/x\.com\/dog_cat_150"[^>]*>犬猫（@dog_cat_
 assert.match(main, /initializeDisplayPreferences\(\);[\s\S]*await import\('\.\/engine\/game\.js'\)/);
 assert.match(game, /import \{ VERSION \} from '\.\.\/config\.js';/);
 assert.match(game, /import \{ JP_DATA \} from '\.\.\/data\/jp-data\.js';/);
-assert.match(config, /VERSION = '1\.13\.6'/);
+assert.match(config, /VERSION = '1\.13\.7'/);
 assert.doesNotMatch(config, /RNG_VERSION|RULES_VERSION/);
 assert.match(initialState, /version:VERSION/);
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
