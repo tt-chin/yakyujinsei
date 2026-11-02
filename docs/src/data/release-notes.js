@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.13.7｜2026/11/02",
+    "lines": [
+      "- 共有画面にリプレイURLのコピーボタンを追加。",
+      "- メニューの項目記号を統一。"
+    ]
+  },
+  {
     "title": "1.13.6｜2026/10/24",
     "lines": [
       "- 画面の文字を日本語フォントで表示するよう修正。"

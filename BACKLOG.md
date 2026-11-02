@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+2026-11-02限定UI修正（開發版1.13.7）：新增分享視窗的獨立URL複製、統一6項選單的aria-hidden圓點；不改S／RNG／遊戲規則。`node scripts/test-share-url-menu.mjs --playwright=<外部模組> --browser=chrome`在PC1280／320／390px及320×300小高度完成237項限定檢查PASS，既有`tests/replay-share-theme.test.mjs` PASS。初回聚焦測試的兩個FAIL為測試期待／同步問題（外部提示無障礙名稱的空白、native close尚未送達就檢查背景解鎖），修正測試後限定重測PASS，不更改既有斷言或歷史基準。完整Quick／Full／完整生涯依本次明示範圍NOT_RUN；實機、Preview及正式發布未驗收，既有未完成事項及ARTIFACT_COVERAGE_BLOCKED不因此結案。
+
 發布同步（2026-11-01，1.13.6）：PR #49將dev `4116389`合併至main，merge commit `2fe5b25`（樹與`4116389`相同），由code owner合併，含game.js重構第21～28期與CODE-DEAD-01，VERSION維持1.13.6（內部重構不升版）。[CI Full Tests #120](https://github.com/tt-chin/yakyujinsei/actions/runs/41305843248) 94／94 PASS（`full-aggregate`：`expected 94`、`acceptedPass 94`、`issues []`）；Publish website #30 success。本番`yakyujinsei.com`實測：`docs/index.html`＋`docs/src`共76檔SHA-256與main一致，顯示v1.13.6，起始畫面Console 0則、資源無4xx／5xx。Preview（`4116389`）76檔與dev一致，使用者已確認驗收。未驗證：本番完整生涯、手機表示、`docs/`其他檔案、實機。本次發布不代表個別UI項目的使用者驗收，既有未完成項目不因此結案。
 
 正式發布（2026-10-31，1.13.6）：PR #41將dev `c6d9c9f`合併至main，merge commit `9fe741d`（樹與`c6d9c9f`相同），含1.13.6字型修正與game.js重構第11～20期。[CI Full Tests #102](https://github.com/tt-chin/yakyujinsei/actions/runs/41196168506) 93／93 PASS（`full-aggregate`：`expected 93`、`acceptedPass 93`、`issues []`）；[Publish website #29](https://github.com/tt-chin/yakyujinsei/actions/runs/41197144452) success。本番`yakyujinsei.com`實測：`docs/index.html`＋`docs/src`共72檔SHA-256與main一致，顯示v1.13.6，起始畫面Console 0則、資源無4xx／5xx。未驗證：本番完整生涯、手機表示、`docs/`其他檔案、Cloudflare Preview部署狀態與Preview驗收紀錄。本次發布不代表個別UI項目的使用者驗收，既有未完成項目不因此結案。
