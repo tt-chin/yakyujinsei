@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {readSourceText} from './support/source-text.mjs';
 import {execFileSync} from 'node:child_process';
 import {runInNewContext,createContext,runInContext} from 'node:vm';
 import {createContract,markSalaryPaid,appendExtension,contractNeedsRenewal} from '../docs/src/engine/contract-policy.js';
 import {productionFunction} from './retirement-hof-test-support.mjs';
 
-const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
-const contractSource=readFileSync(new URL('../docs/src/engine/career-contract.js',import.meta.url),'utf8');
-const movementSource=readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8');
+const game=readSourceText(new URL('../docs/src/engine/game.js',import.meta.url));
+const contractSource=readSourceText(new URL('../docs/src/engine/career-contract.js',import.meta.url));
+const movementSource=readSourceText(new URL('../docs/src/engine/career-movement.js',import.meta.url));
 // Phase 23: the factory's return line ends the last slice. Harnesses run these real bodies; getState comes from the vm context.
 const movementFunction=name=>productionFunction(name,movementSource).split('\n  return {')[0];
 const source=movementFunction('crossOffersRule')+';var crossOffers=crossOffersRule;\n'+productionFunction('reportFlowOutcome',game);

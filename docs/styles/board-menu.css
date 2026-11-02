@@ -8,4 +8,5 @@
 #board-menu-panel button:focus-visible,#board-menu-panel a:focus-visible,#board-menu-toggle:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 #board-menu-panel #btn-restart{border-top:1px solid var(--control-edge);border-radius:0;color:var(--bad)}
 #board-menu-panel svg{flex:none}
+#board-menu-panel .menu-bullet{flex:0 0 1em;text-align:center}
 #board-menu-panel .menu-external{margin-left:auto;font-size:.85em;color:var(--dim)}

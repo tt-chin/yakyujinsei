@@ -1,5 +1,13 @@
 # 統一測試入口
 
+## 原始碼文字比較的換行契約
+
+跨Git歷史／Windows／Linux的來源比較，使用`tests/support/source-text.mjs`的`readSourceText(path)`（嚴格UTF-8讀取）或`sourceText(text)`，在切片、字串替換及比較**之前**將兩端CRLF統一成LF；其餘內容維持逐字相等。單獨CR、BOM、縮排、尾端空白、文字與程式變更不忽略。不可把此工具用於凍結快照、檔案SHA256、二進位證據或golden；原始資料不改寫。
+
+Windows系統Git的`core.autocrlf=true`可使Git內LF在工作樹成為CRLF，部分歷史檔案在Git內本來就是CRLF；因此只正規化歷史端、只修改編輯器編碼或直接比較`git show`與工作樹都不足以保證跨平台一致。此次不修改全域Git設定、不批次renormalize產品／歷史檔案；日後若要訂全Repository的`.gitattributes`及編輯器政策，須另行確認保護歷史證據的路徑與精確差異。新增文字比較沿用此共用入口，不以全域trim／忽略空白替代。
+
+`node scripts/test-source-text.mjs`為獨立小型驗證，涵蓋UTF-8、LF／CRLF／混合換行及非換行差異反例；不增加或減少原Quick／Full入口。現行版本檢查讀取`docs/src/config.js`的`VERSION`，只允許該宣告字面值隨正式升版改變，其餘來源與B1／A凍結證據斷言不放寬。
+
 ## CI Full 分批保存
 
 CI 的 Full 透過 `scripts/ci-full-batches.mjs` 依 `test-manifest.mjs` 的 `seconds` 預估以 LPT 平衡拆成8批（目前92入口；無預估者以5秒計；批內維持 inventory 順序），呼叫原 `scripts/test.mjs full --only=...`；不更改 Runner、測試旗標、timeout、斷言或歷史基準。Quick／Audit 保持原命令。`plan` 固定當次 HEAD、Run ID／attempt及已解析的 origin/main；`run 1`～`run 8` 分別輸出到 `test-results/ci-full/batch-N/`，每批後由獨立 upload-artifact step 保存；`aggregate` 嚴格驗證完整集合、來源與環境、exit/status、log SHA256，任一缺失、FAIL／SKIP／BLOCKED或重用結果都不能得到Full PASS。
