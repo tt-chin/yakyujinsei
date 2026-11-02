@@ -7,6 +7,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {instrumentRng} from './support/rng-instrument.mjs';
 const arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
+const updatesOnly=process.argv.includes('--updates-only');
 const root=fileURLToPath(new URL('../',import.meta.url)),output=arg('output')||path.join(os.tmpdir(),'yakyujinsei-information-dialog');
 await mkdir(output,{recursive:true});
 const pw=createRequire(import.meta.url)(arg('playwright')||'playwright'),engine=arg('engine')||'chromium';
@@ -69,8 +70,13 @@ try{
     await p.evaluate(()=>{const filler=document.createElement('div');filler.style.height='2000px';document.getElementById('log').append(filler);window.scrollTo(0,180);});await settle(p);
     const state=await p.evaluate(()=>window.__dialogState()),initialWatchers=await watchers(p);
     const open=async key=>{await p.locator('#board-menu-toggle').click();await p.locator('#board-'+key).click();await settle(p);assert.equal(await p.evaluate(()=>document.activeElement.id),'information-'+key+'-title');};
-    for(const key of ['help','updates']){
+    for(const key of updatesOnly?['updates']:['help','updates']){
       const original=await p.locator('#information-'+key+' .information-article').textContent();
+      if(updatesOnly){
+        const expected=await p.evaluate(async()=>{const {releaseNotes}=await import('/src/data/release-notes.js');return releaseNotes.map(r=>[r.title,r.lines.join('\n')]);});
+        const actual=await p.locator('#information-updates section').evaluateAll(nodes=>nodes.map(n=>[n.querySelector('h3').textContent,n.querySelector('p').textContent]));
+        assert.deepEqual(actual,expected,'dialog reads every curated version without truncation');
+      }
       for(const [name,ratio] of [['top',0],['middle',.5],['bottom',1]]){
         const scroll=await p.evaluate(()=>[scrollX,scrollY]);await open(key);
         const d=p.locator('#information-'+key),v=d.locator('.information-content');
@@ -114,7 +120,7 @@ try{
       assert.equal(await p.locator('#information-'+key+' .information-article').textContent(),original,'article text preserved');
       results.push({key,width,height,status:'PASS'});
     }
-    if(width===390&&height===844){
+    if(!updatesOnly&&width===390&&height===844){
       await open('updates');const d=p.locator('#information-updates');
       for(const viewport of [{width:844,height:390},{width:390,height:240},{width:390,height:844}]){await p.setViewportSize(viewport);await settle(p);check(await geometry(p,'updates'));}
       const old=await geometry(p,'updates');
@@ -139,9 +145,9 @@ try{
     assert.deepEqual(await p.evaluate(()=>window.__dialogState()),state,'dialog operations do not touch S/RNG');
     assert.deepEqual(await watchers(p),initialWatchers);await ctx.close();
   }
-  assert.deepEqual(errors,[]);console.log(results.length+' dialog layout/lifecycle cases PASS; 12 mobile screenshots; S/RNG unchanged');
+  assert.deepEqual(errors,[]);console.log(results.length+' '+(updatesOnly?'updates-only':'dialog')+' layout/lifecycle cases PASS; '+(updatesOnly?'6':'12')+' mobile screenshots; S/RNG unchanged');
 }catch(e){failure=e;console.error(e.stack);}finally{
-  await writeFile(path.join(output,'summary.json'),JSON.stringify({engine,PASS:results.length,FAIL:failure?1:0,results,errors,failure:failure?.stack},null,2));
+  await writeFile(path.join(output,'summary.json'),JSON.stringify({engine,scope:updatesOnly?'updates-only':'all-dialogs',PASS:results.length,FAIL:failure?1:0,results,errors,failure:failure?.stack},null,2));
   server.closeAllConnections();server.close();await browser?.close();
   process.exit(failure?1:0);
 }

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
+import {readSourceText} from './support/source-text.mjs';
 import {EVENT_CATALOG} from '../docs/src/data/event-cards-jp.js';
 import {beginEvent,applyEvent,ensureEventState} from '../docs/src/engine/event-state-policy.js';
 const root=new URL('../',import.meta.url),baseline='a7fe2e8';
@@ -25,10 +26,10 @@ const withoutTraitExpansion=source=>source.replaceAll('\r\n','\n')
   .replace(/  latepractice:'[^\n]*\n/,'')
   .replaceAll(",'cntTrainingSafeFail'",'');
 // The v1.10.2 draw state/result metadata is verified against v1.10.1 by event-fix.test.mjs.
-for(const path of ['docs/src/engine/event-policy.js','docs/src/engine/event-season-policy.js'])assert.equal(withoutTraitExpansion(fs.readFileSync(new URL(path,root),'utf8')),execFileSync('git',['show',baseline+':'+path],{encoding:'utf8'}).replaceAll('\r\n','\n'),path+' original execution unchanged');
+for(const path of ['docs/src/engine/event-policy.js','docs/src/engine/event-season-policy.js'])assert.equal(withoutTraitExpansion(readSourceText(new URL(path,root))),execFileSync('git',['show',baseline+':'+path],{encoding:'utf8'}).replaceAll('\r\n','\n'),path+' original execution unchanged');
 function run(seed,events){let rng=2166136261,calls=0;for(const ch of seed){rng^=ch.charCodeAt(0);rng=Math.imul(rng,16777619)>>>0;}const R=()=>{calls++;rng^=rng<<13;rng^=rng>>>17;rng^=rng<<5;return(rng>>>0)/4294967296;};const records=[];for(const e of events)for(const mode of ['bold','norm','safe']){const pos=e.eligibility.role==='P'?'P':e.eligibility.role==='C'?'C':'IF',keys=pos==='P'?['vel','ctl','brk','sta']:['con','pow','eye','spd','rng','fld','arm','cat','sta'];const s=ensureEventState({year:2030,age:23,stage:e.eligibility.stages[0],lv:e.eligibility.levels[0],org:e.eligibility.orgs[0],pos,traits:{},ab:Object.fromEntries(keys.map(k=>[k,50])),pot:Object.fromEntries(keys.map(k=>[k,80])),carry:{},careerEarnings:0,tmpInj:0,love:{caught:0,affairs:0}});beginEvent(s,e);const result=applyEvent(s,e,mode,{chance:p=>R()*100<p,pick:a=>a[Math.floor(R()*a.length)],abilityKeys:keys});records.push({s,result,rng:rng>>>0,calls});}return records;}
 // Contract policies may evolve; event execution sections must remain identical (phase 18 moved them to season-events.js: +2 indent and live getState reads).
-const eventsNow=fs.readFileSync(new URL('docs/src/engine/season-events.js',root),'utf8'),gameBefore=execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8'}).replaceAll('\r\n','\n');
+const eventsNow=readSourceText(new URL('docs/src/engine/season-events.js',root)),gameBefore=execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8'}).replaceAll('\r\n','\n');
 const eventSections=[['function evOdds','function drawEvents','function drawEvents',[['{const S=getState();return','{return'],['\n    const S=getState();','']]],['function resolveEvent','  return {eventChoiceSummary,drawEvents,renderEventResult};','/* シーズン中即時可解鎖的特性。 */',[['\n    const S=getState();','']]]];
 for(const [start,end,endBefore,reads] of eventSections){
   const moved=reads.reduce((text,[read,original])=>{assert.equal(text.split(read).length,2,read+' inserted once');return text.replace(read,original);},eventsNow.slice(eventsNow.indexOf(start),eventsNow.indexOf(end))).replace(/^ {2}/gm,'');
