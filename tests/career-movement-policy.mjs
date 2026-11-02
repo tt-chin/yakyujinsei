@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import {readSourceText} from './support/source-text.mjs';
 
 import {
   crossOfferTitle,
@@ -42,11 +42,11 @@ assert.equal(fromNpb1, 'NPB2');
 assert.equal(demotionChoiceText(fromNpb1, levels), '二軍降格を受け入れ、再起を目指す');
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const [game, careerMovement, baseCss] = await Promise.all([
-  readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8'),
-  readFile(path.join(root, 'docs/src/engine/career-movement.js'), 'utf8'),
-  readFile(path.join(root, 'docs/styles/base.css'), 'utf8'),
-]);
+const [game, careerMovement, baseCss] = [
+  readSourceText(path.join(root, 'docs/src/engine/game.js')),
+  readSourceText(path.join(root, 'docs/src/engine/career-movement.js')),
+  readSourceText(path.join(root, 'docs/styles/base.css')),
+];
 // Phase 24: the first movement layer lives in career-movement.js; its body is the last function before the return line.
 const movementBody = careerMovement.slice(careerMovement.indexOf('  function movement(){'),careerMovement.indexOf('\n  return {',careerMovement.indexOf('  function movement(){')));
 assert.ok(movementBody.endsWith('  crossOffers(o);\n  }'));
@@ -97,7 +97,7 @@ for (const route of [
 ]) assert.ok(careerMovement.includes(route), route);
 
 // 長い球団名はチーム列だけ最大2行とし、成績列は横スクロール内で改行させない。
-const careerRetirement = await readFile(path.join(root, 'docs/src/engine/career-retirement.js'), 'utf8');
+const careerRetirement = readSourceText(path.join(root, 'docs/src/engine/career-retirement.js'));
 assert.match(careerRetirement, /class="career-table-scroll"/);
 assert.match(careerRetirement, /class="fin career-table"/);
 assert.match(careerRetirement, /class="career-team"><span>/);

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import {readSourceText,sourceText} from './support/source-text.mjs';
 import {execFileSync} from 'node:child_process';
 import {incomeSummary} from '../docs/src/ui/income-summary.js';
 import {productionFunction} from './retirement-hof-test-support.mjs';
@@ -21,14 +21,14 @@ for(const [id,state,pay] of cases){
 }
 assert.equal(incomeSummary(null).at(-1).amount,0);
 // This is a display change, not permission to change any acquisition formula.
-const old=execFileSync('git',['show','2e69096:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}),now=fs.readFileSync('docs/src/engine/game.js','utf8');
+const old=sourceText(execFileSync('git',['show','2e69096:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6})),now=readSourceText('docs/src/engine/game.js');
 assert.equal(productionFunction('phaseEnd',now),productionFunction('phaseEnd',old),'phaseEnd payment rules unchanged');
-{let moved=productionFunction('runDraftRule',fs.readFileSync('docs/src/engine/amateur-career.js','utf8'));
+{let moved=productionFunction('runDraftRule',readSourceText('docs/src/engine/amateur-career.js'));
  for(const [inserted,original] of [['function runDraftRule(fromSchool,cb){const S=getState();','function runDraft(fromSchool,cb){'],['const accept=()=>{const S=getState();','const accept=()=>{'],['cb(declineDraftSelection(getState()))','cb(declineDraftSelection(S))']]){
   assert.equal(moved.split(inserted).length,2,'one '+original+' change');moved=moved.replace(inserted,original);}
  assert.equal(moved,productionFunction('runDraft',old).replace(/\r\n/g,'\n'),'runDraft payment rules unchanged');}
-const contractSource=fs.readFileSync('docs/src/engine/career-contract.js','utf8'),moved=productionFunction('finalizePendingOffseasonSalary',contractSource),read='\n    const S=getState();';
+const contractSource=readSourceText('docs/src/engine/career-contract.js'),moved=productionFunction('finalizePendingOffseasonSalary',contractSource),read='\n    const S=getState();';
 assert.equal(moved.split(read).length,2,'one state read inserted');assert.equal(moved.replace(read,''),productionFunction('finalizePendingOffseasonSalary',old).replace(/\r\n/g,'\n'),'finalizePendingOffseasonSalary payment rules unchanged');
-{const source=fs.readFileSync('docs/src/engine/career-movement.js','utf8'),moved=productionFunction('buyoutRemaining',source),read='\n    const S=getState();';
+{const source=readSourceText('docs/src/engine/career-movement.js'),moved=productionFunction('buyoutRemaining',source),read='\n    const S=getState();';
  assert.equal(moved.split(read).length,2,'one state read inserted');assert.equal(moved.replace(read,'').replace(/^  /gm,''),productionFunction('buyoutRemaining',old).replace(/\r\n/g,'\n'),'buyoutRemaining payment rules unchanged');}
 console.log('7 income display fixtures, legacy/missing/frozen/repeat, exact stored total, four native payment functions unchanged: PASS');

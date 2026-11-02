@@ -34,6 +34,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/source-text.mjs': ['support','Strict UTF-8 source reader; CRLF-to-LF normalization only for source comparisons. Never normalizes frozen hash/binary evidence.'],
   'support/board-menu.mjs': ['support','Native header menu interaction and E2E assertions; preserves historical visible-button controls.'],
   'support/approved-school-oracle.mjs': ['support','Explicit approved C-school/COPY positive-control overlay; never an old-bug negative oracle. Raw old/new traces remain separate.'],
   'support/baseline-initial-potential.mjs': ['support','Approved birth-potential adapter for positive historical UI comparisons; unadapted fixed-seed S/R proof stays separate. Not executable.'],

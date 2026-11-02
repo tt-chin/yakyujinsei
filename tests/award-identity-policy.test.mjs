@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {VERSION} from '../docs/src/config.js';
 import {AWARD_REGISTRY, getAwardDefinition, parseAwardHonor, identifyAwardDecision,
   buildAwardIdentityView} from '../docs/src/engine/award-identity-policy.js';
 
@@ -171,7 +172,10 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
     if(file==='docs/src/config.js'){
       // G9 approved only the release literal; frozen B1/A snapshots remain untouched.
       assert.match(acceptedA,/^export const VERSION = '1\.12\.0';/);
-      assert.equal(current,exactReplacement(acceptedA,"'1.12.0'","'1.13.7'"),file+': approved dev version literal only');
+      assert.match(VERSION,/^\d+\.\d+\.\d+$/);
+      const expected=exactReplacement(acceptedA,"'1.12.0'",`'${VERSION}'`);
+      assert.equal(current,expected,file+': current version literal only');
+      assert.throws(()=>assert.equal(current+'\n// unexpected',expected),'version handling cannot allow other source edits');
     }else if(file==='docs/src/main.js'){
       let expected=exactReplacement(acceptedA,"import { initializeDisplayPreferences } from './ui/preferences.js';",
         "import { initializeDisplayPreferences } from './ui/preferences.js';\nimport { initializeBoardMenu } from './ui/board-menu.js';\nimport { initializeInformationDialogs } from './ui/information-dialog.js';");
