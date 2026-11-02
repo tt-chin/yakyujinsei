@@ -4009,6 +4009,89 @@ T4 使 Quick 由 69 增為 70、Full 由 94 增為 95，manifest 依檔名自動
 - W4、W7、W8、W9 未對 Full 專屬入口執行，維持 NOT_RUN。
 - 未做：`--preview` 路由、Linux CI、Preview。
 
+### 2ii.7 交付（進行中，2026-11-03）
+
+- 本機驗證後 `origin/dev` 新增 `b9e9c53`（1.13.7，code owner 直接 push），dev push 的 Quick（Tests #124）FAIL 2 項：`verify-modularization` 與 `award-identity-policy.test` 的版本字面值，後者另遮蔽 `seed-share.js` 的凍結檢查。[PR #52](https://github.com/tt-chin/yakyujinsei/pull/52)（`83bc739`，版本字面值＋`seed-share.js` 逐字核准）由 code owner 併入 dev（`4f39a73`），Tests #125 Quick 通過。
+- 本分支以 merge 併入 `origin/dev`（`d9cb4a3`），保留 `4133a1b` 等 SHA 與上節紀錄。乾淨 worktree 結果：Quick 69／70，FAIL 為 `event-integration.test` 的 SIGSEGV（`Builtins_BaselineOutOfLinePrologue`，既知 V8 crash），重跑 PASS；分組 Full（基準 `4f39a73`）90／95，`international-personal-stats-e2e`、`full-power-pitching-e2e`、`stage6-ability-e2e` 案例全 PASS 但 Console 有 `net::ERR_NETWORK_CHANGED`，重跑 PASS；`game-view-dom-e2e`、`replay-share-theme-e2e` 在 `4f39a73` 本身即 FAIL，屬 1.13.7。
+- `game-view-dom-e2e` 以 `4f39a73` 為基準直接比較：`d9cb4a3` 8 段 DOM／`S`／RNG 一致。
+- [PR #53](https://github.com/tt-chin/yakyujinsei/pull/53)（`026a0d5`，分支 `fix/full-1.13.7`）：`game-view-dom-e2e` 預設基準 `1bc65df` → `4f39a73`（§2d.11 同例；兩邊去除選單標記後 `4f39a73` 對 `1bc65df` 8 段一致），`replay-share-theme-e2e` 的 dialog `pending` 情境對應 1.13.7 的 generation 處理（新增斷言，負控制確認）。Quick 69／69 PASS，reviewer 無問題，待 code owner 合併。合併後本文件先前記載的預設基準 `1bc65df` 由此行更新為 `4f39a73`。
+- 下一步：PR #53 併入後再以 merge 併入 `origin/dev`，於乾淨 worktree 跑 Quick、分組 Full（基準為當時的 `origin/dev`），push、PR、Linux Full、Preview。
+- `d9cb4a3` 與本節紀錄尚未 push。
+
+## 2jj. 第 31 期：年度結算移至 `SeasonSettlement`（細部計畫，2026-11-02；計畫已批准 2026-11-03，實作待第 30 期併入 dev 後開始）
+
+基準 `bf4d540`（`refactor/choice-prompt`，含第 30 期 `4133a1b`），`game.js` 821 行／72,281 bytes。結算區段與 `319be98`（dev，PR #51）逐位元組相同，行為與逐字比較以 `319be98` 為基準。路線見 §3.21。
+
+### 2jj.1 現況
+
+- 區段：`game.js` 從 `  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();` 到 `  movement = function(){` 之前，含 `resumeSeasonEnd=` 指派、`settleProfessionalEnd`、`phaseEnd`、`settlePhaseEnd`，共 6,217 bytes。本體無 RNG 呼叫點；`settleChampionship` 以 `random:R` 取值。
+- `professionalEnds` 只在本區段使用；`professionalMoves` 只由其後的 `movement` 覆寫使用。
+- 區段外的引用：`resumeSeasonEnd`（`:267` 宣告、`proSeason` 內呼叫）、`phaseEnd`（`startYear` 的 `stepQ`）。`settleProfessionalEnd`、`settlePhaseEnd` 無區段外呼叫者，測試與工具也未以名稱引用。
+- e2e 在執行時替換 `board`、`card`、`choose`、`allocUI`、`movement`、`salaryCandidate`、`salaryFor`、`R`（§3.21 掃描）；`movement` 另由 `game.js` 自己在區段後重新指派兩次。
+- `careerSession.seasonEndContext`、`corpSettlements`、`pendingOffseasonSalary` 在 `game.js` 的文字只出現在本區段；搬移後 `career-session-access` 依 §2aa 改走 live instance，不需修改。
+
+### 2jj.2 設計（使用者決定 2026-11-03：批准 D1–D8 與 T1–T6）
+
+- D1 新檔 `docs/src/engine/season-settlement.js`，類別 `SeasonSettlement`，實例 `seasonSettlement`。
+- D2 範圍為上述區段。`movement` 的兩層覆寫與 `professionalMoves` 屬 `movement` 領域（§3.18），留在 `game.js`；宣告行拆為 `const professionalMoves=new WeakMap();`。
+- D3 `professionalEnds` 改為私有欄位 `#professionalEnds`。`npb-return-ui.test:161` 的 `const professionalEnds` 錨點只用於舊版原始碼，不受影響。
+- D4 公開 `resumeSeasonEnd`、`settleProfessionalEnd`、`phaseEnd`、`settlePhaseEnd`，模組內互呼加 `this.`（無測試替換這些名稱）。
+- D5 本體逐字搬移，縮排不變（原本即在區塊內）。方法開頭取 `S` 與所需 `#deps`；`go` 在執行時另取 `getState()`，配合 `entry.state!==S` 的重新開始檢查。
+- D6 `game.js` 留 `resumeSeasonEnd=()=>seasonSettlement.resumeSeasonEnd();` 與具名 `function phaseEnd(){return seasonSettlement.phaseEnd();}`（`stepQ.map(f=>f.name)` 快照與 `__cs.stepQ=[phaseEnd]` 依賴此名稱），建構行緊接其後。函式依賴全部以 lambda 延遲綁定；`careerSession`、`choiceViews` 傳參考；`R` 以 `random:()=>R()` 傳入。不留 `settleProfessionalEnd`、`settlePhaseEnd` 包裝。
+- D7 模組直接 import 9 個 policy 函式。`game.js` 的 import 不刪，未使用者由 98 增為 104（`annualStateTransaction`、`contractContinuationForNextYear`、`maintainSeasonEnd`、`normalizeChampionshipState`、`prepareSeasonPayment`、`settleChampionship`）。
+- D8 分支：自第 30 期併入後的 `origin/dev` 以 `--no-track` 開 `refactor/season-settlement`。不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+
+### 2jj.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 位置 | 變更 | 性質 |
+|---|---|---|---|
+| T1 | `tests/championship-intl.test.mjs:75–76`（C09） | 文字切片改為以同一組替身建構 `SeasonSettlement`；`renderCheckpointCard` 仍自 `game.js` 切片；斷言不變 | 目標搬移 |
+| T2 | `tests/income-summary.test.mjs:25` | 改比較模組的 `phaseEnd`：逐一移除 3 處插入（各斷言恰好一次）後與 `2e69096` 逐字相同；另斷言 `game.js` 的 `phaseEnd` 只轉呼叫 | 目標搬移 |
+| T3 | `tests/salary-flow.test.mjs:30,33,34,164` | 4 處 `match(game)` 改查模組；`gameAndModules` 加入模組（`doesNotMatch` 範圍擴大）；新增 `random:()=>R()` 橋接的恰好一次斷言與排除，模組無抽取點 | 目標搬移＋擴大 |
+| T4 | `tests/salary-promotion-policy.mjs:94` | `match(game)` 改查模組；`gameAndModules` 加入模組 | 目標搬移＋擴大 |
+| T5 | `tests/season-settlement.test.mjs` | 新檔。①模組＝`319be98` 區段＋7 處列舉修改（各恰好一次），逐位元組比較；②20 情境在 vm 跑舊區段、在主 realm 跑模組，以相同替身比較呼叫序列、錯誤、`S`、`seasonEndContext` | 新增涵蓋 |
+| T6 | `tests/verify-modularization.mjs` | `game.js` 接線 4 行依序全文斷言＋import 行 | 收緊 |
+
+T5 使 Quick 由 70 增為 71、Full 由 95 增為 96，manifest 依檔名自動分類，不需修改。
+
+### 2jj.4 草稿實測（2026-11-02，scratch worktree，基準 `bf4d540`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 未改測試的 Quick | 66／70，FAIL 為 `championship-intl.test`、`income-summary.test`、`salary-flow.test`、`salary-promotion-policy`，由 T1–T4 涵蓋 |
+| 改測試後 Quick（含 T1–T6） | 71／71 PASS，已核對實際入口數 |
+| 分組 Full（`--baseline=319be98…`，含 T1–T6） | 23＋25＋22＋26＝96／96 PASS，已核對實際入口數 |
+| `game-view-dom-e2e` 直接比較 | 草稿對 `319be98`：8 段 DOM／`S`／RNG 一致 |
+| 模組 AST | 未解析名稱只有 `Error`、`WeakMap`；解構的依賴皆有使用 |
+| acorn 掃描 `tests`、`scripts`、`tools` 146 檔字面值（754 regex、8,381 字串） | 228 個對 `game.js` 的命中數改變。regex 與 16 字以上字串逐項判定：T1–T4 列入；其餘為通用 pattern（換行、縮排、`R(` 計數）或執行期 DOM／狀態鍵，`R(` 計數 41→42 為 `random:()=>R()` 橋接，相關斷言皆為對其他檔的 `doesNotMatch` 或已列入 T3 |
+| 18 字 n-gram 掃描搬移區段 | 命中檔皆為狀態欄位名或執行期鉤子；`tools/development-a/runtime.mjs` 讀 `professionalEnds.get`，研究工具不修改（§2e.1 同例） |
+| 突變：模組本體 111 項（只跑 T5 行為部分與 C09） | 106 項抓到，5 項存活 |
+| 接線突變 11 項 | 全部由 T6 抓到；執行期另抓到 W1、W2、W4（見下表） |
+
+- 存活的 5 項：`STALE_SETTLEMENT` 檢查的 `||`→`&&`（`entry` 取自 `professionalEnds.get(S)`，`state` 恆等於 `S`，不可達）；`ALLOCATION_COMMITTED` 改名（設定後同步呼叫 `go`，重入時不會停在此階段）；`WAIT_ALLOCATION` 分支 `return;` 刪除（之後各分支皆不成立）；`incentive.amount||0` 兩處（fixture 的出來高恆為 0，未涵蓋，非等價）。
+- T5 初版把最終 `S` 序列化成 `[S]`，等於未比較狀態；突變測試發現後修正，並補 5 情境（同年重新開始、`movement` 失敗後重試、`pendingOffseasonSalary` 清除、契約表已付／未付）。Quick 跑的是修正前版本；修正在 Full 執行期間進行，無法確定 Full 跑的是哪一版；修正後版本只單獨執行 PASS。
+
+| 接線突變 | `game-view-dom-e2e` | `stage6-state-transaction` | `stage7-safety` | `stage10-risk` | T6 |
+|---|---|---|---|---|---|
+| W1 `getState` 固定 | 抓到 | 抓到 | 抓到 | 抓到 | 抓到 |
+| W2 `movement` 改傳值 | 抓到 | 無 | 抓到 | 抓到 | 抓到 |
+| W3 `R` 改傳值 | 無 | 無 | 無 | 無 | 抓到 |
+| W4 `card` 改傳值 | 無 | 無 | 抓到 | 無 | 抓到 |
+| W5 `board` 改傳值 | 無 | 無 | 無 | 無 | 抓到 |
+| W6 `choose` 改傳值 | 無 | 無 | 無 | 無 | 抓到 |
+| W7 `resumeSeasonEnd` 未接 | 無 | 無 | 無 | 無 | 抓到 |
+| W8 另開 `CareerSession` | 無 | 無 | 無 | 無 | 抓到 |
+| W9 另開 `choiceViews` | 無 | 無 | 無 | 無 | 抓到 |
+| W10 `restorePendingChoice` 改傳值 | 無 | 無 | 無 | 無 | 抓到 |
+| W11 `allocUI` 改傳值 | 無 | 無 | 無 | 無 | 抓到 |
+
+- 未測：含修正後 T5 的 Quick／Full、`--preview` 路由、Linux CI、Preview；與 1.13.7（`4f39a73`）合併後的草稿。
+
+### 2jj.5 驗證與交付（L3／R3：年度付款、Receipt、能力點分配；允許差分為無）
+
+- 第 30 期併入 dev 後，自 `origin/dev` 開分支重做草稿：Quick、分組 Full（基準為當時的 `origin/dev`）、`game-view-dom-e2e` 直接比較、突變；reviewer。
+- push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -4486,6 +4569,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
   2. ① 不單獨成期，與年度骨架一起處理。
   3. 第 31 期候補為結算：有自己的狀態、本體無 RNG 呼叫點、以名稱引用的測試最少；C09 從文字切片改為匯入模組，符合 §3.6 目的 (c)。屬 L3／R3（付款、Receipt），須批准修改 C09 與 `income-summary.test:25` 的斷言。
   4. 年度骨架其次，`phasePre`、`proSeason` 最後；或於第 30 期後停止重構（§3.20）。
+- 使用者決定（2026-11-02）：第 31 期採結算，細部計畫見 §2jj（2026-11-03 批准）。
 
 ## 4. 使用者決定（2026-10-18）
 
