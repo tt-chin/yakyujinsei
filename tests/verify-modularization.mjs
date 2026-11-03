@@ -54,6 +54,20 @@ for(const line of [
   assert.equal(text.split("\nimport { SeasonSettlement } from './season-settlement.js';\n").length,2,'season settlement import, once');
   for(const name of ['new SeasonSettlement(','seasonSettlement.resumeSeasonEnd(','seasonSettlement.phaseEnd(','function phaseEnd(','\n  resumeSeasonEnd='])assert.equal(text.split(name).length,2,'season settlement wiring only once: '+name);
 }
+{// Phase 32: the year skeleton wiring. The named wrappers stay rebindable for E2E hooks; the constructor follows startYear
+  // and passes every outgoing call as a late-binding lambda (§2kk.4: only advance->startYear is caught by an E2E).
+  const text=sourceText(game);
+  for(const line of [
+    '\nfunction nextStep(){return yearFlow.nextStep();}\n',
+    '\nfunction advance(){return yearFlow.advance();}\n',
+    '\n  function reportFlowOutcome(outcome){return yearFlow.reportFlowOutcome(outcome);}\n  const flowHooks={advance:null,endGame:null};\n',
+    '\n  function phaseIntlPre(){return yearFlow.phaseIntlPre();}\n  function startYear(){return yearFlow.startYear();}\n'+
+      '  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]});\n',
+    "\nimport { YearFlow } from './year-flow.js';\n",
+  ])assert.equal(text.split(line).length,2,'year flow wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new YearFlow(','yearFlow.nextStep(','yearFlow.advance(','yearFlow.reportFlowOutcome(','yearFlow.phaseIntlPre(','yearFlow.startYear(','function nextStep(','function advance(','function reportFlowOutcome(','function phaseIntlPre(','function startYear('])assert.equal(text.split(name).length,2,'year flow wiring only once: '+name);
+  assert.ok(!text.includes('advanceWithoutSalaryFinalization'),'the salary-finalizing advance override moved into YearFlow');
+}
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);

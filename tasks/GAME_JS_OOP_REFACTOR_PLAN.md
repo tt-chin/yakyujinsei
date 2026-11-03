@@ -4117,7 +4117,7 @@ T5 使 Quick 由 70 增為 71、Full 由 95 增為 96，manifest 依檔名自動
 - 未做：18 字 n-gram 與 acorn 字面值掃描未重做（`game.js` 自草稿基準未變，草稿結果見 §2jj.4）；W1–W11 的執行期欄位；`--preview` 路由、Linux CI、Preview。
 - 下一步：PR #55 併入後 merge `origin/dev`、重跑 Quick，push／PR 另批。
 
-## 2kk. 第 32 期：年度骨架移至 `YearFlow`（細部計畫，2026-11-03；計畫已批准 2026-11-03，實作未開始）
+## 2kk. 第 32 期：年度骨架移至 `YearFlow`（細部計畫，2026-11-03；計畫已批准 2026-11-03，本機實作完成，見 §2kk.6）
 
 基準 `refactor/season-settlement` `6b83d68`（`game.js` 與 `1c6bd9b` 相同），`game.js` 756 行／66,735 bytes。路線與候補盤點見 §3.22。
 
@@ -4183,6 +4183,27 @@ T5 使 Quick 由 71 增為 72、Full 由 96 增為 97。
 
 - Quick、分組 Full、`game-view-dom-e2e` 直接比較基準、突變（含逐邊負控制）、探測腳本新舊命中序列比較；reviewer。
 - 第 31 期 push 後定案比較基準 SHA，重跑受影響入口。push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
+
+### 2kk.6 實作（2026-11-03，`refactor/year-flow`，基底 `ffea673`（`game.js` 與 `6b83d68` 相同）；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14）
+
+- 模組與 `game.js` 由 scratch 組裝腳本自 `git show HEAD` 產生，與 §2kk.4 草稿逐位元組相同（模組只差開頭註解）。模組 LF，`game.js` 維持 CRLF。
+- T1–T3：現行側 reporter 由模組方法本體組成自由函式（`yearFlowReporter`，開頭與結尾錨點各斷言恰好一次），舊 SHA 側不變；`draft-signing-policy.test:165` 改為直接以 `YearFlow` 實例斷言 `UNKNOWN_FLOW_OUTCOME`。
+- T5：舊側 `resetEventYear` 以真 policy 注入 vm（模組直接 import，無法替換），兩側以狀態比較其效果；故草稿計畫的「reset 失敗」情境不做，catch 區塊由 step 失敗情境涵蓋。突變發現 `activeChoiceToken=null` 未被涵蓋，補帶 token 的情境。最終 102 情境＋5 項抵達檢查。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（scratch worktree，內容與 repo 逐檔相同） | 72／72 PASS，依 `summary.json` 核對 |
+| 分組 Full（`--baseline=6b83d686…`，轉給 2 個比較入口） | 23＋25＋23＋26＝97／97 PASS，依 `summary.json` 與 `groups.txt` 核對 |
+| `game-view-dom-e2e` 直接比較 `6b83d68` | 8 段 DOM／`S`／RNG 一致 |
+| 探測腳本（3 條生涯） | 命中序列、`S`、RNG、`stepQ` 名稱與 `6b83d68` 相同 |
+| T5 逐邊負控制（去掉第 1 部分單獨跑，避免被逐字比較先擋） | 4／4 抓到 |
+| 突變：模組本體 45 項（T5 第 2、3 部分） | 44 項抓到；存活 `status:'PREPARED'`→`'STARTED'`（建立後下一敘述即改為 `STARTED`，等價） |
+| dispatch 突變對 T1–T3 | `npb-return-ui`、`draft-signing-policy`、`kbo-renewal-floor` 各有抓到，reporter 有被執行 |
+| 接線突變 W1–W10（只跑 T6） | 10／10 抓到 |
+| reviewer | 無發現 |
+
+- 未做：Linux CI、Preview、`--preview` 路由、PC／手機實機確認。比較基準 `6b83d68` 只在本機，第 31 期 push 前不作 CI 證據（D8）。
+- 下一步：PR #55 與第 31 期依序併入後，定案比較基準 SHA、merge `origin/dev`、重跑 Quick；push／PR 另批。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
