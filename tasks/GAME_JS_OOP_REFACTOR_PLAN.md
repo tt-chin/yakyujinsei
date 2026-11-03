@@ -4018,7 +4018,7 @@ T4 使 Quick 由 69 增為 70、Full 由 94 增為 95，manifest 依檔名自動
 - PR #53 由 code owner 併入 dev（`37aff39`）；dev 另含 code owner 的 `9989eda`（1.13.8），並經 PR #54 發布至 main（`df12674`，Tests #129 Full、Publish website #31 success）。
 - 本分支再以 merge 併入 `origin/dev`（`5bac94e`，無衝突）。乾淨 worktree：Quick 70／70、分組 Full（`--baseline=37aff39…`）22＋25＋22＋26＝95／95 PASS，已核對實際入口數。
 - `5bac94e` 已 push，[PR #55](https://github.com/tt-chin/yakyujinsei/pull/55)（→ `dev`）已開。[Tests #130](https://github.com/tt-chin/yakyujinsei/actions/runs/41545449477)（`5bac94e`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 95`、`acceptedPass 95`、`issues []`（記於 PR #55）。
-- 下一步：等 code owner 合併 PR #55（使用者決定 2026-11-03，不由我合併）；合併後確認 dev push 的 Quick 與 Preview（`https://dev.yakyujinsei.pages.dev`：檔案與 dev 一致、Console、4xx／5xx、`choice-prompt.js` 載入、需選擇的流程），再記於本節。之後依 §2jj.5 自 `origin/dev` 開 `refactor/season-settlement` 實作第 31 期。
+- 下一步：等 code owner 合併 PR #55（使用者決定 2026-11-03，不由我合併）；合併後確認 dev push 的 Quick 與 Preview（`https://dev.yakyujinsei.pages.dev`：檔案與 dev 一致、Console、4xx／5xx、`choice-prompt.js` 載入、需選擇的流程），再記於本節。第 31 期已先以本分支為基底實作（使用者決定 2026-11-03，§2jj.2 D8、§2jj.6）。
 - 未驗證：`--preview` 路由、Preview、實機。
 
 ## 2jj. 第 31 期：年度結算移至 `SeasonSettlement`（細部計畫，2026-11-02；計畫已批准 2026-11-03，實作待第 30 期併入 dev 後開始）
@@ -4042,7 +4042,7 @@ T4 使 Quick 由 69 增為 70、Full 由 94 增為 95，manifest 依檔名自動
 - D5 本體逐字搬移，縮排不變（原本即在區塊內）。方法開頭取 `S` 與所需 `#deps`；`go` 在執行時另取 `getState()`，配合 `entry.state!==S` 的重新開始檢查。
 - D6 `game.js` 留 `resumeSeasonEnd=()=>seasonSettlement.resumeSeasonEnd();` 與具名 `function phaseEnd(){return seasonSettlement.phaseEnd();}`（`stepQ.map(f=>f.name)` 快照與 `__cs.stepQ=[phaseEnd]` 依賴此名稱），建構行緊接其後。函式依賴全部以 lambda 延遲綁定；`careerSession`、`choiceViews` 傳參考；`R` 以 `random:()=>R()` 傳入。不留 `settleProfessionalEnd`、`settlePhaseEnd` 包裝。
 - D7 模組直接 import 9 個 policy 函式。`game.js` 的 import 不刪，未使用者由 98 增為 104（`annualStateTransaction`、`contractContinuationForNextYear`、`maintainSeasonEnd`、`normalizeChampionshipState`、`prepareSeasonPayment`、`settleChampionship`）。
-- D8 分支：自第 30 期併入後的 `origin/dev` 以 `--no-track` 開 `refactor/season-settlement`。不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+- D8 分支：~~自第 30 期併入後的 `origin/dev` 以 `--no-track` 開 `refactor/season-settlement`。~~ 變更（使用者決定 2026-11-03）：PR #55 未併入前，自 `origin/refactor/choice-prompt`（`88069cb`）以 `--no-track` 開 `refactor/season-settlement` 先行；比較基準為 `origin/dev` `37aff3961fddc766d088851f25e5583e43f9b374`。PR #55 併入前只在本機 commit；併入後 merge `origin/dev`、重跑 Quick，push／PR 另批。不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
 
 ### 2jj.3 測試變更（無放寬斷言，golden 未改）
 
@@ -4094,6 +4094,28 @@ T5 使 Quick 由 70 增為 71、Full 由 95 增為 96，manifest 依檔名自動
 
 - 第 30 期併入 dev 後，自 `origin/dev` 開分支重做草稿：Quick、分組 Full（基準為當時的 `origin/dev`）、`game-view-dom-e2e` 直接比較、突變；reviewer。
 - push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
+
+### 2jj.6 實作（2026-11-03，`refactor/season-settlement`，基底 `88069cb`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14）
+
+- 基底的 `game.js` 與 `bf4d540` 相同，結算區段與 `319be98` 逐位元組相同。草稿之後 1.13.7／1.13.8 改了 `income-summary.test`（T2）與 `verify-modularization`（T6），兩者依新版重寫。
+- 模組由 `git show HEAD` 的區段以 scratch 組裝腳本產生，7 處修改各斷言恰好一次：4 個方法開頭（取 `S`、`#professionalEnds` 別名、解構 `#deps`；`random:R` 以解構保留原文）、`this.` 互呼 3 處、`go` 開頭 `const S=getState();`。`resumeSeasonEnd` 結尾 `};` → `}` 併入第 2 處。模組 LF，`game.js` 維持 CRLF。
+- T1–T6 依 §2jj.3。T3 另斷言模組 `R(`／`ri(`／`chance(`／`pick(` 為 0 與 `random:R}` 恰好一次。T5 為 23 情境：草稿 20 情境之外補出來高 HALF、無 `annualSchedule` 的契約。
+- T5 撰寫時的 fixture 錯誤皆由負控制或斷言發現並修正，未放寬斷言：失敗次數遞減在共用情境物件上（舊 harness 先用完）；註解誤吃掉 `h.states.push`，使 `states` 為空、`every` 空真，由 `tradeHeat` 負控制發現，另加 `states` 非空且新舊數量相同的斷言。
+
+| 檢查 | 結果 |
+|---|---|
+| 模組 AST（eslint-scope） | 未解析名稱只有 `Error`、`WeakMap`；解構的依賴皆有使用 |
+| `game.js` 未使用 import | 98 → 104，新增的 6 個與 D7 相同；無新增未解析名稱 |
+| 突變：模組本體 119 項（只跑 T5 行為部分與 C09） | 113 項由斷言抓到，6 項存活：`STALE_SETTLEMENT` 的 `||` 與字面值（不可達）、`WAIT_ALLOCATION` 的 `return;`、`ALLOCATION_COMMITTED` 改名 2 處與刪除（設定後同步呼叫 `go`）。草稿存活的 `incentive.amount||0` 兩處由 HALF 情境抓到，`annualSchedule?.` 由無排程情境抓到 |
+| 接線突變 W1–W11（只跑 T6） | 11／11 抓到 |
+| Quick（scratch worktree，含 T1–T6） | 71／71 PASS，已核對實際入口數 |
+| 分組 Full（`--baseline=37aff39…`） | 23＋25＋22＋26＝96／96 PASS，已核對實際入口與預期清單 |
+| `game-view-dom-e2e` 直接比較 `37aff39` | 8 段 DOM／`S`／RNG 一致（Full 內此入口用預設基準 `4f39a73`，亦一致） |
+| reviewer | 無正確性、語意、接線問題；low 一項：T5 直接注入替身，不經 `game.js` lambda，接線層由 T6 與 E2E 負責（依設計，不改） |
+
+- 「未改測試的 Quick」未取得有效結果：執行期間測試已在修改，該次 70／70 不作證據。
+- 未做：18 字 n-gram 與 acorn 字面值掃描未重做（`game.js` 自草稿基準未變，草稿結果見 §2jj.4）；W1–W11 的執行期欄位；`--preview` 路由、Linux CI、Preview。
+- 下一步：PR #55 併入後 merge `origin/dev`、重跑 Quick，push／PR 另批。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
