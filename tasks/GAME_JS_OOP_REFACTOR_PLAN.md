@@ -4117,6 +4117,73 @@ T5 使 Quick 由 70 增為 71、Full 由 95 增為 96，manifest 依檔名自動
 - 未做：18 字 n-gram 與 acorn 字面值掃描未重做（`game.js` 自草稿基準未變，草稿結果見 §2jj.4）；W1–W11 的執行期欄位；`--preview` 路由、Linux CI、Preview。
 - 下一步：PR #55 併入後 merge `origin/dev`、重跑 Quick，push／PR 另批。
 
+## 2kk. 第 32 期：年度骨架移至 `YearFlow`（細部計畫，2026-11-03；計畫已批准 2026-11-03，實作未開始）
+
+基準 `refactor/season-settlement` `6b83d68`（`game.js` 與 `1c6bd9b` 相同），`game.js` 756 行／66,735 bytes。路線與候補盤點見 §3.22。
+
+### 2kk.1 現況
+
+- 範圍：`nextStep`（`:278`）、`advance`（`:540–550`）＋覆寫（`:640–641`，`advanceWithoutSalaryFinalization`）、`reportFlowOutcome`（`:643–674`）、`phaseIntlPre`、`startYear`（`:707–708`）。無 RNG 呼叫點。
+- 區段外引用：`nextStep` 由 `phasePre`、`phaseMid`、`runSeasonPipeline`、`AmateurCareer` 呼叫；`reportFlowOutcome` 由 `phasePre`、`CareerContract`、`AmateurCareer`、`CareerMovement` 呼叫（皆經 lambda）；`startYear` 由 `startJapanese` 呼叫。`advanceWithoutSalaryFinalization` 無區段外引用，測試與工具也未以名稱引用。
+- e2e 執行時替換：`startYear`（`contract-salary-e2e:24`、`smallschool-c-e2e:16`、`stage10-risk-e2e` 包裝）、`advance`（`stage10-risk-e2e` 包裝；`contract-salary-e2e:23` 有 `flowHooks` 時改寫 `flowHooks.advance`）、`nextStep`（`championship-intl-e2e:22`，只在 `proSeason()` 外）；`flowHooks` 的屬性另由 `championship-intl-e2e:18–19`、`retirement-hof-pilot:18` 寫入。`tools/development-a/runtime.mjs:21–23` 替換 `startYear` 後呼叫 `advance`（不在 manifest，不修改）。
+- 文字耦合：`productionFunction('reportFlowOutcome')` 於 `npb-return-ui.test:14,55,114,185,253`、`draft-signing-policy.test:119,165`；`kbo-renewal-floor.test:59` 文字切片；`event-integration.test:35` 對 `game.js` 的 `match`。
+
+### 2kk.2 設計（使用者決定 2026-11-03：批准 D1–D8 與 T1–T6；`reportFlowOutcome` 採方案甲（併入模組）；名稱 `YearFlow`／`year-flow.js`／`yearFlow`；分支採 b）
+
+- D1 新檔 `docs/src/engine/year-flow.js`，類別 `YearFlow`，實例 `yearFlow`。
+- D2 範圍為 §2kk.1 所列。`flowHooks`、`yearHandoffs`、`careerSession` 留在 `game.js`，以參考傳入。§3.22 ① 不併入。
+- D3 本體逐字搬移，縮排不變。列舉修改各斷言恰好一次：①各方法開頭取 `getState()` 與解構 `#deps`；②`careerSession.stepQ=[phasePre,phaseIntlPre,phaseMid,phaseEnd]` → `careerSession.stepQ=yearSteps()`，`game.js` 注入 `yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]`，保留函式同一性與 `.name`；③`:640–641` 覆寫改為模組方法 `advance(){finalizePendingOffseasonSalary();this.advanceWithoutSalaryFinalization();}`，此為唯一的 `this.` 互呼（無測試替換該名稱）。
+- D4 離開模組的 4 條呼叫一律經 `#deps` 的 lambda 延遲綁定：`advance→startYear`、`startYear→nextStep`、`phaseIntlPre→nextStep`、`reportFlowOutcome→advance`；`endGame` 同。
+- D5 `game.js` 留 6 個具名一行包裝（函式宣告，可重綁）：`nextStep`、`advance`、`reportFlowOutcome`、`phaseIntlPre`、`startYear` 於原位置，`advanceWithoutSalaryFinalization` 不留；建構行緊接 `startYear` 包裝之後。`:640–641` 刪除。
+- D6 模組直接 import `resetEventYear`；`game.js` 的 import 不刪，未使用 import 增 1。
+- D7 不升 VERSION，不改 CHANGELOG／CURRENT_SPEC（§9.3）。
+- D8 分支（b）：自 `refactor/season-settlement` 以 `--no-track` 開 `refactor/year-flow`，疊在第 31 期之上，只在本機 commit。T1–T5 以 `git show` 讀取的比較基準 SHA 必須存在於 origin；第 31 期 push 前不定案，定案前以 `6b83d68` 作暫定基準。
+
+### 2kk.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 位置 | 變更 | 性質 |
+|---|---|---|---|
+| T1 | `tests/npb-return-ui.test.mjs:14,55,114,185,253` | 現行版的 reporter 改由模組文字組成：前綴 `function reportFlowOutcome(outcome){`＋模組方法本體（錨點各斷言恰好一次），vm 自由名稱仍為 `advance`／`endGame`／`flowHooks`；條件式改為偵測模組，舊 SHA 側不變 | 目標搬移 |
+| T2 | `tests/draft-signing-policy.test.mjs:119,165` | 同 T1；`:165` 的 `UNKNOWN_FLOW_OUTCOME` 斷言改查模組 | 目標搬移 |
+| T3 | `tests/kbo-renewal-floor.test.mjs:59` | `between` 切片於現行版改用 T1 組法 | 目標搬移 |
+| T4 | `tests/event-integration.test.mjs:35` | `match(game)` 改查模組 | 目標搬移 |
+| T5 | `tests/year-flow.test.mjs` | 新檔。①模組＝基準 4 段＋D3 列舉修改，逐位元組比較；②舊區段在 vm、模組在主 realm，以相同替身比較呼叫序列、錯誤、`S`、`stepQ`，含 `NEXT_YEAR_AMBIGUOUS`、`STALE_YEAR_HANDOFF`、停用 `#act` 的 catch；③抵達證明：`#deps` 的 4 條呼叫皆放 spy 並斷言命中，以逐邊負控制確認各自抓到 | 新增涵蓋 |
+| T6 | `tests/verify-modularization.mjs` | `game.js` 6 個包裝、建構行、import 行逐字斷言且各恰好一次 | 收緊 |
+
+T5 使 Quick 由 71 增為 72、Full 由 96 增為 97。
+
+### 2kk.4 草稿實測（2026-11-03，scratch worktree，基準 `6b83d68`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo，測試未改）
+
+- 草稿：`game.js` 64,165 bytes，模組 4,231 bytes；方案乙（`reportFlowOutcome` 留在 `game.js`）為 65,629／2,615 bytes。
+- 抵達探測：scratch 腳本以 E2E 同樣的方式重綁 `startYear`、`nextStep`、`advance`、`reportFlowOutcome`、`phaseIntlPre`、`endGame`、`phasePre`、`phaseMid`、`phaseEnd` 並計數，跑 3 條生涯（P／IF／OF）。草稿與 `6b83d68` 的命中序列、最終 `S`、RNG 次數、`stepQ` 名稱快照一致。負控制（4 條改為模組內直接呼叫）最終 `S` 與 RNG 不變，但重綁命中減少：`startYear` 23→1、`advance` 22→0、`nextStep` 92→46。
+
+| 模組內呼叫 | 每年命中 | 負控制下 FAIL 的既有測試 |
+|---|---|---|
+| `advance → startYear` | 1 | 只有 `contract-salary-e2e`（314 項 FAIL） |
+| `startYear → nextStep` | 1 | 無 |
+| `phaseIntlPre → nextStep` | 1 | 無 |
+| `reportFlowOutcome → advance` | 1 | 無 |
+
+- 全部改直接呼叫時，`smallschool-c-e2e`（`:16` 替換 `startYear` 為空函式）、`stage10-risk-e2e`、`championship-intl-e2e`、`stage6-state-transaction-e2e`、`stage7-safety-e2e`、`game-view-dom-e2e` 皆 PASS（無聲繞過）。逐邊負控制只跑 `contract-salary-e2e`。
+
+| 檢查 | 結果 |
+|---|---|
+| 未改測試的 Quick | 66／71，FAIL 為 `npb-return-ui.test`、`draft-signing-policy.test`、`kbo-renewal-floor.test`（`yearFlow is not defined`）、`event-integration.test`，由 T1–T4 涵蓋；另 1 項 `test-runner.test` 為探測檔放在 `tests/` 所致，移出後不計 |
+| 分組 Full（未改測試） | 23＋25＋22＋26＝96 入口，92 PASS，FAIL 同上 4 項，無 Full 專屬耦合；已依 `summary.json` 核對 |
+| 方案乙 | 上述 3 個切片測試 PASS，只有 `event-integration.test` FAIL；Full 與探測未做 |
+| 模組 AST（eslint-scope） | 未解析名稱只有 `Error`、`Map`；解構的依賴皆有使用 |
+| `game.js` AST | 未解析名稱與未使用宣告同基準；未使用 import 增 1（`resetEventYear`） |
+| acorn 字面值掃描（151 檔） | 172 處命中數改變，逐項判定：上述 4 項之外為執行期字串、通用 pattern 或對其他檔的斷言 |
+
+- `career-session-access`：`game.js` 的 `careerSession.` 文字由 7 處變為 0，10 個欄位全部改走 live instance 檢查（§2aa 機制），`has()` 由文字存在改為實例存在；測試通過。
+- `stage10-risk-e2e`：`:640–641` 刪除後，`legacy.advance` 包住的是含結算的整條 `advance`；Full 通過，讀 trace 比較時留意。
+- 未做：方案乙的 Full 與探測；`advance` 錯誤路徑（現行 manifest 無測試抵達，T5 須涵蓋）；突變；Linux CI、Preview。
+
+### 2kk.5 驗證與交付（L3／R3：年度推進的確定處理；允許差分為無）
+
+- Quick、分組 Full、`game-view-dom-e2e` 直接比較基準、突變（含逐邊負控制）、探測腳本新舊命中序列比較；reviewer。
+- 第 31 期 push 後定案比較基準 SHA，重跑受影響入口。push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -4622,6 +4689,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - `game.js` 剩餘組成（頂層語句分類，互斥）：import 64 語句 6,224 bytes；一行薄包裝 113 個 8,751 bytes；組件建構 19 語句 8,980 bytes；A–G 候補 21,828 bytes；其他函式 7,057 bytes；其他語句（資料表、`Object.assign`、事件綁定等）11,226 bytes。
 - 建議：第 32 期 A，① 不併入；細部計畫前先做草稿與抵達探測，量 `startYear`／`advance`／`nextStep` 的延遲綁定範圍。B 於 A 之後；C、D 最後；F、G 收益小，不單獨成期。實作宜待 PR #55 併入 dev，避免疊第三層未合併分支（未決）。
 - 使用者決定（2026-11-03）：A–G 全部依序分期進行，一期一組，各期開始前另立細部計畫。順序依上列建議：第 32 期 A，之後 B、E＋C、D；F、G 於各期細部計畫時決定併入相鄰期。不授權實作。
+- 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），見 §2kk。
 
 ## 4. 使用者決定（2026-10-18）
 
