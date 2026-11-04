@@ -4207,6 +4207,65 @@ T5 使 Quick 由 71 增為 72、Full 由 96 增為 97。
 - 未做：Linux CI、Preview、`--preview` 路由、PC／手機實機確認。比較基準 `6b83d68` 只在本機，第 31 期 push 前不作 CI 證據（D8）。
 - 下一步：PR #55 與第 31 期依序併入後，定案比較基準 SHA、merge `origin/dev`、重跑 Quick；push／PR 另批。
 
+## 2ll. 第 33 期：`movement` 尾段移至 `MovementGate`（細部計畫，2026-11-04；D1–D7 使用者決定 2026-11-04；T1–T5 與實作待批准）
+
+§3.22 候選 B。草稿與抵達探測已做（§2ll.4）。
+
+### 2ll.1 現況（基準 `9233cfc`，`game.js` 與 `d4d5ce4` 相同，714 行／64,165 bytes）
+
+- L1 `:529` `function movement(){return careerMovement.movement();}`（第 24 期）；`:574` `LEGACY` 於此時捕捉 L1。
+- L2 `:684` `movement = function(){…LEGACY.movement();};`：`migrateSalaryV130State`、業餘早退（`amateurCareer.seasonEndMovement()`）、`accrueForeignFirstTeamSeason`、服務年限累計（NPB 一軍登錄日數、MLB、KBO1／CPBL1）、`faElig`，最後呼叫 `LEGACY.movement()`。
+- L3 `:685–:695`：`const performMovement=movement;` 後重新指派 `movement`，非 PRO 直接走 L2；PRO 以 `professionalMoves`（`:679` WeakMap）記錄同年度的 `STARTED`／`WAIT_CHOICE`，同年再進入時恢復選擇或丟 `MOVEMENT_CONTINUATION_AMBIGUOUS`。
+- L2／L3 文字自 `319be98` 至 `d4cd99d`（`origin/dev`）不變（逐位元組雜湊相同）。
+- 無 RNG。L2、L3 不含 closure。
+- manifest 外的耦合（不在 quick／full／audit，`test.mjs list` 已核對；本期不改）：`tools/development-a/runtime.mjs:11,21,22`、`tools/development-b/legacy-effect-boundaries.mjs:30,41` 含搬移文字或 `professionalMoves`；`scripts/audit-architecture.mjs:42` 計算 `game.js` 的 `LEGACY.` 成員引用，搬移後少 1。
+
+### 2ll.2 設計（使用者決定 2026-11-04：D1、D3、D4、D7 前半依建議；D2 採 `MovementGate`；分支疊在 `refactor/year-flow` 上）
+
+| # | 內容 | 決定 |
+|---|---|---|
+| D1 | 新模組 vs 併入 `CareerMovement` | 新模組。`career-movement.js` 不在 `award-identity-policy` 凍結清單（`287dd1a` 時不存在），可併入；但 L2 必須經 `LEGACY.movement` 呼叫 L1（`stage10` 以 `legacy.movement` 包裝計數），併入會讓 `CareerMovement` 經 `LEGACY` 間接呼叫自己 |
+| D2 | 名稱 | `MovementGate`／`movement-gate.js`／`movementGate`（另案 `MovementEntry` 未採；不用 `SeasonEndMovement`，與 `amateurCareer.seasonEndMovement` 混淆） |
+| D3 | `LEGACY`、`amateurCareer` 傳參照 | 是。方法本體逐字不改；`LEGACY.movement` 仍為 `:574` 捕捉的 L1（`stage10` trace 包裝後的版本亦同） |
+| D4 | 其他依賴 | `migrateSalaryV130State`、`accrueForeignFirstTeamSeason`（import 改注入，T5 可替換；§2kk.6 `resetEventYear` 的教訓）、`contractStageFor`、`restorePendingChoice` 以延遲綁定 lambda 注入；`restorePendingChoice` 沿用 §2jj 的 `(state,expected)=>…` 形式（無參數呼叫時預設值 `state=S` 相同） |
+| D5 | 內部結構（記錄做法） | L2 為私有 `#performMovement()`，L3 為 `movement()`，`professionalMoves` 為私有欄位 `#professionalMoves`。`performMovement` 在 `game.js` 外無引用 |
+| D6 | `game.js` 位置（記錄做法） | `:679` 刪除；`:684–:695` 換成 `movement=function(){return movementGate.movement();};` 與建構一行，維持在 `LEGACY` 之後（T3 斷言順序）。`movement` 仍是可重新指派的綁定，4 個 e2e 的 `movement=` 替換與 `SeasonSettlement` 的 `()=>movement()` 不受影響 |
+| D7 | F、G 不併入本期；分支 | F（`renderCheckpointCard`）、G（`startJapanese`＋seed 工具）與 `movement` 無關，不併入。分支 `refactor/movement-gate`，自 `refactor/year-flow` `9233cfc` 開（第三層未合併分支）；比較基準 `9233cfc` 只在本機，第 32 期 push 前不作 CI 證據（同 §2kk D8） |
+
+### 2ll.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 | 原因 |
+|---|---|---|---|
+| T1 | `draft-signing-policy.test` | 現行側以模組 class＋`game.js` 的包裝行與建構行（各斷言一次）取代 `^  movement = function` 一行；vm context 加記錄呼叫的 stub（`accrueForeignFirstTeamSeason`、`contractStageFor`、`LEGACY.movement`、`restorePendingChoice`），兩側相同；舊 SHA 側不變 | regex 在新 `game.js` 為 null（`:165` TypeError） |
+| T2 | `salary-flow.test` | `:168` `match(game,/S\.serviceTime\.MLB\+\+/)` 改對模組，另加 `doesNotMatch(game,/serviceTimeAccruedYear/)`；模組加入 `gameAndModules` | 累計移入模組；`gameAndModules` 為明列清單，不加會使 `doesNotMatch` 無聲縮小 |
+| T3 | `verify-modularization` | 第 31 期接線由 4 行改 3 行（去掉 `professionalMoves`）；新增第 33 期區塊：import、包裝行＋建構行連續且各一次、`LEGACY` 在包裝行之前、`professionalMoves`／`performMovement`／`MOVEMENT_CONTINUATION_AMBIGUOUS`／`  movement = function(` 不在 `game.js` | `:48` 斷言 `professionalMoves` 行 |
+| T4 | （無） | `season-settlement.test:19` 的 `END` 只切舊 SHA，不需變更 | 已確認 |
+| T5 | `movement-gate.test`（新） | 第 1 部分：模組＝`d4cd99d` 區段＋所列編輯（整檔相等）、無抽籤呼叫。第 2 部分：舊區段於 vm、模組於主 realm，同一組 stub，27 情境逐步比較呼叫記錄、錯誤、`S`；另斷言 ambiguous／恢復／`LEGACY` 失敗／登錄日迴圈 2 次皆有到達 | 自然生涯不到達 `WAIT_CHOICE` 與兩個 throw（§2ll.4） |
+
+T5 使 Quick 由 72 增為 73、Full 由 97 增為 98（manifest 依檔名自動）。
+
+### 2ll.4 草稿實測（2026-11-04，scratch worktree，基準 `9233cfc`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+- 組裝腳本自 `git show HEAD` 產生；`game.js` +3／−13（CRLF 保留），模組 LF 2,120 bytes。
+- 模組 AST：未解析名稱只有 `Error`、`Math`、`WeakMap`；`game.js` 未解析名稱集合不變；未使用 import 105 → 105。
+- 未改測試的 Quick：69／72，FAIL 為 `draft-signing-policy.test`（`:165`）、`salary-flow.test`（`:168`）、`verify-modularization`（`:53`）。
+- 18 字 n-gram 掃描搬移範圍（`tests`、`scripts`、`tools`、`.github`，含去跳脫的 regex）：19 檔命中，逐行讀過，皆為共用片段（stub 名、`restorePendingChoice(`、錯誤字串等）或舊 SHA 切片，無其他對 `game.js` 的文字斷言；`kbo-renewal-floor` 結束錨點 `\n  function migrateSalaryV130State` 不在範圍內。
+- 抵達探測（L2／L3 入口、`LEGACY.movement` 呼叫、`WAIT_CHOICE`、throw；6 條生涯，含 3 條職業：KBO1、CPBL2、NPB_DEV）：命中序列、`S`、RNG、步數與 `9233cfc` 相同。L3 每次都是首次進入（`STARTED`），`WAIT_CHOICE`、throw 0 次。負控制（模組 `serviceTimeAccruedYear=S.year+1`）→ `S` 不同。
+- 重綁探測：stage6 `payNext` 形式替換 `movement` 後呼叫 `phaseEnd`，新舊皆替換函式 1 次、L2／L3 探測 0 次。
+- 改測試後 Quick（T1 初版、T2、T3）：72／72 PASS，依 `summary.json` 與 `test.mjs list` 核對。
+- 分組 Full（T1 初版、T2、T3，無 T5；`--baseline=9233cfc…`）：23＋25＋23＋26＝97 入口，96 PASS／1 FAIL，已依 `summary.json` 與分組清單核對。FAIL 為 `event-integration.test` SIGSEGV（0.39 s，`.ips` 堆疊為 V8 GC 根標記 `Heap::IterateRoots`→`StackFrameIterator`，與 §2ii.7 的 `Builtins_BaselineOutOfLinePrologue` 不同堆疊），草稿 worktree 重跑 3 次 PASS，仍記 FAIL。
+- 最終 T1–T5 的 Quick：73／73 PASS，依 `summary.json` 與 `test.mjs list` 核對。最終版 T1 與 T5 只跑過 Quick，未在 Full 中執行（兩者皆為 Quick 入口，Full 專屬入口已在上列 Full 涵蓋）。
+- 突變（接線／文字，對 T1–T3）：13 項中 M3、M5–M7（`LEGACY` 呼叫、`WAIT_CHOICE`、恢復結果、年度判斷）存活 → T5。M10–M13（lambda 內容、包裝行位於 `LEGACY` 之前）只由 T3 文字斷言抓到。T1 初版 M1 為 `ReferenceError`（vm 缺 stub，假象），加記錄 stub 後為斷言 FAIL。
+- 突變（模組本體 23 項，對去掉第 1 部分的 T5）：22 項抓到；存活 `entry.phase==='WAIT_CHOICE'`→`!=='STARTED'`（phase 只有兩值，等價）。
+- 草稿、組裝腳本、探測腳本、T5 草稿只在 session scratchpad，不進 repo；實作時依本節重做，T5 以本節情境清單為準。
+- T5 撰寫時 stub 在建立時捕捉 `cfg`，使逐步設定失效；由 T5 的到達斷言發現並修正，未放寬斷言。
+
+### 2ll.5 驗證與交付（L3／R3：年度推進的移籍判定入口、服務年限；允許差分為無）
+
+- Quick、分組 Full、`game-view-dom-e2e` 直接比較基準、抵達探測新舊命中序列、T5 逐邊負控制、突變；reviewer。
+- 比較基準 SHA 待第 32 期 push 後定案，重跑受影響入口。push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
+- 下一步：T1–T5 與實作批准後，於 `refactor/movement-gate` 以組裝腳本自 `git show HEAD` 產生模組與 `game.js`，跑 Quick、分組 Full（含最終 T1、T5）、`game-view-dom-e2e` 直接比較、探測、突變、reviewer。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -4713,6 +4772,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 建議：第 32 期 A，① 不併入；細部計畫前先做草稿與抵達探測，量 `startYear`／`advance`／`nextStep` 的延遲綁定範圍。B 於 A 之後；C、D 最後；F、G 收益小，不單獨成期。實作宜待 PR #55 併入 dev，避免疊第三層未合併分支（未決）。
 - 使用者決定（2026-11-03）：A–G 全部依序分期進行，一期一組，各期開始前另立細部計畫。順序依上列建議：第 32 期 A，之後 B、E＋C、D；F、G 於各期細部計畫時決定併入相鄰期。不授權實作。
 - 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），見 §2kk。
+- 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作待批准，見 §2ll。
 
 ## 4. 使用者決定（2026-10-18）
 
