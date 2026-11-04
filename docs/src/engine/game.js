@@ -48,6 +48,7 @@ import { createChoiceActionToken, runChoiceAction } from '../ui/choice-action.js
 import { ChoicePrompt } from '../ui/choice-prompt.js';
 import { SeasonSettlement } from './season-settlement.js';
 import { YearFlow } from './year-flow.js';
+import { MovementGate } from './movement-gate.js';
 import { GameView } from '../ui/game-view.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
@@ -676,23 +677,12 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function outOfOrg(o){return careerMovement.outOfOrg(o);}
   const careerMovement=new CareerMovement({getState:()=>S,LV,PATHS,careerSession,faMarket:(o,d)=>faMarket(o,d),crossOffers:o=>crossOffers(o),applyPromotionSalary:(fromLv,toLv)=>applyPromotionSalary(fromLv,toLv),markClubInitiatedRenewal:years=>markClubInitiatedRenewal(years),extensionOffer:o=>extensionOffer(o),displayTrait:key=>displayTrait(key),slgOf:st=>slgOf(st),teamNick:id=>teamNick(id),applyKboForeignPackageCap:input=>applyKboForeignPackageCap(input),salaryCandidate:input=>salaryCandidate(input),salaryFor:(lv,d)=>salaryFor(lv,d),fixedContract:input=>fixedContract(input),signTo:(org,lv,teamId,years,mult,reason,options)=>signTo(org,lv,teamId,years,mult,reason,options),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),renewAndAdvance:(mult,allowDecrease,contractType)=>renewAndAdvance(mult,allowDecrease,contractType),arbitrationFlow:()=>arbitrationFlow(),kboPreviousPackage:()=>kboPreviousPackage(),currentMarketRating:()=>currentMarketRating(),contractStageFor:org=>contractStageFor(org),serviceYearsFor:org=>serviceYearsFor(org),migrateSalaryV130State:()=>migrateSalaryV130State(),migrateSalaryV140State:()=>migrateSalaryV140State(),applyDemotionSalary:(fromLv,toLv)=>applyDemotionSalary(fromLv,toLv),ageGateJP:()=>ageGateJP(),doTradeExec:()=>doTradeExec(),dpMult:()=>dpMult(),ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),card:(cls,title,html)=>card(cls,title,html),board:phase=>board(phase),choose:(title,opts)=>choose(title,opts),escapeHTML:v=>escapeHTML(v),teamRec:id=>teamRec(id),listByOrg:org=>listByOrg(org),pickRecord:a=>pickRecord(a),removeTrait:(key,name)=>removeTrait(key,name),traitCard:(key,name,text,cls)=>traitCard(key,name,text,cls),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}});
 
-  const professionalMoves=new WeakMap();
   resumeSeasonEnd=()=>seasonSettlement.resumeSeasonEnd();
   function phaseEnd(){return seasonSettlement.phaseEnd();}
   const seasonSettlement=new SeasonSettlement({getState:()=>S,careerSession,choiceViews,board:phase=>board(phase),migrateSalaryV140State:()=>migrateSalaryV140State(),teamRec:id=>teamRec(id),random:()=>R(),renderCheckpointCard:(owner,key,args)=>renderCheckpointCard(owner,key,args),escapeHTML:v=>escapeHTML(v),fmtMoney:yen=>fmtMoney(yen),movement:()=>movement(),choose:(title,opts)=>choose(title,opts),allocUI:(mode,label,done)=>allocUI(mode,label,done),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected),$:id=>$(id),salaryCandidate:input=>salaryCandidate(input),currentMarketRating:()=>currentMarketRating(),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),card:(cls,title,html)=>card(cls,title,html),salaryDecisionLink:()=>salaryDecisionLink(),bindLatestSalaryDetailLink:()=>bindLatestSalaryDetailLink(),salaryFor:(lv,d)=>salaryFor(lv,d)});
 
-  movement = function(){migrateSalaryV130State();if(amateurCareer.seasonEndMovement())return;accrueForeignFirstTeamSeason(S);if(S.serviceTimeAccruedYear!==S.year){if(S.org==='NPB'&&S.lv==='NPB1'&&S.seasonFactor>0){S.npbRosterDays+=Math.round(145*S.seasonFactor);while(S.npbRosterDays>=145){S.npbRosterDays-=145;S.npbFaSeasons++;}S.serviceTime.NPB=Math.max(S.serviceTime.NPB,S.npbFaSeasons);}else if(S.org==='MLB'&&S.lv==='MLB'&&S.seasonFactor>=.5)S.serviceTime.MLB++;else if((S.org==='KBO'&&S.lv==='KBO1'||S.org==='CPBL'&&S.lv==='CPBL1')&&S.seasonFactor>0)S.serviceTime[S.org]++;S.serviceTimeAccruedYear=S.year;}const stage=contractStageFor(S.org);if(S.org==='NPB')S.faElig=S.serviceTime.NPB>=8;else if(S.org==='MLB')S.faElig=stage!=='CONTROL';LEGACY.movement();};
-  const performMovement=movement;
-  movement=function(){
-    if(S.stage!=='PRO')return performMovement();
-    let entry=professionalMoves.get(S);
-    if(entry?.year===S.year){
-      if(entry.phase==='WAIT_CHOICE'){if(!restorePendingChoice())throw new Error('MOVEMENT_CONTINUATION_AMBIGUOUS');return;}
-      throw new Error('MOVEMENT_CONTINUATION_AMBIGUOUS');
-    }
-    entry={state:S,year:S.year,phase:'STARTED'};professionalMoves.set(S,entry);
-    performMovement();entry.phase='WAIT_CHOICE';
-  };
+  movement=function(){return movementGate.movement();};
+  const movementGate=new MovementGate({getState:()=>S,LEGACY,amateurCareer,migrateSalaryV130State:()=>migrateSalaryV130State(),accrueForeignFirstTeamSeason:state=>accrueForeignFirstTeamSeason(state),contractStageFor:org=>contractStageFor(org),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected)});
 
   const legacyEndGame=LEGACY.endGame;
   endGame=function(reason){legacyEndGame(reason);setTimeout(()=>{

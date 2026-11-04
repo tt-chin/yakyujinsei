@@ -4207,7 +4207,7 @@ T5 使 Quick 由 71 增為 72、Full 由 96 增為 97。
 - 未做：Linux CI、Preview、`--preview` 路由、PC／手機實機確認。比較基準 `6b83d68` 只在本機，第 31 期 push 前不作 CI 證據（D8）。
 - 下一步：PR #55 與第 31 期依序併入後，定案比較基準 SHA、merge `origin/dev`、重跑 Quick；push／PR 另批。
 
-## 2ll. 第 33 期：`movement` 尾段移至 `MovementGate`（細部計畫，2026-11-04；D1–D7 使用者決定 2026-11-04；T1–T5 與實作待批准）
+## 2ll. 第 33 期：`movement` 尾段移至 `MovementGate`（細部計畫，2026-11-04；D1–D7 使用者決定、T1–T5 與實作批准 2026-11-04，本機實作完成，見 §2ll.6）
 
 §3.22 候選 B。草稿與抵達探測已做（§2ll.4）。
 
@@ -4265,6 +4265,21 @@ T5 使 Quick 由 72 增為 73、Full 由 97 增為 98（manifest 依檔名自動
 - Quick、分組 Full、`game-view-dom-e2e` 直接比較基準、抵達探測新舊命中序列、T5 逐邊負控制、突變；reviewer。
 - 比較基準 SHA 待第 32 期 push 後定案，重跑受影響入口。push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
 - 下一步：T1–T5 與實作批准後，於 `refactor/movement-gate` 以組裝腳本自 `git show HEAD` 產生模組與 `game.js`，跑 Quick、分組 Full（含最終 T1、T5）、`game-view-dom-e2e` 直接比較、探測、突變、reviewer。
+
+### 2ll.6 實作（2026-11-04，`refactor/movement-gate`，基底 `cbdec4d`（`docs`、`tests`、`scripts` 與 `9233cfc` 相同）；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14）
+
+- 6 檔（`game.js`、`movement-gate.js`、T1、T2、T3、T5）自 §2ll.4 的 scratch worktree 複製，逐位元組與草稿相同（`cmp`）。模組 LF，`game.js` 維持 CRLF。T1 為加記錄 stub 的最終版，T5 為修正 `cfg` 讀法後的 27 情境版。
+- 下列結果在內容與 repo 相同的 scratch worktree 取得；抵達探測、重綁探測、突變為 §2ll.4 在同一內容上的結果，未重跑。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick | 73／73 PASS，依 `summary.json` 與 `test.mjs list` 核對 |
+| 分組 Full（`--baseline=9233cfc8…`） | 23＋26＋23＋26＝98／98 PASS，依 `summary.json` 與分組清單核對；`movement-gate.test` 在第 3 組 |
+| `game-view-dom-e2e` 直接比較 `9233cfc` | 8 段 DOM／`S`／RNG 一致（Full 內此入口用預設基準 `4f39a73`，亦一致） |
+| reviewer | 無發現（逐字搬移、`S` 讀取時機、`LEGACY` 先後、WeakMap 識別、斷言未放寬、換行碼） |
+
+- 未做：Linux CI、Preview、`--preview` 路由、PC／手機實機確認。比較基準 `9233cfc` 只在本機，第 32 期 push 前不作 CI 證據（D7）。
+- 下一步：PR #56 與第 32 期依序併入後，定案比較基準 SHA、merge `origin/dev`、重跑 Quick；push／PR 另批。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -4772,7 +4787,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 建議：第 32 期 A，① 不併入；細部計畫前先做草稿與抵達探測，量 `startYear`／`advance`／`nextStep` 的延遲綁定範圍。B 於 A 之後；C、D 最後；F、G 收益小，不單獨成期。實作宜待 PR #55 併入 dev，避免疊第三層未合併分支（未決）。
 - 使用者決定（2026-11-03）：A–G 全部依序分期進行，一期一組，各期開始前另立細部計畫。順序依上列建議：第 32 期 A，之後 B、E＋C、D；F、G 於各期細部計畫時決定併入相鄰期。不授權實作。
 - 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），見 §2kk。
-- 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作待批准，見 §2ll。
+- 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），本機實作完成，見 §2ll。
 
 ## 4. 使用者決定（2026-10-18）
 
