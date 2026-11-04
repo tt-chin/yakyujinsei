@@ -22,7 +22,13 @@ for(const [id,state,pay] of cases){
 assert.equal(incomeSummary(null).at(-1).amount,0);
 // This is a display change, not permission to change any acquisition formula.
 const old=sourceText(execFileSync('git',['show','2e69096:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6})),now=readSourceText('docs/src/engine/game.js');
-assert.equal(productionFunction('phaseEnd',now),productionFunction('phaseEnd',old),'phaseEnd payment rules unchanged');
+// Phase 31 moved phaseEnd into SeasonSettlement; game.js only forwards to it.
+assert.ok(now.includes('\n  function phaseEnd(){return seasonSettlement.phaseEnd();}\n'),'game.js phaseEnd only forwards');
+{const source=readSourceText('docs/src/engine/season-settlement.js'),start=source.indexOf('\n  phaseEnd(){');
+ let moved=source.slice(start,source.indexOf('\n  settlePhaseEnd(){',start)).trim();
+ for(const [inserted,original] of [['phaseEnd(){const S=this.#deps.getState(),{careerSession}=this.#deps;','function phaseEnd(){'],["return this.settlePhaseEnd();",'return settlePhaseEnd();'],['try{this.settlePhaseEnd();','try{settlePhaseEnd();']]){
+  assert.equal(moved.split(inserted).length,2,'one '+original+' change');moved=moved.replace(inserted,original);}
+ assert.equal(moved,productionFunction('phaseEnd',old),'phaseEnd payment rules unchanged');}
 {let moved=productionFunction('runDraftRule',readSourceText('docs/src/engine/amateur-career.js'));
  for(const [inserted,original] of [['function runDraftRule(fromSchool,cb){const S=getState();','function runDraft(fromSchool,cb){'],['const accept=()=>{const S=getState();','const accept=()=>{'],['cb(declineDraftSelection(getState()))','cb(declineDraftSelection(S))']]){
   assert.equal(moved.split(inserted).length,2,'one '+original+' change');moved=moved.replace(inserted,original);}
