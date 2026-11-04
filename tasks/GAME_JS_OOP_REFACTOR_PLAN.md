@@ -4009,7 +4009,7 @@ T4 使 Quick 由 69 增為 70、Full 由 94 增為 95，manifest 依檔名自動
 - W4、W7、W8、W9 未對 Full 專屬入口執行，維持 NOT_RUN。
 - 未做：`--preview` 路由、Linux CI、Preview。
 
-### 2ii.7 交付（進行中，2026-11-03；PR #55 待 code owner 合併）
+### 2ii.7 交付（2026-11-04 完成；PR #55 已由 code owner 併入 dev，Preview 自動檢查已做、使用者驗收待確認）
 
 - 本機驗證後 `origin/dev` 新增 `b9e9c53`（1.13.7，code owner 直接 push），dev push 的 Quick（Tests #124）FAIL 2 項：`verify-modularization` 與 `award-identity-policy.test` 的版本字面值，後者另遮蔽 `seed-share.js` 的凍結檢查。[PR #52](https://github.com/tt-chin/yakyujinsei/pull/52)（`83bc739`，版本字面值＋`seed-share.js` 逐字核准）由 code owner 併入 dev（`4f39a73`），Tests #125 Quick 通過。
 - 本分支以 merge 併入 `origin/dev`（`d9cb4a3`），保留 `4133a1b` 等 SHA 與上節紀錄。乾淨 worktree 結果：Quick 69／70，FAIL 為 `event-integration.test` 的 SIGSEGV（`Builtins_BaselineOutOfLinePrologue`，既知 V8 crash），重跑 PASS；分組 Full（基準 `4f39a73`）90／95，`international-personal-stats-e2e`、`full-power-pitching-e2e`、`stage6-ability-e2e` 案例全 PASS 但 Console 有 `net::ERR_NETWORK_CHANGED`，重跑 PASS；`game-view-dom-e2e`、`replay-share-theme-e2e` 在 `4f39a73` 本身即 FAIL，屬 1.13.7。
@@ -4019,7 +4019,9 @@ T4 使 Quick 由 69 增為 70、Full 由 94 增為 95，manifest 依檔名自動
 - 本分支再以 merge 併入 `origin/dev`（`5bac94e`，無衝突）。乾淨 worktree：Quick 70／70、分組 Full（`--baseline=37aff39…`）22＋25＋22＋26＝95／95 PASS，已核對實際入口數。
 - `5bac94e` 已 push，[PR #55](https://github.com/tt-chin/yakyujinsei/pull/55)（→ `dev`）已開。[Tests #130](https://github.com/tt-chin/yakyujinsei/actions/runs/41545449477)（`5bac94e`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 95`、`acceptedPass 95`、`issues []`（記於 PR #55）。
 - 下一步：等 code owner 合併 PR #55（使用者決定 2026-11-03，不由我合併）；合併後確認 dev push 的 Quick 與 Preview（`https://dev.yakyujinsei.pages.dev`：檔案與 dev 一致、Console、4xx／5xx、`choice-prompt.js` 載入、需選擇的流程），再記於本節。第 31 期已先以本分支為基底實作（使用者決定 2026-11-03，§2jj.2 D8、§2jj.6）。
-- 未驗證：`--preview` 路由、Preview、實機。
+- PR #55 由 code owner 併入 dev（`d4cd99d09ca6f4d578e4a1d03dbffbf05d60fb81`，樹與 `88069cb` 相同），`main` 仍為 `df12674`。dev push 的 [Tests #131](https://github.com/tt-chin/yakyujinsei/actions/runs/41747709321)（Quick）success，Full 各 job 依規則 skipped。
+- Preview（2026-11-04，`https://dev.yakyujinsei.pages.dev`）：`docs/` 下 611 檔（`docs/archive/` 除外）與 `d4cd99d` 逐位元組相同（`index.html` 以 `/` 取得）。Brave＋`--disable-features=BraveFarbling` 跑 4 條生涯（P／IF × PC 1280／手機 390，seed `20261104`、`20261105`、`777`、`4242`），皆至引退：Console error、pageerror、4xx／5xx、請求失敗 0，`choice-prompt.js` 200，選擇畫面每條 10–14 次（進路、指名、事件），其中 7–8 次選第 1 個以外的選項，無水平捲動。偵測結束用的 `window.__done` 一行由瀏覽器端附加在 `game.js` 後，其餘為 Preview 原樣。
+- 未驗證：4 條生涯皆短（72–90 步，多在業餘／獨立聯盟結束），NPB 職業球季幾乎未涵蓋；人眼畫面確認、使用者 Preview 驗收、`--preview` 路由、實機。
 
 ## 2jj. 第 31 期：年度結算移至 `SeasonSettlement`（細部計畫，2026-11-02；計畫已批准 2026-11-03，實作待第 30 期併入 dev 後開始）
 
