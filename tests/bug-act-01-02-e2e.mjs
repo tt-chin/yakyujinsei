@@ -14,14 +14,13 @@ const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 function instrument(source){
- const actionAnchor=source.includes('action:()=>invokeAnnualChoice(view,o.f),')?'action:()=>invokeAnnualChoice(view,o.f),':source.includes('action:()=>invokeChoiceAction(o.f),')?'action:()=>invokeChoiceAction(o.f),':'action:o.f,';
- assert.ok(source.includes(actionAnchor),'choice observer anchor');
- const invoke=actionAnchor==='action:o.f,'?'o.f()':actionAnchor.includes('invokeAnnualChoice')?'invokeAnnualChoice(view,o.f)':'invokeChoiceAction(o.f)';
- source=instrumentRng(source,'__calls').replace('function card(cls,title,html){','function card(cls,title,html){window.__cardCalls=(window.__cardCalls||0)+1;(window.__cardHTML??=[]).push({cls,title,html});').replace(actionAnchor,`action:()=>{window.__actionCalls=(window.__actionCalls||0)+1;return ${invoke};},`);
+ source=instrumentRng(source,'__calls').replace('function card(cls,title,html){','function card(cls,title,html){window.__cardCalls=(window.__cardCalls||0)+1;(window.__cardHTML??=[]).push({cls,title,html});');
  source=withCareerSessionAccess(source);
  return injectOverlayHook(source,`const auditSignTo=signTo;signTo=function(...args){const calls=window.__calls||0,rng=_s;try{return auditSignTo(...args);}finally{window.__signAudit={beforeCalls:calls,afterCalls:window.__calls||0,beforeRng:rng,afterRng:_s};}};window.__actAudit={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__calls||0,actions:window.__actionCalls||0,sign:window.__signAudit||null,generation:__cs.choiceGeneration,token:__cs.activeChoiceToken?.generation,running:__cs.activeChoiceToken?.running,dom:document.querySelector('#act').outerHTML,cards:window.__cardCalls||0}),draft:(from,development=false)=>{actClear();S=newState('入団検証',S.pos);Object.assign(S,{age:from==='HS'?18:22,year:2032,stage:from,lv:from,stageYr:from==='HS'?3:4,entryRoute:from,seasonFactor:1});Object.keys(S.ab).forEach(k=>S.ab[k]=development?(from==='HS'?31:39):60);enterDraftPath(from);}};`);
 }
-const server=createServer(async(req,res)=>{try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1)||'index.html';if(rel.includes('..'))throw Error('path');let body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});
+const actionAnchor='action:()=>this.#invokeAnnualChoice(view,o.f),';
+function instrumentChoice(source){assert.equal(source.split(actionAnchor).length,2,'choice observer anchor');return source.replace(actionAnchor,`action:()=>{window.__actionCalls=(window.__actionCalls||0)+1;return this.#invokeAnnualChoice(view,o.f);},`);}
+const server=createServer(async(req,res)=>{try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1)||'index.html';if(rel.includes('..'))throw Error('path');let body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());if(rel==='src/ui/choice-prompt.js')body=instrumentChoice(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const target=arg('preview')||`http://127.0.0.1:${server.address().port}`;
 const output=path.join(os.tmpdir(),'yakyujinsei-act-audit',arg('diagnostic-seed')?'diagnostic':arg('preview')?'preview':'local');await mkdir(output,{recursive:true});
@@ -32,6 +31,7 @@ async function page(width,seed,pos){
  p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push(r.status()+' '+r.url());});
  await p.addInitScript(()=>document.addEventListener('click',e=>{const b=e.target.closest?.('#act button');if(b?.innerText.includes('指名を受けて入団'))window.__lastAcceptance=b.onclick;},true));
  if(arg('preview'))await p.route('**/src/engine/game.js',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:instrument(await r.text())});});
+ if(arg('preview'))await p.route('**/src/ui/choice-prompt.js',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:instrumentChoice(await r.text())});});
  await p.goto(target+'/?seed='+seed);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
 }
 // Same deterministic first-row/balanced priorities as the existing career suite.
