@@ -1,37 +1,8 @@
 # BACKLOG — 野球人生（日文版）
 
-## 2026-11-05 五項UI補驗與使用者實機接受
-
-後續使用者確認：iPhone Safari與Android Chrome兩者均OK；包含開關、捲動、觸控、分享、顯示設定與確認後重新開始，且接受遊び方／更新履歷文案及整體UI。此為使用者實機回報，未提供裝置型號或版本，不冒充本機自動實機測試。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01在各ID範圍結案；SUPPORT-01仍欠OFUSE設定／實際收付款，保持未結案。以下原先PARTIAL及未驗描述為補驗當時紀錄，後續只由本段明確確認的項目解除，不改寫歷史FAIL。其他實機／事件待辦及ARTIFACT_COVERAGE_BLOCKED不自動結案。
-
-依使用者提供的UI_ACCEPTANCE_20261105.md補驗；本機dev先由37aff39乾淨快轉到00ca7b93b1b499564b7f935e4ce9237d3297eacc，與提供報告的dev基準完全相同，VERSION維持1.13.8。報告中的正式站85檔比對及遠端桌面操作為外部提供證據，未冒充本輪重新執行；Preview bytes的403／BLOCKED不因此解除。
-
-- UI-06／UI-07：既有information-dialog-e2e完整聚焦入口11 PASS／0 FAIL，12張手機模擬截圖；320×568、390×844、844×390、390×240、1280×900，固定區域、末段、捲動軌道、觸控模擬、焦點／背景復原、observer清理及S／RNG不變。證據：test-results/ui-acceptance-20261105/dialog/summary.json。屬本機Chromium，非iPhone Safari實機。
-- UI-MENU-01：既有test-share-url-menu共237項PASS，涵蓋完整且精確的seed-only URL剪貼簿payload、成功／拒絕／fallback、重複點擊、關閉與重開的過期回應、原生分享mock／取消、六項無障礙名稱及320／390／PC／小高度版面。證據：test-results/ui-acceptance-20261105/menu/summary.json。原生分享與剪貼簿採受控mock／fallback fixture，非實機系統剪貼簿或share sheet驗收。確認後重新開始仍未補驗，不以取消成功取代。
-- UI-DESKTOP-LAYOUT-01：新增scripts/test-ui-desktop-acceptance.mjs重用既有verifyBoardMenu／長契約工具，60組桌面寬度／主題／字級長資料矩陣PASS；320、390、1179、1180、1280、1876六個寬度的門檻與無水平溢出PASS。另在1180／1280／1876下以四主題×三字級共36組fixture，核對六項非零大額收入、側欄與詳細renderer文字一致、長字折行。fixture只作用DOM，不改S；不稱自然生涯或每種歷史資料皆驗證。最終證據：test-results/ui-acceptance-20261105/desktop-income-recheck/summary.json。
-- SUPPORT-01：本機再次核對連結／別分頁／noopener noreferrer及無opener（受控測試目的頁）；使用者提供報告另有實際OFUSE頁面操作。本輪未實際付款、未確認收取設定，連結通過不代表收款驗收完成。
-
-保留本輪測試開發FAIL：desktop/failure.json為1180px在既有matchMedia→requestAnimationFrame更新之前讀取，改為等待預期可見狀態後desktop-recheck PASS；desktop-final/failure.json為新增收入fixture漏給history陣列，補齊後desktop-income-recheck PASS。未修改產品或放寬版面／收入斷言。產品、VERSION、golden、Runner、CI不變；Quick／Full／完整生涯NOT_RUN，無commit／push／部署。
-
-五項UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01、SUPPORT-01的checkbox維持未勾選。尚需使用者內容／文案及整體UI審查、iPhone／Android真機的開關／觸控／捲動／分享、OFUSE設定／實際收付款確認；另保留真正重新開始的未驗缺口。未明示同意前不拆分或豁免原完成條件。其餘既有待辦及ARTIFACT_COVERAGE_BLOCKED不變。
-
-1.13.8後續修復驗收（本機、未提交）：使用者批准版本差異及CRLF／LF相容修正後，版本檢查改讀正式VERSION，只允許版本字面值變更；6入口的其他嚴格斷言、B1／A凍結hash與原始來源均保留。來源文字比較在切片與替換前以共用readSourceText／sourceText統一UTF-8／LF，僅等同CRLF與LF，不忽略單獨CR、BOM、空白、文字或程式差異；19項正反例PASS。Windows根因為系統Git core.autocrlf=true、無gitattributes及Git內LF／CRLF歷史混合，加上測試只正規化一端；不批次改寫產品／歷史證據，不修改全域Git設定。契約見[scripts/TESTING.md](scripts/TESTING.md#原始碼文字比較的換行契約)。
-
-最終完整Quick **69 PASS／0 FAIL／0 SKIP／0 BLOCKED**，323.497秒、exit 0、69入口實際執行、重用0：[summary](test-results/release-notes-1138-quick-verified/summary.json)。受驗HEAD `4f39a73e23758b891bc24951225231792ab022b4`加本機1.13.8及測試修正，來源指紋`42a226fb54ee0459c20db0053170bf61fb7ca8d1cc0a4fd8ee44152a2949bcb0`。原六入口限定重測6 PASS／0 FAIL見[test-results/release-notes-1138-six-recheck/summary.json](test-results/release-notes-1138-six-recheck/summary.json)。中途完整Quick **68 PASS／1 FAIL**保留於[test-results/release-notes-1138-quick-final/summary.json](test-results/release-notes-1138-quick-final/summary.json)：改用共用讀取時漏改career-movement-policy後段的readFile呼叫，造成ReferenceError；將該處亦接至readSourceText後限定重測PASS，再重新執行上述69入口Quick通過。以下修復前63／6及其他歷史FAIL不改寫。僅結案兩個已驗證的本機測試問題；Linux／Full／實機／CI／Preview及正式發布NOT_RUN，ARTIFACT_COVERAGE_BLOCKED不變；VERSION維持1.13.8，本輪沒有遊戲邏輯變更，不commit／push／PR／合併／部署。
-
-2026-11-02追加完整Quick（1.13.8未提交工作樹）：使用者另行授權後以既有Runner完整執行69入口，**63 PASS／6 FAIL／0 SKIP／0 BLOCKED**，318.927秒、exit 1、重用0。報告：[summary](test-results/release-notes-1138-quick-20261102/summary.json)；同目錄保留各入口原始log及SHA256。受驗HEAD `4f39a73e23758b891bc24951225231792ab022b4`加本機1.13.8修改，來源指紋`bd0584be06f004c14e3a99e1877dbfc5cf60ed271d30e726e3cc8978e0d656d6`；Windows、Node24.15.0、Playwright1.62.1、Chrome156.0.8078.48。兩個FAIL為版本字面值仍預期1.13.7，另四個首個失敗位置顯示CRLF／LF原始碼比較差異；詳見TEST-VERSION-LITERAL-01與TEST-SOURCE-EOL-01。不修改測試或產品來取得PASS，原始FAIL完整保留；此為本機Quick FAILURE，不是CI或Full結果。前輪「限定驗證時Quick NOT_RUN」是當時狀態，本段補記後續實際執行；Full、實機、CI、Preview與正式發布仍未驗證。本輪僅同步BACKLOG，不commit／push／合併／部署。
-
-2026-11-02更新履歷精簡（開發版1.13.8，本機未提交）：沿用RELEASE_NOTES→既有生成器→更新履歷流程，核對51個正式版本，收錄50版玩家摘要（1.0.3僅整合前版，不重複收錄；正式版前開發標籤留於詳細歷史）。R2／L1純顯示文案；CHANGELOG只新增本版、原有詳細歷史完整保留；遊び方與對話框程式／樣式不變。`node scripts/test-release-notes.mjs`內容／日期／來源一致／兩次生成冪等PASS；既有`tests/information-dialog-e2e.mjs --updates-only --playwright=<外部模組> --browser=chrome --output=<本機輸出>`5組尺寸與生命週期案例PASS／0 FAIL，含PC1280、320、390px、橫向與小高度，6張手機截圖，頁面錯誤0。依使用者明示範圍，完整Quick／Full／完整生涯NOT_RUN；實機、CI、Preview及正式發布NOT_RUN，不改既有未完成事項及ARTIFACT_COVERAGE_BLOCKED。本次不commit／push／PR／合併／部署。
-
-2026-11-02限定UI修正（開發版1.13.7）：新增分享視窗的獨立URL複製、統一6項選單的aria-hidden圓點；不改S／RNG／遊戲規則。`node scripts/test-share-url-menu.mjs --playwright=<外部模組> --browser=chrome`在PC1280／320／390px及320×300小高度完成237項限定檢查PASS，既有`tests/replay-share-theme.test.mjs` PASS。初回聚焦測試的兩個FAIL為測試期待／同步問題（外部提示無障礙名稱的空白、native close尚未送達就檢查背景解鎖），修正測試後限定重測PASS，不更改既有斷言或歷史基準。完整Quick／Full／完整生涯依本次明示範圍NOT_RUN；實機、Preview及正式發布未驗收，既有未完成事項及ARTIFACT_COVERAGE_BLOCKED不因此結案。
-
-發布同步（2026-11-01，1.13.6）：PR #49將dev `4116389`合併至main，merge commit `2fe5b25`（樹與`4116389`相同），由code owner合併，含game.js重構第21～28期與CODE-DEAD-01，VERSION維持1.13.6（內部重構不升版）。[CI Full Tests #120](https://github.com/tt-chin/yakyujinsei/actions/runs/41305843248) 94／94 PASS（`full-aggregate`：`expected 94`、`acceptedPass 94`、`issues []`）；Publish website #30 success。本番`yakyujinsei.com`實測：`docs/index.html`＋`docs/src`共76檔SHA-256與main一致，顯示v1.13.6，起始畫面Console 0則、資源無4xx／5xx。Preview（`4116389`）76檔與dev一致，使用者已確認驗收。未驗證：本番完整生涯、手機表示、`docs/`其他檔案、實機。本次發布不代表個別UI項目的使用者驗收，既有未完成項目不因此結案。
-
-正式發布（2026-10-31，1.13.6）：PR #41將dev `c6d9c9f`合併至main，merge commit `9fe741d`（樹與`c6d9c9f`相同），含1.13.6字型修正與game.js重構第11～20期。[CI Full Tests #102](https://github.com/tt-chin/yakyujinsei/actions/runs/41196168506) 93／93 PASS（`full-aggregate`：`expected 93`、`acceptedPass 93`、`issues []`）；[Publish website #29](https://github.com/tt-chin/yakyujinsei/actions/runs/41197144452) success。本番`yakyujinsei.com`實測：`docs/index.html`＋`docs/src`共72檔SHA-256與main一致，顯示v1.13.6，起始畫面Console 0則、資源無4xx／5xx。未驗證：本番完整生涯、手機表示、`docs/`其他檔案、Cloudflare Preview部署狀態與Preview驗收紀錄。本次發布不代表個別UI項目的使用者驗收，既有未完成項目不因此結案。
-
-收入顯示統一（2026-10-24，開發版1.13.4，待使用者審查）：R2／L2；年俸・報酬合計careerBaseSalary與corpIncome，總額直接顯示careerEarnings，不改取得／支給規則或資料欄位。最終本機Quick 68 PASS／0 FAIL／0 SKIP／0 BLOCKED（300.233秒，test-results/income-display-quick-final/summary.json）；收入專項30組及6組退休版型PASS，PC1280／手機模擬320・390px；8條自然生涯逐步比較基準2e690969a6db14826aa87e85e94e78819acd8e17，除逐項驗證的核准收入呈現及版本metadata外，S／選擇／RNG與其他DOM一致。初回Quick65 PASS／3 FAIL保留於income-display-quick：兩項舊分類期待值、一項測試替換字串組裝錯誤，限定修正後重跑全Quick通過；歷史golden未改。Full／CI／Preview／實機NOT_RUN，未提交、推送或部署；既有未完成項目及artifact缺口不結案。
-
-2026-10-22限定修正（1.13.3，待使用者審查）：使用者明確批准將原CPBL送別資格與文案改為NPB年資＋目前海外（MLB／MiLB／KBO／CPBL），保留_daiba一次性旗標，既有true不補發。R2／L2，僅送別卡片與其旗標；不改金錢、能力、honors、引退續行或RNG。基準6e06b1b64abc5f8be1a1a42d68e44c4d1944a16d加本輪工作樹；384原生函式fixture及PC／320／390px共24原生卡片fixture PASS，其他S／RNG精確一致。初回Quick63 PASS／1 FAIL（npb-return-ui的歷史整段比較包含本次批准的送別變更），原報告npb-farewell-quick保留；只對送別函式新增逐字精確期待值，其他契約／復歸嚴格比較保留，限定重測通過。最終Quick64 PASS／0 FAIL／0 SKIP／0 BLOCKED，237.775秒，test-results/npb-farewell-quick-final/summary.json；最終UI入口PASS，npb-farewell-final-render/summary.json。提交前當輪Full／CI／實機NOT_RUN（後續CI狀態見下節）；本輪局部事件不涉及核心計算，不冒充完整生涯或Full驗收。歷史golden不改。已於`4cb4c987792f6d1291fb76b73af4e9eb332931ec`提交至遠端dev；使用者審查待確認，正式main／公開倉庫仍為1.13.0，後續已核對此SHA的Quick CI與Cloudflare部署success（見第1.3節），不代表使用者UI驗收或正式發布。
+> 最新驗收：2026-11-05。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01已在各ID範圍結案；SUPPORT-01仍待OFUSE收取設定與實際收付款確認。
+> 已完成40項、未完成30項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 ## 1. 最新進度總覽
 
@@ -73,7 +44,7 @@
 
 ### 1.2 歷史開發基準與持續限制
 
-以下各版SHA、main及測試數量為當輪歷史紀錄；目前開發1.13.3／公開1.13.0以頁首為準。歷史「smallschool待決」已由1.12.0批准的C級方案取代；實機、完整稽核及其他未結案項目的限制仍保留。
+以下各版SHA、main、開發1.13.3／公開1.13.0及測試數量均為當輪歷史紀錄，不代表目前版本；現況以第1節總覽與各ID的最新記錄為準。歷史「smallschool待決」已由1.12.0批准的C級方案取代；實機、完整稽核及其他未結案項目的限制仍保留。
 
 - **最新全力投球受驗程式：** `a1658c994713fd1fb8f66857dab33df0ff6548fd`、1.11.9。Linux Quick47／Full65入口、新專項36及Preview29案PASS；完整證據見末節。其他版本均為各自歷史受驗範圍，不沿用舊PASS冒充新版測試。
 - **上輪已提交的受驗程式 SHA：** `6020df03ca507c456233005d22bfe36c3d21f306`，1.11.7；本機／Preview已驗證，Linux Quick45及Full61入口均PASS，見末節。此前Linux Full受驗SHA `b2e01509c0ea75712579f53d864ecd09f710840c`、1.11.6及第七階段SHA `13abcf5f8b9f5ba47bcdfc796be6e4e79267bf4e`保留為歷史；後續純文件HEAD不冒充受驗程式SHA。
@@ -202,7 +173,7 @@
 - [ ] **TRAIT-CHAMPIONMAKER** — `承認済み保留`。優勝請負人，待累計 5 冠、計算範圍、勝率加成及 RNG 政策核准。
 - [ ] **UI-TJ-GAUGE-01** — `未着手・表示規則待ち`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2e.7、§2g.1，使用者已批准列待辦：TJゲージ直接String(S.tj||0)顯示長小數。第5期搬移後現位於docs/src/ui/career-presenter.js的ability()，並未修正。先決定位數及是否顯示50／100上限，只改表示、不改S.tj或RNG；不與重構混合修改。本次恢復漏列，不代表授權實作。
 - [ ] **UI-BOARD-SHADOW-01** — `未着手・表示修正待ち`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2ff.7，使用者已批准列待辦：看板球團名的兩處`box-shadow`寫成`rgba(0、0、0、…)`（全形頓號），瀏覽器`CSS.supports`判定無效，陰影未生效。第27期搬移後現位於`docs/src/ui/career-presenter.js`的`board()`，並未修正。改為半形逗號會改變畫面，只改表示、不改`S`或RNG；不與重構混合修改。本次僅列項，不代表授權實作。
-- [x] **UI-DESIGN-TOKENS-01** — `MERGED / RELEASED_SCOPE_LIMITED`（2026-11-02核對）。原訂結案條件為「PR合併後勾選」；PR #26合併`7ef43d368855c71f21ee40479dc560fcf542ee8b`與實作`fcb22a9`均為目前main `2fe5b25`祖先（git merge-base核對），1.13.6正式發布與指定來源Full證據見頁首2026-10-31／11-01紀錄。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2／§6：第1段以Noto Sans JP起首的日文字體列取代Noto Sans TC，新增圓角／陰影token及字體載入斷言；原本機FAIL與重測記錄保留於計畫。僅結案此段已批准範圍，不代表Windows字體回退／手機實機或第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）已驗收，不擴大實作授權。
+- [x] **UI-DESIGN-TOKENS-01** — `MERGED / RELEASED_SCOPE_LIMITED`（2026-11-02核對）。原訂結案條件為「PR合併後勾選」；PR #26合併`7ef43d368855c71f21ee40479dc560fcf542ee8b`與實作`fcb22a9`均為目前main `2fe5b25`祖先（git merge-base核對），1.13.6正式發布與指定來源Full證據見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)2026-10-31／11-01紀錄。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2／§6：第1段以Noto Sans JP起首的日文字體列取代Noto Sans TC，新增圓角／陰影token及字體載入斷言；原本機FAIL與重測記錄保留於計畫。僅結案此段已批准範圍，不代表Windows字體回退／手機實機或第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）已驗收，不擴大實作授權。
 - [ ] **CONTRACT-ASIA-01** — `未実装・仕様待ち`。KBO 亞洲名額及球團整體外國人預算，與現有 `FOREIGN_STANDARD` 不同。
 
 ### 3.5 P2 — 未來功能候補（6項未完成；另保留4項已接受UI索引）
@@ -211,18 +182,18 @@
 - [ ] **PLY-01** — 背號與年度履歷；需先決定 00、轉隊、重複及改號規則。
 - [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。
-- [x] **UI-06** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。遊び方內容與整體UI由使用者接受；使用者確認iPhone Safari與Android Chrome實機的開關、捲動、觸控、分享及顯示操作均OK。結合頁首11組對話框本機驗證，在本ID範圍結案；裝置型號／OS／瀏覽器版本未提供，實機結果為使用者回報，非本機自動測試。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及頁首五項UI補驗紀錄。
-- [x] **UI-07** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。更新履歷文案與整體UI由使用者接受，雙實機操作通過；結合51版／50摘要核對與本機對話框驗證，在本ID範圍結案。原始詳細歷史及FAIL保留，不將實機確認延伸為全部遊戲規則或其他版本驗收。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及頁首五項UI補驗紀錄。
+- [x] **UI-06** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。遊び方內容與整體UI由使用者接受；使用者確認iPhone Safari與Android Chrome實機的開關、捲動、觸控、分享及顯示操作均OK。結合[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)11組對話框本機驗證，在本ID範圍結案；裝置型號／OS／瀏覽器版本未提供，實機結果為使用者回報，非本機自動測試。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
+- [x] **UI-07** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。更新履歷文案與整體UI由使用者接受，雙實機操作通過；結合51版／50摘要核對與本機對話框驗證，在本ID範圍結案。原始詳細歷史及FAIL保留，不將實機確認延伸為全部遊戲規則或其他版本驗收。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
 
   1.13.5限定驗證：Chromium 11 PASS／0 FAIL（test-results/information-dialog-accepted/summary.json）、WebKit 11 PASS／0 FAIL（information-dialog-webkit-recheck/summary.json）；320×568、390×844、844×390、390×240、1280×900，含標題／操作區固定、末段可讀、背景還原、keyboard／Esc／外側／native close、快速重開、observer與事件清理、內容及visualViewport變化、無溢出隱藏軌道。Chromium另驗證原生觸控；WebKit手機模式無wheel API，背景鎖定改用scrollBy嘗試，不能冒充iPhone實機。Quick 68 PASS／0 FAIL／0 SKIP／0 BLOCKED、504.095秒（information-dialog-quick/summary.json）；既有選單相關event-fix-e2e通過，S／RNG不變。CI分批工具31 PASS／1 Linux-only SKIP，僅同步新增入口數91→92，不改Runner或CI通過條件。早期FAIL為測試量測（預留padding、短文無section、鍵盤動畫未停止）及WebKit不支援wheel，原始summary保留於information-dialog-initial、information-dialog-recheck-1、information-dialog-chromium-final、information-dialog-webkit。Full／CI／實機Safari NOT_RUN，artifact缺口及其他歷史未驗證狀態不變。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
-- [x] **UI-MENU-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。使用者確認iPhone Safari與Android Chrome實機開關、捲動、觸控、分享、顯示設定，以及確認後真正重新開始均OK，並接受整體UI。結合本機237項剪貼簿／選單驗證，在本ID範圍結案；不再保留『僅驗取消、真正重新開始未驗』缺口。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及頁首五項UI補驗紀錄。
-- [x] **UI-DESKTOP-LAYOUT-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。本機60組長契約、36組六分類非零大額收入與六種寬度驗證通過，使用者另接受整體UI及雙實機操作，在本ID範圍結案。不宣稱所有自然生涯、未測裝置或任意資料組合已驗證。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及頁首五項UI補驗紀錄。
-- [ ] **SUPPORT-01** — `IMPLEMENTED_UNVERIFIED`。選單OFUSE連結、別分頁安全屬性與本機連結驗證通過；2026-11-05使用者接受整體UI並確認iPhone Safari／Android Chrome實機操作OK。尚未確認OFUSE收取設定及實際收付款，整項維持未結案；不得將UI驗收當成收款驗收。頁首補驗與原始FAIL紀錄保留。
+- [x] **UI-MENU-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。使用者確認iPhone Safari與Android Chrome實機開關、捲動、觸控、分享、顯示設定，以及確認後真正重新開始均OK，並接受整體UI。結合本機237項剪貼簿／選單驗證，在本ID範圍結案；不再保留『僅驗取消、真正重新開始未驗』缺口。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
+- [x] **UI-DESKTOP-LAYOUT-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。本機60組長契約、36組六分類非零大額收入與六種寬度驗證通過，使用者另接受整體UI及雙實機操作，在本ID範圍結案。不宣稱所有自然生涯、未測裝置或任意資料組合已驗證。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
+- [ ] **SUPPORT-01** — `IMPLEMENTED_UNVERIFIED`。選單OFUSE連結、別分頁安全屬性與本機連結驗證通過；2026-11-05使用者接受整體UI並確認iPhone Safari／Android Chrome實機操作OK。尚未確認OFUSE收取設定及實際收付款，整項維持未結案；不得將UI驗收當成收款驗收。[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)補驗與原始FAIL紀錄保留。
 
 #### UI驗收現況（2026-10-23同步）
 
-以上五項已納入遠端dev，最新核對HEAD為52e4cdb、1.13.3；main仍650e4dd／1.13.0。1.13.2提交前26efa59加工作樹Quick63／0與Runtime兩入口PASS，1.13.3本機Quick64／0與相關UI PASS見頁首，均為各自原始受驗範圍。最新Quick CI與Cloudflare部署已success，Preview目前config為1.13.3，詳細受驗SHA及未驗證範圍見第1.3節；不以部署成功代替使用者UI確認。早期Quick62／1 FAIL及原始快照問題保留，不倒改歷史結果。五項ID保持待審查，實機與付款限制不變。
+以上五項已納入遠端dev，最新核對HEAD為52e4cdb、1.13.3；main仍650e4dd／1.13.0。1.13.2提交前26efa59加工作樹Quick63／0與Runtime兩入口PASS，1.13.3本機Quick64／0與相關UI PASS見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)，均為各自原始受驗範圍。最新Quick CI與Cloudflare部署已success，Preview目前config為1.13.3，詳細受驗SHA及未驗證範圍見第1.3節；不以部署成功代替使用者UI確認。早期Quick62／1 FAIL及原始快照問題保留，不倒改歷史結果。五項ID保持待審查，實機與付款限制不變。
 
 #### UI實作與驗證歷史（以下「未commit／push」均為當輪提交前記錄）
 
@@ -236,7 +207,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 ### 3.6 P1 — CI殘項（5項未完成；另保留1項已完成發布索引、4項已併dev的CI項目及2項本機測試修復）
 
-- [x] **TEST-VERSION-LITERAL-01** — `FIXED / LOCAL_QUICK_PASS`。修復前（2026-11-02）award-identity-policy.test與verify-modularization硬編碼預期1.13.7，在1.13.8 FAIL；原始兩份log仍保留於test-results/release-notes-1138-quick-20261102/。使用者批准後改讀config的VERSION，檢查正式三段版號及只變更原版本字面值，其餘config原文、B1／A凍結hash與負面斷言保留，不任意接受額外程式。限定6／6及最終本機Quick69／69 PASS（頁首summary）。僅結案此版本比較問題，不將原FAIL改記PASS，不代表Full／Linux或部署完成。
+- [x] **TEST-VERSION-LITERAL-01** — `FIXED / LOCAL_QUICK_PASS`。修復前（2026-11-02）award-identity-policy.test與verify-modularization硬編碼預期1.13.7，在1.13.8 FAIL；原始兩份log仍保留於test-results/release-notes-1138-quick-20261102/。使用者批准後改讀config的VERSION，檢查正式三段版號及只變更原版本字面值，其餘config原文、B1／A凍結hash與負面斷言保留，不任意接受額外程式。限定6／6及最終本機Quick69／69 PASS（[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)summary）。僅結案此版本比較問題，不將原FAIL改記PASS，不代表Full／Linux或部署完成。
 
 - [x] **TEST-SOURCE-EOL-01** — `FIXED_IN_TESTED_PATHS / LOCAL_QUICK_PASS`。修復前4入口career-movement-policy、event-copy.test、income-summary.test、npb-return-ui.test的CRLF／LF文字比較FAIL，原始log／summary仍保留於test-results/release-notes-1138-quick-20261102/。確認Windows core.autocrlf=true、Git內歷史EOL混合及讀取端處理不對稱；使用者批准後以共用tests/support/source-text.mjs在切片／替換前統一嚴格UTF-8讀取及CRLF→LF，保留所有非換行差異與原先逐字／狀態／RNG斷言。19項正反例、6入口限定及最終Quick69／69 PASS；中途漏改readFile的ReferenceError與68／1原報告亦保留，直接修正後重新全Quick通過。此為已驗證路徑的跨平台比較修復，不代表全Repository已批次改成LF、Linux／Full已重跑或所有未來比較自動免疫；新比較須沿用TESTING契約，凍結hash／golden禁止使用此正規化。產品邏輯、歷史原件與全域Git設定未改。
 
@@ -265,7 +236,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 ## 4. 建議下一階段順序（非自動開發授權）
 
-1. **發布後驗收**：dev至`c6d9c9f`的內容（1.13.6及重構至第20期）已由PR #41併入main（`9fe741d`）並上線，發布紀錄見頁首；1.13.1～1.13.6各項UI保留各自驗收限制。C級高校／弱小校語意已定案，不再列為下一步待決。
+1. **發布後驗收**：dev至`c6d9c9f`的內容（1.13.6及重構至第20期）已由PR #41併入main（`9fe741d`）並上線，發布紀錄見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；1.13.1～1.13.6各項UI保留各自驗收限制。C級高校／弱小校語意已定案，不再列為下一步待決。
 2. **CI殘項及稽核**：Linux Full僅各指定SHA已PASS，舊工具路徑、artifact原件保存與跨版本比較政策仍待完成；8批平行化、CI-FULL-BALANCE-01耗時平衡分批及CI-PITCHING-E2E-01投球E2E拆分均已併dev。重構至第20期已併main（`9fe741d`），§3.15葉領域全部完成。第21期（業餘路線試做，計畫§2y）已併dev（`f8c675b`），CI Full 93／93 PASS（Tests #106），尚未發布至main。第22期（契約，計畫§2z）已於`refactor/career-contract`本機實作並驗證（`0ef5737`，Quick 68／68、分組Full 93／93 PASS，macOS＋Brave本機證據），經PR #43併dev（`a0ad197`）；§2y.4所列模組內呼叫繞過e2e替換的問題以Shadow配置處理並經負控制確認（§2z.6）。第23期（市場・移籍判定，計畫§2aa）已實作並驗證（`d350c58`，Quick 68／68、分組Full 93／93 PASS，macOS＋Brave本機證據），經PR #43併dev；`applyKboForeignPackageCap`接縫由`kbo-renewal-e2e`（T11，§2aa.6）涵蓋。第24期（`movement`第一層，計畫§2bb）已實作並驗證（`2201aee`，Quick 68／68、分組Full 93／93 PASS，macOS＋Brave本機證據），經PR #43併dev。第22～24期CI Full 93／93 PASS（Tests #110，`a0ad197`），尚未發布至main。CODE-DEAD-01（計畫§2cc，`45cccd7`）與第25期（L2業餘分支，計畫§2dd，`c568952`，Quick 68／68、分組Full 93／93 PASS，macOS＋Brave本機證據）經PR #44併dev（`7de1fd1`，樹與`17b271b`相同），Tests #111 Full 93／93 PASS，CODE-DEAD-01已結案，尚未發布至main。第26期（`runDraft`，計畫§2ee）已實作並驗證（`92959a1`，Quick 68／68、分組Full 93／93 PASS，macOS＋Brave本機證據），Tests #113 Linux Full通過（`107520e`），經PR #45併dev（`9d25b09`），尚未發布至main。第27期（`boardModel`，計畫§2ff）已於`refactor/board-model`實作並驗證（`405d152`，Quick 68／68、分組Full 93／93 PASS，macOS＋Brave本機證據），Tests #115 Linux Full通過（`0de0bac`），經PR #46併dev（`9e6129f`），Tests #116 Quick通過，尚未發布至main。第28期（`traitResultMarkup`，計畫§2gg）已於`refactor/trait-result-card`實作（`a1a2377`，Quick 69／69 PASS；分組Full 94入口93 PASS／1 FAIL，FAIL為`event-integration.test`既有SIGSEGV，重跑PASS，macOS＋Brave本機證據），Tests #117 Linux Full 94／94 PASS（`4e2a517`），經PR #47併dev（`294e4be`），Tests #118 Quick通過。第21～28期與CODE-DEAD-01已由PR #49併入main（`2fe5b25`）並上線，Tests #120 Full 94／94 PASS。第29期（`newState`，計畫§2hh）已於`refactor/initial-state`實作並驗證（`a274def`，Quick 69／69、分組Full 94／94 PASS，macOS＋Brave本機證據），Tests #121 Linux Full 94／94 PASS（`ce9e5e2`），經PR #50併dev（`7c50eb8`），Tests #122 Quick通過，尚未發布至main；Preview使用者已確認驗收（2026-11-02）；第30期（`choose`一族，計畫§2ii）已於`refactor/choice-prompt`實作並驗證（`4133a1b`，Quick 70／70、分組Full 95／95 PASS，macOS＋Brave本機證據），尚未併dev；接線突變除W1、W3外只由全文斷言抓到（計畫§2ii.4）。交付中：dev新增1.13.7（`b9e9c53`）後，PR #52修正Quick 2項並併dev（`4f39a73`）；Full專屬入口`game-view-dom-e2e`、`replay-share-theme-e2e`在`4f39a73`本身即FAIL，由PR #53修正並併dev（`37aff39`）。本分支再merge dev（`5bac94e`，含1.13.8），Quick 70／70、分組Full 95／95 PASS（macOS＋Brave本機證據），經PR #55提交至dev，[Tests #130](https://github.com/tt-chin/yakyujinsei/actions/runs/41545449477) Linux Full 95／95 PASS，已由code owner併dev（`d4cd99d`），Tests #131 Quick通過，Preview自動檢查（檔案一致、4條生涯無錯誤）已做，使用者驗收待確認，尚未發布至main（計畫§2ii.7）。第31期（結算移至`SeasonSettlement`，計畫§2jj）細部計畫已批准（2026-11-03），依使用者決定先以PR #55分支為基底於`refactor/season-settlement`實作（Quick 71／71、分組Full 96／96 PASS，基準`37aff39`，macOS＋Brave本機證據，計畫§2jj.6），PR #55併dev後已merge `origin/dev`（`d0499f5`），Quick 71／71 PASS，經PR #56提交至dev，[Tests #132](https://github.com/tt-chin/yakyujinsei/actions/runs/41836296928) Linux Full 96／96 PASS，待code owner合併；第32期以後的候補A–G（年度骨架、`movement`尾段、`phaseMid`、`phasePre`、`proSeason`一組、`renderCheckpointCard`、`startJapanese`＋seed工具）已盤點（基準`1c6bd9b`），使用者決定依序分期、一期一組（2026-11-03，第32期為年度骨架）；第32期（年度骨架移至`YearFlow`，計畫§2kk）草稿與抵達探測已做、細部計畫已批准（2026-11-03），實作未開始，其餘各期尚無細部計畫，盤點與順序見計畫§3.22，調查與方向另見§3.21、§3.20、§3.19、§3.18、§3.17、§3.16、§3.14、§3.6。本條不授權新重構、顯示修正、存檔或刪除LEGACY。AUD-02／REFACTOR-AUDIT-01仍未全面結案。
 3. **HIST-SPEC-CLAUSE-01**：原定義／未完狀態保持；第九階段只提出改為「歷史保留與按需追溯」的建議與可能失去的意圖證據，尚未批准。CURRENT_SPEC來源說明補充須先審查，不自動採納歷史政策。
 4. **HOF-NATURAL-SAMPLE-01**：補足自然到達四聯盟的研究樣本，之後再討論殿堂規則決策。
