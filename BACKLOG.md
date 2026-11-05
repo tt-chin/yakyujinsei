@@ -1,5 +1,20 @@
 # BACKLOG — 野球人生（日文版）
 
+## 2026-11-05 五項UI補驗與使用者實機接受
+
+後續使用者確認：iPhone Safari與Android Chrome兩者均OK；包含開關、捲動、觸控、分享、顯示設定與確認後重新開始，且接受遊び方／更新履歷文案及整體UI。此為使用者實機回報，未提供裝置型號或版本，不冒充本機自動實機測試。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01在各ID範圍結案；SUPPORT-01仍欠OFUSE設定／實際收付款，保持未結案。以下原先PARTIAL及未驗描述為補驗當時紀錄，後續只由本段明確確認的項目解除，不改寫歷史FAIL。其他實機／事件待辦及ARTIFACT_COVERAGE_BLOCKED不自動結案。
+
+依使用者提供的UI_ACCEPTANCE_20261105.md補驗；本機dev先由37aff39乾淨快轉到00ca7b93b1b499564b7f935e4ce9237d3297eacc，與提供報告的dev基準完全相同，VERSION維持1.13.8。報告中的正式站85檔比對及遠端桌面操作為外部提供證據，未冒充本輪重新執行；Preview bytes的403／BLOCKED不因此解除。
+
+- UI-06／UI-07：既有information-dialog-e2e完整聚焦入口11 PASS／0 FAIL，12張手機模擬截圖；320×568、390×844、844×390、390×240、1280×900，固定區域、末段、捲動軌道、觸控模擬、焦點／背景復原、observer清理及S／RNG不變。證據：test-results/ui-acceptance-20261105/dialog/summary.json。屬本機Chromium，非iPhone Safari實機。
+- UI-MENU-01：既有test-share-url-menu共237項PASS，涵蓋完整且精確的seed-only URL剪貼簿payload、成功／拒絕／fallback、重複點擊、關閉與重開的過期回應、原生分享mock／取消、六項無障礙名稱及320／390／PC／小高度版面。證據：test-results/ui-acceptance-20261105/menu/summary.json。原生分享與剪貼簿採受控mock／fallback fixture，非實機系統剪貼簿或share sheet驗收。確認後重新開始仍未補驗，不以取消成功取代。
+- UI-DESKTOP-LAYOUT-01：新增scripts/test-ui-desktop-acceptance.mjs重用既有verifyBoardMenu／長契約工具，60組桌面寬度／主題／字級長資料矩陣PASS；320、390、1179、1180、1280、1876六個寬度的門檻與無水平溢出PASS。另在1180／1280／1876下以四主題×三字級共36組fixture，核對六項非零大額收入、側欄與詳細renderer文字一致、長字折行。fixture只作用DOM，不改S；不稱自然生涯或每種歷史資料皆驗證。最終證據：test-results/ui-acceptance-20261105/desktop-income-recheck/summary.json。
+- SUPPORT-01：本機再次核對連結／別分頁／noopener noreferrer及無opener（受控測試目的頁）；使用者提供報告另有實際OFUSE頁面操作。本輪未實際付款、未確認收取設定，連結通過不代表收款驗收完成。
+
+保留本輪測試開發FAIL：desktop/failure.json為1180px在既有matchMedia→requestAnimationFrame更新之前讀取，改為等待預期可見狀態後desktop-recheck PASS；desktop-final/failure.json為新增收入fixture漏給history陣列，補齊後desktop-income-recheck PASS。未修改產品或放寬版面／收入斷言。產品、VERSION、golden、Runner、CI不變；Quick／Full／完整生涯NOT_RUN，無commit／push／部署。
+
+五項UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01、SUPPORT-01的checkbox維持未勾選。尚需使用者內容／文案及整體UI審查、iPhone／Android真機的開關／觸控／捲動／分享、OFUSE設定／實際收付款確認；另保留真正重新開始的未驗缺口。未明示同意前不拆分或豁免原完成條件。其餘既有待辦及ARTIFACT_COVERAGE_BLOCKED不變。
+
 1.13.8後續修復驗收（本機、未提交）：使用者批准版本差異及CRLF／LF相容修正後，版本檢查改讀正式VERSION，只允許版本字面值變更；6入口的其他嚴格斷言、B1／A凍結hash與原始來源均保留。來源文字比較在切片與替換前以共用readSourceText／sourceText統一UTF-8／LF，僅等同CRLF與LF，不忽略單獨CR、BOM、空白、文字或程式差異；19項正反例PASS。Windows根因為系統Git core.autocrlf=true、無gitattributes及Git內LF／CRLF歷史混合，加上測試只正規化一端；不批次改寫產品／歷史證據，不修改全域Git設定。契約見[scripts/TESTING.md](scripts/TESTING.md#原始碼文字比較的換行契約)。
 
 最終完整Quick **69 PASS／0 FAIL／0 SKIP／0 BLOCKED**，323.497秒、exit 0、69入口實際執行、重用0：[summary](test-results/release-notes-1138-quick-verified/summary.json)。受驗HEAD `4f39a73e23758b891bc24951225231792ab022b4`加本機1.13.8及測試修正，來源指紋`42a226fb54ee0459c20db0053170bf61fb7ca8d1cc0a4fd8ee44152a2949bcb0`。原六入口限定重測6 PASS／0 FAIL見[test-results/release-notes-1138-six-recheck/summary.json](test-results/release-notes-1138-six-recheck/summary.json)。中途完整Quick **68 PASS／1 FAIL**保留於[test-results/release-notes-1138-quick-final/summary.json](test-results/release-notes-1138-quick-final/summary.json)：改用共用讀取時漏改career-movement-policy後段的readFile呼叫，造成ReferenceError；將該處亦接至readSourceText後限定重測PASS，再重新執行上述69入口Quick通過。以下修復前63／6及其他歷史FAIL不改寫。僅結案兩個已驗證的本機測試問題；Linux／Full／實機／CI／Preview及正式發布NOT_RUN，ARTIFACT_COVERAGE_BLOCKED不變；VERSION維持1.13.8，本輪沒有遊戲邏輯變更，不commit／push／PR／合併／部署。
@@ -22,13 +37,13 @@
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
-| 已完成 | **36** | 原33項、表示token第1段，以及版本字面值／Windows換行比較兩項本機Quick修復；各自證據與結案界線見對應ID |
-| 未完成 | **34** | 兩項本機Quick問題修復並重測通過；UI審查、CI工具路徑與artifact缺口保持未完成 |
+| 已完成 | **40** | 原36項，加上本輪經本機補驗與使用者雙實機／文案／整體UI接受的4項；限定結案界線見各ID |
+| 未完成 | **30** | SUPPORT-01收款驗收、其他實機／事件、CI工具路徑與artifact缺口等保持未完成 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
-| IMPLEMENTED_UNVERIFIED | **9** | 五項UI／支持已實作提交dev，待審查；原4項保留 |
+| IMPLEMENTED_UNVERIFIED | **5** | 4項UI已接受結案；SUPPORT-01仍欠收款驗收，另原4項保留 |
 | DESIGN_PENDING | **7** | C級高校語意已定案並結案；其餘設計待決保持 |
-| 其他候補／保留／混合 | **14** | 5項無狀態標籤候補（INJ-UI-01、EVT-01、INT-01、PLY-01、PLY-02）、承認済み保留2項、CI_PASS但工具路徑待處理、本機測試SIGSEGV、本機E2E時序逾時、TJ顯示規則、看板陰影表示、HIST-SPEC-CLAUSE-01及CONTRACT-ASIA-01；UI-06／07已計入IMPLEMENTED_UNVERIFIED |
+| 其他候補／保留／混合 | **14** | 5項無狀態標籤候補（INJ-UI-01、EVT-01、INT-01、PLY-01、PLY-02）、承認済み保留2項、CI_PASS但工具路徑待處理、本機測試SIGSEGV、本機E2E時序逾時、TJ顯示規則、看板陰影表示、HIST-SPEC-CLAUSE-01及CONTRACT-ASIA-01；四項已接受UI已移入完成，不計入本列 |
 
 上次盤點歷史（2026-11-01，非本次現況）：**33 + 35 = 68**（2026-11-01新增TEST-DISPLAY-ENTER-TIMEOUT-01，總數由67增為68；同日新增TEST-EVENT-SIGSEGV-01，總數由66增為67；同日新增UI-BOARD-SHADOW-01，總數由65增為66；同日CODE-DEAD-01經PR #44併dev、Tests #111 Full通過後結案；該項補列時未計入總數，故總數由64更正為65；2026-10-24新增CI-ENV-PIN-01、CI-PITCHING-E2E-01；同日CI-ENV-PIN-01經PR #21合併後勾選；CI-PITCHING-E2E-01經PR #22合併後勾選；CI-FULL-BALANCE-01的實作`cdf0a25`已隨PR #21併dev，經使用者同意一併勾選；同日新增CI-FULL-STALE-01、UI-DESIGN-TOKENS-01；CI-FULL-STALE-01經PR #24／#25併dev、dev Full Run40093614384 92／92 PASS後勾選）。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
 
@@ -87,7 +102,9 @@
 
 本次統計補記：原有68個唯一checkbox（33完成／35未完成）；UI-DESIGN-TOKENS-01依PR #26及既有1.13.6發布證據滿足原訂「PR合併後勾選」，移為完成。新增TEST-VERSION-LITERAL-01與TEST-SOURCE-EOL-01兩項後曾為34完成／36未完成；使用者批准修復、最終本機Quick69／69 PASS後，這兩項限定結案，因此目前為 **36完成＋34未完成＝70**。上方33＋35＝68段落保留為上次盤點歷史，不能取代本次實際統計。未結案UI使用者驗收與artifact缺口不因發布或本機測試自動關閉。
 
-## 2. 已完成工作（36 項；含第3.4與3.6節保留的已完成索引）
+2026-11-05統計補記：使用者接受四項UI後，目前為 **40完成＋30未完成＝70**；前述36／34為當時歷史統計。未新增或刪除ID，OFUSE與其他未授權範圍不自動結案。
+
+## 2. 已完成工作（40 項；含第3.4、3.5與3.6節保留的已完成索引）
 
 ### 2.1 第一至第四階段
 
@@ -153,7 +170,7 @@
 
 - [x] **CODE-DEAD-01** — `MERGED / CI_PASS`（2026-11-01；PR #44併dev（`7de1fd1`））。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2cc：分支`refactor/code-dead-01`（`45cccd7`）已刪除`statBonus`、`checkTraitsMid`、`teamChampRate`、`teamListOf`、`CHEER_DEFAULT`、`ageGateUSA`、`nextContractId`、`settlePhaseEnd`的PRO不可達分支（三處共2,390 bytes，更正§3.18的3,548 bytes），以及掃描新發現的`CPBL_TEAMS`、`NPB_TEAMS`、`MLB_TEAMS`、`HS_CUPS`、`U_CUPS`、`currentAffiliation`、`faFlow`薄包裝、`selPos`。Quick 68／68、分組Full 93／93 PASS（macOS＋Brave本機證據），經PR #44併dev（`7de1fd1`，樹與`17b271b`相同），[Tests #111](https://github.com/tt-chin/yakyujinsei/actions/runs/41275581402) Linux Full（`17b271b`）8批全success，`expected 93`、`acceptedPass 93`、`issues []`（記於PR #44），結案條件已滿足。`game.js`未使用的import 86個（含本次新增5個）不動，第26期（§2ee，`refactor/run-draft`）再增5個（`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms`），併入後為91個，第28期（§2gg，`refactor/trait-result-card`）再增2個（`TRAIT_TEXT`、`EVENT_TRAIT_TEXT`），併入後為93個，第29期（§2hh，`refactor/initial-state`）再增3個（`highSchoolTier`、`installBirthHighSchool`、`ensureEventState`），併入後為96個，第30期（§2ii，`refactor/choice-prompt`）再增2個（`createChoiceActionToken`、`runChoiceAction`），併入後為98個：E2E注入的hook在模組內直接引用，刪除會造成`markSalaryPaid is not defined`；未使用的區域變數與`navigation.js`的`renderRecord` import不在本項範圍。
 
-## 3. 未完成工作（34 項）
+## 3. 未完成工作（30 項）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（3 項）
 
@@ -188,20 +205,20 @@
 - [x] **UI-DESIGN-TOKENS-01** — `MERGED / RELEASED_SCOPE_LIMITED`（2026-11-02核對）。原訂結案條件為「PR合併後勾選」；PR #26合併`7ef43d368855c71f21ee40479dc560fcf542ee8b`與實作`fcb22a9`均為目前main `2fe5b25`祖先（git merge-base核對），1.13.6正式發布與指定來源Full證據見頁首2026-10-31／11-01紀錄。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2／§6：第1段以Noto Sans JP起首的日文字體列取代Noto Sans TC，新增圓角／陰影token及字體載入斷言；原本機FAIL與重測記錄保留於計畫。僅結案此段已批准範圍，不代表Windows字體回退／手機實機或第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）已驗收，不擴大實作授權。
 - [ ] **CONTRACT-ASIA-01** — `未実装・仕様待ち`。KBO 亞洲名額及球團整體外國人預算，與現有 `FOREIGN_STANDARD` 不同。
 
-### 3.5 P2 — 未來功能候補（10 項）
+### 3.5 P2 — 未來功能候補（6項未完成；另保留4項已接受UI索引）
 
 - [ ] **INJ-UI-01** — 一般受傷風險細項顯示；計算與 UI 維持單一資料來源。
 - [ ] **PLY-01** — 背號與年度履歷；需先決定 00、轉隊、重複及改號規則。
 - [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。
-- [ ] **UI-06** — `IMPLEMENTED_UNVERIFIED`。同頁「遊び方」沿用原文章；1.13.5起共用固定標題／可捲動本文／固定閉じる、背景鎖定、位置／焦點還原。已隨正式1.13.6發布（頁首來源與發布證據），不再屬未提交／未部署；個別UI使用者審查及實機限制未解除，不自動結案。本輪1.13.8未修改遊び方或對話框程式／樣式。
-- [ ] **UI-07** — `IMPLEMENTED_UNVERIFIED`。RELEASE_NOTES.md為玩家精簡文案，經既有update-release-notes生成配信資料，CHANGELOG為詳細正本；1.13.5三區與持續位置指示已隨正式1.13.6發布。1.13.8本機另完成51版核對／50版精簡內容與5組尺寸限定驗證（頁首紀錄及test-results/release-notes-1138/summary.json），這部分尚未提交／部署。保留個別使用者審查與實機待驗，不將舊發布或本機PASS視為全部驗收完成。
+- [x] **UI-06** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。遊び方內容與整體UI由使用者接受；使用者確認iPhone Safari與Android Chrome實機的開關、捲動、觸控、分享及顯示操作均OK。結合頁首11組對話框本機驗證，在本ID範圍結案；裝置型號／OS／瀏覽器版本未提供，實機結果為使用者回報，非本機自動測試。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及頁首五項UI補驗紀錄。
+- [x] **UI-07** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。更新履歷文案與整體UI由使用者接受，雙實機操作通過；結合51版／50摘要核對與本機對話框驗證，在本ID範圍結案。原始詳細歷史及FAIL保留，不將實機確認延伸為全部遊戲規則或其他版本驗收。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及頁首五項UI補驗紀錄。
 
   1.13.5限定驗證：Chromium 11 PASS／0 FAIL（test-results/information-dialog-accepted/summary.json）、WebKit 11 PASS／0 FAIL（information-dialog-webkit-recheck/summary.json）；320×568、390×844、844×390、390×240、1280×900，含標題／操作區固定、末段可讀、背景還原、keyboard／Esc／外側／native close、快速重開、observer與事件清理、內容及visualViewport變化、無溢出隱藏軌道。Chromium另驗證原生觸控；WebKit手機模式無wheel API，背景鎖定改用scrollBy嘗試，不能冒充iPhone實機。Quick 68 PASS／0 FAIL／0 SKIP／0 BLOCKED、504.095秒（information-dialog-quick/summary.json）；既有選單相關event-fix-e2e通過，S／RNG不變。CI分批工具31 PASS／1 Linux-only SKIP，僅同步新增入口數91→92，不改Runner或CI通過條件。早期FAIL為測試量測（預留padding、短文無section、鍵盤動畫未停止）及WebKit不支援wheel，原始summary保留於information-dialog-initial、information-dialog-recheck-1、information-dialog-chromium-final、information-dialog-webkit。Full／CI／實機Safari NOT_RUN，artifact缺口及其他歷史未驗證狀態不變。
 - [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
-- [ ] **UI-MENU-01** — `IMPLEMENTED_UNVERIFIED`。1.13.1整合設定、共有、OFUSE與重新開始；1.13.2修正close焦點競態，這些已隨正式1.13.6發布（頁首證據）。1.13.7的6項圓點及獨立URL複製已提交dev（`b9e9c53`，PR #52後HEAD `4f39a73`），本機237項限定驗證見頁首；不宣稱此追加版已正式發布。個別UI使用者審查、實機與歷史FAIL限制保留，不自動結案。
-- [ ] **UI-DESKTOP-LAYOUT-01** — `IMPLEMENTED_UNVERIFIED`。1.13.1實作1180px以上左右唯讀概要、手機單欄；1.13.2擴大側欄，契約／收入依欄寬直排或雙欄並允許折行。這些已隨正式1.13.6發布（頁首證據），不再屬未發布；個別UI使用者審查仍未解除。GameView回歸及下方「UI驗收現況」只代表指定受驗範圍，不代表整體重構或實機結案。
-- [ ] **SUPPORT-01** — `IMPLEMENTED_UNVERIFIED`。選單的「開発を応援」連至指定OFUSE https://ofuse.me/dcb7f92e，別分頁noopener／noreferrer；開始畫面無支持按鈕，不影響遊戲待遇。原功能已隨正式1.13.6發布（頁首證據）；1.13.7於dev將前綴愛心改為aria-hidden圓點，保留「別タブ ↗」。個別使用者審查、實際付款／收款設定與實機驗證仍未完成，原始FAIL保留，不自動結案。
+- [x] **UI-MENU-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。使用者確認iPhone Safari與Android Chrome實機開關、捲動、觸控、分享、顯示設定，以及確認後真正重新開始均OK，並接受整體UI。結合本機237項剪貼簿／選單驗證，在本ID範圍結案；不再保留『僅驗取消、真正重新開始未驗』缺口。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及頁首五項UI補驗紀錄。
+- [x] **UI-DESKTOP-LAYOUT-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。本機60組長契約、36組六分類非零大額收入與六種寬度驗證通過，使用者另接受整體UI及雙實機操作，在本ID範圍結案。不宣稱所有自然生涯、未測裝置或任意資料組合已驗證。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及頁首五項UI補驗紀錄。
+- [ ] **SUPPORT-01** — `IMPLEMENTED_UNVERIFIED`。選單OFUSE連結、別分頁安全屬性與本機連結驗證通過；2026-11-05使用者接受整體UI並確認iPhone Safari／Android Chrome實機操作OK。尚未確認OFUSE收取設定及實際收付款，整項維持未結案；不得將UI驗收當成收款驗收。頁首補驗與原始FAIL紀錄保留。
 
 #### UI驗收現況（2026-10-23同步）
 
