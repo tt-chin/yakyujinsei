@@ -1,6 +1,14 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.14.0｜2026/11/05",
+    "lines": [
+      "- TJゲージに小数1桁と上限を表示。",
+      "- 通算5度のシリーズ優勝で名誉特性「優勝請負人」を獲得。",
+      "- 球団名の表示を調整。"
+    ]
+  },
+  {
     "title": "1.13.8｜2026/11/02",
     "lines": [
       "- 更新履歴を短く整理し、過去の主な更新も掲載。"

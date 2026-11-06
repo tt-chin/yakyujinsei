@@ -1,20 +1,24 @@
 # BACKLOG — 野球人生（日文版）
 
 > 最新驗收：2026-11-05。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01已在各ID範圍結案；SUPPORT-01仍待OFUSE收取設定與實際收付款確認。
-> 已完成40項、未完成30項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 已完成40項、未完成27項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
+
+> 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
+
+> 追加決定：取消野手OVR耐力5%提案；目前40完成＋27未完成＝67項。TJ顯示與優勝請負人已在本機實作，最終回歸及使用者Preview確認尚未完成，不提前結案。
 
 ## 1. 最新進度總覽
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **40** | 原36項，加上本輪經本機補驗與使用者雙實機／文案／整體UI接受的4項；限定結案界線見各ID |
-| 未完成 | **30** | SUPPORT-01收款驗收、其他實機／事件、CI工具路徑與artifact缺口等保持未完成 |
+| 未完成 | **27** | SUPPORT-01收款驗收、其他實機／事件、CI工具路徑與artifact缺口等保持未完成 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
 | IMPLEMENTED_UNVERIFIED | **5** | 4項UI已接受結案；SUPPORT-01仍欠收款驗收，另原4項保留 |
-| DESIGN_PENDING | **7** | C級高校語意已定案並結案；其餘設計待決保持 |
-| 其他候補／保留／混合 | **14** | 5項無狀態標籤候補（INJ-UI-01、EVT-01、INT-01、PLY-01、PLY-02）、承認済み保留2項、CI_PASS但工具路徑待處理、本機測試SIGSEGV、本機E2E時序逾時、TJ顯示規則、看板陰影表示、HIST-SPEC-CLAUSE-01及CONTRACT-ASIA-01；四項已接受UI已移入完成，不計入本列 |
+| DESIGN_PENDING | **6** | C級高校語意已定案並結案；其餘設計待決保持 |
+| 其他候補／保留／混合 | **12** | 5項無狀態標籤候補（INJ-UI-01、EVT-01、INT-01、PLY-01、PLY-02）、承認済み保留1項、CI_PASS但工具路徑待處理、本機測試SIGSEGV、本機E2E時序逾時、TJ顯示規則、看板陰影表示、HIST-SPEC-CLAUSE-01；四項已接受UI已移入完成，不計入本列 |
 
 上次盤點歷史（2026-11-01，非本次現況）：**33 + 35 = 68**（2026-11-01新增TEST-DISPLAY-ENTER-TIMEOUT-01，總數由67增為68；同日新增TEST-EVENT-SIGSEGV-01，總數由66增為67；同日新增UI-BOARD-SHADOW-01，總數由65增為66；同日CODE-DEAD-01經PR #44併dev、Tests #111 Full通過後結案；該項補列時未計入總數，故總數由64更正為65；2026-10-24新增CI-ENV-PIN-01、CI-PITCHING-E2E-01；同日CI-ENV-PIN-01經PR #21合併後勾選；CI-PITCHING-E2E-01經PR #22合併後勾選；CI-FULL-BALANCE-01的實作`cdf0a25`已隨PR #21併dev，經使用者同意一併勾選；同日新增CI-FULL-STALE-01、UI-DESIGN-TOKENS-01；CI-FULL-STALE-01經PR #24／#25併dev、dev Full Run40093614384 92／92 PASS後勾選）。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
 
@@ -141,7 +145,7 @@
 
 - [x] **CODE-DEAD-01** — `MERGED / CI_PASS`（2026-11-01；PR #44併dev（`7de1fd1`））。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2cc：分支`refactor/code-dead-01`（`45cccd7`）已刪除`statBonus`、`checkTraitsMid`、`teamChampRate`、`teamListOf`、`CHEER_DEFAULT`、`ageGateUSA`、`nextContractId`、`settlePhaseEnd`的PRO不可達分支（三處共2,390 bytes，更正§3.18的3,548 bytes），以及掃描新發現的`CPBL_TEAMS`、`NPB_TEAMS`、`MLB_TEAMS`、`HS_CUPS`、`U_CUPS`、`currentAffiliation`、`faFlow`薄包裝、`selPos`。Quick 68／68、分組Full 93／93 PASS（macOS＋Brave本機證據），經PR #44併dev（`7de1fd1`，樹與`17b271b`相同），[Tests #111](https://github.com/tt-chin/yakyujinsei/actions/runs/41275581402) Linux Full（`17b271b`）8批全success，`expected 93`、`acceptedPass 93`、`issues []`（記於PR #44），結案條件已滿足。`game.js`未使用的import 86個（含本次新增5個）不動，第26期（§2ee，`refactor/run-draft`）再增5個（`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms`），併入後為91個，第28期（§2gg，`refactor/trait-result-card`）再增2個（`TRAIT_TEXT`、`EVENT_TRAIT_TEXT`），併入後為93個，第29期（§2hh，`refactor/initial-state`）再增3個（`highSchoolTier`、`installBirthHighSchool`、`ensureEventState`），併入後為96個，第30期（§2ii，`refactor/choice-prompt`）再增2個（`createChoiceActionToken`、`runChoiceAction`），併入後為98個：E2E注入的hook在模組內直接引用，刪除會造成`markSalaryPaid is not defined`；未使用的區域變數與`navigation.js`的`renderRecord` import不在本項範圍。
 
-## 3. 未完成工作（30 項）
+## 3. 未完成工作（27 項）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（3 項）
 
@@ -166,15 +170,14 @@
 - [ ] **SHARE-111-DEVICE** — `BLOCKED`。iPhone／Android／PC 的原生 share sheet、取消、PNG 主題、圖片分享與儲存驗收。
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。全量可到達日文文案、棒球術語與畫面位置仍待清查；COPY-001～005已於1.12.0完成實作及限定驗收，見[COPY驗收](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)，不再重做這五項。與v1.8.2的92事件翻譯替換分開管理；本輪1.13.3只修送別事件，不能據此結案全量COPY。
 
-### 3.4 P2 — 規格待決與保留（6 項未完成；另保留1項已完成索引）
+### 3.4 P2 — 規格待決與保留（3 項未完成；另保留1項已完成索引）
 
-- [ ] **OVR-01** — `DESIGN_PENDING`。野手 OVR 加入 stamina 5% 的提案，先比較現行公式與提案，批准後才能修改。
-- [ ] **TRAIT-NITENICHI** — `承認済み保留`。二天一流；投手三冠已於1.13.0實作（TRAIT-PITCHER-TC），但二刀流制度與本特性接線仍未批准，不因三冠完成自動啟用。
-- [ ] **TRAIT-CHAMPIONMAKER** — `承認済み保留`。優勝請負人，待累計 5 冠、計算範圍、勝率加成及 RNG 政策核准。
-- [ ] **UI-TJ-GAUGE-01** — `未着手・表示規則待ち`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2e.7、§2g.1，使用者已批准列待辦：TJゲージ直接String(S.tj||0)顯示長小數。第5期搬移後現位於docs/src/ui/career-presenter.js的ability()，並未修正。先決定位數及是否顯示50／100上限，只改表示、不改S.tj或RNG；不與重構混合修改。本次恢復漏列，不代表授權實作。
-- [ ] **UI-BOARD-SHADOW-01** — `未着手・表示修正待ち`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2ff.7，使用者已批准列待辦：看板球團名的兩處`box-shadow`寫成`rgba(0、0、0、…)`（全形頓號），瀏覽器`CSS.supports`判定無效，陰影未生效。第27期搬移後現位於`docs/src/ui/career-presenter.js`的`board()`，並未修正。改為半形逗號會改變畫面，只改表示、不改`S`或RNG；不與重構混合修改。本次僅列項，不代表授權實作。
+- [ ] **TRAIT-CHAMPIONMAKER** — `本機実装・最終検証中`。使用者追加批准以既存日本一／ワールドシリーズ／台湾シリーズ／韓国シリーズ優勝為通算對象，跨隊／跨聯盟累計5次、每年最多一次。只採可信championshipResults，不從學生、國際賽、二軍、育成或模糊honors推定。僅榮譽特性，不加勝率、不增加RNG抽選；nitenichi仍停用。4→5→6、舊狀態、重入及取得顯示故障續行已有限定測試；完整回歸與使用者Preview尚待確認。
+  - 2026-11-06：KBO舊版比較未納入新增技術欄位，巨大斷言差異輸出造成OOM；原始FAIL保留。限定修正採舊優勝紀錄獨立oracle、原始digest驗證與逐步首差異診斷，不修改產品／Runner／golden。同版完整重播比較保留；比較器23項PASS、KBO限定與完整模式PASS、全新Quick 71 PASS／0 FAIL。證據：test-results/kbo-oom-fix-targeted/summary.json、test-results/kbo-oom-fix-full-profile/summary.json、test-results/kbo-oom-fix-quick/summary.json。整套Full修正前執行已中斷，原日誌與INTERRUPTED.json保留，尚未取得目前來源的整套Full PASS；Preview仍NOT_RUN，不結案。
+  - 2026-11-06本機Full排程：使用者批准沿用8批、最多2批並行；新增local-full-batches.mjs入口，不變更CI workflow、原Runner、manifest與遊戲案例。工具9 PASS；既有批次工具更正過期92→現行96計數後31 PASS／0 FAIL／1 SKIP（Windows的Linux專用驗證）。新Quick 71 PASS／0 FAIL；該次96項Full已結束，80 PASS／16 FAIL，非PASS，證據test-results/local-full-1140-two-workers-r1/（來源manifest、plan、coordinator、各batch、最終aggregate）。完成前不得標為PASS，artifact缺口與Preview仍獨立未驗證。
+- [ ] **UI-TJ-GAUGE-01** — `本機実装・最終検証中`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2e.7、§2g.1，career-presenter.js已改為小數一位＋既有上限（一般50、ゴムの腕100），例如12.6 / 50；缺值0、不clamp、不寫回S.tj、不改RNG。0／浮點誤差／邊界／缺值已有單元驗證；PC／手機畫面、最終回歸及使用者Preview分別追蹤，不提前結案。
+- [ ] **UI-BOARD-SHADOW-01** — `本機実装・Preview未確認`。2026-11-06使用者批准修正並併入1.14.0。career-presenter.js的board()內兩處rgba全形頓號改為半形逗號，保留色彩、尺寸、球團判定、S與RNG。59項presenter比較PASS；Chromium在1280／320／390px、一般色／白色共6組陰影與無溢出檢查PASS，記錄於test-results/board-shadow-1140/summary.json。僅限定表示驗證；使用者Preview未確認，不提前結案。
 - [x] **UI-DESIGN-TOKENS-01** — `MERGED / RELEASED_SCOPE_LIMITED`（2026-11-02核對）。原訂結案條件為「PR合併後勾選」；PR #26合併`7ef43d368855c71f21ee40479dc560fcf542ee8b`與實作`fcb22a9`均為目前main `2fe5b25`祖先（git merge-base核對），1.13.6正式發布與指定來源Full證據見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)2026-10-31／11-01紀錄。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2／§6：第1段以Noto Sans JP起首的日文字體列取代Noto Sans TC，新增圓角／陰影token及字體載入斷言；原本機FAIL與重測記錄保留於計畫。僅結案此段已批准範圍，不代表Windows字體回退／手機實機或第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）已驗收，不擴大實作授權。
-- [ ] **CONTRACT-ASIA-01** — `未実装・仕様待ち`。KBO 亞洲名額及球團整體外國人預算，與現有 `FOREIGN_STANDARD` 不同。
 
 ### 3.5 P2 — 未來功能候補（6項未完成；另保留4項已接受UI索引）
 
@@ -369,3 +372,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 - **重新部署：PASS。** 使用者提供的同2924dd0重新部署log顯示`Success: Your site was deployed!`。本輪GitHub Cloudflare check再次實際確認：程式SHA2924dd0的[重新部署dc7cd5b1-58b2-4ee4-bc39-1491290dad77](https://dash.cloudflare.com/?to=/383e1ae7fd9e9c94b48e43575172aec4/pages/view/yakyujinsei/dc7cd5b1-58b2-4ee4-bc39-1491290dad77)為completed／success；文件SHA6bfa070的[deployment 5a27a56e-35f4-4788-bc1a-1b589d48cea8](https://dash.cloudflare.com/?to=/383e1ae7fd9e9c94b48e43575172aec4/pages/view/yakyujinsei/5a27a56e-35f4-4788-bc1a-1b589d48cea8)亦success。[文件Quick Run 38252719930](https://github.com/tt-chin/yakyujinsei/actions/runs/38252719930)tests check success；不將本機統計冒充該Linux run的數量／耗時。兩提交遊戲HTML／JS／CSS零差異，本輪沒有修改程式、部署設定或自行再部署。
 - **Preview指定驗收：完成／PASS。** `node tests/international-personal-stats-e2e.mjs --playwright=<PW> --preview=https://dev.yakyujinsei.pages.dev --fixtures-only --output=test-results/intl-preview-final`已實際執行，**43 PASS／0 FAIL／exit0**。48個配信HTML／JS／CSS HTTP200，正規化換行後與受驗dev逐檔一致。受驗HEAD=`6bfa070b914259664ef80ccee2cae4af5bc4d24f`，VERSION1.11.8，Windows／Node24.15.0／Playwright1.62.1／Chrome155.0.8059.39；43案的個別耗時合計183.974秒（非含前置資產查核的總wall time）。包含P-SP/MR/CL、C/IF/OF、P12/WBC原生前後S/RNG、連點／去重、辞退／負傷見送り、intlace時點、舊結果／值コピー／保存種別再描畫及1280／320／360／390×四主題×large的32組。Console/pageerror及JS/CSS404均0；已disconnect的browser profile清理逾時warning保留，不是遊戲錯誤。結果與截圖在test-results/intl-preview-final/，summary.json保存43案及環境。本次fixtures-only沒有重跑6條完整生涯，也不冒充遠端50案；固定seed六生涯及T09/T13等人工整形單體的本機既有證據保持。解除本次Preview阻塞，實機／4,000生涯／Linux Full未實施的限制仍保留。
 - **文件提交區分：** 使用者AGENTS修改與CI證據已於`6bfa070b914259664ef80ccee2cae4af5bc4d24f`一併提交；本次只補BACKLOG的重新部署與實際Preview驗收結果，文件SHA另見Git履歷／最終回報，與程式2924dd0及遠端受驗HEAD6bfa070分開。沿用僅BACKLOG的paths-ignore，不修改CI或重跑未受影響的Quick／Full；後續純文件Preview不冒充另一輪E2E。不改遊戲、AGENTS、VERSION、CHANGELOG、main／正式網站。既有48唯一checkbox、21完成／27未完保持：本大会結果卡指定驗收完成，不把未實裝的歷史列表INT-01結案。等待使用者審查，不發布本番。
+
+- 2026-11-06 1.14.0 回歸修復中：保留上述 Full 原始 FAIL；正向歷史比較新增獨立 championmaker oracle，嚴格驗證核准欄位後投影，並以有界第一差異取代巨大 AssertionError。比較安全38項、既有KBO比較23項、國際賽fixture43項、全力投球fixture30項及GameView八組完整生涯通過。資源／等待限定重測event／stage6／stage7／KBO共4入口PASS；進度診斷與低RAM排程保護仍需確定來源的最後Quick／Full，不以限定重測取代整套PASS；使用者Preview及ARTIFACT_COVERAGE_BLOCKED保持未完成。
+
+- 2026-11-07 提交前結果同步：原16個失敗入口限定重測16 PASS／0 FAIL；確定來源Quick 71 PASS／0 FAIL；八批本機Full 94 PASS／2 FAIL／0 SKIP／0 BLOCKED，耗時3341.313秒，整體FAIL_OR_INCOMPLETE。證據：test-results/comparator-resource-1140-related-final-r1/、comparator-resource-1140-quick-final-r1/、comparator-resource-1140-full-final-r1/。HOF三尺寸與P／IF完整比較通過，最後Console檢查遇ERR_CONNECTION_CLOSED，失敗URL未保存，不能推定為外部字型；KBO通過負面控制、修復後重播／前綴及P比較，180.606秒被Runner逾時終止，確切等待階段尚未確認。兩項均未結案；未放寬斷言、未延長timeout、未修改或覆寫歷史FAIL。Preview、Linux本次Full與ARTIFACT_COVERAGE_BLOCKED分別保留未驗證／未解除。

@@ -32,7 +32,7 @@ import { annualStateTransaction, prepareAwardReceipt, commitAwardReceipt } from 
 import { prepareSeasonPayment } from './season-payment-policy.js';
 import { contractContinuationForNextYear } from './contract-policy.js';
 import { classifyMarketInjury } from './injury-market-policy.js';
-import { normalizeChampionshipState, settleChampionship, maintainSeasonEnd } from './championship-policy.js';
+import { normalizeChampionshipState, settleChampionship, maintainSeasonEnd, updateChampionmaker } from './championship-policy.js';
 
 export class SeasonSettlement {
   #deps;
@@ -54,6 +54,11 @@ const EDITS=[
   assert.ok(moduleText.startsWith(HEADER),'module header, imports and fields exact');
   assert.ok(moduleText.endsWith('}\n')&&moduleText.split('\nexport class ').length===2,'one class, closed at the end');
   let body=moduleText.slice(HEADER.length,-2);
+  // The approved feature is the only addition to the historical settlement body.
+  for(const addition of [
+    '      entry.unlockedChampionmaker=updateChampionmaker(S,teamRec);\n',
+    "      if(entry.unlockedChampionmaker)renderCheckpointCard(entry,'championmaker',['gold','隠し特性解放：優勝請負人','職業一軍で通算5度のシリーズ優勝。追加効果のない名誉特性です。']);\n"
+  ]){assert.equal(body.split(addition).length,2);body=body.replace(addition,'');}
   for(const [original,moved] of EDITS){
     assert.equal(body.split(moved).length,2,'one edit: '+moved.slice(0,48));
     assert.equal(oldBody.split(original).length,2,'one original: '+original.slice(0,48));
@@ -100,7 +105,19 @@ function harness(mode,sc){
   let api;
   if(mode==='old'){
     const c={...POLICIES,...stubs,careerSession,choiceViews,S:h.S,resumeSeasonEnd:null,Error};
-    runInNewContext(oldSection,c);
+    // Independent oracle for the approved added state; all pre-existing fields/logs stay exact.
+    c.expectedChampionmaker=(s,lookup)=>{
+      const titles={NPB1:['NPB','日本一'],MLB:['MLB','ワールドシリーズチャンピオン'],CPBL1:['CPBL','台湾シリーズ優勝'],KBO1:['KBO','韓国シリーズ優勝']};
+      s.championmakerWins=Object.entries(s.championshipResults||{}).filter(([key,r])=>{
+        const rule=titles[r?.level],team=lookup(r?.teamId);
+        return rule&&r.won===true&&r.eligible===true&&typeof r.teamId==='string'&&Number.isInteger(r.year)&&r.year>0&&r.year<=s.year&&String(r.year)===key&&r.league===rule[0]&&r.title===rule[1]&&team?.org===rule[0];
+      }).map(([,r])=>({year:r.year,league:r.league,level:r.level,teamId:r.teamId,title:r.title})).sort((a,b)=>a.year-b.year);
+      s.championmakerCount=s.championmakerWins.length;
+      if(s.championmakerCount<5||s.traits.championmaker)return false;
+      s.traits.championmaker=true;s.championmakerAcquiredYear=s.championmakerWins[4].year;return true;
+    };
+    const expectedSection=oldSection.replace('maintainSeasonEnd(S);','maintainSeasonEnd(S);\n      entry.unlockedChampionmaker=expectedChampionmaker(S,teamRec);').replace("if(entry.phase==='CHAMPIONSHIP_RENDER'){", "if(entry.phase==='CHAMPIONSHIP_RENDER'){\n      if(entry.unlockedChampionmaker)renderCheckpointCard(entry,'championmaker',['gold','隠し特性解放：優勝請負人','職業一軍で通算5度のシリーズ優勝。追加効果のない名誉特性です。']);");
+    runInNewContext(expectedSection,c);
     api={phaseEnd:()=>c.phaseEnd(),resume:()=>c.resumeSeasonEnd(),setS:s=>{c.S=s;}};
   }else{
     const {R,...rest}=stubs;
@@ -121,6 +138,9 @@ const sameYearRestart=function sameYearRestart(ctx){ctx.setS(proState());};
 const liveView=function liveView(ctx){ctx.choiceViews.set(ctx.h.S,{kind:'ALLOCATION',year:ctx.h.S.year,generation:ctx.careerSession.choiceGeneration});};
 const bumpGeneration=function bumpGeneration(ctx){ctx.careerSession.choiceGeneration++;};
 const SCENARIOS=[
+  {id:'fifth championship: trait render failure resumes without repayment or reacquisition',state:()=>{
+    const s=proState();for(let year=2031;year<=2034;year++)s.championshipResults[year]={year,level:'NPB1',league:'NPB',teamId:'NPB_CL_HAN',title:'日本一',eligible:true,won:true};return s;
+  },randoms:[0],renderFails:{key:'championmaker',n:1},steps:['phaseEnd','phaseEnd','phaseEnd'],expect:['RENDER_FAILED','championmaker','movement']},
   {id:'PRO champion, no pool',state:()=>proState(),randoms:[0],steps:['phaseEnd','phaseEnd'],expect:['movement','championship']},
   {id:'PRO not champion, no pool',state:()=>proState(),randoms:[0.99],steps:['phaseEnd'],expect:['movement','payment']},
   {id:'PRO pool: choose, allocate, move',state:()=>proState({pool:3}),steps:['phaseEnd','pick','done','phaseEnd'],expect:['choose','allocUI','movement']},

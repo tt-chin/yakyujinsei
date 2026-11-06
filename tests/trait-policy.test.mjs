@@ -14,7 +14,7 @@ import {PlayerInjury} from '../docs/src/engine/player-injury.js';
 import {SeasonAwards} from '../docs/src/engine/season-awards.js';
 
 assert.equal(Object.keys(policy.TRAIT_LABELS).length,38);
-assert.deepEqual(policy.DEFERRED_TRAITS,['championmaker','nitenichi'],'G7 implements the existing pitcherTC definition');
+assert.deepEqual(policy.DEFERRED_TRAITS,['nitenichi'],'only approved championmaker is enabled; nitenichi stays deferred');
 assert.equal(JP_DATA.teams.find(t=>t.teamId==='NPB_CL_HAN').name,'阪神ストライプス');
 const labelState={mrTeamName:'阪神ストライプス',legendLeague:'NPB',rainbowLg:'MLB',tripleCrownHistory:{hitterTC:[{league:'NPB'},{league:'NPB'},{league:'KBO'}]}};
 assert.equal(policy.traitLabel('mrteam',labelState,()=> 'ストライプス'),'ストライプスミスター');

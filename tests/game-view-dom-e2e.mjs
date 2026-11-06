@@ -11,6 +11,8 @@ import path from 'node:path';
 import {findFirstDifference} from './support/first-difference.mjs';
 import {instrumentRng} from './support/rng-instrument.mjs';
 import {GAME_VIEW_HOOK,captureGameView} from './support/dom-snapshot.mjs';
+import {JP_DATA} from '../docs/src/data/jp-data.js';
+import {projectChampionmakerState} from '../tools/development-b/championmaker-state-oracle.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
@@ -26,7 +28,7 @@ const server=createServer(async(req,res)=>{
     let content=baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
-      if(!baseline)content+='\nwindow.__expectIncomeDisplay=true;';
+      if(!baseline)content+='\nwindow.__expectIncomeDisplay=true;window.__expect1140=true;window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
       if(negativeControl&&!baseline)content+='\nconst __negativeDivider=divider;divider=function(t){__negativeDivider(t+\' \');};';
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);

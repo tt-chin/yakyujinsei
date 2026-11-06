@@ -195,6 +195,13 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
     }else if(approvedReplayShareEdits[file]){
       let expected=acceptedA;for(const [before,after] of approvedReplayShareEdits[file])expected=exactReplacement(expected,before,after);
       assert.equal(current,expected,file+': exact approved replay URL copy, no other changes');
+    }else if(file==='docs/src/engine/championship-policy.js'){
+      const marker='// Only completed, eligible first-team results identify a championship.';
+      assert.equal(current.split(marker).length,2,'one approved championmaker addition');
+      assert.equal(current.slice(0,current.indexOf(marker)).trimEnd(),acceptedA.trimEnd(),'original championship rules and draw order unchanged');
+      assert.match(current.slice(current.indexOf(marker)),/export function updateChampionmaker\(/);
+    }else if(file==='docs/src/ui/condition-view-model.js'){
+      assert.equal(current,acceptedA+'export function tjGaugeCap(state){return state.traits?.rubber?100:50;}\n','only approved read-only TJ cap helper added');
     }else if(!allowedB.has(path.basename(file)))assert.equal(current,acceptedA,file+': no unrelated B wiring');
   }
 });

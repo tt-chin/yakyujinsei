@@ -137,7 +137,7 @@ try{
           if(variant==='candidate'&&step%17===0){
             const before=await p.evaluate(()=>window.__displayRegression());
             await openBoardAction(p,'board-preferences');await setPreferences(p,['standard','night','classic','scoreboard'][step%4],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
-            assert.deepEqual(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
+            assertSameCareer(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
           const result=await p.evaluate(({labels,texts})=>{
             const snapshot=window.__displayRegression();delete snapshot.state.version;if(snapshot.state.birthHighSchool)delete snapshot.state.birthHighSchool.createdVersion;
@@ -179,13 +179,13 @@ try{
         }
         snapshots.push(records);await ctx.close();
       }
-      assertSameCareer(historicalCareer(snapshots[1]),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
+      assertSameCareer(historicalCareer(snapshots[1],{championmaker:true}),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
       const last=snapshots[0].at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');console.log(`Fixed career ${seed}/${pos}: ${snapshots[0].length} actions, RNG ${last.calls}, retirement ${last.state.year}, exact match`);
     }
   }
   console.log(`Console/HTTP errors: ${errors.length}`);
   if(errors.length)console.log(JSON.stringify(errors));
-  assert.deepEqual(errors,[],'Console or JS/CSS HTTP errors');console.log(`Display E2E passed (${channel}): ${combinations?`${combinations} combinations × 6 viewports, ${screenshots} screenshots`:'six-seed career comparison'}. ${artifacts}`);
+  assertSameCareer(errors,[],'Console or JS/CSS HTTP errors');console.log(`Display E2E passed (${channel}): ${combinations?`${combinations} combinations × 6 viewports, ${screenshots} screenshots`:'six-seed career comparison'}. ${artifacts}`);
 }catch(error){failure=error;console.error(error);}
 finally{
   server.closeAllConnections();server.close();server.unref();

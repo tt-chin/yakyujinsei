@@ -15,7 +15,7 @@ export function createInitialState(name,pos,{getState,getSeed,R,ri,pickRecord,DA
   Object.defineProperty(state,'orgTeam',{get(){return this.orgTeamId;},set(v){this.orgTeamId=teamRec(v)?v:(DATA.teams.find(t=>t.name===v)?.teamId||v);},enumerable:false});
   state.teamName=function(){return teamDisplay(this.orgTeamId,this.lv);};
   for(const key of Object.keys(TRAIT_LABELS))state.traits[key]??=false;
-  Object.assign(state,{oldGhostPending:false,oldGhostUsed:false,firstTeamSeasons:{},firstTeamYearsByTeam:{},tripleCrownHistory:{}});
+  Object.assign(state,{oldGhostPending:false,oldGhostUsed:false,firstTeamSeasons:{},firstTeamYearsByTeam:{},tripleCrownHistory:{},championmakerWins:[],championmakerCount:0,championmakerAcquiredYear:null});
   Object.assign(state,{championshipResults:{},seasonChampContext:null,seasonEndMaintenanceYear:null,championshipMigrationVersion:1,intlFinalCount:0,intlTraitResults:{},internationalTraitMigrationVersion:1});
   traitPresentation.set(state,new Set(Object.keys(state.traits).filter(key=>state.traits[key])));
   installBirthHighSchool(state,school,VERSION);

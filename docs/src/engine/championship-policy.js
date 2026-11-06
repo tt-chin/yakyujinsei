@@ -70,3 +70,21 @@ export function maintainSeasonEnd(s){
   s.seasonEndMaintenanceYear=s.year;
   return true;
 }
+
+// Only completed, eligible first-team results identify a championship. Never
+// infer a team/level from current affiliation or an unqualified honor string.
+export function updateChampionmaker(s,teamById){
+  const years=new Map();
+  for(const [key,r] of Object.entries(s.championshipResults||{})){
+    const rule=RULES[r?.level],team=teamById(r?.teamId);
+    if(!rule||r.won!==true||r.eligible!==true||typeof r.teamId!=='string'||!Number.isInteger(r.year)||r.year<1||r.year>s.year||String(r.year)!==key||r.league!==rule.league||r.title!==rule.title||!team||team.org!==rule.league)continue;
+    years.set(r.year,{year:r.year,league:r.league,level:r.level,teamId:r.teamId,title:r.title});
+  }
+  s.championmakerWins=[...years.values()].sort((a,b)=>a.year-b.year);
+  s.championmakerCount=s.championmakerWins.length;
+  s.traits??={};
+  if(s.championmakerCount<5||s.traits.championmaker)return false;
+  s.traits.championmaker=true;
+  s.championmakerAcquiredYear=s.championmakerWins[4].year;
+  return true;
+}
