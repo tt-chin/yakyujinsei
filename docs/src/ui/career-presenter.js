@@ -1,5 +1,6 @@
 import {incomeSummary} from './income-summary.js';
 import {formatRehabStatus} from './condition-view-model.js';
+import {tjGaugeCap} from './condition-view-model.js';
 import {contractTypeLabel} from './contract-labels.js';
 import {removedTraitLabel} from '../engine/trait-policy.js';
 
@@ -8,13 +9,13 @@ import {removedTraitLabel} from '../engine/trait-policy.js';
 // Method bodies are the former game.js build*ViewModel and boardModel bodies; game.js helpers and labels are injected.
 export class CareerPresenter {
   #getState;#deps;
-  constructor({getState,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN,playerType,ovr}){
-    this.#getState=getState;this.#deps={ABL,POS_AB,POSN,DPN,TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN,playerType,ovr};
+  constructor({getState,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN,playerType,ovr,tjCap=()=>tjGaugeCap(getState())}){
+    this.#getState=getState;this.#deps={ABL,POS_AB,POSN,DPN,TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN,playerType,ovr,tjCap};
   }
   #statSummary(bucket,st){const S=this.#getState(),{fmtIP}=this.#deps;if(!st)return '';if(S.pos==='P')return `登板 ${st.G||0}｜投球回 ${fmtIP(st.IP||0)}｜${st.W||0}勝${st.L||0}敗｜奪三振 ${st.SO||0}`;const pa=st.PA||0,ab=st.AB||0,avg=ab?(st.H||0)/ab:0;return `出場 ${st.G||0}｜打席 ${pa}｜打率 ${avg.toFixed(3).replace(/^0/,'')}｜本塁打 ${st.HR||0}｜打点 ${st.RBI||0}`;}
   record(){const S=this.#getState();const definitions=[['NPB',[['NPB1','NPB一軍'],['NPB2','NPB二軍'],['NPB_DEV','NPB育成']]],['KBO',[['KBO1','KBO一軍'],['KBO2','KBOフューチャース']]],['台湾プロ野球',[['CPBL1','台湾プロ野球一軍'],['CPBL2','台湾プロ野球二軍']]],['MLB',[['MLB','MLB']]],['MiLB',[['A3','3A'],['A2','2A'],['A1','1A'],['R','ルーキーリーグ']]],['独立リーグ',[['IND','独立リーグ']]],['社会人野球',[['CORP','社会人野球']]]];const byLevel=S.statsByLevel||{};const groups=definitions.map(([label,levels])=>Object.freeze({label,levels:levels.filter(([key])=>byLevel[key]).map(([key,levelLabel])=>Object.freeze({key,label:levelLabel,summary:this.#statSummary(key,byLevel[key])}))})).filter(group=>group.levels.length);return Object.freeze({seasons:Array.isArray(S.log)?S.log.length:0,internationalCount:S.intlCount||0,groups});}
   #rehabStatusText(){const S=this.#getState();return formatRehabStatus(S);}
-  ability(){const S=this.#getState(),{ABL,POS_AB,POSN}=this.#deps;const condition=[{label:'シーズン稼働率',value:`${Math.round((S.seasonFactor??1)*100)}%`},{label:'次回故障リスク加算',value:`${S.injNext||0}%`},{label:'今季一時故障リスク加算',value:`${S.tmpInj||0}%`},{label:'大きな故障（通算）',value:`${S.bigInj||0}回`},{label:'リハビリ',value:this.#rehabStatusText()}];if(S.pos==='P')condition.push({label:'TJゲージ',value:String(S.tj||0)},{label:'トミー・ジョン手術（通算）',value:`${S.tjCount||0}回`});return Object.freeze({positionLabel:POSN[S.pos],abilities:POS_AB[S.pos].map(key=>Object.freeze({key,label:ABL[key],current:S.ab[key]||0,potential:S.pot?.[key]??62})),condition:condition.map(item=>Object.freeze(item))});}
+  ability(){const S=this.#getState(),{ABL,POS_AB,POSN}=this.#deps;const condition=[{label:'シーズン稼働率',value:`${Math.round((S.seasonFactor??1)*100)}%`},{label:'次回故障リスク加算',value:`${S.injNext||0}%`},{label:'今季一時故障リスク加算',value:`${S.tmpInj||0}%`},{label:'大きな故障（通算）',value:`${S.bigInj||0}回`},{label:'リハビリ',value:this.#rehabStatusText()}];if(S.pos==='P')condition.push({label:'TJゲージ',value:`${Number(S.tj||0).toFixed(1)} / ${this.#deps.tjCap()}`},{label:'トミー・ジョン手術（通算）',value:`${S.tjCount||0}回`});return Object.freeze({positionLabel:POSN[S.pos],abilities:POS_AB[S.pos].map(key=>Object.freeze({key,label:ABL[key],current:S.ab[key]||0,potential:S.pot?.[key]??62})),condition:condition.map(item=>Object.freeze(item))});}
   traits(){const S=this.#getState(),{displayTrait,teamNick}=this.#deps;return Object.freeze({active:Object.entries(S.traits||{}).filter(([,enabled])=>enabled).map(([key])=>displayTrait(key)),removed:(S.removed||[]).map(item=>removedTraitLabel(item,S,teamNick))});}
   board(phase){const S=this.#getState(),{DPN,POSN,TEAM_COLOR,roleN,playerType,ovr}=this.#deps;
     const nameHtml=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
@@ -31,9 +32,9 @@ export class CareerPresenter {
       /* プロ入り済みで球団色が設定されている場合、白背景ラベルを適用。 */
       const isProColored = (S.stage === 'PRO' && TEAM_COLOR[S.orgTeamId]);
       const txtColor = isProColored ? (isWhite ? '#000000' : tc) : 'var(--amber)';
-      const bgStyle = isProColored ? 'background:#ffffff; padding:2px 8px; border-radius:6px; box-shadow:0 2px 4px rgba(0、0、0、0.4);' : '';
+      const bgStyle = isProColored ? 'background:#ffffff; padding:2px 8px; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,0.4);' : '';
       
-      const dot = isProColored ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isWhite ? '#cccccc' : tc};margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba(0、0、0、0.2);"></span>` : '';
+      const dot = isProColored ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isWhite ? '#cccccc' : tc};margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba(0,0,0,0.2);"></span>` : '';
       
       teamHtml = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
     const age=S.age, year=S.year;

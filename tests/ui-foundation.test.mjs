@@ -10,6 +10,7 @@ const ability=fs.readFileSync(new URL('../docs/src/ui/ability-view.js',import.me
 const record=fs.readFileSync(new URL('../docs/src/ui/record-view.js',import.meta.url),'utf8');
 const player=fs.readFileSync(new URL('../docs/src/ui/player-detail.js',import.meta.url),'utf8');
 const presenter=fs.readFileSync(new URL('../docs/src/ui/career-presenter.js',import.meta.url),'utf8');
+const choicePrompt=fs.readFileSync(new URL('../docs/src/ui/choice-prompt.js',import.meta.url),'utf8');
 const css=fs.readFileSync(new URL('../docs/styles/ui-navigation.css',import.meta.url),'utf8');
 
 for(const id of ['board','log','act-toggle','act'])assert.equal((html.match(new RegExp(`id="${id}"`,'g'))||[]).length,1,`${id} must be unique`);
@@ -36,10 +37,10 @@ assert.match(careerMovement,/candidate=\{\.\.\.base,contractMult:\.9\*injury,ann
 assert.match(navigation,/const uiState=\{activeMainView:'home',activePlayerTab:'ability',activeCareerTab:'stats'\}/);
 assert.doesNotMatch(navigation,/['"]action['"]|actionPending|actionExecuting|showAction|beginAction|completeAction/);
 assert.match(navigation,/if\(view==='player'\)selectPlayer/);
-assert.match(game,/b\.onclick=\(\)=>\{if\(S!==view\.state\|\|S\.year!==view\.year\|\|view\.accepted\)return;return runWithResultView\(\(\)=>runChoiceAction/);
+assert.match(choicePrompt,/b\.onclick=\(\)=>\{const S=getState\(\);if\(S!==view\.state\|\|S\.year!==view\.year\|\|view\.accepted\)return;return this\.runWithResultView\(\(\)=>runChoiceAction/);
 assert.match(playerAbility,/c\.onclick=\(\)=>\{if\(!live\(c\)\|\|!\(remaining\(\)===0\|\|keys\.every\(k=>S\.ab\[k\]>=80\)\)\)return;completed=true;return runWithResultView\(\(\)=>\{ archiveTraitResults\(\);actClear\(\); allocDone\(touchedKeys,dice\?true:false\); done\(\); \}\);\}/);
 assert.match(playerAbility,/const live=element=>!completed&&getState\(\)===state&&S\.year===year&&careerSession\.choiceGeneration===generation&&element\.isConnected&&a\.contains\(element\)/);
-assert.match(game,/before=\$\('log'\)\.querySelectorAll\('\.card'\)\.length/);
+assert.match(choicePrompt,/before=\$\('log'\)\.querySelectorAll\('\.card'\)\.length/);
 assert.match(game,/onOpenPlayer:buildPlayerViewModel/);
 assert.match(presenter,/abilities:POS_AB\[S\.pos\]\.map/);
 assert.doesNotMatch(ability,/\b(?:R|ri|pick|chance)\s*\(/);

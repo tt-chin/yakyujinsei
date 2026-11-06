@@ -4,8 +4,9 @@ export const TRAIT_LABELS = Object.freeze({
   favorite:'監督のお気に入り',adking:'広告王',genius:'天才',glass:'スペランカー',iron:'鉄人',scum:'クズ男',late:'大器晩成',disc:'自律の鬼',academy:'理論派',intlace:'国際大会の鬼',franchise:'フランチャイズプレーヤー',clutch:'強心臓',phoenix:'復活',combo:'小細工無用',onetool:'一芸特化',rubber:'ゴムゴムの腕',legend:'歴史に残る名選手',yips:'イップス',distract:'私生活多忙',cancer:'チームの癌',ambience:'問題児',goldcloth:'黄金のユニフォーム',thief:'給料泥棒',mrteam:'ミスター',confidante:'女友達止まり',smallschool:'弱小校の星',grinder:'頑張り屋',rainbow:'渡り鳥',taiwan:'侍ジャパンの魂',
   oldghost:'ベテランの意地',miraclegen:'奇跡の世代',strongpitch:'若き剛腕',stronghit:'若きスラッガー',championmaker:'優勝請負人',latepractice:'練習遅刻常習犯',pitcherTC:'投手三冠王',hitterTC:'打撃三冠王',nitenichi:'二天一流',
 });
-export const DEFERRED_TRAITS = Object.freeze(['championmaker','nitenichi']);
+export const DEFERRED_TRAITS = Object.freeze(['nitenichi']);
 export const TRAIT_TEXT = Object.freeze({
+  championmaker:'職業一軍の所属球団で、日本一・ワールドシリーズ・台湾シリーズ・韓国シリーズの優勝を通算5回経験。同年は1回まで。追加効果のない名誉特性です。',
   intlace:'国際大会による故障リスク加算なし。大会の能力ポイントは最低2点。獲得した大会では適用されず、次回出場から有効。',
   oldghost:'35歳以上で年間MVPを獲得。翌季の衰えを半減（端数は四捨五入、最低1）。生涯一度だけ。',
   miraclegen:'高校時代の地方・秋季・選抜・甲子園で通算4回優勝。能力への追加効果はありません。',

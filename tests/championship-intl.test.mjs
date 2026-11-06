@@ -14,6 +14,7 @@ import {applyIncentivePayment,createIncentiveTerms} from '../docs/src/engine/inc
 import {classifyMarketInjury} from '../docs/src/engine/injury-market-policy.js';
 import * as receipts from '../docs/src/engine/award-transaction-policy.js';
 import {prepareSeasonPayment} from '../docs/src/engine/season-payment-policy.js';
+import {SeasonSettlement} from '../docs/src/engine/season-settlement.js';
 const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const SeasonStats=game.includes('seasonStats.addIntlStats(')?(await import('../docs/src/engine/season-stats.js')).SeasonStats:null;
 const teamById=id=>JP_DATA.teams.find(t=>t.teamId===id);
@@ -72,7 +73,9 @@ test('C09 actual active phaseEnd: champion, maintenance, salary/incentive/progre
   s.ct=contracts.createContract({contractId:'champ',org:'NPB',teamId:s.orgTeamId,signedYear:2034,startYear:2035,years:2,annualSalary:100000000,incentive:createIncentiveTerms({org:'NPB',annualSalary:100000000})});
   champ.captureSeasonChampionship(s);let draws=0,moved=0,cards=0;
   const c={...champ,...contracts,...receipts,prepareSeasonPayment,applyIncentivePayment,classifyMarketInjury,S:s,phaseEnd:null,board:()=>{},migrateSalaryV140State:()=>{},teamRec:teamById,R:()=>{draws++;return 0;},escapeHTML:x=>x,card:()=>cards++,fmtMoney:x=>String(x),movement:()=>moved++,careerSession:{pendingOffseasonSalary:null,seasonEndContext:null,corpSettlements:new WeakMap()},choose:()=>assert.fail('no pool'),allocUI:()=>{},choiceViews:new WeakMap(),restorePendingChoice:()=>false};
-  runInNewContext(productionFunction('renderCheckpointCard',game)+'\n'+game.slice(game.indexOf('  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();'),game.indexOf('  movement = function()',game.indexOf('  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();'))),c);
+  // Phase 31 moved the settlement into SeasonSettlement; renderCheckpointCard stays in game.js and runs on the same stubs.
+  runInNewContext(productionFunction('renderCheckpointCard',game),c);
+  const settlement=new SeasonSettlement({getState:()=>c.S,careerSession:c.careerSession,choiceViews:c.choiceViews,board:c.board,migrateSalaryV140State:c.migrateSalaryV140State,teamRec:c.teamRec,random:c.R,renderCheckpointCard:(owner,key,args)=>c.renderCheckpointCard(owner,key,args),escapeHTML:c.escapeHTML,card:c.card,fmtMoney:c.fmtMoney,movement:c.movement,choose:c.choose,allocUI:c.allocUI,restorePendingChoice:c.restorePendingChoice});c.phaseEnd=()=>settlement.phaseEnd();
   c.phaseEnd();const saved=JSON.stringify(s);c.phaseEnd();assert.equal(JSON.stringify(s),saved);assert.deepEqual([draws,moved,cards],[1,1,2]);assert.equal(s.careerBaseSalary,100000000);assert.equal(s.careerEarnings,100000111);assert.deepEqual([s.tradeRefuse,s.tradeHeat],[1,3]);
 });
 test('snapshot placement and franchise hookup use unchanged actual path',()=>{assert.ok(game.indexOf('captureSeasonChampionship(S);')>game.indexOf('recordSalaryEvaluation(entry.st);'));assert.ok(game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('runSeasonPipeline(0)'));const movementSource=readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8'),source=movementSource.slice(movementSource.indexOf('  function movement(){'),movementSource.indexOf('\n  return {',movementSource.indexOf('  function movement(){')));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});

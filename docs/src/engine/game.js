@@ -45,6 +45,8 @@ import { acceptDraftSelection, declineDraftSelection, draftSigningTerms, isDraft
 import { NPB_BONUS_RANGES, createSigningBonusTerms, calculatePostingFee, applySigningPayment } from './signing-bonus-policy.js';
 import { effectiveMarketOrg, marketTier, foreignProSeasons, accrueForeignFirstTeamSeason, getCrossLeaguePolicy, applyCrossLeagueSalary, applyKboForeignPackageCap } from './cross-league-market-policy.js';
 import { createChoiceActionToken, runChoiceAction } from '../ui/choice-action.js';
+import { ChoicePrompt } from '../ui/choice-prompt.js';
+import { SeasonSettlement } from './season-settlement.js';
 import { GameView } from '../ui/game-view.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
@@ -239,7 +241,7 @@ function checkGoldclothSeason(){
   recordFirstTeamSeason(S);
   if(goldclothEligible(S))traitCard('goldcloth',displayTrait('goldcloth'),'阪神ストライプス一軍で通算10年。虎党の声援を背に、甲子園で戦い続けてきた。その縦縞は、もはやお前の誇りだ。');
 }
-const careerPresenter=new CareerPresenter({getState:()=>S,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN:r=>roleN(r),playerType:()=>playerType(),ovr:()=>ovr()});
+const careerPresenter=new CareerPresenter({getState:()=>S,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN:r=>roleN(r),playerType:()=>playerType(),ovr:()=>ovr(),tjCap:()=>tjCap()});
 function buildRecordViewModel(){return careerPresenter.record();}
 function buildAbilityViewModel(){return careerPresenter.ability();}
 function buildTraitsViewModel(){return careerPresenter.traits();}
@@ -262,34 +264,13 @@ function board(phase){ gameView.renderBoard(boardModel(phase)); }
 function boardModel(phase){return careerPresenter.board(phase);}
 function actClear(){ gameView.actClear(); }
 function actToggleSync(){ gameView.actToggleSync(); }
-function escapeDiagnosticHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 const choiceViews=new WeakMap(),seasonContinuations=new WeakMap(),yearHandoffs=new WeakMap();
 let resumeSeasonEnd=()=>false;
-function restorePendingChoice(state=S,expected){
-  const view=choiceViews.get(state);
-  if(S!==state||view?.year!==state.year||view.kind!=='CHOICE'||(expected&&view!==expected))return false;
-  if(view.generation===careerSession.choiceGeneration&&view.rendered&&view.buttons.length===view.opts.length&&view.buttons.every(b=>!b.disabled&&b.isConnected&&$('act').contains(b)))return true;
-  if(view.accepted)return false;
-  choose(view.title,view.opts);return true;
-}
-function invokeAnnualChoice(view,action){
-  if(S!==view.state||S.year!==view.year||view.generation!==careerSession.choiceGeneration||view.accepted||!view.rendered)return;
-  if([...yearHandoffs.get(S)?.values()||[]].some(h=>h.status==='STARTED'&&h.targetYear===S.year))throw new Error('NEXT_YEAR_AMBIGUOUS');
-  const previous=careerSession.currentChoiceContext;careerSession.currentChoiceContext={state:S,year:S.year,view};
-  try{const result=invokeChoiceAction(action);view.accepted=true;return result;}finally{careerSession.currentChoiceContext=previous;}
-}
-function invokeChoiceAction(action){archiveTraitResults();const previous=careerSession.currentChoiceAction;careerSession.currentChoiceAction=action;try{return action();}finally{careerSession.currentChoiceAction=previous;}}
+function restorePendingChoice(state=S,expected){return choicePrompt.restorePendingChoice(state,expected);}
 function scrollAction(){scrollBottom();}
-function runWithResultView(action){const before=$('log').querySelectorAll('.card').length;careerSession.resultViewDepth++;try{return action();}finally{careerSession.resultViewDepth--;if($('log').querySelectorAll('.card').length>before)scrollBottom();else if(!careerSession.resultViewDepth)scrollAction();}}
-function choose(title,opts){
-  actClear(); const a=$('act'), generation=++careerSession.choiceGeneration, token=createChoiceActionToken(generation);
-  const view={state:S,year:S.year,generation,title,opts,buttons:[],accepted:false,kind:'CHOICE'};choiceViews.set(S,view);
-  careerSession.activeChoiceToken=token;
-  const buttons=gameView.renderChoices(title,opts);
-  opts.forEach((o,i)=>{ const b=buttons[i];
-    b.onclick=()=>{if(S!==view.state||S.year!==view.year||view.accepted)return;return runWithResultView(()=>runChoiceAction({action:()=>invokeAnnualChoice(view,o.f),currentMarkup:()=>a.innerHTML,clear:actClear,restore:()=>{if(S===view.state&&S.year===view.year)choose(title,opts);},token,currentGeneration:()=>careerSession.choiceGeneration,currentToken:()=>careerSession.activeChoiceToken,activateToken:t=>{careerSession.activeChoiceToken=t;},isCurrentChoice:()=>b.isConnected&&a.contains(b),buttonLabel:b.textContent.trim(),disableAll:()=>{a.querySelectorAll('button').forEach(button=>{button.disabled=true;});a.style.pointerEvents='none';},errorContext:()=>{const ct=S?.ct,schedule=Array.isArray(ct?.annualSchedule)?ct.annualSchedule:[],due=schedule.find(x=>Number(x.year)===Number(S?.year));return{year:S?.year??null,age:S?.age??null,stage:S?.stage??null,org:S?.org??null,level:S?.lv??null,contractId:ct?.contractId??null,contractStartYear:ct?.startYear??null,contractEndYear:ct?.endYear??null,contractRemainingYears:ct?.remainingYears??null,contractAnnualSalary:ct?.annualSalary??null,currentSalary:S?.currentSalary??null,lastSalaryPaidYear:S?.lastSalaryPaidYear??null,currentYearSchedule:due?{year:due.year,amount:due.amount,paid:Boolean(due.paid)}:null};},reportError:(error,d)=>{const val=x=>escapeDiagnosticHTML(String(x??'—')),schedule=d.currentYearSchedule?`${val(d.currentYearSchedule.amount)}円／${d.currentYearSchedule.paid?'支払済み':'未払い'}`:'なし';card('bad','処理中にエラーが発生しました',`選択処理を完了できませんでした。<br><b>エラーコード：${val(d.code)}</b><br><small>年度 ${val(d.year)}｜年齢 ${val(d.age)}｜${val(d.org)} ${val(d.level)}<br>契約ID ${val(d.contractId)}｜期間 ${val(d.contractStartYear)}～${val(d.contractEndYear)}｜残り ${val(d.contractRemainingYears)}年<br>現在年俸 ${val(d.currentSalary)}円｜最終支給年 ${val(d.lastSalaryPaidYear)}｜当年度年俸 ${schedule}</small><br>もう一度選択せず、この画面をスクリーンショットして報告してください。`);actToggleSync();}}));};view.buttons.push(b); });
-  actToggleSync();view.rendered=true; if(!careerSession.resultViewDepth)scrollAction();
-}
+function runWithResultView(action){return choicePrompt.runWithResultView(action);}
+function choose(title,opts){choicePrompt.choose(title,opts);}
+const choicePrompt=new ChoicePrompt({getState:()=>S,careerSession,choiceViews,yearHandoffs,gameView,$:id=>$(id),actClear:()=>actClear(),actToggleSync:()=>actToggleSync(),archiveTraitResults:()=>archiveTraitResults(),card:(cls,title,html)=>card(cls,title,html),scrollAction:()=>scrollAction(),scrollBottom:()=>scrollBottom()});
 /* 能力加算介面：mode {dice：[..]} または {pool：n}。 */
 function allocUI(mode,label,done){playerAbility.allocUI(mode,label,done);}
 const playerAbility=new PlayerAbility({getState:()=>S,clamp,POS_AB,ABL,careerSession,choiceViews,$:id=>$(id),abCost:k=>abCost(k),ovr:()=>ovr(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),card:(cls,title,html)=>card(cls,title,html),board:p=>board(p),allocDone:(t,d)=>allocDone(t,d),archiveTraitResults:()=>archiveTraitResults(),actClear:()=>actClear(),actToggleSync:()=>actToggleSync(),runWithResultView:action=>runWithResultView(action),rng:{R:()=>R()}});
@@ -737,76 +718,10 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function outOfOrg(o){return careerMovement.outOfOrg(o);}
   const careerMovement=new CareerMovement({getState:()=>S,LV,PATHS,careerSession,faMarket:(o,d)=>faMarket(o,d),crossOffers:o=>crossOffers(o),applyPromotionSalary:(fromLv,toLv)=>applyPromotionSalary(fromLv,toLv),markClubInitiatedRenewal:years=>markClubInitiatedRenewal(years),extensionOffer:o=>extensionOffer(o),displayTrait:key=>displayTrait(key),slgOf:st=>slgOf(st),teamNick:id=>teamNick(id),applyKboForeignPackageCap:input=>applyKboForeignPackageCap(input),salaryCandidate:input=>salaryCandidate(input),salaryFor:(lv,d)=>salaryFor(lv,d),fixedContract:input=>fixedContract(input),signTo:(org,lv,teamId,years,mult,reason,options)=>signTo(org,lv,teamId,years,mult,reason,options),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),renewAndAdvance:(mult,allowDecrease,contractType)=>renewAndAdvance(mult,allowDecrease,contractType),arbitrationFlow:()=>arbitrationFlow(),kboPreviousPackage:()=>kboPreviousPackage(),currentMarketRating:()=>currentMarketRating(),contractStageFor:org=>contractStageFor(org),serviceYearsFor:org=>serviceYearsFor(org),migrateSalaryV130State:()=>migrateSalaryV130State(),migrateSalaryV140State:()=>migrateSalaryV140State(),applyDemotionSalary:(fromLv,toLv)=>applyDemotionSalary(fromLv,toLv),ageGateJP:()=>ageGateJP(),doTradeExec:()=>doTradeExec(),dpMult:()=>dpMult(),ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),card:(cls,title,html)=>card(cls,title,html),board:phase=>board(phase),choose:(title,opts)=>choose(title,opts),escapeHTML:v=>escapeHTML(v),teamRec:id=>teamRec(id),listByOrg:org=>listByOrg(org),pickRecord:a=>pickRecord(a),removeTrait:(key,name)=>removeTrait(key,name),traitCard:(key,name,text,cls)=>traitCard(key,name,text,cls),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}});
 
-  const professionalEnds=new WeakMap(),professionalMoves=new WeakMap();
-  resumeSeasonEnd=()=>{
-    const entry=professionalEnds.get(S);
-    if(entry?.year!==S.year)return false;
-    settleProfessionalEnd();return true;
-  };
-  function settleProfessionalEnd(){
-    board(2);migrateSalaryV140State();
-    let entry=professionalEnds.get(S);
-    if(entry?.year!==S.year){
-      normalizeChampionshipState(S,teamRec);
-      // An old paid year without a live receipt is read-only, not a retry candidate.
-      if(S.lastSalaryPaidYear===S.year||S.ct?.annualSchedule?.some(row=>row.year===S.year&&row.paid===true))return;
-      entry={state:S,year:S.year,phase:'CHAMPIONSHIP',tx:annualStateTransaction(S)};professionalEnds.set(S,entry);
-    }
-    if(entry.state!==S||entry.year!==S.year)throw new Error('STALE_SETTLEMENT');
-    careerSession.seasonEndContext=entry;
-    if(entry.phase==='CHAMPIONSHIP'){
-      const {result,created}=settleChampionship(S,{teamById:teamRec,random:R});maintainSeasonEnd(S);
-      entry.championship=result;entry.showChampionship=created&&result.won;entry.phase='CHAMPIONSHIP_RENDER';
-    }
-    if(entry.phase==='CHAMPIONSHIP_RENDER'){
-      if(entry.showChampionship){const result=entry.championship,team=teamRec(result.teamId);renderCheckpointCard(entry,'championship',['gold',result.title+'達成',`${escapeHTML(team.name)}が<b class="hl">${result.title}</b>に輝いた。今季の優勝をキャリアの実績に追加した。`]);}
-      entry.phase='PAYMENT_PREPARED';
-    }
-    if(entry.phase==='PAYMENT_PREPARED'){
-      S.marketInjury=classifyMarketInjury({seasonFactor:S.seasonFactor,rehab:S.rehab,skipMid:S.skipMid,majorInjuryOccurred:S._majorInjuryThisSeason});
-      if(!entry.payment){entry.payment=prepareSeasonPayment(S);prepareAwardReceipt(entry.tx,'season-payment',entry.payment.writes);}
-      commitAwardReceipt(entry.tx,'season-payment');careerSession.pendingOffseasonSalary=null;entry.phase='PAYMENT_COMMITTED';
-    }
-    if(entry.phase==='PAYMENT_COMMITTED'){
-      const {paid,incentive}=entry.payment,continuation=contractContinuationForNextYear(S.ct,S.year),continuationText=continuation?`<br><b>現契約を継続</b><br>来季年俸：<b class="hl">${fmtMoney(continuation.nextSalary)}</b><br>契約残り：${continuation.remainingYears}年<br>年俸の再計算はありません<br>今季の実績は次回の契約評価へ反映されます。`:'';
-      if(!entry.resultHTML)entry.resultHTML=`今季支給年俸：<b class="hl">${fmtMoney(paid)}</b>｜出来高：<b class="hl">${fmtMoney(incentive.amount||0)}</b>（${incentive.level}）<br>スポンサー収入：${fmtMoney(S.yearOutsideIncome||0)}<br>今季受取総額：<b class="hl">${fmtMoney(paid+(incentive.amount||0)+(S.yearOutsideIncome||0))}</b>｜生涯収入：${fmtMoney(S.careerEarnings)}${continuationText}`;
-      renderCheckpointCard(entry,'payment',['','シーズン終了',entry.resultHTML]);entry.phase='RESULT_RENDERED';
-    }
-    const go=()=>{if(entry.state!==S||entry.year!==S.year)return;entry.phase='MOVEMENT';movement();entry.phase='WAIT_CHOICE';};
-    if(entry.phase==='RESULT_RENDERED'){
-      entry.pool=S.pool;
-      if(entry.pool>0){prepareAwardReceipt(entry.tx,'allocation-payload',[{path:['pool'],before:entry.pool,after:0}]);commitAwardReceipt(entry.tx,'allocation-payload');entry.phase='WAIT_ALLOCATION';}
-      else go();
-    }
-    if(entry.phase==='WAIT_ALLOCATION'){
-      const live=choiceViews.get(S);
-      if(live?.year===S.year&&live.kind==='ALLOCATION'&&live.generation===careerSession.choiceGeneration)return;
-      if(entry.allocationChoice&&restorePendingChoice(S,entry.allocationChoice)){entry.allocationChoice=choiceViews.get(S);return;}
-      choose('',[{t:`能力点を分配（${entry.pool}点）`,main:true,f:()=>{entry.phase='ALLOCATION_STARTED';allocUI({pool:entry.pool},'シーズン成果の能力点',()=>{entry.phase='ALLOCATION_COMMITTED';go();});}}]);entry.allocationChoice=choiceViews.get(S);return;
-    }
-    if(entry.phase==='ALLOCATION_STARTED'){
-      const live=choiceViews.get(S);if(live?.kind==='ALLOCATION'&&live.year===S.year&&live.generation===careerSession.choiceGeneration&&$('act').children.length)return;
-      throw new Error('ALLOCATION_CONTINUATION_AMBIGUOUS');
-    }
-    if(entry.phase==='ALLOCATION_COMMITTED'||entry.phase==='MOVEMENT')go();
-    else if(entry.phase==='WAIT_CHOICE')restorePendingChoice();
-  }
-  // Payment and successful completion are separate: a display failure must not repay.
-  function phaseEnd(){
-    if(S.stage!=='CORP')return settlePhaseEnd();
-    const state=S,year=S.year;
-    let entry=careerSession.corpSettlements.get(state);
-    if(!entry||entry.year!==year){entry={year,paid:false,complete:false,running:false};careerSession.corpSettlements.set(state,entry);}
-    if(entry.complete||entry.running)return;
-    entry.running=true;
-    try{settlePhaseEnd();entry.complete=true;}finally{entry.running=false;}
-  }
-  function settlePhaseEnd(){
-    if(S.stage==='PRO')return settleProfessionalEnd();
-    board(2);migrateSalaryV140State();
-    normalizeChampionshipState(S,teamRec);
-    careerSession.seasonEndContext={state:S,year:S.year};
-    S.marketInjury=classifyMarketInjury({seasonFactor:S.seasonFactor,rehab:S.rehab,skipMid:S.skipMid,majorInjuryOccurred:S._majorInjuryThisSeason});if(S.stage==='IND'){const candidate=salaryCandidate({sourceLevel:'IND',targetLevel:'IND',rating:currentMarketRating(),contractMult:1}),pay=candidate.annualSalary,previousSalary=S.currentSalary;S.currentSalary=pay;S.ct=null;if(S.lastSalaryPaidYear===S.year)throw new Error('SALARY_ALREADY_PAID_FOR_YEAR');S.careerBaseSalary+=pay;S.careerEarnings+=pay;S.lastSalaryPaidYear=S.year;saveSalaryDecision('RENEWAL',candidate,previousSalary,pay);card('','独立リーグ年間報酬',`今季年俸${fmtMoney(pay)}を受領した。スポンサー収入：${fmtMoney(S.yearOutsideIncome||0)}。今季受取総額：${fmtMoney(pay+(S.yearOutsideIncome||0))}。生涯収入：${fmtMoney(S.careerEarnings)} ${salaryDecisionLink()}`);bindLatestSalaryDetailLink();}else if(S.stage==='CORP'){const entry=careerSession.corpSettlements.get(S),pay=entry.paid?entry.pay:salaryFor('CORP',S.lastD||0);if(!entry.paid){S.corpIncome+=pay;S.careerEarnings+=pay;entry.pay=pay;entry.paid=true;}card('','社会人給与',`企業給与${fmtMoney(pay)}を受領した。スポンサー収入：${fmtMoney(S.yearOutsideIncome||0)}。今季受取総額：${fmtMoney(pay+(S.yearOutsideIncome||0))}。`);}const go=()=>movement();if(S.pool>0){const p=S.pool;S.pool=0;choose('',[{t:`能力点を分配（${p}点）`,main:true,f:()=>allocUI({pool:p},'シーズン成果の能力点',go)}]);}else go();}
+  const professionalMoves=new WeakMap();
+  resumeSeasonEnd=()=>seasonSettlement.resumeSeasonEnd();
+  function phaseEnd(){return seasonSettlement.phaseEnd();}
+  const seasonSettlement=new SeasonSettlement({getState:()=>S,careerSession,choiceViews,board:phase=>board(phase),migrateSalaryV140State:()=>migrateSalaryV140State(),teamRec:id=>teamRec(id),random:()=>R(),renderCheckpointCard:(owner,key,args)=>renderCheckpointCard(owner,key,args),escapeHTML:v=>escapeHTML(v),fmtMoney:yen=>fmtMoney(yen),movement:()=>movement(),choose:(title,opts)=>choose(title,opts),allocUI:(mode,label,done)=>allocUI(mode,label,done),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected),$:id=>$(id),salaryCandidate:input=>salaryCandidate(input),currentMarketRating:()=>currentMarketRating(),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),card:(cls,title,html)=>card(cls,title,html),salaryDecisionLink:()=>salaryDecisionLink(),bindLatestSalaryDetailLink:()=>bindLatestSalaryDetailLink(),salaryFor:(lv,d)=>salaryFor(lv,d)});
 
   movement = function(){migrateSalaryV130State();if(amateurCareer.seasonEndMovement())return;accrueForeignFirstTeamSeason(S);if(S.serviceTimeAccruedYear!==S.year){if(S.org==='NPB'&&S.lv==='NPB1'&&S.seasonFactor>0){S.npbRosterDays+=Math.round(145*S.seasonFactor);while(S.npbRosterDays>=145){S.npbRosterDays-=145;S.npbFaSeasons++;}S.serviceTime.NPB=Math.max(S.serviceTime.NPB,S.npbFaSeasons);}else if(S.org==='MLB'&&S.lv==='MLB'&&S.seasonFactor>=.5)S.serviceTime.MLB++;else if((S.org==='KBO'&&S.lv==='KBO1'||S.org==='CPBL'&&S.lv==='CPBL1')&&S.seasonFactor>0)S.serviceTime[S.org]++;S.serviceTimeAccruedYear=S.year;}const stage=contractStageFor(S.org);if(S.org==='NPB')S.faElig=S.serviceTime.NPB>=8;else if(S.org==='MLB')S.faElig=stage!=='CONTROL';LEGACY.movement();};
   const performMovement=movement;

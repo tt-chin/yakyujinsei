@@ -8,11 +8,29 @@ Windows系統Git的`core.autocrlf=true`可使Git內LF在工作樹成為CRLF，�
 
 `node scripts/test-source-text.mjs`為獨立小型驗證，涵蓋UTF-8、LF／CRLF／混合換行及非換行差異反例；不增加或減少原Quick／Full入口。現行版本檢查讀取`docs/src/config.js`的`VERSION`，只允許該宣告字面值隨正式升版改變，其餘來源與B1／A凍結證據斷言不放寬。
 
+## KBO 歷史比較的 1.14.0 許容差分
+
+`tests/kbo-renewal-e2e.mjs` 同版重播使用既有 `assertSameCareer` 比較原始完整資料；跨版則由 `tools/development-b/championmaker-comparison.mjs` 根據舊版可信優勝紀錄獨立推導新增優勝請負人欄位與取得旗標，驗證後逐步嚴格比較。原始 state/calls digest 另行核對，既有 Decision 驗證仍保留；其餘狀態、選擇、薪資及 RNG 不放寬。遇差異只報第一個位置，避免整段生涯差異輸出耗盡記憶體。此 oracle 不得套用於同版重播，也不全域忽略任何欄位。
+
+`node scripts/test-championmaker-comparison.mjs` 驗證正常與竄改反例；不取代 KBO 實際 E2E、Quick 或 Full。歷史 OOM／FAIL 日誌保留，新重測使用不同輸出位置。
+
 ## CI Full 分批保存
 
-CI 的 Full 透過 `scripts/ci-full-batches.mjs` 依 `test-manifest.mjs` 的 `seconds` 預估以 LPT 平衡拆成8批（目前92入口；無預估者以5秒計；批內維持 inventory 順序），呼叫原 `scripts/test.mjs full --only=...`；不更改 Runner、測試旗標、timeout、斷言或歷史基準。Quick／Audit 保持原命令。`plan` 固定當次 HEAD、Run ID／attempt及已解析的 origin/main；`run 1`～`run 8` 分別輸出到 `test-results/ci-full/batch-N/`，每批後由獨立 upload-artifact step 保存；`aggregate` 嚴格驗證完整集合、來源與環境、exit/status、log SHA256，任一缺失、FAIL／SKIP／BLOCKED或重用結果都不能得到Full PASS。
+### 本機 Full：8批、最多2批並行
 
-本地工具驗證：`node scripts/ci-full-batches.test.mjs`（合成故障案例＋一個明示原生Runner案例；不是完整Full）。Workflow檢查仍使用 `node scripts/check-workflow.mjs --playwright=<外部模組>`。新工具測試是CI工具的獨立驗證，不新增到遊戲92入口。
+本機標準 Full 使用 `node scripts/local-full-batches.mjs --playwright=<外部Playwright模組> --browser=chrome`。既有 `node scripts/test.mjs full` 仍是逐項順序執行；CI workflow 不變。本機入口沿用同一份 inventory、LPT八批計畫、`run N` 與嚴格 aggregate，沒有刪減案例或改變測試timeout／斷言。每批內維持原順序，同一次本機Full最多同時執行2批，不等同於CI的8台Runner；請勿另外同時啟動其他Full或Quick爭用資源。
+
+預設輸出到全新的 `test-results/local-full-<時間>-<隨機值>/`，也可指定不存在的 `--output=test-results/<新目錄>`，拒絕覆寫既有證據。各批保留 `batch-N/` 原生證據與獨立console log；`plan.json`、`source-manifest.json`、`coordinator.json`、原生 `summary.json`、`local-summary.json` 記錄計畫、含dirty／untracked程式的SHA256、進度、OS可用記憶體與結果。這不是完整artifact覆蓋保證，ARTIFACT_COVERAGE_BLOCKED仍獨立保留。
+
+批次FAIL不會阻止其餘批次執行；Ctrl+C／SIGTERM停止排程並終止本次啟動的子進程樹。來源改變或無法核對時停止派發，已啟動批次結束後仍執行aggregate。任一缺失、損壞、FAIL／SKIP／BLOCKED、中斷、來源變更或非零退出均不可取得本機Full PASS。執行期間不要編輯程式或切換Git分支。重跑使用全新輸出目錄，不重用舊PASS。
+
+工具限定測試：`node scripts/local-full-batches.test.mjs` 與既有 `node scripts/ci-full-batches.test.mjs`；合成與小型原生子程序測試不能取代實際Full。記憶體樣本的coordinatorRss僅屬排程程序，不是所有測試子程序總量；並行加速幅度需實測，不宣稱固定倍數。
+
+## CI Full 分批保存
+
+CI 的 Full 透過 `scripts/ci-full-batches.mjs` 依 `test-manifest.mjs` 的 `seconds` 預估以 LPT 平衡拆成8批（依當次inventory，目前96入口；無預估者以5秒計；批內維持 inventory 順序），呼叫原 `scripts/test.mjs full --only=...`；不更改 Runner、測試旗標、timeout、斷言或歷史基準。Quick／Audit 保持原命令。`plan` 固定當次 HEAD、Run ID／attempt及已解析的 origin/main；`run 1`～`run 8` 分別輸出到 `test-results/ci-full/batch-N/`，每批後由獨立 upload-artifact step 保存；`aggregate` 嚴格驗證完整集合、來源與環境、exit/status、log SHA256，任一缺失、FAIL／SKIP／BLOCKED或重用結果都不能得到Full PASS。
+
+本地工具驗證：`node scripts/ci-full-batches.test.mjs`（合成故障案例＋一個明示原生Runner案例；不是完整Full）。Workflow檢查仍使用 `node scripts/check-workflow.mjs --playwright=<外部模組>`。新工具測試是CI工具的獨立驗證，不新增遊戲Full入口。
 
 每批artifact名稱含Run ID、attempt及批次號，保存14天；保留既有tmp證據allowlist，不將全部大型／可能含敏感資料的tmp自動上傳。既有 `D2-CI-ARTIFACT-01 / ARTIFACT_COVERAGE_BLOCKED` 仍有效；summary／log保存不等於完整原始S/RNG可重播封存。Runner突然關閉時，只有之前已完成上傳的批次可期待保留，正在執行的批次及後續批次仍可能遺失；`always()`不能保證失去runner後仍能執行。正常測試失敗後後續批次仍會執行，原失敗step不會被最終彙整或上傳掩蓋。
 
@@ -99,3 +117,13 @@ dev push 僅在所有變更均為 `BACKLOG.md` 或 `docs/reviews/STAGE6_ACCEPTAN
 新增的support/baseline-initial-potential.mjs只對正向歷史UI比較，在基準newState返回時補入核准的出生pot合計，不覆寫既有值、不消費RNG、不用退休pot反推。display／draft／contract／HOF的正向舊版比較使用此adapter，仍保留完整S／RNG斷言。KBO原始負面程式不改：首個2049錯誤及所有數值仍驗證；前綴snapshot僅移除新增potSum0與原有version，非balanced正向歷史生涯才用adapter。925987d殿堂與f3efb0a KBO的真正負面控制來源保持。
 
 這不是「修復前完全不變」的證據。另實際執行 `node tests/stage10-risk-e2e.mjs --compare=<完整修復前SHA> --playwright=<module> --output=<directory>`，載入未改造的修復前game.js，比較逐操作S／選擇／RNG；只允許新增potSum0及引退完成後grinder的批准差異。原始／現行完整狀態都保存。57常規案＝原44＋7稱號邊界＋6重畫／殘留；加P／IF原生比較為59案。此較長入口仍Full／Audit，不加入Quick；新增support只有import分類，不是可執行測試。Runner與CI邏輯不變。
+
+## 1.14.0 比較器與本機資源保護
+
+歷史正向比較僅在明示 `{championmaker:true}` 時啟用獨立狀態 oracle：先以可信 championshipResults 嚴格推導並驗證三個新增欄位、第五年取得旗標，再投影為舊 schema。fixture 缺旗標只限明示 fixture 模式；同版重播仍完整嚴格比較。既有收入、能力、Decision／Receipt、選擇及 RNG 不因此排除。DOM 比較逐項驗證核准的 TJ 格式、陰影與取得顯示後才還原舊表示，其他 DOM 保持原斷言。
+
+`assertSameCareer` 先使用 Node 嚴格深比較，失敗只輸出有界的第一個差異，不把完整生涯交給 AssertionError 產生無限長 diff。`node scripts/test-comparison-safety.mjs` 驗證負面案例及 64 MiB heap 下的大型不相等輸入；不是省略狀態比較。
+
+本機八批排程每批啟動前檢查至少 2 GiB 可用實體 RAM；不足最多等 60 秒，仍不足則停止派發、記錄 RESOURCE_BLOCKED 並嚴格彙整為不完整，既有批次仍保留結果。不更改測試 timeout、heap 或重試；這是啟動門檻，不是執行中記憶體充足保證。瀏覽器進度診斷每 10 秒記錄目前操作、等待時間及記憶體，保留最多 512 個已完成操作，不取代完整狀態證據，也不將逾時轉為 PASS。ACT 支援明示輸出目錄並分開保存同 seed 重播證據。
+
+工具驗證：`node scripts/local-full-batches.test.mjs`、`node scripts/test-browser-progress.mjs`、`node scripts/test-championmaker-comparison.mjs`、`node scripts/test-comparison-safety.mjs`。歷史 Full FAIL 原樣保留，新版需以確定來源重新取得 Quick／Full 結果。

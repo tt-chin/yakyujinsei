@@ -34,6 +34,17 @@ const fixtures={
 for(const [name,state] of Object.entries(fixtures))test(name+': presenter equals 097e212 builders',()=>{
   const presenter=new CareerPresenter({getState:()=>state,labels,...helpers});
   const expected=oldModels(structuredClone(state));
+  // The only approved ability difference is the TJ label value. Independently
+  // enumerate the legacy fixture oracles; all remaining model fields stay exact.
+  const tjExpected={'P minimal':'0.0 / 50','P full':'13.5 / 100'};
+  if(tjExpected[name])for(const model of [expected.ability,expected.player.ability]){
+    const row=model.condition.find(r=>r.label==='TJゲージ');
+    // VM builders freeze each row, so create a replacement retaining freezing.
+    const rows=model.condition.map(r=>r===row?Object.freeze({...r,value:tjExpected[name]}):r);
+    const replacement=Object.freeze({...model,condition:rows});
+    if(model===expected.ability)expected.ability=replacement;
+    else expected.player=Object.freeze({...expected.player,ability:replacement});
+  }
   const values=[['pay','年俸・報酬',Number(state.careerBaseSalary||0)+Number(state.corpIncome||0)],['incentive','出来高',Number(state.careerIncentive||0)],['signing','契約金・支度金',Number(state.careerSigningBonus||0)+Number(state.careerDevelopmentStipend||0)],['buyout','契約解除補償金',Number(state.careerBuyout||0)],['outside','スポンサー収入',Number(state.careerOutsideIncome||0)],['total','生涯総収入',Number(state.careerEarnings||0)]];
   expected.career=Object.freeze({...expected.career,contract:Object.freeze({...expected.career.contract,incomeRows:Object.freeze(values.map(([key,label,value])=>Object.freeze({key,label,value:helpers.fmtMoney(value)})))})});
   for(const method of ['player','career','ability','traits','record'])assert.deepEqual(shape(presenter[method]()),shape(expected[method]),method);
@@ -59,6 +70,8 @@ for(const [name,over] of Object.entries(boardFixtures))for(const phase of [0,1,2
   const state=boardState(over);
   const presenter=new CareerPresenter({getState:()=>state,labels:{...labels,POSN,DPN},TEAM_COLOR,...helpers,...boardHelpers});
   const expected=vm.runInContext(oldBoard+'\nboardModel(phase)',vm.createContext({S:boardState(over),phase,...boardDeps}));
+  // Approved UI-BOARD-SHADOW-01: only the two invalid rgba separators change.
+  expected.teamHtml=expected.teamHtml.replaceAll('rgba(0、0、0、0.4)','rgba(0,0,0,0.4)').replaceAll('rgba(0、0、0、0.2)','rgba(0,0,0,0.2)');
   assert.deepEqual(shape(presenter.board(phase)),shape(expected));
 });
 assert.equal(Object.keys(boardFixtures).length,18);

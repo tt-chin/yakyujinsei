@@ -8,9 +8,34 @@ export const GAME_VIEW_HOOK='\nwindow.__gameViewState=()=>({state:JSON.parse(JSO
 export async function captureGameView(full){
   await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
   await new Promise(resolve=>setTimeout(resolve,0));
-  const {state,calls,views}=window.__gameViewState();
+  const captured=window.__gameViewState(),{calls,views}=captured,rawState=captured.state;
+  const state=window.__expect1140?window.__projectChampionmaker(rawState,window.__champTeams):rawState;
   delete state.version;if(state.birthHighSchool)delete state.birthHighSchool.createdVersion;
   const dom=Object.fromEntries(['log','act','board'].map(id=>[id,document.getElementById(id)?.outerHTML??null]));
+  if(window.__expect1140){
+    // Independently validate the approved TJ presentation before mapping only
+    // that value back to the fixed historical view-model representation.
+    if(rawState.pos==='P'){
+      const rows=views.player.ability.condition.filter(r=>r.label==='TJゲージ');
+      if(rows.length!==1||rows[0].value!==Number(rawState.tj||0).toFixed(1)+' / '+(rawState.traits.rubber?100:50))throw Error('TJ_DISPLAY_CONTRACT');
+      rows[0].value=String(rawState.tj||0);
+    }
+    const spans=[...document.querySelectorAll('#bd-team > span')];
+    if(spans.length===2){
+      for(const [i,expected] of ['0 0 2px rgba(0,0,0,0.2)','0 2px 4px rgba(0,0,0,0.4)'].entries()){
+        const probe=document.createElement('span');probe.style.boxShadow=expected;
+        if(spans[i].style.boxShadow!==probe.style.boxShadow)throw Error('BOARD_SHADOW_CONTRACT');
+      }
+      for(const alpha of ['0.2','0.4']){
+        const before='rgba(0,0,0,'+alpha+')';
+        if(dom.board.split(before).length!==2)throw Error('BOARD_SHADOW_MARKUP_CONTRACT');
+        dom.board=dom.board.replace(before,'rgba(0、0、0、'+alpha+')');
+      }
+    }
+    const active=views.player.traits.active,owned=rawState.traits.championmaker;
+    if(active.filter(x=>x==='優勝請負人').length!==(owned?1:0))throw Error('CHAMPIONMAKER_VIEW_CONTRACT');
+    if(owned)active.splice(active.indexOf('優勝請負人'),1);
+  }
   // Approved 1.13.4 UI-only delta: validate every new value before converting
   // this precise display section to its old representation for the OOP guard.
   // S, RNG, all old view fields and every other DOM byte remain strict.
@@ -24,6 +49,24 @@ export async function captureGameView(full){
   }
   const log=document.getElementById('log')?.cloneNode(true);
   const profile=[...log?.querySelectorAll('.card')||[]].find(e=>e.querySelector('h4')?.textContent==='キャリアプロフィール');
+  if(window.__expect1140){
+    const cards=[...log.querySelectorAll('[data-trait-name="優勝請負人"]')];
+    if(cards.length!==(rawState.traits.championmaker?1:0))throw Error('CHAMPIONMAKER_ACQUISITION_CARD_COUNT');
+    for(const node of cards){
+      const title=node.querySelector('h4')?.textContent,year=node.closest('.yr-block')?.querySelector('.yr-head')?.textContent;
+      if(!node.classList.contains('card')||!node.classList.contains('gold')||!['優勝請負人','隠し特性解放：優勝請負人'].includes(title)||!year?.includes(String(rawState.championmakerAcquiredYear)))throw Error('CHAMPIONMAKER_ACQUISITION_CARD_IDENTITY');
+      if(node.dataset.traitResult==='championmaker'&&!node.textContent.includes('追加効果のない名誉特性'))throw Error('CHAMPIONMAKER_ACQUISITION_DESCRIPTION');
+      node.remove();
+    }
+    if(profile&&rawState.traits.championmaker){
+      const tags=[...profile.querySelectorAll('.tag')].filter(t=>t.textContent==='優勝請負人');
+      if(tags.length!==1)throw Error('CHAMPIONMAKER_RETIREMENT_CONTRACT');
+      const tag=tags[0],space=tag.previousSibling?.nodeType===Node.TEXT_NODE&&tag.previousSibling.nodeValue===' '?tag.previousSibling:tag.nextSibling?.nodeType===Node.TEXT_NODE&&tag.nextSibling.nodeValue===' '?tag.nextSibling:null;
+      space?.remove();tag.remove();
+      if(!profile.querySelector('.tag'))for(const text of profile.childNodes)if(text.nodeType===Node.TEXT_NODE)text.nodeValue=text.nodeValue.replace('特性：','特性：（なし）');
+    }
+    dom.log=log.outerHTML;
+  }
   if(profile){
     const dl=profile.querySelector('dl.income-summary');
     if(window.__expectIncomeDisplay&&!dl)throw Error('INCOME_RETIREMENT_MISSING');

@@ -110,8 +110,9 @@ function nestedHarness() {
 
 const game = fs.readFileSync(new URL('../docs/src/engine/game.js', import.meta.url), 'utf8');
 const ability = fs.readFileSync(new URL('../docs/src/engine/player-ability.js', import.meta.url), 'utf8');
+const choicePrompt = fs.readFileSync(new URL('../docs/src/ui/choice-prompt.js', import.meta.url), 'utf8');
 assert.match(ability, /function allocUI\(mode,label,done\)\{\s*const S=getState\(\);\s*actClear\(\); \+\+careerSession\.choiceGeneration;/);
-assert.match(game, /function escapeDiagnosticHTML\(v\)/);
-assert.doesNotMatch(game, /const val=x=>escapeHTML\(String\(x\?\?'—'\)\)/);
+assert.match(choicePrompt, /function escapeDiagnosticHTML\(v\)/);
+assert.doesNotMatch(game + choicePrompt, /const val=x=>escapeHTML\(String\(x\?\?'—'\)\)/);
 
 console.log('choice action tests: ok');
