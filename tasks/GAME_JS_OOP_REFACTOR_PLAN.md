@@ -4117,7 +4117,9 @@ T5 使 Quick 由 70 增為 71、Full 由 95 增為 96，manifest 依檔名自動
 
 - 「未改測試的 Quick」未取得有效結果：執行期間測試已在修改，該次 70／70 不作證據。
 - 未做：18 字 n-gram 與 acorn 字面值掃描未重做（`game.js` 自草稿基準未變，草稿結果見 §2jj.4）；W1–W11 的執行期欄位；`--preview` 路由、Linux CI、Preview。
-- 下一步：PR #55 併入後 merge `origin/dev`、重跑 Quick，push／PR 另批。
+- PR #55 併入後（2026-11-04）以 merge 併入 `origin/dev`（`d0499f5`，merge `d4cd99d`，無衝突；樹 `7f76b3c` 與 merge 前相同，dev 未帶入內容差異）。乾淨 worktree Quick 71／71 PASS（HEAD `d0499f5`，依 `summary.json` 與 `test.mjs list` 的 Quick 入口數核對）。
+- `7b47d60` 已 push，[PR #56](https://github.com/tt-chin/yakyujinsei/pull/56)（→ `dev`）已開。[Tests #132](https://github.com/tt-chin/yakyujinsei/actions/runs/41836296928)（`7b47d60`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 96`、`acceptedPass 96`、`issues []`（記於 PR #56）。
+- 下一步：等 code owner 合併 PR #56（不由我合併）；合併後確認 dev push 的 Quick 與 Preview，再記於本節。
 
 ## 2kk. 第 32 期：年度骨架移至 `YearFlow`（細部計畫，2026-11-03；計畫已批准 2026-11-03，本機實作完成，見 §2kk.6）
 

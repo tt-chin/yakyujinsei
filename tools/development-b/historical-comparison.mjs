@@ -1,6 +1,7 @@
 // Explicit cross-version comparisons only. Same-B replay must compare raw full S.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {legacyChampionmakerState} from './championmaker-state-oracle.mjs';
 import {validateAwardHistory as validateA} from '../development-a/historical-comparison.mjs';
 import {pitcherAwardCandidate} from '../../docs/src/engine/pitcher-award-policy.js';
 import {decideIndependentAward} from '../../docs/src/engine/award-rng-policy.js';
@@ -71,17 +72,17 @@ export function validateAwardHistory(state){
     assert.equal(rows.some(d=>d.awardId==='PITCH_TRIPLE_CROWN'),triple);
   }
 }
-export function historicalState(state){validateAwardHistory(state);const copy=structuredClone(state);delete copy.awardDecisions;return copy;}
-export function historicalCareer(value){
-  if(Array.isArray(value))return value.map(historicalCareer);
+export function historicalState(state,options={}){validateAwardHistory(state);const copy=structuredClone(options.championmaker?legacyChampionmakerState(state,options):state);delete copy.awardDecisions;return copy;}
+export function historicalCareer(value,options={}){
+  if(Array.isArray(value))return value.map(v=>historicalCareer(v,options));
   if(value&&typeof value==='object'){
-    if(typeof value.seed==='string'&&Number.isInteger(value.year)&&value.traits&&Array.isArray(value.honors))return historicalState(value);
-    const result=Object.fromEntries(Object.entries(value).map(([k,v])=>[k,historicalCareer(v)]));
+    if(typeof value.seed==='string'&&Number.isInteger(value.year)&&value.traits&&Array.isArray(value.honors))return historicalState(value,options);
+    const result=Object.fromEntries(Object.entries(value).map(([k,v])=>[k,historicalCareer(v,options)]));
     if(typeof value.digest==='string'&&value.state)result.digest=createHash('sha256').update(JSON.stringify({state:result.state,calls:result.calls})).digest('hex');
     for(const side of ['before','after'])if(typeof value[side]==='string'&&value[side+'State'])result[side]=createHash('sha256').update(JSON.stringify(result[side+'State'])).digest('hex');
     return result;
   }
-  if(typeof value==='string'&&value.startsWith('{')){let parsed;try{parsed=JSON.parse(value);}catch{}if(parsed&&typeof parsed.seed==='string'&&Number.isInteger(parsed.year)&&parsed.traits&&Array.isArray(parsed.honors))return JSON.stringify(historicalState(parsed));}
+  if(typeof value==='string'&&value.startsWith('{')){let parsed;try{parsed=JSON.parse(value);}catch{}if(parsed&&typeof parsed.seed==='string'&&Number.isInteger(parsed.year)&&parsed.traits&&Array.isArray(parsed.honors))return JSON.stringify(historicalState(parsed,options));}
   return value;
 }
 
@@ -108,7 +109,7 @@ function firstMismatch(a,b,path='$'){
   const short=v=>typeof v==='string'?v.slice(0,180):v;
   return {path,before:short(a),after:short(b)};
 }
-export function assertApprovedProducerRenameCareer(old,current){
+export function assertApprovedProducerRenameCareer(old,current,options={}){
   const evidence=new Map();
   function expected(value,actual,path='$'){
     if(Array.isArray(value))return value.map((v,i)=>expected(v,actual?.[i],path+'.'+i));
@@ -140,7 +141,7 @@ export function assertApprovedProducerRenameCareer(old,current){
     }
     return value;
   }
-  const approved=expected(old,current),observed=historicalCareer(current);
+  const approved=expected(old,current),observed=historicalCareer(current,options);
   // A compact first-difference diagnostic prevents assert's formatting of a
   // 100+ MB career from obscuring an actual failure with ArrayBuffer errors.
   assert.deepEqual(firstMismatch(approved,observed),null,'Only Decision-proven official producer renames allowed; every other field remains strict');

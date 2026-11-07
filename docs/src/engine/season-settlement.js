@@ -8,7 +8,7 @@ import { annualStateTransaction, prepareAwardReceipt, commitAwardReceipt } from 
 import { prepareSeasonPayment } from './season-payment-policy.js';
 import { contractContinuationForNextYear } from './contract-policy.js';
 import { classifyMarketInjury } from './injury-market-policy.js';
-import { normalizeChampionshipState, settleChampionship, maintainSeasonEnd } from './championship-policy.js';
+import { normalizeChampionshipState, settleChampionship, maintainSeasonEnd, updateChampionmaker } from './championship-policy.js';
 
 export class SeasonSettlement {
   #deps;
@@ -32,9 +32,11 @@ export class SeasonSettlement {
     careerSession.seasonEndContext=entry;
     if(entry.phase==='CHAMPIONSHIP'){
       const {result,created}=settleChampionship(S,{teamById:teamRec,random:R});maintainSeasonEnd(S);
+      entry.unlockedChampionmaker=updateChampionmaker(S,teamRec);
       entry.championship=result;entry.showChampionship=created&&result.won;entry.phase='CHAMPIONSHIP_RENDER';
     }
     if(entry.phase==='CHAMPIONSHIP_RENDER'){
+      if(entry.unlockedChampionmaker)renderCheckpointCard(entry,'championmaker',['gold','隠し特性解放：優勝請負人','職業一軍で通算5度のシリーズ優勝。追加効果のない名誉特性です。']);
       if(entry.showChampionship){const result=entry.championship,team=teamRec(result.teamId);renderCheckpointCard(entry,'championship',['gold',result.title+'達成',`${escapeHTML(team.name)}が<b class="hl">${result.title}</b>に輝いた。今季の優勝をキャリアの実績に追加した。`]);}
       entry.phase='PAYMENT_PREPARED';
     }

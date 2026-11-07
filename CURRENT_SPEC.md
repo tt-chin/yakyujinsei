@@ -1,4 +1,4 @@
-# 現行規格（正式公開 v1.13.3／開発版 v1.13.8）
+# 現行規格（正式公開 v1.13.3／開発版 v1.14.0）
 
 ### 開発版1.13.8：プレイヤー向け更新履歴
 
@@ -472,7 +472,7 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 - strongpitch「若き剛腕」／stronghit「若きスラッガー」：24歳未満でNPBまたはMLB年間MVPを獲得。投手／野手を分け、称号のみ。24歳、KBO／CPBL、MVPなしは対象外。
 - latepractice「練習遅刻常習犯」：原始categoryがtrainingの安全選択失敗をcntTrainingSafeFailへ累計、20回で取得。学生／社会人のencounter→training効果変換は計数対象にしない。以後すべてのイベントのsafe成功率−5ポイント、norm／boldは不変。20回目は解決前の特性snapshotで判定し、次の選択から減率。年次リセットしない。処理済みeventOccurrenceIDの再実行・再表示で加算しない。
 - hitterTC「打撃三冠王」：同年同リーグの既存首位打者・本塁打王・打点王を全取得した場合、年間MVPを保証。元の個別賞・MVP抽選を元の順序／回数で行った後に保証し、追加乱数・MVP重複を生じない。tripleCrownHistory.hitterTCにyear／bucket／leagueを保持し、同年同リーグの重複記録を防ぐ。後年・別リーグの取得も記録する。
-- 新規9件の名称は全て承認済み。championmaker「優勝請負人」、nitenichi「二天一流」は名称／IDのみ予約し、自然取得・効果・架空実績を追加しない。pitcherTC「投手三冠王」はD2で実装済みとなり、取得条件・MVP保証は第17節に従う。旧版の保留3件に関する検証記録は当時の結果として保持する。
+- 新規9件の名称は全て承認済み。championmaker「優勝請負人」は開発版1.14.0の末尾仕様に従う名誉特性。nitenichi「二天一流」は名称／IDのみ予約し、自然取得・効果・架空実績を追加しない。pitcherTC「投手三冠王」はD2で実装済みとなり、取得条件・MVP保証は第17節に従う。旧版の保留3件に関する検証記録は当時の結果として保持する。
 - 2026-10-09の審査後確認：rubber解放文はTJゲージ上限50→100、注射成功率55%→85%と明記し、「両方2倍」としない。成功率・上限の実効果は変更しない。阪神の旧混合年資を推測補算しない制限と取得済み状態の保持を使用者が了承。保留3特性の説明UIは追加しない。hitterTCは現行の年度＋リーグ表示名＋正式賞名の厳密一致を維持し、未知の賞名・別年度・別リーグを三冠と推測しない。
 - 共有画像は既存920px論理幅・2倍出力・standard配色・内容・ファイル名・seed-only URLを維持（1.11.1の四主題連動は第16節）。実際の特性タグ幅で改行数を計算して高さへ反映し、38件検証fixtureでも下端の収入とseed／VERSIONを裁切・重畳しない。UI閲覧・画像生成はRNG0。
 - 新しい特性が作用したケースだけ承認済みの結果差を許可する。打撃三冠のMVPが既存表彰・給与評価・出来高へ反映される自然な差、oldghost翌季の能力差、latepractice取得後のイベント成否差を無関係な回帰差と混同しない。給与・成績・契約公式は変更しない。
@@ -508,7 +508,7 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 
 - YAKYUJINSEI_V1.9.1_CHAMPIONSHIP_INTL_FIX_SPECの有効仕様を本節へ移管。旧公開基準5602a7cではなく、dev 004cd26（1.10.3）を実装前の比較基準とする。使用者はMINOR 1.11.0、対象年度の追加優勝抽選による後続seed差、季末の拒否／不満減算を承認。dev push／PreviewはAGENTSに従い、main／本番は別承認。
 - championship-policy.js／international-trait-policy.jsはDOM・グローバルRNGを参照せず、既存RNGと球団Master照会を注入する。到達不能な旧phaseEnd／maybeIntlは削除せず、旧給与処理を委譲しない。international-selection-policy.js（大会日程・代表選考）はDOM・S・RNGを参照しない純関数とし、公式日程と選考に必要な値を引数で受け取る。hall-of-fame-tier-policy.js（殿堂評価点・守備割合・殿堂ランク）も同様にDOM・S・RNGを参照しない純関数とし、TIER_TH／LG_Nは呼び出し時に引数で受け取る。defense-position-policy.js（守備評価・守備基準・守備可否・守備候補・守備位置年俸係数）も同様にDOM・S・RNGを参照しない純関数とし、DP_TH／DP_BAR／DP_MULTは呼び出し時に引数で受け取る。ability-evaluation-policy.js（総合評価・選手タイプ・一芸の役割差・能力段階コスト）も同様にDOM・S・RNGを参照しない純関数とし、守備評価はdefense-position-policy.jsのdefenseScoreForを使う。
-- 92イベントの文案・条件・数値、能力値と成績生成、年俸モデル、FA、国際日程／召集条件／順位確率、共有画像のテーマ、seed-only URLは変更しない。全球団の合計100%優勝分布、国際MVP、大会別履歴一覧、intlBest、二刀流、保存機能、優勝賞金／育成点は追加しない。1.11.8の既存結果カードへの本大会成績表示だけは第15.4節に従う。優勝請負人の累計5冠／機率+5百分点は引き続き別案件。
+- 92イベントの文案・条件・数値、能力値と成績生成、年俸モデル、FA、国際日程／召集条件／順位確率、共有画像のテーマ、seed-only URLは変更しない。全球団の合計100%優勝分布、国際MVP、大会別履歴一覧、intlBest、二刀流、保存機能、優勝賞金／育成点は追加しない。1.11.8の既存結果カードへの本大会成績表示だけは第15.4節に従う。優勝請負人の旧案「勝率+5百分点」は採用せず、開発版1.14.0では追加効果のない名誉特性とする。
 
 ### 15.2 優勝対象と機率
 
@@ -688,3 +688,14 @@ A→Bは最初の承認済み実効果前の既存S／選択／主Rを厳密比�
 - D2§4.3／11／12のIP150／IP190／G100／基本55・旧曲線は[§13のP08最終承認](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#p08-approved-design)と17.2のIP180／S3／B2／G95へ取代された。手機2039年の1.10.3ケースはOFFLINE_ESTIMATEのまま保持する。
 - D2§14.3／14.4／14.7の候補方式より[§14.13正式技術契約](docs/designs/PITCHER_AWARDS_PHASE1_DESIGN_D2.md#d2-technical-approved)を参照する。候補全文を実装済みへ一括昇格させない。
 - D2§14.13.7、Decision Log及び工程計画内のNOT_IMPLEMENTED／NOT_AUTHORIZED／PLANNED等は元時点の記録。後続A／B受入と1.13.0公開検収を別証拠として併記し、当時のFAIL／NOT_RUN／WAIVEDは変更しない。Linux Full NOT_ACCEPTED / DEFERRED、ARTIFACT_COVERAGE_BLOCKED及び未完了の証拠対応・文書整理は残る。
+## 開発版1.14.0：TJ表示と優勝請負人
+
+看板の球団名バッジと球団色マーカーのbox-shadowは半角カンマの有効なrgba構文とする。色・サイズ・所属判定・状態・RNGは変更しない（UI-BOARD-SHADOW-01）。
+
+TJは既存上限（通常50、ゴムゴムの腕100）を共用判定し、小数1桁 / 上限で表示。欠損は0、表示によるクランプ・S.tj更新・抽選変更はない。
+
+優勝請負人は、使用者の追加確認により、既存の日本一・ワールドシリーズ・台湾シリーズ・韓国シリーズ優勝を対象に通算5回で一度取得する名誉特性。勝率・能力・年俸補正はなく、新規RNGを使わない。championshipResultsの年度キー・year一致、won=true、eligible=true、既知の一軍level・league・titleと所属teamIdを確認した記録だけを、移籍に関係なく年度単位で重複除外してchampionmakerWinsへ保存し、championmakerCountをその件数とする。新規状態は空配列・0・championmakerAcquiredYear=null。旧状態は次の有効な職業年度精算で確実な記録のみ復元し、曖昧なhonors文字列、既存回数だけからの推定、MIGRATED_ALREADY_SETTLED記録からの所属推定は行わない。復元によって条件を満たした場合も取得は一度だけで、確認できる5回目の年をchampionmakerAcquiredYearへ保持する。既取得特性は取り消さない。
+
+学生・二軍・育成・独立・国際大会は対象外。同年の追加タイトルを重複加算せず、優勝確定カードと同じcheckpoint再試行経路で取得を表示する。nitenichiは保留のまま。本文中の過去案「累計5冠／機率+5百分点」は本仕様で置換し、勝率加成を実装しない。OVR耐力5%・KBO亞洲名額・二天一流の取りやめは計画上の取消であり、既存ゲーム計算や保留データは削除しない。
+
+許容差分はVERSIONに伴うmetadata、上記3欄位、championmaker取得フラグと取得表示。その他の状態・選択・成績・主RNGは維持する。Previewは未確認。

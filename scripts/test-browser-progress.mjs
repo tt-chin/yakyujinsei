@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {mkdtempSync,readFileSync} from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {observeBrowserOperation,browserProgress,configureBrowserProgress} from '../tools/test-support/browser-progress.mjs';
+const wait=ms=>new Promise(r=>setTimeout(r,ms));let checks=0;
+assert.equal(await observeBrowserOperation('return-value',()=>42),42);checks++;
+const original=Error('original browser failure');await assert.rejects(observeBrowserOperation('failure',()=>{throw original;},{log:()=>{throw Error('logger failed');}}),e=>e===original);checks++;
+const logs=[];await observeBrowserOperation('slow-but-successful',()=>wait(35),{heartbeatMs:5,log:x=>logs.push(x)});assert(logs.length>0);assert(logs.every(x=>x.includes('WAITING')));const count=logs.length;await wait(20);assert.equal(logs.length,count);assert.equal(browserProgress().active.length,0);checks+=3;
+for(let i=0;i<520;i++)await observeBrowserOperation('bounded-'+i,()=>i);assert.equal(browserProgress().completed.length,512);checks++;
+const dir=mkdtempSync(path.join(os.tmpdir(),'browser-progress-contract-')),file=configureBrowserProgress(dir);await observeBrowserOperation('persisted',()=>true);const saved=JSON.parse(readFileSync(file));assert.equal(saved.active.length,0);assert.equal(saved.completed.at(-1).stage,'persisted');assert.equal(saved.completed.at(-1).status,'PASS');checks+=3;
+console.log(`PASS ${checks} browser-progress checks: original values/errors retained, no timeout or retry, heartbeat cleanup, bounded journal, independent persisted diagnostics`);

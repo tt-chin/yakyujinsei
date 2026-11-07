@@ -1,3 +1,5 @@
+import {legacyChampionmakerState} from '../tools/development-b/championmaker-state-oracle.mjs';
+import {assertSameCareer} from './support/first-difference.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -35,9 +37,9 @@ try{
    await p.locator('#sh-img').click();const img=p.locator('#sh-out img');await img.waitFor();await img.evaluate(i=>i.decode());await imageResult(p,width);
    await p.locator('[data-main-view="player"]').click();await p.locator('[data-player-tab="traits"]').click();assert.match(await p.locator('#player-content').innerText(),/メジャーリーグ歴史に残る名選手/);assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.screenshot({path:path.join(shots,'local-'+width+'.png')});console.log(width+'px synthetic F01 unlock/player/PNG/overflow PASS');await p.close();
   }
-  for(const [seed,pos]of [['yakyo-test-001','P'],['jp3-infielder-01','IF']]){const runs=[];for(const old of [true,false]){const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos);const actions=[];for(let i=0;i<3000;i++){if(await p.evaluate(()=>window.__hofFix.get().state.done))break;actions.push(await action(p,false));assert.ok(actions.at(-1),'action');}const snap=await p.evaluate(()=>window.__hofFix.get());assert.equal(snap.state.done,true);delete snap.state.version;runs.push({snap,actions});await p.close();}assert.deepEqual(runs[1],runs[0],seed+' exact full career before/after');console.log(seed+'/'+pos+' full state/actions/RNG exact PASS calls='+runs[1].snap.calls);}
+  for(const [seed,pos]of [['yakyo-test-001','P'],['jp3-infielder-01','IF']]){const runs=[];for(const old of [true,false]){const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos);const actions=[];for(let i=0;i<3000;i++){if(await p.evaluate(()=>window.__hofFix.get().state.done))break;actions.push(await action(p,false));assert.ok(actions.at(-1),'action');}const snap=await p.evaluate(()=>window.__hofFix.get());assert.equal(snap.state.done,true);delete snap.state.version;runs.push({snap,actions});await p.close();}assertSameCareer({...runs[1],snap:{...runs[1].snap,state:legacyChampionmakerState(runs[1].snap.state)}},runs[0],seed+' exact full career before/after except independently verified 1.14.0 state');console.log(seed+'/'+pos+' full state/actions/RNG exact PASS calls='+runs[1].snap.calls);}
  }
- assert.deepEqual(errors,[]);console.log('Console and JS/CSS404 0; screenshots '+shots);
+ assertSameCareer(errors,[]);console.log('Console and JS/CSS404 0; screenshots '+shots);
 }catch(e){failure=e;console.error(e.stack,errors);}finally{server.closeAllConnections();server.close();await Promise.race([browser.close(),new Promise(r=>setTimeout(r,5000))]);process.exit(failure?1:0);}
 import {withApprovedBirthSnapshot} from './support/baseline-initial-potential.mjs';
 import {instrumentRng} from './support/rng-instrument.mjs';
