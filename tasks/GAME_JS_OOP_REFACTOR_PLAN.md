@@ -4297,8 +4297,9 @@ T5 使 Quick 由 72 增為 73、Full 由 97 增為 98（manifest 依檔名自動
 | `game-view-dom-e2e` 直接比較 `722577b`（repo 內測試） | 8 段 DOM／`S`／RNG 一致 |
 
 - 本機記憶體：第一次 8 批 Full 在 LM Studio 高負載下全數 `RESOURCE_BLOCKED`（`os.freemem()` 約 137 MB），工具判斷正確；閒置後約 4–7 GiB，8 批可完成，執行中最低 0.07–0.52 GiB，swap 未增加。
-- 未做：Linux CI（push 後另以手動 dispatch 執行）、Preview、`--preview` 路由、PC／手機實機確認。
-- 下一步：push 本分支、開 PR（→ `dev`，第 32、33 期同一 PR）、手動 dispatch Linux Full 並補記；合併由 code owner 進行。
+- `3ea34dd` 已 push，[PR #59](https://github.com/tt-chin/yakyujinsei/pull/59)（→ `dev`，第 32、33 期同一 PR）已開。[Tests #141](https://github.com/tt-chin/yakyujinsei/actions/runs/42377173624)（`3ea34dd`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 98`、`acceptedPass 98`、`issues []`（記於 PR #59）。`3ea34dd` 與 `35d5779` 只差文件。
+- 未做：Preview、`--preview` 路由、PC／手機實機確認。
+- 下一步：等 code owner 合併 PR #59（不由我合併）；合併後確認 dev push 的 Quick 與 Preview，再記於本節。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
