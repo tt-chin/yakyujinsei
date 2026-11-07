@@ -20,7 +20,8 @@ const careerContract = await readFile(path.join(root, 'docs/src/engine/career-co
 const careerMovement = await readFile(path.join(root, 'docs/src/engine/career-movement.js'), 'utf8');
 const seasonSettlement = await readFile(path.join(root, 'docs/src/engine/season-settlement.js'), 'utf8');
 const movementGate = await readFile(path.join(root, 'docs/src/engine/movement-gate.js'), 'utf8');
-const gameAndModules = game + '\n' + careerContract + '\n' + careerMovement + '\n' + seasonSettlement + '\n' + movementGate;
+const seasonPhases = await readFile(path.join(root, 'docs/src/engine/season-phases.js'), 'utf8');
+const gameAndModules = game + '\n' + careerContract + '\n' + careerMovement + '\n' + seasonSettlement + '\n' + movementGate + '\n' + seasonPhases;
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-period-policy.js'), 'utf8');
@@ -105,15 +106,20 @@ const settlementBridge='random:()=>R()';
 assert.equal(game.split(settlementBridge).length,2,'one SeasonSettlement RNG bridge, not a new independent draw');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonSettlement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,0,0],'SeasonSettlement has no draw site');
 assert.equal(seasonSettlement.split('random:R}').length,2,'settleChampionship still draws through the injected random');
-const gameSites=game.replace(settlementBridge,'random:{settlementBridge}').replace(movementBridge,'rng:{movementBridge}').replace(contractBridge,'rng:{contractBridge}').replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}').replace(awardsBridge,'journalRng:{awardsBridge}').replace(retirementBridge,'rng:{retirementBridge}').replace(amateurBridge,'rng:{amateurBridge}');
-assert.equal((gameSites.match(/\bR\(/g) || []).length,12,'all other native RNG call sites unchanged');
+// Phase 34 moved phasePre into SeasonPhases: R( -2, ri( -6, chance( -1 in game.js, the same 2/6/1/0 in season-phases.js.
+// Its game.js wiring only forwards to the current R/chance/ri (late binding) and is not a draw site.
+const phasesBridge='rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}';
+assert.equal(game.split(phasesBridge).length,2,'one SeasonPhases RNG bridge, not new independent draws');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonPhases.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[2,6,1,0],'SeasonPhases draw sites moved verbatim');
+const gameSites=game.replace(phasesBridge,'rng:{phasesBridge}').replace(settlementBridge,'random:{settlementBridge}').replace(movementBridge,'rng:{movementBridge}').replace(contractBridge,'rng:{contractBridge}').replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}').replace(awardsBridge,'journalRng:{awardsBridge}').replace(retirementBridge,'rng:{retirementBridge}').replace(amateurBridge,'rng:{amateurBridge}');
+assert.equal((gameSites.match(/\bR\(/g) || []).length,10,'all other native RNG call sites unchanged');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonStats.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[6,4,3,0],'SeasonStats draw sites moved verbatim');
-// Six round-specific bonus sites are consolidated; each draft still consumes one ri.
-assert.equal((gameSites.match(/\bri\(/g) || []).length, 6);
+// Phase 34: the last six ri( sites were phasePre's training dice; none is left in game.js.
+assert.equal((gameSites.match(/\bri\(/g) || []).length, 0);
 // Event RNG now lives in applyEvent: one outcome and, only when needed, one target.
 const legacyJournalSlots=[...seasonAwards.matchAll(/\bdraw\('([A-Z_]+)'/g)].map(m=>m[1]);
 assert.deepEqual(legacyJournalSlots,['ALL_STAR','ROOKIE','LEGACY_BEST_PITCHER','PITCH_SAVES','PITCH_RELIEF','PITCH_STRIKEOUTS','BATTING_AVG','BATTING_HR','BATTING_SB','BATTING_RBI','BATTING_OBP','GOLD_GLOVE','DEFENSE_BEST','MVP']);
-assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,15,'existing eligible chance sites moved to one-to-one legacy slots');
+assert.equal((gameSites.match(/\bchance\(/g)||[]).length+legacyJournalSlots.length,14,'existing eligible chance sites moved to one-to-one legacy slots');
 // Phase 15 moved processIntlPhase into InternationalTournament: pick( -1 in game.js, the same 1 in international-tournament.js.
 // Its game.js wiring only forwards to the current pick (late binding) and is not a draw site.
 const intlBridge='pick:a=>pick(a)';
