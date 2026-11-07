@@ -120,7 +120,7 @@ dev push 僅在所有變更均為 `BACKLOG.md` 或 `docs/reviews/STAGE6_ACCEPTAN
 
 ## 1.14.0 比較器與本機資源保護
 
-歷史正向比較僅在明示 `{championmaker:true}` 時啟用獨立狀態 oracle：先以可信 championshipResults 嚴格推導並驗證三個新增欄位、第五年取得旗標，再投影為舊 schema。fixture 缺旗標只限明示 fixture 模式；同版重播仍完整嚴格比較。既有收入、能力、Decision／Receipt、選擇及 RNG 不因此排除。DOM 比較逐項驗證核准的 TJ 格式、陰影與取得顯示後才還原舊表示，其他 DOM 保持原斷言。
+歷史正向比較僅在明示 `{championmaker:true}` 時啟用獨立狀態 oracle：先以可信 championshipResults 嚴格推導並驗證三個新增欄位、第五年取得旗標，再投影為舊 schema。fixture 缺旗標只限明示 fixture 模式；同版重播仍完整嚴格比較。比較入口（`draft-income-e2e`、`contract-salary-e2e`、`display-preferences-e2e`、`game-view-dom-e2e`）只在基準的 `docs/src/config.js` `VERSION` 早於 1.14.0 時啟用此投影（`baselineNeedsChampionmakerProjection`）；基準為 1.14.0 以後時不投影，以原始完整資料嚴格比較。既有收入、能力、Decision／Receipt、選擇及 RNG 不因此排除。DOM 比較逐項驗證核准的 TJ 格式、陰影與取得顯示後才還原舊表示，其他 DOM 保持原斷言。
 
 `assertSameCareer` 先使用 Node 嚴格深比較，失敗只輸出有界的第一個差異，不把完整生涯交給 AssertionError 產生無限長 diff。`node scripts/test-comparison-safety.mjs` 驗證負面案例及 64 MiB heap 下的大型不相等輸入；不是省略狀態比較。
 
