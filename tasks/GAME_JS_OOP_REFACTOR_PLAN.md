@@ -4124,7 +4124,7 @@ T5 使 Quick 由 70 增為 71、Full 由 95 增為 96，manifest 依檔名自動
 - Preview（2026-11-07，`https://dev.yakyujinsei.pages.dev`）：內容已是 `2a7d8f4`，`docs/` 下 612 檔（`docs/archive/` 除外）與 `2a7d8f4` 逐位元組相同（`index.html` 以 `/` 取得；Python 預設 User-Agent 被 Cloudflare 回 403，改帶一般 UA 後取得）。`00ca7b9` 單獨的 Preview 已被取代。
 - 未做（使用者決定 2026-11-07）：§2ii.7 那類 Preview 瀏覽器生涯檢查（Console、4xx／5xx、`season-settlement.js` 載入）記為被取代、未跑。
 
-## 2kk. 第 32 期：年度骨架移至 `YearFlow`（細部計畫，2026-11-03；計畫已批准 2026-11-03，本機實作完成，見 §2kk.6）
+## 2kk. 第 32 期：年度骨架移至 `YearFlow`（細部計畫，2026-11-03；計畫已批准 2026-11-03；與第 33 期同經 PR #59 併入 dev（`7234965`），見 §2kk.6、§2ll.6）
 
 基準 `refactor/season-settlement` `6b83d68`（`game.js` 與 `1c6bd9b` 相同），`game.js` 756 行／66,735 bytes。路線與候補盤點見 §3.22。
 
@@ -4212,7 +4212,7 @@ T5 使 Quick 由 71 增為 72、Full 由 96 增為 97。
 - 未做：Linux CI、Preview、`--preview` 路由、PC／手機實機確認。比較基準 `6b83d68` 只在本機，第 31 期 push 前不作 CI 證據（D8）。
 - 下一步：與第 33 期併為同一 PR 交付（使用者決定 2026-11-07），合併後的驗證見 §2ll.6；本分支（`refactor/year-flow`）不另外 merge `origin/dev`、不單獨 push。
 
-## 2ll. 第 33 期：`movement` 尾段移至 `MovementGate`（細部計畫，2026-11-04；D1–D7 使用者決定、T1–T5 與實作批准 2026-11-04，本機實作完成，見 §2ll.6）
+## 2ll. 第 33 期：`movement` 尾段移至 `MovementGate`（細部計畫，2026-11-04；D1–D7 使用者決定、T1–T5 與實作批准 2026-11-04；與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll.6）
 
 §3.22 候選 B。草稿與抵達探測已做（§2ll.4）。
 
@@ -4299,7 +4299,78 @@ T5 使 Quick 由 72 增為 73、Full 由 97 增為 98（manifest 依檔名自動
 - 本機記憶體：第一次 8 批 Full 在 LM Studio 高負載下全數 `RESOURCE_BLOCKED`（`os.freemem()` 約 137 MB），工具判斷正確；閒置後約 4–7 GiB，8 批可完成，執行中最低 0.07–0.52 GiB，swap 未增加。
 - `3ea34dd` 已 push，[PR #59](https://github.com/tt-chin/yakyujinsei/pull/59)（→ `dev`，第 32、33 期同一 PR）已開。[Tests #141](https://github.com/tt-chin/yakyujinsei/actions/runs/42377173624)（`3ea34dd`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 98`、`acceptedPass 98`、`issues []`（記於 PR #59）。`3ea34dd` 與 `35d5779` 只差文件。
 - 未做：Preview、`--preview` 路由、PC／手機實機確認。
-- 下一步：等 code owner 合併 PR #59（不由我合併）；合併後確認 dev push 的 Quick 與 Preview，再記於本節。
+- PR #59 由 code owner 併入 dev（`7234965`，樹與 `b7c2e08` 相同），`main` 未變。dev push 的 [Tests #142](https://github.com/tt-chin/yakyujinsei/actions/runs/42380281173)（Quick）success，Full 各 job 依規則 skipped。
+- Preview（2026-11-07，`https://dev.yakyujinsei.pages.dev`）：`docs/` 下 614 檔（`docs/archive/` 除外）與 `7234965` 逐位元組相同（`index.html` 以 `/` 取得；以 `curl -L` 取得，Python `urllib` 的 User-Agent 會被回 403）。
+- 未做（使用者決定 2026-11-07）：§2ii.7 那類 Preview 瀏覽器生涯檢查（Console、4xx／5xx、`year-flow.js`／`movement-gate.js` 載入）記為被取代、未跑。使用者 Preview 驗收、`--preview` 路由、實機亦未做。
+
+## 2mm. 第 34 期：`phasePre`＋`phaseMid` 移至 `SeasonPhases`（細部計畫，2026-11-07；D1–D8、T1–T6 與實作批准 2026-11-07）
+
+§3.22 候選 E＋C。草稿與抵達探測已做（§2mm.4）。
+
+### 2mm.1 現況（基準 `7234965`，`game.js` 704 行／63,297 bytes）
+
+- `:282–:360` `phasePre`（C）：年齡上限退場、衰退、復健年、訓練骰、天才解放、投手的投球計畫、老將的春季選擇。`S` 引用 78，延遲讀 `S` 的 closure 10 個（§3.22 計法，只計最內層），需補讀 `S` 的 handler 7 個，RNG `R` 2、`ri` 6、`chance` 1。
+- `:362–:372` `phaseMid`（E）：季中事件、健康檢查、`proSeason`／`amateurSeason` 分派。417 bytes，延遲 handler 1 個（「今季の成績を見る」），無 RNG。
+- `LEGACY` 捕捉兩者的名稱；`YearFlow` 以 `yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]` 延遲取用；`stage10-risk-e2e` 依名稱包裝計數。
+- 文字耦合（18 字 n-gram 掃描搬移範圍，`tests`、`scripts`、`tools`、`.github`）：`npb-return-ui.test`（`phasePre` 文字比較與 vm）、`full-power-pitching.test`（vm 切片）、`full-power-pitching-e2e`（逐字比較，Full 專屬）、`salary-flow.test`（RNG 呼叫點計數）；其餘命中為共用片段或舊 SHA 切片。
+- 自然生涯不到達 `全力投球`、`省エネ投球`、`日本球界へ戻る`、`引退`（E2E 的 `careerAction` 固定選「通常投球」或第一個選項）。
+
+### 2mm.2 設計（使用者決定 2026-11-07：D1–D8 依建議）
+
+| # | 內容 | 決定 |
+|---|---|---|
+| D1 | E 與 C 同一模組或分開 | 同一模組。`phaseMid` 只有 417 bytes，兩者都是年度步驟 |
+| D2 | 名稱 | `SeasonPhases`／`season-phases.js`／`seasonPhases` |
+| D3 | 寫法 | 與 `CareerMovement` 相同的 rules factory（`#rules=seasonPhaseRules(deps)`，內部為函式），測試沿用 `movementFunction` 的切片方式（`.split('\n  return {')[0]`） |
+| D4 | 讀 `S` 的時機 | 兩個方法開頭各加 `const S=getState();`，8 個延遲 handler 各加一次，共 10 處。「引退」那一處加在選項 `f` 開頭，farewell 之後的 continuation 讀點選當下的 `S`（原本於 continuation 執行時讀）；只在 farewell 途中 `S` 被換掉時才不同，自然流程不會發生 |
+| D5 | 依賴 | `POS_AB`、`ABL`、`LV`、`clamp` 傳參照；21 個 `game.js` 函式與 `declineForSeason`（原為 import）以延遲綁定 lambda 注入。RNG bridge 為 `rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}`，順序刻意與 `CareerMovement` 的 bridge 不同，避免 `salary-flow` 的「出現一次」斷言重疊 |
+| D6 | `game.js` 位置 | 兩個包裝行留在原位，建構行緊接在 `phaseMid` 包裝行之後。`LEGACY`、`yearSteps`、`stage10` 包裝計數不受影響 |
+| D7 | 分支 | 自 `origin/dev` 以 `--no-track` 開 `refactor/season-phases`；未 commit 的 §2kk／§2ll 記錄留在工作樹帶過來，是否同 PR commit 於 commit 時另決 |
+| D8 | F、G | 不併入（與本期無關） |
+
+### 2mm.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 | 原因 |
+|---|---|---|---|
+| T1 | `npb-return-ui.test` | 把模組本體還原到 `phasePre` 包裝行的位置，以字串與次數精確去掉 8 處讀 `S`（`'\n    const S=getState();'`×1、`'const S=getState();'`×7），再去縮排，供既有文字比較；vm 現行側改切模組本體 | 本體不在 `game.js` |
+| T2 | `full-power-pitching.test` | 現行側 vm 改切模組本體，context 加 `getState`；舊 SHA 路徑不變；新舊案例清單相同（64 項） | 同上 |
+| T3 | `full-power-pitching-e2e` | 現行側以還原後的文字取代包裝行，包裝行之後的文字保留；去除插入時逐項斷言次數（Full 專屬入口，CRLF 保留） | 同上 |
+| T4 | `salary-flow.test` | 模組加入 `gameAndModules`；新 bridge 斷言出現一次，模組計數 `[2,6,1,0]`；`game.js` 計數 `R(` 12→10、`ri(` 6→0、`chance`＋slots 15→14；過時註解（「6 處 ri 是選秀」，實為 `phasePre` 訓練骰）改正 | RNG 呼叫點移入模組 |
+| T5 | `verify-modularization` | 第 34 期區塊：import、5 行接線連續且只出現一次、`new SeasonPhases(`／包裝呼叫／`function phasePre(`／`function phaseMid(` 各一次；`シーズン前特訓`、`let afterAsk=`、`const preAsk=afterAsk`、`開幕前の投球プラン`、`シーズン半ばの健康診断`、`PRESEASON_` 不在 `game.js` | 接線與搬移的文字斷言 |
+| T6 | `season-phases.test`（新） | 第 1 部分：模組＝`7234965` 區段（＋2 縮排）加上 10 處插入（整檔相等），抽籤呼叫點 `[2,6,1,0,0]`。第 2 部分：舊本體於 vm（`S` 為即時 getter）、模組於主 realm，同一組記錄 stub，42 情境逐步比較呼叫記錄、錯誤、`S`；含到達斷言、「每一步皆無 error」斷言、測試內負控制（`省エネ投球`→`通常投球` 恰被 2 情境抓到） | 自然生涯不到達 4 支分支與 state 替換時機 |
+
+T6 使 Quick 由 73 增為 74、Full 由 98 增為 99（manifest 依檔名自動）。
+
+### 2mm.4 草稿實測（2026-11-07，scratch worktree，基準 `7234965`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+- 組裝腳本自 `git show HEAD` 產生；`game.js` +4／−90（CRLF 保留），模組 LF 8,787 bytes。
+- AST：模組未解析名稱只有 `Math`，無未使用的注入；`game.js` 未解析名稱集合不變；未使用 import 105 → 105。
+- 未改測試的 Quick：70／73，FAIL 為 `full-power-pitching.test`、`npb-return-ui.test`、`salary-flow.test`（與預測相同）。
+- T1–T5 草稿的 Quick：73／73 PASS，依 `summary.json` 核對。
+- `full-power-pitching-e2e` 靜態比較：初版 FAIL（現行側切片少了包裝行之後的 `}\n/* シーズン中。 */`），改為保留包裝行之後的文字後 PASS。
+- 抵達探測（6 條生涯，含 3 條 PRO、2 次 48 歲退場）：命中序列、`S`、RNG、步數與 `7234965` 相同，Console error 0。負控制（模組 `S.six+=2`）→ 6／6 條 `S` 不同。
+- 重綁探測（替換 `allocUI`、`R`、`board`、`loveEvent`、`choose`、`dposReview`）：新舊命中次數與 RNG 一致。
+- 本機 8 批 Full：0／98 執行，全數 `RESOURCE_BLOCKED`（LM Studio `llama-server` 約 19 GB，`os.freemem()` 最低 107 MiB），記為未跑。
+- T1 草稿曾在未改測試的 Quick 執行中寫入同一 worktree；確認該入口尚未執行後還原，之後草稿一律放在另一目錄。
+
+### 2mm.5 驗證與交付（R3：訓練骰 RNG、衰退、復健、引退、年度步驟；允許差分為無）
+
+- Quick、本機 8 批 Full（基準 `origin/main` `bb92ae8`）、抵達與重綁探測、T6 突變、reviewer。push、PR 依 AGENTS §10 另批。Linux Full 與 Preview 於 push 後確認。
+
+### 2mm.6 實作（2026-11-07，`refactor/season-phases`，自 `origin/dev` `7234965` 開，後 fast-forward 至 `8a0e87d`（1.14.1 背景圖、CSS、文件；`docs/src/engine`、`tests` 與 `7234965` 相同）；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14）
+
+- `game.js`、`season-phases.js`、T1–T5 自草稿複製，逐位元組相同。T6 依 §2mm.3 新寫（42 情境）。`game.js` 618 行／57,029 bytes（CRLF），模組 108 行（LF）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（最終程式，2026-11-08） | 74／74 PASS，依 `summary.json` 核對（含 `season-phases.test`）。先前 74／74 PASS 為補 T6 斷言之前的結果 |
+| 本機 Full（原版 `local-full-batches.mjs`，8 批，2026-11-08，LM Studio 已關閉） | `FAIL_OR_INCOMPLETE`，99 入口全數執行，97 PASS／2 FAIL：`event-fix-e2e`（`board-menu.mjs:75` 選單 id 清單多 `board-credits`）、`game-view-dom-e2e`（預設基準 `4f39a73`，step 0 `$.dom.board` 多 `board-credits`）。未改動的 `8a0e87d` 同兩入口同樣 FAIL、第一個差異相同：1.14.1（`8fa5cf5`）新增的選單按鈕未更新這兩個 Full 專屬入口的期待值（dev push 只跑 Quick），與本期無關，仍記 FAIL |
+| `game-view-dom-e2e` 直接比較 `8a0e87d` | 8 段 DOM／`S`／RNG 一致（PASS） |
+| T6 突變（第 2 部分，18 項） | 17 項抓到；存活 M8（`Math.max(2,n-1)`→`1`）為等價突變（非 `skipMid` 時 n≥3，下限不生效）。初次存活的 M2–M4、M10、M17、M18 已以新增情境抓到 |
+| reviewer | 無發現；LOW 建議（每一步皆無 error 的斷言）已採用，並以否定版確認會 FAIL |
+
+- 上述 2 項 FAIL 另以 [PR #61](https://github.com/tt-chin/yakyujinsei/pull/61)（`d68ed26`，分支 `fix/credits-menu-tests`，自 `8a0e87d`）修正，只改測試（使用者決定 2026-11-08）：`board-menu.mjs` 的期待清單加 `board-credits`；`game-view-dom-e2e` 在基準的 `index.html` 沒有該按鈕時設 `__expect1141`，`captureGameView` 要求完全相同的按鈕標記恰好一次（否則 `CREDITS_MENU_CONTRACT`）後只去掉它，預設基準不變。該分支：`event-fix-e2e` PASS、`game-view-dom-e2e` 預設基準與 `--baseline=8a0e87d` 皆 PASS、`--negative-control` 仍 FAIL、突變 3 項皆 FAIL、Quick 73／73 PASS、reviewer 無發現。
+- 未做：Linux CI、Preview、`--preview` 路由、實機確認。本分支未包含 PR #61，Full 在 PR #61 併入前仍會有上述 2 項 FAIL。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -4806,8 +4877,9 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - `game.js` 剩餘組成（頂層語句分類，互斥）：import 64 語句 6,224 bytes；一行薄包裝 113 個 8,751 bytes；組件建構 19 語句 8,980 bytes；A–G 候補 21,828 bytes；其他函式 7,057 bytes；其他語句（資料表、`Object.assign`、事件綁定等）11,226 bytes。
 - 建議：第 32 期 A，① 不併入；細部計畫前先做草稿與抵達探測，量 `startYear`／`advance`／`nextStep` 的延遲綁定範圍。B 於 A 之後；C、D 最後；F、G 收益小，不單獨成期。實作宜待 PR #55 併入 dev，避免疊第三層未合併分支（未決）。
 - 使用者決定（2026-11-03）：A–G 全部依序分期進行，一期一組，各期開始前另立細部計畫。順序依上列建議：第 32 期 A，之後 B、E＋C、D；F、G 於各期細部計畫時決定併入相鄰期。不授權實作。
-- 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），見 §2kk。
-- 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），本機實作完成，見 §2ll。
+- 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），與第 33 期同經 PR #59 併入 dev（`7234965`），見 §2kk。
+- 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll。
+- 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），本機實作於 `refactor/season-phases`，未 commit，見 §2mm。
 
 ## 4. 使用者決定（2026-10-18）
 
