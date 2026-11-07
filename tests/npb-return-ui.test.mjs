@@ -7,11 +7,17 @@ import {createContract,markSalaryPaid,appendExtension,contractNeedsRenewal} from
 import {productionFunction} from './retirement-hof-test-support.mjs';
 
 const game=readSourceText(new URL('../docs/src/engine/game.js',import.meta.url));
+const yearFlowSource=readSourceText(new URL('../docs/src/engine/year-flow.js',import.meta.url));
+// Phase 32 (§2kk): reportFlowOutcome lives in YearFlow. The current side runs its method body as the same free function
+// the game.js slice was (free names advance, endGame, flowHooks); the head and end anchors occur once.
+const yearFlowReporter=moduleSource=>{const head='  reportFlowOutcome(outcome){const {flowHooks,advance,endGame}=this.#deps;\n',end='\n  phaseIntlPre(){';
+  assert.equal(moduleSource.split(head).length,2,'reportFlowOutcome head once');assert.equal(moduleSource.split(end).length,2,'reportFlowOutcome end once');
+  const a=moduleSource.indexOf(head)+head.length;return 'function reportFlowOutcome(outcome){\n'+moduleSource.slice(a,moduleSource.indexOf(end,a))+'\n  const flowHooks={advance:null,endGame:null};';};
 const contractSource=readSourceText(new URL('../docs/src/engine/career-contract.js',import.meta.url));
 const movementSource=readSourceText(new URL('../docs/src/engine/career-movement.js',import.meta.url));
 // Phase 23: the factory's return line ends the last slice. Harnesses run these real bodies; getState comes from the vm context.
 const movementFunction=name=>productionFunction(name,movementSource).split('\n  return {')[0];
-const source=movementFunction('crossOffersRule')+';var crossOffers=crossOffersRule;\n'+productionFunction('reportFlowOutcome',game);
+const source=movementFunction('crossOffersRule')+';var crossOffers=crossOffersRule;\n'+yearFlowReporter(yearFlowSource);
 function fixture(org,level,years=1){
   const original=createContract({contractId:'test',org,teamId:'team',signedYear:2035,startYear:2035,years,annualSalary:120_000_000});
   const s={year:2035,org,lv:level,ct:markSalaryPaid(original,2035).contract},calls={draw:0,advance:0,sign:0,years:0,buyout:0};let buttons;
@@ -52,7 +58,7 @@ for(const [name,wrapper,reads,indent] of [
   for(const read of new Set(reads)){const count=reads.filter(x=>x===read).length;assert.equal(moved.split(read).length,count+1,name+' state reads');moved=moved.replaceAll(read,'');}
   assert.equal(now.split(wrapper).length,2,wrapper);now=now.replace(wrapper,()=>indent?moved.replace(/^  /gm,''):moved);
 }
-const demotionSource=movementFunction('handleDemotion')+'\n'+productionFunction('reportFlowOutcome',game);
+const demotionSource=movementFunction('handleDemotion')+'\n'+yearFlowReporter(yearFlowSource);
 for(const sourceLevel of ['A3','A2'])for(const [overall,targetLevel,title]of [[54,'NPB1','NPB一軍への移籍'],[50,'NPB2','日本の二軍（支配下）へ移籍']])for(const transfer of [false,true]){
   const S={org:'MiLB',lv:sourceLevel,age:25,lastD:0,seasonFactor:1,traits:{},ct:{remainingYears:1},currentSalary:10_000_000},input=[],draws=[],signed=[],candidate=Object.freeze({annualSalary:41_370_000,targetLevel});let choices,advances=0,buyouts=0;
   const context={S,getState:()=>S,LV:{NPB1:{min:53},NPB2:{min:47},A3:{n:'3A'},A2:{n:'2A'},A1:{n:'1A'}},findDemotionTarget:()=> 'A1',demotionChoiceText:()=> '降格',ageGateJP:()=>1,chance:p=>{draws.push(p);return true;},salaryCandidate:v=>{input.push({...v});return candidate;},fmtMoney:v=>v/10000+'万円',card:()=>{},board:()=>{},choose:(_t,opts)=>{choices=opts;},applyDemotionSalary:()=>{},advance:()=>advances++,buyoutRemaining:()=>{buyouts++;S.currentSalary=0;},signTo:(...args)=>signed.push(args)};
@@ -111,7 +117,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
       applyDemotionSalary:(from,to)=>log.push(['applyDemotionSalary',from,to]),buyoutRemaining:rate=>log.push(['buyoutRemaining',rate]),
       signTo:(...args)=>log.push(['signTo',...args]),outOfOrg:o=>log.push(['outOfOrg',o]),daibaFarewell:cont=>{log.push(['daibaFarewell']);cont();},
       advance:()=>log.push(['advance',S.lv,!!S.demotionRefused]),endGame:reason=>log.push(['endGame',reason])});
-    const reporter=source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
+    const reporter=source.includes('yearFlow.reportFlowOutcome(')?[yearFlowReporter(yearFlowSource)]:source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
     const demotionFunction=name=>source.includes("from './career-movement.js'")?movementFunction(name):productionFunction(name,source);
     runInContext("'use strict';\n"+[...reporter,demotionFunction('handleDemotion'),demotionFunction('retireBelowActiveMinimum')].join('\n'),context);
     if(reporter.length)runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};",context);
@@ -182,7 +188,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
       buyoutRemaining:rate=>log.push(['buyoutRemaining',rate]),signTo:(...args)=>log.push(['signTo',...args]),
       isBelowActiveMinimum:o=>{log.push(['isBelowActiveMinimum',o]);return !!below;},retireBelowActiveMinimum:()=>log.push(['retireBelowActiveMinimum']),
       advance:()=>log.push(['advance',S.org,S.lv,S.stage]),endGame:reason=>log.push(['endGame',reason])});
-    const reporter=source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
+    const reporter=source.includes('yearFlow.reportFlowOutcome(')?[yearFlowReporter(yearFlowSource)]:source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
     runInContext("'use strict';\n"+[...reporter,...['overseasOffer','crossOffers','renewAndAdvance','arbitrationFlow','acceptFaOffer','showFaMarket','outOfOrg'].map(name=>marketFunction(name,source))].join('\n'),context);
     if(reporter.length)runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};",context);
     runInContext(entry,context);
@@ -250,7 +256,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
       isBelowActiveMinimum:o=>{log.push(['isBelowActiveMinimum',o]);return false;},retireBelowActiveMinimum:()=>log.push(['retireBelowActiveMinimum']),
       contractNeedsRenewal:ct=>{log.push(['contractNeedsRenewal',ct]);return !!renewal;},markClubInitiatedRenewal:years=>log.push(['markClubInitiatedRenewal',years]),
       advance:()=>log.push(['advance',S.org,S.lv]),endGame:reason=>log.push(['endGame',reason])});
-    const reporter=source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
+    const reporter=source.includes('yearFlow.reportFlowOutcome(')?[yearFlowReporter(yearFlowSource)]:source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
     runInContext("'use strict';\n"+[...reporter,productionFunction('phasePre',source),source===game?movementFunction('movement'):productionFunction('movement',source)].join('\n'),context);
     if(reporter.length)runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};",context);
     runInContext(entry||'phasePre()',context);

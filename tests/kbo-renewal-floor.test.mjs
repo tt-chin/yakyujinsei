@@ -15,6 +15,11 @@ const baseline=process.argv.find(a=>a.startsWith('--baseline='))?.slice(11);
 const read=rel=>baseline?execFileSync('git',['show',`${baseline}:${rel}`],{encoding:'utf8',maxBuffer:20e6}):readFileSync(new URL('../'+rel,import.meta.url),'utf8');
 const policy=baseline?await import('data:text/javascript;base64,'+Buffer.from(read('docs/src/engine/cross-league-market-policy.js')).toString('base64')):market;
 const cap=policy.applyKboForeignPackageCap,game=read('docs/src/engine/game.js').replace(/\r\n/g,'\n');
+// Phase 32 (§2kk): reportFlowOutcome lives in YearFlow. The current side runs its method body as the same free function
+// the game.js slice was (free names advance, endGame, flowHooks); the head and end anchors occur once.
+const yearFlowReporter=moduleSource=>{const head='  reportFlowOutcome(outcome){const {flowHooks,advance,endGame}=this.#deps;\n',end='\n  phaseIntlPre(){';
+  assert.equal(moduleSource.split(head).length,2,'reportFlowOutcome head once');assert.equal(moduleSource.split(end).length,2,'reportFlowOutcome end once');
+  const a=moduleSource.indexOf(head)+head.length;return 'function reportFlowOutcome(outcome){\n'+moduleSource.slice(a,moduleSource.indexOf(end,a))+'\n  const flowHooks={advance:null,endGame:null};';};
 let cases=0;
 const test=(name,run)=>{try{run();cases++;console.log('PASS '+name);}catch(error){console.error('FAIL '+name+': '+error.message);process.exit(1);}};
 test('KBO1 normal renewal unchanged',()=>assert.equal(cap({annualSalary:50_000_000,isRenewal:true,previousPackage:53_500_000,levelMinimum:40_000_000}).annualSalary,50_000_000));
@@ -56,7 +61,7 @@ function harness(){
   card:()=>{},board:()=>{},bindLatestSalaryDetailLink:()=>{},fmtMoney:String,salaryDecisionSummary:()=>'',salaryDecisionLink:()=>'',isBelowActiveMinimum:()=>false,
   saveSalaryDecision:(type,candidate,previousSalary,finalSalary)=>S.salaryDecisionHistory.push({type,candidate,previousSalary,finalSalary}),advances:0});
  vm.runInContext('const LV='+game.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';const PATHS={KBO:["KBO2","KBO1"]};'+contractFunctions()+
-  'function advance(){finalizePendingOffseasonSalary();advances++;}'+movementBetween('  function movement(){','\n  return {')+(game.includes('function reportFlowOutcome(')?'\n'+between('  function reportFlowOutcome(','\n  function newState'):''),context);
+  'function advance(){finalizePendingOffseasonSalary();advances++;}'+movementBetween('  function movement(){','\n  return {')+(game.includes('yearFlow.reportFlowOutcome(')?'\n'+yearFlowReporter(read('docs/src/engine/year-flow.js')):game.includes('function reportFlowOutcome(')?'\n'+between('  function reportFlowOutcome(','\n  function newState'):''),context);
  return{S,old,run:code=>vm.runInContext(code,context),context};
 }
 test('native candidate and fixedContract floor without RNG',()=>{const h=harness();h.S.lv='KBO2';const c=h.run('salaryCandidate()');assert.equal(c.baseSalary,8_000_000);assert.equal(c.positionMult,.92);assert.equal(c.annualSalary,8_000_000);h.context.candidate=c;const signed=h.run('fixedContract({org:S.org,teamId:S.orgTeamId,years:1,annualSalary:7_360_000,candidate})');assert.equal(signed.annualSalary,8_000_000);assert.equal(signed.incentive.rate,.07);assert.deepEqual(h.S.ct,h.old);});

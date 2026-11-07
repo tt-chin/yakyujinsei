@@ -47,6 +47,8 @@ import { effectiveMarketOrg, marketTier, foreignProSeasons, accrueForeignFirstTe
 import { createChoiceActionToken, runChoiceAction } from '../ui/choice-action.js';
 import { ChoicePrompt } from '../ui/choice-prompt.js';
 import { SeasonSettlement } from './season-settlement.js';
+import { YearFlow } from './year-flow.js';
+import { MovementGate } from './movement-gate.js';
 import { GameView } from '../ui/game-view.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
@@ -275,7 +277,7 @@ const choicePrompt=new ChoicePrompt({getState:()=>S,careerSession,choiceViews,ye
 function allocUI(mode,label,done){playerAbility.allocUI(mode,label,done);}
 const playerAbility=new PlayerAbility({getState:()=>S,clamp,POS_AB,ABL,careerSession,choiceViews,$:id=>$(id),abCost:k=>abCost(k),ovr:()=>ovr(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),card:(cls,title,html)=>card(cls,title,html),board:p=>board(p),allocDone:(t,d)=>allocDone(t,d),archiveTraitResults:()=>archiveTraitResults(),actClear:()=>actClear(),actToggleSync:()=>actToggleSync(),runWithResultView:action=>runWithResultView(action),rng:{R:()=>R()}});
 /* 年間進出行。 */
-function nextStep(){ if(S.done){ careerSession.stepQ=[]; return; } /* 已引退：クリア済み後継続步驟、以後はしない跑契約更新/結算。 */ const f=careerSession.stepQ.shift(); if(f)f(); }
+function nextStep(){return yearFlow.nextStep();}
 /* シーズン開幕前。 */
 function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S._majorInjuryThisSeason=false; S.prevD=S.lastD||0; S.lastD=0; /* 先保持上季 d 供投手定位判定。 */
@@ -537,17 +539,7 @@ if(typeof document!=='undefined'&&document.getElementById('btn-restart')){
     if(confirm('人生のこの部分を放棄して、最初からやり直してもよろしいですか?'))location.href=location.pathname;
   };
 }
-function advance(){
-  const state=S,fromYear=careerSession.currentChoiceContext?.state===S?careerSession.currentChoiceContext.year:S.year;
-  let years=yearHandoffs.get(state);if(!years){years=new Map();yearHandoffs.set(state,years);}
-  if([...years.values()].some(h=>h.status==='STARTED'&&h.targetYear===state.year))throw new Error('NEXT_YEAR_AMBIGUOUS');
-  let handoff=years.get(fromYear);
-  if(handoff){if(handoff.status==='COMMITTED')return;if(state.year!==fromYear)throw new Error('NEXT_YEAR_AMBIGUOUS');}
-  else {if(state.year!==fromYear)throw new Error('STALE_YEAR_HANDOFF');handoff={fromYear,targetYear:fromYear+1,age:state.age+1,stageYr:state.stageYr+1,status:'PREPARED'};years.set(fromYear,handoff);}
-  state.age=handoff.age;state.year=handoff.targetYear;state.stageYr=handoff.stageYr;handoff.status='STARTED';
-  try{resetEventYear(state);startYear();handoff.status='COMMITTED';}
-  catch(error){++careerSession.choiceGeneration;careerSession.activeChoiceToken=null;const act=$('act');act.querySelectorAll('button').forEach(b=>{b.disabled=true;});act.style.pointerEvents='none';throw new Error('NEXT_YEAR_AMBIGUOUS',{cause:error});}
-}
+function advance(){return yearFlow.advance();}
 /* キャリア終盤。 */
 const TIER_TH={CPBL:[8500,6000,3100,1800],KBO:[8200,5900,3000,1800],NPB:[8000,5800,3000,1800],MLB:[8500,6500,3600,2000]};
 const LG_N={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ',MINOR:'マイナーリーグ/二軍'};
@@ -637,41 +629,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function recordSalaryEvaluation(st){return careerContract.recordSalaryEvaluation(st);}
   function recordIndependentSalaryEvaluation(results){return careerContract.recordIndependentSalaryEvaluation(results);}
 
-  const advanceWithoutSalaryFinalization=advance;
-  advance=function(){finalizePendingOffseasonSalary();advanceWithoutSalaryFinalization();};
-
-  function reportFlowOutcome(outcome){
-    switch(outcome.kind){
-      case 'AMATEUR_STAY':
-      case 'AMATEUR_ENTER_UNIVERSITY':
-      case 'AMATEUR_JOIN_CORP':
-      case 'AMATEUR_JOIN_IND':
-      case 'AMATEUR_SIGNED_MILB':
-      case 'AMATEUR_DRAFTED':return flowHooks.advance?flowHooks.advance(outcome):advance();
-      case 'AMATEUR_RETIRED':return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);
-      case 'DEMOTION_TRANSFER_NPB1':
-      case 'DEMOTION_TRANSFER_NPB2':
-      case 'DEMOTION_TRANSFER_CPBL1':
-      case 'DEMOTION_ACCEPTED':
-      case 'DEMOTION_REFUSED':return flowHooks.advance?flowHooks.advance(outcome):advance();
-      case 'DEMOTION_RETIRED':
-      case 'ACTIVE_MINIMUM_RETIRED':return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);
-      case 'CROSS_OFFER_RESOLVED':
-      case 'CONTRACT_RENEWED':
-      case 'ARBITRATION_SETTLED':
-      case 'FA_SIGNED':
-      case 'FA_NO_BID_RETURNED':
-      case 'RELEASE_SIGNED_PRO':
-      case 'RELEASE_JOINED_AMATEUR':return flowHooks.advance?flowHooks.advance(outcome):advance();
-      case 'FA_RETIRED':
-      case 'RELEASE_RETIRED':return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);
-      case 'PRESEASON_RETURNED_NPB':
-      case 'REHAB_YEAR_COMPLETED':return flowHooks.advance?flowHooks.advance(outcome):advance();
-      case 'PRESEASON_AGE_LIMIT_RETIRED':
-      case 'PRESEASON_RETIRED':return flowHooks.endGame?flowHooks.endGame(outcome):endGame(outcome.reason);
-    }
-    throw new Error('UNKNOWN_FLOW_OUTCOME:'+outcome.kind);
-  }
+  function reportFlowOutcome(outcome){return yearFlow.reportFlowOutcome(outcome);}
   const flowHooks={advance:null,endGame:null};
 
   function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}
@@ -704,8 +662,9 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function processIntlPhase(phase,done){internationalTournament.process(phase,done);}
   const internationalTournament=new InternationalTournament({getState:()=>S,normalizeInternationalState,validateInternationalEntry,prepareInternationalResult,commitInternationalResult,INTLACE_UNLOCK_TEXT,internationalPersonalStats,renderInternationalPersonalStats,intlEvents:year=>intlEvents(year),intlPhase:e=>intlPhase(e),intlThreshold:e=>intlThreshold(e),intlSelection:e=>intlSelection(e),addIntlStats:()=>addIntlStats(),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),displayTrait:key=>displayTrait(key),fmtIP:ip=>fmtIP(ip),pick:a=>pick(a)});
   function maybeIntl(done){processIntlPhase('POST',done);}
-  function phaseIntlPre(){processIntlPhase('PRE',()=>nextStep());}
-  function startYear(){careerSession.stepQ=[phasePre,phaseIntlPre,phaseMid,phaseEnd];divider(`${S.year}年・${S.age}歳・${stageLabel()}`);nextStep();}
+  function phaseIntlPre(){return yearFlow.phaseIntlPre();}
+  function startYear(){return yearFlow.startYear();}
+  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]});
 
   function daibaFarewell(cont){return careerMovement.daibaFarewell(cont);}
 
@@ -718,23 +677,12 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function outOfOrg(o){return careerMovement.outOfOrg(o);}
   const careerMovement=new CareerMovement({getState:()=>S,LV,PATHS,careerSession,faMarket:(o,d)=>faMarket(o,d),crossOffers:o=>crossOffers(o),applyPromotionSalary:(fromLv,toLv)=>applyPromotionSalary(fromLv,toLv),markClubInitiatedRenewal:years=>markClubInitiatedRenewal(years),extensionOffer:o=>extensionOffer(o),displayTrait:key=>displayTrait(key),slgOf:st=>slgOf(st),teamNick:id=>teamNick(id),applyKboForeignPackageCap:input=>applyKboForeignPackageCap(input),salaryCandidate:input=>salaryCandidate(input),salaryFor:(lv,d)=>salaryFor(lv,d),fixedContract:input=>fixedContract(input),signTo:(org,lv,teamId,years,mult,reason,options)=>signTo(org,lv,teamId,years,mult,reason,options),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),renewAndAdvance:(mult,allowDecrease,contractType)=>renewAndAdvance(mult,allowDecrease,contractType),arbitrationFlow:()=>arbitrationFlow(),kboPreviousPackage:()=>kboPreviousPackage(),currentMarketRating:()=>currentMarketRating(),contractStageFor:org=>contractStageFor(org),serviceYearsFor:org=>serviceYearsFor(org),migrateSalaryV130State:()=>migrateSalaryV130State(),migrateSalaryV140State:()=>migrateSalaryV140State(),applyDemotionSalary:(fromLv,toLv)=>applyDemotionSalary(fromLv,toLv),ageGateJP:()=>ageGateJP(),doTradeExec:()=>doTradeExec(),dpMult:()=>dpMult(),ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),card:(cls,title,html)=>card(cls,title,html),board:phase=>board(phase),choose:(title,opts)=>choose(title,opts),escapeHTML:v=>escapeHTML(v),teamRec:id=>teamRec(id),listByOrg:org=>listByOrg(org),pickRecord:a=>pickRecord(a),removeTrait:(key,name)=>removeTrait(key,name),traitCard:(key,name,text,cls)=>traitCard(key,name,text,cls),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}});
 
-  const professionalMoves=new WeakMap();
   resumeSeasonEnd=()=>seasonSettlement.resumeSeasonEnd();
   function phaseEnd(){return seasonSettlement.phaseEnd();}
   const seasonSettlement=new SeasonSettlement({getState:()=>S,careerSession,choiceViews,board:phase=>board(phase),migrateSalaryV140State:()=>migrateSalaryV140State(),teamRec:id=>teamRec(id),random:()=>R(),renderCheckpointCard:(owner,key,args)=>renderCheckpointCard(owner,key,args),escapeHTML:v=>escapeHTML(v),fmtMoney:yen=>fmtMoney(yen),movement:()=>movement(),choose:(title,opts)=>choose(title,opts),allocUI:(mode,label,done)=>allocUI(mode,label,done),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected),$:id=>$(id),salaryCandidate:input=>salaryCandidate(input),currentMarketRating:()=>currentMarketRating(),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),card:(cls,title,html)=>card(cls,title,html),salaryDecisionLink:()=>salaryDecisionLink(),bindLatestSalaryDetailLink:()=>bindLatestSalaryDetailLink(),salaryFor:(lv,d)=>salaryFor(lv,d)});
 
-  movement = function(){migrateSalaryV130State();if(amateurCareer.seasonEndMovement())return;accrueForeignFirstTeamSeason(S);if(S.serviceTimeAccruedYear!==S.year){if(S.org==='NPB'&&S.lv==='NPB1'&&S.seasonFactor>0){S.npbRosterDays+=Math.round(145*S.seasonFactor);while(S.npbRosterDays>=145){S.npbRosterDays-=145;S.npbFaSeasons++;}S.serviceTime.NPB=Math.max(S.serviceTime.NPB,S.npbFaSeasons);}else if(S.org==='MLB'&&S.lv==='MLB'&&S.seasonFactor>=.5)S.serviceTime.MLB++;else if((S.org==='KBO'&&S.lv==='KBO1'||S.org==='CPBL'&&S.lv==='CPBL1')&&S.seasonFactor>0)S.serviceTime[S.org]++;S.serviceTimeAccruedYear=S.year;}const stage=contractStageFor(S.org);if(S.org==='NPB')S.faElig=S.serviceTime.NPB>=8;else if(S.org==='MLB')S.faElig=stage!=='CONTROL';LEGACY.movement();};
-  const performMovement=movement;
-  movement=function(){
-    if(S.stage!=='PRO')return performMovement();
-    let entry=professionalMoves.get(S);
-    if(entry?.year===S.year){
-      if(entry.phase==='WAIT_CHOICE'){if(!restorePendingChoice())throw new Error('MOVEMENT_CONTINUATION_AMBIGUOUS');return;}
-      throw new Error('MOVEMENT_CONTINUATION_AMBIGUOUS');
-    }
-    entry={state:S,year:S.year,phase:'STARTED'};professionalMoves.set(S,entry);
-    performMovement();entry.phase='WAIT_CHOICE';
-  };
+  movement=function(){return movementGate.movement();};
+  const movementGate=new MovementGate({getState:()=>S,LEGACY,amateurCareer,migrateSalaryV130State:()=>migrateSalaryV130State(),accrueForeignFirstTeamSeason:state=>accrueForeignFirstTeamSeason(state),contractStageFor:org=>contractStageFor(org),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected)});
 
   const legacyEndGame=LEGACY.endGame;
   endGame=function(reason){legacyEndGame(reason);setTimeout(()=>{

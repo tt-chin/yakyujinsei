@@ -19,7 +19,8 @@ const amateurCareer = await readFile(path.join(root, 'docs/src/engine/amateur-ca
 const careerContract = await readFile(path.join(root, 'docs/src/engine/career-contract.js'), 'utf8');
 const careerMovement = await readFile(path.join(root, 'docs/src/engine/career-movement.js'), 'utf8');
 const seasonSettlement = await readFile(path.join(root, 'docs/src/engine/season-settlement.js'), 'utf8');
-const gameAndModules = game + '\n' + careerContract + '\n' + careerMovement + '\n' + seasonSettlement;
+const movementGate = await readFile(path.join(root, 'docs/src/engine/movement-gate.js'), 'utf8');
+const gameAndModules = game + '\n' + careerContract + '\n' + careerMovement + '\n' + seasonSettlement + '\n' + movementGate;
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-period-policy.js'), 'utf8');
@@ -165,7 +166,7 @@ assert.doesNotMatch(contractPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 assert.doesNotMatch(controlPolicy+injuryPolicy+arbitrationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 assert.equal((careerContract.match(/chance\(terms\.winChance\)/g)||[]).length,1,'仲裁結果のRNGは選択後の1回だけ');
 assert.match(careerContract,/contractType:'CONTROL'/);assert.match(careerContract,/contractType:'ARBITRATION'/);assert.match(careerMovement,/proof\?'PROOF'/);
-assert.match(game,/S\.serviceTime\.MLB\+\+/);assert.doesNotMatch(gameAndModules,/S\.serviceTime\.MLB.*MINOR/);
+assert.match(movementGate,/S\.serviceTime\.MLB\+\+/);assert.doesNotMatch(game,/serviceTimeAccruedYear/);assert.doesNotMatch(gameAndModules,/S\.serviceTime\.MLB.*MINOR/);
 assert.match(initialState,/careerBaseSalary:0/);assert.match(initialState,/careerIncentive:0/);assert.match(initialState,/yearlyIncentivePaid:\{\}/);assert.match(initialState,/lastFaMarket:null/);
 assert.match(careerMovement,/generateBidJitters\(selected\.map\(x=>x\.team\.teamId\),R\)/);assert.match(careerMovement,/S\.lastFaMarket\?\.marketKey===key/);assert.match(seasonPayment,/applyIncentivePayment/);
 assert.match(seasonSettlement,/現契約を継続/);assert.match(seasonSettlement,/来季年俸/);assert.match(seasonSettlement,/契約残り/);assert.match(seasonSettlement,/年俸の再計算はありません/);assert.match(seasonSettlement,/今季の実績は次回の契約評価へ反映されます/);assert.doesNotMatch(gameAndModules,/今季の好成績は次回の契約評価へ反映されます/);

@@ -9,6 +9,7 @@ import {execFileSync} from 'node:child_process';
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const initialState=fs.readFileSync(new URL('../docs/src/engine/initial-state.js',import.meta.url),'utf8');
 const amateurSource=fs.readFileSync(new URL('../docs/src/engine/amateur-career.js',import.meta.url),'utf8');
+const yearFlowSource=fs.readFileSync(new URL('../docs/src/engine/year-flow.js',import.meta.url),'utf8');
 const sim=game.slice(game.indexOf('function simSeason('),game.indexOf('/* シーズン状態は10%'));
 const qual=game.slice(game.indexOf('function dpQual('),game.indexOf('const DP_RANK='));
 const fixture={S:{pos:'P',role:'SP',age:23,lv:'NPB1',ab:{vel:20,ctl:20,brk:20,sta:30,con:20,pow:20,eye:20,spd:20},traits:{},seasonFactor:1,dpos:null},LV:{NPB1:{par:53,g:143}},DP_TH:{SS:{NPB1:50}},dpScore:()=>44,defensePositionQualified:defensePolicy.defensePositionQualified,clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),N0:()=>0,R:()=>.5,isSP:()=>true,pitcherRole:()=> 'SP',defRuns:()=>0,applySeasonForm:()=>{}};
@@ -32,7 +33,7 @@ assert.match(amateurSource,/power=overall\+beginEventSeason\(S\)\.form\+bonus\+r
 assert.match(amateurSource,/qualificationResult\(ovr\(\)\+beginEventSeason\(S\)\.form\+bonus\+ri\(-8,8\)\)/);
 assert.match(game,/if\(eventPoints!==0\)Object\.assign\(st,normalizeEventSeason\(st,eventOptions\)\)/);
 assert.match(initialState,/ensureEventState\(state\);state\.potSum0=Object\.values\(pot\)\.reduce\(\(sum,value\)=>sum\+value,0\);return state/);
-assert.match(game,/try\{resetEventYear\(state\);startYear\(\);handoff\.status='COMMITTED'/);
+assert.match(yearFlowSource,/try\{resetEventYear\(state\);startYear\(\);handoff\.status='COMMITTED'/);
 assert.match(amateurSource,/consumeEventSeason\(S\);card\('bad'/);
 assert.equal(TRAIT_LABELS.favorite,'監督のお気に入り');
 assert.match(game,/eventPoints!==0[\s\S]*applyEventSeason[\s\S]*recordSalaryEvaluation\(entry\.st\)/);

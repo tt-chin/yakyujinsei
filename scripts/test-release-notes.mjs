@@ -35,7 +35,15 @@ assert.ok(changelog.endsWith(head.slice(head.indexOf('## '))),'all prior detaile
 assert.match(detailed.find(m=>m[1]==='1.0.3')[3],/1\.0\.2まで.*統合/,'omission has an explicit historical basis');
 for(const name of ['docs/src/ui/information-dialog.js','docs/styles/information.css','scripts/update-release-notes.mjs']){
   const previous=execFileSync('git',['show','HEAD:'+name],{cwd:root,encoding:'utf8'}).replace(/\r\n/g,'\n');
-  assert.equal(read(name),previous,'help, dialog controls, detailed-history references and generator preserved: '+name);
+  const current=read(name);
+  if(name==='docs/src/ui/information-dialog.js'){
+    // Credits extend the entries/rendering only; preserve existing dialog contracts.
+    const part=(text,start,end)=>{const a=text.indexOf(start),b=end?text.indexOf(end,a):text.length;assert.ok(a>=0&&b>a,'recognized dialog contract anchors');return text.slice(a,b);};
+    assert.equal(part(current,'// The body is fixed','export function initializeInformationDialogs'),part(previous,'// The body is fixed','export function initializeInformationDialogs'),'scroll lock and observer lifecycle unchanged');
+    assert.equal(part(current,"    help:{","    updates:"),part(previous,"    help:{","    updates:"),'all help content unchanged');
+    assert.equal(part(current,'    let opener=null',null),part(previous,'    let opener=null',null),'close, focus restoration, keyboard and opening lifecycle unchanged');
+    assert.ok(current.includes("updates:{title:'更新履歴',sections:releaseNotes.map(r=>[r.title,r.lines.join('\\n')])}"),'updates still use curated data');
+  }else assert.equal(current,previous,'dialog styles and generator preserved: '+name);
 }
 const output=new URL('../docs/src/data/release-notes.js',import.meta.url);
 const hash=()=>createHash('sha256').update(readFileSync(output)).digest('hex');

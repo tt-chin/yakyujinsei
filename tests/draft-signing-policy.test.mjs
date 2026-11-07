@@ -7,6 +7,7 @@ import { acceptDraftSelection, declineDraftSelection, draftSigningTerms, isDraft
 import { runChoiceAction, safeErrorCode } from '../docs/src/ui/choice-action.js';
 import { productionFunction } from './retirement-hof-test-support.mjs';
 import { AmateurCareer } from '../docs/src/engine/amateur-career.js';
+import { YearFlow } from '../docs/src/engine/year-flow.js';
 
 function initialState({ stage = 'HS', stageYr = 3, age = 18, year = 2028 } = {}) {
   return {
@@ -88,6 +89,22 @@ assert.deepEqual(draftSigningTerms('ROSTER', 2), { level: 'NPB2', contractType: 
 assert.equal(safeErrorCode(new Error('PRO_PLAYER_WITHOUT_CONTRACT')), 'PRO_PLAYER_WITHOUT_CONTRACT');
 assert.equal(safeErrorCode(new TypeError('Cannot read private data')), 'UNEXPECTED_ERROR');
 const game = fs.readFileSync(new URL('../docs/src/engine/game.js', import.meta.url), 'utf8');
+const yearFlowSource = fs.readFileSync(new URL('../docs/src/engine/year-flow.js', import.meta.url), 'utf8');
+// Phase 32 (§2kk): reportFlowOutcome lives in YearFlow. The current side runs its method body as the same free function
+// the game.js slice was (free names advance, endGame, flowHooks); the head and end anchors occur once.
+const yearFlowReporter=moduleSource=>{const head='  reportFlowOutcome(outcome){const {flowHooks,advance,endGame}=this.#deps;\n',end='\n  phaseIntlPre(){';
+  assert.equal(moduleSource.split(head).length,2,'reportFlowOutcome head once');assert.equal(moduleSource.split(end).length,2,'reportFlowOutcome end once');
+  const a=moduleSource.indexOf(head)+head.length;return 'function reportFlowOutcome(outcome){\n'+moduleSource.slice(a,moduleSource.indexOf(end,a))+'\n  const flowHooks={advance:null,endGame:null};';};
+// Phase 33 (§2ll): movement L2/L3 live in MovementGate. The current side runs the module class with the game.js wrapper and
+// construction lines (each once). The context stubs log the calls past the amateur return on both sides.
+const movementGateSource = fs.readFileSync(new URL('../docs/src/engine/movement-gate.js', import.meta.url), 'utf8');
+const movementEntry = source => {
+  if (!source.includes("from './movement-gate.js'")) return source.match(/^  movement = function\(\)\{[^\n]+/m)[0];
+  const wrapper = source.match(/^  movement=function\(\)\{return movementGate\.movement\(\);\};$/gm), ctor = source.match(/^  const movementGate=new MovementGate\(\{[^\r\n]+/gm);
+  assert.equal(wrapper?.length, 1, 'movement wrapper once'); assert.equal(ctor?.length, 1, 'movementGate construction once');
+  assert.equal(movementGateSource.split('export class MovementGate {').length, 2, 'MovementGate class once');
+  return movementGateSource.replace('export class MovementGate {', 'class MovementGate {') + '\n' + wrapper[0] + '\n' + ctor[0];
+};
 const amateurSource = fs.readFileSync(new URL('../docs/src/engine/amateur-career.js', import.meta.url), 'utf8');
 const contractSource = fs.readFileSync(new URL('../docs/src/engine/career-contract.js', import.meta.url), 'utf8');
 assert.match(amateurSource, /if\(result==='signed'\)\{reportFlowOutcome\(\{kind:'AMATEUR_DRAFTED'\}\);return;\}/);
@@ -108,6 +125,8 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
       createSigningBonusTerms: () => ({ signingBonus: 0 }),
       listByOrg: () => [{ name: 'MiLB-A', teamId: 'MILB-A' }, { name: 'MiLB-B', teamId: 'MILB-B' }, { name: 'MiLB-C', teamId: 'MILB-C' }],
       migrateSalaryV130State: () => log.push(['migrate']),
+      accrueForeignFirstTeamSeason: () => log.push(['accrueForeign']), contractStageFor: org => { log.push(['contractStage', org]); return 'CONTROL'; },
+      LEGACY: { movement: () => log.push(['legacyMovement']) }, restorePendingChoice: () => { log.push(['restore']); return false; },
       advance: () => { log.push(['advance', S.stage, S.stageYr]); },
       endGame: reason => { log.push(['endGame', reason]); },
       setAmateur: stage => { log.push(['setAmateur', stage]); S.stage = stage; S.stageYr = 0; },
@@ -116,8 +135,8 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
       runDraft: (fromSchool, cb) => { log.push(['runDraft', fromSchool]); cb(draft); },
       choose: (title, opts) => { log.push(['choose', title, opts.map(o => o.t)]); choices.push(opts); },
     });
-    const reporter = source.includes('function reportFlowOutcome(') ? [productionFunction('reportFlowOutcome', source)] : [];
-    vm.runInContext("'use strict';\nlet movement;\n" + [...reporter, ...amateurNames.map(name => productionFunction(name, source))].join('\n') + '\n' + source.match(/^  movement = function\(\)\{[^\n]+/m)[0], context);
+    const reporter = source.includes('yearFlow.reportFlowOutcome(') ? [yearFlowReporter(yearFlowSource)] : source.includes('function reportFlowOutcome(') ? [productionFunction('reportFlowOutcome', source)] : [];
+    vm.runInContext("'use strict';\nlet movement;\n" + [...reporter, ...amateurNames.map(name => productionFunction(name, source))].join('\n') + '\n' + movementEntry(source), context);
     if (reporter.length) vm.runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};", context);
     vm.runInContext('movement()', context);
     for (let k = 0; k < picks.length; k++) choices[k][picks[k]].f();
@@ -162,7 +181,7 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
   }
   assert.equal(leafCount, 87);
   assert.deepEqual([...new Set(kinds)].sort(), ['AMATEUR_DRAFTED', 'AMATEUR_ENTER_UNIVERSITY', 'AMATEUR_JOIN_CORP', 'AMATEUR_JOIN_IND', 'AMATEUR_RETIRED', 'AMATEUR_SIGNED_MILB', 'AMATEUR_STAY']);
-  assert.throws(() => vm.runInContext("'use strict';\n" + productionFunction('reportFlowOutcome', game) + "\nreportFlowOutcome({kind:'AMATEUR_UNKNOWN'})", vm.createContext({ advance() {}, endGame() {} })), /UNKNOWN_FLOW_OUTCOME:AMATEUR_UNKNOWN/);
+  assert.throws(() => new YearFlow({ advance() {}, endGame() {}, flowHooks: { advance: null, endGame: null } }).reportFlowOutcome({ kind: 'AMATEUR_UNKNOWN' }), /UNKNOWN_FLOW_OUTCOME:AMATEUR_UNKNOWN/);
 }
 
 console.log('draft signing policy tests: ok');
