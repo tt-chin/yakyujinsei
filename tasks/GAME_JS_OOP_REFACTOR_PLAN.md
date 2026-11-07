@@ -4285,8 +4285,20 @@ T5 使 Quick 由 72 增為 73、Full 由 97 增為 98（manifest 依檔名自動
 
 - 未做：Linux CI、Preview、`--preview` 路由、PC／手機實機確認。比較基準 `9233cfc` 只在本機，第 32 期 push 前不作 CI 證據（D7）。
 - PR #56 併入、1.14.0 發布後（2026-11-07），使用者決定第 32、33 期併為同一 PR（由本分支向 `dev`）。本分支以 merge 併入 `origin/dev`（`e4710a2`，merge `2a7d8f4`）：`BACKLOG.md` 一處文字衝突，以 dev 文字為底補上第 31–33 期現況；`game.js` 自動合併，只帶入 dev 的 `CareerPresenter` 參數 `tjCap:()=>tjCap()`（全檔仍 CRLF）。合併後 `docs/` 對 `2a7d8f4` 只差 `game.js`、`year-flow.js`、`movement-gate.js`。
-- 比較基準改為 `2a7d8f4`（1.14.0 有意改變遊戲行為，舊基準 `6b83d68`／`9233cfc` 不再適用）。
-- 下一步：乾淨 worktree 跑 Quick、分組 Full（`--baseline=2a7d8f4…`）、`game-view-dom-e2e` 直接比較 `2a7d8f4`，記錄後交 reviewer；push／PR 另批。dev 新增的 18 個讀取 `game.js` 的入口（如 `test-championmaker-tj-e2e`）與兩期搬移的耦合由上述結果判定。
+- 1.14.0 有意改變遊戲行為，舊基準 `6b83d68`／`9233cfc` 不再適用。`origin/main`（`bb92ae8`，樹與 `2a7d8f4` 相同）作為 Full 的比較基準。
+- `e4710a2` 的驗證（乾淨 worktree，HEAD `10102a9`）：Quick 73／73 PASS；分組 Full（4 組，`--baseline=bb92ae8…`）95／98；原版 `local-full-batches.mjs` 8 批 95／98（狀態 `FAIL_OR_INCOMPLETE`）。FAIL 皆為 `draft-income-e2e`、`contract-salary-e2e`、`display-preferences-e2e`，第一個差異為 `championmakerWins` 一側 `<missing>`。對照：未改動的 `2a7d8f4` 對 `bb92ae8` 同樣 3／3 FAIL（正規化 SHA／路徑／port 後 FAIL 行一致），本分支對 1.13.8 的 `df12674` 3／3 PASS。原因是 1.14.0 的比較測試無條件把候選側投影回舊 schema，前提是基準早於 1.14.0；PR #57 後 `origin/main` 已是 1.14.0，任何分支都會 FAIL。`game-view-dom-e2e` 直接比較 `2a7d8f4` 同因 FAIL；以只去掉 `__expect1140=true;` 的 scratch 版確認本分支對 `2a7d8f4` 8 條生涯一致（`2a7d8f4` 對自身 PASS、`--negative-control` FAIL）。reviewer：合併無發現（dev 1.14.0 變更皆保留，無過時副本）。
+- 修正另以 [PR #58](https://github.com/tt-chin/yakyujinsei/pull/58)（`627b522`，分支 `fix/championmaker-baseline-gate`）交付：`baselineNeedsChampionmakerProjection(ref, root)` 依基準 `VERSION` 決定是否投影，套用於上述 3 個比較入口與 `game-view-dom-e2e`；只改測試與工具。[Tests #139](https://github.com/tt-chin/yakyujinsei/actions/runs/42371529899) attempt 3 Linux Full `expected 96`、`acceptedPass 96`（attempt 1 的 `display-preferences-e2e:89` FAIL 屬生涯比較前的 UI 互動，重跑 PASS，判斷為偶發，頻率未確認）。PR #58 由 code owner 併入 dev（`722577b`），Tests #140 Quick success。
+- 本分支再以 merge 併入 `origin/dev`（`35d5779`，merge `722577b`，無衝突，只帶入 PR #58 的 6 檔；`docs/` 對 `722577b` 仍只差 3 檔，`game.js` 仍 CRLF）。乾淨 worktree 結果：
+
+| 檢查 | 結果 |
+|---|---|
+| Quick | 73／73 PASS（manifest 72＋`syntax`），基準 `bb92ae8` |
+| 本機 Full（原版 `local-full-batches.mjs`，8 批、最多 2 批並行） | `PASS`，`expected 98`、98／98，`issues []`；未被記憶體門檻擋下、無來源變更 |
+| `game-view-dom-e2e` 直接比較 `722577b`（repo 內測試） | 8 段 DOM／`S`／RNG 一致 |
+
+- 本機記憶體：第一次 8 批 Full 在 LM Studio 高負載下全數 `RESOURCE_BLOCKED`（`os.freemem()` 約 137 MB），工具判斷正確；閒置後約 4–7 GiB，8 批可完成，執行中最低 0.07–0.52 GiB，swap 未增加。
+- 未做：Linux CI（push 後另以手動 dispatch 執行）、Preview、`--preview` 路由、PC／手機實機確認。
+- 下一步：push 本分支、開 PR（→ `dev`，第 32、33 期同一 PR）、手動 dispatch Linux Full 並補記；合併由 code owner 進行。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
