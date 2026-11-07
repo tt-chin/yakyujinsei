@@ -11,6 +11,9 @@ const SeasonStats=seasonStatsSource?(await import('data:text/javascript,'+encode
 // Phase 16 moved tjGamble's body into PlayerInjury; its game.js construction line rides in the tjGamble slice.
 const playerInjurySource=source.includes('new PlayerInjury(')?(ref?execFileSync('git',['show',ref+':docs/src/engine/player-injury.js'],{encoding:'utf8'}):fs.readFileSync(new URL('../docs/src/engine/player-injury.js',import.meta.url),'utf8')):null;
 const PlayerInjury=playerInjurySource?(await import('data:text/javascript,'+encodeURIComponent(playerInjurySource))).PlayerInjury:null;
+// Phase 34 (§2mm) moved phasePre into the SeasonPhases factory; its body runs in this vm with getState from the context.
+const seasonPhasesSource=source.includes('new SeasonPhases(')?(ref?execFileSync('git',['show',ref+':docs/src/engine/season-phases.js'],{encoding:'utf8'}):fs.readFileSync(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8')):null;
+const phasePreSource=()=>seasonPhasesSource?productionFunction('phasePre',seasonPhasesSource).split('\n  return {')[0]:productionFunction('phasePre',source);
 const cases=[];
 const activeLevels=vm.runInNewContext('('+source.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+')');
 function test(id,fn){try{fn();cases.push({id,status:'PASS'});}catch(error){cases.push({id,status:'FAIL',error:error.stack});}console.log(cases.at(-1).status+' '+id);}
@@ -18,8 +21,9 @@ function fixture(v={}){
  const S={pos:'P',role:'SP',stage:'PRO',lv:'NPB1',year:2035,age:25,ab:{vel:57,ctl:57,brk:57,sta:60},traits:{},tj:0,tjCount:0,seasonFactor:1,rehab:0,skipMid:false,effort:'通常投球',pendStat:0,log:[],honors:[],ironStreak:0,stats:{},teamName:()=> '長い球団名称・投球テスト',...v};
  const cards=[],choices=[],raw={G:24,IP:120,W:8,L:8,SO:100,H:110,BB:30,ER:53,SV:0,HLD:0,d:0,era:4,WHIP:1.17,form:0,...v.raw};
  const ctx=vm.createContext({S,LV:activeLevels,POS_AB:{P:['sta','vel','ctl','brk'],IF:['sta','con']},clamp:(n,a,b)=>Math.max(a,Math.min(b,n)),R:()=>{throw Error('UNEXPECTED_RNG');},chance:()=>{throw Error('UNEXPECTED_CHANCE');},N0:()=>0,ri:()=>{throw Error('UNEXPECTED_RI');},isSP:()=>S.role==='SP',board:()=>{},card:(...a)=>cards.push(a),choose:(title,opts)=>choices.push({title,opts}),tjGamble:()=>{},addAb:(k,n)=>S.ab[k]+=n,declineForSeason:()=>0,bucketOf:()=> 'NPB',simSeason:()=>structuredClone(raw),applyEventSeason,normalizeEventSeason,consumeEventSeason:s=>s.pendStat=0,accStat:()=>{},accLevelStat:()=>{},statLine:s=>JSON.stringify(s),awards:()=>{},recordSalaryEvaluation:()=>{},captureSeasonChampionship:()=>{},classifyMarketInjury:()=> 'HEALTHY',toolGap:()=>({gap:0}),careerAllStars:()=>0,displayTrait:k=>k,PlayerInjury,ABL:{}});
- ctx.seasonContinuations=new WeakMap();ctx.resumeSeasonEnd=()=>false;ctx.restorePendingChoice=()=>false;
- for(const name of ['tjCap','tjAccrue','proSeason',...(source.includes('function resumeProfessionalSeason(')?['resumeProfessionalSeason']:[]),...(source.includes('function runSeasonPipeline(')?['runSeasonPipeline']:[]),'phasePre'])vm.runInContext(productionFunction(name,source),ctx);
+ ctx.seasonContinuations=new WeakMap();ctx.resumeSeasonEnd=()=>false;ctx.restorePendingChoice=()=>false;ctx.getState=()=>S;
+ for(const name of ['tjCap','tjAccrue','proSeason',...(source.includes('function resumeProfessionalSeason(')?['resumeProfessionalSeason']:[]),...(source.includes('function runSeasonPipeline(')?['runSeasonPipeline']:[])])vm.runInContext(productionFunction(name,source),ctx);
+ vm.runInContext(phasePreSource(),ctx);
  return{S,ctx,cards,choices,raw,run:code=>vm.runInContext(code,ctx)};
 }
 for(const effort of ['全力投球','通常投球','省エネ投球'])test('F01-F02-callback-'+effort,()=>{const h=fixture();h.run('phasePre()');assert.deepEqual(Array.from(h.choices[0].opts,o=>o.t),['全力投球','通常投球','省エネ投球']);let continued=0;h.ctx.R=()=>{continued++;assert.equal(h.S.effort,effort);throw Error('TRAINING_CONTINUATION_OBSERVED');};assert.throws(()=>h.choices[0].opts.find(o=>o.t===effort).f(),/TRAINING_CONTINUATION_OBSERVED/);assert.equal(continued,1);});

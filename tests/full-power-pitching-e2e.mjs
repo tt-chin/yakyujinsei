@@ -20,6 +20,12 @@ const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs
 const approvedPhoenixPrior=withApprovedPhoenixControl(prior);
 const current=await readFile(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const canonical=s=>s.replaceAll('\r\n','\n');
+// Phase 34 (§2mm) moved phasePre into the SeasonPhases factory: restore the game.js text by removing each inserted state read
+// by exact string and count, then dedent, in place of the game.js wrapper line (the text after it stays). The prior side is unchanged.
+const seasonPhases=await readFile(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8');
+const restoredPhasePre=()=>{let text=productionFunction('phasePre',seasonPhases).split('\n  return {')[0];for(const [read,count] of [['\n    const S=getState();',1],['const S=getState();',7]]){assert.equal(text.split(read).length,count+1,'phasePre state reads: '+JSON.stringify(read));text=text.replaceAll(read,'');}return text.replace(/^  /gm,'');};
+const phasePreWrapper='function phasePre(){return seasonPhases.phasePre();}';
+const currentFunction=fn=>{const sliced=productionFunction(fn,current);if(fn!=='phasePre')return sliced;assert.ok(sliced.startsWith(phasePreWrapper),'phasePre wrapper');return restoredPhasePre()+sliced.slice(phasePreWrapper.length);};
 // Phase 4-A deleted phasePre's unreachable college-path block (comment + if(false){...}); drop it from the prior side only.
 const withoutDeadBlock=(fn,text)=>{if(fn!=='phasePre')return text;const a=text.indexOf('  /* 大學季前'),b=text.indexOf("  if(S.stage==='PRO'&&S.age>=36",a);assert.ok(a>0&&b>a&&text.slice(a,b).includes('if(false){'),'dead block in prior phasePre');return text.slice(0,a)+text.slice(b);};
 // Phase 11-B batch 4: phasePre's year endings report through reportFlowOutcome; restore only these exact calls on the current side.
@@ -28,7 +34,7 @@ const withOriginalEndings=(fn,text)=>{if(fn!=='phasePre')return text;for(const [
  ["で日本球界へ復帰した。`);reportFlowOutcome({kind:'PRESEASON_RETURNED_NPB'});","で日本球界へ復帰した。`);advance();"],
  ["daibaFarewell(()=>reportFlowOutcome({kind:'PRESEASON_RETIRED',reason:'功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'}))","daibaFarewell(()=>endGame('功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'))"]
 ]){assert.equal(text.split(reported).length,2,reported);text=text.replace(reported,()=>original);}return text;};
-for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(withOriginalEndings(fn,canonical(productionFunction(fn,current))),withoutDeadBlock(fn,canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();")),'pitching rules unchanged except approved callback'+(fn==='phasePre'?' and deleted dead block':'')+': '+fn);
+for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(withOriginalEndings(fn,canonical(currentFunction(fn))),withoutDeadBlock(fn,canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();")),'pitching rules unchanged except approved callback'+(fn==='phasePre'?' and deleted dead block':'')+': '+fn);
 // Calculation and accumulation body stays byte-exact; only authorized continuation wiring differs.
 const seasonBody=src=>canonical(productionFunction('proSeason',src));
 const oldSeason=seasonBody(prior),newSeason=seasonBody(current);

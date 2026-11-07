@@ -79,6 +79,17 @@ for(const line of [
   assert.ok(text.indexOf('  const LEGACY = { board, movement,')<text.indexOf('\n  movement=function(){return movementGate'),'LEGACY captures movement before the wrapper');
   for(const gone of ['professionalMoves','performMovement','MOVEMENT_CONTINUATION_AMBIGUOUS','  movement = function('])assert.ok(!text.includes(gone),'moved into MovementGate: '+gone);
 }
+{// Phase 34: the pre/mid-season steps. Both wrappers stay rebindable names (LEGACY captures them, YearFlow reads them through
+  // yearSteps, E2E traces wrap them); the constructor follows phaseMid and passes every game.js call as a late-binding lambda.
+  const text=sourceText(game);
+  for(const line of [
+    "\nimport { SeasonPhases } from './season-phases.js';\n",
+    '\n/* シーズン開幕前。 */\nfunction phasePre(){return seasonPhases.phasePre();}\n/* シーズン中。 */\nfunction phaseMid(){return seasonPhases.phaseMid();}\n'+
+      'const seasonPhases=new SeasonPhases({getState:()=>S,POS_AB,ABL,LV,clamp,board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),buyoutRemaining:rate=>buyoutRemaining(rate),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),declineForSeason:(state,amount)=>declineForSeason(state,amount),checkGoldclothSeason:()=>checkGoldclothSeason(),stageLabel:()=>stageLabel(),addAb:(k,v)=>addAb(k,v),dposReview:cont=>dposReview(cont),allocUI:(mode,label,done)=>allocUI(mode,label,done),nextStep:()=>nextStep(),tjCap:()=>tjCap(),ovr:()=>ovr(),signTo:(...args)=>signTo(...args),daibaFarewell:cont=>daibaFarewell(cont),loveEvent:next=>loveEvent(next),drawEvents:(n,done)=>drawEvents(n,done),rollInjury:()=>rollInjury(),proSeason:()=>proSeason(),amateurSeason:()=>amateurSeason(),rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});\n',
+  ])assert.equal(text.split(line).length,2,'season phases wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new SeasonPhases(','seasonPhases.phasePre(','seasonPhases.phaseMid(','function phasePre(','function phaseMid('])assert.equal(text.split(name).length,2,'season phases wiring only once: '+name);
+  for(const gone of ['シーズン前特訓','let afterAsk=','const preAsk=afterAsk','開幕前の投球プラン','シーズン半ばの健康診断','PRESEASON_'])assert.ok(!text.includes(gone),'moved into SeasonPhases: '+gone);
+}
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
