@@ -4119,7 +4119,10 @@ T5 使 Quick 由 70 增為 71、Full 由 95 增為 96，manifest 依檔名自動
 - 未做：18 字 n-gram 與 acorn 字面值掃描未重做（`game.js` 自草稿基準未變，草稿結果見 §2jj.4）；W1–W11 的執行期欄位；`--preview` 路由、Linux CI、Preview。
 - PR #55 併入後（2026-11-04）以 merge 併入 `origin/dev`（`d0499f5`，merge `d4cd99d`，無衝突；樹 `7f76b3c` 與 merge 前相同，dev 未帶入內容差異）。乾淨 worktree Quick 71／71 PASS（HEAD `d0499f5`，依 `summary.json` 與 `test.mjs list` 的 Quick 入口數核對）。
 - `7b47d60` 已 push，[PR #56](https://github.com/tt-chin/yakyujinsei/pull/56)（→ `dev`）已開。[Tests #132](https://github.com/tt-chin/yakyujinsei/actions/runs/41836296928)（`7b47d60`，手動 dispatch）Linux Full：8 批全 success，`full-aggregate` 為 `expected 96`、`acceptedPass 96`、`issues []`（記於 PR #56）。
-- 下一步：等 code owner 合併 PR #56（不由我合併）；合併後確認 dev push 的 Quick 與 Preview，再記於本節。
+- PR #56 由 code owner 併入 dev（`00ca7b9`）。dev push 的 [Tests #133](https://github.com/tt-chin/yakyujinsei/actions/runs/41935191223)（Quick）success，Full 各 job 依規則 skipped。
+- 之後 code owner 於 dev 新增 `fd57fa0`、`ac2ce0d`、`2a7d8f4`（1.14.0），Tests #134–#138 皆 success（#137 為手動 Full），經 PR #57 發布至 main（`bb92ae8`，Publish website #32 success）；第 31 期隨 1.14.0 上線。
+- Preview（2026-11-07，`https://dev.yakyujinsei.pages.dev`）：內容已是 `2a7d8f4`，`docs/` 下 612 檔（`docs/archive/` 除外）與 `2a7d8f4` 逐位元組相同（`index.html` 以 `/` 取得；Python 預設 User-Agent 被 Cloudflare 回 403，改帶一般 UA 後取得）。`00ca7b9` 單獨的 Preview 已被取代。
+- 未做（使用者決定 2026-11-07）：§2ii.7 那類 Preview 瀏覽器生涯檢查（Console、4xx／5xx、`season-settlement.js` 載入）記為被取代、未跑。
 
 ## 2kk. 第 32 期：年度骨架移至 `YearFlow`（細部計畫，2026-11-03；計畫已批准 2026-11-03，本機實作完成，見 §2kk.6）
 
@@ -4207,7 +4210,7 @@ T5 使 Quick 由 71 增為 72、Full 由 96 增為 97。
 | reviewer | 無發現 |
 
 - 未做：Linux CI、Preview、`--preview` 路由、PC／手機實機確認。比較基準 `6b83d68` 只在本機，第 31 期 push 前不作 CI 證據（D8）。
-- 下一步：PR #55 與第 31 期依序併入後，定案比較基準 SHA、merge `origin/dev`、重跑 Quick；push／PR 另批。
+- 下一步：與第 33 期併為同一 PR 交付（使用者決定 2026-11-07），合併後的驗證見 §2ll.6；本分支（`refactor/year-flow`）不另外 merge `origin/dev`、不單獨 push。
 
 ## 2ll. 第 33 期：`movement` 尾段移至 `MovementGate`（細部計畫，2026-11-04；D1–D7 使用者決定、T1–T5 與實作批准 2026-11-04，本機實作完成，見 §2ll.6）
 
@@ -4281,7 +4284,9 @@ T5 使 Quick 由 72 增為 73、Full 由 97 增為 98（manifest 依檔名自動
 | reviewer | 無發現（逐字搬移、`S` 讀取時機、`LEGACY` 先後、WeakMap 識別、斷言未放寬、換行碼） |
 
 - 未做：Linux CI、Preview、`--preview` 路由、PC／手機實機確認。比較基準 `9233cfc` 只在本機，第 32 期 push 前不作 CI 證據（D7）。
-- 下一步：PR #56 與第 32 期依序併入後，定案比較基準 SHA、merge `origin/dev`、重跑 Quick；push／PR 另批。
+- PR #56 併入、1.14.0 發布後（2026-11-07），使用者決定第 32、33 期併為同一 PR（由本分支向 `dev`）。本分支以 merge 併入 `origin/dev`（`e4710a2`，merge `2a7d8f4`）：`BACKLOG.md` 一處文字衝突，以 dev 文字為底補上第 31–33 期現況；`game.js` 自動合併，只帶入 dev 的 `CareerPresenter` 參數 `tjCap:()=>tjCap()`（全檔仍 CRLF）。合併後 `docs/` 對 `2a7d8f4` 只差 `game.js`、`year-flow.js`、`movement-gate.js`。
+- 比較基準改為 `2a7d8f4`（1.14.0 有意改變遊戲行為，舊基準 `6b83d68`／`9233cfc` 不再適用）。
+- 下一步：乾淨 worktree 跑 Quick、分組 Full（`--baseline=2a7d8f4…`）、`game-view-dom-e2e` 直接比較 `2a7d8f4`，記錄後交 reviewer；push／PR 另批。dev 新增的 18 個讀取 `game.js` 的入口（如 `test-championmaker-tj-e2e`）與兩期搬移的耦合由上述結果判定。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
