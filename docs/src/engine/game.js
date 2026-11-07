@@ -1,3 +1,6 @@
+import {BrowserSaveController} from './browser-save-controller.js';
+import {hydrateSavedState} from './browser-save-runtime.js';
+import {createBrowserSaveUI} from '../ui/browser-save-ui.js';
 import { VERSION } from '../config.js';
 import {incomeSummary} from '../ui/income-summary.js';
 import { Rng } from './rng.js';
@@ -167,6 +170,7 @@ validateEventCatalog();
 const EVENTS=EVENT_CATALOG.events;
 /* ゲーム状態。 */
 let S=null;
+let browserSave=null;
 const careerSession=new CareerSession();
 const seasonStats=new SeasonStats({getState:()=>S,levels:LV,rng:{R:()=>R(),N0:sd=>N0(sd),chance:p=>chance(p),ri:(a,b)=>ri(a,b)},clamp,isSP:()=>isSP(),pitcherRole:()=>pitcherRole(),checkGoldclothSeason:()=>checkGoldclothSeason()});
 let careerRng = null;
@@ -577,7 +581,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   const internationalTournament=new InternationalTournament({getState:()=>S,normalizeInternationalState,validateInternationalEntry,prepareInternationalResult,commitInternationalResult,INTLACE_UNLOCK_TEXT,internationalPersonalStats,renderInternationalPersonalStats,intlEvents:year=>intlEvents(year),intlPhase:e=>intlPhase(e),intlThreshold:e=>intlThreshold(e),intlSelection:e=>intlSelection(e),addIntlStats:()=>addIntlStats(),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),displayTrait:key=>displayTrait(key),fmtIP:ip=>fmtIP(ip),pick:a=>pick(a)});
   function maybeIntl(done){processIntlPhase('POST',done);}
   function phaseIntlPre(){return yearFlow.phaseIntlPre();}
-  function startYear(){return yearFlow.startYear();}
+  function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}
   const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]});
 
   function daibaFarewell(cont){return careerMovement.daibaFarewell(cont);}
@@ -612,7 +616,20 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   createSeedShareController({trigger:$('board-share'),getSeed:()=>S?.seed||$('seed-show').value||SEED});
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});
   const navigation=initNavigation({onNavigate:archiveTraitResults,onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
-  $('btn-start').onclick=startJapanese;
+  $('btn-start').onclick=()=>{if(!browserSave||browserSave.newCareer())startJapanese();};
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();
   $('btn-restart').onclick=()=>{if(confirm('この野球人生を終了して最初からやり直しますか？'))location.href=location.pathname;};
+
+// Bootstrap completes storage inspection before enabling new-career controls.
+export async function initializeBrowserSave(){
+ if(browserSave)return;
+ const home=()=>{if(S&&!confirm('このタブの未保存の進行状況を破棄して、タイトルに戻りますか？'))return;location.href=location.pathname+location.search;};
+ const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onDelete:()=>browserSave.remove(),onRetry:()=>browserSave.restore(),onHome:home});
+ browserSave=new BrowserSaveController({notify:show,lock:locked=>{$('app').inert=locked;if(locked){++careerSession.choiceGeneration;careerSession.activeChoiceToken=null;}},restore:(envelope,{authorization}={})=>{
+  const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});
+  const generation=careerSession.choiceGeneration+1;for(const k of Object.keys(careerSession))delete careerSession[k];Object.assign(careerSession,new CareerSession(),{choiceGeneration:generation});
+  S=candidate;SEED=S.seed;$('log').replaceChildren();actClear();$('app').style.display='flex';$('start').style.display='none';$('board').style.display='';$('act').style.display='';navigation.reset();navigation.show();history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}`);startYear();
+ }});
+ show(browserSave.state);await browserSave.initialize();
+}
