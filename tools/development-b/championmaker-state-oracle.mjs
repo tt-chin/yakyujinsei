@@ -1,6 +1,7 @@
 // Test-only, opt-in cross-version projection. The historical championship
 // records remain compared by the caller; only independently checked 1.14.0
 // technical state and its honor-only flag are mapped to the old schema.
+import {execFileSync} from 'node:child_process';
 import {JP_DATA} from '../../docs/src/data/jp-data.js';
 export function projectChampionmakerState(state,teams,fixture=false){
   const fail=reason=>{throw Error('CHAMPIONMAKER_CONTRACT: '+reason);};
@@ -26,5 +27,14 @@ export function projectChampionmakerState(state,teams,fixture=false){
   delete result.championmakerWins;delete result.championmakerCount;delete result.championmakerAcquiredYear;
   if(owns)result.traits={...state.traits,championmaker:false};
   return result;
+}
+// The projection maps 1.14.0 state back to a pre-1.14.0 baseline. A baseline that
+// is itself 1.14.0 or later already has these fields and is compared raw.
+export function baselineNeedsChampionmakerProjection(ref,root){
+  const source=execFileSync('git',['show',ref+':docs/src/config.js'],{cwd:root,encoding:'utf8'});
+  const match=source.match(/^export const VERSION = '(\d+)\.(\d+)\.(\d+)';$/m);
+  if(!match)throw Error('CHAMPIONMAKER_BASELINE_VERSION: '+ref);
+  const [major,minor]=match.slice(1,3).map(Number);
+  return major<1||(major===1&&minor<14);
 }
 export const legacyChampionmakerState=(state,options={})=>projectChampionmakerState(state,JP_DATA.teams,options.fixture===true);

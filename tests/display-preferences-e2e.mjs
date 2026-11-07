@@ -2,6 +2,7 @@ import {openBoardAction} from './support/board-menu.mjs';
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
 import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
+import {baselineNeedsChampionmakerProjection} from '../tools/development-b/championmaker-state-oracle.mjs';
 import {assertSameCareer} from './support/first-difference.mjs';
 import {createServer} from 'node:http';
 import {readFile, mkdir} from 'node:fs/promises';
@@ -17,6 +18,7 @@ const modulePath=process.argv.find(v=>v.startsWith('--playwright='))?.slice(13);
 const require=createRequire(import.meta.url),{chromium}=require(modulePath||'playwright');
 const preview=process.argv.find(v=>v.startsWith('--preview='))?.slice(10);
 const baselineRef=process.argv.find(v=>v.startsWith('--baseline='))?.slice(11)||'8dd244b';
+const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
 const server=createServer(async(req,res)=>{
   try{
     const url=new URL(req.url,'http://localhost'),baseline=url.pathname.startsWith('/baseline/');
@@ -179,7 +181,7 @@ try{
         }
         snapshots.push(records);await ctx.close();
       }
-      assertSameCareer(historicalCareer(snapshots[1],{championmaker:true}),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
+      assertSameCareer(historicalCareer(snapshots[1],{championmaker}),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
       const last=snapshots[0].at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');console.log(`Fixed career ${seed}/${pos}: ${snapshots[0].length} actions, RNG ${last.calls}, retirement ${last.state.year}, exact match`);
     }
   }
