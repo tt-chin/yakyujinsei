@@ -64,7 +64,12 @@ export function initializeInformationDialogs(){
       ['選手とキャリア','「選手」で能力・コンディション・特性、「キャリア」で成績・実績・契約・年度別記録を確認できます。'],
       ['共有と表示設定','右上のメニューからSeed共有と表示設定を開けます。共有URLは途中の保存データではなく、そのSeedで新しい人生を始めるためのものです。'],
       ['再開について','このページを閉じたり再読み込みすると進行中の人生は失われます。「最初からやり直す」は確認後に新しく始めます。']]},
-    updates:{title:'更新履歴',sections:releaseNotes.map(r=>[r.title,r.lines.join('\n')])}
+    updates:{title:'更新履歴',sections:releaseNotes.map(r=>[r.title,r.lines.join('\n')])},
+    credits:{title:'クレジット・使用素材',sections:[
+      ['背景写真','「エスコンフィールド北海道」\n撮影：高梨慎太郎'],
+      ['出典','Wikimedia Commons','https://commons.wikimedia.org/wiki/File:エスコンフィールド北海道.jpg'],
+      ['ライセンス','CC BY-SA 4.0','https://creativecommons.org/licenses/by-sa/4.0/'],
+      ['加工・適用範囲','加工：トリミング・縮小・明るさ調整・WebP形式への変換。\n加工後の写真もCC BY-SA 4.0で提供しています。適用対象は背景写真のみです。ゲーム全体のライセンスは変更しません。']]}
   };
   let activeDialog=null;
   for(const [key,entry] of Object.entries(entries)){
@@ -75,7 +80,7 @@ export function initializeInformationDialogs(){
     const frame=document.createElement('div');frame.className='information-scroll-frame';
     const viewport=document.createElement('div');viewport.className='information-content';viewport.tabIndex=0;viewport.setAttribute('role','region');viewport.setAttribute('aria-labelledby',heading.id);
     const article=document.createElement('div');article.className='information-article';
-    for(const [title,body] of entry.sections){const section=document.createElement('section'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=title;p.textContent=body;section.append(h,p);article.append(section);}
+    for(const [title,body,href] of entry.sections){const section=document.createElement('section'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=title;if(href){const a=document.createElement('a');a.href=href;a.textContent=body;a.target='_blank';a.rel='noopener noreferrer';p.append(a);}else p.textContent=body;section.append(h,p);article.append(section);}
     viewport.append(article);
     const track=document.createElement('div');track.className='information-scroll-track';track.hidden=true;track.setAttribute('aria-hidden','true');
     const thumb=document.createElement('div');thumb.className='information-scroll-thumb';track.append(thumb);frame.append(viewport,track);

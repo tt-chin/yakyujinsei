@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.14.1｜2026/11/07",
+    "lines": [
+      "- エスコンフィールド北海道の背景写真を追加。",
+      "- 写真のクレジット・使用素材を確認できるようにしました。"
+    ]
+  },
+  {
     "title": "1.14.0｜2026/11/05",
     "lines": [
       "- TJゲージに小数1桁と上限を表示。",
