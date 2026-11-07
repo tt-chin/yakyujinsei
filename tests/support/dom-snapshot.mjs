@@ -12,17 +12,6 @@ export async function captureGameView(full){
   const state=window.__expect1140?window.__projectChampionmaker(rawState,window.__champTeams):rawState;
   delete state.version;if(state.birthHighSchool)delete state.birthHighSchool.createdVersion;
   const dom=Object.fromEntries(['log','act','board'].map(id=>[id,document.getElementById(id)?.outerHTML??null]));
-  // Approved 1.14.1 credit entry: verify its exact markup and menu position,
-  // then project only this addition to the fixed pre-background baseline.
-  // No other DOM bytes, state fields or RNG calls are excluded.
-  const credits=document.querySelector('#board-credits');
-  if(window.__expectCredits||credits){
-    const expected='<button type="button" id="board-credits" data-information="credits" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>クレジット・使用素材</button>';
-    if(!credits||document.querySelectorAll('#board-credits').length!==1||credits.outerHTML!==expected||credits.parentElement.id!=='board-menu-panel'||credits.previousElementSibling?.id!=='board-updates'||credits.nextElementSibling?.id!=='board-preferences')throw Error('CREDITS_MENU_CONTRACT');
-    const addition=expected+'\n        ';
-    if(dom.board.split(addition).length!==2)throw Error('CREDITS_MENU_MARKUP_CONTRACT');
-    dom.board=dom.board.replace(addition,'');
-  }
   if(window.__expect1140){
     // Independently validate the approved TJ presentation before mapping only
     // that value back to the fixed historical view-model representation.

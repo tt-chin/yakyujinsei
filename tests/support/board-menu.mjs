@@ -47,18 +47,12 @@ export async function openBoardAction(page,id,{touch=false}={}) {
 
 export async function verifyBoardMenu(page,{width,screenshot}={}) {
   if(width===1280)await verifyDesktopContract(page,screenshot);
-  for(const key of ['help','updates','credits']){
+  for(const key of ['help','updates']){
     await page.locator('#board-menu-toggle').click();
     await page.locator('#board-menu-panel [data-information="'+key+'"]').click();
     const dialog=page.locator('#information-'+key);
     assert.equal(await dialog.isVisible(),true);
     assert.ok((await dialog.innerText()).length>100);
-    if(key==='credits'){
-      assert.match(await dialog.innerText(),/高梨慎太郎/);
-      for(const href of ['https://commons.wikimedia.org/wiki/File:エスコンフィールド北海道.jpg','https://creativecommons.org/licenses/by-sa/4.0/']){
-        assert.equal(await dialog.locator('a').evaluateAll((links,href)=>links.filter(a=>a.getAttribute('href')===href).length,href),1);
-      }
-    }
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.keyboard.press('Escape');
     assert.equal(await dialog.isVisible(),false);
@@ -78,7 +72,7 @@ export async function verifyBoardMenu(page,{width,screenshot}={}) {
   await toggle.focus();await page.keyboard.press('Enter');
   assert.equal(await toggle.getAttribute('aria-expanded'),'true');
   const ids=await panel.locator('button,a').evaluateAll(nodes=>nodes.map(n=>n.id));
-  assert.deepEqual(ids,['board-help','board-updates','board-credits','board-preferences','board-share','board-support','btn-restart']);
+  assert.deepEqual(ids,['board-help','board-updates','board-preferences','board-share','board-support','btn-restart']);
   await page.keyboard.press('ArrowDown');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'board-help');
   await page.keyboard.press('End');
