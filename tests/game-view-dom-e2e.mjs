@@ -19,6 +19,8 @@ const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const baselineRef=arg('baseline')||'4f39a73e23758b891bc24951225231792ab022b4';
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
+// 1.14.1 added the credits menu button; older baselines lack it (see dom-snapshot.mjs).
+const credits1141=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('id="board-credits"');
 // Harness self-check only: a DOM-only change on the candidate side (year header text) must FAIL.
 const negativeControl=process.argv.includes('--negative-control');
 const server=createServer(async(req,res)=>{
@@ -29,7 +31,7 @@ const server=createServer(async(req,res)=>{
     let content=baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
-      if(!baseline)content+='\nwindow.__expectIncomeDisplay=true;window.__expect1140='+championmaker+';window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
+      if(!baseline)content+='\nwindow.__expectIncomeDisplay=true;window.__expect1140='+championmaker+';window.__expect1141='+credits1141+';window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
       if(negativeControl&&!baseline)content+='\nconst __negativeDivider=divider;divider=function(t){__negativeDivider(t+\' \');};';
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);

@@ -12,6 +12,13 @@ export async function captureGameView(full){
   const state=window.__expect1140?window.__projectChampionmaker(rawState,window.__champTeams):rawState;
   delete state.version;if(state.birthHighSchool)delete state.birthHighSchool.createdVersion;
   const dom=Object.fromEntries(['log','act','board'].map(id=>[id,document.getElementById(id)?.outerHTML??null]));
+  if(window.__expect1141){
+    // Approved 1.14.1 UI-only delta: the credits menu button. Validate its exact
+    // markup once, then drop only that button; every other #board byte stays strict.
+    const credits='\n        <button type="button" id="board-credits" data-information="credits" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>クレジット・使用素材</button>';
+    if(typeof dom.board!=='string'||dom.board.split(credits).length!==2)throw Error('CREDITS_MENU_CONTRACT');
+    dom.board=dom.board.replace(credits,'');
+  }
   if(window.__expect1140){
     // Independently validate the approved TJ presentation before mapping only
     // that value back to the fixed historical view-model representation.
