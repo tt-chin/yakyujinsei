@@ -66,6 +66,7 @@ import { toolGapFor, overallRatingFor, playerTypeFor, abilityStepCostFor } from 
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
 import {TraitResultCard} from '../ui/trait-result-card.js';
+import { CareerTraits } from './career-traits.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
 import { canPlayHighSchoolFall, canPlaySenbatsu, nextSenbatsuEligibleYear, qualificationResult, qualifiesForChampionship, qualifiesForCorporateJapan, qualifiesForUniversityJingu, tournamentResult } from './domestic-tournament-policy.js';
 
@@ -135,11 +136,8 @@ const seasonStats=new SeasonStats({getState:()=>S,levels:LV,rng:{R:()=>R(),N0:sd
 let careerRng = null;
 function blankStat(){return seasonStats.blankStat();}
 function bucketOf(lv){return resolveStatBucket(LV,lv);}
-function traitCard(key,name,desc,tone){ S.traits[key]=true;
-  card(tone||'gold','隠し特性解放：'+name,desc); board(0); }
-function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
-    traitPresentation.get(S)?.delete(key);
-    if(!S.removed.includes(label))S.removed.push(label); } }
+function traitCard(key,name,desc,tone){careerTraits.unlock(key,name,desc,tone);}
+function removeTrait(key,label){careerTraits.remove(key,label);}
 /* 一芸特化：評価対象は三つの役割軸のみ——打撃(長打力/Contact)、走塁(速度)、守備(総合)。 */
 function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
 function toolGap(){return toolGapFor(S.ab,S.pos);}
@@ -196,12 +194,9 @@ function slgOf(st){
   return tb/st.AB;
 }
 const fmtMoney=yen=>{yen=Math.max(0,Math.round(Number(yen)||0));const oku=Math.floor(yen/100000000),man=Math.floor((yen%100000000)/10000);return (oku?oku+'億':'')+(man?man.toLocaleString()+'万円':oku?'円':'0円');};
-function displayTrait(key){return traitLabel(key,S,teamNick);}
-function traitNames(){return Object.fromEntries(Object.keys(TRAIT_LABELS).map(key=>[key,displayTrait(key)]));}
-function checkGoldclothSeason(){
-  recordFirstTeamSeason(S);
-  if(goldclothEligible(S))traitCard('goldcloth',displayTrait('goldcloth'),'阪神ストライプス一軍で通算10年。虎党の声援を背に、甲子園で戦い続けてきた。その縦縞は、もはやお前の誇りだ。');
-}
+function displayTrait(key){return careerTraits.label(key);}
+function traitNames(){return careerTraits.names();}
+function checkGoldclothSeason(){careerTraits.checkGoldclothSeason();}
 const careerPresenter=new CareerPresenter({getState:()=>S,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN:r=>roleN(r),playerType:()=>playerType(),ovr:()=>ovr(),tjCap:()=>tjCap()});
 function buildRecordViewModel(){return careerPresenter.record();}
 function buildAbilityViewModel(){return careerPresenter.ability();}
@@ -219,6 +214,7 @@ const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onT
 function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){return traitResultCard.decorate(node,title,html);}
 const traitResultCard=new TraitResultCard({getState:()=>S,traitPresentation,displayTrait});
+const careerTraits=new CareerTraits({getState:()=>S,traitPresentation,card:(cls,title,html)=>card(cls,title,html),board:p=>board(p),teamNick:team=>teamNick(team),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),displayTrait:key=>displayTrait(key)});
 function card(cls,title,html){ gameView.card(cls,title,html); }
 function divider(t){ _curYearBody=gameView.divider(t,MAX_YEARS); }
 function board(phase){ gameView.renderBoard(boardModel(phase)); }
