@@ -4,7 +4,7 @@
 
 ## 状態
 
-IMPLEMENTED_UNVERIFIED（2026-11-08最新）：dev合併後のCI Quick／Full及び桌機PreviewはPASS、iPhone Safari／Android Chrome実機はNOT_RUN（下記「dev合併後のCIと桌機Preview」）。以下は前時点の記録：最新補強後の最終Quick／Fullは執行請求が拒否されたためNOT_RUN。結果取得前に第一期完了とはしない。実機Safari／Android、Preview：NOT_RUN。ARTIFACT_COVERAGE_BLOCKEDは別件として継続。
+IMPLEMENTED_UNVERIFIED（2026-11-08最新）：dev合併後のCI Quick／Full及び桌機PreviewはPASS、iPhone Safari実機はWebDriver自動化で受入済み（使用者が実機受入として承認）、Android Chrome実機はNOT_RUN（下記「dev 合併後的 CI 與桌機 Preview」「iPhone Safari 實機」）。以下は前時点の記録：最新補強後の最終Quick／Fullは執行請求が拒否されたためNOT_RUN。結果取得前に第一期完了とはしない。実機Safari／Android、Preview：NOT_RUN。ARTIFACT_COVERAGE_BLOCKEDは別件として継続。
 
 ## 実装範囲
 
@@ -106,4 +106,19 @@ PR #65 合併後的 dev 再併入 PR #66（第 36 期 `CheckpointRenderer`），
   5. 兩分頁自 2027 年再開；A 進到 2028 年存檔（61／34／31／23）；B 以不同分配進到 2028 年（54／47）後顯示「別のタブで進行状況が更新されました。このタブでは以後セーブされません。」，只有「セーブせずに続ける」「タイトルで最新データを読む」，無強制覆寫。B 返回標題確認 cancel 後留在遊戲，承認後再開為 A 的 2028 年（61／34）：PASS。
   6. 標題存檔區在 390×844、844×390 無水平溢出（`scrollWidth`＝視窗寬），按鈕未被裁切：限定 PASS；網址列顯示切換只能實機確認。
   7. 主題改為ナイター後，兩段確認刪除存檔；reload 後顯示「セーブデータはありません」、無「続きから」，主題保留：PASS。測試後顯示設定已恢復初始值。
-- 未做：iPhone Safari／Android Chrome 實機（NOT_RUN）。桌機結果不代替實機；收到實機結果前本 ID 保持未勾選。ARTIFACT_COVERAGE_BLOCKED 維持獨立追蹤。
+- 未做（本節時點）：iPhone Safari／Android Chrome 實機。iPhone 已於下節完成。ARTIFACT_COVERAGE_BLOCKED 維持獨立追蹤。
+
+### iPhone Safari 實機（2026-11-08，WebDriver 自動化；使用者確認作為 iPhone 實機驗收）
+
+- 裝置：iPhone 13 mini（iPhone14,4），iOS 26.6.1（23G83），Safari 26.6.1；USB 配對，Mac 端 `safaridriver`（Safari 26.5.2 附帶）以 `platformName: iOS` 連線，iPhone 已開啟網頁檢閱器與遠端自動化。未安裝任何套件。
+- 對象：`https://dev.yakyujinsei.pages.dev`（`ea89c15` 內容，v1.15.0），`isSecureContext` true、`crypto.subtle` 可用，視窗 375×664。seed `save-device-20261108`、投手；開始前此 origin 無存檔。
+- 與手順的差異：WebDriver 工作階段與一般瀏覽資料隔離（非通常模式本身），結束時清除；「關閉頁籤」以 WebDriver 關閉視窗＋開新視窗代替 App 切換器操作。使用者確認以此結果作為 iPhone 實機驗收。
+- 結果：
+  1. 開局後「2026年の開始時点をセーブしました」：PASS。
+  2. 同年度分配骰子並確定（總合 29→30）後 reload，「続きから」回到 2026 年開頭，總合 29、年齡 16、年俸 0，分配可重做：PASS。
+  3. 進到 2027 年並存檔（17 歲、總合 31），開新視窗並關閉原視窗，新視窗開同 URL，概要為 2027 年・17 歲，再開後一致：PASS。
+  4. 回標題確認承認後，新規開始確認 dismiss、刪除第 1 段 accept・第 2 段 dismiss，概要仍為 2027 年：PASS（原生 confirm 文字皆正確）。
+  5. 兩視窗自 2027 年再開；A 進到 2028 年存檔（總合 31，保存日時 17:25:28）；B 以不同分配進到 2028 年（總合 36）後顯示「別のタブで進行状況が更新されました。このタブでは以後セーブされません。」，可見按鈕只有「セーブせずに続ける」「タイトルで最新データを読む」。B 返回標題確認 dismiss 後留在遊戲，accept 後概要為 2028 年 17:25:28，再開為總合 31（A 的存檔）：PASS。
+  6. 直向 375×664：遊戲畫面與標題存檔區 `scrollWidth`＝375、無水平溢出、無按鈕裁切，截圖目視確認：限定 PASS。橫向及網址列顯示切換未測（WebDriver 無法操作）。
+  7. 主題改為ナイター後兩段確認刪除；reload 後「セーブデータはありません」、無「続きから」，主題保留：PASS。測試後顯示設定已恢復初始值。
+- 未做：Android Chrome 實機（NOT_RUN）。收到結果前本 ID 保持未勾選。ARTIFACT_COVERAGE_BLOCKED 維持獨立追蹤。
