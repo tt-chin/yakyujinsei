@@ -705,18 +705,37 @@ TJは既存上限（通常50、ゴムゴムの腕100）を共用判定し、小�
 
 1.14.1（追加調整）：写真と上部漸層を含む装飾背景レイヤーのみ不透明度50%。画像原本、本文、フォーム、ボタンと読取面の不透明度は変更しない。
 
-### 開発中1.15.0：年度開始のブラウザー保存（受入中／未公開）
+### 開発中1.15.0：年度開始のブラウザー保存（第一期受入済み／未公開）
 
 同originのIndexedDBへ年度開始時点を1枠保存する試作を実装した。読込時は最後に保存が成功した年度の最初へ戻り、当年度の未保存操作は再プレイする。年度引継ぎ確定後かつ衰退・骰子等の首步前にSとRNGを擷取し、revision CASで逐次保存する。任意時点保存、export/import、端末同期は含まない。
 
 読取不可時は確認付き非保存プレイ、他タブ競合時は当該タブの書込停止、初期復元失敗時は操作停止と原保存からのretryを提供。ホームの独立した削除操作は設けず、新規開始を確定する時だけ既存データの上書きを確認する。復元・削除中は重複操作を拒否し、失敗で旧データを覆わない。引退後も年度開始保存を保ち、引退結果の保存とは扱わない。
 
-過年度D2完了証明の欠失によるHOF差異を確認し、完全Sと由来証明の封存認証・歴史readonly復元を実装した。schemaVersion2／year-start-v2-auth。証明／seal／keyを検証できなければ原データを保持して読込を拒否し、JSONだけで可信身分を認定しない。元の獎項待遇・取得・付款・主RNGを変えない。2MiB等の資源制限と失敗保護契約は[BROWSER_SAVE_DESIGN.md](BROWSER_SAVE_DESIGN.md)参照。
+過年度D2完了証明の欠失によるHOF差異を確認し、完全Sと由来証明の封存認証・歴史readonly復元を実装した。schemaVersion2／year-start-v2-auth。証明／seal／keyを検証できなければ原データを保持して読込を拒否し、JSONだけで可信身分を認定しない。元の獎項待遇・取得・付款・主RNGを変えない。資源制限と失敗保護契約は下記「年度保存の技術契約」を参照。
 
-[第一期受入記録](docs/reviews/BROWSER_SAVE_PHASE1_ACCEPTANCE.md)に限定検証、原FAILと残件を記す。最終補強後のQuick／Fullは執行未獲准のためNOT_RUN、Preview・実機受入も未完了であり、正式公開版の完了仕様とはしない。
+[第一期受入記録](docs/reviews/BROWSER_SAVE_PHASE1_ACCEPTANCE.md)に各SHAのQuick／Full、原FAILと修復、実機確認を記す。2026-11-08に使用者が残る実機と1.15.1の確認を受け入れ、第一期はUSER_ACCEPTED / PHASE1_COMPLETE。最新Fullは修正分支1c10e7fで107／107 PASSであり、合併後の別SHAへ流用しない。dev受入完了であり正式公開は未実施、ARTIFACT_COVERAGE_BLOCKEDは独立継続。
 
-### 開発中1.15.1：ホームの操作整理（受入待ち／未公開）
+### 開発中1.15.1：ホームの操作整理（使用者受入済み／未公開）
 
 有効なセーブがなければ通常の選手作成フォームのみを表示し、セーブ説明・空枠・削除成功通知は出さない。有効なセーブがあれば「続きから」「新しく始める」を表示。「新しく始める」はフォーム表示だけでデータを変更せず、実際の新規開始で既存の上書き確認を行う。取消時は保存データを維持。読み取り不能・再開失敗時の警告、非保存プレイの明示確認と復旧経路は保持する。
 
-ホーム下部は表示設定／遊び方、更新履歴／クレジットのDOM順で2列2行。素材本文・リンクは維持する。699px以下ではタイトル領域を透明にし、操作面板のみテーマ色83%を目安とする。文字と入力自体は透過させない。背景は従来どおりプレイ中も常時表示し、画像・保存契約・S・RNGは変更しない。Quick／FullはGitHub Actions、実機表示は別途受入とする。
+ホーム下部は表示設定／遊び方、更新履歴／クレジットのDOM順で2列2行。素材本文・リンクは維持する。699px以下ではタイトル領域を透明にし、操作面板のみテーマ色83%を目安とする。文字と入力自体は透過させない。背景は従来どおりプレイ中も常時表示し、画像・保存契約・S・RNGは変更しない。検証は第一期受入記録を参照。使用者は2026-11-08に1.15.1の実機表示を受入済み。
+
+
+### ブラウザー保存の開発終了（2026-11-08）
+
+使用者決定により、保存機能の交付範囲は受入済み第一期の年度開始自動保存で確定。第二期のJSON export/importと第三期の操作途中再開はCANCELLED／未実装であり、残作業や今後の交付予定として扱わない。閉じる・再読込後は最後に成功した保存年度の先頭へ戻り、その年の未保存操作は再プレイする。これ以外の時点保存、可搬バックアップや端末同期は提供しない。独立CI課題ARTIFACT_COVERAGE_BLOCKEDは継続し、正式公開の承認・実施とは区別する。
+
+
+### 年度保存の技術契約
+
+設計書廃止後の現行契約。実装は`docs/src/engine/browser-save-{codec,state-contract,auth,store,controller,runtime}.js`、年度境界は`year-flow.js`、開始・復元入口は`career-entry.js`を参照。検証入口は`tests/browser-save-*.mjs`及び`scripts/test-browser-save-*.mjs`。旧設計はGit履歴にのみ保持し、現行仕様や取消済み第二・三期の実装指示にしない。
+
+- **年度境界**：初期化又は前年度の契約・付款・移籍・配分とhandoff COMMITTEDが確定し、年度イベント初期化後、新年度の衰退・骰子・抽選等の首步前をYEAR_START_READYとする。曖昧な途中状態を保存しない。独立した完全快照を同期取得し、その後のI/O成否でゲーム状態・RNGを変更しない。離脱時保存だけには依存せず、transaction complete前は成功としない。
+- **形式と容量**：format=yakyujinsei-career-save、schemaVersion=2、compatibilityId=year-start-v2-auth。gameVersion、savedAt、careerId、revision、checkpoint（year／age／stageYr／eventYearInitialized）、awardProofs、完全な純データstateを保存し、checkpointとstateの年度を一致させる。上限2MiB（UTF-8）、深度32、配列1024、節点131072。超過・未知型別を黙って切捨てず拒否し旧保存を保持する。
+- **型と復元**：null／boolean／finite number／string／密なarray／純object、及び合法な共有参照を扱い、cycle、疎配列、undefined、BigInt、Symbol、Date／Map／Set、危険キー、未許可prototypeや実行可能データを拒否する。途中で追加された有効S欄位も保存し、動的欄位の契約はstate-contractを用いる。関数、DOM、WeakMap、callback、closure、debug hook、scroll、表示設定は保存しない。許可されたaccessor／方法とCareerSession等は専用hydrateで再構築し、newState／seedInit／追加抽選でデータを補わない。
+- **保存・競合**：同originのIndexedDB `yakyujinsei-career` v1、career storeのautosave一枠。{revision,save,seal}を単一readwrite transactionでCAS更新。順序付き書込、careerId／generationで過期処理を拒否。内部削除はrevision tombstoneでABAを防ぐが、独立削除UIはない。新規開始は確認後、最初の保存成功時だけ置換。生涯IDやI/O用IDは主RNGを消費しない。
+- **失敗保護**：読取不能／未知保存では明示確認した非保存プレイを許し、その生涯は回復後も自動書込を再開しない。多分頁CAS敗者は以後の書込を停止、強制覆書しない。戻って最新保存を読む時は未保存操作破棄を確認。配額不足や保存失敗は旧データを保持し成功扱いにしない。URLのseedで保存を自動読込／上書きせず、開発・本番・端末間で保存は共有しない。
+- **還原失敗**：検証後に隔離候補から新しい実行期を作り、首步成功前は保存・成功表示・ゲーム操作を止める。部分実行に失敗した候補やcallback／token／佇列を再利用しない。retryは原保存を再読取・再検証し、新しいS／CareerSession／generationから再開する。元保存は失敗状態で覆わない。
+- **由来と信頼性**：実際の完了所有権とCOMMITTED Receiptを確認して捕捉したD2証明だけを完全Sとともに封存。同庫の永続・非exportable HMAC keyで完全内容／careerId／revisionを検証後、過年度Consumer用readonly証明を再構築する。任意JSONやhashを完了身分に昇格せず、効果・給与・honorsを再実行しない。鍵欠失・改変・不整合・未対応schema／compatibilityは原保存を保持して拒否する。防作弊、悪意ある同origin任意コードや整包有効旧データの回放への防御は保証しない。
+- **互換性と検証**：gameVersionだけで読取可否を判断せず、表示変更とルール／RNG変更を区別してcompatibilityを評価する。未対応データを自動昇格せず、旧engine切替やrv／rules URLは導入しない。各支援路線の保存・読込・同じ選択策略の完整S／RNG、正常・境界・破損・再実行・付款防重・多分頁・首步故障を関連テストで確認する。受入結果と実機の測定限界は第一期受入記録を正本とし、異なるSHAのPASSを流用しない。

@@ -1,8 +1,12 @@
 # ブラウザー年度保存 第一期：開発・受入記録
 
-2026-11-08。開発版1.15.0、未公開・未コミット。開始時dev HEAD 3e4a98e0eea30db849935bf3303283444878b03f。途中の独立作業で素材選單修正をPR #61へ置換し、PR #62を保持した現在HEADは1a74e71954c4a0f1fbf311f3a6796e3ca7e0329b。存檔変更はすべて作業ツリーにあり、独立CI提交へ混入していない。
+開始時点の履歴（以下の各時点記録は当時の状態を保持）：2026-11-08。開発版1.15.0、未公開・未コミット。開始時dev HEAD 3e4a98e0eea30db849935bf3303283444878b03f。途中の独立作業で素材選單修正をPR #61へ置換し、PR #62を保持した現在HEADは1a74e71954c4a0f1fbf311f3a6796e3ca7e0329b。存檔変更はすべて作業ツリーにあり、独立CI提交へ混入していない。
 
 ## 状態
+
+USER_ACCEPTED / PHASE1_COMPLETE（2026-11-08）。使用者已確認剩餘實機驗收及1.15.1首頁正常，第一期在批准範圍內完成；開發版1.15.1、dev合併PR #70，尚未合併main或正式發布。詳細結案依據見文末「第一期最終使用者驗收」。ARTIFACT_COVERAGE_BLOCKED獨立継續，不屬本次解除事項。
+
+### 結案前狀態（歷史原文）
 
 IMPLEMENTED_UNVERIFIED（2026-11-08最新）：dev合併後のCI Quick／Full及び桌機PreviewはPASS、iPhone Safari実機はWebDriver自動化で受入済み（使用者が実機受入として承認）、Android Chrome実機はNOT_RUN（下記「dev 合併後的 CI 與桌機 Preview」「iPhone Safari 實機」）。以下は前時点の記録：最新補強後の最終Quick／Fullは執行請求が拒否されたためNOT_RUN。結果取得前に第一期完了とはしない。実機Safari／Android、Preview：NOT_RUN。ARTIFACT_COVERAGE_BLOCKEDは別件として継続。
 
@@ -122,3 +126,23 @@ PR #65 合併後的 dev 再併入 PR #66（第 36 期 `CheckpointRenderer`），
   6. 直向 375×664：遊戲畫面與標題存檔區 `scrollWidth`＝375、無水平溢出、無按鈕裁切，截圖目視確認：限定 PASS。橫向及網址列顯示切換未測（WebDriver 無法操作）。
   7. 主題改為ナイター後兩段確認刪除；reload 後「セーブデータはありません」、無「続きから」，主題保留：PASS。測試後顯示設定已恢復初始值。
 - 未做：Android Chrome 實機（NOT_RUN）。收到結果前本 ID 保持未勾選。ARTIFACT_COVERAGE_BLOCKED 維持獨立追蹤。
+
+
+## 第一期最終使用者驗收（2026-11-08）
+
+- 使用者在本對話先獲告知剩餘Android Chrome實機與1.15.1首頁Preview／實機確認，隨後回覆：「實績驗收OK，1.15.1也確認沒問題」。依對話上下文記為上述剩餘受入確認PASS，並非新一輪代理自動化實測。型號、OS／瀏覽器版本及逐項步驟未另提供，這些metadata標記未提供，不推定具體裝置或補造原始證據。
+- 先前iPhone Safari受入與其WebDriver／橫向／網址列測試限制維持原樣；不將歷史NOT_RUN改寫成當時已執行。最新使用者驗收與歷史工具量測分開記錄。
+- 產品1.15.1來源：fix分支1c10e7ff555bb046aa663a882ffa5846d0560be9；PR #70合入dev f3f05fae431a002429dbd42e430713aee2e058bc，保留dev的後續重構。正式站／main尚未反映本功能。
+- 本機Quick於34f83b3提交前測試修正工作樹：81 PASS／0 FAIL／0 SKIP／0 BLOCKED，372.501秒。其後僅修event-fix E2E與驗收紀錄；該入口1280／320／390px限定重測PASS，包含完整save／revision不變與原S／RNG斷言。
+- 最終Linux Full：[Run42474997879](https://github.com/tt-chin/yakyujinsei/actions/runs/42474997879)，attempt1，受驗SHA1c10e7ff555bb046aa663a882ffa5846d0560be9，107 PASS／0 FAIL／0 SKIP／0 BLOCKED，8批與Aggregate PASS。此結果只屬該SHA，不冒充加入dev平行重構後又執行過相同Full。
+- 原CI Quick80 PASS／1 FAIL（Run42470961151）及Full106 PASS／1 FAIL（Run42472867637）為舊首頁測試假設，已按正常新建表單操作修復，未改產品規則、原S／RNG斷言、baseline或timeout。歷史FAIL保持FAIL。
+- 最終狀態：BROWSER-SAVE-01 USER_ACCEPTED / PHASE1_COMPLETE。獨立刪除入口按使用者批准移除；開始新生涯時的覆蓋確認、原存檔保護及其他已批准年度存檔契約維持。任意時點存檔、匯入匯出、跨裝置同步不在第一期。
+- ARTIFACT_COVERAGE_BLOCKED繼續獨立未完成。結案不是main合併／正式部署授權，也不宣稱已發布。
+
+
+## 存檔功能開發結束（2026-11-08）
+
+使用者明確取消第二期匯出／匯入與第三期操作途中續玩，存檔功能以已驗收的第一期結案。第二、三期狀態為CANCELLED／未實作，不記為PASS，不視為未完成的第一期條件。後續不建立備份或途中存檔功能。原始驗收、歷史FAIL、各SHA結果及ARTIFACT_COVERAGE_BLOCKED均保持原狀；本決定不是正式發布授權。
+
+
+設計書整理（2026-11-08）：使用者授權刪除BROWSER_SAVE_DESIGN.md。現行年度保存技術契約移入[CURRENT_SPEC](../../CURRENT_SPEC.md)「年度保存の技術契約」，舊設計以[固定Git歷史](https://github.com/tt-chin/yakyujinsei/blob/f3f05fae431a002429dbd42e430713aee2e058bc/BROWSER_SAVE_DESIGN.md)保留追溯；第二、三期取消與第一期結案狀態不變，原FAIL證據不刪除。
