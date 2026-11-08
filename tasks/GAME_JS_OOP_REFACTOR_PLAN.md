@@ -4371,6 +4371,11 @@ T6 使 Quick 由 73 增為 74、Full 由 98 增為 99（manifest 依檔名自動
 
 - 上述 2 項 FAIL 另以 [PR #61](https://github.com/tt-chin/yakyujinsei/pull/61)（`d68ed26`，分支 `fix/credits-menu-tests`，自 `8a0e87d`）修正，只改測試（使用者決定 2026-11-08）：`board-menu.mjs` 的期待清單加 `board-credits`；`game-view-dom-e2e` 在基準的 `index.html` 沒有該按鈕時設 `__expect1141`，`captureGameView` 要求完全相同的按鈕標記恰好一次（否則 `CREDITS_MENU_CONTRACT`）後只去掉它，預設基準不變。該分支：`event-fix-e2e` PASS、`game-view-dom-e2e` 預設基準與 `--baseline=8a0e87d` 皆 PASS、`--negative-control` 仍 FAIL、突變 3 項皆 FAIL、Quick 73／73 PASS、reviewer 無發現。
 - 未做：Linux CI、Preview、`--preview` 路由、實機確認。本分支未包含 PR #61，Full 在 PR #61 併入前仍會有上述 2 項 FAIL。
+- 併入與發布（2026-11-08 以 GitHub Actions 頁面與 git 確認；上一行為實作當時的狀態）：
+  - [PR #62](https://github.com/tt-chin/yakyujinsei/pull/62) 併 dev（merge `ef7768e`），[Tests #148](https://github.com/tt-chin/yakyujinsei/actions/runs/42399800873) Quick success；PR #61 併 dev（merge `1a74e71`），[Tests #149](https://github.com/tt-chin/yakyujinsei/actions/runs/42400674221) Quick success。
+  - [Tests #150](https://github.com/tt-chin/yakyujinsei/actions/runs/42401142552)（手動 Full，dev `1a74e71`）：8 批與 aggregate success，`expected 99`、`acceptedPass 99`、`issues []`。
+  - [PR #63](https://github.com/tt-chin/yakyujinsei/pull/63) dev→main（merge `a8859b9`，樹與 `1a74e71` 相同）：PR Full [Tests #151](https://github.com/tt-chin/yakyujinsei/actions/runs/42404561894)（merge ref `26d2c28`）`expected 99`、`acceptedPass 99`、`issues []`；[Publish website #34](https://github.com/tt-chin/yakyujinsei/actions/runs/42404607279) success。VERSION 仍為 1.14.1。
+  - 仍未做：Preview、`--preview` 路由、實機確認、正式站內容確認。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -4879,7 +4884,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 使用者決定（2026-11-03）：A–G 全部依序分期進行，一期一組，各期開始前另立細部計畫。順序依上列建議：第 32 期 A，之後 B、E＋C、D；F、G 於各期細部計畫時決定併入相鄰期。不授權實作。
 - 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），與第 33 期同經 PR #59 併入 dev（`7234965`），見 §2kk。
 - 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll。
-- 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），本機實作於 `refactor/season-phases`，未 commit，見 §2mm。
+- 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），於 `refactor/season-phases` 實作，經 PR #62 併入 dev（`ef7768e`），隨 PR #63 發布至 main（`a8859b9`），Linux Full 99／99 PASS，見 §2mm.6。
 
 ## 4. 使用者決定（2026-10-18）
 
