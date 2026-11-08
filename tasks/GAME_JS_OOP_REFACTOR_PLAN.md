@@ -4688,7 +4688,16 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 
 ### 2rr.5 驗證與交付（R3：故障與特性效果；允許差分無）
 
-- 待實作：草稿檔案依 T1／T2／T3 分 3 個 commit 複製至分支，逐位元組相同（`cmp`）；各 commit 跑 Quick；HEAD 於乾淨 worktree 跑 Quick（預期 85）與 8 批 Full（預期 111）；reviewer。
+- 實作：同一 assembler 依 T1／T2／T3 逐步套用，測試檔自草稿複製；13 檔與草稿逐位元組相同（`cmp`）。commit `85c5b7a`（T1）、`66ded78`（T2）、`597545c`（T3），計畫 commit `da05557` 在前。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（各 commit 的乾淨 worktree） | `85c5b7a` 83／83、`66ded78` 84／84、`597545c` 85／85 PASS，依 `summary.json` 核對（含 `career-traits.test`、`stat-format.test`） |
+| 本機 Full 第 1 次（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `597545c`） | **FAIL_OR_INCOMPLETE**：`acceptedPass 109`／`expected 111`，batch 4、5 exit 1。`bug-act-01-02-e2e` 與 `full-power-pitching-yakyo-test-001-e2e` 都在 `page.goto: Timeout 30000ms`（14:00:09–14:00:21 同一時段，兩個不同批次），無斷言失敗。判為環境問題：兩入口以 `test.mjs full --only=` 單獨重跑 2／2 PASS（部分重跑，不作為 Full PASS） |
+| 本機 Full 第 2 次（同上） | `PASS`，`expected 111`、`acceptedPass 111`、`issues []`，plan 111 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,103 秒（macOS＋Brave 本機證據）。含 `game-view-dom-e2e` 對 `4f39a73` |
+| reviewer | 無阻擋性發現。已查：移動本體與 `f3f05fa` 逐字相同（僅狀態讀取插入、改名、縮排）、載入時無 TDZ（各建構函式只保存依賴）、無內部呼叫繞過 `game.js` 名稱、`productionFunction` 切片與文字錨點仍有效、測試未放寬或空轉、換行與絕對路徑、新依賴。資訊性：`award-journal-native` 與 `tools/development-b/award-runtime-support` 把 `removeTrait` 包裝切進未提供 `careerTraits` 的 vm；現行 `awards`／`renderCheckpointCard` 不呼叫它，故不影響，日後若獎項流程呼叫 `removeTrait` 須補 |
+
+- 交付：PR 至 dev（待開）。未做：Linux CI Full（併 dev 後）、Preview、實機確認、main 發布。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
