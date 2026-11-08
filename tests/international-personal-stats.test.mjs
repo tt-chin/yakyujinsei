@@ -5,7 +5,8 @@ import {execFileSync} from 'node:child_process';
 import {internationalPersonalStats,renderInternationalPersonalStats} from '../docs/src/ui/international-personal-stats.js';
 import {prepareInternationalResult,commitInternationalResult} from '../docs/src/engine/international-trait-policy.js';
 const source=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
-const fmtIP=runInNewContext('('+source.slice(source.indexOf('function fmtIP('),source.indexOf('function roleN('))+')');
+// Phase 39 (§2rr): fmtIP moved from game.js into stat-format.js.
+import {fmtIP} from '../docs/src/ui/stat-format.js';
 const zero={G:0,IP:0,W:0,SV:0,SO:0,ER:0,PA:0,AB:0,H:0,HR:0,RBI:0};
 const state=()=>({year:2035,intlCount:0,intlFinalCount:0,intlCompletedKeys:{},intlTraitResults:{},intlStat:{...zero},pool:0,injNext:17,honors:[],traits:{}});
 let cases=0;
@@ -77,6 +78,10 @@ test('existing addIntlStats and fmtIP implementations remain byte-equivalent',()
   current=current.replace(delegate,'  function addIntlStats(){'+seasonStats.slice(at,seasonStats.indexOf('\n  }\n',at))+'}\n');
  }
  // OOP plan §2s: completeIntl moved into InternationalTournament, so addIntlStats ends at the next 2-space declaration.
- for(const [start,end]of [['  function addIntlStats(', '\n  function '],['function fmtIP(', 'function roleN(']])assert.equal(current.slice(current.lastIndexOf(start),current.indexOf(end,current.lastIndexOf(start))),baseline.slice(baseline.lastIndexOf(start),baseline.indexOf(end,baseline.lastIndexOf(start))));
+ // OOP plan §2rr: fmtIP moved into stat-format.js; compare its exported body with the baseline game.js function.
+ const statFormat=readFileSync(new URL('../docs/src/ui/stat-format.js',import.meta.url),'utf8').replace(/\r\n/g,'\n'),fmtStart='export function fmtIP(';
+ assert.equal(statFormat.split(fmtStart).length,2,'one exported fmtIP');assert.doesNotMatch(current,/function fmtIP\(/,'game.js no longer defines fmtIP');
+ assert.equal(statFormat.slice(statFormat.indexOf(fmtStart)+'export '.length,statFormat.indexOf('/* 長打率估算')),baseline.slice(baseline.lastIndexOf('function fmtIP('),baseline.indexOf('function roleN(',baseline.lastIndexOf('function fmtIP('))));
+ for(const [start,end]of [['  function addIntlStats(', '\n  function ']])assert.equal(current.slice(current.lastIndexOf(start),current.indexOf(end,current.lastIndexOf(start))),baseline.slice(baseline.lastIndexOf(start),baseline.indexOf(end,baseline.lastIndexOf(start))));
 });
 console.log(cases+' cases PASS');

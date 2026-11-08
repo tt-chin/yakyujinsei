@@ -65,7 +65,9 @@ import { defenseScoreFor, defenseBarFor, defensePositionQualified, defensePositi
 import { toolGapFor, overallRatingFor, playerTypeFor, abilityStepCostFor } from './ability-evaluation-policy.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
+import { fmtIP, slgOf } from '../ui/stat-format.js';
 import {TraitResultCard} from '../ui/trait-result-card.js';
+import { CareerTraits } from './career-traits.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
 import { canPlayHighSchoolFall, canPlaySenbatsu, nextSenbatsuEligibleYear, qualificationResult, qualifiesForChampionship, qualifiesForCorporateJapan, qualifiesForUniversityJingu, tournamentResult } from './domestic-tournament-policy.js';
 
@@ -135,21 +137,13 @@ const seasonStats=new SeasonStats({getState:()=>S,levels:LV,rng:{R:()=>R(),N0:sd
 let careerRng = null;
 function blankStat(){return seasonStats.blankStat();}
 function bucketOf(lv){return resolveStatBucket(LV,lv);}
-function traitCard(key,name,desc,tone){ S.traits[key]=true;
-  card(tone||'gold','隠し特性解放：'+name,desc); board(0); }
-function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
-    traitPresentation.get(S)?.delete(key);
-    if(!S.removed.includes(label))S.removed.push(label); } }
+function traitCard(key,name,desc,tone){careerTraits.unlock(key,name,desc,tone);}
+function removeTrait(key,label){careerTraits.remove(key,label);}
 /* 一芸特化：評価対象は三つの役割軸のみ——打撃(長打力/Contact)、走塁(速度)、守備(総合)。 */
 function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
 function toolGap(){return toolGapFor(S.ab,S.pos);}
-function tjAccrue(){ /* 毎季TJゲージを蓄積する。球速と変化球が高いほど負担が増え、投球強度で倍率を決める。 */
-  if(S.pos!=='P'||S.seasonFactor<=0)return;
-  const mult={'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}[S.effort]||1.0;
-  const base=(S.ab.vel+S.ab.brk)/19*mult*(S.tjCount>=1?1.15:1); /* 手術歴がある場合はTJゲージの蓄積を速める。 */
-  S.tj+=base;
-}
-function tjCap(){ return S.traits.rubber?100:50; }
+function tjAccrue(){return playerInjury.accrueTj();}
+function tjCap(){return playerInjury.tjGaugeLimit();}
 function afterGamble(kind,cont){playerInjury.afterGamble(kind,cont);}
 function tjGamble(cont){playerInjury.tjGamble(cont);}
 const playerInjury=new PlayerInjury({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,v)=>addAb(k,v),board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),removeTrait:(key,label)=>removeTrait(key,label),tjCap:()=>tjCap(),rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}});
@@ -160,13 +154,6 @@ function pitcherRole(){ /* スタミナ >=52 先発;それ以外はブルペン�
   const d=(S.role&&S.role!=='SP')?pd:-99;
   if(S.role==='CL')return d>=1?'CL':'MR';   /* クローザー成績急落時のみセットアッパー。 */
   return d>=3?'CL':'MR';                     /* セットアッパーがトップ階級の成績ならクローザーへ昇格。 */
-}
-function fmtIP(ip){ /* 十進出位局数轉棒球表示：小数部分 →三分之幾(出局数)。 */
-  if(ip==null)return '0.0';
-  const whole=Math.floor(ip); const frac=ip-whole;
-  const outs=Math.round(frac*3); /* 0/1/2/3 */
-  if(outs>=3)return (whole+1)+'.0';
-  return whole+'.'+outs;
 }
 function roleN(r){ return {SP:'先発',MR:'中継ぎ',CL:'抑え'}[r]||'—'; }
 function isSP(){ return S.role==='SP'; } /* 先発引擎判定。 */
@@ -181,32 +168,11 @@ function defRuns(lv){return seasonStats.defRuns(lv);}
 function addStatTotal(t,st){return seasonStats.addStatTotal(t,st);}
 function accStat(bucket,st){return seasonStats.accStat(bucket,st);}
 function accLevelStat(levelKey,st){return seasonStats.accLevelStat(levelKey,st);}
-function statLine(st){
-  if(S.pos==='P'){ const role=roleN(S.role); const relief=(S.role==='CL'&&st.SV)?`｜${st.SV}セーブ`:(S.role==='MR'&&st.HLD)?`｜${st.HLD}ホールド`:''; return `出場 ${st.G}｜投球回 ${fmtIP(st.IP)}｜${st.W}勝${st.L}敗${relief}｜奪三振 ${st.SO}｜四球 ${st.BB||0}｜ERA ${st.era.toFixed(2)}｜WHIP ${(st.WHIP||0).toFixed(2)}`; }
-  const obpN=st.PA>0?(st.H+st.BB)/st.PA:0;
-  const slgN=slgOf(st);
-  const obp=st.PA>0?obpN.toFixed(3).replace(/^0/,''):'-';
-  const slg=st.AB>0?slgN.toFixed(3).replace(/^0/,''):'-';
-  const ops=st.AB>0?(obpN+slgN).toFixed(3).replace(/^0/,''):'-';
-  return `出場 ${st.G}｜打席 ${st.PA}｜打率 ${st.avg.toFixed(3).replace(/^0/,'')}｜出塁率 ${obp}｜長打率 ${slg}｜OPS ${ops}｜安打 ${st.H}｜本塁打 ${st.HR}｜打点 ${st.RBI}｜四球 ${st.BB}｜盗塁 ${st.SB}${st.DEF!==undefined?`｜守備 ${st.DEF>0?'+':''}${st.DEF}`:''}`;
-}
-/* 長打率估算：なし二三壘成績、に応じて本塁打比例と長打力推估塁打数。 */
-function slgOf(st){
-  if(!st.AB)return 0;
-  const hr=st.HR, nonHR=Math.max(0,st.H-hr);
-  /* 本塁打以外の安打のうち、約 22% 二塁打、3% 三塁打——整数本で算出し、塁打数必ず整数、小標本で成立しないSLGが出るのを防ぐ。 */
-  const doubles=Math.round(nonHR*0.22), triples=Math.round(nonHR*0.03);
-  const singles=Math.max(0,nonHR-doubles-triples);
-  const tb=singles + doubles*2 + triples*3 + hr*4;
-  return tb/st.AB;
-}
+function statLine(st){return careerPresenter.statLine(st);}
 const fmtMoney=yen=>{yen=Math.max(0,Math.round(Number(yen)||0));const oku=Math.floor(yen/100000000),man=Math.floor((yen%100000000)/10000);return (oku?oku+'億':'')+(man?man.toLocaleString()+'万円':oku?'円':'0円');};
-function displayTrait(key){return traitLabel(key,S,teamNick);}
-function traitNames(){return Object.fromEntries(Object.keys(TRAIT_LABELS).map(key=>[key,displayTrait(key)]));}
-function checkGoldclothSeason(){
-  recordFirstTeamSeason(S);
-  if(goldclothEligible(S))traitCard('goldcloth',displayTrait('goldcloth'),'阪神ストライプス一軍で通算10年。虎党の声援を背に、甲子園で戦い続けてきた。その縦縞は、もはやお前の誇りだ。');
-}
+function displayTrait(key){return careerTraits.label(key);}
+function traitNames(){return careerTraits.names();}
+function checkGoldclothSeason(){careerTraits.checkGoldclothSeason();}
 const careerPresenter=new CareerPresenter({getState:()=>S,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN:r=>roleN(r),playerType:()=>playerType(),ovr:()=>ovr(),tjCap:()=>tjCap()});
 function buildRecordViewModel(){return careerPresenter.record();}
 function buildAbilityViewModel(){return careerPresenter.ability();}
@@ -224,6 +190,7 @@ const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onT
 function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){return traitResultCard.decorate(node,title,html);}
 const traitResultCard=new TraitResultCard({getState:()=>S,traitPresentation,displayTrait});
+const careerTraits=new CareerTraits({getState:()=>S,traitPresentation,card:(cls,title,html)=>card(cls,title,html),board:p=>board(p),teamNick:team=>teamNick(team),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),displayTrait:key=>displayTrait(key)});
 function card(cls,title,html){ gameView.card(cls,title,html); }
 function divider(t){ _curYearBody=gameView.divider(t,MAX_YEARS); }
 function board(phase){ gameView.renderBoard(boardModel(phase)); }

@@ -31,6 +31,8 @@ function fixture(v={}){
  const ctx=vm.createContext({S,LV:activeLevels,POS_AB:{P:['sta','vel','ctl','brk'],IF:['sta','con']},clamp:(n,a,b)=>Math.max(a,Math.min(b,n)),R:()=>{throw Error('UNEXPECTED_RNG');},chance:()=>{throw Error('UNEXPECTED_CHANCE');},N0:()=>0,ri:()=>{throw Error('UNEXPECTED_RI');},isSP:()=>S.role==='SP',board:()=>{},card:(...a)=>cards.push(a),choose:(title,opts)=>choices.push({title,opts}),tjGamble:()=>{},addAb:(k,n)=>S.ab[k]+=n,declineForSeason:()=>0,bucketOf:()=> 'NPB',simSeason:()=>structuredClone(raw),applyEventSeason,normalizeEventSeason,consumeEventSeason:s=>s.pendStat=0,accStat:()=>{},accLevelStat:()=>{},statLine:s=>JSON.stringify(s),awards:()=>{},recordSalaryEvaluation:()=>{},captureSeasonChampionship:()=>{},classifyMarketInjury:()=> 'HEALTHY',toolGap:()=>({gap:0}),careerAllStars:()=>0,displayTrait:k=>k,PlayerInjury,ABL:{}});
  ctx.seasonContinuations=new WeakMap();ctx.resumeSeasonEnd=()=>false;ctx.restorePendingChoice=()=>false;ctx.getState=()=>S;
  for(const name of ['tjCap','tjAccrue'])vm.runInContext(productionFunction(name,source),ctx);
+ // Phase 39 (§2rr): tjCap/tjAccrue are wrappers over PlayerInjury.tjGaugeLimit/accrueTj; build the instance from this fixture's state.
+ if(source.includes('playerInjury.accrueTj('))ctx.playerInjury=new PlayerInjury({getState:()=>S,tjCap:()=>ctx.tjCap(),rng:{}});
  for(const name of ['proSeason',...(hasSeasonFunction('resumeProfessionalSeason')?['resumeProfessionalSeason']:[]),...(hasSeasonFunction('runSeasonPipeline')?['runSeasonPipeline']:[])])vm.runInContext(seasonFunctionSource(name),ctx);
  vm.runInContext(phasePreSource(),ctx);
  return{S,ctx,cards,choices,raw,run:code=>vm.runInContext(code,ctx)};

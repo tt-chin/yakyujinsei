@@ -3,10 +3,12 @@ import {formatRehabStatus} from './condition-view-model.js';
 import {tjGaugeCap} from './condition-view-model.js';
 import {contractTypeLabel} from './contract-labels.js';
 import {removedTraitLabel} from '../engine/trait-policy.js';
+import {slgOf} from './stat-format.js';
 
 // Read-only player/career view models for navigation, the desktop overview (OOP plan §2g) and the scoreboard (§2ff).
 // The career state is read on every call through getState, so a new career (S reassigned) is seen at once.
 // Method bodies are the former game.js build*ViewModel and boardModel bodies; game.js helpers and labels are injected.
+// statLine is the former game.js statLine body (OOP plan §2rr); slgOf comes from stat-format.js.
 export class CareerPresenter {
   #getState;#deps;
   constructor({getState,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN,playerType,ovr,tjCap=()=>tjGaugeCap(getState())}){
@@ -40,6 +42,15 @@ export class CareerPresenter {
     const age=S.age, year=S.year;
     const ovrValue=ovr(), clearTj=S.pos==='P', salaryText=Math.round((S.currentSalary||0)/10000).toLocaleString();
     return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase};
+  }
+  statLine(st){const S=this.#getState(),{fmtIP,roleN}=this.#deps;
+    if(S.pos==='P'){ const role=roleN(S.role); const relief=(S.role==='CL'&&st.SV)?`｜${st.SV}セーブ`:(S.role==='MR'&&st.HLD)?`｜${st.HLD}ホールド`:''; return `出場 ${st.G}｜投球回 ${fmtIP(st.IP)}｜${st.W}勝${st.L}敗${relief}｜奪三振 ${st.SO}｜四球 ${st.BB||0}｜ERA ${st.era.toFixed(2)}｜WHIP ${(st.WHIP||0).toFixed(2)}`; }
+    const obpN=st.PA>0?(st.H+st.BB)/st.PA:0;
+    const slgN=slgOf(st);
+    const obp=st.PA>0?obpN.toFixed(3).replace(/^0/,''):'-';
+    const slg=st.AB>0?slgN.toFixed(3).replace(/^0/,''):'-';
+    const ops=st.AB>0?(obpN+slgN).toFixed(3).replace(/^0/,''):'-';
+    return `出場 ${st.G}｜打席 ${st.PA}｜打率 ${st.avg.toFixed(3).replace(/^0/,'')}｜出塁率 ${obp}｜長打率 ${slg}｜OPS ${ops}｜安打 ${st.H}｜本塁打 ${st.HR}｜打点 ${st.RBI}｜四球 ${st.BB}｜盗塁 ${st.SB}${st.DEF!==undefined?`｜守備 ${st.DEF>0?'+':''}${st.DEF}`:''}`;
   }
   player(){return Object.freeze({ability:this.ability(),traits:this.traits()});}
   career(){const S=this.#getState(),{fmtMoney}=this.#deps;const ct=S.ct||null,contractDescription=ct?`${ct.startYear||S.year}～${ct.endYear||S.year}年　${contractTypeLabel(ct.contractType)}`:'契約なし';const schedule=Array.isArray(ct?.annualSchedule)&&ct.annualSchedule.length?ct.annualSchedule.map(row=>`${row.year}年 ${fmtMoney(row.amount||0)}${row.paid?'（支払済み）':''}`):['—'];const history=(S.salaryDecisionHistory||[]).map(row=>`${row.salaryYear||row.decisionYear||'—'}年 ${fmtMoney(row.finalSalary||0)}`);return Object.freeze({stats:this.record(),achievements:[...(S.honors||[])],contract:Object.freeze({description:contractDescription,remainingYears:ct?`${ct.remainingYears||0}年`:'—',guaranteedTotal:ct?fmtMoney(ct.guaranteedTotal||0):'—',schedule,currentSalary:fmtMoney(S.currentSalary||0),signingBonus:fmtMoney(S.careerSigningBonus||0),developmentStipend:fmtMoney(S.careerDevelopmentStipend||0),postingFee:ct?.postingFee>0?fmtMoney(ct.postingFee)+'（球団への支払い・生涯収入対象外）':undefined,outsideIncome:fmtMoney(S.careerOutsideIncome||0),yearOutsideIncome:fmtMoney(S.yearOutsideIncome||0),corpIncome:fmtMoney(S.corpIncome||0),incomeLedger:(S.incomeLedger||[]).map(row=>row.year+'年 '+fmtMoney(row.amountYen)),careerEarnings:fmtMoney(S.careerEarnings||0),incomeRows:Object.freeze(incomeSummary(S).map(row=>Object.freeze({key:row.key,label:row.label,value:fmtMoney(row.amount)}))),history}),yearly:(S.log||[]).map(row=>Object.freeze({year:row.y,age:row.age,team:row.tm,summary:row.line||''}))});}
