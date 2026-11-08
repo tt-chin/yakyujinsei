@@ -4450,6 +4450,68 @@ T6 使 Quick 由 74 增為 75、Full 由 99 增為 100。
   - 仍未做：Preview 實際遊玩、實機確認、main 發布。D9 已記為 BACKLOG `TEST-VACUOUS-ASSERT-01`，本機 Full 記憶體門檻記為 `TEST-LOCAL-FULL-MEMGATE-01`。
 - 後續：§3.22 的 D 系列候補至此完成，F、G 收益小；是否繼續下一期另行決定。`championship-intl.test:81` 恆真斷言另批修正（D9）。
 
+## 2oo. 第 36 期：`renderCheckpointCard` 移至 `CheckpointRenderer`（細部計畫，2026-11-08；D1–D7、T1–T6 與實作批准 2026-11-08）
+
+§3.22 候選 F，依 §3.23 的判斷標準（是否讓程式更物件導向、更好擴充）選出。草稿、抵達探測與草稿 Full 已做（§2oo.4）。維護收益：結果卡的繪製收據（每個 owner、每個 key 只畫一次，失敗時判定是否已寫入 DOM）由單一類別負責，收據狀態不再寫進業務物件（賞的計畫、季末 entry）；新的 checkpoint 使用者只要注入同一個實例。
+
+### 2oo.1 現況（基準 `c62cd4a`，`game.js` 518 行／51,705 bytes）
+
+- `:315–:329` `renderCheckpointCard(owner,key,args)`，988 bytes；不讀 `S`、無 RNG；自由名稱 `card`、`logTarget`、`document`、`Map`、`Error`。收據存於 `owner.renderReceipts`（`Map`），狀態 `PLANNED`／`COMMITTED`／`AMBIGUOUS`，`AMBIGUOUS` 時丟 `RESULT_RENDER_AMBIGUOUS`。
+- 呼叫端：`SeasonAwards`（`season-awards.js:31`，owner＝賞的計畫，`年間賞` 等卡）與 `SeasonSettlement`（`season-settlement.js:39,40,51`，owner＝`careerSession.seasonEndContext`，`隠し特性解放：優勝請負人`、`…達成`、`シーズン終了`），兩者都經 `game.js:314`、`:483` 的延遲綁定 lambda 取得。
+- owner 不在 `S`：賞的計畫存於 `award-transaction-policy.js` 的 `WeakMap`；`seasonEndContext` 在 `careerSession`，browser save 讀檔時重建 `careerSession`。`browser-save-*.js` 不處理 `Map`、計畫或 `renderIndex`。`tests`、`scripts`、`tools` 沒有讀 `renderReceipts`（grep 0 處）。
+- 執行時重綁：E2E 與 vm 測試替換 `game.js` 的 `card`，對 `年間賞`、`シーズン終了` 注入故障以測收據恢復（`award-journal-native.test`、`tools/development-b/award-runtime-support.mjs` 的 vm `card`；`tools/development-a/runtime.mjs` 不在 manifest，且引用已不存在的名稱）。故搬移後不可直接呼叫 `GameView.card`。
+- 名稱切片：`championship-intl.test:77`、`award-journal-native.test:28`、`award-runtime-support.mjs:38`（`award-history-b-comparison.test`、`pitcher-award-integration.test` 經此）以 `productionFunction('renderCheckpointCard')` 切片；`trait-policy.test:109` 以 `function awards(` 至 `/* 升降格と去向。 */` 文字切片。搬移本體的 18 字 n-gram 掃描（649 個片段，`tests`、`scripts`、`tools`、`docs/src`）：命中只有名稱簽名 `renderCheckpointCard(owner,key,args`（接線行，不變）、`season-settlement.test:46,60` 的結算模組舊本體字串（不變）與 `status==='COMMITTED'`、`classList.contains` 等通用片段，沒有錨定搬移本體的文字耦合。基準 Full 入口數 106（`ci-full-batches.mjs plan`，`c62cd4a`）。
+
+### 2oo.2 設計（使用者決定 2026-11-08：D1 新類別、D2 WeakMap，D3–D7 依建議）
+
+| # | 內容 | 決定／建議 |
+|---|---|---|
+| D1 | 位置與名稱 | **已決定**：新檔 `docs/src/ui/checkpoint-renderer.js`，類別 `CheckpointRenderer`，方法 `render(owner,key,args)`，實例 `checkpointRenderer`。不做成 `GameView` 方法：它必須呼叫注入的 `card`，放進 `GameView` 會形成 `GameView`→`game.js` `card`→`GameView.card` 的迴圈依賴 |
+| D2 | 收據存放 | **已決定**：類別私有 `#receipts=new WeakMap()`，鍵為 owner，值為 key→receipt 的 `Map`。owner 不再帶 `renderReceipts`；生命週期與原本相同（隨 owner 回收） |
+| D3 | 依賴 | `card:(...args)=>card(...args)`、`logTarget:()=>logTarget()`，皆為延遲綁定 lambda，私有欄位保存。`typeof document` 判斷留在類別內，語意不變（vm 測試與 Node 主 realm 皆無 `document`） |
+| D4 | `game.js` 接線 | 包裝 `function renderCheckpointCard(owner,key,args){checkpointRenderer.render(owner,key,args);}` 留在原位，建構行緊接其後、`/* 升降格と去向。 */` 之前；import 接在 `GameView` 之後。保留原因：`SeasonAwards`、`SeasonSettlement` 的建構行文字不變（`verify-modularization:50` 逐字比對），4 處切片依名稱取用。移除條件：兩個建構行改注入實例、切片不再依名稱取用時 |
+| D5 | 本體 | 原 13 行逐字搬入（＋2 縮排），只改 3 處：收據取得行、`logTarget()`→`this.#logTarget()`、`card(`→`this.#card(`；註解原樣保留 |
+| D6 | 允許差分 | `S`、RNG、DOM、卡片順序、錯誤：無。唯一刻意差異：owner 物件不再有 `renderReceipts` 屬性（非 `S`，無觀察者） |
+| D7 | 分支 | 自 `origin/dev`（`c62cd4a`）以 `--no-track` 開 `refactor/checkpoint-renderer`；第一個 commit 為本計畫與 §3.23 |
+
+### 2oo.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `championship-intl.test` | import `CheckpointRenderer` 並加入 vm 情境 `c`；`:76` 註解改寫（切片現在帶包裝與建構行） |
+| T2 | `award-journal-native.test` | import 並加入 vm 情境 |
+| T3 | `tools/development-b/award-runtime-support.mjs` | import 並加入 vm 情境（`award-history-b-comparison.test`、`pitcher-award-integration.test` 由此修復） |
+| T4 | `trait-policy.test` | import 並加入 `:112` 的 `Object.assign` 情境 |
+| T5 | `verify-modularization` | 第 36 期區塊：import 兩行、包裝＋建構行＋`/* 升降格と去向。 */` 各恰好一次；`new CheckpointRenderer(`／`checkpointRenderer.render(`／`function renderCheckpointCard(` 各一次；`renderReceipts`、`RESULT_RENDER_AMBIGUOUS`、`AMBIGUOUS`、`card appends synchronously` 不在 `game.js` |
+| T6 | `checkpoint-renderer.test`（新） | 第 1 部分：模組＝檔頭＋`c62cd4a` 本體（＋2 縮排）加 3 處替換（整檔相等，每處以次數 1 斷言）。第 2 部分：舊函式於 vm、類別於主 realm，同一組 `card`／`logTarget`／假 DOM stub；6 種 `card` 行為（成功、寫入前丟錯、寫入一張卡後丟錯、寫入非卡元素後丟錯、寫入兩個後丟錯、移除後丟錯）×有／無 `document`，再接重試、同 owner 另一 key、另一 owner 同 key，加 1 組連續 AMBIGUOUS，共 13 組逐呼叫比較結果、錯誤、`card`／`logTarget` 呼叫與 DOM；到達斷言（`return`、`CARD_FAULT`、`RESULT_RENDER_AMBIGUOUS`、COMMITTED 略過重試、`logTarget` 只在有 `document` 時呼叫）；刻意差異斷言（舊 owner 有 `renderReceipts`，新 owner 無屬性）；測試內負控制（`count+1`→`count+2` 的模組副本須得 `['CARD_FAULT','RESULT_RENDER_AMBIGUOUS']`） |
+
+T6 使 Quick 由 80 增為 81、Full 由 106 增為 107（`test.mjs list` 自動入口 107→108，含 syntax）。
+
+### 2oo.4 草稿實測（2026-11-08，scratch worktree，基準 `c62cd4a`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 `git show HEAD` 產生；搬移本體與原文只差 D5 的 3 行；`game.js` +3／−15（CRLF 保留），模組 LF |
+| AST | `game.js` 未解析名稱只少 `Map`、`Error`，未使用 import 105→105；模組未解析名稱只有 `Error`、`Map`、`WeakMap`、`document` |
+| 未改測試的 Quick | 75／80，FAIL：`award-history-b-comparison.test`、`award-journal-native.test`、`championship-intl.test`、`pitcher-award-integration.test`、`trait-policy.test`（皆 `CheckpointRenderer is not defined`，切片帶入建構行） |
+| T1–T6 後的 Quick | 81／81 PASS（依 `summary.json`，含新入口） |
+| 本機 8 批 Full（`local-full-batches.mjs`） | `PASS`，`expected 107`、`acceptedPass 107`、`issues []`，`sourceChanged false`，1,110 秒；Full 專屬入口不需額外測試變更 |
+| 抵達與接縫探測（`probe33-0` P、`-1` IF、`-3` P，balanced；舊＝`c62cd4a`、新＝草稿；頁面掛鉤重綁 `card`） | 3 條皆 PRO 結束（KBO1／CPBL2／NPB_DEV）。每條跑 3 種：無故障、首張 `シーズン終了` 寫入後丟錯、首張 `年間賞` 寫入前丟錯。9／9 新舊一致：結束狀態、步數、故障次數、checkpoint 卡標題序列（35–38 張）、最終 `S` 雜湊、`#log` HTML 雜湊、頁面錯誤（堆疊正規化後）。故障後生涯恢復並完成（多 1 步） |
+| 接縫負控制（建構行改 `card:(...args)=>gameView.card(...args)`） | 9／9 與舊不同：掛鉤看到的 checkpoint 卡 0 張、注入故障 0 次，故障情境步數與錯誤也不同。證明這些卡全部經 `CheckpointRenderer` 注入的 `card` |
+| 突變（新寫與改指向的斷言） | 13／13 抓到，皆為 `ERR_ASSERTION`，檔案逐位元組還原。T5：繞過 `card`、包裝不呼叫 `render`、`renderReceipts` 出現在 `game.js`（第一次放在錨點行被接線斷言先抓到，改放檔尾後由「moved into」斷言抓到）。T6 第 1 部分：`count+2`、不存收據、一律呼叫 `logTarget`。T6 第 2 部分（去掉第 1 部分整檔斷言的暫存副本，避免被遮蔽）：上述 3 項加「AMBIGUOUS 不丟錯」皆由逐呼叫比較抓到。T1、T2：包裝不呼叫 `render` 時由既有斷言抓到 |
+
+### 2oo.5 驗證與交付（R3：Receipt；允許差分見 D6）
+
+- 實作：草稿 8 檔複製至分支，逐位元組相同（`cmp`）。commit `a08764f`（計畫 commit `c490b0a` 在前）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，HEAD `a08764f`） | 81／81 PASS，依 `summary.json` 核對 |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `a08764f`） | `PASS`，`expected 107`、`acceptedPass 107`、`issues []`，plan 107 入口、8 批全數執行，`sourceChanged false`，1,108 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：`typeof document` 改在主 realm 判定（4 個 vm 情境都沒有注入 `document`）、錯誤改由主 realm 丟出（沒有 `instanceof` 判斷）、`renderReceipts` 無讀取端、owner 皆為物件、`card`／`logTarget` 無繞過路徑、import 路徑大小寫 |
+
+- 未做：Linux CI、Preview、實機確認。push、PR 依 AGENTS §10 另批。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -4959,6 +5021,20 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll。
 - 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），於 `refactor/season-phases` 實作，經 PR #62 併入 dev（`ef7768e`），隨 PR #63 發布至 main（`a8859b9`），Linux Full 99／99 PASS，見 §2mm.6。
 - 第 35 期 D：草稿、抵達探測與草稿 Full 已做（基準 `1a74e71`），D1–D10、T1–T8 與實作已批准（2026-11-08，`ProfessionalSeason`），於 `refactor/pro-season` 實作（`4df368b`，Quick 75／75、本機 Full 100／100 PASS，macOS＋Brave 本機證據），經 PR #64 併入 dev（`d3d2a53`），Tests #156 Linux Full 100／100 PASS，見 §2nn.5。
+- 第 36 期 F：§3.23 依物件導向／擴充標準選出；草稿、抵達與接縫探測、草稿 Full 已做（基準 `c62cd4a`），D1–D7、T1–T6 與實作已批准（2026-11-08，`CheckpointRenderer`、`WeakMap`），於 `refactor/checkpoint-renderer` 實作（`a08764f`，Quick 81／81、本機 Full 107／107 PASS，macOS＋Brave 本機證據），尚未 push，見 §2oo.5。
+
+### 3.23 第 36 期候補再盤點（2026-11-08，基準 `c62cd4a`，`game.js` 518 行／51,705 bytes；靜態分析）
+
+- 方法：scratchpad acorn＋eslint-scope 腳本（同 §3.22），測試耦合以 grep 掃 `tests`、`scripts`、`tools`。152 個頂層函式共 17,695 bytes，多為一行包裝；其餘約 34 KB 為 import、常數與組件建構接線。
+- 使用者決定（2026-11-08）：以「是否讓程式更物件導向、更好擴充」為選期標準，不以 bytes 收益為準。
+
+| 候選 | 物件導向／擴充的改善 | 判斷 |
+|---|---|---|
+| F `renderCheckpointCard` | 收據狀態離開業務物件，描畫收據由單一類別負責 | 第 36 期（§2oo） |
+| 開局流程（`startJapanese`＋`initializeBrowserSave` 的 restore callback） | 兩條路徑重複開局流程（設 `S`／`SEED`、切換畫面、`navigation.reset/show`、`history.replaceState`、`startYear`），restore 直接 `delete careerSession[k]`；可由一個物件提供 `startNew()`、`resume(state)` 共用同一段進入流程。眼前的收益是消除重複；更多入口（匯入／匯出、多存檔槽）目前不在設計內 | **待 BROWSER-SAVE-01 驗收完成**後另立一期；涉及 seed，R3 |
+| G2 seed／名稱工具（`normalizeSeed` 等 5 個） | 無狀態純函式，只是拆檔 | 不做 |
+| G1 `fnv1a32` | 已以雜湊策略注入 `Rng`；6 處依名稱切片 | 不做 |
+| `initializeBrowserSave` 單獨搬 | 組裝接線，留在 `game.js` 合理 | 只隨開局流程處理 |
 
 ## 4. 使用者決定（2026-10-18）
 

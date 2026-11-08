@@ -12,6 +12,7 @@ import {decideIndependentAward} from '../../docs/src/engine/award-rng-policy.js'
 import {calculateMarketAwardAdjustment} from '../../docs/src/engine/salary-evaluation-policy.js';
 import {Rng} from '../../docs/src/engine/rng.js';
 import {SeasonAwards} from '../../docs/src/engine/season-awards.js';
+import {CheckpointRenderer} from '../../docs/src/ui/checkpoint-renderer.js';
 import {salaryAwardBonus} from '../../docs/src/engine/salary-promotion-policy.js';
 import {evaluateIncentive} from '../../docs/src/engine/incentive-policy.js';
 import {honorScoreFor} from '../../docs/src/engine/hall-of-fame-policy.js';
@@ -27,7 +28,7 @@ const state=(league='NPB',role='SP',seed='d2-native-'+league)=>({seed,year:2039,
   honors:['2038 NPB新人王'],traits:{glass:true,phoenix:false,yips:true},removed:[],pool:7});
 function harness(src,s,st,{slotFault=false,effectFault=false,newFault=false,renderFault=false,historyFault=false}={}){
   const cards=[],rng=[];let slotOnce=slotFault,effectOnce=effectFault,newOnce=newFault,renderOnce=renderFault;
-  const c=vm.createContext({S:structuredClone(s),SEED:s.seed,structuredClone,TextEncoder,Rng,SeasonAwards,...identity,...consumers,...tx,...traits,
+  const c=vm.createContext({S:structuredClone(s),SEED:s.seed,structuredClone,TextEncoder,Rng,SeasonAwards,CheckpointRenderer,...identity,...consumers,...tx,...traits,
     traitPresentation:new WeakMap(),teamNick:x=>x,board:()=>{},recordR:x=>rng.push(structuredClone(x)),
     captureAwardSlot:(...a)=>tx.captureAwardSlot(...a,slotOnce?()=>{slotOnce=false;throw Error('AFTER_SLOT');}:undefined),
     prepareD2AwardDecisions:(...a)=>tx.prepareD2AwardDecisions(...a,newOnce?()=>{newOnce=false;throw Error('AFTER_NEW_DECISIONS');}:undefined),

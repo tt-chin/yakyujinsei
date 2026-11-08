@@ -102,6 +102,17 @@ for(const line of [
   for(const name of ['new ProfessionalSeason(','professionalSeason.proSeason(','function proSeason('])assert.equal(text.split(name).length,2,'professional season wiring only once: '+name);
   for(const gone of ['function resumeProfessionalSeason(','function runSeasonPipeline(','function portionOf(','seasonContinuations','STALE_SEASON_CONTINUATION','PRO_SEASON_AMBIGUOUS','SEASON_CONTINUATION_AMBIGUOUS','シーズン途中の移籍','隠し特性解放：鉄人','一芸特化を返上'])assert.ok(!text.includes(gone),'moved into ProfessionalSeason: '+gone);
 }
+{// Phase 36: the checkpoint render receipts. renderCheckpointCard stays a game.js name (SeasonAwards and SeasonSettlement
+  // reach it through late-binding lambdas, vm harnesses slice it by name); the constructor follows the wrapper and passes card
+  // and logTarget as late-binding lambdas so card rebinding in E2E and vm fault fixtures still reaches the receipt body.
+  const text=sourceText(game);
+  for(const line of [
+    "\nimport { GameView } from '../ui/game-view.js';\nimport { CheckpointRenderer } from '../ui/checkpoint-renderer.js';\n",
+    '\nfunction renderCheckpointCard(owner,key,args){checkpointRenderer.render(owner,key,args);}\nconst checkpointRenderer=new CheckpointRenderer({card:(...args)=>card(...args),logTarget:()=>logTarget()});\n/* 升降格と去向。 */\n',
+  ])assert.equal(text.split(line).length,2,'checkpoint renderer wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new CheckpointRenderer(','checkpointRenderer.render(','function renderCheckpointCard('])assert.equal(text.split(name).length,2,'checkpoint renderer wiring only once: '+name);
+  for(const gone of ['renderReceipts','RESULT_RENDER_AMBIGUOUS','AMBIGUOUS','card appends synchronously'])assert.ok(!text.includes(gone),'moved into CheckpointRenderer: '+gone);
+}
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
