@@ -4510,7 +4510,8 @@ T6 使 Quick 由 80 增為 81、Full 由 106 增為 107（`test.mjs list` 自動
 | 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `a08764f`） | `PASS`，`expected 107`、`acceptedPass 107`、`issues []`，plan 107 入口、8 批全數執行，`sourceChanged false`，1,108 秒（macOS＋Brave 本機證據） |
 | reviewer | 無發現。已查：`typeof document` 改在主 realm 判定（4 個 vm 情境都沒有注入 `document`）、錯誤改由主 realm 丟出（沒有 `instanceof` 判斷）、`renderReceipts` 無讀取端、owner 皆為物件、`card`／`logTarget` 無繞過路徑、import 路徑大小寫 |
 
-- 未做：Linux CI、Preview、實機確認。push、PR 依 AGENTS §10 另批。
+- 交付：連同 `TEST-VACUOUS-ASSERT-01`（`ab4fbb1`）經 PR #66 併入 dev（`ea89c15`）。dev push Quick Tests #160 PASS；手動 Full Tests #161（Run 42464271804）Linux 107／107 PASS（8 批及 Aggregate PASS）。dev Preview 內容與 `ea89c15` 逐位元組一致。
+- 未做：實機確認、main 發布。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -5021,7 +5022,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll。
 - 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），於 `refactor/season-phases` 實作，經 PR #62 併入 dev（`ef7768e`），隨 PR #63 發布至 main（`a8859b9`），Linux Full 99／99 PASS，見 §2mm.6。
 - 第 35 期 D：草稿、抵達探測與草稿 Full 已做（基準 `1a74e71`），D1–D10、T1–T8 與實作已批准（2026-11-08，`ProfessionalSeason`），於 `refactor/pro-season` 實作（`4df368b`，Quick 75／75、本機 Full 100／100 PASS，macOS＋Brave 本機證據），經 PR #64 併入 dev（`d3d2a53`），Tests #156 Linux Full 100／100 PASS，見 §2nn.5。
-- 第 36 期 F：§3.23 依物件導向／擴充標準選出；草稿、抵達與接縫探測、草稿 Full 已做（基準 `c62cd4a`），D1–D7、T1–T6 與實作已批准（2026-11-08，`CheckpointRenderer`、`WeakMap`），於 `refactor/checkpoint-renderer` 實作（`a08764f`，Quick 81／81、本機 Full 107／107 PASS，macOS＋Brave 本機證據），尚未 push，見 §2oo.5。
+- 第 36 期 F：§3.23 依物件導向／擴充標準選出；草稿、抵達與接縫探測、草稿 Full 已做（基準 `c62cd4a`），D1–D7、T1–T6 與實作已批准（2026-11-08，`CheckpointRenderer`、`WeakMap`），於 `refactor/checkpoint-renderer` 實作（`a08764f`，Quick 81／81、本機 Full 107／107 PASS，macOS＋Brave 本機證據），經 PR #66 併入 dev（`ea89c15`），Tests #161 Linux Full 107／107 PASS，見 §2oo.5。
 
 ### 3.23 第 36 期候補再盤點（2026-11-08，基準 `c62cd4a`，`game.js` 518 行／51,705 bytes；靜態分析）
 
