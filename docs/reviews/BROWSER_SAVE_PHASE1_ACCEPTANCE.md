@@ -4,7 +4,7 @@
 
 ## 状態
 
-IMPLEMENTED_UNVERIFIED。最新補強後の最終Quick／Fullは執行請求が拒否されたためNOT_RUN。結果取得前に第一期完了とはしない。実機Safari／Android、Preview：NOT_RUN。ARTIFACT_COVERAGE_BLOCKEDは別件として継続。
+IMPLEMENTED_UNVERIFIED（2026-11-08最新）：dev合併後のCI Quick／Full及び桌機PreviewはPASS、iPhone Safari／Android Chrome実機はNOT_RUN（下記「dev合併後のCIと桌機Preview」）。以下は前時点の記録：最新補強後の最終Quick／Fullは執行請求が拒否されたためNOT_RUN。結果取得前に第一期完了とはしない。実機Safari／Android、Preview：NOT_RUN。ARTIFACT_COVERAGE_BLOCKEDは別件として継続。
 
 ## 実装範囲
 
@@ -91,3 +91,19 @@ feature/browser-saveの製品commitはccd1ac2b109fd34812c0a5588558376b8a87ab1a�
 合入 dev d3d2a53f78537f3de90befd8438c08a65049edfc，保留 PR #64 ProfessionalSeason 重構。BACKLOG 保留存檔未完成項目及 dev 的歷史紀錄；全力投球 E2E 保留首次導航前安裝 fixture，並將相同探針接到抽離後的 ProfessionalSeason。模組文字在切片前統一換行，不放寬原規則／S／RNG 斷言。新增的 ProfessionalSeason 入口使合併後 Full 為 106，批次工具期待數同步更新，未減少測試。
 
 限定驗證：ProfessionalSeason 29 情境 PASS；存檔 Runtime 在 1280／320／390px 的年度還原 S／RNG、失敗保護及重試、雙分頁衝突與資料庫拒絕情境 PASS；批次工具 31 PASS／0 FAIL／1 SKIP（Linux 專用案例於 Windows 未執行）；235 個 JS 語法 PASS。本機未執行 Full。合併後整套 Quick／Full、Preview、iPhone Safari／Android Chrome 實機尚未驗證，不能沿用原 SHA 的 Full 105 PASS。ARTIFACT_COVERAGE_BLOCKED 維持獨立追蹤。
+
+### dev 合併後的 CI 與桌機 Preview（2026-11-08）
+
+PR #65 合併後的 dev 再併入 PR #66（第 36 期 `CheckpointRenderer`），受驗 SHA 為 `ea89c152f0c2fca95cdcc17f2a5a13573b8e2403`。
+
+- CI：push Quick Tests #160 PASS；手動 Full Tests #161（Run 42464271804）Aggregate `{"status":"PASS","expected":107,"acceptedPass":107,"issues":[]}`，8 批 exitCode 0。此為合併後首次 Full，原 `06eb583` 的 Full 105 不再沿用。
+- Preview 內容：`https://dev.yakyujinsei.pages.dev` 的 `src/engine/game.js`、`src/ui/checkpoint-renderer.js` 與 `ea89c15` 逐位元組一致；版本 1.15.0。
+- 桌機 Preview（macOS Brave、Playwright 操作、1280 寬；seed `save-preview-20261108`、投手；開始前此 origin 無存檔）依上述實機受入手順：
+  1. 開局後「2026年の開始時点をセーブしました」：PASS。
+  2. 同年度分配 5 顆骰子（スタミナ 22→47）並確定後 reload，「続きから」回到 2026 年開頭，スタミナ 22、年齡 16、年俸 0，無重複加算：PASS。
+  3. 進到 2027 年並存檔（17 歲、能力 51／31／31／23、總合 32），關閉分頁後新分頁開同 URL，概要為 2027 年・17 歲，再開後數值一致：PASS。
+  4. 新規開始確認 cancel、刪除第 1 段承認・第 2 段 cancel 後，存檔概要仍為 2027 年：PASS。
+  5. 兩分頁自 2027 年再開；A 進到 2028 年存檔（61／34／31／23）；B 以不同分配進到 2028 年（54／47）後顯示「別のタブで進行状況が更新されました。このタブでは以後セーブされません。」，只有「セーブせずに続ける」「タイトルで最新データを読む」，無強制覆寫。B 返回標題確認 cancel 後留在遊戲，承認後再開為 A 的 2028 年（61／34）：PASS。
+  6. 標題存檔區在 390×844、844×390 無水平溢出（`scrollWidth`＝視窗寬），按鈕未被裁切：限定 PASS；網址列顯示切換只能實機確認。
+  7. 主題改為ナイター後，兩段確認刪除存檔；reload 後顯示「セーブデータはありません」、無「続きから」，主題保留：PASS。測試後顯示設定已恢復初始值。
+- 未做：iPhone Safari／Android Chrome 實機（NOT_RUN）。桌機結果不代替實機；收到實機結果前本 ID 保持未勾選。ARTIFACT_COVERAGE_BLOCKED 維持獨立追蹤。
