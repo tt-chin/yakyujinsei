@@ -38,7 +38,19 @@ export async function runPool(items,concurrency,run,{shouldStop=()=>false}={}){
   await Promise.all(Array.from({length:Math.min(concurrency,items.length)},worker));
   return results.sort((a,b)=>a.index-b.index);
 }
-export async function waitForMemory({readFree=os.freemem,now=Date.now,pause=ms=>new Promise(r=>setTimeout(r,ms)),minBytes=2*1024**3,timeoutMs=60000,shouldStop=()=>false,onWait=()=>{}}={}){
+// macOS os.freemem() omits reclaimable inactive pages. vm_stat "Pages free"
+// excludes speculative pages; purgeable pages already sit in active/inactive.
+export function parseVmStat(text){
+  const page=String(text).match(/page size of (\d+) bytes/);if(!page)return null;
+  const pages=['free','speculative','inactive'].map(name=>String(text).match(new RegExp(`^Pages ${name}:\\s+(\\d+)\\.$`,'m')));
+  if(pages.some(x=>!x))return null;
+  return pages.reduce((sum,x)=>sum+Number(x[1]),0)*Number(page[1]);
+}
+export function readAvailableMemory({platform=process.platform,runVmStat=()=>execFileSync('vm_stat',{encoding:'utf8',timeout:5000}),readFree=os.freemem}={}){
+  if(platform==='darwin'){try{const bytes=parseVmStat(runVmStat());if(bytes!==null)return bytes;}catch{}}
+  return readFree();
+}
+export async function waitForMemory({readFree=()=>readAvailableMemory(),now=Date.now,pause=ms=>new Promise(r=>setTimeout(r,ms)),minBytes=2*1024**3,timeoutMs=60000,shouldStop=()=>false,onWait=()=>{}}={}){
   const started=now();
   while(!shouldStop()){
     const free=readFree();if(free>=minBytes)return true;
@@ -64,7 +76,7 @@ async function main(){
   if(options.playwright)env.PLAYWRIGHT_MODULE=options.playwright;
   if(options.browser)env.TEST_BROWSER=options.browser;
   const identity=sourceIdentity(),started=new Date().toISOString(),disk=statfsSync(root);
-  const environment={node:process.version,platform:process.platform,arch:process.arch,osRelease:os.release(),totalMemory:os.totalmem(),initialFreeMemory:os.freemem(),diskAvailableBytes:disk.bavail*disk.bsize};
+  const environment={node:process.version,platform:process.platform,arch:process.arch,osRelease:os.release(),totalMemory:os.totalmem(),initialFreeMemory:os.freemem(),initialAvailableMemory:readAvailableMemory(),diskAvailableBytes:disk.bavail*disk.bsize};
   write(path.join(output,'source-manifest.json'),identity);
   const active=new Map(),completed=[],samples=[],memoryWait=new Map();let stopped=false,sourceChanged=false,resourceBlocked=false,peakConcurrency=0;
   const coordinator=()=>({started,head:identity.head,sourceFingerprint:identity.fingerprint,concurrency:2,peakConcurrency,active:[...active.keys()],completed,stopped,sourceChanged,resourceBlocked,memoryWait:[...memoryWait.values()],minFreeMemoryMiB:2048,resourceWaitLimitSeconds:60,environment,memorySamples:samples});
@@ -92,15 +104,16 @@ async function main(){
     const plan=JSON.parse(readFileSync(path.join(output,'plan.json'),'utf8'));
     console.log(`PLAN ${plan.batches.flat().length} entries / 8 batches / max 2 concurrent; ${output}`);
     timer=setInterval(()=>{
-      samples.push({time:new Date().toISOString(),osFreeMemory:os.freemem(),coordinatorRss:process.memoryUsage().rss});save();
-      console.log(`RUN batches ${[...active.keys()].join(',')||'none'}; completed ${completed.length}/8; free memory ${Math.round(os.freemem()/1048576)} MiB`);
+      const availableMemory=readAvailableMemory();
+      samples.push({time:new Date().toISOString(),osFreeMemory:os.freemem(),availableMemory,coordinatorRss:process.memoryUsage().rss});save();
+      console.log(`RUN batches ${[...active.keys()].join(',')||'none'}; completed ${completed.length}/8; available memory ${Math.round(availableMemory/1048576)} MiB`);
     },30000);
     const executions=await runPool([1,2,3,4,5,6,7,8],2,async index=>{
       if(!unchanged())throw Error('SOURCE_CHANGED: batch not started');
       let lastNotice=-1;
       const ready=await waitForMemory({shouldStop:()=>stopped||sourceChanged||resourceBlocked,onWait:sample=>{
         memoryWait.set(index,{index,...sample});
-        const notice=Math.floor(sample.waitedMs/10000);if(notice!==lastNotice){lastNotice=notice;save();console.log(`RESOURCE_WAIT batch ${index}; free ${Math.round(sample.freeBytes/1048576)} MiB`);}
+        const notice=Math.floor(sample.waitedMs/10000);if(notice!==lastNotice){lastNotice=notice;save();console.log(`RESOURCE_WAIT batch ${index}; available ${Math.round(sample.freeBytes/1048576)} MiB`);}
       }});
       memoryWait.delete(index);
       if(!ready||resourceBlocked||stopped||sourceChanged){resourceBlocked=resourceBlocked||(!stopped&&!sourceChanged);save();throw Error(resourceBlocked?'RESOURCE_BLOCKED: insufficient free RAM for 60 seconds; batch not started':'STOPPED: batch not started');}

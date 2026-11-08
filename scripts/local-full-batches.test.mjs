@@ -4,7 +4,7 @@ import {mkdtempSync,readFileSync,writeFileSync} from 'node:fs';
 import {spawn} from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
-import {runPool,acceptedLocalRun,newOutput,sourceIdentity,waitForMemory} from './local-full-batches.mjs';
+import {runPool,acceptedLocalRun,newOutput,sourceIdentity,waitForMemory,parseVmStat,readAvailableMemory} from './local-full-batches.mjs';
 import {fullIds,fullSeconds,splitIds,validatePlan} from './ci-full-batches.mjs';
 const ids=[1,2,3,4,5,6,7,8],wait=ms=>new Promise(r=>setTimeout(r,ms));
 test('exact existing eight-way Full partition; every entry once',()=>{
@@ -69,4 +69,33 @@ test('low-memory wait resumes when headroom returns; no timeout/assertion change
 test('persistent low RAM or cancellation never launches an accepted Full',async()=>{
  let clock=0;assert.equal(await waitForMemory({readFree:()=>0,now:()=>clock,timeoutMs:3000,pause:async ms=>{clock+=ms;}}),false);assert.equal(clock,3000);
  assert.equal(await waitForMemory({shouldStop:()=>true,readFree:()=>{throw Error('must not read');}}),false);
+});
+const vmStat=`Mach Virtual Memory Statistics: (page size of 16384 bytes)
+Pages free:                                   750684.
+Pages active:                                 935930.
+Pages inactive:                              1198534.
+Pages speculative:                              7509.
+Pages throttled:                                   0.
+Pages wired down:                             191661.
+Pages purgeable:                               48160.
+`;
+test('darwin available memory counts free, speculative and inactive pages only',()=>{
+ const expected=(750684+7509+1198534)*16384;
+ assert.equal(parseVmStat(vmStat),expected);
+ assert.equal(readAvailableMemory({platform:'darwin',runVmStat:()=>vmStat,readFree:()=>{throw Error('must not read');}}),expected);
+});
+test('available memory falls back to os free memory off darwin or on unreadable vm_stat',()=>{
+ let vmStatCalls=0;const countedVmStat=()=>{vmStatCalls++;return vmStat;};
+ assert.equal(readAvailableMemory({platform:'linux',runVmStat:countedVmStat,readFree:()=>123}),123);
+ assert.equal(readAvailableMemory({platform:'win32',runVmStat:countedVmStat,readFree:()=>124}),124);
+ assert.equal(vmStatCalls,0);
+ assert.equal(readAvailableMemory({platform:'darwin',runVmStat:()=>{throw Error('vm_stat missing');},readFree:()=>125}),125);
+ for(const broken of ['',vmStat.replace('page size of 16384 bytes','page size unknown'),vmStat.replace(/^Pages inactive:.*\n/m,''),vmStat.replace('Pages free:                                   750684.','Pages free: n/a')]){
+  assert.equal(parseVmStat(broken),null);
+  assert.equal(readAvailableMemory({platform:'darwin',runVmStat:()=>broken,readFree:()=>126}),126);
+ }
+});
+test('memory gate defaults to available memory and keeps the 2 GiB / 60 s guard',()=>{
+ const source=readFileSync(new URL('./local-full-batches.mjs',import.meta.url),'utf8');
+ assert.equal(source.split('export async function waitForMemory({readFree=()=>readAvailableMemory(),now=Date.now,pause=ms=>new Promise(r=>setTimeout(r,ms)),minBytes=2*1024**3,timeoutMs=60000,').length,2);
 });
