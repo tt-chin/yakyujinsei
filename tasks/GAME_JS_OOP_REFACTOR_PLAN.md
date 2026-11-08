@@ -4441,7 +4441,13 @@ T6 使 Quick 由 74 增為 75、Full 由 99 增為 100。
 | 抵達與重綁探測（`4df368b` 對 `ce9e2d1`，同 §2nn.4 的 6 條） | 命中序列、重綁計數、RNG、步數、`S` 全部一致，Console error 0 |
 | reviewer | 無發現。提示：`game.js` 接線的 key 與模組 `DEPS` 名稱集合沒有測試互相核對（草稿 AST 檢查已核對 31 個一致，探測證實執行時接線） |
 
-- 未做：Linux CI、Preview、實機確認。push、PR 依 AGENTS §10 另批。
+- 未做（實作當時）：Linux CI、Preview、實機確認。push、PR 依 AGENTS §10 另批。
+- 併入（2026-11-08 以 GitHub Actions 頁面、git 與 curl 確認；上一行為實作當時的狀態）：
+  - [PR #64](https://github.com/tt-chin/yakyujinsei/pull/64) 併 dev（merge `d3d2a53`，`docs`、`tests`、`scripts` 與 `df0ed19` 相同）。
+  - [Tests #156](https://github.com/tt-chin/yakyujinsei/actions/runs/42452617589)（手動 Full，`refactor/pro-season` `df0ed19`）：8 批與 aggregate success，`expected 100`、`acceptedPass 100`、`issues []`。
+  - dev push [Quick](https://github.com/tt-chin/yakyujinsei/actions/runs/42453651874)（`d3d2a53`）75／75 PASS。
+  - 固定 Preview 的 `professional-season.js`、`game.js`、`season-phases.js`、`config.js`、`index.html` 與 dev 一致（行尾正規化後 SHA256）。
+  - 仍未做：Preview 實際遊玩、實機確認、main 發布。D9 已記為 BACKLOG `TEST-VACUOUS-ASSERT-01`，本機 Full 記憶體門檻記為 `TEST-LOCAL-FULL-MEMGATE-01`。
 - 後續：§3.22 的 D 系列候補至此完成，F、G 收益小；是否繼續下一期另行決定。`championship-intl.test:81` 恆真斷言另批修正（D9）。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
@@ -4952,7 +4958,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），與第 33 期同經 PR #59 併入 dev（`7234965`），見 §2kk。
 - 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll。
 - 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），於 `refactor/season-phases` 實作，經 PR #62 併入 dev（`ef7768e`），隨 PR #63 發布至 main（`a8859b9`），Linux Full 99／99 PASS，見 §2mm.6。
-- 第 35 期 D：草稿、抵達探測與草稿 Full 已做（基準 `1a74e71`），D1–D10、T1–T8 與實作已批准（2026-11-08，`ProfessionalSeason`），於 `refactor/pro-season` 實作（`4df368b`，Quick 75／75、本機 Full 100／100 PASS，macOS＋Brave 本機證據），尚未 push，見 §2nn。
+- 第 35 期 D：草稿、抵達探測與草稿 Full 已做（基準 `1a74e71`），D1–D10、T1–T8 與實作已批准（2026-11-08，`ProfessionalSeason`），於 `refactor/pro-season` 實作（`4df368b`，Quick 75／75、本機 Full 100／100 PASS，macOS＋Brave 本機證據），經 PR #64 併入 dev（`d3d2a53`），Tests #156 Linux Full 100／100 PASS，見 §2nn.5。
 
 ## 4. 使用者決定（2026-10-18）
 
