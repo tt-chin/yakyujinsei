@@ -4626,7 +4626,15 @@ T5 使 Quick 由 82 增為 83、Full 由 108 增為 109。
 
 ### 2qq.5 驗證與交付（R3：成績模擬的階級表；允許差分無）
 
-- 待實作：草稿 14 檔複製至分支並以 `cmp` 確認相同，commit；乾淨 worktree 跑 Quick（預期 83）與 8 批 Full（預期 109）；reviewer。
+- 實作：草稿 14 檔複製至分支，逐位元組相同（`cmp`）。commit `5bd5aa4`（計畫 commit `de7069b` 在前）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，HEAD `5bd5aa4`） | 83／83 PASS，依 `summary.json` 核對（含 `league-catalog.test`） |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `5bd5aa4`） | `PASS`，`expected 109`、`acceptedPass 109`、`issues []`，plan 109 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,087 秒（macOS＋Brave 本機證據）。其中 `game-view-dom-e2e`：8 份生涯與 `4f39a73` 逐步相同 |
+| reviewer | 無發現。已查：合併表的值與鍵順序（正式程式無依賴鍵順序的迭代）、目錄提早建立時 7 個組件建構函式與 rules 工廠皆不在建構時讀表值、球團紀錄提早凍結前後皆無寫入、無程式改寫 `window.TEAM_MASTER`、無 hook 改綁或以 `productionFunction` 切出 `teamRec` 等名稱、測試未放寬且 `doesNotMatch` 未變空轉、換行與絕對路徑、新依賴、E2E 注入錨點仍在 |
+
+- 交付：PR 至 dev（待開）。未做：Linux CI Full（併 dev 後與第 37 期一起）、Preview、實機確認、main 發布。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
