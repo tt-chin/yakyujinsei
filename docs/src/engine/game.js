@@ -54,6 +54,7 @@ import { YearFlow } from './year-flow.js';
 import { MovementGate } from './movement-gate.js';
 import { SeasonPhases } from './season-phases.js';
 import { ProfessionalSeason } from './professional-season.js';
+import { CareerEntry } from './career-entry.js';
 import { GameView } from '../ui/game-view.js';
 import { CheckpointRenderer } from '../ui/checkpoint-renderer.js';
 import { initNavigation } from '../ui/navigation.js';
@@ -482,7 +483,8 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
     });
   },0);};
 
-  function startJapanese(){let params=new URLSearchParams(location.search);let sv=normalizeSeed($('seed-show').value||params.get('seed'));if(!sv)sv=generateSeed();SEED=sv;const pos=document.querySelector('#seg-pos button.on')?.dataset.v||'P';const nm=normalizePlayerName($('in-name').value,SEED,pos);S={rngState:0};seedInit(SEED);S=newState(nm,pos);history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}`);$('start').style.display='none';$('board').style.display='';$('act').style.display='';navigation.reset();navigation.show();card('info','選手誕生',`${S.year}年春、${POSN[S.pos]} <b class="hl">${escapeHTML(S.name)}</b>は<b class="hl">${escapeHTML(S.team)}</b>${S.schoolTier==='C'?'（C級・弱小校）':''}野球部に入部した。ここから、すべての選択が野球人生を変える。`);startYear();}
+  function startJapanese(){careerEntry.startNew();}
+  const careerEntry=new CareerEntry({getState:()=>S,setState:state=>{S=state;},getSeed:()=>SEED,setSeed:seed=>{SEED=seed;},careerSession,CareerSession,POSN,$:id=>$(id),getNavigation:()=>navigation,normalizeSeed:raw=>normalizeSeed(raw),generateSeed:()=>generateSeed(),normalizePlayerName:(raw,seed,pos)=>normalizePlayerName(raw,seed,pos),seedInit:str=>seedInit(str),newState:(name,pos)=>newState(name,pos),escapeHTML:v=>escapeHTML(v),card:(...args)=>card(...args),actClear:()=>actClear(),startYear:()=>startYear()});
   const appVersion=$('app-version');if(appVersion)appVersion.textContent='v'+VERSION;
   createSeedShareController({trigger:$('board-share'),getSeed:()=>S?.seed||$('seed-show').value||SEED});
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});
@@ -499,8 +501,7 @@ export async function initializeBrowserSave(){
  const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onDelete:()=>browserSave.remove(),onRetry:()=>browserSave.restore(),onHome:home});
  browserSave=new BrowserSaveController({notify:show,lock:locked=>{$('app').inert=locked;if(locked){++careerSession.choiceGeneration;careerSession.activeChoiceToken=null;}},restore:(envelope,{authorization}={})=>{
   const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});
-  const generation=careerSession.choiceGeneration+1;for(const k of Object.keys(careerSession))delete careerSession[k];Object.assign(careerSession,new CareerSession(),{choiceGeneration:generation});
-  S=candidate;SEED=S.seed;$('log').replaceChildren();actClear();$('app').style.display='flex';$('start').style.display='none';$('board').style.display='';$('act').style.display='';navigation.reset();navigation.show();history.replaceState(null,'',`?seed=${encodeURIComponent(SEED)}`);startYear();
+  careerEntry.resume(candidate);
  }});
  show(browserSave.state);await browserSave.initialize();
 }
