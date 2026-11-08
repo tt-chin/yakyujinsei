@@ -27,13 +27,17 @@
 <link rel="stylesheet" href="./styles/board-menu.css">
 <link rel="stylesheet" href="./styles/information.css">
 <link rel="stylesheet" href="./styles/stadium-background.css">
+<link rel="stylesheet" href="./styles/browser-save.css">
 </head>
   <body>
 <div id="start">
   <div class="wrap">
+    <header class="home-title">
     <div class="stitch"></div>
     <h1 id="logo-tap"><em>野球人生シミュレーター</em><span id="app-version" style="margin-left:8px;font-family:monospace;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--dim);white-space:nowrap;vertical-align:middle"></span></h1>
     <p class="sub">高校野球からNPBドラフト、海外挑戦、日本代表、引退まで。すべての選択が野球人生を変える。</p>
+    </header>
+    <section id="home-create" class="home-controls" aria-label="新しい選手の作成">
     <div class="field"><label>選手名</label><input id="in-name" maxlength="10" placeholder="例：山田太郎" value=""></div>
     <div class="field"><label>ポジション</label>
       <div class="seg" id="seg-pos">
@@ -44,8 +48,8 @@
     <p class="seedline">ワールドシード
       <input id="seed-show" maxlength="24" style="width:120px;background:#fff;color:#a71930;border:1px solid #d9a1aa;border-radius:6px;padding:2px 6px;font-family:inherit;font-size:12px;text-align:center">
       · <a href="#" id="seed-re" style="color:var(--blue)">新しいシード</a><br>同じシード＋同じ選択＝同じ野球人生</p>
-    <button type="button" class="btn" data-open-preferences aria-haspopup="dialog">表示設定</button>
-  <nav class="start-information" aria-label="ゲーム案内"><button class="btn" type="button" data-information="help">遊び方</button><button class="btn" type="button" data-information="updates">更新履歴</button><button class="btn" type="button" data-information="credits">クレジット・使用素材</button></nav>
+    </section>
+  <nav class="start-information" aria-label="ゲーム案内"><button class="btn" type="button" data-open-preferences aria-haspopup="dialog">表示設定</button><button class="btn" type="button" data-information="help">遊び方</button><button class="btn" type="button" data-information="updates">更新履歴</button><button class="btn" type="button" data-information="credits">クレジット</button></nav>
     <footer style="text-align:center;margin-top:22px;color:var(--dim);font-size:12px">Produced by <a href="https://x.com/dog_cat_150" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none">犬猫（@dog_cat_150）</a></footer>
   </div>
 </div>

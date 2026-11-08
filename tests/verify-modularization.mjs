@@ -19,6 +19,9 @@ const [html, config, data, game, main, baseCss, themeCss] = await Promise.all([
 ]);
 const shareImage = await read('docs/src/ui/share-image.js');
 const initialState = await read('docs/src/engine/initial-state.js');
+const careerEntryModule = await read('docs/src/engine/career-entry.js');
+const leagueCatalogModule = await read('docs/src/engine/league-catalog.js');
+const playerInjuryModule = await read('docs/src/engine/player-injury.js');
 
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/jp-theme\.css">/);
@@ -60,7 +63,7 @@ for(const line of [
     '\nfunction nextStep(){return yearFlow.nextStep();}\n',
     '\nfunction advance(){return yearFlow.advance();}\n',
     '\n  function reportFlowOutcome(outcome){return yearFlow.reportFlowOutcome(outcome);}\n  const flowHooks={advance:null,endGame:null};\n',
-    '\n  function phaseIntlPre(){return yearFlow.phaseIntlPre();}\n  function startYear(){return yearFlow.startYear();}\n'+
+    '\n  function phaseIntlPre(){return yearFlow.phaseIntlPre();}\n  function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}\n'+
       '  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]});\n',
     "\nimport { YearFlow } from './year-flow.js';\n",
   ])assert.equal(text.split(line).length,2,'year flow wiring, once: '+line.trim().slice(0,50));
@@ -90,6 +93,67 @@ for(const line of [
   for(const name of ['new SeasonPhases(','seasonPhases.phasePre(','seasonPhases.phaseMid(','function phasePre(','function phaseMid('])assert.equal(text.split(name).length,2,'season phases wiring only once: '+name);
   for(const gone of ['シーズン前特訓','let afterAsk=','const preAsk=afterAsk','開幕前の投球プラン','シーズン半ばの健康診断','PRESEASON_'])assert.ok(!text.includes(gone),'moved into SeasonPhases: '+gone);
 }
+{// Phase 35: the professional season. proSeason stays a rebindable name (LEGACY captures it, SeasonPhases reaches it through a
+  // late-binding lambda, E2E traces wrap it); the constructor follows the wrapper and passes every game.js call as a late-binding lambda.
+  const text=sourceText(game);
+  for(const line of [
+    "\nimport { ProfessionalSeason } from './professional-season.js';\n",
+    '\nconst choiceViews=new WeakMap(),yearHandoffs=new WeakMap();\n',
+    '\nfunction rollInjury(){playerInjury.rollInjury();}\nfunction proSeason(){return professionalSeason.proSeason();}\n'+
+      "const professionalSeason=new ProfessionalSeason({getState:()=>S,LV,clamp,simSeason:lv=>simSeason(lv),applyEventSeason:(st,options)=>applyEventSeason(st,options),consumeEventSeason:state=>consumeEventSeason(state),normalizeEventSeason:(st,options)=>normalizeEventSeason(st,options),bucketOf:lv=>bucketOf(lv),accStat:(bucket,st)=>accStat(bucket,st),accLevelStat:(levelKey,st)=>accLevelStat(levelKey,st),card:(cls,title,html)=>card(cls,title,html),statLine:st=>statLine(st),isSP:()=>isSP(),toolGap:()=>toolGap(),careerAllStars:()=>careerAllStars(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),removeTrait:(key,label)=>removeTrait(key,label),board:phase=>board(phase),awards:(bucket,st)=>awards(bucket,st),classifyMarketInjury:input=>classifyMarketInjury(input),recordSalaryEvaluation:st=>recordSalaryEvaluation(st),captureSeasonChampionship:state=>captureSeasonChampionship(state),tjAccrue:()=>tjAccrue(),tjGamble:cont=>tjGamble(cont),demotionAudit:cont=>demotionAudit(cont),tradeCheck:cont=>tradeCheck(cont),maybeIntl:done=>maybeIntl(done),nextStep:()=>nextStep(),resumeSeasonEnd:()=>resumeSeasonEnd(),restorePendingChoice:()=>restorePendingChoice(),seasonRng:{R:()=>R()}});\n"+'function awards(bucket,st){',
+  ])assert.equal(text.split(line).length,2,'professional season wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new ProfessionalSeason(','professionalSeason.proSeason(','function proSeason('])assert.equal(text.split(name).length,2,'professional season wiring only once: '+name);
+  for(const gone of ['function resumeProfessionalSeason(','function runSeasonPipeline(','function portionOf(','seasonContinuations','STALE_SEASON_CONTINUATION','PRO_SEASON_AMBIGUOUS','SEASON_CONTINUATION_AMBIGUOUS','シーズン途中の移籍','隠し特性解放：鉄人','一芸特化を返上'])assert.ok(!text.includes(gone),'moved into ProfessionalSeason: '+gone);
+}
+{// Phase 36: the checkpoint render receipts. renderCheckpointCard stays a game.js name (SeasonAwards and SeasonSettlement
+  // reach it through late-binding lambdas, vm harnesses slice it by name); the constructor follows the wrapper and passes card
+  // and logTarget as late-binding lambdas so card rebinding in E2E and vm fault fixtures still reaches the receipt body.
+  const text=sourceText(game);
+  for(const line of [
+    "\nimport { GameView } from '../ui/game-view.js';\nimport { CheckpointRenderer } from '../ui/checkpoint-renderer.js';\n",
+    '\nfunction renderCheckpointCard(owner,key,args){checkpointRenderer.render(owner,key,args);}\nconst checkpointRenderer=new CheckpointRenderer({card:(...args)=>card(...args),logTarget:()=>logTarget()});\n/* 升降格と去向。 */\n',
+  ])assert.equal(text.split(line).length,2,'checkpoint renderer wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new CheckpointRenderer(','checkpointRenderer.render(','function renderCheckpointCard('])assert.equal(text.split(name).length,2,'checkpoint renderer wiring only once: '+name);
+  for(const gone of ['renderReceipts','RESULT_RENDER_AMBIGUOUS','AMBIGUOUS','card appends synchronously'])assert.ok(!text.includes(gone),'moved into CheckpointRenderer: '+gone);
+}
+{// Phase 37: new and resumed careers. startJapanese stays a game.js name (btn-start and the smallschool E2E hook call it);
+  // the constructor follows the wrapper and injects S/SEED accessors, careerSession by reference and every game.js function
+  // as a late-binding lambda, so E2E rebinding of card, startYear, R and seedInit still reaches both entry paths. The restore
+  // callback keeps hydrateSavedState and hands the candidate to careerEntry.resume.
+  const text=sourceText(game);
+  for(const line of [
+    "\nimport { ProfessionalSeason } from './professional-season.js';\nimport { CareerEntry } from './career-entry.js';\n",
+    "\n  function startJapanese(){careerEntry.startNew();}\n  const careerEntry=new CareerEntry({getState:()=>S,setState:state=>{S=state;},getSeed:()=>SEED,setSeed:seed=>{SEED=seed;},careerSession,CareerSession,POSN,$:id=>$(id),getNavigation:()=>navigation,normalizeSeed:raw=>normalizeSeed(raw),generateSeed:()=>generateSeed(),normalizePlayerName:(raw,seed,pos)=>normalizePlayerName(raw,seed,pos),seedInit:str=>seedInit(str),newState:(name,pos)=>newState(name,pos),escapeHTML:v=>escapeHTML(v),card:(...args)=>card(...args),actClear:()=>actClear(),startYear:()=>startYear()});\n",
+    "\n  const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});\n  careerEntry.resume(candidate);\n }});\n",
+  ])assert.equal(text.split(line).length,2,'career entry wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new CareerEntry(','careerEntry.startNew(','careerEntry.resume(','function startJapanese('])assert.equal(text.split(name).length,2,'career entry wiring only once: '+name);
+  for(const gone of ['選手誕生','S=newState(nm,pos)','S=candidate;SEED=S.seed','Object.keys(careerSession)','new CareerSession(),{choiceGeneration',"querySelector('#seg-pos button.on')","$('in-name').value"])assert.ok(!text.includes(gone),'moved into CareerEntry: '+gone);
+}
+{// Phase 38: league, level and team tables. LV, PATHS, TIER_TH, LG_N and TEAM_COLOR stay game.js names (components get them
+  // by reference, E2E hooks use them) as aliases of the catalog's tables; teamRec, teamDisplay, listByOrg and teamNick stay wrappers.
+  // The Japanese overlay's Object.assign lines are gone: the catalog defines their result once.
+  const text=sourceText(game),catalog=sourceText(leagueCatalogModule);
+  for(const line of [
+    "\nimport { JP_DATA } from '../data/jp-data.js';\nimport { LeagueCatalog } from './league-catalog.js';\n",
+    "\nconst leagueCatalog=new LeagueCatalog({teams:JP_DATA.teams});\nconst TEAM_COLOR=leagueCatalog.teamColors;\nconst LV=leagueCatalog.levels;\nconst PATHS=leagueCatalog.paths;\n",
+    "\nconst TIER_TH=leagueCatalog.tierThresholds;\nconst LG_N=leagueCatalog.leagueNames;\n",
+    "\nfunction teamNick(team){return leagueCatalog.teamNick(team);}\n",
+    "\n  window.TEAM_MASTER = leagueCatalog.teamMaster;\n",
+    "\n  function teamRec(id){return leagueCatalog.teamRec(id);}\n  function teamDisplay(id,lv){return leagueCatalog.teamDisplay(id,lv);}\n  function listByOrg(org){return leagueCatalog.listByOrg(org);}\n",
+  ])assert.equal(text.split(line).length,2,'league catalog wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new LeagueCatalog(','const TEAM_COLOR=','const LV=','const PATHS=','const TIER_TH=','const LG_N=','window.TEAM_MASTER','function teamNick(','function teamRec(','function teamDisplay(','function listByOrg('])assert.equal(text.split(name).length,2,'league catalog wiring only once: '+name);
+  for(const gone of ['Object.assign(LV','Object.assign(PATHS','Object.assign(LG_N','Object.assign(TIER_TH','Object.assign(ABL','Object.assign(POSN','Object.assign(DPN','typeof LG_N','typeof TIER_TH',"'台中マンモス'",'DATA.teams.map(','DATA.teams.filter(','for(const t of DATA.teams)'])assert.ok(!text.includes(gone),'moved into LeagueCatalog: '+gone);
+  for(const moved of ["'台中マンモス':'#ffd800'","'台中マンモス':'マンモス'",'teams.map(x=>[x.teamId,Object.freeze(x)])','.filter(t=>t.org===o&&t.active)',"NPB_DEV:{n:'NPB育成'"])assert.equal(catalog.split(moved).length,2,'in LeagueCatalog once: '+moved);
+}
+{// Phase 39: the TJ gauge accrual and cap moved into PlayerInjury (accrueTj, tjGaugeLimit). tjAccrue and tjCap stay game.js
+  // wrappers (ProfessionalSeason, SeasonPhases, CareerPresenter and E2E hooks reach them by name), and PlayerInjury still gets
+  // tjCap as an injected lambda, so tjGamble reads the cap through the game.js name.
+  const text=sourceText(game),injury=sourceText(playerInjuryModule);
+  assert.equal(text.split('\nfunction tjAccrue(){return playerInjury.accrueTj();}\nfunction tjCap(){return playerInjury.tjGaugeLimit();}\n').length,2,'TJ wrappers, once');
+  assert.equal(text.split(',tjCap:()=>tjCap()').length,4,'tjCap lambda for PlayerInjury, SeasonPhases and CareerPresenter');
+  for(const gone of ["{'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}",'S.tj+=base','return S.traits.rubber?100:50'])assert.ok(!text.includes(gone),'moved into PlayerInjury: '+gone);
+  for(const moved of ["{'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}",'S.tj+=base','return S.traits.rubber?100:50','  accrueTj(){this.#rules.accrueTj();}\n  tjGaugeLimit(){return this.#rules.tjGaugeLimit();}\n','return {tjGamble,afterGamble,rollInjury,accrueTj,tjGaugeLimit};'])assert.equal(injury.split(moved).length,2,'in PlayerInjury once: '+moved);
+}
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
@@ -98,12 +162,12 @@ assert.match(html, /<h1 id="logo-tap"><em>野球人生シミュレーター<\/em
 assert.doesNotMatch(html, /v1\.0\.0/);
 assert.match(game, /appVersion\.textContent='v'\+VERSION/);
 
-const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}`;
+const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}\n${careerEntryModule}`;
 assert.doesNotMatch(forbidden, /UNSUPPORTED_REPLAY_VERSION/);
 assert.doesNotMatch(forbidden, /[?&]rv=/);
 assert.doesNotMatch(forbidden, /[?&]rules=/);
 assert.match(await read('docs/src/engine/career-retirement.js'), /replayURL\(getState\(\)\.seed\|\|getSeed\(\),location\.href\)/);
-assert.match(game, /history\.replaceState\(null,'',`\?seed=\$\{encodeURIComponent\(SEED\)\}`\)/);
+assert.equal(careerEntryModule.split("history.replaceState(null,'',`?seed=${encodeURIComponent(getSeed())}`)").length,3,'new and resumed careers both write the seed-only URL');
 
 assert.equal((data.match(/"teamId"/g) || []).length, 90);
 assert.equal((data.match(/"schoolId"/g) || []).length, 85);

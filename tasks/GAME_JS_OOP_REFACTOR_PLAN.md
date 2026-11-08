@@ -4371,6 +4371,333 @@ T6 使 Quick 由 73 增為 74、Full 由 98 增為 99（manifest 依檔名自動
 
 - 上述 2 項 FAIL 另以 [PR #61](https://github.com/tt-chin/yakyujinsei/pull/61)（`d68ed26`，分支 `fix/credits-menu-tests`，自 `8a0e87d`）修正，只改測試（使用者決定 2026-11-08）：`board-menu.mjs` 的期待清單加 `board-credits`；`game-view-dom-e2e` 在基準的 `index.html` 沒有該按鈕時設 `__expect1141`，`captureGameView` 要求完全相同的按鈕標記恰好一次（否則 `CREDITS_MENU_CONTRACT`）後只去掉它，預設基準不變。該分支：`event-fix-e2e` PASS、`game-view-dom-e2e` 預設基準與 `--baseline=8a0e87d` 皆 PASS、`--negative-control` 仍 FAIL、突變 3 項皆 FAIL、Quick 73／73 PASS、reviewer 無發現。
 - 未做：Linux CI、Preview、`--preview` 路由、實機確認。本分支未包含 PR #61，Full 在 PR #61 併入前仍會有上述 2 項 FAIL。
+- 併入與發布（2026-11-08 以 GitHub Actions 頁面與 git 確認；上一行為實作當時的狀態）：
+  - [PR #62](https://github.com/tt-chin/yakyujinsei/pull/62) 併 dev（merge `ef7768e`），[Tests #148](https://github.com/tt-chin/yakyujinsei/actions/runs/42399800873) Quick success；PR #61 併 dev（merge `1a74e71`），[Tests #149](https://github.com/tt-chin/yakyujinsei/actions/runs/42400674221) Quick success。
+  - [Tests #150](https://github.com/tt-chin/yakyujinsei/actions/runs/42401142552)（手動 Full，dev `1a74e71`）：8 批與 aggregate success，`expected 99`、`acceptedPass 99`、`issues []`。
+  - [PR #63](https://github.com/tt-chin/yakyujinsei/pull/63) dev→main（merge `a8859b9`，樹與 `1a74e71` 相同）：PR Full [Tests #151](https://github.com/tt-chin/yakyujinsei/actions/runs/42404561894)（merge ref `26d2c28`）`expected 99`、`acceptedPass 99`、`issues []`；[Publish website #34](https://github.com/tt-chin/yakyujinsei/actions/runs/42404607279) success。VERSION 仍為 1.14.1。
+  - 仍未做：Preview、`--preview` 路由、實機確認、正式站內容確認。
+
+## 2nn. 第 35 期：`proSeason` 一組移至 `ProfessionalSeason`（細部計畫，2026-11-08；D1–D10、T1–T8 與實作批准 2026-11-08）
+
+§3.22 候選 D。草稿、抵達探測與草稿 Full 已做（§2nn.4）。維護收益：季成績的安全上限、事件與投球強度補正、鐵人與一芸特化判定，以及賽季後的續行狀態機集中於一個模組；T6 使這些分支不靠完整生涯即可逐步驗證。
+
+### 2nn.1 現況（基準 `1a74e71`，`game.js` 618 行／57,029 bytes）
+
+- `:305–:311` `portionOf`、`:313–:397` `proSeason`、`:398–:414` `resumeProfessionalSeason`、`:415–:425` `runSeasonPipeline`；`seasonContinuations`（`:270`）只有 `proSeason` 使用。RNG 只有 `:356` 的 `R()`（季中移籍的成績分配）。
+- `proSeason` 由 `LEGACY`（以值捕捉）、`SeasonPhases` 的 lambda 與 `stage10-risk-e2e` 的名稱包裝取用；另外兩個函式沒有外部呼叫端，也沒有測試重綁。
+- E2E 執行時重綁的自由名稱：`accLevelStat`、`tjAccrue`、`awards`（`full-power-pitching-e2e`）、`tjGamble`／`demotionAudit`／`tradeCheck`／`maybeIntl`／`nextStep`（`championship-intl-e2e:22`）、`maybeIntl`／`nextStep`（`trait-system-e2e`）、`card`、`board`、`R`（`stage6-browser` 等）。
+- 文字耦合：名稱搜尋只找到 4 檔；18 字 n-gram 掃描另找到 `event-integration.test:34,39`、`information-architecture.test:16` 與 `full-power-pitching-e2e` 的投球強度探測錨點（Full 專屬，草稿 Full 才發現，§2nn.4）。
+
+### 2nn.2 設計（使用者決定 2026-11-08：依建議，D6 採 A）
+
+| # | 內容 | 決定 |
+|---|---|---|
+| D1 | 範圍 | `portionOf`、`proSeason`、`resumeProfessionalSeason`、`runSeasonPipeline` 與 `seasonContinuations`。F、G 不併入（內聚性低，2026-11-08 決定） |
+| D2 | 名稱 | `ProfessionalSeason`／`professional-season.js`／`professionalSeason` |
+| D3 | 寫法 | 與 `SeasonPhases` 相同的 rules factory；只公開 `proSeason()`，另外兩個為模組內函式 |
+| D4 | `game.js` 接線 | 包裝 `function proSeason(){return professionalSeason.proSeason();}` 留在原位，建構行緊接其後、`function awards(` 之前。保留原因：`LEGACY` 以值捕捉、`SeasonPhases` 依名稱呼叫、`stage10` 包裝名稱。移除條件：三者皆不再依名稱取用時 |
+| D5 | 讀 `S` 的時機 | `proSeason`、`resumeProfessionalSeason` 開頭各一次（共 2 處）。本體同步執行，續行的 `cont` 閉包不讀 `S` |
+| D6 | 依賴 | `LV`、`clamp` 傳參照；其餘 28 個以延遲綁定 lambda 注入（A 案）。5 個 policy import 無法重綁，lambda 只為接線一致，於模組檔頭註明 |
+| D7 | `seasonContinuations` | 模組私有；`game.js:270` 移除 |
+| D8 | RNG bridge | `seasonRng:{R:()=>R()}`。`rng:{R:()=>R()}` 已是 PlayerAbility 的 bridge，`salary-flow` 以子字串計數，相同文字會衝突 |
+| D9 | `championship-intl.test:81` 第二個斷言 | 原本即恆真（`'  captureSeasonChampionship(S);'` 不存在，`indexOf` 為 −1）。本期只改指向模組，另批修正 |
+| D10 | 分支 | 自 `origin/dev` 以 `--no-track` 開 `refactor/pro-season`；第一個 commit 為 `ce9e2d1`（第 34 期併入與發布記錄） |
+
+### 2nn.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `full-power-pitching.test` | `new ProfessionalSeason(` 存在時，現行側 vm 改切模組的 3 個函式（`.split('\n  return {')[0]`）；pipeline vm 加 `getState`；舊 SHA 側不變 |
+| T2 | `full-power-pitching-e2e` | `proSeason`／`resumeProfessionalSeason`／`runSeasonPipeline` 以字串與次數精確去掉插入（1／1／0）後去縮排比較；投球強度探測在 `game.js` 無錨點時改插入模組（錨點須恰在兩者之一出現一次）。Full 專屬，CRLF 保留 |
+| T3 | `championship-intl.test:81` | 順序斷言改讀模組 |
+| T4 | `salary-flow.test` | 模組加入 `gameAndModules`；新 bridge 斷言出現一次、模組計數 `[1,0,0,0]`；`game.js` `R(` 10→9；`recordSalaryEvaluation(entry.st)` 改讀模組 |
+| T5 | `verify-modularization` | 第 35 期區塊：import、`choiceViews` 行、包裝＋建構行各恰好一次；`new ProfessionalSeason(`／包裝呼叫／`function proSeason(` 各一次；搬移的函式名、`seasonContinuations`、3 種錯誤碼與 3 個卡片標題不在 `game.js` |
+| T6 | `professional-season.test`（新） | 第 1 部分：模組＝`1a74e71` 區段（＋2 縮排）加 2 處插入（整檔相等），抽籤呼叫點 `[1,0,0,0,0]`。第 2 部分：舊本體於 vm（`S` 為即時 getter）、模組於主 realm，同一組記錄 stub，29 情境逐步比較呼叫記錄、錯誤、`S`；到達斷言、只有故障情境出錯且錯誤碼固定、測試內負控制（`em*0.06`→`0.05` 恰被 2 個投球強度情境抓到） |
+| T7 | `event-integration.test:34,39` | 改讀模組 |
+| T8 | `information-architecture.test:16` | 改讀模組 |
+
+T6 使 Quick 由 74 增為 75、Full 由 99 增為 100。
+
+### 2nn.4 草稿實測（2026-11-08，scratch worktree，基準 `ce9e2d1`（`docs`、`tests`、`scripts` 與 `1a74e71` 相同）；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 `git show HEAD` 產生；去掉 2 處插入並去縮排後與原文逐位元組相同；`game.js` +4／−121（CRLF 保留），模組 LF |
+| AST | 模組未解析名稱只有 `Error`、`Math`、`Object`、`WeakMap`；31 個注入皆有使用且與接線一致；`game.js` 未解析名稱集合不變，未使用 import 105→105 |
+| 未改測試的 Quick | 69／74，FAIL：`championship-intl.test`、`event-integration.test`、`full-power-pitching.test`、`information-architecture.test`、`salary-flow.test` |
+| T1–T8 後的 Quick | 75／75 PASS（依 `summary.json`） |
+| 本機 8 批 Full | `FAIL_OR_INCOMPLETE`，100 入口全數執行，97 PASS／3 FAIL：`full-power-pitching-e2e`、`-yakyo-test-001-e2e`、`-jp3-pitcher-02-e2e`（`observe` 的投球強度錨點已移入模組，`1 !== 2`）。T2 補上模組路由後只重跑該 3 項：3／3 PASS（部分重跑，不算 Full PASS） |
+| 抵達與重綁探測（`probe33-0` P、`-1` IF、`-3` P、`-4` IF、`-5` P、`-7` IF，balanced） | 6 條皆 PRO 結束（KBO1／CPBL2／NPB_DEV／KBO2／CPBL1／KBO2）；命中序列、10 個重綁名稱的計數（皆 >0，`tjAccrue` 只投手）、RNG 數值序列、步數、最終 `S` 與基準相同，Console error 0。`portionOf` 自然生涯未到達（季中移籍），由 T6 涵蓋。負控制（模組 `S.ironStreak++`→`+=2`）→ 6／6 條 `S` 不同 |
+| 突變（新寫與改指向的斷言，15 項） | 15／15 抓到，失敗的皆為目標斷言，檔案逐位元組還原 |
+
+### 2nn.5 驗證與交付（R3：季成績、續行狀態機、RNG 呼叫點；允許差分為無）
+
+- 實作：草稿 10 檔複製至分支，逐位元組相同；D6 的檔頭註解於複製前加入（T6 同步）。commit `4df368b`。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（最終程式，工作樹與 `4df368b` 相同） | 75／75 PASS，依 `summary.json` 核對 |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `4df368b`） | `PASS`，`expected 100`，8 批 100 入口全數執行、100 PASS，`sourceChanged false`，1,013 秒。首次嘗試時 `os.freemem()` 為 1,668 MiB（vm_stat inactive 約 30 GB，未計入），派發前 `RESOURCE_WAIT` 逾時結束、0／100 執行，記為 NOT_RUN；關閉 Obsidian 後以新輸出目錄重跑 |
+| 抵達與重綁探測（`4df368b` 對 `ce9e2d1`，同 §2nn.4 的 6 條） | 命中序列、重綁計數、RNG、步數、`S` 全部一致，Console error 0 |
+| reviewer | 無發現。提示：`game.js` 接線的 key 與模組 `DEPS` 名稱集合沒有測試互相核對（草稿 AST 檢查已核對 31 個一致，探測證實執行時接線） |
+
+- 未做（實作當時）：Linux CI、Preview、實機確認。push、PR 依 AGENTS §10 另批。
+- 併入（2026-11-08 以 GitHub Actions 頁面、git 與 curl 確認；上一行為實作當時的狀態）：
+  - [PR #64](https://github.com/tt-chin/yakyujinsei/pull/64) 併 dev（merge `d3d2a53`，`docs`、`tests`、`scripts` 與 `df0ed19` 相同）。
+  - [Tests #156](https://github.com/tt-chin/yakyujinsei/actions/runs/42452617589)（手動 Full，`refactor/pro-season` `df0ed19`）：8 批與 aggregate success，`expected 100`、`acceptedPass 100`、`issues []`。
+  - dev push [Quick](https://github.com/tt-chin/yakyujinsei/actions/runs/42453651874)（`d3d2a53`）75／75 PASS。
+  - 固定 Preview 的 `professional-season.js`、`game.js`、`season-phases.js`、`config.js`、`index.html` 與 dev 一致（行尾正規化後 SHA256）。
+  - 仍未做：Preview 實際遊玩、實機確認、main 發布。D9 已記為 BACKLOG `TEST-VACUOUS-ASSERT-01`，本機 Full 記憶體門檻記為 `TEST-LOCAL-FULL-MEMGATE-01`。
+- 後續：§3.22 的 D 系列候補至此完成，F、G 收益小；是否繼續下一期另行決定。`championship-intl.test:81` 恆真斷言另批修正（D9）。
+
+## 2oo. 第 36 期：`renderCheckpointCard` 移至 `CheckpointRenderer`（細部計畫，2026-11-08；D1–D7、T1–T6 與實作批准 2026-11-08）
+
+§3.22 候選 F，依 §3.23 的判斷標準（是否讓程式更物件導向、更好擴充）選出。草稿、抵達探測與草稿 Full 已做（§2oo.4）。維護收益：結果卡的繪製收據（每個 owner、每個 key 只畫一次，失敗時判定是否已寫入 DOM）由單一類別負責，收據狀態不再寫進業務物件（賞的計畫、季末 entry）；新的 checkpoint 使用者只要注入同一個實例。
+
+### 2oo.1 現況（基準 `c62cd4a`，`game.js` 518 行／51,705 bytes）
+
+- `:315–:329` `renderCheckpointCard(owner,key,args)`，988 bytes；不讀 `S`、無 RNG；自由名稱 `card`、`logTarget`、`document`、`Map`、`Error`。收據存於 `owner.renderReceipts`（`Map`），狀態 `PLANNED`／`COMMITTED`／`AMBIGUOUS`，`AMBIGUOUS` 時丟 `RESULT_RENDER_AMBIGUOUS`。
+- 呼叫端：`SeasonAwards`（`season-awards.js:31`，owner＝賞的計畫，`年間賞` 等卡）與 `SeasonSettlement`（`season-settlement.js:39,40,51`，owner＝`careerSession.seasonEndContext`，`隠し特性解放：優勝請負人`、`…達成`、`シーズン終了`），兩者都經 `game.js:314`、`:483` 的延遲綁定 lambda 取得。
+- owner 不在 `S`：賞的計畫存於 `award-transaction-policy.js` 的 `WeakMap`；`seasonEndContext` 在 `careerSession`，browser save 讀檔時重建 `careerSession`。`browser-save-*.js` 不處理 `Map`、計畫或 `renderIndex`。`tests`、`scripts`、`tools` 沒有讀 `renderReceipts`（grep 0 處）。
+- 執行時重綁：E2E 與 vm 測試替換 `game.js` 的 `card`，對 `年間賞`、`シーズン終了` 注入故障以測收據恢復（`award-journal-native.test`、`tools/development-b/award-runtime-support.mjs` 的 vm `card`；`tools/development-a/runtime.mjs` 不在 manifest，且引用已不存在的名稱）。故搬移後不可直接呼叫 `GameView.card`。
+- 名稱切片：`championship-intl.test:77`、`award-journal-native.test:28`、`award-runtime-support.mjs:38`（`award-history-b-comparison.test`、`pitcher-award-integration.test` 經此）以 `productionFunction('renderCheckpointCard')` 切片；`trait-policy.test:109` 以 `function awards(` 至 `/* 升降格と去向。 */` 文字切片。搬移本體的 18 字 n-gram 掃描（649 個片段，`tests`、`scripts`、`tools`、`docs/src`）：命中只有名稱簽名 `renderCheckpointCard(owner,key,args`（接線行，不變）、`season-settlement.test:46,60` 的結算模組舊本體字串（不變）與 `status==='COMMITTED'`、`classList.contains` 等通用片段，沒有錨定搬移本體的文字耦合。基準 Full 入口數 106（`ci-full-batches.mjs plan`，`c62cd4a`）。
+
+### 2oo.2 設計（使用者決定 2026-11-08：D1 新類別、D2 WeakMap，D3–D7 依建議）
+
+| # | 內容 | 決定／建議 |
+|---|---|---|
+| D1 | 位置與名稱 | **已決定**：新檔 `docs/src/ui/checkpoint-renderer.js`，類別 `CheckpointRenderer`，方法 `render(owner,key,args)`，實例 `checkpointRenderer`。不做成 `GameView` 方法：它必須呼叫注入的 `card`，放進 `GameView` 會形成 `GameView`→`game.js` `card`→`GameView.card` 的迴圈依賴 |
+| D2 | 收據存放 | **已決定**：類別私有 `#receipts=new WeakMap()`，鍵為 owner，值為 key→receipt 的 `Map`。owner 不再帶 `renderReceipts`；生命週期與原本相同（隨 owner 回收） |
+| D3 | 依賴 | `card:(...args)=>card(...args)`、`logTarget:()=>logTarget()`，皆為延遲綁定 lambda，私有欄位保存。`typeof document` 判斷留在類別內，語意不變（vm 測試與 Node 主 realm 皆無 `document`） |
+| D4 | `game.js` 接線 | 包裝 `function renderCheckpointCard(owner,key,args){checkpointRenderer.render(owner,key,args);}` 留在原位，建構行緊接其後、`/* 升降格と去向。 */` 之前；import 接在 `GameView` 之後。保留原因：`SeasonAwards`、`SeasonSettlement` 的建構行文字不變（`verify-modularization:50` 逐字比對），4 處切片依名稱取用。移除條件：兩個建構行改注入實例、切片不再依名稱取用時 |
+| D5 | 本體 | 原 13 行逐字搬入（＋2 縮排），只改 3 處：收據取得行、`logTarget()`→`this.#logTarget()`、`card(`→`this.#card(`；註解原樣保留 |
+| D6 | 允許差分 | `S`、RNG、DOM、卡片順序、錯誤：無。唯一刻意差異：owner 物件不再有 `renderReceipts` 屬性（非 `S`，無觀察者） |
+| D7 | 分支 | 自 `origin/dev`（`c62cd4a`）以 `--no-track` 開 `refactor/checkpoint-renderer`；第一個 commit 為本計畫與 §3.23 |
+
+### 2oo.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `championship-intl.test` | import `CheckpointRenderer` 並加入 vm 情境 `c`；`:76` 註解改寫（切片現在帶包裝與建構行） |
+| T2 | `award-journal-native.test` | import 並加入 vm 情境 |
+| T3 | `tools/development-b/award-runtime-support.mjs` | import 並加入 vm 情境（`award-history-b-comparison.test`、`pitcher-award-integration.test` 由此修復） |
+| T4 | `trait-policy.test` | import 並加入 `:112` 的 `Object.assign` 情境 |
+| T5 | `verify-modularization` | 第 36 期區塊：import 兩行、包裝＋建構行＋`/* 升降格と去向。 */` 各恰好一次；`new CheckpointRenderer(`／`checkpointRenderer.render(`／`function renderCheckpointCard(` 各一次；`renderReceipts`、`RESULT_RENDER_AMBIGUOUS`、`AMBIGUOUS`、`card appends synchronously` 不在 `game.js` |
+| T6 | `checkpoint-renderer.test`（新） | 第 1 部分：模組＝檔頭＋`c62cd4a` 本體（＋2 縮排）加 3 處替換（整檔相等，每處以次數 1 斷言）。第 2 部分：舊函式於 vm、類別於主 realm，同一組 `card`／`logTarget`／假 DOM stub；6 種 `card` 行為（成功、寫入前丟錯、寫入一張卡後丟錯、寫入非卡元素後丟錯、寫入兩個後丟錯、移除後丟錯）×有／無 `document`，再接重試、同 owner 另一 key、另一 owner 同 key，加 1 組連續 AMBIGUOUS，共 13 組逐呼叫比較結果、錯誤、`card`／`logTarget` 呼叫與 DOM；到達斷言（`return`、`CARD_FAULT`、`RESULT_RENDER_AMBIGUOUS`、COMMITTED 略過重試、`logTarget` 只在有 `document` 時呼叫）；刻意差異斷言（舊 owner 有 `renderReceipts`，新 owner 無屬性）；測試內負控制（`count+1`→`count+2` 的模組副本須得 `['CARD_FAULT','RESULT_RENDER_AMBIGUOUS']`） |
+
+T6 使 Quick 由 80 增為 81、Full 由 106 增為 107（`test.mjs list` 自動入口 107→108，含 syntax）。
+
+### 2oo.4 草稿實測（2026-11-08，scratch worktree，基準 `c62cd4a`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 `git show HEAD` 產生；搬移本體與原文只差 D5 的 3 行；`game.js` +3／−15（CRLF 保留），模組 LF |
+| AST | `game.js` 未解析名稱只少 `Map`、`Error`，未使用 import 105→105；模組未解析名稱只有 `Error`、`Map`、`WeakMap`、`document` |
+| 未改測試的 Quick | 75／80，FAIL：`award-history-b-comparison.test`、`award-journal-native.test`、`championship-intl.test`、`pitcher-award-integration.test`、`trait-policy.test`（皆 `CheckpointRenderer is not defined`，切片帶入建構行） |
+| T1–T6 後的 Quick | 81／81 PASS（依 `summary.json`，含新入口） |
+| 本機 8 批 Full（`local-full-batches.mjs`） | `PASS`，`expected 107`、`acceptedPass 107`、`issues []`，`sourceChanged false`，1,110 秒；Full 專屬入口不需額外測試變更 |
+| 抵達與接縫探測（`probe33-0` P、`-1` IF、`-3` P，balanced；舊＝`c62cd4a`、新＝草稿；頁面掛鉤重綁 `card`） | 3 條皆 PRO 結束（KBO1／CPBL2／NPB_DEV）。每條跑 3 種：無故障、首張 `シーズン終了` 寫入後丟錯、首張 `年間賞` 寫入前丟錯。9／9 新舊一致：結束狀態、步數、故障次數、checkpoint 卡標題序列（35–38 張）、最終 `S` 雜湊、`#log` HTML 雜湊、頁面錯誤（堆疊正規化後）。故障後生涯恢復並完成（多 1 步） |
+| 接縫負控制（建構行改 `card:(...args)=>gameView.card(...args)`） | 9／9 與舊不同：掛鉤看到的 checkpoint 卡 0 張、注入故障 0 次，故障情境步數與錯誤也不同。證明這些卡全部經 `CheckpointRenderer` 注入的 `card` |
+| 突變（新寫與改指向的斷言） | 13／13 抓到，皆為 `ERR_ASSERTION`，檔案逐位元組還原。T5：繞過 `card`、包裝不呼叫 `render`、`renderReceipts` 出現在 `game.js`（第一次放在錨點行被接線斷言先抓到，改放檔尾後由「moved into」斷言抓到）。T6 第 1 部分：`count+2`、不存收據、一律呼叫 `logTarget`。T6 第 2 部分（去掉第 1 部分整檔斷言的暫存副本，避免被遮蔽）：上述 3 項加「AMBIGUOUS 不丟錯」皆由逐呼叫比較抓到。T1、T2：包裝不呼叫 `render` 時由既有斷言抓到 |
+
+### 2oo.5 驗證與交付（R3：Receipt；允許差分見 D6）
+
+- 實作：草稿 8 檔複製至分支，逐位元組相同（`cmp`）。commit `a08764f`（計畫 commit `c490b0a` 在前）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，HEAD `a08764f`） | 81／81 PASS，依 `summary.json` 核對 |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `a08764f`） | `PASS`，`expected 107`、`acceptedPass 107`、`issues []`，plan 107 入口、8 批全數執行，`sourceChanged false`，1,108 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：`typeof document` 改在主 realm 判定（4 個 vm 情境都沒有注入 `document`）、錯誤改由主 realm 丟出（沒有 `instanceof` 判斷）、`renderReceipts` 無讀取端、owner 皆為物件、`card`／`logTarget` 無繞過路徑、import 路徑大小寫 |
+
+- 交付：連同 `TEST-VACUOUS-ASSERT-01`（`ab4fbb1`）經 PR #66 併入 dev（`ea89c15`）。dev push Quick Tests #160 PASS；手動 Full Tests #161（Run 42464271804）Linux 107／107 PASS（8 批及 Aggregate PASS）。dev Preview 內容與 `ea89c15` 逐位元組一致。
+- 未做：實機確認、main 發布。
+
+## 2pp. 第 37 期：開局流程移至 `CareerEntry`（細部計畫，2026-11-08；D1、D3 與實作批准 2026-11-08）
+
+§3.23 的「開局流程」候補。原定待 BROWSER-SAVE-01 驗收完成後另立一期；**使用者決定（2026-11-08）不等 BROWSER-SAVE-01 驗收結案即開始**（排程決定，不改變 BROWSER-SAVE-01 的狀態與 checkbox，Android Chrome 實機仍 NOT_RUN）。維護收益：新規開始與讀檔續玩由同一個物件提供，兩者共用的畫面切換與導覽初始化只寫一次；`careerSession` 的就地重建不再寫在 `game.js` 的 restore callback 裡。兩條路徑真正相同的只有 5 句，收益有限，使用者知悉後決定實作。
+
+### 2pp.1 現況（基準 `950795e`（PR #67 併入後；`docs/src`、`tests` 與 `ea89c15` 相同），`game.js` 506 行／50,983 bytes）
+
+- `:485` `startJapanese()`（一行）：決定 seed（`seed-show` 欄位→URL `seed`→`generateSeed`）、`SEED=sv`、讀 `#seg-pos`、`normalizePlayerName`、`S={rngState:0};seedInit(SEED);S=newState(nm,pos)`、`history.replaceState`（seed-only）、`start`／`board`／`act` 顯示切換、`navigation.reset/show`、「選手誕生」卡、`startYear()`。
+- `:501–:504` `initializeBrowserSave` 的 restore callback：`hydrateSavedState(...)`、`careerSession` 就地重建（`choiceGeneration+1`、刪除全部 key、`Object.assign(new CareerSession(),…)`）、`S=candidate;SEED=S.seed`、清 `#log`、`actClear`、`#app` flex、相同的顯示切換與 `navigation.reset/show`、`history.replaceState`、`startYear()`。
+- 兩條路徑的 `history.replaceState` 位置不同：開局在顯示切換之前，續玩在 `navigation.show()` 之後。
+- 耦合：`tests/smallschool-c-e2e.mjs:13` 的 hook 依名稱呼叫 `startJapanese()`；`stage10-risk-e2e`、`contract-salary-e2e`、`support/stage6-browser` 的 hook 在 `game.js` scope 使用 `S`／`SEED`／`seedInit`／`newState`／`actClear`（名稱保留，不受影響）；`verify-modularization:129` 斷言 `game.js` 含 seed-only `replaceState`。`main.js` 由 `display-preferences.test:22`、`award-identity-policy.test:184` 逐字固定，本期不動。兩段本體的 18 字 n-gram 掃描（1,293 片段，`tests`、`scripts`、`tools`、`docs/src`）只命中通用片段（`document.querySelector`、`encodeURIComponent` 等）、上述 hook 與 `approved-school-oracle`（只改寫舊基準的出生卡文字，現行原始碼於第一行 return）；沒有錨定搬移本體的文字耦合。`btn-start` 的 38 個檔案都是 DOM id 操作。
+
+### 2pp.2 設計（使用者決定 2026-11-08：D1 名稱、D3 replaceState 保留原位；其餘依建議）
+
+| # | 內容 | 決定／建議 |
+|---|---|---|
+| D1 | 位置與名稱 | **已決定**：新檔 `docs/src/engine/career-entry.js`，類別 `CareerEntry`，方法 `startNew()`、`resume(candidate)`，實例 `careerEntry`。放 engine：會設定 `S` 並觸發 RNG |
+| D2 | `hydrateSavedState` | 留在 `game.js` restore callback（需要 `DATA`、`teamRec`、`teamDisplay`、`traitPresentation`、`authorization`）；callback 只剩 hydrate＋`careerEntry.resume(candidate)`。hydrate 失敗時不重建 `careerSession`，與原本相同 |
+| D3 | 共用段 | **已決定**：內部 `enter()` 只含兩條路徑逐字相同的 5 句；`history.replaceState` 保留各自原位，無允許差分 |
+| D4 | `document`／`location`／`history` | 模組內直接使用全域，與原本相同；沒有 vm 測試切片這兩段 |
+| D5 | 包裝 | `function startJapanese(){careerEntry.startNew();}` 留原位（`btn-start`、smallschool hook），建構行緊接其後；import 接在 `ProfessionalSeason` 之後 |
+| D6 | 依賴 | 依 §2nn 的 rules 閉包形式。`getState`／`setState`／`getSeed`／`setSeed` 讀寫 `game.js` 的 `let S`／`SEED`，每次讀取皆即時取得（出生卡在 `enter()` 之後才 `getState()`）；`careerSession` 傳參考、`CareerSession`、`POSN` 直接傳；`navigation` 以 `getNavigation:()=>navigation` 延遲取得（宣告在建構行之後）；其餘 `game.js` 函式皆為延遲綁定 lambda |
+| D7 | 分類與允許差分 | R3（seed、RNG、`S`、`careerSession`）。允許差分：無 |
+| D8 | 分支 | 自 `origin/dev`（`950795e`）以 `--no-track` 開 `refactor/career-entry`；第一個 commit 為本計畫與 §3.23 |
+
+### 2pp.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `verify-modularization` | `:129` 的 seed-only `replaceState` 斷言改指向 `career-entry.js`（恰好 2 處：開局、續玩）；`career-entry.js` 加入 `rv`／`rules` 禁止掃描；第 37 期區塊：import 兩行、包裝＋建構行、restore callback 結尾各恰好一次；`new CareerEntry(`／`careerEntry.startNew(`／`careerEntry.resume(`／`function startJapanese(` 各一次；`選手誕生`、`S=newState(nm,pos)`、`S=candidate;SEED=S.seed`、`Object.keys(careerSession)`、`new CareerSession(),{choiceGeneration`、`#seg-pos button.on`、`$('in-name').value` 不在 `game.js` |
+| T2 | `career-entry.test`（新） | 第 1 部分：模組＝檔頭＋`950795e` 兩段本體加列出的替換（每處次數 1）。第 2 部分：舊本體於 vm、類別於主 realm，同一組 stub（`$` 元素的 style 寫入、`location.search`、`history.replaceState`、`querySelector`、`navigation`、`card`、`startYear` 等皆記錄呼叫及當下 `S`／`SEED`），13 組逐呼叫比較：開局 8 組（seed 來源 3 種、無守位按鈕、HTML 名稱、C 級、`newState`／`show`／`card`／`startYear` 丟錯）、`show` 期間替換 `S` 1 組、續玩 4 組（含 `careerSession` 額外 key、`show`／`startYear` 丟錯）；到達斷言（各故障、`careerSession` 就地重建、3 種 seed 來源、兩路徑 `replaceState` 相對 `navigation.show` 的順序）；測試內負控制 3 項（開局 `replaceState` 移到 `enter()` 後、略過 `careerSession` 刪除、`getState()` 移到 `enter()` 前） |
+
+T2 使 Quick 由 81 增為 82、Full 由 107 增為 108。
+
+### 2pp.4 草稿實測（2026-11-08，scratch worktree；先於 `ea89c15`，PR #67 併入後移至 `950795e`（`docs/src`、`tests` 相同）；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 `git show` 產生；兩段本體與原文只差 2pp.3 T2 第 1 部分列出的替換；`game.js` +4／−3（CRLF 保留，restore callback 原為 LF 亦保留），模組 LF |
+| AST | `game.js` 未解析名稱不變，未使用 import 105→105；模組未解析名稱只有 `Object`、`URLSearchParams`、`document`、`encodeURIComponent`、`history`、`location` |
+| 未改測試的 Quick | 80／81，FAIL：`verify-modularization`（`:129` 的 seed-only `replaceState` 已移出 `game.js`） |
+| T1–T2 後的 Quick | 82／82 PASS（依 `summary.json`，含新入口） |
+| 本機 8 批 Full（`local-full-batches.mjs`，`950795e` 內含 memgate 修正） | `PASS`，`expected 108`、`acceptedPass 108`、`issues []`，plan 108 入口全數執行，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,146 秒 |
+| 抵達探測（舊＝`ea89c15`、新＝草稿；頁面掛鉤重綁 `R`、`card`、`startYear`） | 7／7 新舊一致：開局 4 組（`probe37-a` P、`-b` IF＋名稱、`-c` OF、`-d` C＋HTML 名稱）＋C 級高校 1 組（`probe37c6`），開局後再 60 步；續玩 2 組（`probe37-r1` P、`-r2` IF：2027 存檔→重載→`#save-continue`→60 步）。比較 `S` 雜湊、RNG 抽取次數與值、`#log` 雜湊、卡片標題序列、`startYear` 次數、`careerSession`、URL、顯示狀態 |
+| 接縫負控制（建構行改 `card:(...args)=>gameView.card(...args)`、`startYear:()=>yearFlow.startYear()`） | 開局 5／5 與舊不同：掛鉤少 1 張卡（出生卡）、`startYear` 0 次。續玩路徑在此版不存檔，探測逾時而無結果；續玩的抵達由新版重載後 `startYear` 1 次（唯一呼叫端）證明 |
+| 突變（新寫的斷言） | 7／7 抓到，皆為 `ERR_ASSERTION`，檔案逐位元組還原。T1：包裝改呼叫 `resume`、`card` 繞過注入、restore 改呼叫 `startNew`、續玩 URL 加 `&rv=1`、`選手誕生` 留在 `game.js`（放在接線行會被接線斷言先抓到，改放檔尾後由「moved into」斷言抓到）。T2：`#app` 改 `block`、續玩先設 seed 後設 state。T2 第 2 部分另有測試內負控制 3 項；第 3 項（`getState()` 移到 `enter()` 前）在原有 stub 下為等價突變，加入 `show` 期間替換 `S` 的情境後抓到 |
+
+### 2pp.5 驗證與交付（R3：seed、RNG、`S`、`careerSession`；允許差分無）
+
+- 實作：草稿 4 檔複製至分支，逐位元組相同（`cmp`）。commit `8b489b2`（計畫 commit `417accc` 在前）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，HEAD `8b489b2`） | 82／82 PASS，依 `summary.json` 核對（含 `career-entry.test`） |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `8b489b2`） | `PASS`，`expected 108`、`acceptedPass 108`、`issues []`，plan 108 入口、8 批全數執行，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,153 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：兩路徑逐句對照（`S`／`SEED` 讀寫順序、出生卡的 `getState()` 在 `navigation.show()` 之後）、建構行與 `navigation` 的 TDZ、延遲綁定 lambda 的 hook 抵達（`POSN`、`CareerSession` 為不可變綁定，非 hook 對象）、錨定搬移本體的文字 hook 0 處、`career-session-access` 探測欄位仍在 `game.js`、例外時狀態一致、新測試的模式歸屬與負控制、斷言未放寬、import 路徑大小寫 |
+
+- 交付：[PR #68](https://github.com/tt-chin/yakyujinsei/pull/68) 已併 dev（merge `132c9de`）。dev 上的 Linux CI Full 依使用者決定（2026-11-08）延至第 38 期併入後一起執行。未做：Linux CI Full、Preview、實機確認、main 發布。
+
+## 2qq. 第 38 期：聯盟・階級・球團目錄移至 `LeagueCatalog`（細部計畫，2026-11-08；D1–D10 批准 2026-11-08）
+
+§3.24 的候補 H（使用者決定 2026-11-08）。維護收益：日本版的階級、路線、聯盟名、殿堂門檻與球團顏色只定義一次，不再由台灣版表加覆寫組成；新增聯盟或階級只改一處，球團查詢有單一負責的物件。
+
+### 2qq.1 現況（基準 `e35521d`；`docs/src`、`tests`、`tools` 與 `origin/dev` `132c9de`、`8b489b2` 相同；`game.js` 507 行／50,305 bytes）
+
+- 台灣版的表先定義：`TEAM_COLOR`（`:122–157`，球團名鍵）、`LV`（`:159–169`）、`PATHS`（`:170`）、`TIER_TH`、`LG_N`（`:334–335`）。日本版覆寫在 `:367–380`，用 `Object.assign` 改寫 `ABL`／`POSN`／`DPN`／`LV`／`PATHS`／`LG_N`／`TIER_TH`；其中 `ABL`／`POSN`／`DPN` 寫回的值與原值相同。`:382–383` 建立凍結的 `window.TEAM_MASTER`，並把 teamId 鍵的顏色加入 `TEAM_COLOR`。查詢函式：`teamRec`、`teamDisplay`、`listByOrg`（`:394–396`）、`teamNick`（`:302–309`）。
+- 組件在建構時以參考取得 `LV`（`SeasonStats` 等）、`TEAM_COLOR`、`TIER_TH`、`LG_N`，之後才被覆寫；`career-retirement.js:49` 讀 `window.TEAM_MASTER`。
+- 測試耦合：7 處以 `/Object.assign\(LV,(\{…\})\);/` 擷取覆寫的字面值（現行版：`kbo-renewal-floor`、`full-power-pitching`、`award-journal-native`、`retirement-hof-test-support`、`tools/development-b/award-runtime-support`、`legacy-effect-boundaries`；只讀舊版：`season-stats`）；`retirement-hof-test-support` 另以 `literal('TIER_TH')`／`literal('LG_N')` 及兩行覆寫取原文；`salary-flow`、`record-condition-fix`、`information-architecture`、`retirement-hof-balance` 對 `game.js` 文字斷言階級表內容。覆寫區開頭的標記註解是 `overlay-hook` 與 `stage10-risk-e2e` 的注入錨點，`const DATA = JP_DATA;` 是 `approved-school-oracle` 的錨點。沒有測試重新指派 `teamRec`／`teamDisplay`／`listByOrg`／`teamNick` 或 `window.TEAM_MASTER`。
+
+### 2qq.2 設計（使用者決定 2026-11-08：D1–D10 依建議）
+
+| # | 內容 |
+|---|---|
+| D1 | 新檔 `docs/src/engine/league-catalog.js`，類別 `LeagueCatalog`，實例 `leagueCatalog`。屬性 `levels`、`paths`、`leagueNames`、`tierThresholds`、`teamColors`、`teamMaster`；方法 `teamRec`、`teamDisplay`、`listByOrg`、`teamNick`（本體與原函式相同，`LV`→`this.levels`、`window.TEAM_MASTER`→`this.teamMaster`、`DATA.teams`→建構時傳入的 `teams`） |
+| D2 | 另匯出 `leagueTables()`，每次呼叫回傳新的表物件，供測試直接取得同一組值 |
+| D3 | 各表合併成一份字面值：鍵順序為原台灣版表的順序，覆寫新增的鍵依覆寫順序接在後面；值為覆寫後的結果。被覆寫掉的台灣版數值不再保留（原本即不會被讀到）。`TEAM_COLOR` 的球團名鍵逐字保留，teamId 鍵仍於建構時自球團資料加入 |
+| D4 | 拿掉 `ABL`／`POSN`／`DPN` 的 `Object.assign`（同值、無作用）；覆寫區其餘各行一併移除 |
+| D5 | `teamRec` 讀目錄自己的 `teamMaster`，與 `window.TEAM_MASTER` 為同一物件；`window.TEAM_MASTER = leagueCatalog.teamMaster;` 保留在原位，供 `career-retirement.js` 使用 |
+| D6 | 目錄在原 `TEAM_COLOR` 的位置以 `new LeagueCatalog({teams:JP_DATA.teams})` 建立，球團紀錄因此比原本早約 260 行凍結；兩者之間沒有寫入球團紀錄的程式 |
+| D7 | `game.js` 保留 `LV`、`PATHS`、`TIER_TH`、`LG_N`、`TEAM_COLOR` 名稱作為目錄各表的別名（位置同原定義），`teamRec`／`teamDisplay`／`listByOrg`／`teamNick` 保留為一行轉呼叫；各組件建構行不改 |
+| D8 | 覆寫區標記註解、`const DATA = JP_DATA;`、`LEGACY` 原樣保留 |
+| D9 | R3（`LV` 決定成績模擬）。允許差分：無。VERSION 維持 1.15.0 |
+| D10 | 分支 `refactor/league-catalog`（自 `e35521d`）。併 dev 後，第 37、38 期的 Linux CI Full 一起執行 |
+
+### 2qq.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `kbo-renewal-floor`、`retirement-hof-test-support` | 只讀現行版：`LV`（及 `TIER_TH`、`LG_N`）改由 `leagueTables()` 取得，以 JSON 字面值放入 vm |
+| T2 | `full-power-pitching`、`award-journal-native`、`tools/development-b/award-runtime-support`、`tools/development-b/legacy-effect-boundaries` | 新舊兩版都會讀：原始碼含覆寫行就照舊以正規式擷取，否則用目錄。`full-power-pitching` 指定 `--source=<ref>` 時讀同一 ref 的 `league-catalog.js` |
+| T3 | `salary-flow`、`record-condition-fix`、`information-architecture`、`retirement-hof-balance` | 階級表文字斷言改比對 `league-catalog.js`，含 `record-condition-fix` 的 `doesNotMatch` |
+| T4 | `verify-modularization` | 第 38 期區塊：import、建構與別名、`teamNick`、`window.TEAM_MASTER`、三個查詢轉呼叫各恰好一次；覆寫各行、`typeof LG_N`／`typeof TIER_TH`、`'台中マンモス'`、`DATA.teams.map(`／`DATA.teams.filter(`／`for(const t of DATA.teams)` 不在 `game.js`；`TEAM_COLOR` 與 `teamNick` 的首個條目、凍結與篩選本體、`NPB_DEV` 定義在目錄中各恰好一次 |
+| T5 | `league-catalog.test`（新） | 與 `8b489b2` 的舊 `game.js` 比對（舊本體依內容錨定切出後在 vm 執行）：LC1 各表與覆寫結果相同（JSON，含鍵順序）；LC2 比對能抓到鍵順序與數值的改動；LC3 查詢逐項相同（全部 teamId×全部階級＋缺值，`listByOrg` 各 org，`teamNick` 全部名稱；計數須 >1,500）；LC4 凍結與物件身分；LC5 `leagueTables()` 每次回傳新物件；LC6 現行 `ABL`／`POSN`／`DPN` 與舊版覆寫後的值相同 |
+
+T5 使 Quick 由 82 增為 83、Full 由 108 增為 109。
+
+### 2qq.4 草稿實測（2026-11-08，scratch worktree，基準 `e35521d`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 `git show` 產生，每次替換斷言恰好一次。`game.js` 507→440 行、50,305→43,804 bytes（CRLF 保留，原有的 16 行 LF 不變）；模組 93 行，LF。12 個修改檔逐檔確認 hunk 數與預期相符，換行比例不變 |
+| 等值 | 各表與舊版「台灣版表＋覆寫」的結果逐鍵相同（JSON，含鍵順序）；查詢 1,701 項相同 |
+| AST | `game.js` 未解析名稱 18→18、未使用 import 105→105；模組未解析名稱只有 `Object` |
+| 未改測試的 Quick | 77／82。FAIL：`salary-flow`、`record-condition-fix`、`information-architecture`、`retirement-hof-balance`（階級表文字已移出 `game.js`），以及 `event-integration`（`exit=null`，`.ips` 堆疊與已知 V8 GC SIGSEGV 相同，單獨重跑 PASS；仍記為 FAIL） |
+| T1–T3 後的 Quick | 82／82 PASS |
+| 本機 8 批 Full（`local-full-batches.mjs`，T4–T5 加入前） | `PASS`，`expected 108`，108 入口全數執行（計畫與結果逐項對照，缺 0、多 0），`sourceChanged false`、`resourceBlocked false`，1,166 秒。含 `game-view-dom-e2e`：8 份生涯與固定基準 `4f39a73` 逐步 DOM／`S`／RNG 次數相同 |
+| T4–T5 後的 Quick | 83／83 PASS（含 `league-catalog.test`）。Full 未在此狀態重跑，以實作 commit 的 Full 為準 |
+| 突變（新改與新寫的斷言） | 8／8 抓到，皆為 `ERR_ASSERTION`，檔案逐位元組還原：NPB2 加 `top:`（`record-condition-fix`、T5）、NPB_DEV `par` 改值（`salary-flow`、T5）、CPBL2／CPBL1 鍵順序對調（T5）、`teamNick` 條目改值（T5）、`game.js` 留一行 `Object.assign(PATHS,…)`（T4）、`teamRec` 改回讀 `window.TEAM_MASTER`（T4）、ルーキーリーグ名稱改字（`information-architecture`、T5）、NPB2 `statBucket` 改值（`retirement-hof-balance`、T5） |
+| 抵達探測 | `leagueTables()` 開頭改為丟出 `LT_PROBE`：9／9 入口帶 `LT_PROBE` 失敗（`kbo-renewal-floor`、`full-power-pitching`、`award-journal-native`、`retirement-hof-balance`、`award-history-b-comparison`、`pitcher-award-integration`、`hof-first-ballot-league`、`legacy-effect-boundaries`、`league-catalog.test`） |
+| 不可用的比較 | 直接執行 `game-view-dom-e2e --baseline=8b489b2…` 在第 0 步 `$.dom.board` 失敗：測試只在新版一側移除 `#save-live`，基準若已含存檔功能就會不同。在未修改的 HEAD 上同樣重現，非草稿造成；無差異的證據改用上列 Full 內對 `4f39a73` 的結果 |
+| 既有問題（不修） | `tools/development-b/legacy-effect-boundaries.mjs` 在未修改的 HEAD 與草稿上相同：19 項 PASS 後，在 `movement = function` 的擷取（`match` 為 null）出錯。不在 manifest 內 |
+
+### 2qq.5 驗證與交付（R3：成績模擬的階級表；允許差分無）
+
+- 實作：草稿 14 檔複製至分支，逐位元組相同（`cmp`）。commit `5bd5aa4`（計畫 commit `de7069b` 在前）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，HEAD `5bd5aa4`） | 83／83 PASS，依 `summary.json` 核對（含 `league-catalog.test`） |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `5bd5aa4`） | `PASS`，`expected 109`、`acceptedPass 109`、`issues []`，plan 109 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,087 秒（macOS＋Brave 本機證據）。其中 `game-view-dom-e2e`：8 份生涯與 `4f39a73` 逐步相同 |
+| reviewer | 無發現。已查：合併表的值與鍵順序（正式程式無依賴鍵順序的迭代）、目錄提早建立時 7 個組件建構函式與 rules 工廠皆不在建構時讀表值、球團紀錄提早凍結前後皆無寫入、無程式改寫 `window.TEAM_MASTER`、無 hook 改綁或以 `productionFunction` 切出 `teamRec` 等名稱、測試未放寬且 `doesNotMatch` 未變空轉、換行與絕對路徑、新依賴、E2E 注入錨點仍在 |
+
+- 交付：[PR #69](https://github.com/tt-chin/yakyujinsei/pull/69) 併 dev（merge `cfb1a31`，樹與 `cb0bc4a` 相同）。第 37＋38 期的 Linux CI Full：dev `f3f05fa`（另含 PR #70）手動 [Run 42481235307](https://github.com/tt-chin/yakyujinsei/actions/runs/42481235307)（Tests #169）109／109 PASS，8 批與 Aggregate PASS。未做：Preview、實機確認、main 發布。
+
+## 2rr. 第 39 期：TJ 量表移入 `PlayerInjury`、特性物件 `CareerTraits`、成績格式（細部計畫，2026-11-08；D1–D9 批准 2026-11-08）
+
+§3.25 的候補 I-TJ＋J＋I-格式（使用者決定 2026-11-08）。物件導向的收益：TJ 量表的累積、上限與手術判定都由 `PlayerInjury` 負責；隱藏特性的解放、移除、顯示名稱與阪神縦縞判定由單一物件負責；`statLine` 歸 `CareerPresenter`，純格式函式獨立成模組，`ShareImage`、LEGACY、國際賽與 presenter 共用。
+
+### 2rr.1 現況（基準 `origin/dev` `f3f05fa`；`game.js` 440 行／43,804 bytes，與 `cb0bc4a` 相同）
+
+- TJ：`tjAccrue`（`:146–151`，寫 `S.tj`）、`tjCap`（`:152`）。`PlayerInjury` 已有 `tjGamble`／`afterGamble`，但以注入的 `tjCap` 讀上限；`tjCap` 另注入 `SeasonPhases`、`CareerPresenter`（`:210`、`:249`），`tjAccrue` 注入 `ProfessionalSeason`（Journal `TJ_ACCRUAL` 階段）。
+- 特性：`traitCard`／`removeTrait`（`:138–142`）、`displayTrait`／`traitNames`／`checkGoldclothSeason`（`:204–209`）。`traitPresentation`（`:222`）由 `GameView`、`TraitResultCard`、`SeasonAwards`、`createInitialState`、`hydrateSavedState` 共用。
+- 格式：`fmtIP`（`:164–170`）、`statLine`（`:184–192`）、`slgOf`（`:194–202`）。`condition-view-model.js` 有另一份 `tjGaugeCap`（`traits?.rubber`，與 `game.js` 寫法不同），不合併。
+- 測試耦合：`full-power-pitching.test:33` 以 `productionFunction` 切 `tjCap`／`tjAccrue`；`full-power-pitching-e2e:37` 把兩者與基準 SHA 逐字比對，`:55` 改綁 `tjAccrue` 並斷言恰好被呼叫 1 次；`trait-policy:107` 在 `game.js` 比對 `return S.traits.rubber?100:50`；`international-personal-stats:8,80`、`championship-intl:45` 以 `function fmtIP(`→`function roleN(` 文字切片（`:80` 與基準逐字比對）；`trait-display-e2e:20–21` 以名稱呼叫 `traitCard`／`displayTrait`／`removeTrait`；`ability-allocation:28` 以 `function tjAccrue(` 作切片終點。凍結檢查（`award-identity-policy` 的 `287dd1a`）不含 `player-injury.js`、`career-presenter.js`；`condition-view-model.js`、`international-personal-stats.js` 在凍結清單內，不改。
+
+### 2rr.2 設計（使用者決定 2026-11-08：D1–D9 依建議）
+
+| # | 內容 |
+|---|---|
+| D1 | `game.js` 所有包裝名稱與 DEPS 注入 lambda 保留，只搬本體（E2E 以名稱改綁或呼叫） |
+| D2 | T1：`PlayerInjury` 新增 `accrueTj()`、`tjGaugeLimit()`（原 `tjAccrue`／`tjCap` 本體，加一行 `const S=getState();`）。`game.js` 的 `tjAccrue`／`tjCap` 改為一行轉呼叫，位置不變。`tjCap` 仍以 lambda 注入 `PlayerInjury`，`tjGamble` 經 `game.js` 名稱讀上限；實作方法用不同名稱，避免依賴與方法同名 |
+| D3 | T2：新檔 `docs/src/engine/career-traits.js`，類別 `CareerTraits`，方法 `unlock`、`remove`、`label`、`names`、`checkGoldclothSeason`（原 `traitCard`／`removeTrait`／`displayTrait`／`traitNames`／`checkGoldclothSeason` 本體）。依賴：`getState`、`traitPresentation`（參考）、`card`／`board`／`teamNick` lambda，以及回到 `game.js` 的 `traitCard`／`displayTrait` lambda，使縦縞解放與 `names()` 的內部呼叫仍經 `game.js` 名稱 |
+| D4 | `CareerTraits` 在 `TraitResultCard` 建構行之後建立（`traitPresentation` 宣告後）。`traitPresentation` 改由物件擁有需改 5 處接線，本期不做 |
+| D5 | T3：新檔 `docs/src/ui/stat-format.js` 匯出 `fmtIP`、`slgOf`（本體不變），`game.js` 直接 import 同名；`statLine` 改為 `CareerPresenter.statLine(st)`（`fmtIP`／`roleN` 取自既有注入，`slgOf` 由 presenter import），`game.js` 留一行包裝 |
+| D6 | `game.js` 因此不再使用的 import（`TRAIT_LABELS`、`traitLabel`、`recordFirstTeamSeason`、`goldclothEligible`）保留：E2E hook 會在 `game.js` 內以名稱呼叫 import |
+| D7 | 不改 `tjGaugeCap`、`CareerPresenter` 的 `tjCap` 預設值、`pitcherRole`／`isSP`／`roleN` |
+| D8 | R3（故障、特性效果）。允許差分：無。VERSION 維持 1.15.1 |
+| D9 | 分支 `refactor/career-traits`（自 `f3f05fa`，`--no-track`）。commit 依序：本計畫、T1、T2、T3，每個實作 commit 各自通過 Quick |
+
+### 2rr.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1a | `full-power-pitching.test` | 原始碼含 `playerInjury.accrueTj(` 時，vm 內以該 fixture 的 `S` 建立 `playerInjury` |
+| T1b | `full-power-pitching-e2e` | `tjAccrue`／`tjCap` 先確認 `game.js` 包裝行，再由 `player-injury.js` 還原原文（依確切字串與次數移除插入的狀態讀取、改回原名、去縮排）後與基準逐字比對；基準側不變 |
+| T1c | `trait-policy` | 上限本體的比對改對 `player-injury.js` 的 `tjGaugeLimit`，另確認 `game.js` 的 `tjCap` 包裝 |
+| T1d | `verify-modularization` | 第 39 期區塊：TJ 包裝各一次、`,tjCap:()=>tjCap()` 共 3 處、累積與上限本體不在 `game.js` 而在 `PlayerInjury` 各一次 |
+| T2 | `career-traits.test`（新，17 項） | 移動後本體還原後與 `f3f05fa` 逐字相同；`game.js` 包裝與建構行各一次、原本體字串不在 `game.js`；舊本體（vm）與新類別在 12 組情境（解放、移除、顯示名稱、`names`、縦縞達標／同季兩次／未達／非一軍／已持有）結果、呼叫紀錄、`S` 與 `traitPresentation` 相同；`getState` 每次即時讀；內部呼叫經注入的 `traitCard`／`displayTrait`（spy）；`teamNick` 經注入 lambda |
+| T3a | `international-personal-stats`、`championship-intl` | `fmtIP` 改由 `stat-format.js` import；`:80` 的逐字比對改為 `stat-format.js` 匯出本體對基準 `game.js` 函式，並確認 `game.js` 不再定義 `fmtIP` |
+| T3b | `stat-format.test`（新，5 項） | `fmtIP`／`slgOf` 與 `f3f05fa` 逐字相同；`CareerPresenter.statLine` 還原後與基準相同；`game.js` import 與包裝各一次；`fmtIP`／`slgOf` 數值與舊版相同；`statLine` 投手（SP／CL／MR，有無 SV／HLD）與打者（DEF 有無正負零、PA／AB 為 0）文字與舊版相同 |
+
+T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
+
+### 2rr.4 草稿實測（2026-11-08，scratch worktree，基準 `f3f05fa`；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 worktree 的 `game.js` 文字產生，每次替換斷言恰好一次、每行反引號數為偶數。`game.js` +11／−44（CRLF 保留，原有 16 行 LF 不變）；新模組與 `player-injury.js`、`career-presenter.js` 為 LF；修改的測試檔換行比例不變 |
+| AST | `game.js` 未解析名稱 18→17（少 `Object`）；未使用 import 105→109（D6 的 4 個）。新模組未解析名稱只有 `Object`／`Math` |
+| 未改測試的 Quick | 79／83。FAIL：`championship-intl`、`international-personal-stats`（`fmtIP` 切片）、`full-power-pitching`（vm 無 `playerInjury`）、`trait-policy`（上限本體已移出 `game.js`） |
+| 測試變更後的 Quick | 84／85。FAIL 為 `event-integration`（`exit=null`、log 空，`.ips` 堆疊 `ClearStaleLeftTrimmedPointerVisitor` 與已知 V8 GC SIGSEGV 相同，單獨重跑 5／5 PASS；仍記為 FAIL） |
+| 本機 8 批 Full（`local-full-batches.mjs`） | `PASS`，`expected 111`、`acceptedPass 111`、`issues []`，plan 111 入口與結果逐項對照（缺 0、多 0），`sourceChanged false`、`resourceBlocked false`。Full 專屬入口不需其他測試變更；`full-power-pitching-e2e` 的 `trace.tj.length===1` 證明改綁的 `tjAccrue` 仍被呼叫 |
+| 突變（新改與新寫的斷言） | 11／11 抓到，皆為 `ERR_ASSERTION`，檔案逐位元組還原：累積倍率、上限值、解放預設色、`names` 改呼叫內部 `label`、縦縞改呼叫內部 `unlock`、移除時不刪 `traitPresentation`、長打率比例、`fmtIP` 進位條件、`statLine` ホールド字樣、`game.js` 的 `traitCard` lambda 繞過包裝、`getState` 於建構時凍結。三個內部繞過在移除逐字比對後仍由 spy 項單獨抓到（新舊等價項因同一目標而抓不到） |
+
+### 2rr.5 驗證與交付（R3：故障與特性效果；允許差分無）
+
+- 實作：同一 assembler 依 T1／T2／T3 逐步套用，測試檔自草稿複製；13 檔與草稿逐位元組相同（`cmp`）。commit `85c5b7a`（T1）、`66ded78`（T2）、`597545c`（T3），計畫 commit `da05557` 在前。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（各 commit 的乾淨 worktree） | `85c5b7a` 83／83、`66ded78` 84／84、`597545c` 85／85 PASS，依 `summary.json` 核對（含 `career-traits.test`、`stat-format.test`） |
+| 本機 Full 第 1 次（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `597545c`） | **FAIL_OR_INCOMPLETE**：`acceptedPass 109`／`expected 111`，batch 4、5 exit 1。`bug-act-01-02-e2e` 與 `full-power-pitching-yakyo-test-001-e2e` 都在 `page.goto: Timeout 30000ms`（14:00:09–14:00:21 同一時段，兩個不同批次），無斷言失敗。判為環境問題：兩入口以 `test.mjs full --only=` 單獨重跑 2／2 PASS（部分重跑，不作為 Full PASS） |
+| 本機 Full 第 2 次（同上） | `PASS`，`expected 111`、`acceptedPass 111`、`issues []`，plan 111 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,103 秒（macOS＋Brave 本機證據）。含 `game-view-dom-e2e` 對 `4f39a73` |
+| reviewer | 無阻擋性發現。已查：移動本體與 `f3f05fa` 逐字相同（僅狀態讀取插入、改名、縮排）、載入時無 TDZ（各建構函式只保存依賴）、無內部呼叫繞過 `game.js` 名稱、`productionFunction` 切片與文字錨點仍有效、測試未放寬或空轉、換行與絕對路徑、新依賴。資訊性：`award-journal-native` 與 `tools/development-b/award-runtime-support` 把 `removeTrait` 包裝切進未提供 `careerTraits` 的 vm；現行 `awards`／`renderCheckpointCard` 不呼叫它，故不影響，日後若獎項流程呼叫 `removeTrait` 須補 |
+
+- 交付：PR 至 dev（待開）。未做：Linux CI Full（併 dev 後）、Preview、實機確認、main 發布。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -4879,7 +5206,53 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 使用者決定（2026-11-03）：A–G 全部依序分期進行，一期一組，各期開始前另立細部計畫。順序依上列建議：第 32 期 A，之後 B、E＋C、D；F、G 於各期細部計畫時決定併入相鄰期。不授權實作。
 - 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），與第 33 期同經 PR #59 併入 dev（`7234965`），見 §2kk。
 - 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll。
-- 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），本機實作於 `refactor/season-phases`，未 commit，見 §2mm。
+- 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），於 `refactor/season-phases` 實作，經 PR #62 併入 dev（`ef7768e`），隨 PR #63 發布至 main（`a8859b9`），Linux Full 99／99 PASS，見 §2mm.6。
+- 第 35 期 D：草稿、抵達探測與草稿 Full 已做（基準 `1a74e71`），D1–D10、T1–T8 與實作已批准（2026-11-08，`ProfessionalSeason`），於 `refactor/pro-season` 實作（`4df368b`，Quick 75／75、本機 Full 100／100 PASS，macOS＋Brave 本機證據），經 PR #64 併入 dev（`d3d2a53`），Tests #156 Linux Full 100／100 PASS，見 §2nn.5。
+- 第 36 期 F：§3.23 依物件導向／擴充標準選出；草稿、抵達與接縫探測、草稿 Full 已做（基準 `c62cd4a`），D1–D7、T1–T6 與實作已批准（2026-11-08，`CheckpointRenderer`、`WeakMap`），於 `refactor/checkpoint-renderer` 實作（`a08764f`，Quick 81／81、本機 Full 107／107 PASS，macOS＋Brave 本機證據），經 PR #66 併入 dev（`ea89c15`），Tests #161 Linux Full 107／107 PASS，見 §2oo.5。
+
+### 3.23 第 36 期候補再盤點（2026-11-08，基準 `c62cd4a`，`game.js` 518 行／51,705 bytes；靜態分析）
+
+- 方法：scratchpad acorn＋eslint-scope 腳本（同 §3.22），測試耦合以 grep 掃 `tests`、`scripts`、`tools`。152 個頂層函式共 17,695 bytes，多為一行包裝；其餘約 34 KB 為 import、常數與組件建構接線。
+- 使用者決定（2026-11-08）：以「是否讓程式更物件導向、更好擴充」為選期標準，不以 bytes 收益為準。
+
+| 候選 | 物件導向／擴充的改善 | 判斷 |
+|---|---|---|
+| F `renderCheckpointCard` | 收據狀態離開業務物件，描畫收據由單一類別負責 | 第 36 期（§2oo） |
+| 開局流程（`startJapanese`＋`initializeBrowserSave` 的 restore callback） | 兩條路徑重複開局流程（設 `S`／`SEED`、切換畫面、`navigation.reset/show`、`history.replaceState`、`startYear`），restore 直接 `delete careerSession[k]`；可由一個物件提供 `startNew()`、`resume(state)` 共用同一段進入流程。眼前的收益是消除重複；更多入口（匯入／匯出、多存檔槽）目前不在設計內 | 原定**待 BROWSER-SAVE-01 驗收完成**後另立一期；使用者決定（2026-11-08）不等驗收結案即開始，為第 37 期（§2pp）；涉及 seed，R3 |
+| G2 seed／名稱工具（`normalizeSeed` 等 5 個） | 無狀態純函式，只是拆檔 | 不做 |
+| G1 `fnv1a32` | 已以雜湊策略注入 `Rng`；6 處依名稱切片 | 不做 |
+| `initializeBrowserSave` 單獨搬 | 組裝接線，留在 `game.js` 合理 | 只隨開局流程處理 |
+
+### 3.24 第 38 期候補盤點（2026-11-08，基準 `refactor/career-entry` `bd3d283`（含第 37 期，未併 dev），`game.js` 507 行／50,305 bytes；靜態分析，未做草稿）
+
+- 方法：scratchpad acorn＋eslint-scope 腳本（同 §3.22）計算頂層宣告的自由名稱、`S` 引用、RNG 直接呼叫與模組變數寫入；測試耦合以 `/usr/bin/grep` 掃 `tests`、`scripts`、`tools`（名稱、`productionFunction` 切片、文字錨點）。腳本不保留。
+- 結構：152 個頂層函式中 121 個 ≤120 bytes 的轉發包裝；28 行組件建構共 12,582 bytes。實質邏輯只剩下表各組。
+- 選期標準：沿用 §3.23 使用者決定（物件導向／擴充性，非 bytes）。
+
+| 候選 | 範圍（約） | 物件導向／擴充的改善 | 主要測試耦合 | 分類 | 判斷 |
+|---|---|---|---|---|---|
+| H 聯盟／球隊目錄 | `LV`、`PATHS`、`LG_N`、`TIER_TH`、`TEAM_COLOR`、`window.TEAM_MASTER`，與 `teamRec`／`teamDisplay`／`listByOrg`／`teamNick`（約 4.5 KB） | 現為台灣版表（`:159` 等）＋日本版 `Object.assign` 覆寫（`:367–383`）兩段定義；`ABL`／`POSN`／`DPN` 的 assign 與原值相同（無作用）。收為單一目錄物件後，新增聯盟／層級只改一處，球隊查詢有單一擁有者 | HOF harness 依 `Object.assign` 就地修改的 `TIER_TH`／`LG_N` 參考（須傳參考）；`career-retirement.js:49` 讀 `window.TEAM_MASTER`；`TIER_TH` 5 檔、`LG_N` 4 檔、`listByOrg` 13 檔（多為注入依賴） | 無 RNG；`LV` 決定成績模擬，保守列 R3，允許差分無 | **第 38 期**（使用者決定 2026-11-08） |
+| I TJ／投手角色／成績格式 | `tjAccrue`、`tjCap`、`pitcherRole`、`isSP`、`roleN`、`statLine`、`fmtIP`、`slgOf`（約 3 KB） | `tjAccrue` 寫 `S.tj`，可移入已持有 `tjGamble` 的 `PlayerInjury`；格式化歸顯示側 | `full-power-pitching` 以 `productionFunction` 切 `tjCap`／`tjAccrue`；`trait-policy` 切 `afterGamble→pitcherRole`；`international-personal-stats` 切 `fmtIP→roleN` | 故障，R3 | 次選（可只做 TJ） |
+| J 特性解放工具 | `traitCard`、`removeTrait`、`displayTrait`、`traitNames`、`checkGoldclothSeason`（約 0.8 KB） | 可併入 `TraitResultCard` 或另立特性物件 | 多個組件的 DEPS 清單注入 | R2–R3 | 小，可與 I 合看 |
+| K 標題畫面接線 | `act-toggle`、`seed-show`／`seed-re`、`seg-pos`、`btn-start`、`btn-restart`、`app-version` | 改善有限。另有兩處被覆蓋的重複綁定：`seed-re`（`:357`，被 `:493` 覆蓋）、`btn-restart`（`:327–331`，被 `:495` 覆蓋，確認文字不同） | `seg-pos` 26 檔 E2E（綁定時機與引擎競態） | 涉及 `SEED`，R3 | 不單獨成期；重複綁定可另作小清理 |
+| L 函式重新指派 | `board`（`:432`）、`movement`（`:474`）、`endGame`（`:478`，台幣→円文字替換）、`seedInit`／`R`（`:400–401`） | 最不物件導向的部分 | `seedInit = function`／`R = function` 被 7 檔以上文字比對，`rng-instrument` 直接替換原始碼；`LEGACY` 22 檔 63 處 | R3 | RNG 兩行不做（同 G1）；`board`／`endGame` 須另行深入調查 |
+
+- H 的待確認事項（立期計畫前以草稿＋4 組 Full 定案）：合併後各表最終值與 `:367–383` 覆寫結果逐鍵相同、物件參考在各組件間維持同一、`window.TEAM_MASTER` 建立時機、HOF harness 與名稱切片是否需調整。分支接在 `refactor/career-entry` 之上或待 PR #68 併 dev 後開，未決。
+
+### 3.25 第 39 期候補再盤點（2026-11-08，基準 `refactor/league-catalog` `cb0bc4a`（第 38 期，未併 dev），`game.js` 440 行／43,804 bytes；grep 與讀碼，未做 AST）
+
+- §3.24 剩餘的 I／J／K／L 依現行程式重新確認；選期標準沿用 §3.23（物件導向／擴充性）。
+
+| 候選 | 現況 | 物件導向／擴充的改善 | 主要測試耦合 | 判斷 |
+|---|---|---|---|---|
+| I-TJ `tjAccrue`、`tjCap` | `PlayerInjury` 已有 `tjGamble`／`afterGamble`，卻要 `game.js` 反向注入 `tjCap`；`tjAccrue` 寫 `S.tj` | TJ 量表由 `PlayerInjury` 負責 | `full-power-pitching` 切片、`full-power-pitching-e2e` 逐字比對與改綁、`trait-policy` 文字比對 | **第 39 期**（§2rr） |
+| I-角色 `pitcherRole`、`isSP`、`roleN` | 讀 `S.ab.sta`、`S.prevD`，注入 `SeasonStats` | 沒有自然的擁有者 | `trait-policy`、`season-stats` 以文字範圍切片 | 不單獨成期 |
+| I-格式 `statLine`、`fmtIP`、`slgOf` | 純顯示 | `statLine` 歸 `CareerPresenter`，純函式共用 | `international-personal-stats`、`championship-intl` 文字切片 | **第 39 期**（§2rr） |
+| J 特性 5 函式 | 解放／移除／顯示分散，混有 UI 與阪神專屬規則 | 單一特性物件，擴充性收益最大 | 多處 DEPS 注入、`trait-display-e2e` 以名稱呼叫 | **第 39 期**（§2rr） |
+| K 重複綁定 | `seed-re`（`:306`，被 `:426` 覆蓋，產生空 seed）、`btn-restart`（`:276–280`，被 `:428` 覆蓋，確認文字不同） | 只是清理 | `seg-pos` 26 個 E2E 有綁定時機競態 | 可另做小清理 |
+| L 函式重新指派 `board`、`movement`、`endGame`、`seedInit`／`R` | `endGame` 以畫面文字替換「台幣→円」，屬 LEGACY 修補 | 改善最大但風險最高 | `R`／`seedInit` 被文字比對，`LEGACY` 大量引用 | 須另行深入調查 |
+
+- 使用者決定（2026-11-08）：第 39 期做 I-TJ＋J＋I-格式，T3 採 `stat-format.js` 方案，分支自 `origin/dev`（`f3f05fa`）。
 
 ## 4. 使用者決定（2026-10-18）
 

@@ -30,7 +30,7 @@ const errors=[],results=[],started=Date.now();
 const save=(name,data)=>writeFile(path.join(artifacts,name+'.json'),JSON.stringify(data,null,2));
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push(r.status()+' '+r.url());});};
 const get=p=>p.evaluate(()=>window.__draftIncomeTest.get());
-const start=async(p,url,pos='P')=>{await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#in-name').fill('イベント検証');await p.locator('#btn-start').click();assert.equal((await get(p)).state.pos,pos,'position listener must be ready');};
+const start=async(p,url,pos='P')=>{await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);if(await p.locator('#save-new').isVisible())await p.locator('#save-new').click();await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#in-name').fill('イベント検証');const overwrite=d=>{assert.equal(d.type(),'confirm');assert.match(d.message(),/新しい野球人生を始めると/);d.accept();};p.on('dialog',overwrite);try{await p.locator('#btn-start').click();}finally{p.off('dialog',overwrite);}assert.equal((await get(p)).state.pos,pos,'position listener must be ready');};
 const context=width=>browser.newContext({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500});
 const pass=name=>{results.push({name,status:'PASS'});console.log('PASS '+name);};
 // Ordinary UI operations. Balance current values, preserving DOM order on ties.

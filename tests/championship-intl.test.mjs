@@ -9,12 +9,15 @@ import * as intl from '../docs/src/engine/international-trait-policy.js';
 import * as selection from '../docs/src/engine/international-selection-policy.js';
 import {internationalPersonalStats,renderInternationalPersonalStats} from '../docs/src/ui/international-personal-stats.js';
 import {InternationalTournament} from '../docs/src/engine/international-tournament.js';
+// Phase 39 (§2rr): fmtIP moved from game.js into stat-format.js.
+import {fmtIP} from '../docs/src/ui/stat-format.js';
 import * as contracts from '../docs/src/engine/contract-policy.js';
 import {applyIncentivePayment,createIncentiveTerms} from '../docs/src/engine/incentive-policy.js';
 import {classifyMarketInjury} from '../docs/src/engine/injury-market-policy.js';
 import * as receipts from '../docs/src/engine/award-transaction-policy.js';
 import {prepareSeasonPayment} from '../docs/src/engine/season-payment-policy.js';
 import {SeasonSettlement} from '../docs/src/engine/season-settlement.js';
+import {CheckpointRenderer} from '../docs/src/ui/checkpoint-renderer.js';
 const game=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const SeasonStats=game.includes('seasonStats.addIntlStats(')?(await import('../docs/src/engine/season-stats.js')).SeasonStats:null;
 const teamById=id=>JP_DATA.teams.find(t=>t.teamId===id);
@@ -41,7 +44,7 @@ test('structured result overrides ambiguous honor, valid final count retained',(
 // Execute the actual active international functions, not a reimplementation.
 function activeIntl(v={},source=game){
   const s=state({ab:{vel:65,ctl:65,brk:65,sta:65},pos:'P',role:'SP',rehab:0,skipMid:false,seasonFactor:1,intlDeclinedCount:0,...v});let opts,draws=0,done=0,cards=[];
-  const context={...intl,...selection,internationalPersonalStats,renderInternationalPersonalStats,InternationalTournament,fmtIP:runInNewContext('('+game.slice(game.indexOf('function fmtIP('),game.indexOf('function roleN('))+')'),S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
+  const context={...intl,...selection,internationalPersonalStats,renderInternationalPersonalStats,InternationalTournament,fmtIP,S:s,DATA:JP_DATA,ovr:()=>65,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),ri:(a,b)=>{draws++;return a;},R:()=>{draws++;return .1;},chance:()=>{draws++;return false;},pick:a=>{draws++;return a[context.rank||0];},isSP:()=>true,choose:(_,o)=>{opts=o;},card:(...a)=>cards.push(a),displayTrait:()=> '国際大会の鬼',nextStep:()=>{},maybeIntl:null};
   // OOP plan §2i (7-A): with the addIntlStats delegate, the vm group calls a SeasonStats built from the live context stubs.
   if(source.includes('seasonStats.addIntlStats('))context.seasonStats=new SeasonStats({getState:()=>context.S,levels:null,rng:{R:()=>context.R(),N0:()=>assert.fail('N0'),chance:p=>context.chance(p),ri:(a,b)=>context.ri(a,b)},clamp:(x,a,b)=>context.clamp(x,a,b),isSP:()=>context.isSP(),pitcherRole:()=>assert.fail('pitcherRole'),checkGoldclothSeason:()=>assert.fail('checkGoldclothSeason')});
   // OOP plan §2s: the slice itself constructs InternationalTournament with lambdas that resolve these context stubs at call time.
@@ -72,13 +75,16 @@ test('C09 actual active phaseEnd: champion, maintenance, salary/incentive/progre
   const s=state({seed:'championship-native-receipt',tradeRefuse:2,tradeHeat:8,careerEarnings:111,careerBaseSalary:0,careerIncentive:0,yearlyIncentivePaid:{},yearOutsideIncome:111});
   s.ct=contracts.createContract({contractId:'champ',org:'NPB',teamId:s.orgTeamId,signedYear:2034,startYear:2035,years:2,annualSalary:100000000,incentive:createIncentiveTerms({org:'NPB',annualSalary:100000000})});
   champ.captureSeasonChampionship(s);let draws=0,moved=0,cards=0;
-  const c={...champ,...contracts,...receipts,prepareSeasonPayment,applyIncentivePayment,classifyMarketInjury,S:s,phaseEnd:null,board:()=>{},migrateSalaryV140State:()=>{},teamRec:teamById,R:()=>{draws++;return 0;},escapeHTML:x=>x,card:()=>cards++,fmtMoney:x=>String(x),movement:()=>moved++,careerSession:{pendingOffseasonSalary:null,seasonEndContext:null,corpSettlements:new WeakMap()},choose:()=>assert.fail('no pool'),allocUI:()=>{},choiceViews:new WeakMap(),restorePendingChoice:()=>false};
-  // Phase 31 moved the settlement into SeasonSettlement; renderCheckpointCard stays in game.js and runs on the same stubs.
+  const c={...champ,...contracts,...receipts,CheckpointRenderer,prepareSeasonPayment,applyIncentivePayment,classifyMarketInjury,S:s,phaseEnd:null,board:()=>{},migrateSalaryV140State:()=>{},teamRec:teamById,R:()=>{draws++;return 0;},escapeHTML:x=>x,card:()=>cards++,fmtMoney:x=>String(x),movement:()=>moved++,careerSession:{pendingOffseasonSalary:null,seasonEndContext:null,corpSettlements:new WeakMap()},choose:()=>assert.fail('no pool'),allocUI:()=>{},choiceViews:new WeakMap(),restorePendingChoice:()=>false};
+  // Phase 31 moved the settlement into SeasonSettlement. Phase 36 (§2oo) moved the receipt body into CheckpointRenderer: the
+  // renderCheckpointCard slice now carries the wrapper and its construction line, which needs the class and runs on the same card stub.
   runInNewContext(productionFunction('renderCheckpointCard',game),c);
   const settlement=new SeasonSettlement({getState:()=>c.S,careerSession:c.careerSession,choiceViews:c.choiceViews,board:c.board,migrateSalaryV140State:c.migrateSalaryV140State,teamRec:c.teamRec,random:c.R,renderCheckpointCard:(owner,key,args)=>c.renderCheckpointCard(owner,key,args),escapeHTML:c.escapeHTML,card:c.card,fmtMoney:c.fmtMoney,movement:c.movement,choose:c.choose,allocUI:c.allocUI,restorePendingChoice:c.restorePendingChoice});c.phaseEnd=()=>settlement.phaseEnd();
   c.phaseEnd();const saved=JSON.stringify(s);c.phaseEnd();assert.equal(JSON.stringify(s),saved);assert.deepEqual([draws,moved,cards],[1,1,2]);assert.equal(s.careerBaseSalary,100000000);assert.equal(s.careerEarnings,100000111);assert.deepEqual([s.tradeRefuse,s.tradeHeat],[1,3]);
 });
-test('snapshot placement and franchise hookup use unchanged actual path',()=>{assert.ok(game.indexOf('captureSeasonChampionship(S);')>game.indexOf('recordSalaryEvaluation(entry.st);'));assert.ok(game.indexOf('  captureSeasonChampionship(S);')<game.indexOf('runSeasonPipeline(0)'));const movementSource=readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8'),source=movementSource.slice(movementSource.indexOf('  function movement(){'),movementSource.indexOf('\n  return {',movementSource.indexOf('  function movement(){')));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});
+// Phase 35 (§2nn) moved the season continuation into professional-season.js; the order checks read that module.
+const professionalSeason=readFileSync(new URL('../docs/src/engine/professional-season.js',import.meta.url),'utf8');
+test('snapshot placement and franchise hookup use unchanged actual path',()=>{const callAt=text=>{assert.equal(professionalSeason.split(text).length,2,'one call site: '+text);return professionalSeason.indexOf(text);};assert.ok(callAt('recordSalaryEvaluation(entry.st);')<callAt('captureSeasonChampionship(S);'),'championship snapshot after salary evaluation');assert.ok(callAt('captureSeasonChampionship(S);')<callAt('runSeasonPipeline(0)'),'championship snapshot before the pipeline starts');const movementSource=readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8'),source=movementSource.slice(movementSource.indexOf('  function movement(){'),movementSource.indexOf('\n  return {',movementSource.indexOf('  function movement(){')));assert.match(source,/S\.teamYears=\(S\.teamYears\|\|0\)\+1/);assert.match(source,/S\.teamYears>=7&&S\.champThisTeam&&S\.champTeam===S\.orgTeamId/);});
 test('out-of-scope data and rules unchanged except approved KBO floor fix',()=>{
   for(const file of ['src/data/event-cards-jp.js','src/data/jp-data.js','src/data/salary-market-data.js','src/engine/market-policy.js','src/engine/cross-league-market-policy.js','src/engine/contract-policy.js','src/engine/event-policy.js','src/engine/event-state-policy.js','src/engine/incentive-policy.js']){
     let current=readFileSync(new URL('../docs/'+file,import.meta.url),'utf8').replace(/\r\n/g,'\n');

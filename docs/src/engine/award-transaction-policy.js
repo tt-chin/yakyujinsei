@@ -1,3 +1,4 @@
+import {authenticatedAwardProofs} from './browser-save-auth.js';
 // AF04/05: same-page, same-state transactions. No RNG rollback or persistent storage.
 import {pitcherAwardCandidate} from './pitcher-award-policy.js';
 import {decideIndependentAward} from './award-rng-policy.js';
@@ -14,7 +15,7 @@ const error=code=>Object.assign(new Error(code),{code});
 // Exact current producer strings only; team/international honors are out of scope.
 const historicalPersonal=/^(\d{4}) (?:NPB|KBO|台湾プロ野球|メジャーリーグ)(?:年間MVP|新人王|最優秀投手賞|最多セーブ|最優秀中継ぎ|最多奪三振|最多勝利投手賞|最優秀防御率投手賞|最多三振奪取投手賞|勝率第一位投手賞|最多セーブ投手賞|最優秀中継ぎ投手賞|投手三冠王|沢村賞|首位打者|本塁打王|盗塁王|打点王|最高出塁率|ゴールデングラブ賞|年間最優秀守備選手|打撃三冠王|オールスターゲーム(?:\(ファン投票選出\))?)$/;
 const data=token=>{const d=owned.get(token);if(!d)throw error('INVALID_AWARD_TRANSACTION');return d;};
-const currentData=token=>{const d=data(token);if(d.state.year!==d.year||d.state.seed!==d.seed)throw error('STALE_AWARD_TRANSACTION');return d;};
+const currentData=token=>{const d=data(token);if(d.historicalReadonly)throw error('RESTORED_AWARD_READ_ONLY');if(d.state.year!==d.year||d.state.seed!==d.seed)throw error('STALE_AWARD_TRANSACTION');return d;};
 const parent=(state,path)=>{
   if(!Array.isArray(path)||!path.length||path.some(k=>typeof k!=='string'||['__proto__','constructor','prototype'].includes(k)))throw error('INVALID_EFFECT_PATH');
   let p=state;for(const k of path.slice(0,-1)){const desc=Object.getOwnPropertyDescriptor(p,k);if(!desc||!Object.hasOwn(desc,'value')||!desc.value||typeof desc.value!=='object')throw error('INVALID_EFFECT_PARENT');p=desc.value;}
@@ -166,3 +167,32 @@ export function completeAwardDecisions(token,afterHistoryWrite){
 }
 export function isCompletedAwardDecision(decision,state){const proof=completed.get(decision);return !!proof&&(!state||proof.state===state)&&data(proof.token).phase==='AWARD_EFFECTS_COMMITTED'&&proof.state.awardDecisions?.[proof.index]===decision&&equal(decision,proof.value);}
 export function inspectAwardTransaction(token){const d=data(token);return copy({phase:d.phase,year:d.year,league:d.league,decisions:d.decisions||[],slots:[...d.slots.values()],receipts:[...d.receipts.values()].map(r=>({effectId:r.effectId,status:r.status,writes:r.writes.map(w=>({path:w.path,beforePresent:w.beforePresent,before:w.before,after:w.after,status:w.status}))}))});}
+
+// Persistence carries only provenance of already committed historical Decisions.
+// No transaction effects, draws or payments are replayed by this bridge.
+export function captureCompletedAwardProofs(state){
+  const result=[];
+  for(const [index,decision] of (state.awardDecisions||[]).entries()){
+    const proof=completed.get(decision);
+    if(!proof)continue; // Consumer-only / copied legacy history remains unverified.
+    if(!isCompletedAwardDecision(decision,state)||proof.index!==index)throw error('SAVE_AWARD_PROOF_CONFLICT');
+    const d=data(proof.token);
+    if(d.seed!==state.seed||d.year>=state.year||[...d.receipts.values()].some(r=>r.status!=='COMMITTED'))throw error('SAVE_AWARD_PROOF_BOUNDARY');
+    result.push({index,decisionKey:decision.decisionKey,year:d.year,leagueKey:d.league,level:d.level,role:d.role,pos:d.pos,receiptIds:[...d.receipts.keys()]});
+  }
+  return result;
+}
+export function restoreCompletedAwardProofs(state,authorization,envelope){
+  const proofs=authenticatedAwardProofs(authorization,state,envelope),prepared=[];let last=-1;
+  for(const p of proofs){
+    const decision=state.awardDecisions?.[p.index];
+    if(!Number.isSafeInteger(p.index)||p.index<=last||!decision||p.year>=state.year||decision.year!==p.year||decision.leagueKey!==p.leagueKey||decision.level!==p.level||decision.role!==p.role||decision.decisionKey!==p.decisionKey||!['P','C','IF','OF'].includes(p.pos)||!Array.isArray(p.receiptIds)||!p.receiptIds.includes('decision-history')||new Set(p.receiptIds).size!==p.receiptIds.length)throw error('SAVE_AWARD_PROOF_CONFLICT');
+    last=p.index;prepared.push({p,decision});
+  }
+  // Validate every record before making any Decision recognizable.
+  for(const {p,decision} of prepared){
+    const token=Object.freeze({schemaVersion:1,year:p.year,leagueKey:p.leagueKey,kind:'RESTORED_READ_ONLY'});
+    owned.set(token,{state,seed:state.seed,year:p.year,league:p.leagueKey,level:p.level,role:p.role,pos:p.pos,historicalReadonly:true,phase:'AWARD_EFFECTS_COMMITTED',receipts:new Map(p.receiptIds.map(effectId=>[effectId,{status:'COMMITTED'}]))});
+    completed.set(decision,{state,token,index:p.index,value:copy(decision)});
+  }
+}

@@ -7,6 +7,8 @@ import * as defensePolicy from '../docs/src/engine/defense-position-policy.js';
 import {AmateurCareer} from '../docs/src/engine/amateur-career.js';
 import {execFileSync} from 'node:child_process';
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
+// Phase 35 (§2nn) moved proSeason and its continuation into professional-season.js; the season integration checks read that module.
+const professionalSeason=fs.readFileSync(new URL('../docs/src/engine/professional-season.js',import.meta.url),'utf8');
 const initialState=fs.readFileSync(new URL('../docs/src/engine/initial-state.js',import.meta.url),'utf8');
 const amateurSource=fs.readFileSync(new URL('../docs/src/engine/amateur-career.js',import.meta.url),'utf8');
 const yearFlowSource=fs.readFileSync(new URL('../docs/src/engine/year-flow.js',import.meta.url),'utf8');
@@ -31,12 +33,12 @@ assert.equal(vm.runInContext("dpQual('DH')",context),true);
 // Guard actual integration locations, not the unreachable legacy tournament function.
 assert.match(amateurSource,/power=overall\+beginEventSeason\(S\)\.form\+bonus\+ri\(-8,8\)/);
 assert.match(amateurSource,/qualificationResult\(ovr\(\)\+beginEventSeason\(S\)\.form\+bonus\+ri\(-8,8\)\)/);
-assert.match(game,/if\(eventPoints!==0\)Object\.assign\(st,normalizeEventSeason\(st,eventOptions\)\)/);
+assert.match(professionalSeason,/if\(eventPoints!==0\)Object\.assign\(st,normalizeEventSeason\(st,eventOptions\)\)/);
 assert.match(initialState,/ensureEventState\(state\);state\.potSum0=Object\.values\(pot\)\.reduce\(\(sum,value\)=>sum\+value,0\);return state/);
 assert.match(yearFlowSource,/try\{resetEventYear\(state\);startYear\(\);handoff\.status='COMMITTED'/);
 assert.match(amateurSource,/consumeEventSeason\(S\);card\('bad'/);
 assert.equal(TRAIT_LABELS.favorite,'監督のお気に入り');
-assert.match(game,/eventPoints!==0[\s\S]*applyEventSeason[\s\S]*recordSalaryEvaluation\(entry\.st\)/);
+assert.match(professionalSeason,/eventPoints!==0[\s\S]*applyEventSeason[\s\S]*recordSalaryEvaluation\(entry\.st\)/);
 const seasonEvents=fs.readFileSync(new URL('../docs/src/engine/season-events.js',import.meta.url),'utf8');
 const eventDisplay=seasonEvents.slice(seasonEvents.indexOf('function eventChoiceSummary'),seasonEvents.indexOf('function drawEvents'));
 assert.doesNotMatch(eventDisplay,/\b(?:R|ri|pick|chance)\s*\(/);

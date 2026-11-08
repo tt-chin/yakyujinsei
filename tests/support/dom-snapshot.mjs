@@ -12,6 +12,15 @@ export async function captureGameView(full){
   const state=window.__expect1140?window.__projectChampionmaker(rawState,window.__champTeams):rawState;
   delete state.version;if(state.birthHighSchool)delete state.birthHighSchool.createdVersion;
   const dom=Object.fromEntries(['log','act','board'].map(id=>[id,document.getElementById(id)?.outerHTML??null]));
+  if(window.__expectBrowserSave){
+    const board=document.getElementById('board').cloneNode(true),live=board.querySelector('#save-live');
+    if(!live||board.querySelectorAll('#save-live').length!==1||live.children.length!==3)throw Error('SAVE_STATUS_STRUCTURE');
+    const [status,unsaved,home]=live.children;
+    if(status.getAttribute('role')!=='status'||unsaved.id!=='save-continue-unsaved'||unsaved.textContent!=='セーブせずに続ける'||home.id!=='save-return-title'||!['タイトルへ','タイトルで最新データを読む'].includes(home.textContent))throw Error('SAVE_STATUS_CONTROLS');
+    if(!/セーブ|再開|保存/.test(status.textContent))throw Error('SAVE_STATUS_MESSAGE');
+    const year=status.textContent.match(/^(\d{4})年/);if(year&&Number(year[1])>rawState.year)throw Error('SAVE_STATUS_FUTURE_YEAR');
+    live.remove();dom.board=board.outerHTML;
+  }
   if(window.__expect1141){
     // Approved 1.14.1 UI-only delta: the credits menu button. Validate its exact
     // markup once, then drop only that button; every other #board byte stays strict.

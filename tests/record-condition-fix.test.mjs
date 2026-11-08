@@ -4,6 +4,8 @@ import { resolveStatBucket } from '../docs/src/engine/stat-bucket.js';
 import { formatRehabStatus } from '../docs/src/ui/condition-view-model.js';
 
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
+// Phase 38 (§2qq) moved the level table into league-catalog.js.
+const leagueCatalog=fs.readFileSync(new URL('../docs/src/engine/league-catalog.js',import.meta.url),'utf8');
 const record=fs.readFileSync(new URL('../docs/src/ui/record-view.js',import.meta.url),'utf8');
 const presenter=fs.readFileSync(new URL('../docs/src/ui/career-presenter.js',import.meta.url),'utf8');
 const levels={NPB_DEV:{statBucket:'NPB'},NPB2:{statBucket:'NPB'},NPB1:{statBucket:'NPB'},KBO2:{statBucket:'KBO'},KBO1:{statBucket:'KBO'},CPBL2:{statBucket:'CPBL'},CPBL1:{statBucket:'CPBL'},R:{statBucket:'MINOR'},A1:{statBucket:'MINOR'},A2:{statBucket:'MINOR'},A3:{statBucket:'MINOR'},MLB:{statBucket:'MLB'},IND:{statBucket:'IND'},CORP:{statBucket:'CORP'}};
@@ -13,8 +15,8 @@ for(const key of ['CPBL2','CPBL1'])assert.equal(resolveStatBucket(levels,key),'C
 for(const key of ['R','A1','A2','A3'])assert.equal(resolveStatBucket(levels,key),'MINOR');
 for(const key of ['MLB','IND','CORP'])assert.equal(resolveStatBucket(levels,key),key);
 assert.throws(()=>resolveStatBucket(levels,'UNKNOWN'),/UNKNOWN_STAT_BUCKET:UNKNOWN/);
-assert.match(game,/NPB_DEV:\{[^}]+statBucket:'NPB'/);assert.match(game,/KBO2:\{[^}]+statBucket:'KBO'/);assert.match(game,/CPBL2:\{[^}]+statBucket:'CPBL'/);assert.match(game,/R:\{[^}]+statBucket:'MINOR'/);
-assert.doesNotMatch(game,/NPB_DEV:\{[^}]+top:|NPB2:\{[^}]+top:|KBO2:\{[^}]+top:|CPBL2:\{[^}]+top:|R:\{[^}]+top:/);
+assert.match(leagueCatalog,/NPB_DEV:\{[^}]+statBucket:'NPB'/);assert.match(leagueCatalog,/KBO2:\{[^}]+statBucket:'KBO'/);assert.match(leagueCatalog,/CPBL2:\{[^}]+statBucket:'CPBL'/);assert.match(leagueCatalog,/R:\{[^}]+statBucket:'MINOR'/);
+assert.doesNotMatch(leagueCatalog,/NPB_DEV:\{[^}]+top:|NPB2:\{[^}]+top:|KBO2:\{[^}]+top:|CPBL2:\{[^}]+top:|R:\{[^}]+top:/);
 assert.equal(formatRehabStatus({rehab:0,skipMid:true,seasonFactor:0}),'リハビリ中（今季全休）');
 assert.equal(formatRehabStatus({rehab:1,skipMid:true,seasonFactor:0}),'リハビリ中（今季全休・残り1年）');
 assert.equal(formatRehabStatus({rehab:1,skipMid:false,seasonFactor:1}),'残り1年');

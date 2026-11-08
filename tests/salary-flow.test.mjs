@@ -5,6 +5,8 @@ import path from 'node:path';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
+// Phase 38 (§2qq) moved the level table into league-catalog.js.
+const leagueCatalog = await readFile(path.join(root, 'docs/src/engine/league-catalog.js'), 'utf8');
 const initialState = await readFile(path.join(root, 'docs/src/engine/initial-state.js'), 'utf8');
 const seasonPayment = await readFile(path.join(root, 'docs/src/engine/season-payment-policy.js'), 'utf8');
 const seasonStats = await readFile(path.join(root, 'docs/src/engine/season-stats.js'), 'utf8');
@@ -21,7 +23,8 @@ const careerMovement = await readFile(path.join(root, 'docs/src/engine/career-mo
 const seasonSettlement = await readFile(path.join(root, 'docs/src/engine/season-settlement.js'), 'utf8');
 const movementGate = await readFile(path.join(root, 'docs/src/engine/movement-gate.js'), 'utf8');
 const seasonPhases = await readFile(path.join(root, 'docs/src/engine/season-phases.js'), 'utf8');
-const gameAndModules = game + '\n' + careerContract + '\n' + careerMovement + '\n' + seasonSettlement + '\n' + movementGate + '\n' + seasonPhases;
+const professionalSeason = await readFile(path.join(root, 'docs/src/engine/professional-season.js'), 'utf8');
+const gameAndModules = game + '\n' + careerContract + '\n' + careerMovement + '\n' + seasonSettlement + '\n' + movementGate + '\n' + seasonPhases + '\n' + professionalSeason;
 const evaluationPolicy = await readFile(path.join(root, 'docs/src/engine/salary-evaluation-policy.js'), 'utf8');
 const contractPolicy = await readFile(path.join(root, 'docs/src/engine/contract-policy.js'), 'utf8');
 const controlPolicy = await readFile(path.join(root, 'docs/src/engine/control-period-policy.js'), 'utf8');
@@ -47,7 +50,7 @@ assert.match(careerMovement, /if\(S\.skipMid\)\{if\(contractNeedsRenewal\(S\.ct\
 assert.match(careerContract, /const sourceLevel=S\.lv,sourceStage=S\.stage,sourceOrg=S\.org/);
 assert.match(careerContract, /sourceLevel:LV\[sourceLevel\]\?sourceLevel:lv/);
 assert.match(careerContract, /rating:sourceStage==='PRO'\?currentMarketRating\(\):0/);
-assert.match(game, /recordSalaryEvaluation\(entry\.st\)/);
+assert.match(professionalSeason, /recordSalaryEvaluation\(entry\.st\)/);
 assert.match(amateurCareer, /if\(S\.stage==='IND'\)recordIndependentSalaryEvaluation\(results\)/);
 assert.match(careerContract, /LEGACY_RATING_FALLBACK/);
 assert.match(evaluationPolicy, /LEGACY_NO_INDIVIDUAL_STATS/);
@@ -111,8 +114,13 @@ assert.equal(seasonSettlement.split('random:R}').length,2,'settleChampionship st
 const phasesBridge='rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}';
 assert.equal(game.split(phasesBridge).length,2,'one SeasonPhases RNG bridge, not new independent draws');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonPhases.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[2,6,1,0],'SeasonPhases draw sites moved verbatim');
-const gameSites=game.replace(phasesBridge,'rng:{phasesBridge}').replace(settlementBridge,'random:{settlementBridge}').replace(movementBridge,'rng:{movementBridge}').replace(contractBridge,'rng:{contractBridge}').replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}').replace(awardsBridge,'journalRng:{awardsBridge}').replace(retirementBridge,'rng:{retirementBridge}').replace(amateurBridge,'rng:{amateurBridge}');
-assert.equal((gameSites.match(/\bR\(/g) || []).length,10,'all other native RNG call sites unchanged');
+// Phase 35 moved proSeason into ProfessionalSeason: R( -1 in game.js (the mid-season trade split), the same 1/0/0/0 in professional-season.js.
+// Its game.js wiring only forwards to the current R (late binding) and is not a draw site.
+const proSeasonBridge='seasonRng:{R:()=>R()}';
+assert.equal(game.split(proSeasonBridge).length,2,'one ProfessionalSeason RNG bridge, not a new independent draw');
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(professionalSeason.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[1,0,0,0],'ProfessionalSeason draw site moved verbatim');
+const gameSites=game.replace(proSeasonBridge,'seasonRng:{proSeasonBridge}').replace(phasesBridge,'rng:{phasesBridge}').replace(settlementBridge,'random:{settlementBridge}').replace(movementBridge,'rng:{movementBridge}').replace(contractBridge,'rng:{contractBridge}').replace(seasonStatsBridge,'rng:{seasonStatsBridge}').replace(injuryBridge,'rng:{injuryBridge}').replace(abilityBridge,'rng:{abilityBridge}').replace(romanceBridge,'rng:{romanceBridge}').replace(eventsBridge,'rng:{eventsBridge}').replace(awardsBridge,'journalRng:{awardsBridge}').replace(retirementBridge,'rng:{retirementBridge}').replace(amateurBridge,'rng:{amateurBridge}');
+assert.equal((gameSites.match(/\bR\(/g) || []).length,9,'all other native RNG call sites unchanged');
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(seasonStats.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[6,4,3,0],'SeasonStats draw sites moved verbatim');
 // Phase 34: the last six ri( sites were phasePre's training dice; none is left in game.js.
 assert.equal((gameSites.match(/\bri\(/g) || []).length, 0);
@@ -162,11 +170,11 @@ assert.doesNotMatch(gameAndModules, /const yearly=Math\.round\(salaryFor\(S\.lv,
 assert.match(careerMovement, /S\.careerBuyout=\(S\.careerBuyout\|\|0\)\+result\.buyoutAmount/);
 assert.match(careerMovement, /S\.ct=null;\s*S\.currentSalary=0/);
 
-assert.match(game, /NPB_DEV:\{n:'NPB育成',par:35/);
-assert.match(game, /NPB2:\{n:'NPB二軍',par:52/);
-assert.match(game, /NPB1:\{n:'NPB一軍',par:58/);
-assert.match(game, /A3:\{n:'3A',par:56/);
-assert.match(game, /MLB:\{n:'メジャーリーグ',par:63/);
+assert.match(leagueCatalog, /NPB_DEV:\{n:'NPB育成',par:35/);
+assert.match(leagueCatalog, /NPB2:\{n:'NPB二軍',par:52/);
+assert.match(leagueCatalog, /NPB1:\{n:'NPB一軍',par:58/);
+assert.match(leagueCatalog, /A3:\{n:'3A',par:56/);
+assert.match(leagueCatalog, /MLB:\{n:'メジャーリーグ',par:63/);
 
 assert.doesNotMatch(contractPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 assert.doesNotMatch(controlPolicy+injuryPolicy+arbitrationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);

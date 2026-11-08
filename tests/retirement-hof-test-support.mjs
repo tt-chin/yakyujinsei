@@ -6,6 +6,7 @@ import {careerScoreFor,defenseShareFor,hallOfFameTier} from '../docs/src/engine/
 import {hasHistoricalDefenseAward} from '../docs/src/engine/award-consumer-policy.js';
 import {Rng} from '../docs/src/engine/rng.js';
 import {CareerRetirement} from '../docs/src/engine/career-retirement.js';
+import {leagueTables} from '../docs/src/engine/league-catalog.js';
 globalThis.window??={TEAM_MASTER:{}}; // CareerRetirement.capTeam reads window here, outside the vm context.
 export const GAME_SOURCE=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const SeasonStats=GAME_SOURCE.includes('seasonStats.blankStat(')?(await import('../docs/src/engine/season-stats.js')).SeasonStats:null;
@@ -20,7 +21,7 @@ export function productionFunction(name,source=GAME_SOURCE){
 function literal(name){return GAME_SOURCE.match(new RegExp('const '+name+'=(\\{[^;]+\\});'))?.[0]||(()=>{throw Error('Missing '+name);})();}
 export function createProductionHarness(state,seed='hof-fixed',retirementSource=GAME_SOURCE){
  const cards=[],context=vm.createContext({S:structuredClone(state),TextEncoder,Rng,CareerRetirement,TEAM_COLOR:{},POSN:{},honorScoreFor,careerScoreFor,defenseShareFor,hallOfFameTier,hasHistoricalDefenseAward,window:{TEAM_MASTER:{}},card:(...args)=>cards.push(args)});
- const declarations=literal('TIER_TH')+'\n'+literal('LG_N')+'\n'+literal('DPN')+'\nconst LV='+GAME_SOURCE.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';\n'+GAME_SOURCE.match(/Object.assign\(TIER_TH,\{[^\n]+\}\)/)[0]+';\n'+GAME_SOURCE.match(/Object.assign\(LG_N,\{[^\n]+\}\)/)[0]+';';
+ const tables=leagueTables(),declarations='const TIER_TH='+JSON.stringify(tables.tierThresholds)+';\nconst LG_N='+JSON.stringify(tables.leagueNames)+';\n'+literal('DPN')+'\nconst LV='+JSON.stringify(tables.levels)+';';
  const functions=['careerScore','capTeam','defShare','posLegendPhrase','honorScore','tierOf','retireScene','blankStat','addStatTotal','accStat','fnv1a32'].map(name=>productionFunction(name,name==='retireScene'?retirementSource:GAME_SOURCE)).join('\n');
  const rng=`let _s=0,seedInit,R;const careerRng=new Rng(()=>S,fnv1a32);${GAME_SOURCE.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}\n${GAME_SOURCE.match(/R = function\(\)\{[^\n]+/)[0]}\nlet calls=0;const nativeR=R;R=()=>{calls++;return nativeR();};const ri=(a,b)=>a+Math.floor(R()*(b-a+1));`;
  const seasonStats=SeasonStats?'\nconst seasonStats=new SeasonStats({getState:()=>S,levels:LV,rng:{R:()=>R(),N0:sd=>N0(sd),chance:p=>chance(p),ri:(a,b)=>ri(a,b)},clamp:(v,a,b)=>clamp(v,a,b),isSP:()=>isSP(),pitcherRole:()=>pitcherRole(),checkGoldclothSeason:()=>checkGoldclothSeason()});':'';if(SeasonStats)context.SeasonStats=SeasonStats;

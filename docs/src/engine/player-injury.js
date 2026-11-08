@@ -3,12 +3,16 @@
 // ability/UI helpers, tjCap and the ri/chance/pick RNG bridge as late-binding lambdas. The rule bodies are the former
 // game.js tjGamble/tjTwoStrike/tjBigInjury/afterGamble/injuryProb/rollInjury/injStatLoss; each unit, including the
 // deferred choose options, reads getState() live.
+// accrueTj/tjGaugeLimit are the former game.js tjAccrue/tjCap bodies (OOP plan §2rr); game.js keeps tjAccrue/tjCap as
+// wrappers, and tjGamble still reaches the cap through the injected tjCap lambda, so a rebound game.js tjCap is honoured.
 export class PlayerInjury {
   #rules;
   constructor(deps){this.#rules=injuryRules(deps);}
   tjGamble(cont){this.#rules.tjGamble(cont);}
   afterGamble(kind,cont){this.#rules.afterGamble(kind,cont);}
   rollInjury(){this.#rules.rollInjury();}
+  accrueTj(){this.#rules.accrueTj();}
+  tjGaugeLimit(){return this.#rules.tjGaugeLimit();}
 }
 
 function injuryRules({getState,clamp,POS_AB,ABL,addAb,board,card,choose,removeTrait,tjCap,rng:{ri,chance,pick}}){
@@ -120,5 +124,13 @@ function injuryRules({getState,clamp,POS_AB,ABL,addAb,board,card,choose,removeTr
     S.ab[k]=clamp(S.ab[k]-amt,1,80); board(1);
     return `けがの後遺症が残った：<b class="dn">${ABL[k]} −${amt}</b>。`;
   }
-  return {tjGamble,afterGamble,rollInjury};
+  function accrueTj(){ /* 毎季TJゲージを蓄積する。球速と変化球が高いほど負担が増え、投球強度で倍率を決める。 */
+    const S=getState();
+    if(S.pos!=='P'||S.seasonFactor<=0)return;
+    const mult={'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}[S.effort]||1.0;
+    const base=(S.ab.vel+S.ab.brk)/19*mult*(S.tjCount>=1?1.15:1); /* 手術歴がある場合はTJゲージの蓄積を速める。 */
+    S.tj+=base;
+  }
+  function tjGaugeLimit(){ const S=getState(); return S.traits.rubber?100:50; }
+  return {tjGamble,afterGamble,rollInjury,accrueTj,tjGaugeLimit};
 }
