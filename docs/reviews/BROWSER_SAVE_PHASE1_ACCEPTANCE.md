@@ -72,3 +72,14 @@ feature/browser-saveの製品commitはccd1ac2b109fd34812c0a5588558376b8a87ab1a�
 本機Fullは使用者がGitHub Actionsでの驗收へ切替を承認したため中止。test-results/browser-save-1150-full-acceptance-r2/INTERRUPTED_BY_USER.jsonにcoordinatorと理由を保存。起動中のbatch1／2を停止し、未完了をPASSへ数えない。CI側に必要なテストを含まない製品のみのccd1ac2 Runは第一期の完整驗收ではない。
 
 本機Fullの再実行は不要とし、テスト・manifest・文書をfeatureへ提交／push後、同一新SHAでCI Quick79→成功後CI Full105を行う。既存workflowと判定を保持し、8批／Aggregate PASS及び必要証拠を確認する。CI結果、Preview／実機は現時点未取得。ARTIFACT_COVERAGE_BLOCKEDは独立継続。dev／mainへの合併、正式部署は本切替の範囲外。
+
+
+### Full 42434182612啟動相容性修正（2026-11-08）
+
+同一d173509的Linux Quick42433830934為79 PASS；Full42434182612為98 PASS／7 FAIL、Aggregate FAIL_OR_INCOMPLETE。原結果及test-results/browser-save-ci-failure-analysis-42434182612/原始log保持不變。
+
+修正限於測試啟動：共用harness提供首次導航前的beforeLoad接點，5類wrapper在第一次開局前安裝fixture，不先開局後reload造成覆蓋確認被預設取消；歷史game-only模式使用固定的存檔功能前main.js（1a74e71954c4a0f1fbf311f3a6796e3ca7e0329b），現行模式繼續使用現行main.js。歷史game.js比較SHA、原斷言、操作策略、狀態／RNG比較與timeout均未修改。
+
+本機僅限定七項，未執行整套Full：startup-seven-r1為4 PASS／3 FAIL（1140.969秒）；3項全力投球在Windows因phasePre字串切片前未統一CRLF而立即FAIL。將season-phases.js讀取後、切片前正規化CRLF，再以startup-pitching-r2限定重測3項，3 PASS／0 FAIL（1036.908秒）。其他4項的來源及共用helper未再變動，保留原PASS。七項最終各自PASS，不把原r1的FAIL改寫，也不將限定結果稱為Full105 PASS。
+
+修改6個測試檔及本紀錄，產品、VERSION、CI、Runner、manifest、golden均未改動。接著提交／push feature分支，完整Full105交由GitHub Actions取得全新結果；不在本機跑整套Full、不合併dev／main或正式部署。第一期仍須新CI Full及實機驗收，不提前結案。

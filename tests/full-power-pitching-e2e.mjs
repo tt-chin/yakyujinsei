@@ -22,7 +22,7 @@ const current=await readFile(new URL('../docs/src/engine/game.js',import.meta.ur
 const canonical=s=>s.replaceAll('\r\n','\n');
 // Phase 34 (§2mm) moved phasePre into the SeasonPhases factory: restore the game.js text by removing each inserted state read
 // by exact string and count, then dedent, in place of the game.js wrapper line (the text after it stays). The prior side is unchanged.
-const seasonPhases=await readFile(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8');
+const seasonPhases=canonical(await readFile(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8'));
 const restoredPhasePre=()=>{let text=productionFunction('phasePre',seasonPhases).split('\n  return {')[0];for(const [read,count] of [['\n    const S=getState();',1],['const S=getState();',7]]){assert.equal(text.split(read).length,count+1,'phasePre state reads: '+JSON.stringify(read));text=text.replaceAll(read,'');}return text.replace(/^  /gm,'');};
 const phasePreWrapper='function phasePre(){return seasonPhases.phasePre();}';
 const currentFunction=fn=>{const sliced=productionFunction(fn,current);if(fn!=='phasePre')return sliced;assert.ok(sliced.startsWith(phasePreWrapper),'phasePre wrapper');return restoredPhasePre()+sliced.slice(phasePreWrapper.length);};
@@ -58,7 +58,7 @@ window.__effortAudit={
 };`;
 function observe(s){if(!s.includes('let s6rng=[]'))s=instrument(s);const anchor='/* 投球強度による成績補正。 */';assert.equal(s.split(anchor).length,2);s=s.replace(anchor,anchor+`window.__effortInputs.push({year:S.year,role:S.role,pos:S.pos,effort:S.effort,eventPoints,seasonFactor:S.seasonFactor,maxGames:maxG,st:JSON.parse(JSON.stringify(st)),calls:window.__stage6.get().rng.length});`);return injectOverlayHook(s,hook+phoenixAwardProbe);}
 const h=await harness('full-power-pitching'+(part?'-'+part:''));
-async function page(width,pos='P',seed='effort-test',old=false,approved=false){const p=await h.page(width,pos,seed);await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=old?(approved?approvedPhoenixPrior:prior):await response.text();await route.fulfill({response,body:observe(body)});});await p.reload();await p.waitForFunction(()=>window.__effortAudit&&!document.querySelector('#btn-start').disabled).catch(error=>{throw Error(error.message+' '+JSON.stringify(h.errors));});await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;}
+async function page(width,pos='P',seed='effort-test',old=false,approved=false){const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=old?(approved?approvedPhoenixPrior:prior):await response.text();await route.fulfill({response,body:observe(body)});});}});await p.waitForFunction(()=>window.__effortAudit&&!document.querySelector('#btn-start').disabled).catch(error=>{throw Error(error.message+' '+JSON.stringify(h.errors));});return p;}
 const clean=s=>{s=structuredClone(s);delete s.version;return s;};
 const digest=s=>createHash('sha256').update(JSON.stringify(clean(s))).digest('hex');
 const controls=['全力投球','通常投球','省エネ投球'];

@@ -23,9 +23,8 @@ const hook=`window.__intlDisplay={
  step:()=>{if(S.done)return {done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));const priority=n=>['vel','ctl','brk','con','pow','eye','spd'].includes(n.dataset.abilityKey)?0:1;rows.sort((a,b)=>priority(a)-priority(b)||S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey]);const b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows[0]||buttons.find(n=>/現在の球団に残留|宣言残留/.test(n.textContent))||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S)),action=b.textContent;b.click();return {before,after:JSON.parse(JSON.stringify(S)),action};}
 };`;
 async function page(width,pos='P',seed='intl-stats',old=false,approved=false){
- const p=await h.page(width,pos,seed);
- await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(approved?approvedPhoenixPrior:prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook+phoenixAwardProbe)});});
- await p.reload();await p.waitForFunction(()=>window.__intlDisplay&&!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
+ const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{
+ await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(approved?approvedPhoenixPrior:prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook+phoenixAwardProbe)});});}});await p.waitForFunction(()=>window.__intlDisplay&&!document.querySelector('#btn-start').disabled);return p;
 }
 const clean=s=>{const copy=structuredClone(s);delete copy.version;for(const r of Object.values(copy.intlTraitResults||{}))delete r.personalStats;return copy;};
 const digest=s=>createHash('sha256').update(JSON.stringify(clean(s))).digest('hex');
