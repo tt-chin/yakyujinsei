@@ -11,6 +11,7 @@ import {expectedState} from '../tools/development-b/award-runtime-support.mjs';
 import {awardTraitUnlocks,TRAIT_TEXT,traitLabel} from '../docs/src/engine/trait-policy.js';
 import {Rng} from '../docs/src/engine/rng.js';
 import {SeasonAwards} from '../docs/src/engine/season-awards.js';
+import {CheckpointRenderer} from '../docs/src/ui/checkpoint-renderer.js';
 const baseline=execFileSync('git',['show','efd4710c4c5c366ff3aba69c59180031c82ff18a:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
 const current=fs.readFileSync('docs/src/engine/game.js','utf8');
 let pass=0;const test=(id,fn)=>{fn();pass++;console.log('PASS '+id);};
@@ -20,7 +21,7 @@ const initial=(league,pos='P',role='SP')=>({seed:'native-journal-'+league,year:2
 const st={d:15,G:143,IP:200,era:2,SO:260,SV:40,HLD:35,W:17,L:6,PA:680,AB:600,H:220,BB:100,HR:50,RBI:145,SB:45,DEF:12,avg:220/600};
 function harness(source,state,{render=false,slot=false}={}){
   const cards=[],rng=[];let renderFault=render,slotFault=slot;
-  const context=vm.createContext({S:structuredClone(state),SEED:state.seed,getAwardDefinition,structuredClone,TextEncoder,Rng,SeasonAwards,TRAIT_TEXT,awardTraitUnlocks,hasCurrentAwardEffect,
+  const context=vm.createContext({S:structuredClone(state),SEED:state.seed,getAwardDefinition,structuredClone,TextEncoder,Rng,SeasonAwards,CheckpointRenderer,TRAIT_TEXT,awardTraitUnlocks,hasCurrentAwardEffect,
     ...policy,captureAwardSlot:(...args)=>policy.captureAwardSlot(...args,slotFault?()=>{slotFault=false;throw Error('AFTER_RECORD_FAULT');}:undefined),
     traitPresentation:new WeakMap(),traitLabel,teamNick:x=>x,displayTrait:k=>traitLabel(k,context.S,x=>x),board:()=>{},recordR:x=>rng.push(structuredClone(x)),
     card:(...args)=>{if(renderFault&&args[1]==='年間賞'){renderFault=false;throw Error('RENDER_FAULT');}cards.push(args);}});

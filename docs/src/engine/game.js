@@ -55,6 +55,7 @@ import { MovementGate } from './movement-gate.js';
 import { SeasonPhases } from './season-phases.js';
 import { ProfessionalSeason } from './professional-season.js';
 import { GameView } from '../ui/game-view.js';
+import { CheckpointRenderer } from '../ui/checkpoint-renderer.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
 import { careerScoreFor, defenseShareFor, hallOfFameTier } from './hall-of-fame-tier-policy.js';
@@ -312,21 +313,8 @@ function proSeason(){return professionalSeason.proSeason();}
 const professionalSeason=new ProfessionalSeason({getState:()=>S,LV,clamp,simSeason:lv=>simSeason(lv),applyEventSeason:(st,options)=>applyEventSeason(st,options),consumeEventSeason:state=>consumeEventSeason(state),normalizeEventSeason:(st,options)=>normalizeEventSeason(st,options),bucketOf:lv=>bucketOf(lv),accStat:(bucket,st)=>accStat(bucket,st),accLevelStat:(levelKey,st)=>accLevelStat(levelKey,st),card:(cls,title,html)=>card(cls,title,html),statLine:st=>statLine(st),isSP:()=>isSP(),toolGap:()=>toolGap(),careerAllStars:()=>careerAllStars(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),removeTrait:(key,label)=>removeTrait(key,label),board:phase=>board(phase),awards:(bucket,st)=>awards(bucket,st),classifyMarketInjury:input=>classifyMarketInjury(input),recordSalaryEvaluation:st=>recordSalaryEvaluation(st),captureSeasonChampionship:state=>captureSeasonChampionship(state),tjAccrue:()=>tjAccrue(),tjGamble:cont=>tjGamble(cont),demotionAudit:cont=>demotionAudit(cont),tradeCheck:cont=>tradeCheck(cont),maybeIntl:done=>maybeIntl(done),nextStep:()=>nextStep(),resumeSeasonEnd:()=>resumeSeasonEnd(),restorePendingChoice:()=>restorePendingChoice(),seasonRng:{R:()=>R()}});
 function awards(bucket,st){seasonAwards.awards(bucket,st);}
 const seasonAwards=new SeasonAwards({getState:()=>S,getSeed:()=>SEED,LV,clamp,traitPresentation,isSP:()=>isSP(),teamNick,renderCheckpointCard:(owner,key,args)=>renderCheckpointCard(owner,key,args),journalRng:{R:()=>R()},annualAwardTransaction,preallocateAwardSlots,captureAwardSlot,prepareAwardReceipt,commitAwardReceipt,awardPlan,awardInputs,prepareD2AwardDecisions,recordAwardDecisions,completeAwardDecisions,getAwardDefinition,hasCurrentAwardEffect});
-function renderCheckpointCard(owner,key,args){
-  const receipts=owner.renderReceipts||(owner.renderReceipts=new Map());let receipt=receipts.get(key);
-  if(receipt?.status==='COMMITTED')return;
-  if(receipt?.status==='AMBIGUOUS')throw new Error('RESULT_RENDER_AMBIGUOUS');
-  if(!receipt){receipt={status:'PLANNED'};receipts.set(key,receipt);}
-  const target=typeof document!=='undefined'?logTarget():null,count=target?.children.length;
-  try{card(...args);receipt.node=target?.lastElementChild;receipt.status='COMMITTED';}
-  catch(error){
-    // card appends synchronously before scrollBottom. An already appended owned card
-    // may be acknowledged, but unexplained extra DOM writes must not be guessed.
-    if(target&&target.children.length===count+1&&target.lastElementChild.classList.contains('card')){receipt.node=target.lastElementChild;receipt.status='COMMITTED';}
-    else if(target&&target.children.length!==count)receipt.status='AMBIGUOUS';
-    throw error;
-  }
-}
+function renderCheckpointCard(owner,key,args){checkpointRenderer.render(owner,key,args);}
+const checkpointRenderer=new CheckpointRenderer({card:(...args)=>card(...args),logTarget:()=>logTarget()});
 /* 升降格と去向。 */
 function movement(){return careerMovement.movement();}
 function buyoutRemaining(rate){return careerMovement.buyoutRemaining(rate);}
