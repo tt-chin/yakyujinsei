@@ -9,7 +9,13 @@ export async function captureGameView(full){
   await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
   await new Promise(resolve=>setTimeout(resolve,0));
   const captured=window.__gameViewState(),{calls,views}=captured,rawState=captured.state;
-  const state=window.__expect1140?window.__projectChampionmaker(rawState,window.__champTeams):rawState;
+  if(window.__projectFranchise){
+    const previous=window.__previousFranchiseState;
+    if(previous&&!previous.traits.franchise&&rawState.traits.franchise)window.__franchiseGrant=window.__verifyFranchise(previous,rawState);
+    window.__previousFranchiseState=rawState;
+  }
+  const projected=window.__projectFranchise?window.__projectFranchise(rawState,window.__franchiseGrant):rawState;
+  const state=window.__expect1140?window.__projectChampionmaker(projected,window.__champTeams):projected;
   delete state.version;if(state.birthHighSchool)delete state.birthHighSchool.createdVersion;
   const dom=Object.fromEntries(['log','act','board'].map(id=>[id,document.getElementById(id)?.outerHTML??null]));
   if(window.__expectBrowserSave){
@@ -83,6 +89,7 @@ export async function captureGameView(full){
     }
     dom.log=log.outerHTML;
   }
+  if(window.__hofDisplay&&rawState.done){window.__projectHofLog(log,window.__hofDisplay());dom.log=log.outerHTML;}
   if(profile){
     const dl=profile.querySelector('dl.income-summary');
     if(window.__expectIncomeDisplay&&!dl)throw Error('INCOME_RETIREMENT_MISSING');
@@ -96,4 +103,28 @@ export async function captureGameView(full){
   if(full)return snapshot;
   const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(snapshot))));
   return {digest:[...bytes].map(b=>b.toString(16).padStart(2,'0')).join(''),done:!!state.done,year:state.year,calls};
+}
+
+// Exact approved display contract, shared by DOM and display-preference guards.
+export function projectHofLog(log,hofModels){
+    // Verify the complete new blocks first, then map only these approved UI
+    // fields back to the frozen historical representation. Grades, retirement
+    // effects, complete S, other DOM and RNG remain compared by the caller.
+    const models=Object.values(hofModels);
+    const cards=title=>[...log.querySelectorAll('.card')].filter(n=>n.querySelector('h4')?.textContent===title);
+    const exact=(title,body)=>{const nodes=cards(title),expected=document.createElement('div');expected.innerHTML='<h4>'+title+'</h4>'+body;if(nodes.length!==1||nodes[0].className!=='card info'||nodes[0].attributes.length!==1||nodes[0].innerHTML!==expected.innerHTML)throw Error('HOF_DETAIL_DOM_CONTRACT: '+title);nodes[0].remove();};
+    for(const {current:t,old,label} of models){
+      if(t.i!==old.i)throw Error('HOF_GRADE_CHANGE_REQUIRES_RETIREMENT_CAUSAL_ORACLE: '+label);
+      const d=t.details;
+      exact(label+' 評価の内訳',`一軍成績：${Number(t.base.toFixed(2))}点<br>個人賞：${d.personal.reduce((n,r)=>n+r.sc,0)}点<br>球団優勝：${d.team.reduce((n,r)=>n+r.sc,0)}点<br>特性の功績：${d.other.reduce((n,r)=>n+r.sc,0)}点<br>国際大会・代表の栄誉：殿堂評価への加点なし${d.international.length?'（'+d.international.length+'件）':''}<br>${d.personal.concat(d.team,d.other).map(r=>r.text+'：'+r.sc+'点').join('<br>')}`);
+    }
+    const intl=[...new Set(models.flatMap(({current:t})=>t.details.international.map(r=>r.text)))];
+    if(intl.length)exact('国際大会・代表の栄誉',intl.join('<br>')+'<br>各リーグの殿堂評価には加算しません。');
+    else if(cards('国際大会・代表の栄誉').length)throw Error('HOF_UNEXPECTED_INTERNATIONAL_CARD');
+    if(models.length){
+      const nodes=cards('通算評価'),expected=document.createElement('div');
+      expected.innerHTML='<h4>通算評価</h4>'+models.map(({current:t})=>`<span class="tag">${t.name}${t.reason?'（'+t.reason+'）':''}</span>（評価点${t.sc}${t.belowThreshold?'・基準未達':''}${t.hasFirstTeam===false?'・一軍成績の記録なし':''}）`).join('<br>');
+      if(nodes.length!==1||nodes[0].className!=='card gold'||nodes[0].attributes.length!==1||nodes[0].innerHTML!==expected.innerHTML)throw Error('HOF_RATING_DOM_CONTRACT');
+      nodes[0].innerHTML='<h4>通算評価</h4>'+models.map(({old:t})=>`<span class="tag">${t.name}</span>（評価点${t.sc}）`).join('<br>');
+    }
 }

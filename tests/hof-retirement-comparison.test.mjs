@@ -23,3 +23,30 @@ for(const league of ['NPB','MLB','KBO','CPBL'])for(const years of [5,6,7])for(co
  assert.deepEqual(B,A,'native acquisition conditions and all other effects unchanged');
 }
 console.log('PASS 24 native franchise grant/negative scenarios with exact provenance and state/action equality');
+
+const {findFirstDifference}=await import('./support/first-difference.mjs');
+const prefix=Object.fromEntries(Array.from({length:15000},(_,i)=>['key'+i,{a:i,b:[i,i+1]}]));
+assert.equal(findFirstDifference({prefix,tail:{value:1}},{prefix:structuredClone(prefix),tail:{value:2}}).path,'$.tail.value','large equal subtrees cannot exhaust diagnostic budget before the real difference');
+console.log('PASS diagnostic finds actual mismatch after 15,000 equal subtrees without changing strict comparison');
+
+const {franchiseComparisonProof,historicalCareer}=await import('../tools/development-b/historical-comparison.mjs');
+const nativeBefore={seed:'proof',year:2039,stage:'PRO',lv:'CPBL1',teamYears:6,orgTeamId:'CPBL_TEAM',champThisTeam:true,champTeam:'CPBL_TEAM',traits:{franchise:false},honors:[]};
+const nativeAfter={...structuredClone(nativeBefore),year:2040,teamYears:7,traits:{franchise:true},franchiseAchievement:{year:2039,league:'CPBL',teamId:'CPBL_TEAM'}};
+const trajectory={steps:[{beforeState:nativeBefore,afterState:nativeAfter}],state:structuredClone(nativeAfter)};
+const proof=franchiseComparisonProof(trajectory);
+assert.equal(Object.hasOwn(historicalCareer(trajectory,{franchiseProof:proof}).state,'franchiseAchievement'),false);
+for(const [label,mutate] of [
+ ['wrong year',c=>c.steps[0].afterState.franchiseAchievement.year++],
+ ['wrong league',c=>c.steps[0].afterState.franchiseAchievement.league='MLB'],
+ ['wrong team',c=>c.steps[0].afterState.franchiseAchievement.teamId='OTHER'],
+ ['minor level',c=>c.steps[0].beforeState.lv='CPBL2'],
+ ['early tenure',c=>c.steps[0].beforeState.teamYears=5],
+ ['no title',c=>c.steps[0].beforeState.champThisTeam=false],
+ ['other champion team',c=>c.steps[0].beforeState.champTeam='OTHER'],
+ ['later mutation',c=>c.state.franchiseAchievement.year++],
+ ['later missing',c=>delete c.state.franchiseAchievement],
+ ['missing transition',c=>c.steps=[]],
+ ['before insertion',c=>c.steps[0].beforeState.franchiseAchievement=structuredClone(nativeAfter.franchiseAchievement)]
+]){const c=structuredClone(trajectory);mutate(c);assert.throws(()=>historicalCareer(c,{franchiseProof:franchiseComparisonProof(c)}),label);}
+assert.deepEqual(trajectory.state,nativeAfter,'projection cannot mutate raw replay evidence');
+console.log('PASS franchise provenance projection and 11 negative controls; raw full replay remains unchanged');

@@ -1,7 +1,9 @@
+import {sourceText} from './support/source-text.mjs';
+import {projectHofLog} from './support/dom-snapshot.mjs';
 import {openBoardAction} from './support/board-menu.mjs';
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
-import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
+import {historicalCareer,franchiseComparisonProof} from '../tools/development-b/historical-comparison.mjs';
 import {baselineNeedsChampionmakerProjection} from '../tools/development-b/championmaker-state-oracle.mjs';
 import {assertSameCareer} from './support/first-difference.mjs';
 import {createServer} from 'node:http';
@@ -24,10 +26,19 @@ const server=createServer(async(req,res)=>{
     const url=new URL(req.url,'http://localhost'),baseline=url.pathname.startsWith('/baseline/');
     let relative=decodeURIComponent(url.pathname).replace(/^\/(?:baseline\/)?/,'')||'index.html';
     if(relative.includes('..'))throw new Error('Unsafe path');
-    let content=baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
+    let content=relative==='hof-oracle/hall-of-fame-policy.js'?'':baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
+    // Frozen old formula, sharing the byte-identical trusted award module
+    // instance with the candidate. A second module instance loses WeakMap trust.
+    if(relative==='hof-oracle/hall-of-fame-policy.js'){
+      const original=execFileSync('git',['show',`${baselineRef}:docs/src/engine/hall-of-fame-policy.js`],{cwd:root,maxBuffer:20*1024*1024}).toString();
+      const dependency="'./award-consumer-policy.js'";assert(original.split(dependency).length<=2);
+      if(original.includes(dependency))for(const file of ['award-consumer-policy.js','award-identity-policy.js'])assert.equal(sourceText(execFileSync('git',['show',`${baselineRef}:docs/src/engine/${file}`],{cwd:root,maxBuffer:20*1024*1024}).toString()),sourceText(await readFile(path.join(root,'docs/src/engine',file),'utf8')),'historical oracle requires unchanged trusted award dependency '+file);
+      content=original.replace(dependency,"'/src/engine/award-consumer-policy.js'");
+    }
     if(relative==='src/engine/game.js'){
       let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls');
       script+='\nwindow.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
+      if(!baseline)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       content=script;
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
@@ -148,6 +159,7 @@ try{
             // Compare all non-trait copy and full S/RNG. Only the approved trait
             // explanation lifetime/summary changes are normalized on a detached clone.
             const log=document.querySelector('#log').cloneNode(true);
+            if(window.__hofDisplay&&snapshot.state.done)window.__projectHofLog(log,window.__hofDisplay());
             // Only the approved per-event statistics block; old result copy remains compared.
             for(const block of log.querySelectorAll('.intl-personal-stats'))block.remove();
             const lost={'ゴムゴムの腕、ついに限界':'rubber','結果で黙らせる':'cancer','一芸特化を返上':'onetool','イップス克服':'yips'};
@@ -181,7 +193,7 @@ try{
         }
         snapshots.push(records);await ctx.close();
       }
-      assertSameCareer(historicalCareer(snapshots[1],{championmaker}),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
+      assertSameCareer(historicalCareer(snapshots[1],{championmaker,franchiseProof:franchiseComparisonProof(snapshots[1])}),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);
       const last=snapshots[0].at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');console.log(`Fixed career ${seed}/${pos}: ${snapshots[0].length} actions, RNG ${last.calls}, retirement ${last.state.year}, exact match`);
     }
   }

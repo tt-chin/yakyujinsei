@@ -36,3 +36,27 @@ Quick：test-results/hof-policy-quick-final-r3/summary.json、85 PASS／0 FAIL�
 NPB制御例の数値因果：Pは旧基本9100＋個人賞420＋国際520＝10040、新一軍130＋個人賞420＋国際0＝550。IFは8500＋420＋520＝9440→100＋420＝520。個人賞420は旧版で既に重複除外されており、新差異と偽らない。旧殿堂／初回投票→新スター候補で、最初の退休RNG用途がHOF_VOTE_PERCENT→CANDIDATE_PERCENT。最初の値自体は同じだが、その後既存候補年数抽選へ進み、4呼出→5呼出。新規抽選機構は追加せず、各before／after／value／用途はcausality JSONに保存。差異はrngState、traits.legend、hofInfo、legendLeague；それ以外の状態は独立oracleへ完全一致を要求した。
 
 構文・相対リンク・diff・リリースノート再生成の同一性を確認。変更したテスト期待値は批准したHOF帰属／国際0点／未取整表示／未知階級に限り、原Consumer別A投影と他Consumer給与待遇、元score係数を維持。Full未実行のため旧全入口の跨版比較が自動的に通るとは宣言しない。未解釋差異はそのままFAILとする。
+
+## Linux Full 42492930690 與限定測試修正（2026-11-09）
+
+正式 CI：`4bbcd3bbfcb1cb7be238f9be8c47a3eea31edaa5`、[Run 42492930690](https://github.com/tt-chin/yakyujinsei/actions/runs/42492930690)、112入口中104 PASS／8 FAIL／0 SKIP／0 BLOCKED。8批及aggregate已執行，沒有job timeout或runner shutdown。以上取代先前「CI NOT_RUN」現況；原始FAIL保留，不改為PASS。完整原始生涯JSON未全部被artifact glob涵蓋，ARTIFACT_COVERAGE_BLOCKED維持。
+
+修正限測試與比較工具，不改產品、VERSION、Runner、workflow、golden或原比較基準：
+
+- 首輪殿堂及弱小校CPBL人工fixture明確加入一軍statsByLevel；原入選／特性斷言保留，不把未知階級推測為一軍。
+- 診斷器跳過完整相等子樹，hash不同時先定位原始S欄位，不以診斷遍歷上限冒充第一個差異。
+- 跨版本franchise新增欄位先從原始false→true取得步驟驗證PRO一軍、同球團優勝、原年資條件、年度／聯盟／球團與完整欄位，再驗證後續不變／不遺失，才投影至舊schema。沒有取得證據、提早插入、改值、遺失均拒絕；不是全域忽略欄位。同版原始完整重播及其他狀態／RNG斷言保留。
+- 評價明細、國際榮譽及通算評價先逐字驗證新DOM，只對批准的顯示欄位建立固定舊公式表示；等級若不同，要求額外退休因果oracle並失敗，不略過相關S／RNG。舊公式共用相同的可信獎項模組實例，並核對依賴來源一致（僅CRLF／LF正規化），避免WeakMap信任因不同模組實例失效。其他DOM仍嚴格比較。
+
+本輪已完成的限定驗證：
+
+- HOF規則54件及franchise／缺損資料檢查PASS；原生取得24情境、比較政策反例、15,000相等子樹診斷及新增11個franchise反例PASS。
+- `hof-first-ballot-e2e`完整入口PASS：1280／320／390、投手／內野手自然生涯完整狀態及RNG。
+- `smallschool-c-e2e`完整入口30 PASS／0 FAIL。
+- 兩個省能量投球失敗案例：yakyo-test-001保存的舊／現行完整快照離線比較PASS；jp3-pitcher-02舊／現行／同版重播實際限定重測PASS。
+- `game-view-dom-e2e` r2八組生涯PASS。其後新增的8個DOM反例及依賴來源檢查尚未完成最終實跑，不以r2替代最終來源的驗證。
+- `international-personal-stats-e2e`已完成4個自然生涯PASS（yakyo-test-001、jp3-pitcher-02、jp3-pitcher-03、jp3-catcher-01）；IF執行中停止，OF未執行，整個入口不列PASS。
+
+證據：`test-results/hof-ci-fix-firstballot-r1.log`、`hof-ci-fix-smallschool-r1/`及log、`hof-ci-fix-energy-probe-r1/`及log（含原FAIL）、`hof-ci-fix-energy-p02-r1/`及log、`hof-ci-fix-dom-r1.log`（測試oracle失敗）、`hof-ci-fix-dom-r2.log`、`hof-ci-fix-international-r1/`及log、`hof-ci-fix-targeted-final-r1/`及log。全部保留，不提交大型產物。
+
+使用者最新決定：不執行本機Quick，改由GitHub驗證，先提交推送。故停止尚未完成的本機限定重測；五入口最終重測中display已啟動但中止，其餘未開始，不列PASS；本輪Quick NOT_RUN、新完整Full NOT_RUN、最終Linux修正驗證待執行。修正前Quick 85／85僅是舊來源歷史結果，不當作本輪新Quick。Preview／實機未追加驗證。
