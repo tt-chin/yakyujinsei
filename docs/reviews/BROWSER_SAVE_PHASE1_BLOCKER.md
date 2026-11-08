@@ -10,7 +10,7 @@ Rookie（R）開始の投手fixture save-route-Rを実際の年度処理で進�
 
 原因は保存データ量やRNGではなく、過年度獎項の完了所有権がランタイム専用であること。engine/award-transaction-policy.jsのcompleteAwardDecisionsはDecisionオブジェクトをキーにcompleted WeakMapへstate／token／index／valueの証明を登録する。同モジュールisCompletedAwardDecision（167行）とaward-identity-policy.jsのidentifyAwardDecision（104行）がこれを要求する。再読込した同じJSONはその証明を持たない。award-consumer-policy.jsのconsumerTreatmentView（118行）がCOMPLETED_DECISION待遇から旧名称fallbackへ変わり、hall-of-fame-policy.jsのhonorScoreForを介して殿堂判定に差が出る。前年度の精算が完了していても、その証明は後年のConsumerに必要であり、単に年度境界をCOMMITTEDにしても解決しない。
 
-原設計[BROWSER_SAVE_DESIGN.md](../../BROWSER_SAVE_DESIGN.md) §5.1は過年度WeakMap／receipt所有権を安全に破棄できると推測することを禁止している。識別判定を緩める、JSONだけで完了を認定する、古い報酬を再実行する修正はしていない。現状の作業ツリーは開発試作であり、安全な全路線保存として使用・配信できない。
+原設計[BROWSER_SAVE_DESIGN.md](https://github.com/tt-chin/yakyujinsei/blob/f3f05fae431a002429dbd42e430713aee2e058bc/BROWSER_SAVE_DESIGN.md) §5.1は過年度WeakMap／receipt所有権を安全に破棄できると推測することを禁止している。識別判定を緩める、JSONだけで完了を認定する、古い報酬を再実行する修正はしていない。現状の作業ツリーは開発試作であり、安全な全路線保存として使用・配信できない。
 
 ## 実行結果と限界
 

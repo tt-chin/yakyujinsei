@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
 > 最新狀態核對：2026-11-08。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01已在各ID範圍結案；SUPPORT-01仍待OFUSE收取設定與實際收付款確認。
-> 已完成42項、未完成28項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 已完成43項、未完成27項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -393,7 +393,9 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 - 2026-11-07 エスコン背景（1.14.1、dev已提交／Preview已配信）：使用者最後指示為開始／角色建立／遊戲畫面全程保留。原圖與CREDITS.md位元組完全保留；699px以下縱圖，700px以上橫圖；開始案內及選單新增素材對話框，授權僅照片。限定Chromium 1440×900、390×844與699／700邊界、開始／重啟／捲動／選單／素材連結及圖片失敗fallback通過；既有對話框E2E 11 PASS、S／RNG不變，履歷來源／生成／重複生成／歷史保留檢查PASS。證據test-results/escon-background-1141/。實機iOS Safari、使用者Preview為NOT_RUN；本機Quick／Full依限定範圍未執行；後續已commit／push（`8fa5cf5`、`8a0e87d`），自動Quick與Preview配信成功，未合併main或正式部署。照片裝飾層含漸層為50%不透明度。詳見§1，不改寫歷史FAIL或artifact缺口。
 
 
-- [ ] **BROWSER-SAVE-01** — `IMPLEMENTED_UNVERIFIED`（最新）；以下為原BLOCKED歷史。1.15.0開發試作已接線；年度續行6路線PASS，但Rookie路線引退年度因過年度D2 Decision完了WeakMap證明未能跨重載恢復，原生HOF待遇與讀檔結果不一致。不得將第一期視為完成或發布。須先確認可信證明的持久化／驗證契約，不以JSON或hash直接認定可信，不補發效果、不降斷言。新Quick／Full、全路線、Preview／實機尚未完成。[停止報告](docs/reviews/BROWSER_SAVE_PHASE1_BLOCKER.md)／[設計§5.1、§14.2](BROWSER_SAVE_DESIGN.md)。原始FAIL及舊工作樹保留，ARTIFACT_COVERAGE_BLOCKED維持獨立。統計：40完成＋28未完成＝68項；新增本項，不改寫其他歷史結案。
+- [x] **BROWSER-SAVE-01** — `USER_ACCEPTED / PHASE1_COMPLETE`（2026-11-08）。使用者於本對話確認「實績驗收OK，1.15.1也確認沒問題」，依前一則明列的剩餘範圍，記為剩餘Android Chrome實機及1.15.1首頁Preview／實機驗收通過；未提供裝置型號、OS／瀏覽器版本及逐項原始紀錄，屬使用者驗收確認，不宣稱代理另行實測。年度存檔第一期在批准範圍內結案；使用者已取消第二期匯入／匯出與第三期操作途中續玩（CANCELLED／不實作），存檔功能開發結束。dev已合併PR #70（f3f05fa），不代表main合併或正式發布。[第一期驗收記錄](docs/reviews/BROWSER_SAVE_PHASE1_ACCEPTANCE.md)。原FAIL與各SHA的Quick／Full證據保持原狀；ARTIFACT_COVERAGE_BLOCKED仍獨立未完成。
+
+> 原BLOCKED時點原文（歷史，已由後續修復與本次驗收取代，非現況）：`IMPLEMENTED_UNVERIFIED`（最新）；以下為原BLOCKED歷史。1.15.0開發試作已接線；年度續行6路線PASS，但Rookie路線引退年度因過年度D2 Decision完了WeakMap證明未能跨重載恢復，原生HOF待遇與讀檔結果不一致。不得將第一期視為完成或發布。須先確認可信證明的持久化／驗證契約，不以JSON或hash直接認定可信，不補發效果、不降斷言。新Quick／Full、全路線、Preview／實機尚未完成。[停止報告](docs/reviews/BROWSER_SAVE_PHASE1_BLOCKER.md)／[設計§5.1、§14.2](https://github.com/tt-chin/yakyujinsei/blob/f3f05fae431a002429dbd42e430713aee2e058bc/BROWSER_SAVE_DESIGN.md)。原始FAIL及舊工作樹保留，ARTIFACT_COVERAGE_BLOCKED維持獨立。統計：40完成＋28未完成＝68項；新增本項，不改寫其他歷史結案。
 
 
 BROWSER-SAVE-01追記（2026-11-08）：使用者指示繼續後，已實作封存驗證與歷史唯讀證明還原；原Rookie HOF差異限定重測通過，全15路線341年度及引退重玩通過。最終Quick／Full與Preview／實機尚待驗收，本ID仍不勾選，不改寫原BLOCKED歷史。最新[第一期驗收記錄](docs/reviews/BROWSER_SAVE_PHASE1_ACCEPTANCE.md)，不以限定PASS冒充完成。
@@ -412,3 +414,8 @@ BROWSER-SAVE-01／ホームUI補足（2026-11-08）：fix/home-ui-20261108、開
 
 ホームUI Quick失敗修復（2026-11-08）：CI Run42470961151／adac181為80 PASS／1 FAIL。唯一失敗draft-income-e2e在同context第二案例有存檔時未先選「新しく始める」，直接點隱藏守位欄而timeout；修正start helper在該入口可見時先正常點擊，不改產品、原比較基準、收入／防重／S／RNG斷言或timeout。限定入口重測18 PASS／0 FAIL（85.884秒）。依使用者最新批准改在本機執行整套Quick：test-results/home-ui-1151-quick-r2/summary.json，81 PASS／0 FAIL／0 SKIP／0 BLOCKED，372.501秒。原CI FAIL保留；接著提交推送fix分支並手動啟動Linux Full，啟動後不監控。Full與實機結果仍待取得，ARTIFACT_COVERAGE_BLOCKED不變。
 ホームUI Full失敗修復（2026-11-08）：Run42472867637／34f83b3は107入口中106 PASS／1 FAIL／0 SKIP／0 BLOCKED。第7批event-fix-e2eの共有URL再訪問で、同contextの有効保存を持つホームにも即座に開始ボタンが見えるとする旧断言がFAIL。テストを「続きから／新しく始める」表示→新規フォーム表示へ更新し、Seed完全一致、表示切替前後の完全save／revision不変を追加確認。製品、元のイベント・共有・状態／RNG断言、timeout、baselineは変更しない。限定入口を1280／320／390pxで重測PASS、各幅の8送別fixture、その他イベント・共有・S／RNG・Console／JS-CSS404検証もPASS。旧Full FAILは保持。テストのみの修正として版号据置1.15.1、GitHub Fullを新SHAで1回起動し、以後監視しない。Full全体と実機の受入は未取得、ARTIFACT_COVERAGE_BLOCKED継続。
+
+BROWSER-SAVE-01最終驗收（2026-11-08）：使用者已確認剩餘實機驗收及1.15.1正常，上述未勾選／IMPLEMENTED_UNVERIFIED／Android NOT_RUN等文字均為原時點歷史，不再作為本項現況。最新狀態以本ID的USER_ACCEPTED / PHASE1_COMPLETE及第一期驗收記錄為準。統計43完成／27未完成，共70項；不解除artifact缺口、不宣稱合併後另跑Full或已正式發布。
+
+
+存檔功能最終範圍決定（2026-11-08）：使用者明確指示「第二期第三期不實做，存檔功能開發結束」。第二期匯出／匯入及第三期操作途中續玩均取消，不列入未完成待辦、不冒充已實作；第一期維持USER_ACCEPTED / PHASE1_COMPLETE。保留原提案與失敗歷史，沒有新增備份按鈕、跨裝置／跨瀏覽器承諾或新產品功能。checkbox統計仍為43完成／27未完成，共70項。ARTIFACT_COVERAGE_BLOCKED及正式發布狀態不變。
