@@ -18,8 +18,8 @@
 .information-dialog button{min-height:44px;padding:8px 22px;background:var(--panel);color:var(--chalk);border:1px solid var(--control-edge);border-radius:var(--radius-md);cursor:pointer;font:inherit}
 .information-dialog :focus-visible{outline:2px solid var(--amber);outline-offset:3px}
 .information-content:focus-visible{outline-offset:-3px}
-.start-information{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px}
-.start-information .btn{width:auto;flex:1;min-width:100px}
+.start-information{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.start-information .btn{width:100%;min-width:0;min-height:44px;height:100%;white-space:normal;overflow-wrap:anywhere;padding:10px}
 .desktop-overview{display:none}
 /* Narrow sidebars use label/value rows; wide sidebars can safely use columns. */
 #desktop-career .ui-data-list{grid-template-columns:minmax(0,1fr);gap:3px}

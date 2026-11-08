@@ -405,3 +405,6 @@ BROWSER-SAVE-01：2026-11-08最新核對，本機最終Quick79／0已完成（qu
 
 
 BROWSER-SAVE-01：2026-11-08 dev合併後核對。PR #65合併後dev（含PR #66，`ea89c15`）：Tests #160 Quick PASS、Tests #161 Linux Full 107／107 PASS（8批及Aggregate PASS，[Run42464271804](https://github.com/tt-chin/yakyujinsei/actions/runs/42464271804)）。桌機Preview（`https://dev.yakyujinsei.pages.dev`，檔案與`ea89c15`逐位元組一致，v1.15.0；macOS Brave、seed `save-preview-20261108`、投手）依實機受入手順1～7執行：1～5、7 PASS，6僅以390×844／844×390視窗確認無溢出，網址列切換須實機。同日iPhone 13 mini（iOS 26.6.1、Safari 26.6.1）以Mac端`safaridriver`的WebDriver自動化執行同手順：1～5、7 PASS，6僅直向375×664確認（橫向與網址列未測）；工作階段與一般瀏覽資料隔離、關閉頁籤以關閉視窗代替，使用者確認作為iPhone實機驗收。Android Chrome實機仍NOT_RUN，保持未勾選／IMPLEMENTED_UNVERIFIED。詳見[第一期驗收記錄](docs/reviews/BROWSER_SAVE_PHASE1_ACCEPTANCE.md)。
+
+
+BROWSER-SAVE-01／ホームUI補足（2026-11-08）：fix/home-ui-20261108、開発版1.15.1。セーブありは「続きから」「新しく始める」、なしは通常フォーム。フォーム表示だけでは保存を変更せず、実際の新規開始時の確認・取消保護を保持。独立削除ボタンは使用者決定により廃止。ホーム下部2×2、クレジット短縮、スマホのタイトル／半透明操作面板を実装。ゲーム中も背景を保持。限定ローカル確認は1440×900／390×844／375×667、拡大・回転、全保存行の不変／確認後置換、年度還原S／RNG、故障retry、複数タブ・読取不能、controller10項PASS。ローカルQuick／Fullは未実行、今回の確定SHAでGitHub Actionsにて実行する。Preview／本修正の実機確認はNOT_RUN、Androidを含む第一期全体の未完了状態とARTIFACT_COVERAGE_BLOCKEDを維持。既存のQuick／Full PASSは元SHAの記録として保持し、本変更へ流用しない。項目とcheckbox総数は変更しない。
