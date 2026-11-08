@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.15.1｜2026/11/08",
+    "lines": [
+      "- ホームの再開・新規開始と案内ボタンを整理。",
+      "- スマートフォンで球場背景が見やすくなるよう調整。"
+    ]
+  },
+  {
     "title": "1.15.0｜2026/11/08",
     "lines": [
       "- 年の初めに自動セーブし、「続きから」で再開できるようになりました。",
