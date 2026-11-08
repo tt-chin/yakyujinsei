@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
-> 最新狀態核對：2026-11-07。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01已在各ID範圍結案；SUPPORT-01仍待OFUSE收取設定與實際收付款確認。
-> 已完成40項、未完成27項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 最新狀態核對：2026-11-08。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01已在各ID範圍結案；SUPPORT-01仍待OFUSE收取設定與實際收付款確認。
+> 已完成40項、未完成28項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -21,10 +21,10 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **40** | 原36項，加上本輪經本機補驗與使用者雙實機／文案／整體UI接受的4項；限定結案界線見各ID |
-| 未完成 | **27** | SUPPORT-01收款驗收、其他實機／事件、CI工具路徑與artifact缺口等保持未完成 |
+| 未完成 | **28** | SUPPORT-01收款驗收、其他實機／事件、CI工具路徑與artifact缺口等保持未完成 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
-| BLOCKED | **4** | 三項實機／分享，另加ARTIFACT_COVERAGE_BLOCKED；後者不阻擋Linux Full啟動 |
-| IMPLEMENTED_UNVERIFIED | **5** | 4項UI已接受結案；SUPPORT-01仍欠收款驗收，另原4項保留 |
+| BLOCKED | **4** | 三項實機／分享與ARTIFACT_COVERAGE_BLOCKED；BROWSER-SAVE-01技術阻擋已修復，轉IMPLEMENTED_UNVERIFIED待最終驗收 |
+| IMPLEMENTED_UNVERIFIED | **6** | 4項UI已接受結案；SUPPORT-01仍欠收款驗收，另原4項保留 |
 | DESIGN_PENDING | **6** | C級高校語意已定案並結案；其餘設計待決保持 |
 | 其他候補／保留／混合 | **12** | 5項無狀態標籤候補（INJ-UI-01、EVT-01、INT-01、PLY-01、PLY-02）、承認済み保留1項、CI_PASS但工具路徑待處理、本機測試SIGSEGV、本機E2E時序逾時、TJ顯示規則、看板陰影表示、HIST-SPEC-CLAUSE-01；四項已接受UI已移入完成，不計入本列 |
 
@@ -386,3 +386,15 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 - 歷史提交前時點（2026-11-07；後續Linux結果見§1）：原16個失敗入口限定重測16 PASS／0 FAIL；確定來源Quick 71 PASS／0 FAIL；八批本機Full 94 PASS／2 FAIL／0 SKIP／0 BLOCKED，耗時3341.313秒，整體FAIL_OR_INCOMPLETE。證據：test-results/comparator-resource-1140-related-final-r1/、comparator-resource-1140-quick-final-r1/、comparator-resource-1140-full-final-r1/。HOF三尺寸與P／IF完整比較通過，最後Console檢查遇ERR_CONNECTION_CLOSED，失敗URL未保存，不能推定為外部字型；KBO通過負面控制、修復後重播／前綴及P比較，180.606秒被Runner逾時終止，確切等待階段尚未確認。兩項均未結案；未放寬斷言、未延長timeout、未修改或覆寫歷史FAIL。Preview、Linux本次Full與ARTIFACT_COVERAGE_BLOCKED分別保留未驗證／未解除。
 
 - 2026-11-07 エスコン背景（1.14.1、dev已提交／Preview已配信）：使用者最後指示為開始／角色建立／遊戲畫面全程保留。原圖與CREDITS.md位元組完全保留；699px以下縱圖，700px以上橫圖；開始案內及選單新增素材對話框，授權僅照片。限定Chromium 1440×900、390×844與699／700邊界、開始／重啟／捲動／選單／素材連結及圖片失敗fallback通過；既有對話框E2E 11 PASS、S／RNG不變，履歷來源／生成／重複生成／歷史保留檢查PASS。證據test-results/escon-background-1141/。實機iOS Safari、使用者Preview為NOT_RUN；本機Quick／Full依限定範圍未執行；後續已commit／push（`8fa5cf5`、`8a0e87d`），自動Quick與Preview配信成功，未合併main或正式部署。照片裝飾層含漸層為50%不透明度。詳見§1，不改寫歷史FAIL或artifact缺口。
+
+
+- [ ] **BROWSER-SAVE-01** — `IMPLEMENTED_UNVERIFIED`（最新）；以下為原BLOCKED歷史。1.15.0開發試作已接線；年度續行6路線PASS，但Rookie路線引退年度因過年度D2 Decision完了WeakMap證明未能跨重載恢復，原生HOF待遇與讀檔結果不一致。不得將第一期視為完成或發布。須先確認可信證明的持久化／驗證契約，不以JSON或hash直接認定可信，不補發效果、不降斷言。新Quick／Full、全路線、Preview／實機尚未完成。[停止報告](docs/reviews/BROWSER_SAVE_PHASE1_BLOCKER.md)／[設計§5.1、§14.2](BROWSER_SAVE_DESIGN.md)。原始FAIL及舊工作樹保留，ARTIFACT_COVERAGE_BLOCKED維持獨立。統計：40完成＋28未完成＝68項；新增本項，不改寫其他歷史結案。
+
+
+BROWSER-SAVE-01追記（2026-11-08）：使用者指示繼續後，已實作封存驗證與歷史唯讀證明還原；原Rookie HOF差異限定重測通過，全15路線341年度及引退重玩通過。最終Quick／Full與Preview／實機尚待驗收，本ID仍不勾選，不改寫原BLOCKED歷史。最新[第一期驗收記錄](docs/reviews/BROWSER_SAVE_PHASE1_ACCEPTANCE.md)，不以限定PASS冒充完成。
+
+
+BROWSER-SAVE-01最新狀態：技術阻擋已有封存驗證與歷史唯讀證明修復，最新直接測試43／0；metadata綁定補強後的Quick79／Full105執行請求未獲准，均未啟動，NOT_RUN。先前Quick79／0是補強前中間結果，不流用。保持未勾選及IMPLEMENTED_UNVERIFIED；40完成／28未完成不變，BLOCKED 4項、IMPLEMENTED_UNVERIFIED 6項。使用者另行執行／批准驗收後再更新，不改寫原始FAIL及Linux／artifact歷史。
+
+
+BROWSER-SAVE-01：2026-11-08最新核對，本機最終Quick79／0已完成（quick-acceptance-r4）；依使用者指示中止本機Full並轉GitHub Actions完整105入口驗收。舊「最新Quick未獲准」為前時點紀錄，新一輪已取得授權並完成。測試／文件將與產品一併存在feature分支供CI，尚未取得新CI完整結果及實機結果，保持未勾選／IMPLEMENTED_UNVERIFIED。

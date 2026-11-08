@@ -4,6 +4,9 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'browser-save-store-e2e': {quick:[],seconds:15,reason:'Real IndexedDB revision, quota and stale-write fault checks.'},
+  'browser-save-runtime-e2e': {quick:[],seconds:40,reason:'Real reload S/RNG, first-step failure/retry, two tabs and unavailable storage UI.'},
+  'browser-save-routes-e2e': {seconds:600,reason:'Every annual checkpoint in two natural and thirteen controlled career routes, exact S/RNG after real reload.'},
   'information-dialog-e2e': {seconds:90,reason:'Shared help/update dialog: fixed regions, custom indicator, viewport/content resizing, scroll lock, focus and observer cleanup across mobile/desktop; no full-career replay.'},
   'income-display-e2e': {seconds:40,reason:'Native read-only income summary/detail/retirement/canvas, 30 role/viewport/financial fixtures with exact S/RNG checks.'},
   'smallschool-c-e2e': {seconds:600,reason:'C-school native initialization, immutable birth snapshots, retirement fixtures, three viewports and raw cross-version P/IF traces with exact new-version replay.'},

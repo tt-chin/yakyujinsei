@@ -92,7 +92,7 @@ const game = fs.readFileSync(new URL('../docs/src/engine/game.js', import.meta.u
 const yearFlowSource = fs.readFileSync(new URL('../docs/src/engine/year-flow.js', import.meta.url), 'utf8');
 // Phase 32 (§2kk): reportFlowOutcome lives in YearFlow. The current side runs its method body as the same free function
 // the game.js slice was (free names advance, endGame, flowHooks); the head and end anchors occur once.
-const yearFlowReporter=moduleSource=>{const head='  reportFlowOutcome(outcome){const {flowHooks,advance,endGame}=this.#deps;\n',end='\n  phaseIntlPre(){';
+const yearFlowReporter=moduleSource=>{moduleSource=moduleSource.replace(/\r\n/g,'\n');const head='  reportFlowOutcome(outcome){const {flowHooks,advance,endGame}=this.#deps;\n',end='\n  phaseIntlPre(){';
   assert.equal(moduleSource.split(head).length,2,'reportFlowOutcome head once');assert.equal(moduleSource.split(end).length,2,'reportFlowOutcome end once');
   const a=moduleSource.indexOf(head)+head.length;return 'function reportFlowOutcome(outcome){\n'+moduleSource.slice(a,moduleSource.indexOf(end,a))+'\n  const flowHooks={advance:null,endGame:null};';};
 // Phase 33 (§2ll): movement L2/L3 live in MovementGate. The current side runs the module class with the game.js wrapper and

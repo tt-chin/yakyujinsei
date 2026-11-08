@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {identifyAwardDecision} from '../docs/src/engine/award-identity-policy.js';
-import {annualAwardTransaction,preallocateAwardSlots,captureAwardSlot,recordAwardDecisions,prepareAwardReceipt,commitAwardReceipt,completeAwardDecisions,isCompletedAwardDecision,inspectAwardTransaction} from '../docs/src/engine/award-transaction-policy.js';
+import {annualAwardTransaction,preallocateAwardSlots,captureAwardSlot,recordAwardDecisions,prepareAwardReceipt,commitAwardReceipt,completeAwardDecisions,isCompletedAwardDecision,inspectAwardTransaction,captureCompletedAwardProofs,restoreCompletedAwardProofs} from '../docs/src/engine/award-transaction-policy.js';
 let pass=0;const test=(id,fn)=>{fn();pass++;console.log('PASS '+id);};
 const setup=()=>{const s={seed:'receipt-fixture',year:2039,traits:{glass:true,phoenix:false},pool:7,removed:[],honors:[]};const context={league:'NPB',level:'NPB1',role:'SP',metrics:{W:15,L:7,IP:180.1}};return {s,context,t:annualAwardTransaction(s,context)};};
 test('F-B01/02: legacy chance100 still draws once, repeat draws zero',()=>{const {s,t}=setup();preallocateAwardSlots(t,['MVP']);let calls=0,r=0;const draw=()=>{calls++;r++;return .5;};assert(captureAwardSlot(t,'MVP',100,draw,()=>r));assert(captureAwardSlot(t,'MVP',100,draw,()=>r));assert.equal(calls,1);assert.equal(s.pool,7);});
@@ -78,5 +78,13 @@ test('trusted Adapter requires live completion; history remains readable after h
   const decision=s.awardDecisions[0];assert.equal(identifyAwardDecision(decision,s).awardId,'LEGACY_BEST_PITCHER');assert.equal(identifyAwardDecision(decision,s).decisionVerified,true);
   assert.equal(identifyAwardDecision(structuredClone(decision),s).decisionVerified,false);assert.equal(identifyAwardDecision(decision,{...s}).decisionVerified,false);
   s.year++;assert.equal(identifyAwardDecision(decision,s).decisionVerified,true);
+});
+test('save proof requires complete prior-year state and original Decision ownership',()=>{
+ const {s,t}=setup();s.pos='P';preallocateAwardSlots(t,['MVP']);captureAwardSlot(t,'MVP',100,()=>.5,()=>1);completeAwardDecisions(t);
+ assert.throws(()=>captureCompletedAwardProofs(s),/SAVE_AWARD_PROOF_BOUNDARY/);s.year++;
+ const proofs=captureCompletedAwardProofs(s);assert.equal(proofs.length,1);assert.equal(proofs[0].index,0);assert.deepEqual(proofs[0].receiptIds,['decision-history']);
+ assert.throws(()=>captureCompletedAwardProofs({...s}),/SAVE_AWARD_PROOF_CONFLICT/);assert.deepEqual(captureCompletedAwardProofs(structuredClone(s)),[],'JSON copies are not provenance');
+ assert.throws(()=>restoreCompletedAwardProofs(s,{}),/SAVE_AUTH_REQUIRED/);
+ const decision=s.awardDecisions[0];decision.awarded=false;assert.throws(()=>captureCompletedAwardProofs(s),/SAVE_AWARD_PROOF_CONFLICT/);
 });
 console.log(JSON.stringify({PASS:pass,FAIL:0,evidence:'NATIVE_PRODUCT_MODULE_FIXTURE; not game integration'}));

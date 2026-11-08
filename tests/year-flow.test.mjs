@@ -39,7 +39,7 @@ export class YearFlow {
   constructor(deps){this.#deps=deps;}
 `;
 const body=(text,head)=>replaceOnce(text,head,'',head).replace(/}$/,'');
-const expected=HEADER+
+const expectedOriginal=HEADER+
   '  nextStep(){const S=this.#deps.getState(),{careerSession}=this.#deps;'+body(oldNext,'function nextStep(){')+'}\n'+
   '  advance(){this.#deps.finalizePendingOffseasonSalary();this.advanceWithoutSalaryFinalization();}\n'+
   '  advanceWithoutSalaryFinalization(){const S=this.#deps.getState(),{careerSession,yearHandoffs,startYear,$}=this.#deps;\n'+
@@ -50,6 +50,7 @@ const expected=HEADER+
   '  startYear(){const S=this.#deps.getState(),{careerSession,yearSteps,divider,stageLabel,nextStep}=this.#deps;'+
   replaceOnce(body(oldStart,'  function startYear(){'),'careerSession.stepQ=[phasePre,phaseIntlPre,phaseMid,phaseEnd];','careerSession.stepQ=yearSteps();','stepQ')+'}\n'+
   '}\n';
+const expected=expectedOriginal.replace('  startYear(){',"  // Persistent saves use this entry; the original entry remains for historical controls.\n  startReadyYear(capture){\n    const S=this.#deps.getState(),{careerSession,yearSteps,divider,stageLabel,nextStep,yearHandoffs}=this.#deps;\n    const pending=[...(yearHandoffs.get(S)?.values()||[])].filter(h=>h.status==='STARTED');\n    if(pending.some(h=>h.targetYear!==S.year))throw new Error('NEXT_YEAR_AMBIGUOUS');\n    careerSession.stepQ=yearSteps();\n    divider(`${S.year}年・${S.age}歳・${stageLabel()}`);\n    for(const handoff of pending)handoff.status='COMMITTED';\n    capture(S);\n    nextStep();\n  }\n"+'  startYear(){');
 assert.equal(moduleText,expected,'YearFlow is the BASE year skeleton plus the listed edits only');
 for(const pattern of [/\bR\(/,/\bri\(/,/\bchance\(/,/\bpick\(/,/\bpickRecord\(/])assert.doesNotMatch(moduleText,pattern,'no draw site');
 assert.deepEqual(moduleText.match(/this\.(?!#deps)\w+\(/g),['this.advanceWithoutSalaryFinalization('],'one internal call; every other call leaves through #deps');

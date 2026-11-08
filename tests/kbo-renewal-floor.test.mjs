@@ -17,7 +17,7 @@ const policy=baseline?await import('data:text/javascript;base64,'+Buffer.from(re
 const cap=policy.applyKboForeignPackageCap,game=read('docs/src/engine/game.js').replace(/\r\n/g,'\n');
 // Phase 32 (§2kk): reportFlowOutcome lives in YearFlow. The current side runs its method body as the same free function
 // the game.js slice was (free names advance, endGame, flowHooks); the head and end anchors occur once.
-const yearFlowReporter=moduleSource=>{const head='  reportFlowOutcome(outcome){const {flowHooks,advance,endGame}=this.#deps;\n',end='\n  phaseIntlPre(){';
+const yearFlowReporter=moduleSource=>{moduleSource=moduleSource.replace(/\r\n/g,'\n');const head='  reportFlowOutcome(outcome){const {flowHooks,advance,endGame}=this.#deps;\n',end='\n  phaseIntlPre(){';
   assert.equal(moduleSource.split(head).length,2,'reportFlowOutcome head once');assert.equal(moduleSource.split(end).length,2,'reportFlowOutcome end once');
   const a=moduleSource.indexOf(head)+head.length;return 'function reportFlowOutcome(outcome){\n'+moduleSource.slice(a,moduleSource.indexOf(end,a))+'\n  const flowHooks={advance:null,endGame:null};';};
 let cases=0;
