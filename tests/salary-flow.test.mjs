@@ -5,6 +5,8 @@ import path from 'node:path';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const game = await readFile(path.join(root, 'docs/src/engine/game.js'), 'utf8');
+// Phase 38 (§2qq) moved the level table into league-catalog.js.
+const leagueCatalog = await readFile(path.join(root, 'docs/src/engine/league-catalog.js'), 'utf8');
 const initialState = await readFile(path.join(root, 'docs/src/engine/initial-state.js'), 'utf8');
 const seasonPayment = await readFile(path.join(root, 'docs/src/engine/season-payment-policy.js'), 'utf8');
 const seasonStats = await readFile(path.join(root, 'docs/src/engine/season-stats.js'), 'utf8');
@@ -168,11 +170,11 @@ assert.doesNotMatch(gameAndModules, /const yearly=Math\.round\(salaryFor\(S\.lv,
 assert.match(careerMovement, /S\.careerBuyout=\(S\.careerBuyout\|\|0\)\+result\.buyoutAmount/);
 assert.match(careerMovement, /S\.ct=null;\s*S\.currentSalary=0/);
 
-assert.match(game, /NPB_DEV:\{n:'NPB育成',par:35/);
-assert.match(game, /NPB2:\{n:'NPB二軍',par:52/);
-assert.match(game, /NPB1:\{n:'NPB一軍',par:58/);
-assert.match(game, /A3:\{n:'3A',par:56/);
-assert.match(game, /MLB:\{n:'メジャーリーグ',par:63/);
+assert.match(leagueCatalog, /NPB_DEV:\{n:'NPB育成',par:35/);
+assert.match(leagueCatalog, /NPB2:\{n:'NPB二軍',par:52/);
+assert.match(leagueCatalog, /NPB1:\{n:'NPB一軍',par:58/);
+assert.match(leagueCatalog, /A3:\{n:'3A',par:56/);
+assert.match(leagueCatalog, /MLB:\{n:'メジャーリーグ',par:63/);
 
 assert.doesNotMatch(contractPolicy, /\b(?:R|ri|chance|pick)\s*\(/);
 assert.doesNotMatch(controlPolicy+injuryPolicy+arbitrationPolicy, /\b(?:R|ri|chance|pick)\s*\(/);

@@ -10,6 +10,7 @@ import {validateAwardHistory} from '../tools/development-b/historical-comparison
 import {expectedState} from '../tools/development-b/award-runtime-support.mjs';
 import {awardTraitUnlocks,TRAIT_TEXT,traitLabel} from '../docs/src/engine/trait-policy.js';
 import {Rng} from '../docs/src/engine/rng.js';
+import {leagueTables} from '../docs/src/engine/league-catalog.js';
 import {SeasonAwards} from '../docs/src/engine/season-awards.js';
 import {CheckpointRenderer} from '../docs/src/ui/checkpoint-renderer.js';
 const baseline=execFileSync('git',['show','efd4710c4c5c366ff3aba69c59180031c82ff18a:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
@@ -25,7 +26,7 @@ function harness(source,state,{render=false,slot=false}={}){
     ...policy,captureAwardSlot:(...args)=>policy.captureAwardSlot(...args,slotFault?()=>{slotFault=false;throw Error('AFTER_RECORD_FAULT');}:undefined),
     traitPresentation:new WeakMap(),traitLabel,teamNick:x=>x,displayTrait:k=>traitLabel(k,context.S,x=>x),board:()=>{},recordR:x=>rng.push(structuredClone(x)),
     card:(...args)=>{if(renderFault&&args[1]==='年間賞'){renderFault=false;throw Error('RENDER_FAULT');}cards.push(args);}});
-  const levels=source.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1];
+  const levels=source.includes('Object.assign(LV,')?source.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]:JSON.stringify(leagueTables().levels);
   const functions=['awards','renderCheckpointCard',...(source.includes('function collectLegacyAwardPlan(')?['collectLegacyAwardPlan']:[]),'isSP','removeTrait','fnv1a32'].map(n=>productionFunction(n,source)).join('\n');
   vm.runInContext(`const LV=${levels};const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));let _s=0,seedInit,R;const careerRng=new Rng(()=>S,fnv1a32);
     ${source.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}

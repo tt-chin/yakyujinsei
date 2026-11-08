@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import {buildFixedCases,buildSpecialCases,measure,createProductionHarness,productionFunction,leagues,labels,GAME_SOURCE} from './retirement-hof-test-support.mjs';
 import {honorScoreFor} from '../docs/src/engine/hall-of-fame-policy.js';
+import {readFileSync} from 'node:fs';
+// Phase 38 (§2qq) moved the level table into league-catalog.js.
+const LEAGUE_CATALOG_SOURCE=readFileSync(new URL('../docs/src/engine/league-catalog.js',import.meta.url),'utf8');
 import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
 import {careerScoreFor,defenseShareFor,hallOfFameTier} from '../docs/src/engine/hall-of-fame-tier-policy.js';
@@ -26,7 +29,7 @@ assert.equal(measure({id:'negative',league:'NPB',pos:'IF',stats:{...blank(),DEF:
 assert.ok(Number.isNaN(measure({id:'missing',league:'NPB',pos:'P',stats:{IP:10}}).base),'missing raw stats are not normalized by score');
 const both=measure({id:'multiple',league:'CPBL',pos:'IF',stats:{...blank(),H:8600,yr:4},state:{stats:{CPBL:{...blank(),H:8600,yr:4},MLB:{...blank(),H:11000,yr:10}}}});
 const multi=createProductionHarness({pos:'IF',lv:'MLB',stage:'PRO',year:2050,traits:{},honors:[],stats:{CPBL:{...blank(),H:8600,yr:4},MLB:{...blank(),H:11000,yr:10}},teamTally:{}},'multi');multi.run("retireScene({CPBL:tierOf('CPBL'),MLB:tierOf('MLB')})");assert.equal(multi.snapshot().state.hofInfo.length,2);assert.equal(multi.snapshot().state.legendLeague,'メジャーリーグ','first-ballot league must exclude later-ballot inductees');assertions+=3;
-assert.match(GAME_SOURCE,/NPB2:[^\n]+statBucket:'NPB'/);assert.match(GAME_SOURCE,/KBO2:[^\n]+statBucket:'KBO'/);assert.match(GAME_SOURCE,/CPBL2:[^\n]+statBucket:'CPBL'/);assertions+=3;
+assert.match(LEAGUE_CATALOG_SOURCE,/NPB2:[^\n]+statBucket:'NPB'/);assert.match(LEAGUE_CATALOG_SOURCE,/KBO2:[^\n]+statBucket:'KBO'/);assert.match(LEAGUE_CATALOG_SOURCE,/CPBL2:[^\n]+statBucket:'CPBL'/);assertions+=3;
 // OOP §2j phase 8: 52e4cdb careerScore/defShare/tierOf vs current wrappers + hall-of-fame-tier-policy, with final TIER_TH/LG_N and a stub honorScore.
 const tierBaseline=execFileSync('git',['show','52e4cdb36d6b770a2c73ca89e947c94bcc616562:docs/src/engine/game.js'],{encoding:'utf8'});
 const tables=createProductionHarness({pos:'IF',traits:{},honors:[],stats:{}}),finalTH=tables.snapshot().thresholds,finalLG=JSON.parse(tables.run('JSON.stringify(LG_N)'));
