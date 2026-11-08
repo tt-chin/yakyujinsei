@@ -4377,6 +4377,73 @@ T6 使 Quick 由 73 增為 74、Full 由 98 增為 99（manifest 依檔名自動
   - [PR #63](https://github.com/tt-chin/yakyujinsei/pull/63) dev→main（merge `a8859b9`，樹與 `1a74e71` 相同）：PR Full [Tests #151](https://github.com/tt-chin/yakyujinsei/actions/runs/42404561894)（merge ref `26d2c28`）`expected 99`、`acceptedPass 99`、`issues []`；[Publish website #34](https://github.com/tt-chin/yakyujinsei/actions/runs/42404607279) success。VERSION 仍為 1.14.1。
   - 仍未做：Preview、`--preview` 路由、實機確認、正式站內容確認。
 
+## 2nn. 第 35 期：`proSeason` 一組移至 `ProfessionalSeason`（細部計畫，2026-11-08；D1–D10、T1–T8 與實作批准 2026-11-08）
+
+§3.22 候選 D。草稿、抵達探測與草稿 Full 已做（§2nn.4）。維護收益：季成績的安全上限、事件與投球強度補正、鐵人與一芸特化判定，以及賽季後的續行狀態機集中於一個模組；T6 使這些分支不靠完整生涯即可逐步驗證。
+
+### 2nn.1 現況（基準 `1a74e71`，`game.js` 618 行／57,029 bytes）
+
+- `:305–:311` `portionOf`、`:313–:397` `proSeason`、`:398–:414` `resumeProfessionalSeason`、`:415–:425` `runSeasonPipeline`；`seasonContinuations`（`:270`）只有 `proSeason` 使用。RNG 只有 `:356` 的 `R()`（季中移籍的成績分配）。
+- `proSeason` 由 `LEGACY`（以值捕捉）、`SeasonPhases` 的 lambda 與 `stage10-risk-e2e` 的名稱包裝取用；另外兩個函式沒有外部呼叫端，也沒有測試重綁。
+- E2E 執行時重綁的自由名稱：`accLevelStat`、`tjAccrue`、`awards`（`full-power-pitching-e2e`）、`tjGamble`／`demotionAudit`／`tradeCheck`／`maybeIntl`／`nextStep`（`championship-intl-e2e:22`）、`maybeIntl`／`nextStep`（`trait-system-e2e`）、`card`、`board`、`R`（`stage6-browser` 等）。
+- 文字耦合：名稱搜尋只找到 4 檔；18 字 n-gram 掃描另找到 `event-integration.test:34,39`、`information-architecture.test:16` 與 `full-power-pitching-e2e` 的投球強度探測錨點（Full 專屬，草稿 Full 才發現，§2nn.4）。
+
+### 2nn.2 設計（使用者決定 2026-11-08：依建議，D6 採 A）
+
+| # | 內容 | 決定 |
+|---|---|---|
+| D1 | 範圍 | `portionOf`、`proSeason`、`resumeProfessionalSeason`、`runSeasonPipeline` 與 `seasonContinuations`。F、G 不併入（內聚性低，2026-11-08 決定） |
+| D2 | 名稱 | `ProfessionalSeason`／`professional-season.js`／`professionalSeason` |
+| D3 | 寫法 | 與 `SeasonPhases` 相同的 rules factory；只公開 `proSeason()`，另外兩個為模組內函式 |
+| D4 | `game.js` 接線 | 包裝 `function proSeason(){return professionalSeason.proSeason();}` 留在原位，建構行緊接其後、`function awards(` 之前。保留原因：`LEGACY` 以值捕捉、`SeasonPhases` 依名稱呼叫、`stage10` 包裝名稱。移除條件：三者皆不再依名稱取用時 |
+| D5 | 讀 `S` 的時機 | `proSeason`、`resumeProfessionalSeason` 開頭各一次（共 2 處）。本體同步執行，續行的 `cont` 閉包不讀 `S` |
+| D6 | 依賴 | `LV`、`clamp` 傳參照；其餘 28 個以延遲綁定 lambda 注入（A 案）。5 個 policy import 無法重綁，lambda 只為接線一致，於模組檔頭註明 |
+| D7 | `seasonContinuations` | 模組私有；`game.js:270` 移除 |
+| D8 | RNG bridge | `seasonRng:{R:()=>R()}`。`rng:{R:()=>R()}` 已是 PlayerAbility 的 bridge，`salary-flow` 以子字串計數，相同文字會衝突 |
+| D9 | `championship-intl.test:81` 第二個斷言 | 原本即恆真（`'  captureSeasonChampionship(S);'` 不存在，`indexOf` 為 −1）。本期只改指向模組，另批修正 |
+| D10 | 分支 | 自 `origin/dev` 以 `--no-track` 開 `refactor/pro-season`；第一個 commit 為 `ce9e2d1`（第 34 期併入與發布記錄） |
+
+### 2nn.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `full-power-pitching.test` | `new ProfessionalSeason(` 存在時，現行側 vm 改切模組的 3 個函式（`.split('\n  return {')[0]`）；pipeline vm 加 `getState`；舊 SHA 側不變 |
+| T2 | `full-power-pitching-e2e` | `proSeason`／`resumeProfessionalSeason`／`runSeasonPipeline` 以字串與次數精確去掉插入（1／1／0）後去縮排比較；投球強度探測在 `game.js` 無錨點時改插入模組（錨點須恰在兩者之一出現一次）。Full 專屬，CRLF 保留 |
+| T3 | `championship-intl.test:81` | 順序斷言改讀模組 |
+| T4 | `salary-flow.test` | 模組加入 `gameAndModules`；新 bridge 斷言出現一次、模組計數 `[1,0,0,0]`；`game.js` `R(` 10→9；`recordSalaryEvaluation(entry.st)` 改讀模組 |
+| T5 | `verify-modularization` | 第 35 期區塊：import、`choiceViews` 行、包裝＋建構行各恰好一次；`new ProfessionalSeason(`／包裝呼叫／`function proSeason(` 各一次；搬移的函式名、`seasonContinuations`、3 種錯誤碼與 3 個卡片標題不在 `game.js` |
+| T6 | `professional-season.test`（新） | 第 1 部分：模組＝`1a74e71` 區段（＋2 縮排）加 2 處插入（整檔相等），抽籤呼叫點 `[1,0,0,0,0]`。第 2 部分：舊本體於 vm（`S` 為即時 getter）、模組於主 realm，同一組記錄 stub，29 情境逐步比較呼叫記錄、錯誤、`S`；到達斷言、只有故障情境出錯且錯誤碼固定、測試內負控制（`em*0.06`→`0.05` 恰被 2 個投球強度情境抓到） |
+| T7 | `event-integration.test:34,39` | 改讀模組 |
+| T8 | `information-architecture.test:16` | 改讀模組 |
+
+T6 使 Quick 由 74 增為 75、Full 由 99 增為 100。
+
+### 2nn.4 草稿實測（2026-11-08，scratch worktree，基準 `ce9e2d1`（`docs`、`tests`、`scripts` 與 `1a74e71` 相同）；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 `git show HEAD` 產生；去掉 2 處插入並去縮排後與原文逐位元組相同；`game.js` +4／−121（CRLF 保留），模組 LF |
+| AST | 模組未解析名稱只有 `Error`、`Math`、`Object`、`WeakMap`；31 個注入皆有使用且與接線一致；`game.js` 未解析名稱集合不變，未使用 import 105→105 |
+| 未改測試的 Quick | 69／74，FAIL：`championship-intl.test`、`event-integration.test`、`full-power-pitching.test`、`information-architecture.test`、`salary-flow.test` |
+| T1–T8 後的 Quick | 75／75 PASS（依 `summary.json`） |
+| 本機 8 批 Full | `FAIL_OR_INCOMPLETE`，100 入口全數執行，97 PASS／3 FAIL：`full-power-pitching-e2e`、`-yakyo-test-001-e2e`、`-jp3-pitcher-02-e2e`（`observe` 的投球強度錨點已移入模組，`1 !== 2`）。T2 補上模組路由後只重跑該 3 項：3／3 PASS（部分重跑，不算 Full PASS） |
+| 抵達與重綁探測（`probe33-0` P、`-1` IF、`-3` P、`-4` IF、`-5` P、`-7` IF，balanced） | 6 條皆 PRO 結束（KBO1／CPBL2／NPB_DEV／KBO2／CPBL1／KBO2）；命中序列、10 個重綁名稱的計數（皆 >0，`tjAccrue` 只投手）、RNG 數值序列、步數、最終 `S` 與基準相同，Console error 0。`portionOf` 自然生涯未到達（季中移籍），由 T6 涵蓋。負控制（模組 `S.ironStreak++`→`+=2`）→ 6／6 條 `S` 不同 |
+| 突變（新寫與改指向的斷言，15 項） | 15／15 抓到，失敗的皆為目標斷言，檔案逐位元組還原 |
+
+### 2nn.5 驗證與交付（R3：季成績、續行狀態機、RNG 呼叫點；允許差分為無）
+
+- 實作：草稿 10 檔複製至分支，逐位元組相同；D6 的檔頭註解於複製前加入（T6 同步）。commit `4df368b`。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（最終程式，工作樹與 `4df368b` 相同） | 75／75 PASS，依 `summary.json` 核對 |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `4df368b`） | `PASS`，`expected 100`，8 批 100 入口全數執行、100 PASS，`sourceChanged false`，1,013 秒。首次嘗試時 `os.freemem()` 為 1,668 MiB（vm_stat inactive 約 30 GB，未計入），派發前 `RESOURCE_WAIT` 逾時結束、0／100 執行，記為 NOT_RUN；關閉 Obsidian 後以新輸出目錄重跑 |
+| 抵達與重綁探測（`4df368b` 對 `ce9e2d1`，同 §2nn.4 的 6 條） | 命中序列、重綁計數、RNG、步數、`S` 全部一致，Console error 0 |
+| reviewer | 無發現。提示：`game.js` 接線的 key 與模組 `DEPS` 名稱集合沒有測試互相核對（草稿 AST 檢查已核對 31 個一致，探測證實執行時接線） |
+
+- 未做：Linux CI、Preview、實機確認。push、PR 依 AGENTS §10 另批。
+- 後續：§3.22 的 D 系列候補至此完成，F、G 收益小；是否繼續下一期另行決定。`championship-intl.test:81` 恆真斷言另批修正（D9）。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -4885,6 +4952,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 第 32 期 A：草稿與抵達探測已做，細部計畫已批准（2026-11-03），與第 33 期同經 PR #59 併入 dev（`7234965`），見 §2kk。
 - 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll。
 - 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），於 `refactor/season-phases` 實作，經 PR #62 併入 dev（`ef7768e`），隨 PR #63 發布至 main（`a8859b9`），Linux Full 99／99 PASS，見 §2mm.6。
+- 第 35 期 D：草稿、抵達探測與草稿 Full 已做（基準 `1a74e71`），D1–D10、T1–T8 與實作已批准（2026-11-08，`ProfessionalSeason`），於 `refactor/pro-season` 實作（`4df368b`，Quick 75／75、本機 Full 100／100 PASS，macOS＋Brave 本機證據），尚未 push，見 §2nn。
 
 ## 4. 使用者決定（2026-10-18）
 
