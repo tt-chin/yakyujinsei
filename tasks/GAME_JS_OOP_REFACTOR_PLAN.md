@@ -4559,6 +4559,18 @@ T2 使 Quick 由 81 增為 82、Full 由 107 增為 108。
 | 接縫負控制（建構行改 `card:(...args)=>gameView.card(...args)`、`startYear:()=>yearFlow.startYear()`） | 開局 5／5 與舊不同：掛鉤少 1 張卡（出生卡）、`startYear` 0 次。續玩路徑在此版不存檔，探測逾時而無結果；續玩的抵達由新版重載後 `startYear` 1 次（唯一呼叫端）證明 |
 | 突變（新寫的斷言） | 7／7 抓到，皆為 `ERR_ASSERTION`，檔案逐位元組還原。T1：包裝改呼叫 `resume`、`card` 繞過注入、restore 改呼叫 `startNew`、續玩 URL 加 `&rv=1`、`選手誕生` 留在 `game.js`（放在接線行會被接線斷言先抓到，改放檔尾後由「moved into」斷言抓到）。T2：`#app` 改 `block`、續玩先設 seed 後設 state。T2 第 2 部分另有測試內負控制 3 項；第 3 項（`getState()` 移到 `enter()` 前）在原有 stub 下為等價突變，加入 `show` 期間替換 `S` 的情境後抓到 |
 
+### 2pp.5 驗證與交付（R3：seed、RNG、`S`、`careerSession`；允許差分無）
+
+- 實作：草稿 4 檔複製至分支，逐位元組相同（`cmp`）。commit `8b489b2`（計畫 commit `417accc` 在前）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，HEAD `8b489b2`） | 82／82 PASS，依 `summary.json` 核對（含 `career-entry.test`） |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `8b489b2`） | `PASS`，`expected 108`、`acceptedPass 108`、`issues []`，plan 108 入口、8 批全數執行，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,153 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：兩路徑逐句對照（`S`／`SEED` 讀寫順序、出生卡的 `getState()` 在 `navigation.show()` 之後）、建構行與 `navigation` 的 TDZ、延遲綁定 lambda 的 hook 抵達（`POSN`、`CareerSession` 為不可變綁定，非 hook 對象）、錨定搬移本體的文字 hook 0 處、`career-session-access` 探測欄位仍在 `game.js`、例外時狀態一致、新測試的模式歸屬與負控制、斷言未放寬、import 路徑大小寫 |
+
+- 交付：PR 至 dev（待開）。未做：Linux CI Full、Preview、實機確認、main 發布。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
