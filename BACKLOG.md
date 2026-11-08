@@ -408,3 +408,5 @@ BROWSER-SAVE-01：2026-11-08 dev合併後核對。PR #65合併後dev（含PR #66
 
 
 BROWSER-SAVE-01／ホームUI補足（2026-11-08）：fix/home-ui-20261108、開発版1.15.1。セーブありは「続きから」「新しく始める」、なしは通常フォーム。フォーム表示だけでは保存を変更せず、実際の新規開始時の確認・取消保護を保持。独立削除ボタンは使用者決定により廃止。ホーム下部2×2、クレジット短縮、スマホのタイトル／半透明操作面板を実装。ゲーム中も背景を保持。限定ローカル確認は1440×900／390×844／375×667、拡大・回転、全保存行の不変／確認後置換、年度還原S／RNG、故障retry、複数タブ・読取不能、controller10項PASS。ローカルQuick／Fullは未実行、今回の確定SHAでGitHub Actionsにて実行する。Preview／本修正の実機確認はNOT_RUN、Androidを含む第一期全体の未完了状態とARTIFACT_COVERAGE_BLOCKEDを維持。既存のQuick／Full PASSは元SHAの記録として保持し、本変更へ流用しない。項目とcheckbox総数は変更しない。
+
+ホームUI Quick失敗修復（2026-11-08）：CI Run42470961151／adac181為80 PASS／1 FAIL。唯一失敗draft-income-e2e在同context第二案例有存檔時未先選「新しく始める」，直接點隱藏守位欄而timeout；修正start helper在該入口可見時先正常點擊，不改產品、原比較基準、收入／防重／S／RNG斷言或timeout。限定入口重測18 PASS／0 FAIL（85.884秒）。依使用者最新批准改在本機執行整套Quick：test-results/home-ui-1151-quick-r2/summary.json，81 PASS／0 FAIL／0 SKIP／0 BLOCKED，372.501秒。原CI FAIL保留；接著提交推送fix分支並手動啟動Linux Full，啟動後不監控。Full與實機結果仍待取得，ARTIFACT_COVERAGE_BLOCKED不變。
