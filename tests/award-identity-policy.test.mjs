@@ -181,6 +181,7 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
         "import { initializeDisplayPreferences } from './ui/preferences.js';\nimport { initializeBoardMenu } from './ui/board-menu.js';\nimport { initializeInformationDialogs } from './ui/information-dialog.js';");
       expected=exactReplacement(expected,"document.getElementById('btn-start').disabled=false;",
         "document.getElementById('btn-start').disabled=false;\ninitializeBoardMenu();\ninitializeInformationDialogs();");
+      expected=exactReplacement(expected,"await import('./engine/game.js');\ndocument.getElementById('btn-start').disabled=false;","const game=await import('./engine/game.js');\nawait game.initializeBrowserSave();");
       assert.equal(current,expected,'main: exact approved UI wiring, no other edits');
       assert.throws(()=>assert.equal(current+'\n// unexpected',expected));
     }else if(file==='docs/src/ui/navigation.js'){

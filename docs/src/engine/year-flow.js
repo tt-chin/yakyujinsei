@@ -54,5 +54,16 @@ export class YearFlow {
     throw new Error('UNKNOWN_FLOW_OUTCOME:'+outcome.kind);
   }
   phaseIntlPre(){const {processIntlPhase,nextStep}=this.#deps;processIntlPhase('PRE',()=>nextStep());}
+  // Persistent saves use this entry; the original entry remains for historical controls.
+  startReadyYear(capture){
+    const S=this.#deps.getState(),{careerSession,yearSteps,divider,stageLabel,nextStep,yearHandoffs}=this.#deps;
+    const pending=[...(yearHandoffs.get(S)?.values()||[])].filter(h=>h.status==='STARTED');
+    if(pending.some(h=>h.targetYear!==S.year))throw new Error('NEXT_YEAR_AMBIGUOUS');
+    careerSession.stepQ=yearSteps();
+    divider(`${S.year}年・${S.age}歳・${stageLabel()}`);
+    for(const handoff of pending)handoff.status='COMMITTED';
+    capture(S);
+    nextStep();
+  }
   startYear(){const S=this.#deps.getState(),{careerSession,yearSteps,divider,stageLabel,nextStep}=this.#deps;careerSession.stepQ=yearSteps();divider(`${S.year}年・${S.age}歳・${stageLabel()}`);nextStep();}
 }

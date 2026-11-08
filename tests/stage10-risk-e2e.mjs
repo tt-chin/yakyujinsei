@@ -43,14 +43,13 @@ const compare=arg('compare')&&execFileSync('git',['rev-parse',arg('compare')+'^{
 const priorSource=compare&&execFileSync('git',['show',compare+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
 const hash=x=>createHash('sha256').update(x).digest('hex');
 async function page(width=1280,seed='stage10-fixture',trace=true,pos='IF',prior=false){
-  const p=await h.page(width,pos,seed);
+  const p=await h.page(width,pos,seed,{historical:prior,beforeLoad:async p=>{
   await p.route('**/src/engine/game.js',async route=>{
     const response=await route.fetch(),body=prior?stage6Instrument(priorSource):await response.text();
     // Loopback already has the shared hook; a Preview fetch returns the raw asset.
     await route.fulfill({response,body:instrument(body.includes('let s6rng=[]')?body:stage6Instrument(body),trace)});
-  });
-  await p.reload();await p.waitForFunction(()=>window.__stage10&&!document.querySelector('#btn-start').disabled);
-  await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
+  });}});await p.waitForFunction(()=>window.__stage10&&!document.querySelector('#btn-start').disabled);
+  return p;
 }
 const get=p=>p.evaluate(()=>window.__stage10.get());
 const comparable=s=>{const state=JSON.parse(JSON.stringify(s));delete state.version;delete state.potSum0;if(state.done)delete state.traits.grinder;return state;};

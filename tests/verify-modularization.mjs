@@ -60,7 +60,7 @@ for(const line of [
     '\nfunction nextStep(){return yearFlow.nextStep();}\n',
     '\nfunction advance(){return yearFlow.advance();}\n',
     '\n  function reportFlowOutcome(outcome){return yearFlow.reportFlowOutcome(outcome);}\n  const flowHooks={advance:null,endGame:null};\n',
-    '\n  function phaseIntlPre(){return yearFlow.phaseIntlPre();}\n  function startYear(){return yearFlow.startYear();}\n'+
+    '\n  function phaseIntlPre(){return yearFlow.phaseIntlPre();}\n  function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}\n'+
       '  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]});\n',
     "\nimport { YearFlow } from './year-flow.js';\n",
   ])assert.equal(text.split(line).length,2,'year flow wiring, once: '+line.trim().slice(0,50));

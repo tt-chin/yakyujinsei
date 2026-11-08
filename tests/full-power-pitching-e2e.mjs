@@ -22,7 +22,7 @@ const current=await readFile(new URL('../docs/src/engine/game.js',import.meta.ur
 const canonical=s=>s.replaceAll('\r\n','\n');
 // Phase 34 (§2mm) moved phasePre into the SeasonPhases factory: restore the game.js text by removing each inserted state read
 // by exact string and count, then dedent, in place of the game.js wrapper line (the text after it stays). The prior side is unchanged.
-const seasonPhases=await readFile(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8');
+const seasonPhases=canonical(await readFile(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8'));
 const restoredPhasePre=()=>{let text=productionFunction('phasePre',seasonPhases).split('\n  return {')[0];for(const [read,count] of [['\n    const S=getState();',1],['const S=getState();',7]]){assert.equal(text.split(read).length,count+1,'phasePre state reads: '+JSON.stringify(read));text=text.replaceAll(read,'');}return text.replace(/^  /gm,'');};
 const phasePreWrapper='function phasePre(){return seasonPhases.phasePre();}';
 const currentFunction=fn=>{const sliced=productionFunction(fn,current);if(fn!=='phasePre')return sliced;assert.ok(sliced.startsWith(phasePreWrapper),'phasePre wrapper');return restoredPhasePre()+sliced.slice(phasePreWrapper.length);};
@@ -38,7 +38,7 @@ for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(withOriginalEndings
 // Calculation and accumulation body stays byte-exact; only authorized continuation wiring differs.
 // Phase 35 (§2nn) moved proSeason, resumeProfessionalSeason and runSeasonPipeline into the ProfessionalSeason factory: restore their
 // game.js text by removing each inserted state read by exact string and count, then dedent. The prior side is unchanged.
-const professionalSeason=await readFile(new URL('../docs/src/engine/professional-season.js',import.meta.url),'utf8');
+const professionalSeason=canonical(await readFile(new URL('../docs/src/engine/professional-season.js',import.meta.url),'utf8'));
 const seasonFunction=name=>{let text=productionFunction(name,professionalSeason).split('\n  return {')[0];const read='\n    const S=getState();',count={proSeason:1,resumeProfessionalSeason:1,runSeasonPipeline:0}[name];assert.equal(text.split(read).length,count+1,name+' state reads');text=text.replaceAll(read,'');return text.replace(/^  /gm,'');};
 const oldSeason=canonical(productionFunction('proSeason',prior)),newSeason=canonical(seasonFunction('proSeason'));
 assert.equal(newSeason.slice(newSeason.indexOf(' const st=simSeason'),newSeason.indexOf('  Object.assign(continuation,')),
@@ -65,7 +65,7 @@ const effortAnchor='/* 投球強度による成績補正。 */',effortProbe=`win
 function observe(s){if(!s.includes('let s6rng=[]'))s=instrument(s);const n=s.split(effortAnchor).length-1;if(n===1)s=s.replace(effortAnchor,effortAnchor+effortProbe);else assert.ok(n===0&&s.includes('new ProfessionalSeason('),'effort anchor in game.js or ProfessionalSeason');return injectOverlayHook(s,hook+phoenixAwardProbe);}
 function observeSeason(s){assert.equal(s.split(effortAnchor).length,2,'effort anchor in ProfessionalSeason');return s.replace(effortAnchor,effortAnchor+effortProbe);}
 const h=await harness('full-power-pitching'+(part?'-'+part:''));
-async function page(width,pos='P',seed='effort-test',old=false,approved=false){const p=await h.page(width,pos,seed);await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=old?(approved?approvedPhoenixPrior:prior):await response.text();await route.fulfill({response,body:observe(body)});});if(!old&&(await readFile(new URL('../docs/src/engine/game.js',import.meta.url),'utf8')).includes('new ProfessionalSeason('))await p.route('**/src/engine/professional-season.js',async route=>{const response=await route.fetch();await route.fulfill({response,body:observeSeason(await response.text())});});await p.reload();await p.waitForFunction(()=>window.__effortAudit&&!document.querySelector('#btn-start').disabled).catch(error=>{throw Error(error.message+' '+JSON.stringify(h.errors));});await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;}
+async function page(width,pos='P',seed='effort-test',old=false,approved=false){const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=old?(approved?approvedPhoenixPrior:prior):await response.text();await route.fulfill({response,body:observe(body)});});if(!old)await p.route('**/src/engine/professional-season.js',async route=>{const response=await route.fetch();await route.fulfill({response,body:observeSeason(await response.text())});});}});await p.waitForFunction(()=>window.__effortAudit&&!document.querySelector('#btn-start').disabled).catch(error=>{throw Error(error.message+' '+JSON.stringify(h.errors));});return p;}
 const clean=s=>{s=structuredClone(s);delete s.version;return s;};
 const digest=s=>createHash('sha256').update(JSON.stringify(clean(s))).digest('hex');
 const controls=['全力投球','通常投球','省エネ投球'];
