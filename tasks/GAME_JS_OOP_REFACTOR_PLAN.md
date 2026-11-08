@@ -5095,6 +5095,22 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 | G1 `fnv1a32` | 已以雜湊策略注入 `Rng`；6 處依名稱切片 | 不做 |
 | `initializeBrowserSave` 單獨搬 | 組裝接線，留在 `game.js` 合理 | 只隨開局流程處理 |
 
+### 3.24 第 38 期候補盤點（2026-11-08，基準 `refactor/career-entry` `bd3d283`（含第 37 期，未併 dev），`game.js` 507 行／50,305 bytes；靜態分析，未做草稿）
+
+- 方法：scratchpad acorn＋eslint-scope 腳本（同 §3.22）計算頂層宣告的自由名稱、`S` 引用、RNG 直接呼叫與模組變數寫入；測試耦合以 `/usr/bin/grep` 掃 `tests`、`scripts`、`tools`（名稱、`productionFunction` 切片、文字錨點）。腳本不保留。
+- 結構：152 個頂層函式中 121 個 ≤120 bytes 的轉發包裝；28 行組件建構共 12,582 bytes。實質邏輯只剩下表各組。
+- 選期標準：沿用 §3.23 使用者決定（物件導向／擴充性，非 bytes）。
+
+| 候選 | 範圍（約） | 物件導向／擴充的改善 | 主要測試耦合 | 分類 | 判斷 |
+|---|---|---|---|---|---|
+| H 聯盟／球隊目錄 | `LV`、`PATHS`、`LG_N`、`TIER_TH`、`TEAM_COLOR`、`window.TEAM_MASTER`，與 `teamRec`／`teamDisplay`／`listByOrg`／`teamNick`（約 4.5 KB） | 現為台灣版表（`:159` 等）＋日本版 `Object.assign` 覆寫（`:367–383`）兩段定義；`ABL`／`POSN`／`DPN` 的 assign 與原值相同（無作用）。收為單一目錄物件後，新增聯盟／層級只改一處，球隊查詢有單一擁有者 | HOF harness 依 `Object.assign` 就地修改的 `TIER_TH`／`LG_N` 參考（須傳參考）；`career-retirement.js:49` 讀 `window.TEAM_MASTER`；`TIER_TH` 5 檔、`LG_N` 4 檔、`listByOrg` 13 檔（多為注入依賴） | 無 RNG；`LV` 決定成績模擬，保守列 R3，允許差分無 | **第 38 期**（使用者決定 2026-11-08） |
+| I TJ／投手角色／成績格式 | `tjAccrue`、`tjCap`、`pitcherRole`、`isSP`、`roleN`、`statLine`、`fmtIP`、`slgOf`（約 3 KB） | `tjAccrue` 寫 `S.tj`，可移入已持有 `tjGamble` 的 `PlayerInjury`；格式化歸顯示側 | `full-power-pitching` 以 `productionFunction` 切 `tjCap`／`tjAccrue`；`trait-policy` 切 `afterGamble→pitcherRole`；`international-personal-stats` 切 `fmtIP→roleN` | 故障，R3 | 次選（可只做 TJ） |
+| J 特性解放工具 | `traitCard`、`removeTrait`、`displayTrait`、`traitNames`、`checkGoldclothSeason`（約 0.8 KB） | 可併入 `TraitResultCard` 或另立特性物件 | 多個組件的 DEPS 清單注入 | R2–R3 | 小，可與 I 合看 |
+| K 標題畫面接線 | `act-toggle`、`seed-show`／`seed-re`、`seg-pos`、`btn-start`、`btn-restart`、`app-version` | 改善有限。另有兩處被覆蓋的重複綁定：`seed-re`（`:357`，被 `:493` 覆蓋）、`btn-restart`（`:327–331`，被 `:495` 覆蓋，確認文字不同） | `seg-pos` 26 檔 E2E（綁定時機與引擎競態） | 涉及 `SEED`，R3 | 不單獨成期；重複綁定可另作小清理 |
+| L 函式重新指派 | `board`（`:432`）、`movement`（`:474`）、`endGame`（`:478`，台幣→円文字替換）、`seedInit`／`R`（`:400–401`） | 最不物件導向的部分 | `seedInit = function`／`R = function` 被 7 檔以上文字比對，`rng-instrument` 直接替換原始碼；`LEGACY` 22 檔 63 處 | R3 | RNG 兩行不做（同 G1）；`board`／`endGame` 須另行深入調查 |
+
+- H 的待確認事項（立期計畫前以草稿＋4 組 Full 定案）：合併後各表最終值與 `:367–383` 覆寫結果逐鍵相同、物件參考在各組件間維持同一、`window.TEAM_MASTER` 建立時機、HOF harness 與名稱切片是否需調整。分支接在 `refactor/career-entry` 之上或待 PR #68 併 dev 後開，未決。
+
 ## 4. 使用者決定（2026-10-18）
 
 1. 前置 1：D2-G9-RELEASE 殘項未結案，仍可開始第 1 期的本機實作與驗證；重構 PR 併入 `dev` 的時機另行決定。
