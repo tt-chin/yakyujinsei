@@ -30,7 +30,14 @@ try{
     assert.match(await p.locator('#seed-share').innerText(),/同じSeedでも選択やバージョンが異なると結果は変わります/);
     await p.locator('#share-copy-seed').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='Seedをコピーしました。');await p.locator('#share-copy-url').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='リプレイURLをコピーしました。');
     const copied=await p.evaluate(()=>window.__copies),url=await p.locator('#share-url-value').inputValue();assert.deepEqual(copied,[saved?.state.seed||'日本語 +?&%/#"',url]);assert.equal(new URL(url).origin,target);assert.deepEqual([...new URL(url).searchParams.keys()],['seed']);assert.equal(new URL(url).hash,'');
-    const replay=await ctx.newPage();wire(replay);await replay.goto(url);await replay.waitForFunction(()=>!document.querySelector('#btn-start').disabled);assert.equal(await replay.locator('#seed-show').inputValue(),saved?.state.seed||'日本語 +?&%/#"');assert.ok(await replay.locator('#btn-start').isVisible());await replay.close();
+    const replay=await ctx.newPage();wire(replay);await replay.goto(url);await replay.waitForFunction(()=>!document.querySelector('#btn-start').disabled);assert.equal(await replay.locator('#seed-show').inputValue(),saved?.state.seed||'日本語 +?&%/#"');// A second tab shares the valid save: the approved home UI first offers resume/new.
+    assert.deepEqual(await replay.locator('.save-actions button:visible').allTextContents(),['続きから','新しく始める']);
+    assert.equal(await replay.locator('#home-create').isVisible(),false);assert.equal(await replay.locator('#btn-start').isVisible(),false);
+    const readReplaySave=()=>replay.evaluate(async()=>{const {BrowserSaveStore}=await import('/src/engine/browser-save-store.js');const {save,revision}=await new BrowserSaveStore().read();return{save,revision};});
+    const originalSave=await readReplaySave();assert.ok(originalSave.save,'shared context must retain the valid saved career');
+    await replay.locator('#save-new').click();assert.ok(await replay.locator('#home-create').isVisible());assert.ok(await replay.locator('#btn-start').isVisible());
+    assert.equal(await replay.locator('#seed-show').inputValue(),saved?.state.seed||'日本語 +?&%/#"');
+    assert.deepEqual(await readReplaySave(),originalSave,'opening replay creation form must not replace or delete the saved career');await replay.close();
     for(const kind of ['missing','denied']){
       await p.evaluate(kind=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:kind==='missing'?undefined:{writeText:async()=>{throw Error('permission denied');}}}),kind);await p.locator('#share-copy-seed').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent.startsWith('コピーできませんでした。'));assert.ok(await p.locator('#share-seed-value').isVisible());assert.equal(await p.locator('#share-seed-value').inputValue(),saved?.state.seed||'日本語 +?&%/#"');
     }
