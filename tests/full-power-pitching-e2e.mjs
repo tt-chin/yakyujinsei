@@ -36,14 +36,17 @@ const withOriginalEndings=(fn,text)=>{if(fn!=='phasePre')return text;for(const [
 ]){assert.equal(text.split(reported).length,2,reported);text=text.replace(reported,()=>original);}return text;};
 for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(withOriginalEndings(fn,canonical(currentFunction(fn))),withoutDeadBlock(fn,canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();")),'pitching rules unchanged except approved callback'+(fn==='phasePre'?' and deleted dead block':'')+': '+fn);
 // Calculation and accumulation body stays byte-exact; only authorized continuation wiring differs.
-const seasonBody=src=>canonical(productionFunction('proSeason',src));
-const oldSeason=seasonBody(prior),newSeason=seasonBody(current);
+// Phase 35 (§2nn) moved proSeason, resumeProfessionalSeason and runSeasonPipeline into the ProfessionalSeason factory: restore their
+// game.js text by removing each inserted state read by exact string and count, then dedent. The prior side is unchanged.
+const professionalSeason=canonical(await readFile(new URL('../docs/src/engine/professional-season.js',import.meta.url),'utf8'));
+const seasonFunction=name=>{let text=productionFunction(name,professionalSeason).split('\n  return {')[0];const read='\n    const S=getState();',count={proSeason:1,resumeProfessionalSeason:1,runSeasonPipeline:0}[name];assert.equal(text.split(read).length,count+1,name+' state reads');text=text.replaceAll(read,'');return text.replace(/^  /gm,'');};
+const oldSeason=canonical(productionFunction('proSeason',prior)),newSeason=canonical(seasonFunction('proSeason'));
 assert.equal(newSeason.slice(newSeason.indexOf(' const st=simSeason'),newSeason.indexOf('  Object.assign(continuation,')),
  oldSeason.slice(oldSeason.indexOf(' const st=simSeason'),oldSeason.indexOf('  awards(bucket,st);')),'full native season calculations, RNG and accumulation unchanged');
-const continuationBody=productionFunction('resumeProfessionalSeason',current);
+const continuationBody=seasonFunction('resumeProfessionalSeason');
 for(const call of ['awards(entry.bucket,entry.st)','recordSalaryEvaluation(entry.st)','captureSeasonChampionship(S)','tjAccrue()','runSeasonPipeline(0)'])assert(continuationBody.includes(call),'required original continuation '+call);
 // Phase 11-A: the post-season chain runs through runSeasonPipeline; step order and dispatch targets stay the original chain.
-const pipelineBody=productionFunction('runSeasonPipeline',current);
+const pipelineBody=seasonFunction('runSeasonPipeline');
 assert(pipelineBody.includes("const steps=['TJ_GAMBLE','DEMOTION_AUDIT','TRADE_CHECK','INTL_POST'];"),'post-season step order unchanged');
 for(const call of ["case 'TJ_GAMBLE':return tjGamble(cont);","case 'DEMOTION_AUDIT':return demotionAudit(cont);","case 'TRADE_CHECK':return tradeCheck(cont);","case 'INTL_POST':return maybeIntl(cont);",'if(step>=steps.length)return nextStep();','const cont=()=>runSeasonPipeline(step+1);'])assert(pipelineBody.includes(call),'required pipeline dispatch '+call);
 const hook=`
@@ -56,9 +59,13 @@ window.__effortAudit={
  season:()=>{__cs.stepQ=[phaseEnd];proSeason();},get:()=>({inputs:window.__effortInputs,seasons:window.__effortSeasons,tj:window.__effortTJ}),
  step:effort=>{if(S.done)return{done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')).sort((a,b)=>{const priority=n=>['vel','ctl','brk','con','pow','eye','spd'].includes(n.dataset.abilityKey)?0:1;return priority(a)-priority(b)||S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey];});const buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));const b=buttons.find(n=>n.textContent.trim().startsWith(effort))||rows[0]||buttons.find(n=>/現在の球団に残留|宣言残留/.test(n.textContent))||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S)),action=b.textContent,callsBefore=s6rng.length;b.click();return{before,after:JSON.parse(JSON.stringify(S)),action,callsBefore,callsAfter:s6rng.length};}
 };`;
-function observe(s){if(!s.includes('let s6rng=[]'))s=instrument(s);const anchor='/* 投球強度による成績補正。 */';assert.equal(s.split(anchor).length,2);s=s.replace(anchor,anchor+`window.__effortInputs.push({year:S.year,role:S.role,pos:S.pos,effort:S.effort,eventPoints,seasonFactor:S.seasonFactor,maxGames:maxG,st:JSON.parse(JSON.stringify(st)),calls:window.__stage6.get().rng.length});`);return injectOverlayHook(s,hook+phoenixAwardProbe);}
+// Phase 35 (§2nn) moved the effort adjustment into professional-season.js: the same probe goes into that module when game.js no
+// longer has the anchor, and the anchor must exist exactly once in one of the two.
+const effortAnchor='/* 投球強度による成績補正。 */',effortProbe=`window.__effortInputs.push({year:S.year,role:S.role,pos:S.pos,effort:S.effort,eventPoints,seasonFactor:S.seasonFactor,maxGames:maxG,st:JSON.parse(JSON.stringify(st)),calls:window.__stage6.get().rng.length});`;
+function observe(s){if(!s.includes('let s6rng=[]'))s=instrument(s);const n=s.split(effortAnchor).length-1;if(n===1)s=s.replace(effortAnchor,effortAnchor+effortProbe);else assert.ok(n===0&&s.includes('new ProfessionalSeason('),'effort anchor in game.js or ProfessionalSeason');return injectOverlayHook(s,hook+phoenixAwardProbe);}
+function observeSeason(s){assert.equal(s.split(effortAnchor).length,2,'effort anchor in ProfessionalSeason');return s.replace(effortAnchor,effortAnchor+effortProbe);}
 const h=await harness('full-power-pitching'+(part?'-'+part:''));
-async function page(width,pos='P',seed='effort-test',old=false,approved=false){const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=old?(approved?approvedPhoenixPrior:prior):await response.text();await route.fulfill({response,body:observe(body)});});}});await p.waitForFunction(()=>window.__effortAudit&&!document.querySelector('#btn-start').disabled).catch(error=>{throw Error(error.message+' '+JSON.stringify(h.errors));});return p;}
+async function page(width,pos='P',seed='effort-test',old=false,approved=false){const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=old?(approved?approvedPhoenixPrior:prior):await response.text();await route.fulfill({response,body:observe(body)});});if(!old)await p.route('**/src/engine/professional-season.js',async route=>{const response=await route.fetch();await route.fulfill({response,body:observeSeason(await response.text())});});}});await p.waitForFunction(()=>window.__effortAudit&&!document.querySelector('#btn-start').disabled).catch(error=>{throw Error(error.message+' '+JSON.stringify(h.errors));});return p;}
 const clean=s=>{s=structuredClone(s);delete s.version;return s;};
 const digest=s=>createHash('sha256').update(JSON.stringify(clean(s))).digest('hex');
 const controls=['全力投球','通常投球','省エネ投球'];

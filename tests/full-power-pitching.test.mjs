@@ -14,6 +14,12 @@ const PlayerInjury=playerInjurySource?(await import('data:text/javascript,'+enco
 // Phase 34 (§2mm) moved phasePre into the SeasonPhases factory; its body runs in this vm with getState from the context.
 const seasonPhasesSource=source.includes('new SeasonPhases(')?(ref?execFileSync('git',['show',ref+':docs/src/engine/season-phases.js'],{encoding:'utf8'}):fs.readFileSync(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8')):null;
 const phasePreSource=()=>seasonPhasesSource?productionFunction('phasePre',seasonPhasesSource).split('\n  return {')[0]:productionFunction('phasePre',source);
+// Phase 35 (§2nn) moved proSeason/resumeProfessionalSeason/runSeasonPipeline into the ProfessionalSeason factory; for the tested
+// source their bodies come from the module and run in these vms with getState from the context. Other sources are sliced as before.
+const professionalSeasonSource=source.includes('new ProfessionalSeason(')?(ref?execFileSync('git',['show',ref+':docs/src/engine/professional-season.js'],{encoding:'utf8'}):fs.readFileSync(new URL('../docs/src/engine/professional-season.js',import.meta.url),'utf8')):null;
+const seasonText=src=>src===source&&professionalSeasonSource?professionalSeasonSource:src;
+const hasSeasonFunction=(name,src=source)=>seasonText(src).includes('function '+name+'(');
+const seasonFunctionSource=(name,src=source)=>seasonText(src)===src?productionFunction(name,src):productionFunction(name,professionalSeasonSource).split('\n  return {')[0];
 const cases=[];
 const activeLevels=vm.runInNewContext('('+source.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+')');
 function test(id,fn){try{fn();cases.push({id,status:'PASS'});}catch(error){cases.push({id,status:'FAIL',error:error.stack});}console.log(cases.at(-1).status+' '+id);}
@@ -22,7 +28,8 @@ function fixture(v={}){
  const cards=[],choices=[],raw={G:24,IP:120,W:8,L:8,SO:100,H:110,BB:30,ER:53,SV:0,HLD:0,d:0,era:4,WHIP:1.17,form:0,...v.raw};
  const ctx=vm.createContext({S,LV:activeLevels,POS_AB:{P:['sta','vel','ctl','brk'],IF:['sta','con']},clamp:(n,a,b)=>Math.max(a,Math.min(b,n)),R:()=>{throw Error('UNEXPECTED_RNG');},chance:()=>{throw Error('UNEXPECTED_CHANCE');},N0:()=>0,ri:()=>{throw Error('UNEXPECTED_RI');},isSP:()=>S.role==='SP',board:()=>{},card:(...a)=>cards.push(a),choose:(title,opts)=>choices.push({title,opts}),tjGamble:()=>{},addAb:(k,n)=>S.ab[k]+=n,declineForSeason:()=>0,bucketOf:()=> 'NPB',simSeason:()=>structuredClone(raw),applyEventSeason,normalizeEventSeason,consumeEventSeason:s=>s.pendStat=0,accStat:()=>{},accLevelStat:()=>{},statLine:s=>JSON.stringify(s),awards:()=>{},recordSalaryEvaluation:()=>{},captureSeasonChampionship:()=>{},classifyMarketInjury:()=> 'HEALTHY',toolGap:()=>({gap:0}),careerAllStars:()=>0,displayTrait:k=>k,PlayerInjury,ABL:{}});
  ctx.seasonContinuations=new WeakMap();ctx.resumeSeasonEnd=()=>false;ctx.restorePendingChoice=()=>false;ctx.getState=()=>S;
- for(const name of ['tjCap','tjAccrue','proSeason',...(source.includes('function resumeProfessionalSeason(')?['resumeProfessionalSeason']:[]),...(source.includes('function runSeasonPipeline(')?['runSeasonPipeline']:[])])vm.runInContext(productionFunction(name,source),ctx);
+ for(const name of ['tjCap','tjAccrue'])vm.runInContext(productionFunction(name,source),ctx);
+ for(const name of ['proSeason',...(hasSeasonFunction('resumeProfessionalSeason')?['resumeProfessionalSeason']:[]),...(hasSeasonFunction('runSeasonPipeline')?['runSeasonPipeline']:[])])vm.runInContext(seasonFunctionSource(name),ctx);
  vm.runInContext(phasePreSource(),ctx);
  return{S,ctx,cards,choices,raw,run:code=>vm.runInContext(code,ctx)};
 }
@@ -36,14 +43,14 @@ for(const v of [{pos:'IF'},{seasonFactor:0}])test('F09-tj-guard-'+JSON.stringify
 test('F09-pre-full-rest',()=>{const h=fixture({rehab:1});h.ctx.checkGoldclothSeason=()=>{};h.ctx.ri=()=>{throw Error('TRAINING_START');};assert.throws(()=>h.run('phasePre()'),/TRAINING_START/);assert.ok(!h.choices.some(c=>c.title.includes('投球プラン')));assert.equal(h.S.seasonFactor,0);});
 for(const role of ['SP','MR','CL'])test('F11-original-simulation-'+role,()=>{const runs=[];for(const effort of ['全力投球','通常投球']){const h=fixture({role,effort});let n=0;const values=[];h.ctx.R=()=>{const r=((++n*16807)%2147483647)/2147483647;values.push(r);return r;};h.ctx.N0=sd=> (h.ctx.R()+h.ctx.R()+h.ctx.R()+h.ctx.R()-2)*sd;h.ctx.chance=p=>h.ctx.R()*100<p;h.ctx.ri=(a,b)=>a+Math.floor(h.ctx.R()*(b-a+1));if(SeasonStats){const seasonStats=new SeasonStats({getState:()=>h.S,levels:h.ctx.LV,rng:{R:()=>h.ctx.R(),N0:sd=>h.ctx.N0(sd),chance:p=>h.ctx.chance(p),ri:(a,b)=>h.ctx.ri(a,b)},clamp:h.ctx.clamp,isSP:()=>h.ctx.isSP(),pitcherRole:()=>h.ctx.pitcherRole(),checkGoldclothSeason:()=>h.ctx.checkGoldclothSeason()});runs.push({st:JSON.parse(JSON.stringify(seasonStats.simSeason("NPB1"))),values});}else{h.run(productionFunction('applySeasonForm',source));h.run(productionFunction('simSeason',source));runs.push({st:JSON.parse(h.run('JSON.stringify(simSeason("NPB1"))')),values});}}assert.deepEqual(runs[0],runs[1]);});
 // Phase 11-A: the post-season dispatch keeps the original chain's call order, continuation count and entry.phase timing.
-if(source.includes('function resumeProfessionalSeason(')){
+if(hasSeasonFunction('resumeProfessionalSeason')){
  const pipelineBase=execFileSync('git',['show','ec903fd3cac9f62a457dbed18effe8065510679d:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
  const pipeline=['tjGamble','demotionAudit','tradeCheck','maybeIntl','nextStep'];
  function pipelineTrace(src,mode,at){
   const S={year:2035},entry={state:S,year:2035,phase:'PIPELINE_PREPARED'},calls=[],deferred=[];
-  const ctx=vm.createContext({S,entry});
+  const ctx=vm.createContext({S,entry,getState:()=>S});
   for(const name of pipeline)ctx[name]=cont=>{calls.push([name,entry.phase]);if(name===at&&mode==='throw')throw Error('PIPELINE_FAULT_'+name);if(name===at&&mode==='defer'){deferred.push(cont);return;}if(cont)cont();};
-  vm.runInContext("'use strict';\n"+['resumeProfessionalSeason',...(src.includes('function runSeasonPipeline(')?['runSeasonPipeline']:[])].map(n=>productionFunction(n,src)).join('\n'),ctx);
+  vm.runInContext("'use strict';\n"+['resumeProfessionalSeason',...(hasSeasonFunction('runSeasonPipeline',src)?['runSeasonPipeline']:[])].map(n=>seasonFunctionSource(n,src)).join('\n'),ctx);
   let error=null;try{vm.runInContext('resumeProfessionalSeason(entry)',ctx);}catch(e){error=e.message;}
   calls.push(['RETURNED',entry.phase,error]);
   while(deferred.length)deferred.shift()(); // the player's choose() tap resumes the deferred layer

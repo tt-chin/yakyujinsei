@@ -83,3 +83,11 @@ feature/browser-saveの製品commitはccd1ac2b109fd34812c0a5588558376b8a87ab1a�
 本機僅限定七項，未執行整套Full：startup-seven-r1為4 PASS／3 FAIL（1140.969秒）；3項全力投球在Windows因phasePre字串切片前未統一CRLF而立即FAIL。將season-phases.js讀取後、切片前正規化CRLF，再以startup-pitching-r2限定重測3項，3 PASS／0 FAIL（1036.908秒）。其他4項的來源及共用helper未再變動，保留原PASS。七項最終各自PASS，不把原r1的FAIL改寫，也不將限定結果稱為Full105 PASS。
 
 修改6個測試檔及本紀錄，產品、VERSION、CI、Runner、manifest、golden均未改動。接著提交／push feature分支，完整Full105交由GitHub Actions取得全新結果；不在本機跑整套Full、不合併dev／main或正式部署。第一期仍須新CI Full及實機驗收，不提前結案。
+
+### dev PR #64 合併相容性（2026-11-08）
+
+原分支 06eb583e30cf61d300ef0a6b82209f0070cde8f6 的 Linux Full 42445951072：105 PASS／0 FAIL／0 SKIP／0 BLOCKED，8 批及 Aggregate PASS。此結果僅屬原受驗 SHA。
+
+合入 dev d3d2a53f78537f3de90befd8438c08a65049edfc，保留 PR #64 ProfessionalSeason 重構。BACKLOG 保留存檔未完成項目及 dev 的歷史紀錄；全力投球 E2E 保留首次導航前安裝 fixture，並將相同探針接到抽離後的 ProfessionalSeason。模組文字在切片前統一換行，不放寬原規則／S／RNG 斷言。新增的 ProfessionalSeason 入口使合併後 Full 為 106，批次工具期待數同步更新，未減少測試。
+
+限定驗證：ProfessionalSeason 29 情境 PASS；存檔 Runtime 在 1280／320／390px 的年度還原 S／RNG、失敗保護及重試、雙分頁衝突與資料庫拒絕情境 PASS；批次工具 31 PASS／0 FAIL／1 SKIP（Linux 專用案例於 Windows 未執行）；235 個 JS 語法 PASS。本機未執行 Full。合併後整套 Quick／Full、Preview、iPhone Safari／Android Chrome 實機尚未驗證，不能沿用原 SHA 的 Full 105 PASS。ARTIFACT_COVERAGE_BLOCKED 維持獨立追蹤。
