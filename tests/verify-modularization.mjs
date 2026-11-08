@@ -21,6 +21,7 @@ const shareImage = await read('docs/src/ui/share-image.js');
 const initialState = await read('docs/src/engine/initial-state.js');
 const careerEntryModule = await read('docs/src/engine/career-entry.js');
 const leagueCatalogModule = await read('docs/src/engine/league-catalog.js');
+const playerInjuryModule = await read('docs/src/engine/player-injury.js');
 
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/jp-theme\.css">/);
@@ -143,6 +144,15 @@ for(const line of [
   for(const name of ['new LeagueCatalog(','const TEAM_COLOR=','const LV=','const PATHS=','const TIER_TH=','const LG_N=','window.TEAM_MASTER','function teamNick(','function teamRec(','function teamDisplay(','function listByOrg('])assert.equal(text.split(name).length,2,'league catalog wiring only once: '+name);
   for(const gone of ['Object.assign(LV','Object.assign(PATHS','Object.assign(LG_N','Object.assign(TIER_TH','Object.assign(ABL','Object.assign(POSN','Object.assign(DPN','typeof LG_N','typeof TIER_TH',"'台中マンモス'",'DATA.teams.map(','DATA.teams.filter(','for(const t of DATA.teams)'])assert.ok(!text.includes(gone),'moved into LeagueCatalog: '+gone);
   for(const moved of ["'台中マンモス':'#ffd800'","'台中マンモス':'マンモス'",'teams.map(x=>[x.teamId,Object.freeze(x)])','.filter(t=>t.org===o&&t.active)',"NPB_DEV:{n:'NPB育成'"])assert.equal(catalog.split(moved).length,2,'in LeagueCatalog once: '+moved);
+}
+{// Phase 39: the TJ gauge accrual and cap moved into PlayerInjury (accrueTj, tjGaugeLimit). tjAccrue and tjCap stay game.js
+  // wrappers (ProfessionalSeason, SeasonPhases, CareerPresenter and E2E hooks reach them by name), and PlayerInjury still gets
+  // tjCap as an injected lambda, so tjGamble reads the cap through the game.js name.
+  const text=sourceText(game),injury=sourceText(playerInjuryModule);
+  assert.equal(text.split('\nfunction tjAccrue(){return playerInjury.accrueTj();}\nfunction tjCap(){return playerInjury.tjGaugeLimit();}\n').length,2,'TJ wrappers, once');
+  assert.equal(text.split(',tjCap:()=>tjCap()').length,4,'tjCap lambda for PlayerInjury, SeasonPhases and CareerPresenter');
+  for(const gone of ["{'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}",'S.tj+=base','return S.traits.rubber?100:50'])assert.ok(!text.includes(gone),'moved into PlayerInjury: '+gone);
+  for(const moved of ["{'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}",'S.tj+=base','return S.traits.rubber?100:50','  accrueTj(){this.#rules.accrueTj();}\n  tjGaugeLimit(){return this.#rules.tjGaugeLimit();}\n','return {tjGamble,afterGamble,rollInjury,accrueTj,tjGaugeLimit};'])assert.equal(injury.split(moved).length,2,'in PlayerInjury once: '+moved);
 }
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);

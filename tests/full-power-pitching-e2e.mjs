@@ -25,7 +25,12 @@ const canonical=s=>s.replaceAll('\r\n','\n');
 const seasonPhases=canonical(await readFile(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8'));
 const restoredPhasePre=()=>{let text=productionFunction('phasePre',seasonPhases).split('\n  return {')[0];for(const [read,count] of [['\n    const S=getState();',1],['const S=getState();',7]]){assert.equal(text.split(read).length,count+1,'phasePre state reads: '+JSON.stringify(read));text=text.replaceAll(read,'');}return text.replace(/^  /gm,'');};
 const phasePreWrapper='function phasePre(){return seasonPhases.phasePre();}';
-const currentFunction=fn=>{const sliced=productionFunction(fn,current);if(fn!=='phasePre')return sliced;assert.ok(sliced.startsWith(phasePreWrapper),'phasePre wrapper');return restoredPhasePre()+sliced.slice(phasePreWrapper.length);};
+// Phase 39 (§2rr) moved tjAccrue/tjCap into PlayerInjury as accrueTj/tjGaugeLimit: restore the game.js text the same way (remove the
+// inserted state read by exact string and count, rename, dedent) in place of the game.js wrapper. The prior side is unchanged.
+const playerInjury=canonical(await readFile(new URL('../docs/src/engine/player-injury.js',import.meta.url),'utf8'));
+const movedTj={tjAccrue:['function tjAccrue(){return playerInjury.accrueTj();}','accrueTj','\n    const S=getState();'],tjCap:['function tjCap(){return playerInjury.tjGaugeLimit();}','tjGaugeLimit',' const S=getState();']};
+const restoredTj=fn=>{const [wrapper,method,read]=movedTj[fn];assert.equal(productionFunction(fn,current),wrapper,fn+' wrapper');let text=productionFunction(method,playerInjury).split('\n  return {')[0];assert.equal(text.split(read).length,2,fn+' state read');text=text.replace(read,'').replace('function '+method+'(','function '+fn+'(');return text.replace(/^  /gm,'');};
+const currentFunction=fn=>{if(movedTj[fn])return restoredTj(fn);const sliced=productionFunction(fn,current);if(fn!=='phasePre')return sliced;assert.ok(sliced.startsWith(phasePreWrapper),'phasePre wrapper');return restoredPhasePre()+sliced.slice(phasePreWrapper.length);};
 // Phase 4-A deleted phasePre's unreachable college-path block (comment + if(false){...}); drop it from the prior side only.
 const withoutDeadBlock=(fn,text)=>{if(fn!=='phasePre')return text;const a=text.indexOf('  /* 大學季前'),b=text.indexOf("  if(S.stage==='PRO'&&S.age>=36",a);assert.ok(a>0&&b>a&&text.slice(a,b).includes('if(false){'),'dead block in prior phasePre');return text.slice(0,a)+text.slice(b);};
 // Phase 11-B batch 4: phasePre's year endings report through reportFlowOutcome; restore only these exact calls on the current side.

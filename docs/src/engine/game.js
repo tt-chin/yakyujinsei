@@ -143,13 +143,8 @@ function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
 /* 一芸特化：評価対象は三つの役割軸のみ——打撃(長打力/Contact)、走塁(速度)、守備(総合)。 */
 function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
 function toolGap(){return toolGapFor(S.ab,S.pos);}
-function tjAccrue(){ /* 毎季TJゲージを蓄積する。球速と変化球が高いほど負担が増え、投球強度で倍率を決める。 */
-  if(S.pos!=='P'||S.seasonFactor<=0)return;
-  const mult={'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}[S.effort]||1.0;
-  const base=(S.ab.vel+S.ab.brk)/19*mult*(S.tjCount>=1?1.15:1); /* 手術歴がある場合はTJゲージの蓄積を速める。 */
-  S.tj+=base;
-}
-function tjCap(){ return S.traits.rubber?100:50; }
+function tjAccrue(){return playerInjury.accrueTj();}
+function tjCap(){return playerInjury.tjGaugeLimit();}
 function afterGamble(kind,cont){playerInjury.afterGamble(kind,cont);}
 function tjGamble(cont){playerInjury.tjGamble(cont);}
 const playerInjury=new PlayerInjury({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,v)=>addAb(k,v),board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),removeTrait:(key,label)=>removeTrait(key,label),tjCap:()=>tjCap(),rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}});
