@@ -4502,7 +4502,15 @@ T6 使 Quick 由 80 增為 81、Full 由 106 增為 107（`test.mjs list` 自動
 
 ### 2oo.5 驗證與交付（R3：Receipt；允許差分見 D6）
 
-- 實作：草稿檔複製至分支並核對逐位元組相同；Quick、本機 Full 於最終程式重跑；reviewer；push、PR 依 AGENTS §10 另批。
+- 實作：草稿 8 檔複製至分支，逐位元組相同（`cmp`）。commit `a08764f`（計畫 commit `c490b0a` 在前）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，HEAD `a08764f`） | 81／81 PASS，依 `summary.json` 核對 |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `a08764f`） | `PASS`，`expected 107`、`acceptedPass 107`、`issues []`，plan 107 入口、8 批全數執行，`sourceChanged false`，1,108 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：`typeof document` 改在主 realm 判定（4 個 vm 情境都沒有注入 `document`）、錯誤改由主 realm 丟出（沒有 `instanceof` 判斷）、`renderReceipts` 無讀取端、owner 皆為物件、`card`／`logTarget` 無繞過路徑、import 路徑大小寫 |
+
+- 未做：Linux CI、Preview、實機確認。push、PR 依 AGENTS §10 另批。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -5013,7 +5021,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 第 33 期 B：草稿與抵達探測已做（基準 `9233cfc`），D1–D7 已決定（2026-11-04，`MovementGate`、疊在 `refactor/year-flow` 上），T1–T5 與實作已批准（2026-11-04），與第 32 期同經 PR #59 併入 dev（`7234965`），見 §2ll。
 - 第 34 期 E＋C：草稿與抵達探測已做（基準 `7234965`），D1–D8、T1–T6 與實作已批准（2026-11-07，`SeasonPhases`），於 `refactor/season-phases` 實作，經 PR #62 併入 dev（`ef7768e`），隨 PR #63 發布至 main（`a8859b9`），Linux Full 99／99 PASS，見 §2mm.6。
 - 第 35 期 D：草稿、抵達探測與草稿 Full 已做（基準 `1a74e71`），D1–D10、T1–T8 與實作已批准（2026-11-08，`ProfessionalSeason`），於 `refactor/pro-season` 實作（`4df368b`，Quick 75／75、本機 Full 100／100 PASS，macOS＋Brave 本機證據），經 PR #64 併入 dev（`d3d2a53`），Tests #156 Linux Full 100／100 PASS，見 §2nn.5。
-- 第 36 期 F：§3.23 依物件導向／擴充標準選出；草稿、抵達與接縫探測、草稿 Full 已做（基準 `c62cd4a`），D1–D7、T1–T6 與實作已批准（2026-11-08，`CheckpointRenderer`、`WeakMap`），於 `refactor/checkpoint-renderer` 實作，見 §2oo。
+- 第 36 期 F：§3.23 依物件導向／擴充標準選出；草稿、抵達與接縫探測、草稿 Full 已做（基準 `c62cd4a`），D1–D7、T1–T6 與實作已批准（2026-11-08，`CheckpointRenderer`、`WeakMap`），於 `refactor/checkpoint-renderer` 實作（`a08764f`，Quick 81／81、本機 Full 107／107 PASS，macOS＋Brave 本機證據），尚未 push，見 §2oo.5。
 
 ### 3.23 第 36 期候補再盤點（2026-11-08，基準 `c62cd4a`，`game.js` 518 行／51,705 bytes；靜態分析）
 
