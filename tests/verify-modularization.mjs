@@ -19,6 +19,7 @@ const [html, config, data, game, main, baseCss, themeCss] = await Promise.all([
 ]);
 const shareImage = await read('docs/src/ui/share-image.js');
 const initialState = await read('docs/src/engine/initial-state.js');
+const careerEntryModule = await read('docs/src/engine/career-entry.js');
 
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/jp-theme\.css">/);
@@ -113,6 +114,19 @@ for(const line of [
   for(const name of ['new CheckpointRenderer(','checkpointRenderer.render(','function renderCheckpointCard('])assert.equal(text.split(name).length,2,'checkpoint renderer wiring only once: '+name);
   for(const gone of ['renderReceipts','RESULT_RENDER_AMBIGUOUS','AMBIGUOUS','card appends synchronously'])assert.ok(!text.includes(gone),'moved into CheckpointRenderer: '+gone);
 }
+{// Phase 37: new and resumed careers. startJapanese stays a game.js name (btn-start and the smallschool E2E hook call it);
+  // the constructor follows the wrapper and injects S/SEED accessors, careerSession by reference and every game.js function
+  // as a late-binding lambda, so E2E rebinding of card, startYear, R and seedInit still reaches both entry paths. The restore
+  // callback keeps hydrateSavedState and hands the candidate to careerEntry.resume.
+  const text=sourceText(game);
+  for(const line of [
+    "\nimport { ProfessionalSeason } from './professional-season.js';\nimport { CareerEntry } from './career-entry.js';\n",
+    "\n  function startJapanese(){careerEntry.startNew();}\n  const careerEntry=new CareerEntry({getState:()=>S,setState:state=>{S=state;},getSeed:()=>SEED,setSeed:seed=>{SEED=seed;},careerSession,CareerSession,POSN,$:id=>$(id),getNavigation:()=>navigation,normalizeSeed:raw=>normalizeSeed(raw),generateSeed:()=>generateSeed(),normalizePlayerName:(raw,seed,pos)=>normalizePlayerName(raw,seed,pos),seedInit:str=>seedInit(str),newState:(name,pos)=>newState(name,pos),escapeHTML:v=>escapeHTML(v),card:(...args)=>card(...args),actClear:()=>actClear(),startYear:()=>startYear()});\n",
+    "\n  const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});\n  careerEntry.resume(candidate);\n }});\n",
+  ])assert.equal(text.split(line).length,2,'career entry wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new CareerEntry(','careerEntry.startNew(','careerEntry.resume(','function startJapanese('])assert.equal(text.split(name).length,2,'career entry wiring only once: '+name);
+  for(const gone of ['選手誕生','S=newState(nm,pos)','S=candidate;SEED=S.seed','Object.keys(careerSession)','new CareerSession(),{choiceGeneration',"querySelector('#seg-pos button.on')","$('in-name').value"])assert.ok(!text.includes(gone),'moved into CareerEntry: '+gone);
+}
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
@@ -121,12 +135,12 @@ assert.match(html, /<h1 id="logo-tap"><em>野球人生シミュレーター<\/em
 assert.doesNotMatch(html, /v1\.0\.0/);
 assert.match(game, /appVersion\.textContent='v'\+VERSION/);
 
-const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}`;
+const forbidden = `${html}\n${config}\n${data}\n${game}\n${main}\n${careerEntryModule}`;
 assert.doesNotMatch(forbidden, /UNSUPPORTED_REPLAY_VERSION/);
 assert.doesNotMatch(forbidden, /[?&]rv=/);
 assert.doesNotMatch(forbidden, /[?&]rules=/);
 assert.match(await read('docs/src/engine/career-retirement.js'), /replayURL\(getState\(\)\.seed\|\|getSeed\(\),location\.href\)/);
-assert.match(game, /history\.replaceState\(null,'',`\?seed=\$\{encodeURIComponent\(SEED\)\}`\)/);
+assert.equal(careerEntryModule.split("history.replaceState(null,'',`?seed=${encodeURIComponent(getSeed())}`)").length,3,'new and resumed careers both write the seed-only URL');
 
 assert.equal((data.match(/"teamId"/g) || []).length, 90);
 assert.equal((data.match(/"schoolId"/g) || []).length, 85);

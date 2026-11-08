@@ -4513,6 +4513,64 @@ T6 使 Quick 由 80 增為 81、Full 由 106 增為 107（`test.mjs list` 自動
 - 交付：連同 `TEST-VACUOUS-ASSERT-01`（`ab4fbb1`）經 PR #66 併入 dev（`ea89c15`）。dev push Quick Tests #160 PASS；手動 Full Tests #161（Run 42464271804）Linux 107／107 PASS（8 批及 Aggregate PASS）。dev Preview 內容與 `ea89c15` 逐位元組一致。
 - 未做：實機確認、main 發布。
 
+## 2pp. 第 37 期：開局流程移至 `CareerEntry`（細部計畫，2026-11-08；D1、D3 與實作批准 2026-11-08）
+
+§3.23 的「開局流程」候補。原定待 BROWSER-SAVE-01 驗收完成後另立一期；**使用者決定（2026-11-08）不等 BROWSER-SAVE-01 驗收結案即開始**（排程決定，不改變 BROWSER-SAVE-01 的狀態與 checkbox，Android Chrome 實機仍 NOT_RUN）。維護收益：新規開始與讀檔續玩由同一個物件提供，兩者共用的畫面切換與導覽初始化只寫一次；`careerSession` 的就地重建不再寫在 `game.js` 的 restore callback 裡。兩條路徑真正相同的只有 5 句，收益有限，使用者知悉後決定實作。
+
+### 2pp.1 現況（基準 `950795e`（PR #67 併入後；`docs/src`、`tests` 與 `ea89c15` 相同），`game.js` 506 行／50,983 bytes）
+
+- `:485` `startJapanese()`（一行）：決定 seed（`seed-show` 欄位→URL `seed`→`generateSeed`）、`SEED=sv`、讀 `#seg-pos`、`normalizePlayerName`、`S={rngState:0};seedInit(SEED);S=newState(nm,pos)`、`history.replaceState`（seed-only）、`start`／`board`／`act` 顯示切換、`navigation.reset/show`、「選手誕生」卡、`startYear()`。
+- `:501–:504` `initializeBrowserSave` 的 restore callback：`hydrateSavedState(...)`、`careerSession` 就地重建（`choiceGeneration+1`、刪除全部 key、`Object.assign(new CareerSession(),…)`）、`S=candidate;SEED=S.seed`、清 `#log`、`actClear`、`#app` flex、相同的顯示切換與 `navigation.reset/show`、`history.replaceState`、`startYear()`。
+- 兩條路徑的 `history.replaceState` 位置不同：開局在顯示切換之前，續玩在 `navigation.show()` 之後。
+- 耦合：`tests/smallschool-c-e2e.mjs:13` 的 hook 依名稱呼叫 `startJapanese()`；`stage10-risk-e2e`、`contract-salary-e2e`、`support/stage6-browser` 的 hook 在 `game.js` scope 使用 `S`／`SEED`／`seedInit`／`newState`／`actClear`（名稱保留，不受影響）；`verify-modularization:129` 斷言 `game.js` 含 seed-only `replaceState`。`main.js` 由 `display-preferences.test:22`、`award-identity-policy.test:184` 逐字固定，本期不動。兩段本體的 18 字 n-gram 掃描（1,293 片段，`tests`、`scripts`、`tools`、`docs/src`）只命中通用片段（`document.querySelector`、`encodeURIComponent` 等）、上述 hook 與 `approved-school-oracle`（只改寫舊基準的出生卡文字，現行原始碼於第一行 return）；沒有錨定搬移本體的文字耦合。`btn-start` 的 38 個檔案都是 DOM id 操作。
+
+### 2pp.2 設計（使用者決定 2026-11-08：D1 名稱、D3 replaceState 保留原位；其餘依建議）
+
+| # | 內容 | 決定／建議 |
+|---|---|---|
+| D1 | 位置與名稱 | **已決定**：新檔 `docs/src/engine/career-entry.js`，類別 `CareerEntry`，方法 `startNew()`、`resume(candidate)`，實例 `careerEntry`。放 engine：會設定 `S` 並觸發 RNG |
+| D2 | `hydrateSavedState` | 留在 `game.js` restore callback（需要 `DATA`、`teamRec`、`teamDisplay`、`traitPresentation`、`authorization`）；callback 只剩 hydrate＋`careerEntry.resume(candidate)`。hydrate 失敗時不重建 `careerSession`，與原本相同 |
+| D3 | 共用段 | **已決定**：內部 `enter()` 只含兩條路徑逐字相同的 5 句；`history.replaceState` 保留各自原位，無允許差分 |
+| D4 | `document`／`location`／`history` | 模組內直接使用全域，與原本相同；沒有 vm 測試切片這兩段 |
+| D5 | 包裝 | `function startJapanese(){careerEntry.startNew();}` 留原位（`btn-start`、smallschool hook），建構行緊接其後；import 接在 `ProfessionalSeason` 之後 |
+| D6 | 依賴 | 依 §2nn 的 rules 閉包形式。`getState`／`setState`／`getSeed`／`setSeed` 讀寫 `game.js` 的 `let S`／`SEED`，每次讀取皆即時取得（出生卡在 `enter()` 之後才 `getState()`）；`careerSession` 傳參考、`CareerSession`、`POSN` 直接傳；`navigation` 以 `getNavigation:()=>navigation` 延遲取得（宣告在建構行之後）；其餘 `game.js` 函式皆為延遲綁定 lambda |
+| D7 | 分類與允許差分 | R3（seed、RNG、`S`、`careerSession`）。允許差分：無 |
+| D8 | 分支 | 自 `origin/dev`（`950795e`）以 `--no-track` 開 `refactor/career-entry`；第一個 commit 為本計畫與 §3.23 |
+
+### 2pp.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `verify-modularization` | `:129` 的 seed-only `replaceState` 斷言改指向 `career-entry.js`（恰好 2 處：開局、續玩）；`career-entry.js` 加入 `rv`／`rules` 禁止掃描；第 37 期區塊：import 兩行、包裝＋建構行、restore callback 結尾各恰好一次；`new CareerEntry(`／`careerEntry.startNew(`／`careerEntry.resume(`／`function startJapanese(` 各一次；`選手誕生`、`S=newState(nm,pos)`、`S=candidate;SEED=S.seed`、`Object.keys(careerSession)`、`new CareerSession(),{choiceGeneration`、`#seg-pos button.on`、`$('in-name').value` 不在 `game.js` |
+| T2 | `career-entry.test`（新） | 第 1 部分：模組＝檔頭＋`950795e` 兩段本體加列出的替換（每處次數 1）。第 2 部分：舊本體於 vm、類別於主 realm，同一組 stub（`$` 元素的 style 寫入、`location.search`、`history.replaceState`、`querySelector`、`navigation`、`card`、`startYear` 等皆記錄呼叫及當下 `S`／`SEED`），13 組逐呼叫比較：開局 8 組（seed 來源 3 種、無守位按鈕、HTML 名稱、C 級、`newState`／`show`／`card`／`startYear` 丟錯）、`show` 期間替換 `S` 1 組、續玩 4 組（含 `careerSession` 額外 key、`show`／`startYear` 丟錯）；到達斷言（各故障、`careerSession` 就地重建、3 種 seed 來源、兩路徑 `replaceState` 相對 `navigation.show` 的順序）；測試內負控制 3 項（開局 `replaceState` 移到 `enter()` 後、略過 `careerSession` 刪除、`getState()` 移到 `enter()` 前） |
+
+T2 使 Quick 由 81 增為 82、Full 由 107 增為 108。
+
+### 2pp.4 草稿實測（2026-11-08，scratch worktree；先於 `ea89c15`，PR #67 併入後移至 `950795e`（`docs/src`、`tests` 相同）；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 `git show` 產生；兩段本體與原文只差 2pp.3 T2 第 1 部分列出的替換；`game.js` +4／−3（CRLF 保留，restore callback 原為 LF 亦保留），模組 LF |
+| AST | `game.js` 未解析名稱不變，未使用 import 105→105；模組未解析名稱只有 `Object`、`URLSearchParams`、`document`、`encodeURIComponent`、`history`、`location` |
+| 未改測試的 Quick | 80／81，FAIL：`verify-modularization`（`:129` 的 seed-only `replaceState` 已移出 `game.js`） |
+| T1–T2 後的 Quick | 82／82 PASS（依 `summary.json`，含新入口） |
+| 本機 8 批 Full（`local-full-batches.mjs`，`950795e` 內含 memgate 修正） | `PASS`，`expected 108`、`acceptedPass 108`、`issues []`，plan 108 入口全數執行，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,146 秒 |
+| 抵達探測（舊＝`ea89c15`、新＝草稿；頁面掛鉤重綁 `R`、`card`、`startYear`） | 7／7 新舊一致：開局 4 組（`probe37-a` P、`-b` IF＋名稱、`-c` OF、`-d` C＋HTML 名稱）＋C 級高校 1 組（`probe37c6`），開局後再 60 步；續玩 2 組（`probe37-r1` P、`-r2` IF：2027 存檔→重載→`#save-continue`→60 步）。比較 `S` 雜湊、RNG 抽取次數與值、`#log` 雜湊、卡片標題序列、`startYear` 次數、`careerSession`、URL、顯示狀態 |
+| 接縫負控制（建構行改 `card:(...args)=>gameView.card(...args)`、`startYear:()=>yearFlow.startYear()`） | 開局 5／5 與舊不同：掛鉤少 1 張卡（出生卡）、`startYear` 0 次。續玩路徑在此版不存檔，探測逾時而無結果；續玩的抵達由新版重載後 `startYear` 1 次（唯一呼叫端）證明 |
+| 突變（新寫的斷言） | 7／7 抓到，皆為 `ERR_ASSERTION`，檔案逐位元組還原。T1：包裝改呼叫 `resume`、`card` 繞過注入、restore 改呼叫 `startNew`、續玩 URL 加 `&rv=1`、`選手誕生` 留在 `game.js`（放在接線行會被接線斷言先抓到，改放檔尾後由「moved into」斷言抓到）。T2：`#app` 改 `block`、續玩先設 seed 後設 state。T2 第 2 部分另有測試內負控制 3 項；第 3 項（`getState()` 移到 `enter()` 前）在原有 stub 下為等價突變，加入 `show` 期間替換 `S` 的情境後抓到 |
+
+### 2pp.5 驗證與交付（R3：seed、RNG、`S`、`careerSession`；允許差分無）
+
+- 實作：草稿 4 檔複製至分支，逐位元組相同（`cmp`）。commit `8b489b2`（計畫 commit `417accc` 在前）。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（乾淨 worktree，HEAD `8b489b2`） | 82／82 PASS，依 `summary.json` 核對（含 `career-entry.test`） |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `8b489b2`） | `PASS`，`expected 108`、`acceptedPass 108`、`issues []`，plan 108 入口、8 批全數執行，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,153 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：兩路徑逐句對照（`S`／`SEED` 讀寫順序、出生卡的 `getState()` 在 `navigation.show()` 之後）、建構行與 `navigation` 的 TDZ、延遲綁定 lambda 的 hook 抵達（`POSN`、`CareerSession` 為不可變綁定，非 hook 對象）、錨定搬移本體的文字 hook 0 處、`career-session-access` 探測欄位仍在 `game.js`、例外時狀態一致、新測試的模式歸屬與負控制、斷言未放寬、import 路徑大小寫 |
+
+- 交付：PR 至 dev（待開）。未做：Linux CI Full、Preview、實機確認、main 發布。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -5032,7 +5090,7 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 | 候選 | 物件導向／擴充的改善 | 判斷 |
 |---|---|---|
 | F `renderCheckpointCard` | 收據狀態離開業務物件，描畫收據由單一類別負責 | 第 36 期（§2oo） |
-| 開局流程（`startJapanese`＋`initializeBrowserSave` 的 restore callback） | 兩條路徑重複開局流程（設 `S`／`SEED`、切換畫面、`navigation.reset/show`、`history.replaceState`、`startYear`），restore 直接 `delete careerSession[k]`；可由一個物件提供 `startNew()`、`resume(state)` 共用同一段進入流程。眼前的收益是消除重複；更多入口（匯入／匯出、多存檔槽）目前不在設計內 | **待 BROWSER-SAVE-01 驗收完成**後另立一期；涉及 seed，R3 |
+| 開局流程（`startJapanese`＋`initializeBrowserSave` 的 restore callback） | 兩條路徑重複開局流程（設 `S`／`SEED`、切換畫面、`navigation.reset/show`、`history.replaceState`、`startYear`），restore 直接 `delete careerSession[k]`；可由一個物件提供 `startNew()`、`resume(state)` 共用同一段進入流程。眼前的收益是消除重複；更多入口（匯入／匯出、多存檔槽）目前不在設計內 | 原定**待 BROWSER-SAVE-01 驗收完成**後另立一期；使用者決定（2026-11-08）不等驗收結案即開始，為第 37 期（§2pp）；涉及 seed，R3 |
 | G2 seed／名稱工具（`normalizeSeed` 等 5 個） | 無狀態純函式，只是拆檔 | 不做 |
 | G1 `fnv1a32` | 已以雜湊策略注入 `Rng`；6 處依名稱切片 | 不做 |
 | `initializeBrowserSave` 單獨搬 | 組裝接線，留在 `game.js` 合理 | 只隨開局流程處理 |
