@@ -131,11 +131,11 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
         /* 初回投票選出基準：評価点が基準を明確に上回る(1.15×名人堂基準)場合のみ first-ballot、それ以外は需等 N 年。 */
         const th=TIER_TH[b][0];
         const fbMult={CPBL:1.15,KBO:1.15,NPB:1.12,MLB:1.2}[b]||1.2;
-        const firstNow = t.sc>=th*fbMult;
+        const firstNow = (t.rawSc??t.sc)>=th*fbMult;
         const ballotYr = firstNow?1:ri(2,6);
         if(firstNow){ firstBallot=true; firstBallotLeagues.push(cfg.lg); }
         hofLeagues.push(cfg.lg);
-        const pct=Math.min(99.1,75+ (t.sc-th)/th*40 + R()*6 - (ballotYr-1)*4);
+        const pct=Math.min(99.1,75+ ((t.rawSc??t.sc)-th)/th*40 + R()*6 - (ballotYr-1)*4);
         const votes=Math.round(cfg.total*Math.max(75,pct)/100);
         if(!S.hofInfo)S.hofInfo=[]; S.hofInfo.push({lg:cfg.lg,yr:ballotYr,pct:Math.max(75,pct).toFixed(1)}); /* 結果画像用。 */
         const cap=capTeam(b), phr=posLegendPhrase(b);
@@ -158,7 +158,11 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     /* リーグ別成績と評価。 */
     let tables='',evals=[],best=99; const tiersByLg={};
     ['MLB','NPB','KBO','CPBL','MINOR'].forEach(b=>{ if(S.stats[b]){ tables+=statTable(b);
-      if(b!=='MINOR'){ const t=tierOf(b); tiersByLg[b]=t; evals.push(`<span class="tag">${t.name}</span>（評価点${t.sc}）`); best=Math.min(best,t.i); } } });
+      if(b!=='MINOR'){ const t=tierOf(b); tiersByLg[b]=t; evals.push(`<span class="tag">${t.name}${t.reason?'（'+t.reason+'）':''}</span>（評価点${t.sc}${t.belowThreshold?'・基準未達':''}${t.hasFirstTeam===false?'・一軍成績の記録なし':''}）`);
+      if(t.details){const d=t.details;card('info',LG_N[b]+' 評価の内訳',`一軍成績：${Number(t.base.toFixed(2))}点<br>個人賞：${d.personal.reduce((n,r)=>n+r.sc,0)}点<br>球団優勝：${d.team.reduce((n,r)=>n+r.sc,0)}点<br>特性の功績：${d.other.reduce((n,r)=>n+r.sc,0)}点<br>国際大会・代表の栄誉：殿堂評価への加点なし${d.international.length?'（'+d.international.length+'件）':''}<br>${d.personal.concat(d.team,d.other).map(r=>r.text+'：'+r.sc+'点').join('<br>')}`);}
+       best=Math.min(best,t.i); } } });
+    const internationalHonors=[...new Set(Object.values(tiersByLg).flatMap(t=>t.details?.international.map(r=>r.text)||[]))];
+    if(internationalHonors.length)card('info','国際大会・代表の栄誉',internationalHonors.join('<br>')+'<br>各リーグの殿堂評価には加算しません。');
     if(best===99)best=4;
     retireScene(tiersByLg);
     /* 成就基準：CPBL名人堂 または 站上NPB/大リーグ。 */

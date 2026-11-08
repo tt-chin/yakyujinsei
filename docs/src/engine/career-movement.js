@@ -269,6 +269,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
       if(goldclothEligible(S)){ S.traits.goldcloth=true;
         card('gold','隠し特性解放：黄金のユニフォーム',TRAIT_TEXT.goldcloth); board(1); }
       if(!S.traits.franchise&&S.teamYears>=7&&S.champThisTeam&&S.champTeam===S.orgTeamId){ S.traits.franchise=true;
+        S.franchiseAchievement={year:S.year,league:LV[S.lv]?.statBucket||null,teamId:S.orgTeamId};
         card('gold','隠し特性解放：神カード','この街のファンはあなたの成長を見守ってきた。放出すれば本拠地が炎上することをフロントも分かっている――<b class="hl">所属球団との再契約の評価に補正が入り、引退評価にも加点。球団はトレードを拒否する</b>。'); }
       /* ◯◯先生：同じ支球団效力滿 15 年且成績安定。 */
       if(!S.traits.mrteam&&S.teamYears>=15&&(S.lastD||0)>=0){ S.traits.mrteam=true; S.mrTeamName=S.orgTeamId;

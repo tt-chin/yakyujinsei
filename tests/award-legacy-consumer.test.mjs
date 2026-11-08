@@ -44,7 +44,10 @@ for(const name of names)for(const label of ['', 'NPB','KBO','台湾プロ野球'
   const text=prefix+label+name,honors=Object.freeze([text]),before=structuredClone(honors);
   const expected=native(consumer,honors,2039,'NPB'),actual=projected(consumer,honors,2039,'NPB');
   assert.deepEqual(actual,expected,consumer+' exact legacy treatment: '+text);assert.deepEqual(honors,before);
-  const wired=native(consumer,honors,2039,'NPB',live);assert.deepEqual(wired,expected,consumer+' actual wired native function: '+text);
+  // Approved 1.16 HOF attribution requires an explicit year and native league label.
+  // Native A compatibility projection above remains characterized verbatim; all other consumers stay exact.
+  const expectedWired=consumer==='hof'&&!/^\d{4} (?:NPB|KBO|台湾プロ野球|メジャーリーグ)/.test(text)?{sc:0,mvp:0,aceN:0,king:0}:expected;
+  const wired=native(consumer,honors,2039,'NPB',live);assert.deepEqual(wired,expectedWired,consumer+' actual wired native function: '+text);
   cases.push({text,consumer,identity:parseAwardHonor(text).status,expected,actual,wired,status:'PASS'});passed++;
 }
 // These are explicit legacy Consumer names, not newly trusted award identities.

@@ -1,3 +1,4 @@
+import {evaluateLeagueHof,firstTeamStats} from '../docs/src/engine/hof-evaluation-policy.js';
 // Test-only harness: execute the production functions verbatim; never imported by docs/src.
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
@@ -20,7 +21,7 @@ export function productionFunction(name,source=GAME_SOURCE){
 }
 function literal(name){return GAME_SOURCE.match(new RegExp('const '+name+'=(\\{[^;]+\\});'))?.[0]||(()=>{throw Error('Missing '+name);})();}
 export function createProductionHarness(state,seed='hof-fixed',retirementSource=GAME_SOURCE){
- const cards=[],context=vm.createContext({S:structuredClone(state),TextEncoder,Rng,CareerRetirement,TEAM_COLOR:{},POSN:{},honorScoreFor,careerScoreFor,defenseShareFor,hallOfFameTier,hasHistoricalDefenseAward,window:{TEAM_MASTER:{}},card:(...args)=>cards.push(args)});
+ const cards=[],context=vm.createContext({S:structuredClone(state),TextEncoder,Rng,CareerRetirement,TEAM_COLOR:{},POSN:{},evaluateLeagueHof,honorScoreFor,careerScoreFor,defenseShareFor,hallOfFameTier,hasHistoricalDefenseAward,window:{TEAM_MASTER:{}},card:(...args)=>cards.push(args)});
  const tables=leagueTables(),declarations='const TIER_TH='+JSON.stringify(tables.tierThresholds)+';\nconst LG_N='+JSON.stringify(tables.leagueNames)+';\n'+literal('DPN')+'\nconst LV='+JSON.stringify(tables.levels)+';';
  const functions=['careerScore','capTeam','defShare','posLegendPhrase','honorScore','tierOf','retireScene','blankStat','addStatTotal','accStat','fnv1a32'].map(name=>productionFunction(name,name==='retireScene'?retirementSource:GAME_SOURCE)).join('\n');
  const rng=`let _s=0,seedInit,R;const careerRng=new Rng(()=>S,fnv1a32);${GAME_SOURCE.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}\n${GAME_SOURCE.match(/R = function\(\)\{[^\n]+/)[0]}\nlet calls=0;const nativeR=R;R=()=>{calls++;return nativeR();};const ri=(a,b)=>a+Math.floor(R()*(b-a+1));`;
@@ -30,13 +31,13 @@ export function createProductionHarness(state,seed='hof-fixed',retirementSource=
 }
 export function components(st,pos){return pos==='P'?{wins:13*st.W,saves:6*st.SV,strikeouts:.9*st.SO,innings:.35*st.IP}:{hits:st.H,homeRuns:3*st.HR,steals:.8*st.SB,rbi:.5*st.RBI,walks:.3*st.BB,defense:6*Math.max(0,st.DEF||0)};}
 export function measure(input){
- const state={pos:input.pos,role:input.role||null,stage:'PRO',lv:firstLevels[input.league],year:2060,age:50,traits:{franchise:!!input.franchise},honors:input.honors||[],intlCount:input.intlCount||0,stats:{[input.league]:input.stats},teamTally:{},...input.state};
+ const state={pos:input.pos,role:input.role||null,stage:'PRO',lv:firstLevels[input.league],year:2060,age:50,traits:{franchise:!!input.franchise},honors:input.honors||[],intlCount:input.intlCount||0,stats:{[input.league]:input.stats},statsByLevel:{[firstLevels[input.league]]:structuredClone(input.stats)},teamTally:{},...input.state};
  const h=createProductionHarness(state,input.seed||input.id);h.context.bucket=input.league;
- const base=h.run('careerScore(S.stats[bucket])'),honor=h.run('honorScore(bucket)'),tier=JSON.parse(h.run('JSON.stringify(tierOf(bucket))'));
+ const first=firstTeamStats(state,input.league),base=first?careerScoreFor(first,input.pos):0,honor=h.run('honorScore(bucket)'),tier=JSON.parse(h.run('JSON.stringify(tierOf(bucket))'));
  const thresholds=h.snapshot().thresholds[input.league],raw=base+honor.sc,pure=raw>=thresholds[0]?0:raw>=thresholds[1]?1:raw>=thresholds[2]?2:raw>=thresholds[3]?3:4;
  const before=h.snapshot();h.run('retireScene({[bucket]:tierOf(bucket)})');const after=h.snapshot(),info=after.state.hofInfo||[];
  const perHonor=state.honors.map(text=>({text,...honorScoreFor({bucket:input.league,honors:[text],position:input.pos})}));
- return {...input,source:input.source||'人工構造固定案例（不是遊戲分布）',base,honor:JSON.parse(JSON.stringify(honor)),perHonor,components:components(input.stats,input.pos),raw,score:tier.sc,pureTier:pure,tier:tier.i,tierName:tier.name,candidate:tier.i<=1,inducted:tier.i===0,firstBallot:info.some(x=>x.yr===1),hofInfo:info,voteNarrative:h.cards.filter(c=>c[1]==='殿堂入り投票').map(c=>c[2]),rngCalls:after.calls-before.calls,legend:!!after.state.traits.legend,legendLeague:after.state.legendLeague||null};
+ return {...input,source:input.source||'人工構造固定案例（不是遊戲分布）',base,honor:JSON.parse(JSON.stringify(honor)),perHonor,components:components(first||{W:0,SV:0,SO:0,IP:0,H:0,HR:0,SB:0,RBI:0,BB:0,DEF:0},input.pos),raw,score:tier.sc,pureTier:pure,tier:tier.i,tierName:tier.name,candidate:tier.i<=1,inducted:tier.i===0,firstBallot:info.some(x=>x.yr===1),hofInfo:info,voteNarrative:h.cards.filter(c=>c[1]==='殿堂入り投票').map(c=>c[2]),rngCalls:after.calls-before.calls,legend:!!after.state.traits.legend,legendLeague:after.state.legendLeague||null};
 }
 export function buildFixedCases(){
  const cases=[],roles=['SP','MR','CL','power','contact','speed','defense','allround'],levels=['low','ordinary','excellent','star','legend'];

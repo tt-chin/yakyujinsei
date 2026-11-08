@@ -60,6 +60,7 @@ import { GameView } from '../ui/game-view.js';
 import { CheckpointRenderer } from '../ui/checkpoint-renderer.js';
 import { initNavigation } from '../ui/navigation.js';
 import { honorScoreFor } from './hall-of-fame-policy.js';
+import {evaluateLeagueHof} from './hof-evaluation-policy.js';
 import { careerScoreFor, defenseShareFor, hallOfFameTier } from './hall-of-fame-tier-policy.js';
 import { defenseScoreFor, defenseBarFor, defensePositionQualified, defensePositionCandidates, defensePositionMultiplier } from './defense-position-policy.js';
 import { toolGapFor, overallRatingFor, playerTypeFor, abilityStepCostFor } from './ability-evaluation-policy.js';
@@ -291,7 +292,7 @@ const careerRetirement=new CareerRetirement({getState:()=>S,getSeed:()=>SEED,LV,
 function honorScore(bucket){
   return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S});
 }
-function tierOf(bucket){const st=S.stats[bucket];if(!st)return null;const hs=honorScore(bucket);return hallOfFameTier({baseScore:careerScore(st),honor:hs,thresholds:TIER_TH[bucket],leagueName:LG_N[bucket]});}
+function tierOf(bucket){return evaluateLeagueHof(S,bucket,TIER_TH[bucket],LG_N[bucket]);}
 function retireScene(tiers){careerRetirement.retireScene(tiers);}
 function endGame(reason){careerRetirement.endGame(reason);}
 /* 結算圖（Canvas 產生 PNG、可長按儲存または自動下載）。 */
