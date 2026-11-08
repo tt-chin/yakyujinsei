@@ -20,6 +20,7 @@ const [html, config, data, game, main, baseCss, themeCss] = await Promise.all([
 const shareImage = await read('docs/src/ui/share-image.js');
 const initialState = await read('docs/src/engine/initial-state.js');
 const careerEntryModule = await read('docs/src/engine/career-entry.js');
+const leagueCatalogModule = await read('docs/src/engine/league-catalog.js');
 
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/base\.css">/);
 assert.match(html, /<link rel="stylesheet" href="\.\/styles\/jp-theme\.css">/);
@@ -126,6 +127,22 @@ for(const line of [
   ])assert.equal(text.split(line).length,2,'career entry wiring, once: '+line.trim().slice(0,50));
   for(const name of ['new CareerEntry(','careerEntry.startNew(','careerEntry.resume(','function startJapanese('])assert.equal(text.split(name).length,2,'career entry wiring only once: '+name);
   for(const gone of ['選手誕生','S=newState(nm,pos)','S=candidate;SEED=S.seed','Object.keys(careerSession)','new CareerSession(),{choiceGeneration',"querySelector('#seg-pos button.on')","$('in-name').value"])assert.ok(!text.includes(gone),'moved into CareerEntry: '+gone);
+}
+{// Phase 38: league, level and team tables. LV, PATHS, TIER_TH, LG_N and TEAM_COLOR stay game.js names (components get them
+  // by reference, E2E hooks use them) as aliases of the catalog's tables; teamRec, teamDisplay, listByOrg and teamNick stay wrappers.
+  // The Japanese overlay's Object.assign lines are gone: the catalog defines their result once.
+  const text=sourceText(game),catalog=sourceText(leagueCatalogModule);
+  for(const line of [
+    "\nimport { JP_DATA } from '../data/jp-data.js';\nimport { LeagueCatalog } from './league-catalog.js';\n",
+    "\nconst leagueCatalog=new LeagueCatalog({teams:JP_DATA.teams});\nconst TEAM_COLOR=leagueCatalog.teamColors;\nconst LV=leagueCatalog.levels;\nconst PATHS=leagueCatalog.paths;\n",
+    "\nconst TIER_TH=leagueCatalog.tierThresholds;\nconst LG_N=leagueCatalog.leagueNames;\n",
+    "\nfunction teamNick(team){return leagueCatalog.teamNick(team);}\n",
+    "\n  window.TEAM_MASTER = leagueCatalog.teamMaster;\n",
+    "\n  function teamRec(id){return leagueCatalog.teamRec(id);}\n  function teamDisplay(id,lv){return leagueCatalog.teamDisplay(id,lv);}\n  function listByOrg(org){return leagueCatalog.listByOrg(org);}\n",
+  ])assert.equal(text.split(line).length,2,'league catalog wiring, once: '+line.trim().slice(0,50));
+  for(const name of ['new LeagueCatalog(','const TEAM_COLOR=','const LV=','const PATHS=','const TIER_TH=','const LG_N=','window.TEAM_MASTER','function teamNick(','function teamRec(','function teamDisplay(','function listByOrg('])assert.equal(text.split(name).length,2,'league catalog wiring only once: '+name);
+  for(const gone of ['Object.assign(LV','Object.assign(PATHS','Object.assign(LG_N','Object.assign(TIER_TH','Object.assign(ABL','Object.assign(POSN','Object.assign(DPN','typeof LG_N','typeof TIER_TH',"'台中マンモス'",'DATA.teams.map(','DATA.teams.filter(','for(const t of DATA.teams)'])assert.ok(!text.includes(gone),'moved into LeagueCatalog: '+gone);
+  for(const moved of ["'台中マンモス':'#ffd800'","'台中マンモス':'マンモス'",'teams.map(x=>[x.teamId,Object.freeze(x)])','.filter(t=>t.org===o&&t.active)',"NPB_DEV:{n:'NPB育成'"])assert.equal(catalog.split(moved).length,2,'in LeagueCatalog once: '+moved);
 }
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);

@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import * as market from '../docs/src/engine/cross-league-market-policy.js';
 import * as contract from '../docs/src/engine/contract-policy.js';
 import {calculateControlOffer} from '../docs/src/engine/control-period-policy.js';
+import {leagueTables} from '../docs/src/engine/league-catalog.js';
 import {calculateSalaryCurve,convertRatingBetweenLevels,roundToTenThousandYen} from '../docs/src/engine/salary-promotion-policy.js';
 import {createIncentiveTerms} from '../docs/src/engine/incentive-policy.js';
 import {createSigningBonusTerms} from '../docs/src/engine/signing-bonus-policy.js';
@@ -60,7 +61,7 @@ function harness(){
   currentMarketRating:()=>-5.75,dpMult:()=>.92,ovr:()=>44,injurySalaryMultiplier:()=>1,isRecentStar:()=>false,serviceYearsFor:org=>S.serviceTime[org]||0,previousSalaryForOffer:()=>S.currentSalary,hadAmericanContract:()=>false,migrateSalaryV130State:()=>{},
   card:()=>{},board:()=>{},bindLatestSalaryDetailLink:()=>{},fmtMoney:String,salaryDecisionSummary:()=>'',salaryDecisionLink:()=>'',isBelowActiveMinimum:()=>false,
   saveSalaryDecision:(type,candidate,previousSalary,finalSalary)=>S.salaryDecisionHistory.push({type,candidate,previousSalary,finalSalary}),advances:0});
- vm.runInContext('const LV='+game.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+';const PATHS={KBO:["KBO2","KBO1"]};'+contractFunctions()+
+ vm.runInContext('const LV='+JSON.stringify(leagueTables().levels)+';const PATHS={KBO:["KBO2","KBO1"]};'+contractFunctions()+
   'function advance(){finalizePendingOffseasonSalary();advances++;}'+movementBetween('  function movement(){','\n  return {')+(game.includes('yearFlow.reportFlowOutcome(')?'\n'+yearFlowReporter(read('docs/src/engine/year-flow.js')):game.includes('function reportFlowOutcome(')?'\n'+between('  function reportFlowOutcome(','\n  function newState'):''),context);
  return{S,old,run:code=>vm.runInContext(code,context),context};
 }

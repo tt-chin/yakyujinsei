@@ -11,6 +11,7 @@ import {pitcherAwardCandidate} from '../../docs/src/engine/pitcher-award-policy.
 import {decideIndependentAward} from '../../docs/src/engine/award-rng-policy.js';
 import {calculateMarketAwardAdjustment} from '../../docs/src/engine/salary-evaluation-policy.js';
 import {Rng} from '../../docs/src/engine/rng.js';
+import {leagueTables} from '../../docs/src/engine/league-catalog.js';
 import {SeasonAwards} from '../../docs/src/engine/season-awards.js';
 import {CheckpointRenderer} from '../../docs/src/ui/checkpoint-renderer.js';
 import {salaryAwardBonus} from '../../docs/src/engine/salary-promotion-policy.js';
@@ -35,7 +36,7 @@ function harness(src,s,st,{slotFault=false,effectFault=false,newFault=false,rend
     commitAwardReceipt:(...a)=>tx.commitAwardReceipt(...a,effectOnce?path=>{if(effectOnce===true||path.join('.')===effectOnce){effectOnce=false;throw Error('AFTER_EFFECT_WRITE');}}:undefined),
     completeAwardDecisions:(...a)=>tx.completeAwardDecisions(...a,historyFault?()=>{historyFault=false;throw Error('AFTER_HISTORY_WRITE');}:undefined),
     card:(...a)=>{if(renderOnce&&a[1]==='年間賞'){renderOnce=false;throw Error('AFTER_EFFECT_RENDER');}cards.push(a);}});
-  const levels=src.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1];
+  const levels=src.includes('Object.assign(LV,')?src.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]:JSON.stringify(leagueTables().levels);
   const functions=['awards','renderCheckpointCard',...(src.includes('function collectLegacyAwardPlan(')?['collectLegacyAwardPlan']:[]),'isSP','removeTrait','fnv1a32'].map(n=>productionFunction(n,src)).join('\n');
   vm.runInContext(`const LV=${levels};const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));let _s=0,seedInit,R;const careerRng=new Rng(()=>S,fnv1a32);
     ${src.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}

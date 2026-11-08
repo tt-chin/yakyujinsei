@@ -8,6 +8,7 @@ import {goldclothEligible,TRAIT_TEXT} from '../../docs/src/engine/trait-policy.j
 import {isBelowActiveMinimum,findDemotionTarget,demotionChoiceText} from '../../docs/src/engine/career-policy.js';
 import {createContract,contractNeedsRenewal} from '../../docs/src/engine/contract-policy.js';
 import {Rng} from '../../docs/src/engine/rng.js';
+import {leagueTables} from '../../docs/src/engine/league-catalog.js';
 let pass=0;
 for(const title of ['最優秀投手賞','首位打者','本塁打王','ゴールデングラブ賞','年間MVP','年度MVP','新人王','守備王','出塁王','最多勝',
  '年度最佳投手','救援王','中繼王','三振王','盜壘王','打點王','ホールド王','盗み王','賽揚獎']){
@@ -30,7 +31,7 @@ function movement(src,honor,good){
   ovr:()=>52,migrateSalaryV130State:()=>{},accrueForeignFirstTeamSeason:()=>{},contractStageFor:()=> 'CONTROL',crossOffers:()=>{},
   markClubInitiatedRenewal:()=>{},applyPromotionSalary:()=>{},retireBelowActiveMinimum:()=>assert.fail('invalid below-active fixture'),
   advance:()=>{},outOfOrg:()=>assert.fail('unexpected release'),teamNick:x=>x,observe:x=>observed.push(x),recordR:x=>rng.push(x)});
- const levels=src.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1],paths=src.match(/Object.assign\(PATHS,(\{[^\n]+\})\);/)[1];
+ const overlay=src.includes('Object.assign(LV,'),levels=overlay?src.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]:JSON.stringify(leagueTables().levels),paths=overlay?src.match(/Object.assign\(PATHS,(\{[^\n]+\})\);/)[1]:JSON.stringify(leagueTables().paths);
  const functions=['movement','handleDemotion','traitCard','removeTrait','fnv1a32'].map(n=>{
   const f=productionFunction(n,src);return n==='movement'?f.replace('  if(wonAward||goodReal)',"  observe({wonAward,goodReal});\n  if(wonAward||goodReal)"):f;
  }).join('\n');

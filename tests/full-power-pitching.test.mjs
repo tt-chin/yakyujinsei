@@ -21,7 +21,9 @@ const seasonText=src=>src===source&&professionalSeasonSource?professionalSeasonS
 const hasSeasonFunction=(name,src=source)=>seasonText(src).includes('function '+name+'(');
 const seasonFunctionSource=(name,src=source)=>seasonText(src)===src?productionFunction(name,src):productionFunction(name,professionalSeasonSource).split('\n  return {')[0];
 const cases=[];
-const activeLevels=vm.runInNewContext('('+source.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+')');
+// Phase 38 moved the final level table into league-catalog.js (leagueTables); older sources still carry the overlay literal.
+const catalogLevels=async()=>{const text=ref?execFileSync('git',['show',ref+':docs/src/engine/league-catalog.js'],{encoding:'utf8'}):fs.readFileSync(new URL('../docs/src/engine/league-catalog.js',import.meta.url),'utf8');return JSON.stringify((await import('data:text/javascript,'+encodeURIComponent(text))).leagueTables().levels);};
+const activeLevels=vm.runInNewContext('('+(source.includes('Object.assign(LV,')?source.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]:await catalogLevels())+')');
 function test(id,fn){try{fn();cases.push({id,status:'PASS'});}catch(error){cases.push({id,status:'FAIL',error:error.stack});}console.log(cases.at(-1).status+' '+id);}
 function fixture(v={}){
  const S={pos:'P',role:'SP',stage:'PRO',lv:'NPB1',year:2035,age:25,ab:{vel:57,ctl:57,brk:57,sta:60},traits:{},tj:0,tjCount:0,seasonFactor:1,rehab:0,skipMid:false,effort:'通常投球',pendStat:0,log:[],honors:[],ironStreak:0,stats:{},teamName:()=> '長い球団名称・投球テスト',...v};

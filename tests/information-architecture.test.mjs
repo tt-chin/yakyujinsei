@@ -4,6 +4,8 @@ import fs from 'node:fs';
 const read=path=>fs.readFileSync(new URL(path,import.meta.url),'utf8');
 const html=read('../docs/index.html');
 const game=read('../docs/src/engine/game.js');
+// Phase 38 (§2qq) moved the level table into league-catalog.js.
+const leagueCatalog=read('../docs/src/engine/league-catalog.js');
 // Phase 35 (§2nn) moved proSeason's accumulation line into professional-season.js.
 const professionalSeason=read('../docs/src/engine/professional-season.js');
 const initialState=read('../docs/src/engine/initial-state.js');
@@ -21,7 +23,7 @@ const seasonStats=game.includes('seasonStats.accLevelStat(')?read('../docs/src/e
 const levelAccumulator=seasonStats?seasonStats.slice(seasonStats.indexOf('accLevelStat(levelKey,st){')):game.slice(game.indexOf('function accLevelStat'),game.indexOf('function statLine'));
 assert.doesNotMatch(levelAccumulator,/\b(?:R|ri|pick|chance)\s*\(/);
 assert.match(record,/階級別通算成績/);
-for(const label of ['NPB一軍','NPB二軍','NPB育成','KBO一軍','KBOフューチャース','台湾プロ野球一軍','台湾プロ野球二軍','3A','2A','1A','ルーキーリーグ'])assert.match(game,new RegExp(label));
+for(const label of ['NPB一軍','NPB二軍','NPB育成','KBO一軍','KBOフューチャース','台湾プロ野球一軍','台湾プロ野球二軍','3A','2A','1A','ルーキーリーグ'])assert.match(leagueCatalog,new RegExp(label));
 assert.doesNotMatch(ability,/能力[\s\S]*総合/);
 assert.doesNotMatch(game+presenter,/\{label:'スタミナ',value:/);
 assert.match(ability,/現在表示できる特性はありません。/);
@@ -32,5 +34,5 @@ const incomeSource=read('../docs/src/ui/income-summary.js');
 assert.match(incomeSource,/生涯総収入/);
 assert.ok(incomeSource.indexOf('スポンサー収入')<incomeSource.indexOf('生涯総収入'));
 assert.match(presenter,/formatRehabStatus\(S\)/);
-assert.match(game,/NPB_DEV:\{[^}]+statBucket:'NPB'/);
+assert.match(leagueCatalog,/NPB_DEV:\{[^}]+statBucket:'NPB'/);
 console.log('Information architecture v1.5.2 checks passed.');

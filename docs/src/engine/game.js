@@ -31,6 +31,7 @@ import { CareerContract } from './career-contract.js';
 import { CareerMovement } from './career-movement.js';
 import { applyEventSeason, normalizeEventSeason } from './event-season-policy.js';
 import { JP_DATA } from '../data/jp-data.js';
+import { LeagueCatalog } from './league-catalog.js';
 import { MARKET_BASELINES } from '../data/salary-market-data.js';
 import { crossOfferTitle, crossOfferType, demotionChoiceText, findDemotionTarget, isBelowActiveMinimum } from './career-policy.js';
 import { calculateSalaryCurve, convertRatingBetweenLevels, roundToTenThousandYen, salaryAwardBonus, salaryEvaluationD } from './salary-promotion-policy.js';
@@ -119,55 +120,10 @@ function dpList(){return defensePositionCandidates(S.pos,dpQual);}
 function dpMult(){return defensePositionMultiplier({position:S.pos,defensePosition:S.dpos,multipliers:DP_MULT});}
 function dposReview(cont){defensePositionReview.review(cont);}
 const defensePositionReview=new DefensePositionReview({getState:()=>S,getLevels:()=>LV,DPN,DP_RANK,DP_MULT,dpBar:()=>dpBar(),dpQual:p=>dpQual(p),dpList:()=>dpList(),pitcherRole:()=>pitcherRole(),roleN:r=>roleN(r),choose:(title,opts)=>choose(title,opts),card:(cls,title,html)=>card(cls,title,html)});
-const TEAM_COLOR={
-  /* CPBL。 */
-  '台中マンモス':'#ffd800','府城ライオンズ':'#ff7f00','桃園コングス':'#8b1a1a','新北ナイツ':'#003f87','台北ダイナソーズ':'#c8102e','高雄イーグルス':'#1a7a3a',
-  /* NPB。 */
-  '東京グランズ':'#f97709','阪神ストライプス':'#ffe201','横浜ブルースターズ':'#0a3ce0','広島レッドフィッシュ':'#e60012','神宮スカイバーズ':'#0a7bc2','名古屋ドラグーンズ':'#003a70','福岡シーホークス':'#f5c400','北海道ノースファイターズ':'#0a2d5c','千葉オーシャンズ':'#111111','仙台ゴールデンオウルズ':'#8b0000','大阪ブルホーンズ':'#0033a0','埼玉レオンズ':'#1268b3',
-  /* MLB。 */
-  'ロサンゼルス・ブルー':'#005A9C',   'サンディエゴ・フライアーズ':'#2F241D', 
-  'ベイエリア・ジャイアンツ':'#FD5A1E',
-  'ニューヨーク・エンパイア':'#0C2340', 
-  'ボストン・レッドソックス':'#BD3039',
-  'ニューヨーク・ビッグアップル':'#FF5910',
-  'フィラデルフィア・アイアンズ':'#E81828',
-  'アトランタ・トマホークス':'#13274F',
-  'シカゴ・カブス':'#0E3386',
-  'セントルイス・カージナルス':'#C41E3A',
-  'ヒューストン・ロケッツ':'#EB6E1F',
-  'テキサス・レンジャーズ':'#003278',
-  'シアトル・マリナーズ':'#005C5C', 
-  'ロサンゼルス・エンジェルズ':'#BA0021',
-  'トロント・ブルージェイズ':'#134A8E',
-  'ボルチモア・オリオールズ':'#DF4601',
-  'タンパベイ・レイズ':'#092C5C', 
-  'クリーブランド・ガーディアンズ':'#E31937',
-  'デトロイト・タイガース':'#0C2340',
-  'ミネソタ・ツインズ':'#002B5C',
-  'シカゴ・ホワイトソックス':'#27251F',
-  'カンザスシティ・ロイヤルズ':'#174885',
-  'オークランド・アスレチックス':'#003831',
-  'ミルウォーキー・ブルワーズ':'#FFC52F',
-  'ピッツバーグ・パイレーツ':'#FDB827',
-  'マイアミ・マーリンズ':'#00A3E0',
-  'ワシントン・ナショナルズ':'#AB0003',
-  'アリゾナ・ダイヤモンドバックス':'#A71930',
-  'コロラド・ロッキーズ':'#33006F',
-  'シンシナティ・レッズ':'#C6011F'
-};
-/* par=当該階級の平均水準、 min=最低基準(下回る→降格/戦力外)、 g=シーズン試合数。 */
-const LV={
- CPBL2:{n:'台湾プロ野球二軍',par:34,min:30,g:80, org:'CPBL'},
- CPBL1:{n:'台湾プロ野球一軍',par:44,min:41,g:120,org:'CPBL',top:'CPBL'},
- NPB2:{n:'NPB二軍',par:47,min:44,g:100,org:'NPB'},
- NPB1:{n:'NPB一軍',par:53,min:50,g:143,org:'NPB',top:'NPB'},
- R:{n:'ルーキーリーグ',par:41,min:39,g:55, org:'MiLB'},
- A1:{n:'1A',par:45,min:43,g:110,org:'MiLB'},
- A2:{n:'2A',par:49,min:47,g:120,org:'MiLB'},
- A3:{n:'3A',par:54,min:52,g:130,org:'MiLB'},
- MLB:{n:'メジャーリーグ',par:59,min:56,g:162,org:'MiLB',top:'MLB'},
-};
-const PATHS={CPBL:['CPBL2','CPBL1'],NPB:['NPB2','NPB1'],MiLB:['R','A1','A2','A3','MLB']};
+const leagueCatalog=new LeagueCatalog({teams:JP_DATA.teams});
+const TEAM_COLOR=leagueCatalog.teamColors;
+const LV=leagueCatalog.levels;
+const PATHS=leagueCatalog.paths;
 /* Approved 92-card catalog; validation consumes no RNG. */
 validateEventCatalog();
 const EVENTS=EVENT_CATALOG.events;
@@ -299,14 +255,7 @@ const playerRomance=new PlayerRomance({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,
 function addAbStat(k,amt){return playerAbility.addAbStat(k,amt);}
 function renderEventResult(ev,result){seasonEvents.renderEventResult(ev,result);}
 function allocDone(touched,isDice){playerAbility.allocDone(touched,isDice);}
-function teamNick(team){ /* ◯◯先生的◯◯：球団名を代表する語を取得。 */
-  const map={'台中マンモス':'マンモス','府城ライオンズ':'ライオン','桃園コングス':'キングコング','新北ナイツ':'騎士','台北ダイナソーズ':'恐竜','高雄イーグルス':'神鷲',
-    /* 同名処理：ソックス系は色で区別;大人2球団ともオレンジ、都市名で区別。 */
-    'ボストン・レッドソックス':'レッドソックスのキング','シカゴ・ホワイトソックス':'ホワイトソックスのキング','東京グランズ':'東京グランズ','ベイエリア・ジャイアンツ':'ベイエリア・ジャイアンツ',
-    /* slice(-2) 切字修正。 */
-    'オークランド・アスレチックス':'オークランド・アスレチックス','アリゾナ・ダイヤモンドバックス':'コブラ'};
-  return map[team]||(team||'').slice(-2);
-}
+function teamNick(team){return leagueCatalog.teamNick(team);}
 function demotionAudit(cont){return careerMovement.demotionAudit(cont);}
 function tradeCheck(cont){return careerMovement.tradeCheck(cont);}
 function rollInjury(){playerInjury.rollInjury();}
@@ -331,8 +280,8 @@ if(typeof document!=='undefined'&&document.getElementById('btn-restart')){
 }
 function advance(){return yearFlow.advance();}
 /* キャリア終盤。 */
-const TIER_TH={CPBL:[8500,6000,3100,1800],KBO:[8200,5900,3000,1800],NPB:[8000,5800,3000,1800],MLB:[8500,6500,3600,2000]};
-const LG_N={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ',MINOR:'マイナーリーグ/二軍'};
+const TIER_TH=leagueCatalog.tierThresholds;
+const LG_N=leagueCatalog.leagueNames;
 function careerScore(st){return careerScoreFor(st,S.pos);}
 function primaryPos(){return careerRetirement.primaryPos();}
 function capTeam(bucket){return careerRetirement.capTeam(bucket);}
@@ -364,23 +313,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   const DATA = JP_DATA;
   const LEGACY = { board, movement, phasePre, phaseMid, proSeason, endGame };
 
-  Object.assign(ABL,{sta:'スタミナ',vel:'球速',ctl:'制球',brk:'変化球',con:'ミート',pow:'パワー',spd:'走力',eye:'選球眼',rng:'守備範囲',fld:'捕球',arm:'肩力',cat:'リード'});
-  Object.assign(POSN,{P:'投手',C:'捕手',IF:'内野手',OF:'外野手'});
-  Object.assign(DPN,{SS:'遊撃手','2B':'二塁手','3B':'三塁手','1B':'一塁手',CF:'中堅手',RF:'右翼手',LF:'左翼手',DH:'指名打者',C:'捕手'});
-  Object.assign(LV,{
-    HS:{n:'高校野球',par:38,min:0,g:20,org:'AMATEUR'}, U:{n:'大学野球',par:44,min:0,g:24,org:'AMATEUR'},
-    CORP:{n:'社会人野球',par:37,min:32,g:45,org:'CORP',statBucket:'CORP'}, IND:{n:'独立リーグ',par:35,min:30,g:70,org:'IND',top:'IND',statBucket:'IND'},
-    NPB_DEV:{n:'NPB育成',par:35,min:30,g:100,org:'NPB',statBucket:'NPB'}, NPB2:{n:'NPB二軍',par:52,min:47,g:100,org:'NPB',statBucket:'NPB'}, NPB1:{n:'NPB一軍',par:58,min:53,g:143,org:'NPB',top:'NPB',statBucket:'NPB'},
-    KBO2:{n:'KBOフューチャース',par:39,min:35,g:90,org:'KBO',statBucket:'KBO'}, KBO1:{n:'KBO一軍',par:50,min:47,g:144,org:'KBO',top:'KBO',statBucket:'KBO'},
-    CPBL2:{n:'台湾プロ野球二軍',par:39,min:35,g:80,org:'CPBL',statBucket:'CPBL'}, CPBL1:{n:'台湾プロ野球一軍',par:48,min:45,g:120,org:'CPBL',top:'CPBL',statBucket:'CPBL'},
-    R:{n:'ルーキーリーグ',par:43,min:39,g:55,org:'MiLB',statBucket:'MINOR'}, A1:{n:'1A',par:47,min:43,g:110,org:'MiLB',statBucket:'MINOR'}, A2:{n:'2A',par:51,min:47,g:120,org:'MiLB',statBucket:'MINOR'}, A3:{n:'3A',par:56,min:52,g:130,org:'MiLB',statBucket:'MINOR'}, MLB:{n:'メジャーリーグ',par:63,min:58,g:162,org:'MLB',top:'MLB',statBucket:'MLB'}
-  });
-  Object.assign(PATHS,{NPB:['NPB_DEV','NPB2','NPB1'],KBO:['KBO2','KBO1'],CPBL:['CPBL2','CPBL1'],MiLB:['R','A1','A2','A3','MLB'],MLB:['R','A1','A2','A3','MLB'],IND:['IND'],CORP:['CORP']});
-  if(typeof LG_N==='object')Object.assign(LG_N,{NPB:'NPB',KBO:'KBO',CPBL:'CPBL',MLB:'MLB',MINOR:'マイナー／二軍',IND:'独立',CORP:'社会人'});
-  if(typeof TIER_TH==='object')Object.assign(TIER_TH,{NPB:[8000,5800,3000,1800],MLB:[8500,6500,3600,2000],KBO:[8200,5900,3000,1800],CPBL:[8500,6000,3100,1800],IND:[3000,1800,900,400],CORP:[3000,1800,900,400]});
-
-  window.TEAM_MASTER = Object.freeze(Object.fromEntries(DATA.teams.map(x=>[x.teamId,Object.freeze(x)])));
-  for(const t of DATA.teams){ if(t.color)TEAM_COLOR[t.teamId]=t.color; }
+  window.TEAM_MASTER = leagueCatalog.teamMaster;
 
   function normalizeSeed(raw){
     return [...String(raw??'').normalize('NFKC').trim().replace(/[\u0000-\u001f\u007f-\u009f]/g,'')].slice(0,24).join('');
@@ -391,9 +324,9 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function deriveDefaultName(seed,pos){ const names={P:['投山翔太'],C:['強肩剛'],IF:['守田巧'],OF:['走川隼人']}[pos];return names[deriveSeedInt(seed,'defaultName:'+pos)%names.length]; }
   function normalizePlayerName(raw,seed,pos){ const n=[...String(raw??'').normalize('NFKC').trim().replace(/[\u0000-\u001f\u007f-\u009f]/g,'')].slice(0,10).join('');return n||deriveDefaultName(seed,pos); }
   function escapeHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
-  function teamRec(id){return id?window.TEAM_MASTER[id]||null:null;}
-  function teamDisplay(id,lv){ const t=teamRec(id);if(!t)return'';if(['NPB_DEV','NPB2','KBO2','CPBL2','R','A1','A2','A3'].includes(lv))return t.name+' '+LV[lv].n;return t.name; }
-  function listByOrg(org){ const o=org==='MiLB'?'MLB':org;return DATA.teams.filter(t=>t.org===o&&t.active).sort((a,b)=>a.order-b.order); }
+  function teamRec(id){return leagueCatalog.teamRec(id);}
+  function teamDisplay(id,lv){return leagueCatalog.teamDisplay(id,lv);}
+  function listByOrg(org){return leagueCatalog.listByOrg(org);}
   function pickRecord(a){return a[Math.floor(R()*a.length)];}
 
   careerRng = new Rng(() => S, fnv1a32);
