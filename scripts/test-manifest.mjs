@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'hof-retirement-policy-e2e': {seconds:180,reason:'Approved HOF-only deltas: full pre-retirement S/choice/RNG equality, P/IF deterministic replay and frozen-rule retirement oracle, no blanket ignore.'},
   'browser-save-store-e2e': {quick:[],seconds:15,reason:'Real IndexedDB revision, quota and stale-write fault checks.'},
   'browser-save-runtime-e2e': {quick:[],seconds:40,reason:'Real reload S/RNG, first-step failure/retry, two tabs and unavailable storage UI.'},
   'browser-save-routes-e2e': {seconds:600,reason:'Every annual checkpoint in two natural and thirteen controlled career routes, exact S/RNG after real reload.'},
@@ -37,6 +38,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/approved-hof-comparison.mjs':['support','Strict approved-retirement comparison used by dedicated unit and E2E tests; not a standalone suite.'],
   'support/source-text.mjs': ['support','Strict UTF-8 source reader; CRLF-to-LF normalization only for source comparisons. Never normalizes frozen hash/binary evidence.'],
   'support/board-menu.mjs': ['support','Native header menu interaction and E2E assertions; preserves historical visible-button controls.'],
   'support/approved-school-oracle.mjs': ['support','Explicit approved C-school/COPY positive-control overlay; never an old-bug negative oracle. Raw old/new traces remain separate.'],

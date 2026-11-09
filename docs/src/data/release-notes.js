@@ -1,6 +1,14 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.0｜2026/11/08",
+    "lines": [
+      "- 殿堂評価を各リーグの一軍成績と当時の実績に整理。",
+      "- 評価理由と加点の内訳、基準付近の点数表示を改善。",
+      "- 国際大会・代表の栄誉を殿堂評価と分けて表示。"
+    ]
+  },
+  {
     "title": "1.15.1｜2026/11/08",
     "lines": [
       "- ホームの再開・新規開始と案内ボタンを整理。",

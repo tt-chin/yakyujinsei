@@ -1,3 +1,4 @@
+import {sourceText} from './support/source-text.mjs';
 // No project dependency: pass --playwright=<installed package directory> when needed.
 // GameView refactor guard (tasks/GAME_JS_OOP_REFACTOR_PLAN.md §2d.4): same seed/choices must give the same
 // #log/#act/#board DOM, S and RNG count at every step as the fixed baseline. Allowed difference: none.
@@ -10,7 +11,8 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {findFirstDifference} from './support/first-difference.mjs';
 import {instrumentRng} from './support/rng-instrument.mjs';
-import {GAME_VIEW_HOOK,captureGameView} from './support/dom-snapshot.mjs';
+import {GAME_VIEW_HOOK,captureGameView,projectHofLog} from './support/dom-snapshot.mjs';
+import {verifyFranchiseGrant,projectFranchiseField} from '../tools/development-b/historical-comparison.mjs';
 import {JP_DATA} from '../docs/src/data/jp-data.js';
 import {baselineNeedsChampionmakerProjection,projectChampionmakerState} from '../tools/development-b/championmaker-state-oracle.mjs';
 
@@ -28,9 +30,18 @@ const server=createServer(async(req,res)=>{
     const url=new URL(req.url,'http://localhost'),baseline=url.pathname.startsWith('/baseline/');
     const relative=decodeURIComponent(url.pathname).replace(/^\/(?:baseline\/)?/,'')||'index.html';
     if(relative.includes('..'))throw new Error('Unsafe path');
-    let content=baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
+    let content=relative==='hof-oracle/hall-of-fame-policy.js'?'':baseline?execFileSync('git',['show',`${baselineRef}:docs/${relative}`],{cwd:root,maxBuffer:20*1024*1024}):await readFile(path.join(root,'docs',relative));
+    // Frozen old formula, sharing the byte-identical trusted award module
+    // instance with the candidate. A second module instance loses WeakMap trust.
+    if(relative==='hof-oracle/hall-of-fame-policy.js'){
+      const original=execFileSync('git',['show',`${baselineRef}:docs/src/engine/hall-of-fame-policy.js`],{cwd:root,maxBuffer:20*1024*1024}).toString();
+      const dependency="'./award-consumer-policy.js'";assert(original.split(dependency).length<=2);
+      if(original.includes(dependency))for(const file of ['award-consumer-policy.js','award-identity-policy.js'])assert.equal(sourceText(execFileSync('git',['show',`${baselineRef}:docs/src/engine/${file}`],{cwd:root,maxBuffer:20*1024*1024}).toString()),sourceText(await readFile(path.join(root,'docs/src/engine',file),'utf8')),'historical oracle requires unchanged trusted award dependency '+file);
+      content=original.replace(dependency,"'/src/engine/award-consumer-policy.js'");
+    }
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
+      if(!baseline)content+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__verifyFranchise=${verifyFranchiseGrant.toString()};window.__projectFranchise=${projectFranchiseField.toString()};\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       if(!baseline)content+='\nwindow.__expectBrowserSave=true;window.__expectIncomeDisplay=true;window.__expect1140='+championmaker+';window.__expect1141='+credits1141+';window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
       if(negativeControl&&!baseline)content+='\nconst __negativeDivider=divider;divider=function(t){__negativeDivider(t+\' \');};';
     }
@@ -69,6 +80,18 @@ const cases=[
 const viewports=[{width:1280,height:800},{width:390,height:844}];
 let failure=null;
 try{
+  const contractPage=await browser.newPage();
+  await contractPage.evaluate(fn=>{
+    const project=new Function('return '+fn)();
+    const model={NPB:{current:{i:1,name:'NPBスター選手',sc:420,base:0,reason:'MVP受賞による評価',details:{personal:[{text:'2035 NPB年間MVP',sc:420}],team:[],other:[],international:[]}},old:{i:1,name:'NPBスター選手',sc:500},label:'NPB'}};
+    const markup='<div class="card info"><h4>NPB 評価の内訳</h4>一軍成績：0点<br>個人賞：420点<br>球団優勝：0点<br>特性の功績：0点<br>国際大会・代表の栄誉：殿堂評価への加点なし<br>2035 NPB年間MVP：420点</div><div class="card gold"><h4>通算評価</h4><span class="tag">NPBスター選手（MVP受賞による評価）</span>（評価点420）</div><p>unchanged</p>';
+    const log=document.createElement('div');log.innerHTML=markup;project(log,model);
+    if(log.innerHTML!=='<div class="card gold"><h4>通算評価</h4><span class="tag">NPBスター選手</span>（評価点500）</div><p>unchanged</p>')throw Error('HOF_DISPLAY_POSITIVE');
+    const mutations=[s=>s.replace('一軍成績：0点','一軍成績：1点'),s=>s.replace('評価点420','評価点421'),s=>s.replace('2035 NPB年間MVP','2036 NPB年間MVP'),s=>s.replace('card info','card gold'),s=>s.replace('<div class="card info">','<div class="card info" data-unknown="x">'),s=>s.replace(/<div class="card info">.*?<\/div>/,''),s=>s+s.match(/<div class="card info">.*?<\/div>/)[0]];
+    for(const mutate of mutations){log.innerHTML=mutate(markup);let refused=false;try{project(log,model);}catch{refused=true;}if(!refused)throw Error('HOF_DISPLAY_CORRUPTION_ACCEPTED');}
+    log.innerHTML=markup;const bad=structuredClone(model);bad.NPB.current.i=0;let refused=false;try{project(log,bad);}catch{refused=true;}if(!refused)throw Error('HOF_GRADE_CHANGE_NOT_STRICT');
+  },projectHofLog.toString());
+  await contractPage.close();console.log('PASS HOF display contract and 8 negative controls');
   for(const viewport of viewports)for(const c of cases){
     const label=`${c.seed}/${c.pos}/${c.balanced?'balanced':'first-row'}/${viewport.width}`;
     const [base,head]=[await career('baseline',c,viewport),await career('candidate',c,viewport)];
@@ -82,7 +105,7 @@ try{
       assert.fail(`${label} differs from ${baselineRef} at step ${at} (year ${base.steps[at]?.year}) ${d?d.path+': '+near(d.before,d.after).join(' -> '):'(length only)'}`);
     }
     const last=base.steps.at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');
-    console.log(`PASS ${label}: ${base.steps.length} steps, RNG ${last.calls}, retirement ${last.year}, DOM/S/RNG identical`);
+    console.log(`PASS ${label}: ${base.steps.length} steps, RNG ${last.calls}, retirement ${last.year}, verified approved HOF/provenance display; remaining DOM/S/RNG strict`);
   }
   assert.deepEqual(errors,[],'Console or page errors');
   console.log(`GameView DOM E2E passed: ${cases.length*viewports.length} careers vs ${baselineRef}`);

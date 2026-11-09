@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
-> 最新狀態核對：2026-11-08。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01已在各ID範圍結案；SUPPORT-01仍待OFUSE收取設定與實際收付款確認。
-> 已完成43項、未完成27項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 最新狀態核對：2026-11-08。UI-06、UI-07、UI-MENU-01、UI-DESKTOP-LAYOUT-01已在各ID範圍結案；本次新增7項使用者驗收結案（詳見各ID）；未實作的候選規則與獨立CI／稽核事項另列。
+> 已完成50項、未完成19項；其他實機／事件、稽核及ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -156,7 +156,7 @@
 
 - [x] **CODE-DEAD-01** — `MERGED / CI_PASS`（2026-11-01；PR #44併dev（`7de1fd1`））。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2cc：分支`refactor/code-dead-01`（`45cccd7`）已刪除`statBonus`、`checkTraitsMid`、`teamChampRate`、`teamListOf`、`CHEER_DEFAULT`、`ageGateUSA`、`nextContractId`、`settlePhaseEnd`的PRO不可達分支（三處共2,390 bytes，更正§3.18的3,548 bytes），以及掃描新發現的`CPBL_TEAMS`、`NPB_TEAMS`、`MLB_TEAMS`、`HS_CUPS`、`U_CUPS`、`currentAffiliation`、`faFlow`薄包裝、`selPos`。Quick 68／68、分組Full 93／93 PASS（macOS＋Brave本機證據），經PR #44併dev（`7de1fd1`，樹與`17b271b`相同），[Tests #111](https://github.com/tt-chin/yakyujinsei/actions/runs/41275581402) Linux Full（`17b271b`）8批全success，`expected 93`、`acceptedPass 93`、`issues []`（記於PR #44），結案條件已滿足。`game.js`未使用的import 86個（含本次新增5個）不動，第26期（§2ee，`refactor/run-draft`）再增5個（`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms`），併入後為91個，第28期（§2gg，`refactor/trait-result-card`）再增2個（`TRAIT_TEXT`、`EVENT_TRAIT_TEXT`），併入後為93個，第29期（§2hh，`refactor/initial-state`）再增3個（`highSchoolTier`、`installBirthHighSchool`、`ensureEventState`），併入後為96個，第30期（§2ii，`refactor/choice-prompt`）再增2個（`createChoiceActionToken`、`runChoiceAction`），併入後為98個：E2E注入的hook在模組內直接引用，刪除會造成`markSalaryPaid is not defined`；未使用的區域變數與`navigation.js`的`renderRecord` import不在本項範圍。
 
-## 3. 未完成工作（27 項）
+## 3. 未完成工作（19 項；本節另保留已結案索引）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（3 項）
 
@@ -165,45 +165,44 @@
 - [ ] **HIST-SPEC-CLAUSE-01** — `未完成細項對照`。第八階段盤點與差異分類已完成，但兩份大詳細設計的全數值／學校tier地域／§19–22舊API與翻譯條款、參考作品分析的每條公式及更早Git修訂尚未逐條核對。建立原始固定來源→現行對應→證據台帳，與AUD-02現行功能驗收、COPY-01可到達文案驗收分開；未經批准不移入正式規格、不恢復舊規則、不刪原文。[範圍與限制](docs/reviews/STAGE8_HISTORICAL_SPEC_AUDIT.md)
 
 
-### 3.2 P1 — 退休與殿堂研究、決策（6 項）
+### 3.2 P1 — 退休與殿堂研究、決策（5 項）
 
 - [ ] **HOF-NATURAL-SAMPLE-01** — `IMPLEMENTED_UNVERIFIED`。現有固定案例及 50 條完成生涯，但自然生涯沒有足夠到達 KBO／MLB 一軍的樣本；四聯盟比較與 4,000 有效生涯目標尚未完成。先改進研究路線與樣本品質，**不修改殿堂規則**。
-- [ ] **HOF-BUCKET-DECISION-01** — `DESIGN_PENDING`。決定 NPB／CPBL／KBO 的育成、二軍、一軍成績在殿堂評價中如何合算；MiLB 目前不併入 MLB。
-- [ ] **HOF-PITCHER-BALANCE-01** — `DESIGN_PENDING`。以自然生涯評估 SP／MR／CL 與 HLD、ERA、WHIP、L 等投手指標；A／B／C 方案仍是假說，係數未批准。
-- [ ] **HOF-HONOR-POLICY-01** — `DESIGN_PENDING`。確認 MVP、最優秀投手、部門／守備獎對殿堂投票候選的保證規則，以及國際／加盟球團加分範圍。
-- [ ] **HOF-DISPLAY-ROUND-01** — `DESIGN_PENDING`。如 raw 7999.8 顯示 8000，是否造成門檻誤解；是否補註或調整顯示需決策，未批准修改判定。
-- [ ] **HOF-VOTE-STORY-01** — `DESIGN_PENDING`。檢查 i=0 確定性殿堂演出、i=1 候選止步的說明是否容易被誤認為隨機投票；未批准概率化。
+- [ ] **HOF-BUCKET-DECISION-01** — `IMPLEMENTED_LOCAL / QUICK_PASS / FULL_NOT_RUN`。四聯盟殿堂只計當聯盟一軍；二軍／育成／MiLB保留紀錄但不計入，未知歷史階級不推測。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
+- [ ] **HOF-PITCHER-BALANCE-01** — `RESEARCH_ONLY / NOT_IMPLEMENTED`。只調查SP／MR／CL與指標，暫不採A／B／C或改係數；不影響另已批准的一軍篩選及國際榮譽變更。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
+- [ ] **HOF-HONOR-POLICY-01** — `IMPLEMENTED_LOCAL / QUICK_PASS / FULL_NOT_RUN`。保留MVP／最優秀投手至少明星、部門獎至少主力並展示實際理由。個人獎與球隊優勝按取得當年聯盟，不能重複加分；國際榮譽獨立展示、各聯盟分數及下限貢獻為0。移除現NPB國際加分是規則變更，非純UI。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
+- [ ] **HOF-DISPLAY-ROUND-01** — `IMPLEMENTED_LOCAL / QUICK_PASS / FULL_NOT_RUN`。以未取整分數判定；顯示適當精度，仍可能誤解時標示基準未達，不調整入選規則。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
 
-### 3.3 P1 — 實機與日文文案（4 項）
+### 3.3 P1 — 實機與日文文案（1項未完成；3項實機已結案）
 
-- [ ] **EVT-1102-ANDROID** — `BLOCKED`。Android Chrome 實機的年度事件去重、途中 Seed 分享驗收。
-- [ ] **UI-17-DEVICE** — `BLOCKED`。iOS Safari／Android Chrome 實機的顯示設定與事件驗收；功能已公開，**不是未實作**。
-- [ ] **SHARE-111-DEVICE** — `BLOCKED`。iPhone／Android／PC 的原生 share sheet、取消、PNG 主題、圖片分享與儲存驗收。
+- [x] **EVT-1102-ANDROID** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。Android Chrome年度事件去重與途中Seed分享：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
+- [x] **UI-17-DEVICE** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。iOS Safari／Android Chrome顯示設定與事件：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
+- [x] **SHARE-111-DEVICE** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。iPhone／Android／PC原生分享、取消、PNG主題與圖片分享儲存：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。全量可到達日文文案、棒球術語與畫面位置仍待清查；COPY-001～005已於1.12.0完成實作及限定驗收，見[COPY驗收](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)，不再重做這五項。與v1.8.2的92事件翻譯替換分開管理；本輪1.13.3只修送別事件，不能據此結案全量COPY。
 
-### 3.4 P2 — 規格待決與保留（3 項未完成；另保留1項已完成索引）
+### 3.4 P2 — 規格待決與保留（0項未完成；保留4項已完成索引）
 
-- [ ] **TRAIT-CHAMPIONMAKER** — `CI_PASS / MAIN_MERGED / USER_PREVIEW_PENDING`。使用者追加批准以既存日本一／ワールドシリーズ／台湾シリーズ／韓国シリーズ優勝為通算對象，跨隊／跨聯盟累計5次、每年最多一次。只採可信championshipResults，不從學生、國際賽、二軍、育成或模糊honors推定。僅榮譽特性，不加勝率、不增加RNG抽選；nitenichi仍停用。4→5→6、舊狀態、重入及取得顯示故障續行已有限定測試；Linux Full 96／96 PASS，已隨1.14.0併main且發布Workflow成功；使用者Preview仍待確認，見§1現況摘要。
+- [x] **TRAIT-CHAMPIONMAKER** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。優勝請負人Preview：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
   - 歷史修復時點（2026-11-06，後續結果見§1）：KBO舊版比較未納入新增技術欄位，巨大斷言差異輸出造成OOM；原始FAIL保留。限定修正採舊優勝紀錄獨立oracle、原始digest驗證與逐步首差異診斷，不修改產品／Runner／golden。同版完整重播比較保留；比較器23項PASS、KBO限定與完整模式PASS、全新Quick 71 PASS／0 FAIL。證據：test-results/kbo-oom-fix-targeted/summary.json、test-results/kbo-oom-fix-full-profile/summary.json、test-results/kbo-oom-fix-quick/summary.json。整套Full修正前執行已中斷，原日誌與INTERRUPTED.json保留，尚未取得目前來源的整套Full PASS；Preview仍NOT_RUN，不結案。
   - 歷史本機Full排程（2026-11-06，非目前CI狀態）：使用者批准沿用8批、最多2批並行；新增local-full-batches.mjs入口，不變更CI workflow、原Runner、manifest與遊戲案例。工具9 PASS；既有批次工具更正過期92→現行96計數後31 PASS／0 FAIL／1 SKIP（Windows的Linux專用驗證）。新Quick 71 PASS／0 FAIL；該次96項Full已結束，80 PASS／16 FAIL，非PASS，證據test-results/local-full-1140-two-workers-r1/（來源manifest、plan、coordinator、各batch、最終aggregate）。完成前不得標為PASS，artifact缺口與Preview仍獨立未驗證。
-- [ ] **UI-TJ-GAUGE-01** — `CI_PASS / MAIN_MERGED / USER_PREVIEW_PENDING`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2e.7、§2g.1，career-presenter.js已改為小數一位＋既有上限（一般50、ゴムの腕100），例如12.6 / 50；缺值0、不clamp、不寫回S.tj、不改RNG。0／浮點誤差／邊界／缺值已有單元驗證；PC／手機限定驗證與Linux Full 96／96已通過，1.14.0已併main且發布Workflow成功；使用者Preview未確認，不提前結案。
-- [ ] **UI-BOARD-SHADOW-01** — `CI_PASS / MAIN_MERGED / USER_PREVIEW_PENDING`。2026-11-06使用者批准修正並併入1.14.0。career-presenter.js的board()內兩處rgba全形頓號改為半形逗號，保留色彩、尺寸、球團判定、S與RNG。59項presenter比較PASS；Chromium在1280／320／390px、一般色／白色共6組陰影與無溢出檢查PASS，記錄於test-results/board-shadow-1140/summary.json。另有Linux Full 96／96 PASS、1.14.0 main合併與發布Workflow成功；使用者Preview未確認，不提前結案。
+- [x] **UI-TJ-GAUGE-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。TJ小數一位及上限顯示Preview：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
+- [x] **UI-BOARD-SHADOW-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。球團名稱陰影Preview：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
 - [x] **UI-DESIGN-TOKENS-01** — `MERGED / RELEASED_SCOPE_LIMITED`（2026-11-02核對）。原訂結案條件為「PR合併後勾選」；PR #26合併`7ef43d368855c71f21ee40479dc560fcf542ee8b`與實作`fcb22a9`均為目前main `2fe5b25`祖先（git merge-base核對），1.13.6正式發布與指定來源Full證據見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)2026-10-31／11-01紀錄。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2／§6：第1段以Noto Sans JP起首的日文字體列取代Noto Sans TC，新增圓角／陰影token及字體載入斷言；原本機FAIL與重測記錄保留於計畫。僅結案此段已批准範圍，不代表Windows字體回退／手機實機或第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）已驗收，不擴大實作授權。
 
-### 3.5 P2 — 未來功能候補（6項未完成；另保留4項已接受UI索引）
+### 3.5 P2 — 未來功能候補（5項未完成；另保留5項已接受索引）
 
 - [ ] **INJ-UI-01** — 一般受傷風險細項顯示；計算與 UI 維持單一資料來源。
-- [ ] **PLY-01** — 背號與年度履歷；需先決定 00、轉隊、重複及改號規則。
+- [ ] **PLY-01** — `SPEC_APPROVED / NOT_IMPLEMENTED`。球團／年度／字串背號履歷，0與00分開；系統固定預設、玩家可改，轉隊優先沿用，同隊可改並記生效年；0、00、1～99只排明確禁號，不模擬隊友占用，不消耗生涯RNG、不影響能力收入成績殿堂。固定選號次序及舊資料處理待實作盤點。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
 - [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
 - [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。
 - [x] **UI-06** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。遊び方內容與整體UI由使用者接受；使用者確認iPhone Safari與Android Chrome實機的開關、捲動、觸控、分享及顯示操作均OK。結合[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)11組對話框本機驗證，在本ID範圍結案；裝置型號／OS／瀏覽器版本未提供，實機結果為使用者回報，非本機自動測試。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
 - [x] **UI-07** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。更新履歷文案與整體UI由使用者接受，雙實機操作通過；結合51版／50摘要核對與本機對話框驗證，在本ID範圍結案。原始詳細歷史及FAIL保留，不將實機確認延伸為全部遊戲規則或其他版本驗收。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
 
   1.13.5限定驗證：Chromium 11 PASS／0 FAIL（test-results/information-dialog-accepted/summary.json）、WebKit 11 PASS／0 FAIL（information-dialog-webkit-recheck/summary.json）；320×568、390×844、844×390、390×240、1280×900，含標題／操作區固定、末段可讀、背景還原、keyboard／Esc／外側／native close、快速重開、observer與事件清理、內容及visualViewport變化、無溢出隱藏軌道。Chromium另驗證原生觸控；WebKit手機模式無wheel API，背景鎖定改用scrollBy嘗試，不能冒充iPhone實機。Quick 68 PASS／0 FAIL／0 SKIP／0 BLOCKED、504.095秒（information-dialog-quick/summary.json）；既有選單相關event-fix-e2e通過，S／RNG不變。CI分批工具31 PASS／1 Linux-only SKIP，僅同步新增入口數91→92，不改Runner或CI通過條件。早期FAIL為測試量測（預留padding、短文無section、鍵盤動畫未停止）及WebKit不支援wheel，原始summary保留於information-dialog-initial、information-dialog-recheck-1、information-dialog-chromium-final、information-dialog-webkit。Full／CI／實機Safari NOT_RUN，artifact缺口及其他歷史未驗證狀態不變。
-- [ ] **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
+- [ ] **PLY-02** — `DESIGN_DEFERRED / NOT_IMPLEMENTED`。先完成PLY-01。後續只依同球團一軍年資、成績、榮譽設計；本輪不設門檻、不判定、不抽選、不加效果、不宣告完成。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
 - [x] **UI-MENU-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。使用者確認iPhone Safari與Android Chrome實機開關、捲動、觸控、分享、顯示設定，以及確認後真正重新開始均OK，並接受整體UI。結合本機237項剪貼簿／選單驗證，在本ID範圍結案；不再保留『僅驗取消、真正重新開始未驗』缺口。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
 - [x] **UI-DESKTOP-LAYOUT-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。本機60組長契約、36組六分類非零大額收入與六種寬度驗證通過，使用者另接受整體UI及雙實機操作，在本ID範圍結案。不宣稱所有自然生涯、未測裝置或任意資料組合已驗證。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
-- [ ] **SUPPORT-01** — `IMPLEMENTED_UNVERIFIED`。選單OFUSE連結、別分頁安全屬性與本機連結驗證通過；2026-11-05使用者接受整體UI並確認iPhone Safari／Android Chrome實機操作OK。尚未確認OFUSE收取設定及實際收付款，整項維持未結案；不得將UI驗收當成收款驗收。[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)補驗與原始FAIL紀錄保留。
+- [x] **SUPPORT-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。OFUSE功能及收款設定／實際收付款待驗收範圍：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
 
 #### UI驗收現況（2026-10-23同步）
 
@@ -240,7 +239,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 > 歷史準備快照（2026-10-15，保留原時點）：`ARTIFACT_COVERAGE_BLOCKED`。CI job timeout已由60提高至120分鐘，但Linux實際驗證截至本次提交前尚未執行。bounded evidence collector限定測試47 PASS／0 FAIL，尚未接入正式CI；現有artifact glob保持，Full原始S／RNG／Decision／Receipt等證據仍有保存缺口。使用者接受先啟動Linux CI Full，完整封存另行改善；CI Full執行結果、workflow／上傳結果與artifact完整性須分開報告，保存完整性不得標PASS。結案需核准並驗證Gate→case→原件保存契約、超大JSON／64MiB上限處理、敏感路徑安全保存、缺失／損壞／超額與下載還原一致性；不得只用hash索引冒充完整可重播證據。未另行批准不接collector、不取代或擴大glob、不改Full條件或golden。[缺口與限定驗收](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)。
 
-- [ ] **TEST-COMPARE-BASELINE-01** — `DESIGN_PENDING`（2026-10-19縮小範圍）。以`origin/main`為比較基準的3入口（`contract-salary-e2e`、`draft-income-e2e`、`display-preferences-e2e`）在`dev`升版而`main`未跟上時，`birthHighSchool.createdVersion`版本戳記不同，自第0步不一致。**版本戳記部分已處理**：使用者批准比照既有`delete state.version`，於比對前排除該欄位（衍生結果`traits.smallschool`仍比對）；`display-preferences-e2e`亦改用共用`assertSameCareer`防止失敗時OOM。本機Docker 2 CPU／7GB驗證：3入口對`7220ad8`（1.12.0）與`650e4dd`皆PASS（`contract-salary-e2e` 381案，峰值≤3.49GB）；排除前對`7220ad8`的FAIL（含milb-demotion兩案）與`display-preferences-e2e`的OOM皆僅由此欄位造成。**剩餘待決**：有規則變更的版本於發布前跑dev Full時，跨版本比對是否須以許容差分oracle（如`assertApprovedProducerRenameCareer`）宣告差異，或明確接受該等入口FAIL；屬政策判斷，未經批准不改期望值或基準。固定基準的入口（如`hof-first-ballot-e2e`、`salary-history-e2e`）不隨`origin/main`變動，不在本項範圍。2026-10-19 CI確認：Run39260159042（`2a11a64`，Linux Chromium）中3入口對`650e4dd`皆PASS（`contract-salary-e2e` 135.9秒、`display-preferences-e2e` 115.1秒、`draft-income-e2e` 334.2秒）；本次`dev`與`main`的VERSION相同，不構成跨版本規則變更的驗證，剩餘待決不變。
+- [ ] **TEST-COMPARE-BASELINE-01** — `IMPLEMENTED_LOCAL / QUICK_PASS / FULL_NOT_RUN`。逐項批准差異：背號只允許背號／履歷等新增資料，其餘能力收入成績及RNG嚴格一致；殿堂規則變更另列評分／稱號／演出差異。不得全份比較略過或因版本不同接受未知FAIL；工具接線及驗收尚未完成。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
 
 - [x] **CI-FULL-BALANCE-01** — `MERGED / CI_PASS`（2026-10-24；實作`cdf0a25`隨PR #21併dev（`7fbfde4`，[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §10.7），dev push Quick Run40068894037 PASS 67／67；含`cdf0a25`的Full Run40046088278（`ec54253`）PASS 87／87、wall time 18分43秒，其後Run40055238234（`50139d0`）11分15秒（§11.6）。經使用者同意勾選）。原狀態：`PROPOSED / NOT_APPROVED`（2026-10-23）。依[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §7-2、§8，8批平行化已完成，但splitIds仍按入口數平分；Run39879968880指定b6f71f6（84入口）記錄21分37秒，批次耗時5／520／384／1205／550／23／294／321秒，第4批為瓶頸。依耗時平衡是另案未批准提案；舊86入口manifest試算不代表目前87入口或實測提速。需先決定manifest預估或實測校正，再另批ci-full-batches.mjs及其嚴格分批斷言變更；保留不漏測、不重複、任一FAIL／SKIP／BLOCKED不得PASS。驗收須指定SHA的完整Linux Full aggregate及實際wall time；本次只恢復漏列。2026-10-24：計畫見[CI平行化計畫](tasks/CI_FULL_PARALLEL_PLAN.md) §9（DRAFT，未核准）；以manifest `seconds`為權重的LPT試算，最大批由本機617秒降至362秒（`full-power-pitching-e2e`單獨一批為下限），CI預估約13分，未實測。2026-10-24：已實作（`ci/full-balance` `cdf0a25`）；Run40038325238（`5b57f6e`）Full PASS 87／87，最大批測試1205→809秒，但wall time 21分47秒未改善（3批apt安裝約7分，見CI-ENV-PIN-01）；PR暫停至CI-ENV-PIN-01後一併驗證（§9.8）。
 
@@ -419,3 +418,48 @@ BROWSER-SAVE-01最終驗收（2026-11-08）：使用者已確認剩餘實機驗�
 
 
 存檔功能最終範圍決定（2026-11-08）：使用者明確指示「第二期第三期不實做，存檔功能開發結束」。第二期匯出／匯入及第三期操作途中續玩均取消，不列入未完成待辦、不冒充已實作；第一期維持USER_ACCEPTED / PHASE1_COMPLETE。保留原提案與失敗歷史，沒有新增備份按鈕、跨裝置／跨瀏覽器承諾或新產品功能。checkbox統計仍為43完成／27未完成，共70項。ARTIFACT_COVERAGE_BLOCKED及正式發布狀態不變。
+
+
+## 已實作項目驗收結案（2026-11-08）
+
+依使用者對前一則未完成項目清單的統一確認，將上述7項已實作、待Preview／實機／外部收款驗收項目標記結案。這是使用者驗收紀錄，不是代理重新執行測試；未提供個別裝置或付款憑證，僅記錄其接受。尚未選定的DESIGN_PENDING規則、未完成稽核及CI技術債不因本確認自動實作或通過。ARTIFACT_COVERAGE_BLOCKED保持未完成。統計50完成／20未完成，共70項。以下為結案前各ID的完整歷史原文，不作為現況：
+
+> **EVT-1102-ANDROID** — `BLOCKED`。Android Chrome 實機的年度事件去重、途中 Seed 分享驗收。
+
+> **UI-17-DEVICE** — `BLOCKED`。iOS Safari／Android Chrome 實機的顯示設定與事件驗收；功能已公開，**不是未實作**。
+
+> **SHARE-111-DEVICE** — `BLOCKED`。iPhone／Android／PC 的原生 share sheet、取消、PNG 主題、圖片分享與儲存驗收。
+
+> **TRAIT-CHAMPIONMAKER** — `CI_PASS / MAIN_MERGED / USER_PREVIEW_PENDING`。使用者追加批准以既存日本一／ワールドシリーズ／台湾シリーズ／韓国シリーズ優勝為通算對象，跨隊／跨聯盟累計5次、每年最多一次。只採可信championshipResults，不從學生、國際賽、二軍、育成或模糊honors推定。僅榮譽特性，不加勝率、不增加RNG抽選；nitenichi仍停用。4→5→6、舊狀態、重入及取得顯示故障續行已有限定測試；Linux Full 96／96 PASS，已隨1.14.0併main且發布Workflow成功；使用者Preview仍待確認，見§1現況摘要。
+
+> **UI-TJ-GAUGE-01** — `CI_PASS / MAIN_MERGED / USER_PREVIEW_PENDING`。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2e.7、§2g.1，career-presenter.js已改為小數一位＋既有上限（一般50、ゴムの腕100），例如12.6 / 50；缺值0、不clamp、不寫回S.tj、不改RNG。0／浮點誤差／邊界／缺值已有單元驗證；PC／手機限定驗證與Linux Full 96／96已通過，1.14.0已併main且發布Workflow成功；使用者Preview未確認，不提前結案。
+
+> **UI-BOARD-SHADOW-01** — `CI_PASS / MAIN_MERGED / USER_PREVIEW_PENDING`。2026-11-06使用者批准修正並併入1.14.0。career-presenter.js的board()內兩處rgba全形頓號改為半形逗號，保留色彩、尺寸、球團判定、S與RNG。59項presenter比較PASS；Chromium在1280／320／390px、一般色／白色共6組陰影與無溢出檢查PASS，記錄於test-results/board-shadow-1140/summary.json。另有Linux Full 96／96 PASS、1.14.0 main合併與發布Workflow成功；使用者Preview未確認，不提前結案。
+
+> **SUPPORT-01** — `IMPLEMENTED_UNVERIFIED`。選單OFUSE連結、別分頁安全屬性與本機連結驗證通過；2026-11-05使用者接受整體UI並確認iPhone Safari／Android Chrome實機操作OK。尚未確認OFUSE收取設定及實際收付款，整項維持未結案；不得將UI驗收當成收款驗收。[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)補驗與原始FAIL紀錄保留。
+
+
+## 殿堂與背號批准決策（2026-11-08）
+
+依使用者逐項批准及四點補充，[決策正本](tasks/HOF_JERSEY_APPROVED_SPEC.md)記載待實作的殿堂規則、理由顯示、背號履歷與比較界線。HOF-VOTE-STORY-01 CANCELLED／不實作，移出待辦而非標PASS；永久欠番保留後續設計，投手平衡只調查。50完成／19未完成，共69項（取消1項）。以下保留原待決條款與測試歷史，不作現行授權：
+
+> **HOF-BUCKET-DECISION-01** — `DESIGN_PENDING`。決定 NPB／CPBL／KBO 的育成、二軍、一軍成績在殿堂評價中如何合算；MiLB 目前不併入 MLB。
+
+> **HOF-PITCHER-BALANCE-01** — `DESIGN_PENDING`。以自然生涯評估 SP／MR／CL 與 HLD、ERA、WHIP、L 等投手指標；A／B／C 方案仍是假說，係數未批准。
+
+> **HOF-HONOR-POLICY-01** — `DESIGN_PENDING`。確認 MVP、最優秀投手、部門／守備獎對殿堂投票候選的保證規則，以及國際／加盟球團加分範圍。
+
+> **HOF-DISPLAY-ROUND-01** — `DESIGN_PENDING`。如 raw 7999.8 顯示 8000，是否造成門檻誤解；是否補註或調整顯示需決策，未批准修改判定。
+
+> **PLY-01** — 背號與年度履歷；需先決定 00、轉隊、重複及改號規則。
+
+> **PLY-02** — 永久欠番；以前述背號履歷為前提，待組織、年數、成績及 RNG 規則批准。
+
+> **TEST-COMPARE-BASELINE-01** — `DESIGN_PENDING`（2026-10-19縮小範圍）。以`origin/main`為比較基準的3入口（`contract-salary-e2e`、`draft-income-e2e`、`display-preferences-e2e`）在`dev`升版而`main`未跟上時，`birthHighSchool.createdVersion`版本戳記不同，自第0步不一致。**版本戳記部分已處理**：使用者批准比照既有`delete state.version`，於比對前排除該欄位（衍生結果`traits.smallschool`仍比對）；`display-preferences-e2e`亦改用共用`assertSameCareer`防止失敗時OOM。本機Docker 2 CPU／7GB驗證：3入口對`7220ad8`（1.12.0）與`650e4dd`皆PASS（`contract-salary-e2e` 381案，峰值≤3.49GB）；排除前對`7220ad8`的FAIL（含milb-demotion兩案）與`display-preferences-e2e`的OOM皆僅由此欄位造成。**剩餘待決**：有規則變更的版本於發布前跑dev Full時，跨版本比對是否須以許容差分oracle（如`assertApprovedProducerRenameCareer`）宣告差異，或明確接受該等入口FAIL；屬政策判斷，未經批准不改期望值或基準。固定基準的入口（如`hof-first-ballot-e2e`、`salary-history-e2e`）不隨`origin/main`變動，不在本項範圍。2026-10-19 CI確認：Run39260159042（`2a11a64`，Linux Chromium）中3入口對`650e4dd`皆PASS（`contract-salary-e2e` 135.9秒、`display-preferences-e2e` 115.1秒、`draft-income-e2e` 334.2秒）；本次`dev`與`main`的VERSION相同，不構成跨版本規則變更的驗證，剩餘待決不變。
+
+> **HOF-VOTE-STORY-01** — `DESIGN_PENDING`。檢查 i=0 確定性殿堂演出、i=1 候選止步的說明是否容易被誤認為隨機投票；未批准概率化。
+
+
+## 殿堂四項本機實作（2026-11-08）
+
+feature/hof-evaluation-policy，自dev 25b815e，1.16.0工作樹。TEST-COMPARE-BASELINE-01／HOF-DISPLAY-ROUND-01／HOF-BUCKET-DECISION-01／HOF-HONOR-POLICY-01本機已實作；最終Quick 85 PASS／0 FAIL／0 SKIP／0 BLOCKED，362.42秒（test-results/hof-policy-quick-final-r3/summary.json）。固定P／IF自然與控制退休、同版完整重播、PC／320／390及分享圖PASS；控制例以固定舊退休模組及獨立批准評價oracle嚴格比完整S與用途標記逐筆RNG，不略過整個退休。新franchise來源只在原取得條件成功時新增，舊布林不猜聯盟。原整合FAIL及修復見[驗收紀錄](docs/reviews/HOF_EVALUATION_1160_ACCEPTANCE.md)。`4bbcd3b`已提交推送；[Linux Full 42492930690](https://github.com/tt-chin/yakyujinsei/actions/runs/42492930690)為104 PASS／8 FAIL（112入口），原FAIL保留。2026-11-09限定修正fixture、franchise取得證據比較及退休顯示oracle，詳見上列驗收紀錄。依使用者新決定，本輪不執行本機Quick；尚未完成的本機重測已停止，最終GitHub驗證待執行，不以部分PASS代替完整Full。四ID維持未勾選；Preview／實機NOT_RUN。背號、永久欠番未實作，投手係數不改，票選概率化提案不復活。既有50完成／19未完成及ARTIFACT_COVERAGE_BLOCKED不變。本輪僅提交推送作業分支，不merge或部署。

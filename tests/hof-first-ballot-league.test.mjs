@@ -7,7 +7,7 @@ const thresholds=createProductionHarness({traits:{},honors:[],stats:{}}).snapsho
 const mult={CPBL:1.15,KBO:1.15,NPB:1.12,MLB:1.2};
 let count=0;
 function check(id,scores,expected,existing=false,initialLeague){
- const initial={pos:'IF',lv:'MLB',stage:'PRO',year:2050,traits:{legend:existing},honors:[],stats:Object.fromEntries(Object.entries(scores).map(([l,H])=>[l,{...blank(),H}])),teamTally:{}};
+ const initial={pos:'IF',lv:'MLB',stage:'PRO',year:2050,traits:{legend:existing},honors:[],statsByLevel:Object.fromEntries(Object.entries(scores).map(([l,H])=>[{CPBL:'CPBL1',KBO:'KBO1',NPB:'NPB1',MLB:'MLB'}[l],{...blank(),H}])),stats:Object.fromEntries(Object.entries(scores).map(([l,H])=>[l,{...blank(),H}])),teamTally:{}};
  if(initialLeague!==undefined)initial.legendLeague=initialLeague;
  const runs=[baseline,undefined].map(source=>{const h=createProductionHarness(initial,id,source);h.run("retireScene(Object.fromEntries(Object.keys(S.stats).map(b=>[b,tierOf(b)])))");return {h,snap:h.snapshot(),cards:structuredClone(h.cards)};});
  const [old,now]=runs;assert.equal(now.snap.state.legendLeague,expected,id);
@@ -16,8 +16,8 @@ function check(id,scores,expected,existing=false,initialLeague){
  const oldCards=old.cards.map(c=>{if(c[1].startsWith('隠し特性解放：')&&old.snap.state.legendLeague!==expected){const prev=old.snap.state.legendLeague;return c.map((value,i)=>i?value.replaceAll(prev,expected):value);}return c;});
  const expectedCards=existing?oldCards.map(c=>c[1].startsWith('隠し特性解放：')?[c[0],c[1].replace('隠し特性解放：',''),'']:c):oldCards;
  assert.deepEqual(now.cards,expectedCards,id+' exact vote cards; corrected league label and approved name-only existing legend');
- const expectedFirst=leagues.filter(l=>scores[l]!=null&&Math.round(scores[l])>=thresholds[l][0]*mult[l]);
- assert.deepEqual(now.snap.state.hofInfo?.filter(x=>x.yr===1).map(x=>x.lg)||[],expectedFirst.map(l=>labels[l]),id+' first ballot uses rounded t.sc and native float comparison');
+ const expectedFirst=leagues.filter(l=>scores[l]!=null&&scores[l]>=thresholds[l][0]*mult[l]);
+ assert.deepEqual(now.snap.state.hofInfo?.filter(x=>x.yr===1).map(x=>x.lg)||[],expectedFirst.map(l=>labels[l]),id+' first ballot uses unrounded score and native float comparison');
  assert.equal(now.snap.state.traits.legend,existing||expectedFirst.length>0,id+' unchanged unlock');
  console.log(id+' PASS RNG='+now.snap.calls+' final='+now.snap.state.rngState);count++;
 }
@@ -28,5 +28,5 @@ check('F07',{CPBL:8600,KBO:11000,MLB:11000},'KBO');
 check('F08',{CPBL:8600,MLB:8600},'existing-marker',false,'existing-marker');
 check('F09-candidate',{NPB:6000},undefined);check('F09-none',{NPB:100},undefined);
 check('F10',{MLB:11000},'NPB',true,'NPB');
-for(const l of leagues){const boundary=thresholds[l][0]*mult[l];for(const delta of [-1,0,1,-.49,.49]){const score=boundary+delta;check('F11-'+l+'-'+delta,{[l]:score},Math.round(score)>=boundary?labels[l]:undefined);}}
+for(const l of leagues){const boundary=thresholds[l][0]*mult[l];for(const delta of [-1,0,1,-.49,.49]){const score=boundary+delta;check('F11-'+l+'-'+delta,{[l]:score},score>=boundary?labels[l]:undefined);}}
 console.log(count+' fixed diagnostic before/after cases PASS; league label fix and existing legend name-only UI, RNG and vote cards exact.');

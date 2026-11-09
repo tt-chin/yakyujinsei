@@ -72,7 +72,36 @@ export function validateAwardHistory(state){
     assert.equal(rows.some(d=>d.awardId==='PITCH_TRIPLE_CROWN'),triple);
   }
 }
-export function historicalState(state,options={}){validateAwardHistory(state);const copy=structuredClone(options.championmaker?legacyChampionmakerState(state,options):state);delete copy.awardDecisions;return copy;}
+// Browser/Node shared, assertion-library independent grant contract.
+export function verifyFranchiseGrant(before,after){
+ const levels={NPB1:'NPB',MLB:'MLB',KBO1:'KBO',CPBL1:'CPBL'};
+ if(!before||!after||before.traits?.franchise||!after.traits?.franchise||before.stage!=='PRO'||!levels[before.lv]||!Number.isInteger(before.teamYears)||before.teamYears<6||before.champThisTeam!==true||before.champTeam!==before.orgTeamId||typeof before.orgTeamId!=='string'||!before.orgTeamId)throw Error('FRANCHISE_NATIVE_GRANT_CONTRACT');
+ const grant={year:before.year,league:levels[before.lv],teamId:before.orgTeamId};
+ const f=after.franchiseAchievement;
+ if(!f||Object.keys(f).sort().join(',')!=='league,teamId,year'||Object.keys(grant).some(k=>f[k]!==grant[k]))throw Error('FRANCHISE_GRANT_PROVENANCE');
+ return grant;
+}
+export function projectFranchiseField(state,grant){
+ const present=Object.hasOwn(state,'franchiseAchievement'),f=state.franchiseAchievement;
+ if(present&&(!grant||!state.traits.franchise||state.year<grant.year||!f||Object.keys(f).sort().join(',')!=='league,teamId,year'||Object.keys(grant).some(k=>f[k]!==grant[k])))throw Error('FRANCHISE_PROVENANCE_MUTATION_OR_NO_PROOF');
+ if(grant&&state.traits.franchise&&state.year>=grant.year&&!present)throw Error('FRANCHISE_PROVENANCE_DISAPPEARED');
+ const copy={...state};if(present)delete copy.franchiseAchievement;return copy;
+}
+// Opt-in provenance projection for pre-1.16 histories. Validate the real native
+// false -> true grant transition first; never infer acquisition from final S.
+export function franchiseComparisonProof(career){
+  const rows=career.steps||career.actions;
+  const pairs=rows?rows.map(r=>[r.beforeState,r.afterState]):Array.isArray(career)?career.slice(1).map((r,i)=>[career[i].state,r.state]):[];
+  let grant=null;
+  for(const [before,after] of pairs){
+    if(!before||!after||before.traits?.franchise||!after.traits?.franchise)continue;
+    assert.equal(grant,null,'one native franchise acquisition');
+    grant=verifyFranchiseGrant(before,after);
+  }
+  return {grant,project:state=>projectFranchiseField(state,grant)};
+}
+
+export function historicalState(state,options={}){validateAwardHistory(state);const source=options.franchiseProof?options.franchiseProof.project(state):state;const copy=structuredClone(options.championmaker?legacyChampionmakerState(source,options):source);delete copy.awardDecisions;return copy;}
 export function historicalCareer(value,options={}){
   if(Array.isArray(value))return value.map(v=>historicalCareer(v,options));
   if(value&&typeof value==='object'){
@@ -102,6 +131,7 @@ function firstMismatch(a,b,path='$'){
     if(Array.isArray(a)!==Array.isArray(b))return {path,reason:'container type'};
     for(const k of new Set([...Object.keys(a),...Object.keys(b)])){
       if(!Object.hasOwn(a,k)||!Object.hasOwn(b,k))return {path:path+'.'+k,reason:'missing/extra field'};
+      if(['before','after'].includes(k)&&a[k+'State']&&b[k+'State']){const stateDiff=firstMismatch(a[k+'State'],b[k+'State'],path+'.'+k+'State');if(stateDiff)return stateDiff;}
       const d=firstMismatch(a[k],b[k],path+'.'+k);if(d)return d;
     }
     return null;
@@ -141,9 +171,10 @@ export function assertApprovedProducerRenameCareer(old,current,options={}){
     }
     return value;
   }
-  const approved=expected(old,current),observed=historicalCareer(current,options);
+  const franchiseProof=franchiseComparisonProof(current);
+  const approved=expected(old,current),observed=historicalCareer(current,{...options,franchiseProof});
   // A compact first-difference diagnostic prevents assert's formatting of a
   // 100+ MB career from obscuring an actual failure with ArrayBuffer errors.
   assert.deepEqual(firstMismatch(approved,observed),null,'Only Decision-proven official producer renames allowed; every other field remains strict');
-  return {classification:'EXPECTED_D2_PRODUCER_NAME_ONLY',strictOtherFields:true,renames:[...evidence.values()]};
+  return {classification:franchiseProof.grant?'EXPECTED_D2_NAMES_AND_VERIFIED_FRANCHISE_PROVENANCE':'EXPECTED_D2_PRODUCER_NAME_ONLY',strictOtherFields:true,franchiseGrant:franchiseProof.grant,renames:[...evidence.values()]};
 }
