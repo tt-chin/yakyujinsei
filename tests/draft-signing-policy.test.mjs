@@ -96,14 +96,16 @@ const yearFlowReporter=moduleSource=>{moduleSource=moduleSource.replace(/\r\n/g,
   assert.equal(moduleSource.split(head).length,2,'reportFlowOutcome head once');assert.equal(moduleSource.split(end).length,2,'reportFlowOutcome end once');
   const a=moduleSource.indexOf(head)+head.length;return 'function reportFlowOutcome(outcome){\n'+moduleSource.slice(a,moduleSource.indexOf(end,a))+'\n  const flowHooks={advance:null,endGame:null};';};
 // Phase 33 (§2ll): movement L2/L3 live in MovementGate. The current side runs the module class with the game.js wrapper and
-// construction lines (each once). The context stubs log the calls past the amateur return on both sides.
+// construction lines (each once). The context stubs log the calls past the amateur return on both sides. Phase 40 (§2ss):
+// the wrapper is a function declaration; the vm declares `let movement`, so it runs as an assignment of the same body.
 const movementGateSource = fs.readFileSync(new URL('../docs/src/engine/movement-gate.js', import.meta.url), 'utf8');
 const movementEntry = source => {
   if (!source.includes("from './movement-gate.js'")) return source.match(/^  movement = function\(\)\{[^\n]+/m)[0];
-  const wrapper = source.match(/^  movement=function\(\)\{return movementGate\.movement\(\);\};$/gm), ctor = source.match(/^  const movementGate=new MovementGate\(\{[^\r\n]+/gm);
+  const wrapper = source.match(/^function movement\(\)\{return movementGate\.movement\(\);\}$/gm), ctor = source.match(/^  const movementGate=new MovementGate\(\{[^\r\n]+/gm);
   assert.equal(wrapper?.length, 1, 'movement wrapper once'); assert.equal(ctor?.length, 1, 'movementGate construction once');
   assert.equal(movementGateSource.split('export class MovementGate {').length, 2, 'MovementGate class once');
-  return movementGateSource.replace('export class MovementGate {', 'class MovementGate {') + '\n' + wrapper[0] + '\n' + ctor[0];
+  const body = wrapper[0].slice('function movement(){'.length, -1);
+  return movementGateSource.replace('export class MovementGate {', 'class MovementGate {') + '\n' + 'movement=function(){' + body + '};' + '\n' + ctor[0];
 };
 const amateurSource = fs.readFileSync(new URL('../docs/src/engine/amateur-career.js', import.meta.url), 'utf8');
 const contractSource = fs.readFileSync(new URL('../docs/src/engine/career-contract.js', import.meta.url), 'utf8');
@@ -118,6 +120,7 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
   const amateurNames = ['enterDraftPath', 'draftFallback', 'pathChoiceHS', 'pathChoiceU4'];
   function amateurRun(source, { state, overall, draft }, picks) {
     const log = [], choices = [], reported = [];
+    const movementLayer = { movement: () => log.push(['legacyMovement']) };
     const S = { entryRoute: 'HS', corpYears: 0, indYears: 0, ...state };
     const context = vm.createContext({
       S, LV: { A1: { n: 'A+' }, R: { n: 'ルーキー' } }, isDraftFallbackResult, reported, AmateurCareer, DATA: {},
@@ -126,7 +129,7 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
       listByOrg: () => [{ name: 'MiLB-A', teamId: 'MILB-A' }, { name: 'MiLB-B', teamId: 'MILB-B' }, { name: 'MiLB-C', teamId: 'MILB-C' }],
       migrateSalaryV130State: () => log.push(['migrate']),
       accrueForeignFirstTeamSeason: () => log.push(['accrueForeign']), contractStageFor: org => { log.push(['contractStage', org]); return 'CONTROL'; },
-      LEGACY: { movement: () => log.push(['legacyMovement']) }, restorePendingChoice: () => { log.push(['restore']); return false; },
+      LEGACY: movementLayer, careerMovement: movementLayer, restorePendingChoice: () => { log.push(['restore']); return false; },
       advance: () => { log.push(['advance', S.stage, S.stageYr]); },
       endGame: reason => { log.push(['endGame', reason]); },
       setAmateur: stage => { log.push(['setAmateur', stage]); S.stage = stage; S.stageYr = 0; },
