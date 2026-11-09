@@ -4699,7 +4699,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 
 - 交付：[PR #72](https://github.com/tt-chin/yakyujinsei/pull/72) 已併 dev（merge `b9a45e0`）。未做：Linux CI Full、Preview、實機確認、main 發布。
 
-## 2ss. 第 40 期：拿掉 `LEGACY` 覆寫層與重複綁定（細部計畫，2026-11-08；2026-11-09 rebase 至 `4c15523` 後重做草稿；D1–D8、T2e 待批准）
+## 2ss. 第 40 期：拿掉 `LEGACY` 覆寫層與重複綁定（細部計畫，2026-11-08；2026-11-09 rebase 至 `4c15523` 後重做草稿；D1–D8、T2e 批准 2026-11-09）
 
 §3.25 的候補 K＋L 的一部分（使用者決定 2026-11-08）。物件導向的收益：`board`／`endGame`／`movement` 各自只有一個宣告，不再由覆寫區「先存 `LEGACY` 再重新指派」；`MovementGate` 直接以參考取得 `CareerMovement`，與 `amateurCareer` 相同。`seedInit`／`R` 的重新指派不在本期（9 個測試／工具檔以文字比對 `R = function`／`seedInit = function`，且屬 RNG）。
 
@@ -4712,7 +4712,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 文字替換：三個字串在 `docs/src`、`docs/index.html` 與資料中只出現於替換本身（`docs/archive/` 除外，不載入），Unicode 跳脫寫法也沒有。現行只會改寫玩家名稱或 seed 中的這些字。
 - 測試耦合：`stage10-risk-e2e` 在覆寫區標記前以 `board=s10wrap(…)` 等改綁 `oldNames`，斷言 `legacy.board>0`、`legacy.endGame>0`，所以三個宣告須留在標記之前且可重新指派。`verify-modularization:78–83`（movement 接線、`LEGACY` 先於包裝）、`draft-signing-policy:102–103,129`（包裝行正規式、`LEGACY` stub）、`movement-gate.test`（模組標頭、解構與 `LEGACY` stub）、`career-movement-policy:55`（`game.js` 呼叫 `careerMovement.movement()`）。Full 專屬：`hof-retirement-policy-e2e`（PR #74）的 `old` mode 以基準 `25b815e` 的 `game.js` 搭配現行模組，該版傳 `LEGACY` 給 `MovementGate`；其餘以舊 `game.js` 搭配現行模組的 E2E，固定基準都早於 `movement-gate.js`，`display-preferences-e2e` 則整棵基準樹一起提供。`tools/development-b/legacy-effect-boundaries`、`scripts/audit-architecture` 不在 Quick／Full。
 
-### 2ss.2 設計（D1–D8 待批准）
+### 2ss.2 設計（D1–D8 批准 2026-11-09）
 
 | # | 內容 |
 |---|---|
@@ -4753,7 +4753,16 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 ### 2ss.5 驗證與交付（K：R2；L：R3（年度精算的 movement、引退）；允許差分無）
 
 - 草稿用的 assembler（K／L 兩段，L 段含 T2a–T2e）、突變腳本與 probe 只放在 session scratchpad，未進 repo；自乾淨 `ce1cdf6` 重建的 `git diff` 與草稿相同（SHA-1 `bfbfd2b`）。scratchpad 不跨 session，若需重建，依 2ss.2／2ss.3 的行號與內容重做，並對照本表數字（`game.js` +10／−23、395 行／40,809 bytes）。
-- 待實作：同一 assembler 依 K／L 分 2 個 commit 套用，與草稿逐位元組相同（`cmp`）；各 commit 跑 Quick（預期 87）；HEAD 於乾淨 worktree 跑 Quick（預期 87）與 8 批 Full（預期 114）；reviewer。
+- 實作：同一 assembler 依 K／L 分 2 個 commit 套用；L 後 7 檔與草稿逐位元組相同（`cmp`），`game.js` 395 行／40,809 bytes。commit `93af9b7`（K）、`22e33e0`（L），計畫 commit `ce1cdf6`、`103846c` 在前。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（各 commit） | `93af9b7` 87／87、`22e33e0` 87／87 PASS，依 `summary.json` 核對；HEAD 乾淨 worktree 再跑 87／87 PASS |
+| 本機 Full 第 1 次（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `22e33e0`，比較基準 `dfc8ff7`） | **FAIL_OR_INCOMPLETE**：`acceptedPass 111`／`expected 114`，batch 3、6、7 exit 1。`salary-history-e2e`（21:59 結束）、`draft-income-e2e`、`event-system-e2e`（22:09–22:10 結束）都是「Console Error 為 0」的斷言收到 `Failed to load resource: net::ERR_NETWORK_CHANGED`；生涯比對與 RNG 比對皆 PASS。判為本機網路環境問題：三入口以 `test.mjs full --only=` 單獨重跑 3／3 PASS（部分重跑，不作為 Full PASS）。`hof-retirement-policy-e2e` 在此次已 PASS（T2e） |
+| 本機 Full 第 2 次（同上） | `PASS`，`expected 114`、`acceptedPass 114`、`issues []`，plan 114 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,365 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：求值順序、TDZ（`careerMovement` 先於 `movementGate` 建構，模組求值期無同步呼叫）、`setTimeout` 時序與舊覆寫等價；Quick／Full 範圍內無 `LEGACY` 讀取者；K 刪除的綁定確由 bootstrap 覆蓋；測試未放寬或空轉；T2e 只限 `old` mode 正確（`oracle` 載入現行 `game.js`）。資訊性：`docs/design/*.md` 仍描述 `LEGACY`，屬文件、不在本期範圍 |
+
+- 交付：分支 `refactor/legacy-wrappers` 尚未 push、未開 PR。未做：Linux CI Full、Preview、實機確認、main 發布。
 - BACKLOG 新增：`endGame` 的「台幣→円」等文字替換只會改寫玩家名稱／seed，刪除屬 PATCH 規格變更，另案。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
