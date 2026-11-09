@@ -154,6 +154,12 @@ for(const line of [
   for(const gone of ["{'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}",'S.tj+=base','return S.traits.rubber?100:50'])assert.ok(!text.includes(gone),'moved into PlayerInjury: '+gone);
   for(const moved of ["{'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}",'S.tj+=base','return S.traits.rubber?100:50','  accrueTj(){this.#rules.accrueTj();}\n  tjGaugeLimit(){return this.#rules.tjGaugeLimit();}\n','return {tjGamble,afterGamble,rollInjury,accrueTj,tjGaugeLimit};'])assert.equal(injury.split(moved).length,2,'in PlayerInjury once: '+moved);
 }
+{// Phase 40 (K): the restart and seed bindings that the bootstrap block overwrote at load time are gone; each control
+  // is bound once, by the bootstrap block.
+  const text=sourceText(game);
+  for(const bound of ["$('btn-restart').onclick=","$('seed-re').onclick="])assert.equal(text.split(bound).length,2,'bound once: '+bound);
+  for(const gone of ["getElementById('btn-restart')",'(0).toString(36)',"$('seed-show').value=SEED;",'人生のこの部分を放棄して'])assert.ok(!text.includes(gone),'dead binding removed: '+gone);
+}
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);

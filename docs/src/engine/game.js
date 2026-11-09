@@ -241,11 +241,6 @@ function retireBelowActiveMinimum(){return careerMovement.retireBelowActiveMinim
 /* 長期契約/短期契約 選択処理。 */
 function extensionOffer(o){return careerContract.extensionOffer(o);}
 function ageGateJP(){return careerContract.ageGateJP();}
-if(typeof document!=='undefined'&&document.getElementById('btn-restart')){
-  document.getElementById('btn-restart').onclick=function(){
-    if(confirm('人生のこの部分を放棄して、最初からやり直してもよろしいですか?'))location.href=location.pathname;
-  };
-}
 function advance(){return yearFlow.advance();}
 /* キャリア終盤。 */
 const TIER_TH=leagueCatalog.tierThresholds;
@@ -270,8 +265,6 @@ function shareImage(evals,out){shareImageView.render(evals,out);}
   if(t)t.onclick=()=>{ document.getElementById('act').classList.toggle('collapsed');
     t.textContent=document.getElementById('act').classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる'; };
 })();
-$('seed-show').value=SEED;
-$('seed-re').onclick=e=>{e.preventDefault();SEED=(0).toString(36).slice(2,10);$('seed-show').value=SEED;};
 document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#seg-pos button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
