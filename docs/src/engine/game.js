@@ -310,8 +310,8 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function doTradeExec(){return careerContract.doTradeExec();}
   function stageLabel(){return careerContract.stageLabel();}
 
-  function setSchool(kind){const a=kind==='U'?DATA.universities:DATA.highSchools,r=pickRecord(a);S.schoolId=r.schoolId;S.schoolTier=r.tier;S.team=r.name;S.lv=kind;S.org='AMATEUR';}
-  function setAmateur(stage){S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=pickRecord(listByOrg(stage)).teamId;S.team=teamRec(S.orgTeamId).name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;}
+  function setSchool(kind){amateurCareer.setSchool(kind);}
+  function setAmateur(stage){amateurCareer.setAmateur(stage);}
   function enterDraftPath(from){amateurCareer.enterDraftPath(from);}
   function draftFallback(from){amateurCareer.draftFallback(from);}
 
@@ -319,7 +319,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
 
   function pathChoiceHS(){amateurCareer.pathChoiceHS();}
   function pathChoiceU4(){amateurCareer.pathChoiceU4();}
-  const amateurCareer=new AmateurCareer({getState:()=>S,DATA,LV,ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),salaryFor:(lv,d)=>salaryFor(lv,d),listByOrg:org=>listByOrg(org),signTo:(...args)=>signTo(...args),choose:(title,opts)=>choose(title,opts),card:(cls,title,html)=>card(cls,title,html),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),displayTrait:key=>displayTrait(key),setSchool:kind=>setSchool(kind),setAmateur:stage=>setAmateur(stage),runDraft:(fromSchool,cb)=>runDraft(fromSchool,cb),pickRecord:a=>pickRecord(a),escapeHTML:v=>escapeHTML(v),salaryDecisionLink:()=>salaryDecisionLink(),bindLatestSalaryDetailLink:()=>bindLatestSalaryDetailLink(),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),nextStep:()=>nextStep(),maybeIntl:done=>maybeIntl(done),recordIndependentSalaryEvaluation:results=>recordIndependentSalaryEvaluation(results),rng:{ri:(a,b)=>ri(a,b),R:()=>R()}});
+  const amateurCareer=new AmateurCareer({getState:()=>S,DATA,LV,ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),salaryFor:(lv,d)=>salaryFor(lv,d),listByOrg:org=>listByOrg(org),signTo:(...args)=>signTo(...args),choose:(title,opts)=>choose(title,opts),card:(cls,title,html)=>card(cls,title,html),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),displayTrait:key=>displayTrait(key),setSchool:kind=>setSchool(kind),setAmateur:stage=>setAmateur(stage),runDraft:(fromSchool,cb)=>runDraft(fromSchool,cb),pickRecord:a=>pickRecord(a),escapeHTML:v=>escapeHTML(v),salaryDecisionLink:()=>salaryDecisionLink(),bindLatestSalaryDetailLink:()=>bindLatestSalaryDetailLink(),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),nextStep:()=>nextStep(),maybeIntl:done=>maybeIntl(done),recordIndependentSalaryEvaluation:results=>recordIndependentSalaryEvaluation(results),teamRec:id=>teamRec(id),rng:{ri:(a,b)=>ri(a,b),R:()=>R()}});
 
   function amateurSeason(){amateurCareer.amateurSeason();}
 

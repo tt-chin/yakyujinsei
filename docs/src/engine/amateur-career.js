@@ -1,7 +1,8 @@
 // Amateur career path and domestic tournament seasons (OOP plan §2y).
 // The career state is read through getState; DATA and LV are passed by reference because the overlay only changes them in
-// place. setSchool and setAmateur stay in game.js with the contract domain and arrive with the other game.js
-// names as late-binding lambdas, so reportFlowOutcome stays the only exit to the year flow. Bodies are the former game.js
+// place. setSchool and setAmateur are implemented here (setSchoolRule/setAmateurRule, phase 42 §2tt; bodies are the former
+// game.js ones), but internal callers reach them through the injected game.js names as late-binding lambdas, like runDraft,
+// so E2E hooks calling the game.js names and spies on the deps keep working; reportFlowOutcome stays the only exit to the year flow. Bodies are the former game.js
 // ones; the deferred choose options that touch S read getState() live. runDraft stays a late-binding name so internal
 // callers keep passing through game.js; the implementation is runDraftRule.
 import { acceptDraftSelection, declineDraftSelection, draftSigningTerms, isDraftFallbackResult } from './draft-signing-policy.js';
@@ -17,13 +18,17 @@ export class AmateurCareer {
   enterDraftPath(from){this.#rules.enterDraftPath(from);}
   draftFallback(from){this.#rules.draftFallback(from);}
   runDraft(fromSchool,cb){this.#rules.runDraftRule(fromSchool,cb);}
+  setSchool(kind){this.#rules.setSchoolRule(kind);}
+  setAmateur(stage){this.#rules.setAmateurRule(stage);}
   pathChoiceHS(){this.#rules.pathChoiceHS();}
   pathChoiceU4(){this.#rules.pathChoiceU4();}
   amateurSeason(){this.#rules.amateurSeason();}
   seasonEndMovement(){return this.#rules.seasonEndMovement();}
 }
 
-function amateurCareerRules({getState,DATA,LV,ovr,fmtMoney,salaryFor,listByOrg,signTo,choose,card,traitCard,displayTrait,setSchool,setAmateur,runDraft,pickRecord,escapeHTML,salaryDecisionLink,bindLatestSalaryDetailLink,reportFlowOutcome,nextStep,maybeIntl,recordIndependentSalaryEvaluation,rng:{R,ri}}){
+function amateurCareerRules({getState,DATA,LV,ovr,fmtMoney,salaryFor,listByOrg,teamRec,signTo,choose,card,traitCard,displayTrait,setSchool,setAmateur,runDraft,pickRecord,escapeHTML,salaryDecisionLink,bindLatestSalaryDetailLink,reportFlowOutcome,nextStep,maybeIntl,recordIndependentSalaryEvaluation,rng:{R,ri}}){
+  function setSchoolRule(kind){const S=getState();const a=kind==='U'?DATA.universities:DATA.highSchools,r=pickRecord(a);S.schoolId=r.schoolId;S.schoolTier=r.tier;S.team=r.name;S.lv=kind;S.org='AMATEUR';}
+  function setAmateurRule(stage){const S=getState();S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=pickRecord(listByOrg(stage)).teamId;S.team=teamRec(S.orgTeamId).name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;}
   function enterDraftPath(from){runDraft(false,result=>{if(result==='signed'){reportFlowOutcome({kind:'AMATEUR_DRAFTED'});return;}if(isDraftFallbackResult(result)){draftFallback(from);return;}throw new Error('UNKNOWN_DRAFT_RESULT:'+result);});}
   function draftFallback(from){const opts=[];if(from==='HS')opts.push({t:'大学へ進学',main:true,f:()=>{const S=getState();S.stage='U';S.stageYr=0;setSchool('U');reportFlowOutcome({kind:'AMATEUR_ENTER_UNIVERSITY'});}});opts.push({t:'社会人野球へ',f:()=>{setAmateur('CORP');reportFlowOutcome({kind:'AMATEUR_JOIN_CORP'});}},{t:'独立リーグへ',f:()=>{setAmateur('IND');reportFlowOutcome({kind:'AMATEUR_JOIN_IND'});}},{t:'野球をやめる',warn:true,f:()=>reportFlowOutcome({kind:'AMATEUR_RETIRED',reason:'ドラフト指名漏れを機に現役を退いた。'})});choose('指名漏れ、その後',opts);}
   function runDraftRule(fromSchool,cb){const S=getState();const o=ovr(),score=o+Math.max(0,22-S.age)*2+ri(-4,4);let rd=0,type='ROSTER';if(score>=60)rd=1;else if(score>=55)rd=2;else if(score>=50)rd=3;else if(score>=46)rd=4;else if(score>=42)rd=ri(5,6);else if(score>=37){rd=ri(1,3);type='DEVELOPMENT';}
@@ -107,5 +112,5 @@ function amateurCareerRules({getState,DATA,LV,ovr,fmtMoney,salaryFor,listByOrg,s
     consumeEventSeason(S);
     const rows=results.map(result=>result.html);S.log.push({y:S.year,age:S.age,tm:S.team,line:rows.map(x=>x.replace(/<[^>]+>/g,'')).join('、'),inj:false});card('','国内大会',rows.join('<br>'));maybeIntl(()=>nextStep());}
   function seasonEndMovement(){const S=getState();if(S.stage==='HS'){if(S.stageYr<3)reportFlowOutcome({kind:'AMATEUR_STAY'});else pathChoiceHS();return true;}if(S.stage==='U'){if(S.stageYr<4)reportFlowOutcome({kind:'AMATEUR_STAY'});else pathChoiceU4();return true;}if(S.stage==='CORP'){S.corpYears++;const eligible=(S.entryRoute==='HS'?S.corpYears>=3:S.corpYears>=2);const opts=[{t:'社会人野球を続ける',main:true,f:()=>reportFlowOutcome({kind:'AMATEUR_STAY'})},{t:'独立リーグへ移籍',f:()=>{setAmateur('IND');reportFlowOutcome({kind:'AMATEUR_JOIN_IND'});}},{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'AMATEUR_RETIRED',reason:'社会人野球で現役生活を終えた。'})}];if(eligible)opts.unshift({t:'NPBドラフトへ再挑戦',main:true,f:()=>enterDraftPath('CORP')});choose('社会人シーズン終了',opts);return true;}if(S.stage==='IND'){S.indYears++;choose('独立リーグシーズン終了',[{t:'NPBドラフトへ再挑戦',main:true,f:()=>enterDraftPath('IND')},{t:'独立リーグに残留',f:()=>reportFlowOutcome({kind:'AMATEUR_STAY'})},{t:'社会人野球へ',f:()=>{setAmateur('CORP');reportFlowOutcome({kind:'AMATEUR_JOIN_CORP'});}},{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'AMATEUR_RETIRED',reason:'独立リーグで現役生活を終えた。'})}]);return true;}return false;}
-  return {enterDraftPath,draftFallback,runDraftRule,pathChoiceHS,pathChoiceU4,amateurSeason,seasonEndMovement};
+  return {enterDraftPath,draftFallback,runDraftRule,setSchoolRule,setAmateurRule,pathChoiceHS,pathChoiceU4,amateurSeason,seasonEndMovement};
 }
