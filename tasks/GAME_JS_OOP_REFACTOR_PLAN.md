@@ -4762,7 +4762,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 | 本機 Full 第 2 次（同上） | `PASS`，`expected 114`、`acceptedPass 114`、`issues []`，plan 114 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,365 秒（macOS＋Brave 本機證據） |
 | reviewer | 無發現。已查：求值順序、TDZ（`careerMovement` 先於 `movementGate` 建構，模組求值期無同步呼叫）、`setTimeout` 時序與舊覆寫等價；Quick／Full 範圍內無 `LEGACY` 讀取者；K 刪除的綁定確由 bootstrap 覆蓋；測試未放寬或空轉；T2e 只限 `old` mode 正確（`oracle` 載入現行 `game.js`）。資訊性：`docs/design/*.md` 仍描述 `LEGACY`，屬文件、不在本期範圍 |
 
-- 交付：分支 `refactor/legacy-wrappers` 已 push，[PR #75](https://github.com/tt-chin/yakyujinsei/pull/75)（→ dev）開啟中；`docs/design/*.md` 4 檔檔頭加註 `LEGACY` 已移除、下文仍為 `ea951c2` 快照（reviewer 資訊性意見）。未做：Linux CI Full、Preview、實機確認、main 發布。
+- 交付：分支 `refactor/legacy-wrappers` 已 push，[PR #75](https://github.com/tt-chin/yakyujinsei/pull/75)（→ dev）已合併（2026-11-10，merge commit `f38e4a2`，tree 與 `4fabbdc` 相同；遠端分支已刪，本機分支經使用者指示刪除）；`docs/design/*.md` 4 檔檔頭加註 `LEGACY` 已移除、下文仍為 `ea951c2` 快照（reviewer 資訊性意見）。未做：Linux CI Full、Preview、實機確認、main 發布。
 - BACKLOG 新增：`endGame` 的「台幣→円」等文字替換只會改寫玩家名稱／seed，刪除屬 PATCH 規格變更，另案。
 
 ## 2tt. 第 42 期：守備位置規則移入 `DefensePosition`、業餘入學移入 `AmateurCareer`（細部計畫，2026-11-10；D1–D9 批准 2026-11-10）
@@ -4820,6 +4820,19 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 | 本機 Full（`local-full-batches.mjs`，8 批，比較基準 `origin/main` `dfc8ff7`） | `PASS`，`expected 114`、`acceptedPass 114`、`issues []`，plan 與結果逐項對照（缺 0、多 0），`sourceChanged false`、`resourceBlocked false`，1,106 秒 |
 | 到達 probe（D9） | 舊 `109f94f` 與草稿並排供檔，在 `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult`／`setSchool`／`setAmateur` 與新側對應方法／rule 開頭注入帶標記紀錄，以 `game-view-dom-e2e` 的 `careerAction` 走完整生涯：`probe33-0`～`7` 的 IF／OF／C、`jp3-infielder-01` IF、`jp3-outfielder-01` OF、`yakyo-test-001` P，共 27 段，hit 序列、最終 `S`、步數新舊全同（mismatch 0、錯誤 0）。hit 數：`mult` 563、`qual` 280、`score` 234、`list` 57、`bar` 28（只在捕手分支）、`setAmateur` 21、`setSchool` 3 |
 | probe 負控制 | `setAmateurRule` 的 `stageYr=1` 與 `multiplier()×1.01` 各以 mismatch 偵出；`DP_MULT` 的 SS 值、`candidates()` 反轉在 `probe33-0/IF` 未偵出（該生涯未用到 SS，推定候補清單只有 `DH`，屬情境下的等價突變，未另行實測） |
+
+### 2tt.5 驗證與交付（A、C：R3（年俸係數、RNG）；允許差分無）
+
+- 草稿用的 assembler、突變腳本與 probe 只放在 session scratchpad，未進 repo；若需重建，依 2tt.2／2tt.3 的內容重做，並對照 2tt.4 的數字。
+- 實作：同一 assembler 依 A／C 分 2 個 commit 套用；C 後 5 檔與草稿逐位元組相同（`cmp`）。commit `30237c7`（A）、`dd6e309`（C），計畫 commit `109f94f`、`68658c4` 在前。PR #75 合併後的 `origin/dev`（`f38e4a2`）tree 與 `4fabbdc` 相同，草稿與以下驗證等同於在 `origin/dev` 上取得，不需 rebase。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（各 commit，乾淨 worktree） | `30237c7` 87／87、`dd6e309` 87／87 PASS，依 `summary.json` 核對 |
+| 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `dd6e309`，比較基準 `origin/main` `dfc8ff7`） | `PASS`，`expected 114`、`acceptedPass 114`、`issues []`，plan 與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`，1,110 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：搬移內容逐項等價（`filter` 回呼參數、`S` 讀取順序、`this` 綁定與 private field 搭配 instance spy）、模組求值期無 `defensePosition` 先用（無 TDZ）、移除的 import／包裝無文字或 hook 引用、測試未放寬且新側確實執行新模組、`amateur-career.js` 檔頭註解正確 |
+
+- 交付：分支 `refactor/defense-position-rules` push 後開 PR（→ dev）。未做：Linux CI（PR → dev 不觸發；併入 dev 後跑 Quick）、Preview、實機確認、main 發布。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
