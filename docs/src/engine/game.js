@@ -194,7 +194,7 @@ const traitResultCard=new TraitResultCard({getState:()=>S,traitPresentation,disp
 const careerTraits=new CareerTraits({getState:()=>S,traitPresentation,card:(cls,title,html)=>card(cls,title,html),board:p=>board(p),teamNick:team=>teamNick(team),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),displayTrait:key=>displayTrait(key)});
 function card(cls,title,html){ gameView.card(cls,title,html); }
 function divider(t){ _curYearBody=gameView.divider(t,MAX_YEARS); }
-function board(phase){ gameView.renderBoard(boardModel(phase)); }
+function board(phase){ gameView.renderBoard(boardModel(phase));gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()}); }
 function boardModel(phase){return careerPresenter.board(phase);}
 function actClear(){ gameView.actClear(); }
 function actToggleSync(){ gameView.actToggleSync(); }
@@ -234,18 +234,13 @@ const seasonAwards=new SeasonAwards({getState:()=>S,getSeed:()=>SEED,LV,clamp,tr
 function renderCheckpointCard(owner,key,args){checkpointRenderer.render(owner,key,args);}
 const checkpointRenderer=new CheckpointRenderer({card:(...args)=>card(...args),logTarget:()=>logTarget()});
 /* 升降格と去向。 */
-function movement(){return careerMovement.movement();}
+function movement(){return movementGate.movement();}
 function buyoutRemaining(rate){return careerMovement.buyoutRemaining(rate);}
 function handleDemotion(o,path,idx){return careerMovement.handleDemotion(o,path,idx);}
 function retireBelowActiveMinimum(){return careerMovement.retireBelowActiveMinimum();}
 /* 長期契約/短期契約 選択処理。 */
 function extensionOffer(o){return careerContract.extensionOffer(o);}
 function ageGateJP(){return careerContract.ageGateJP();}
-if(typeof document!=='undefined'&&document.getElementById('btn-restart')){
-  document.getElementById('btn-restart').onclick=function(){
-    if(confirm('人生のこの部分を放棄して、最初からやり直してもよろしいですか?'))location.href=location.pathname;
-  };
-}
 function advance(){return yearFlow.advance();}
 /* キャリア終盤。 */
 const TIER_TH=leagueCatalog.tierThresholds;
@@ -261,7 +256,13 @@ function honorScore(bucket){
 }
 function tierOf(bucket){return evaluateLeagueHof(S,bucket,TIER_TH[bucket],LG_N[bucket]);}
 function retireScene(tiers){careerRetirement.retireScene(tiers);}
-function endGame(reason){careerRetirement.endGame(reason);}
+function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
+  /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
+  document.querySelectorAll('.card').forEach(c=>{
+    const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
+    for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeValue=n.nodeValue.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');
+  });
+},0);}
 /* 結算圖（Canvas 產生 PNG、可長按儲存または自動下載）。 */
 const shareImageView=new ShareImage({getState:()=>S,getSeed:()=>SEED,LG_N,TEAM_COLOR,teamNick,roleN,playerType,primaryPos,traitNames,fmtIP,slgOf,fmtMoney});
 function shareImage(evals,out){shareImageView.render(evals,out);}
@@ -270,8 +271,6 @@ function shareImage(evals,out){shareImageView.render(evals,out);}
   if(t)t.onclick=()=>{ document.getElementById('act').classList.toggle('collapsed');
     t.textContent=document.getElementById('act').classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる'; };
 })();
-$('seed-show').value=SEED;
-$('seed-re').onclick=e=>{e.preventDefault();SEED=(0).toString(36).slice(2,10);$('seed-show').value=SEED;};
 document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#seg-pos button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
@@ -279,7 +278,6 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
 
 /* ================= 日本版仕様オーバーレイ 1.0.4 ================= */
   const DATA = JP_DATA;
-  const LEGACY = { board, movement, phasePre, phaseMid, proSeason, endGame };
 
   window.TEAM_MASTER = leagueCatalog.teamMaster;
 
@@ -330,7 +328,6 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function signTo(org,lv,teamId,yrs,mult,decisionType,options){return careerContract.signTo(org,lv,teamId,yrs,mult,decisionType,options);}
   function doTradeExec(){return careerContract.doTradeExec();}
   function stageLabel(){return careerContract.stageLabel();}
-  board = function(phase){LEGACY.board(phase);gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()});};
 
   function setSchool(kind){const a=kind==='U'?DATA.universities:DATA.highSchools,r=pickRecord(a);S.schoolId=r.schoolId;S.schoolTier=r.tier;S.team=r.name;S.lv=kind;S.org='AMATEUR';}
   function setAmateur(stage){S.stage=stage;S.stageYr=0;S.lv=stage;S.org=stage;S.orgTeamId=pickRecord(listByOrg(stage)).teamId;S.team=teamRec(S.orgTeamId).name;if(stage==='CORP')S.corpYears=0;else S.indYears=0;}
@@ -372,17 +369,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function phaseEnd(){return seasonSettlement.phaseEnd();}
   const seasonSettlement=new SeasonSettlement({getState:()=>S,careerSession,choiceViews,board:phase=>board(phase),migrateSalaryV140State:()=>migrateSalaryV140State(),teamRec:id=>teamRec(id),random:()=>R(),renderCheckpointCard:(owner,key,args)=>renderCheckpointCard(owner,key,args),escapeHTML:v=>escapeHTML(v),fmtMoney:yen=>fmtMoney(yen),movement:()=>movement(),choose:(title,opts)=>choose(title,opts),allocUI:(mode,label,done)=>allocUI(mode,label,done),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected),$:id=>$(id),salaryCandidate:input=>salaryCandidate(input),currentMarketRating:()=>currentMarketRating(),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),card:(cls,title,html)=>card(cls,title,html),salaryDecisionLink:()=>salaryDecisionLink(),bindLatestSalaryDetailLink:()=>bindLatestSalaryDetailLink(),salaryFor:(lv,d)=>salaryFor(lv,d)});
 
-  movement=function(){return movementGate.movement();};
-  const movementGate=new MovementGate({getState:()=>S,LEGACY,amateurCareer,migrateSalaryV130State:()=>migrateSalaryV130State(),accrueForeignFirstTeamSeason:state=>accrueForeignFirstTeamSeason(state),contractStageFor:org=>contractStageFor(org),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected)});
-
-  const legacyEndGame=LEGACY.endGame;
-  endGame=function(reason){legacyEndGame(reason);setTimeout(()=>{
-    /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
-    document.querySelectorAll('.card').forEach(c=>{
-      const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
-      for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeValue=n.nodeValue.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');
-    });
-  },0);};
+  const movementGate=new MovementGate({getState:()=>S,careerMovement,amateurCareer,migrateSalaryV130State:()=>migrateSalaryV130State(),accrueForeignFirstTeamSeason:state=>accrueForeignFirstTeamSeason(state),contractStageFor:org=>contractStageFor(org),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected)});
 
   function startJapanese(){careerEntry.startNew();}
   const careerEntry=new CareerEntry({getState:()=>S,setState:state=>{S=state;},getSeed:()=>SEED,setSeed:seed=>{SEED=seed;},careerSession,CareerSession,POSN,$:id=>$(id),getNavigation:()=>navigation,normalizeSeed:raw=>normalizeSeed(raw),generateSeed:()=>generateSeed(),normalizePlayerName:(raw,seed,pos)=>normalizePlayerName(raw,seed,pos),seedInit:str=>seedInit(str),newState:(name,pos)=>newState(name,pos),escapeHTML:v=>escapeHTML(v),card:(...args)=>card(...args),actClear:()=>actClear(),startYear:()=>startYear()});

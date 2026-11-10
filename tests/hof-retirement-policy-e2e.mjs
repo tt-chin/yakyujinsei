@@ -33,6 +33,7 @@ try{for(const pos of ['P','IF'])for(const controlled of [true,false]){
   if(mode==='oracle'&&!controlled)continue;
   const page=await h.page(390,pos,seed,{beforeLoad:async p=>{
    for(const file of ['hall-of-fame-policy.js','career-movement.js'])if(mode==='old'||mode==='oracle')await p.route('**/src/engine/'+file,r=>r.fulfill({body:old(file),contentType:'text/javascript'}));
+   if(mode==='old')await p.route('**/src/engine/movement-gate.js',r=>r.fulfill({body:old('movement-gate.js'),contentType:'text/javascript'}));// phase 40: the baseline game.js passes LEGACY
    await p.route('**/src/engine/career-retirement.js',async r=>{const response=await r.fetch(),body=mode==='old'||mode==='oracle'?old('career-retirement.js'):await response.text();await r.fulfill({response,body:tagRetirement(body)});});
    await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();const body=mode==='old'?instrument(old('game.js')):await response.text();await route.fulfill({response,body:body+hooks});});
   }});

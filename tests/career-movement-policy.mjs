@@ -52,7 +52,11 @@ const movementBody = careerMovement.slice(careerMovement.indexOf('  function mov
 assert.ok(movementBody.endsWith('  crossOffers(o);\n  }'));
 assert.doesNotMatch(movementBody, /crossOffersRule/);
 assert.match(game.slice(game.indexOf('new CareerMovement(')), /^new CareerMovement\([^\n]*crossOffers:o=>crossOffers\(o\)/);
-assert.match(game, /function movement\(\)\{return careerMovement\.movement\(\);\}/);
+// Phase 40 (§2ss): the game.js movement name goes through MovementGate, which calls careerMovement.movement() once.
+assert.match(game, /^function movement\(\)\{return movementGate\.movement\(\);\}$/m);
+assert.match(game, /^  const movementGate=new MovementGate\(\{getState:\(\)=>S,careerMovement,amateurCareer,/m);
+const movementGateModule = readSourceText(path.join(root, 'docs/src/engine/movement-gate.js'));
+assert.equal(movementGateModule.split('careerMovement.movement();').length, 2);
 const forcedCheck = movementBody.indexOf('if(isBelowActiveMinimum(o)){');
 const injuryYearCheck = movementBody.indexOf("if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);reportFlowOutcome({kind:'REHAB_YEAR_COMPLETED'});return;}");
 const demotionCheck = movementBody.indexOf('handleDemotion(o,path,idx)');

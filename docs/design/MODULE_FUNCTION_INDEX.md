@@ -1,5 +1,7 @@
 # 現行模組與函式索引
 
+> 2026-11-10 補足（OOP 重構第 1–40 期，至 `22e33e0`）：`game.js` 的各領域已移入各模組，第 40 期拿掉 `LEGACY` 覆寫層，`board`／`movement`／`endGame` 各只剩一個宣告。下文的 overlay／`LEGACY` 描述與行號仍是 `ea951c2` 快照，不代表現行結構；現行模組分工見 [`tasks/GAME_JS_OOP_REFACTOR_PLAN.md`](../../tasks/GAME_JS_OOP_REFACTOR_PLAN.md)。
+
 > 1.11.8：新增UI模組international-personal-stats.js的internationalPersonalStats（既存通算前後差分）與renderInternationalPersonalStats（保存值純粋整形、既存fmtIP注入）。gameのprocessIntlPhaseからprepareInternationalResultの任意personalStatsへ値コピーし、既存commit／result cardを再利用。既存addIntlStatsと旧maybeIntlは不変。以下全量索引の数値・行号は歴史快照のまま。[本大会成績検証](../reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)。
 
 > 1.11.7新增UI責務：game內traitPresentation（WeakMap）、traitResultMarkup與archiveTraitResults，只讀S、寫DOM／UI閉包；card成功append後記展示，removeTrait同步UI再取得標記。navigation增加可選onNavigate；buildTraitsViewModel／退休posT／shareImage僅名稱。以下ea951c2的數量／函式行號為歷史快照，不冒充新增函式索引已全量重算。[驗收](../reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。

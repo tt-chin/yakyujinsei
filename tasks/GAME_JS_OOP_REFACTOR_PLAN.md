@@ -4697,7 +4697,73 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 | 本機 Full 第 2 次（同上） | `PASS`，`expected 111`、`acceptedPass 111`、`issues []`，plan 111 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,103 秒（macOS＋Brave 本機證據）。含 `game-view-dom-e2e` 對 `4f39a73` |
 | reviewer | 無阻擋性發現。已查：移動本體與 `f3f05fa` 逐字相同（僅狀態讀取插入、改名、縮排）、載入時無 TDZ（各建構函式只保存依賴）、無內部呼叫繞過 `game.js` 名稱、`productionFunction` 切片與文字錨點仍有效、測試未放寬或空轉、換行與絕對路徑、新依賴。資訊性：`award-journal-native` 與 `tools/development-b/award-runtime-support` 把 `removeTrait` 包裝切進未提供 `careerTraits` 的 vm；現行 `awards`／`renderCheckpointCard` 不呼叫它，故不影響，日後若獎項流程呼叫 `removeTrait` 須補 |
 
-- 交付：PR 至 dev（待開）。未做：Linux CI Full（併 dev 後）、Preview、實機確認、main 發布。
+- 交付：[PR #72](https://github.com/tt-chin/yakyujinsei/pull/72) 已併 dev（merge `b9a45e0`）。未做：Linux CI Full、Preview、實機確認、main 發布。
+
+## 2ss. 第 40 期：拿掉 `LEGACY` 覆寫層與重複綁定（細部計畫，2026-11-08；2026-11-09 rebase 至 `4c15523` 後重做草稿；D1–D8、T2e 批准 2026-11-09）
+
+§3.25 的候補 K＋L 的一部分（使用者決定 2026-11-08）。物件導向的收益：`board`／`endGame`／`movement` 各自只有一個宣告，不再由覆寫區「先存 `LEGACY` 再重新指派」；`MovementGate` 直接以參考取得 `CareerMovement`，與 `amateurCareer` 相同。`seedInit`／`R` 的重新指派不在本期（9 個測試／工具檔以文字比對 `R = function`／`seedInit = function`，且屬 RNG）。
+
+### 2ss.1 現況（基準 `origin/dev` `4c15523`（PR #74 merge，2026-11-09）；`game.js` 408 行／41,522 bytes）
+
+初版（2026-11-08）以 `b9a45e0` 為基準，其草稿結果見 commit `ce1cdf6` 的本節。PR #74 在 `game.js` 只多一行 import（`:63`）並改寫 `tierOf`，本期的錨點內容不變、行號皆 +1；`config.js` 的 VERSION 為 1.16.0；入口數 Quick 85→87、Full 111→114。
+
+- K 重複綁定：`btn-restart`（`:244–248`，確認文字「人生のこの部分を放棄して…」）、`seed-show` 初值（`:273`）、`seed-re`（`:274`，`(0).toString(36).slice(2,10)` 產生空 seed）都在模組載入時被 `:394–396` 同步覆蓋，使用者操作前就失效。`seg-pos` 只綁定一次，不在範圍內。
+- L 覆寫層：`:282` `const LEGACY = { board, movement, phasePre, phaseMid, proSeason, endGame };`，之後 `board`（`:333`）、`movement`（`:375`）、`endGame`（`:378–385`，含 `台幣→円`／`中華隊→日本代表`／`臺灣→日本` 的文字節點替換）被重新指派。`LEGACY.board`／`LEGACY.endGame` 只在這兩處被讀，`LEGACY.movement` 由 `MovementGate` 讀；`phasePre`／`phaseMid`／`proSeason` 三個鍵無人讀取。三個名稱在覆寫前沒有以值傳出（只有 `LEGACY` 一處），其餘都是 late-binding lambda。
+- 文字替換：三個字串在 `docs/src`、`docs/index.html` 與資料中只出現於替換本身（`docs/archive/` 除外，不載入），Unicode 跳脫寫法也沒有。現行只會改寫玩家名稱或 seed 中的這些字。
+- 測試耦合：`stage10-risk-e2e` 在覆寫區標記前以 `board=s10wrap(…)` 等改綁 `oldNames`，斷言 `legacy.board>0`、`legacy.endGame>0`，所以三個宣告須留在標記之前且可重新指派。`verify-modularization:78–83`（movement 接線、`LEGACY` 先於包裝）、`draft-signing-policy:102–103,129`（包裝行正規式、`LEGACY` stub）、`movement-gate.test`（模組標頭、解構與 `LEGACY` stub）、`career-movement-policy:55`（`game.js` 呼叫 `careerMovement.movement()`）。Full 專屬：`hof-retirement-policy-e2e`（PR #74）的 `old` mode 以基準 `25b815e` 的 `game.js` 搭配現行模組，該版傳 `LEGACY` 給 `MovementGate`；其餘以舊 `game.js` 搭配現行模組的 E2E，固定基準都早於 `movement-gate.js`，`display-preferences-e2e` 則整棵基準樹一起提供。`tools/development-b/legacy-effect-boundaries`、`scripts/audit-architecture` 不在 Quick／Full。
+
+### 2ss.2 設計（D1–D8 批准 2026-11-09）
+
+| # | 內容 |
+|---|---|
+| D1 | K：刪除 `:244–248`、`:273`、`:274`。`:394–396` 的綁定與確認文字不變 |
+| D2 | `board`：`:197` 的宣告直接接上 `gameView.patchBoard({…})`（原覆寫的第二句，逐字），刪除 `:333` |
+| D3 | `endGame`：`:264` 的宣告接上原覆寫的 `setTimeout` 本體（逐字，縮排減 2），刪除 `:377–385`（前一行空行、`legacyEndGame` 與覆寫）。文字替換原樣保留（使用者決定 2026-11-08）；刪除與否另列 BACKLOG，屬 PATCH 規格變更 |
+| D4 | `movement`：`:237` 的宣告改為 `return movementGate.movement();`，刪除 `:375`。`MovementGate` 依賴 `LEGACY` 改為 `careerMovement`（以參考），`#performMovement` 的 `LEGACY.movement()` 改為 `careerMovement.movement()`，模組標頭註解改寫 |
+| D5 | 刪除 `const LEGACY = {…}`。覆寫區標記註解與 `const DATA = JP_DATA;` 保留（`injectOverlayHook`、`stage10-risk-e2e` 以標記定位） |
+| D6 | 三個宣告留在原位（標記之前），仍為可重新指派的模組層 `function` 宣告 |
+| D7 | 分類：K 為 R2（死碼，無行為差異）；L 為 R3（年度精算的 movement、引退）。允許差分：無。VERSION 維持 1.16.0 |
+| D8 | 分支 `refactor/legacy-wrappers`（自 `98ad6d0` 開，PR #72 併入後快轉至 `b9a45e0`，2026-11-09 rebase 至 `4c15523`，無 upstream，push 時明確指定 refspec）。commit 依序：本計畫、K、L，每個實作 commit 各自通過 Quick |
+
+### 2ss.3 測試變更（無放寬斷言，golden 未改）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `verify-modularization` | 第 40 期 K 區塊：`$('btn-restart').onclick=`、`$('seed-re').onclick=` 各一次；`getElementById('btn-restart')`、`(0).toString(36)`、`$('seed-show').value=SEED;`、舊確認文字不存在 |
+| T2a | `verify-modularization` | 第 33 期：接線改為 `function movement(){return movementGate.movement();}` 與 `careerMovement` 建構行各一次；`'\n  movement='` 不存在；`careerMovement` 建構先於 `movementGate`。第 34／35 期註解刪去「LEGACY captures」。新第 40 期 L 區塊：合併後的 `board`／`endGame` 宣告全文各一次且在標記之前；三個宣告各一次、`movement` 在標記之前；`LEGACY`、`legacyEndGame`、`board =`、`endGame=` 不存在 |
+| T2b | `movement-gate.test` | 新標頭；基準 L2 本體的 `LEGACY.movement()` 恰好一次並改名為 `careerMovement.movement()`（列為已知編輯）；stub 以同一物件同時提供 `LEGACY`（舊 vm）與 `careerMovement`（新模組），log 相同 |
+| T2c | `draft-signing-policy` | 現行版包裝行正規式改為宣告形式；vm 仍宣告 `let movement`，故以同一本體的指派放入；context 加 `careerMovement` stub（與 `LEGACY` stub 同 log） |
+| T2d | `career-movement-policy` | `:55` 改為：`game.js` 的 `movement` 呼叫 `movementGate.movement()`、建構時傳 `careerMovement`、`movement-gate.js` 恰好一次 `careerMovement.movement();` |
+| T2e | `hof-retirement-policy-e2e` | `old` mode（基準 `25b815e` 的 `game.js`，傳 `LEGACY`）另以基準版 `movement-gate.js` 回應，與既有的 `hall-of-fame-policy.js`／`career-movement.js` 同樣處理。`oracle`／`repeat`／`new` 載入現行 `game.js`，不改。新舊自然生涯的嚴格比對（選擇、全 S、所有 RNG）照舊，因此也證明 movement 在自然生涯不變（2026-11-09 草稿 Full 發現） |
+
+不新增測試檔，Quick 維持 87、Full 維持 114。
+
+### 2ss.4 草稿實測（2026-11-09，scratch worktree，基準 `ce1cdf6`（`4c15523`＋本計畫）；本機 macOS，Brave＋`--disable-features=BraveFarbling`，Node 24.14；草稿不進 repo）
+
+| 檢查 | 結果 |
+|---|---|
+| 組裝 | 腳本自 worktree 的文字產生，每次替換斷言恰好一次、每行反引號數為偶數。`game.js` +10／−23，408→395 行／41,522→40,809 bytes（−713，與初版草稿相同；CRLF 保留，原有 16 行 LF 不變）；`movement-gate.js` +5／−6，與修改的測試檔皆為 LF |
+| AST | `game.js` 未解析名稱 17→17、未使用 import 110→110（PR #74 後為 110）；被重新指派的函式宣告 `seedInit`／`R`／`board`／`movement`／`endGame` → `seedInit`／`R` |
+| 未改測試的 Quick | 83／87。FAIL：`career-movement-policy`（`:55`）、`draft-signing-policy.test`（包裝行正規式）、`movement-gate.test`（模組標頭）、`verify-modularization`（第 33 期接線），與初版相同 |
+| 測試變更後的 Quick | 只套 K：87／87；K＋L：87／87 PASS（依 `summary.json`） |
+| 本機 8 批 Full（`local-full-batches.mjs`，T1–T2d） | **`FAIL_OR_INCOMPLETE`，`expected 114`、`acceptedPass 113`**，`issues`：batch 5。plan 入口與結果逐項對照（缺 0、多 0），`sourceChanged false`、`resourceBlocked false`。FAIL：`hof-retirement-policy-e2e` `yakyo-hof-P` 的 `old` mode，`page.evaluate: Error: CAREER_LIMIT`（基準 `25b815e` 的 `game.js` 傳 `LEGACY`，現行 gate 讀 `careerMovement` 而失敗，生涯無法推進）。未修正單獨重跑仍 FAIL（非偶發）；加 T2e 後單獨重跑 PASS（14.5 秒）。單獨重跑不是 Full PASS，114 項的 Full 留待實作 HEAD。其餘 113 項 PASS；`stage10-risk-e2e` `D-passive-trace`：P／IF 的 `legacy.board` 286／306、`legacy.endGame` 1／1、`legacy.movement` 24／25，皆與 `active.*` 相同（movement 現在包的是 gate 宣告，只記錄不斷言） |
+| `endGame` 替換的 reach（scratch probe，不進 repo） | fixture 設 `S.name`、加一張含「臺灣・台幣・中華隊」的卡後呼叫 `endGame`：草稿與基準皆變為「日本・円・日本代表」；去掉替換的突變版保留原文。全套測試沒有這三個字串，故此行為只由逐字比對（T2a）與本 probe 證明 |
+| 突變（新改與新寫的斷言） | 11／11 抓到，皆為 `ERR_ASSERTION`，檔案逐位元組還原：`board` 去掉 `patchBoard`、`endGame` 去掉替換、`LEGACY` 物件回復、`endGame` 覆寫回復、`movement` 繞過 gate、gate 收到替身、gate 不呼叫／呼叫兩次 `careerMovement.movement()`、K 的 `seed-re`／`btn-restart` 死碼回復、`endGame` 移到標記之後。另以只改 fixture 的對照（`careerMovement` stub 改 log 標籤）證明 `movement-gate.test` 第 2 部分的行為比對確實經過新依賴 |
+
+### 2ss.5 驗證與交付（K：R2；L：R3（年度精算的 movement、引退）；允許差分無）
+
+- 草稿用的 assembler（K／L 兩段，L 段含 T2a–T2e）、突變腳本與 probe 只放在 session scratchpad，未進 repo；自乾淨 `ce1cdf6` 重建的 `git diff` 與草稿相同（SHA-1 `bfbfd2b`）。scratchpad 不跨 session，若需重建，依 2ss.2／2ss.3 的行號與內容重做，並對照本表數字（`game.js` +10／−23、395 行／40,809 bytes）。
+- 實作：同一 assembler 依 K／L 分 2 個 commit 套用；L 後 7 檔與草稿逐位元組相同（`cmp`），`game.js` 395 行／40,809 bytes。commit `93af9b7`（K）、`22e33e0`（L），計畫 commit `ce1cdf6`、`103846c` 在前。
+
+| 檢查 | 結果 |
+|---|---|
+| Quick（各 commit） | `93af9b7` 87／87、`22e33e0` 87／87 PASS，依 `summary.json` 核對；HEAD 乾淨 worktree 再跑 87／87 PASS |
+| 本機 Full 第 1 次（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `22e33e0`，比較基準 `dfc8ff7`） | **FAIL_OR_INCOMPLETE**：`acceptedPass 111`／`expected 114`，batch 3、6、7 exit 1。`salary-history-e2e`（21:59 結束）、`draft-income-e2e`、`event-system-e2e`（22:09–22:10 結束）都是「Console Error 為 0」的斷言收到 `Failed to load resource: net::ERR_NETWORK_CHANGED`；生涯比對與 RNG 比對皆 PASS。判為本機網路環境問題：三入口以 `test.mjs full --only=` 單獨重跑 3／3 PASS（部分重跑，不作為 Full PASS）。`hof-retirement-policy-e2e` 在此次已 PASS（T2e） |
+| 本機 Full 第 2 次（同上） | `PASS`，`expected 114`、`acceptedPass 114`、`issues []`，plan 114 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,365 秒（macOS＋Brave 本機證據） |
+| reviewer | 無發現。已查：求值順序、TDZ（`careerMovement` 先於 `movementGate` 建構，模組求值期無同步呼叫）、`setTimeout` 時序與舊覆寫等價；Quick／Full 範圍內無 `LEGACY` 讀取者；K 刪除的綁定確由 bootstrap 覆蓋；測試未放寬或空轉；T2e 只限 `old` mode 正確（`oracle` 載入現行 `game.js`）。資訊性：`docs/design/*.md` 仍描述 `LEGACY`，屬文件、不在本期範圍 |
+
+- 交付：分支 `refactor/legacy-wrappers` 已 push，[PR #75](https://github.com/tt-chin/yakyujinsei/pull/75)（→ dev）開啟中；`docs/design/*.md` 4 檔檔頭加註 `LEGACY` 已移除、下文仍為 `ea951c2` 快照（reviewer 資訊性意見）。未做：Linux CI Full、Preview、實機確認、main 發布。
+- BACKLOG 新增：`endGame` 的「台幣→円」等文字替換只會改寫玩家名稱／seed，刪除屬 PATCH 規格變更，另案。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
@@ -5253,6 +5319,20 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 | L 函式重新指派 `board`、`movement`、`endGame`、`seedInit`／`R` | `endGame` 以畫面文字替換「台幣→円」，屬 LEGACY 修補 | 改善最大但風險最高 | `R`／`seedInit` 被文字比對，`LEGACY` 大量引用 | 須另行深入調查 |
 
 - 使用者決定（2026-11-08）：第 39 期做 I-TJ＋J＋I-格式，T3 採 `stat-format.js` 方案，分支自 `origin/dev`（`f3f05fa`）。
+- 使用者決定（2026-11-08）：第 40 期做 K＋L 的 `board`／`endGame`／`movement` 與 `LEGACY` 物件（`seedInit`／`R` 不做），`endGame` 文字替換原樣保留，基準 `origin/dev` `b9a45e0`（§2ss，D1–D8 待批准）。
+
+### 3.26 第 41 期候補盤點：`seedInit`／`R`（2026-11-10，基準 `refactor/legacy-wrappers` `823f0a1`，`game.js` 395 行／40,809 bytes；grep 與讀碼，未做 AST、未做草稿）
+
+- 現況：`:87` `let _s`；`:88–89` 舊 mulberry32 `function seedInit`／`function R`；`:298–300` 載入時重新指派為 `careerRng`（`Rng`）的包裝並同步 `_s=S.rngState|0`。`:300` 之前沒有 `R` 呼叫，`:88–89` 為死碼，只剩文字。
+- 測試耦合：
+  - 以正規式取出 `seedInit = function(seed){…}`／`R = function(){…}` 那一行放進 vm：`rng.test`、`award-journal-native.test`、`retirement-hof-test-support`、`tools/development-g9/verify-version-metadata`；工具 `award-runtime-support`、`legacy-effect-boundaries`、`legacy-slot-source-check`（逐字比對）。
+  - `support/rng-instrument` 對 `'function R(){'` 與 `'R = function(){'` 兩處插入計數器，`rng-instrument.test` 斷言兩處都插入。
+  - `fixed-seed-v160.test`（Quick）只斷言 `:88–89` 舊文字存在；切片結尾 `'function clamp'` 不存在（`clamp` 是 `const`），實際切到接近檔尾。
+  - `scripts/test-browser-save-runtime`／`-routes` 以 `R=function(){…}` 從外部重新包裝，`R` 須可重新指派。
+  - `event-fix`、`event-system`、`draft-income`、`npb-return`、`trait-system`、`display-preferences` 6 個 E2E 的 hook 讀 `rng:_s`，`_s` 與同步須保留。
+- 守備：正式 RNG 已由 `rng.test`（5 seed×8 抽的 golden，基準 `650e4dd`，含 `game.js` 包裝與 `_s` 同步）固定。`fixed-seed-v160` 的 `sample()` 是舊 v1.6.2 seed 雜湊的獨立重寫，與 `rng.js`（`fnv1a32('v1:'+seed)`）無關，守的是歷史演算法與死碼文字，不是守備缺口。
+- 判斷：可刪的只有 `:88–89` 兩行，`_s` 與可重新指派須保留；R3 且要改約 7 個測試／工具檔，收益小於成本。
+- 使用者決定（2026-11-10）：`seedInit`／`R` 不成期；`fixed-seed-v160` 切片結尾的修正不做；`docs/design/*.md` 只在檔頭加註（`b920ede`）。
 
 ## 4. 使用者決定（2026-10-18）
 
