@@ -163,7 +163,7 @@
 | D4 | standard、classic 沿用現值（外觀不變）；night、scoreboard 改深色底＋淺色字，色值於草稿算出並附 4 主題截圖，另經批准 |
 | D5 | mrteam 4 主題皆維持白底；球團色以 `style="--team-color:#…"` 傳入，無色時仍退回 `#a71930` |
 | D6 | 球團徽章改 `.team-badge`／`.team-badge-dot`＋token，4 主題外觀不變（白底、陰影、白色球團黑字、圓點 `#cccccc`）；球團色以 `--team-color` 傳入，非 PRO 維持 `var(--amber)` |
-| D7 | PATCH 1.16.0 → 1.16.1；CHANGELOG、RELEASE_NOTES（`update-release-notes.mjs`）、兩個測試的 VERSION 字面值同步 |
+| D7 | PATCH 1.16.0 → 1.16.1；`config.js`、CHANGELOG、RELEASE_NOTES（`update-release-notes.mjs`）同步。（更正：`verify-modularization`、`award-identity-policy.test` 已改為動態讀取 `config.js` 的 VERSION，無需改測試字面值） |
 
 ### 8.2 測試（T1～T5）
 
@@ -179,3 +179,20 @@
 
 1. 草稿：實作＋T1～T4，算出 D4 深色色值，附 4 主題 × PC／手機截圖 → 使用者批准色值。
 2. 定案：相關測試、Quick、本機 8 批 Full、reviewer，版本與文件更新，PR → `dev`。
+
+### 8.4 結果（2026-11-11）
+
+- 實作 commit `8086480`（自 `990d941`）。D4 深色色值經使用者批准（2026-11-11）：night legend `#3a300f`／`#b8902a`／`#f2cc5c`、goldcloth `#33320c`／`#a89a1e`／`#e8dc5a`、genius `#262d38`／`#7d8899`／`#ccd4de`、negative `#3d1a1d`／`#d9534f`／`#ff8a8a`、removed 字 `#9aa3ad`／框 `#6b7480`；scoreboard legend `#3b3512`／`#b8962e`／`#f0cd6a`、goldcloth `#34370f`／`#a39a22`／`#e6de66`、genius `#25362c`／`#8a9a90`／`#d3dbd5`、negative `#3d1c19`／`#d0574c`／`#ff9088`、removed 字 `#a2ad9a`／框 `#6b8273`。字色對底色 6.8～9.3（standard 舊色 5.9～6.7）。
+
+| 驗證 | 結果 |
+|---|---|
+| `career-presenter.test`／`design-tokens-02.test`／`design-tokens-02-e2e` | 59／8 cases／80 項 computed style PASS |
+| `game-view-dom-e2e`（基準 `4f39a73`） | 8 段生涯 PASS，差異 0 |
+| 負控制 | NC1～NC7（presenter class、退休卡 class、standard token、night 對比、徽章 padding、night 未隨主題、白色圓點 token）全部 FAIL；每次還原以 shasum 核對。首輪因 zsh 不拆分變數未備份、突變累積，結果作廢並逐一反轉後以 bash 陣列重跑 |
+| 抵達負控制 | NC8～NC10（`dom-snapshot` 投影的徽章、一般標籤、特殊標籤字串）全部 FAIL：fixture 生涯確實經過 PRO 徽章（2029）與退休卡一般／特殊標籤（2058） |
+| 實機畫面（`yakyo-test-001` P 全生涯，4 主題 × 1280／390） | 退休卡：night／scoreboard 為深色變體，standard／classic 不變；看板 PRO 徽章截圖與改動前 `ca81755` 逐位元組相同（8／8）。390px 徽章折行為既有行為 |
+| Quick | 89／89 PASS（新增 2 項） |
+| 本機 Full（`local-full-batches.mjs`，8 批，HEAD `8086480`，基準 `origin/main` `dfc8ff7`） | `PASS`，`expected 116`、`acceptedPass 116`、`issues []`，plan 對照缺 0、多 0，8 批 exit 0，`sourceChanged false`，1,103 秒（macOS＋Brave 本機證據） |
+| reviewer | 無阻擋性發現。低優先 2 項已處理：`CURRENT_SPEC.md` 標頭開發版號、本節 D7 敘述。範圍外註記：分享圖（canvas）的特性標籤色仍為 `share-image.js` 內的固定色，屬第 3 段（UI-DESIGN-TOKENS-03） |
+
+- 未做：Linux CI Full、Preview、實機（手機）確認、main 發布。
