@@ -25,10 +25,11 @@ assert.match(ability,/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/);
 assert.match(ability,/if\(cur>=pk\)cost\*=isP\?4:3/);
 // OOP §2l phase 10: f4a2894 toolGap/ovr/playerType/abCost vs current wrappers + ability-evaluation-policy.
 const abBaseline=execFileSync('git',['show','f4a289422e76591b17106ec07cf87c61170fa246:docs/src/engine/game.js'],{encoding:'utf8'});
-const abBlock=source=>[/^function dpScore\(.*$/m.exec(source)[0],source.slice(source.indexOf('function toolGap('),source.indexOf('function tjAccrue(')),source.slice(source.indexOf('function ovr('),source.indexOf('function addAb('))].join('\n');
-const abContext=source=>{const c=vm.createContext({...defensePolicy,...abilityPolicy,S:null});vm.runInContext(abBlock(source)+'\nconst run=f=>{try{return f();}catch(e){return "E:"+e.constructor.name+":"+e.message;}};function cell(keys){const before=JSON.stringify(S),r={ovr:run(ovr),type:run(playerType),gap:run(toolGap),cost:keys.map(k=>run(()=>abCost(k)))};return JSON.stringify({r,unchanged:before===JSON.stringify(S)});}',c);return c;};
-const abOld=abContext(abBaseline),abNew=abContext(game);
-assert.match(abBlock(abBaseline),/const a=S\.ab;/);assert.match(abBlock(game),/return overallRatingFor\(/);
+// Phase 42 (§2tt) moved dpScore into DefensePosition: the baseline still needs it, the current block must not reference it.
+const abBlock=(source,{dpScore=true}={})=>[...(dpScore?[/^function dpScore\(.*$/m.exec(source)[0]]:[]),source.slice(source.indexOf('function toolGap('),source.indexOf('function tjAccrue(')),source.slice(source.indexOf('function ovr('),source.indexOf('function addAb('))].join('\n');
+const abContext=(source,opts)=>{const c=vm.createContext({...defensePolicy,...abilityPolicy,S:null});vm.runInContext(abBlock(source,opts)+'\nconst run=f=>{try{return f();}catch(e){return "E:"+e.constructor.name+":"+e.message;}};function cell(keys){const before=JSON.stringify(S),r={ovr:run(ovr),type:run(playerType),gap:run(toolGap),cost:keys.map(k=>run(()=>abCost(k)))};return JSON.stringify({r,unchanged:before===JSON.stringify(S)});}',c);return c;};
+const abOld=abContext(abBaseline),abNew=abContext(game,{dpScore:false});
+assert.match(abBlock(abBaseline),/const a=S\.ab;/);assert.match(abBlock(game,{dpScore:false}),/return overallRatingFor\(/);
 const abKeys=['sta','vel','ctl','brk','con','pow','spd','eye','rng','fld','arm','cat'],abUniform=v=>Object.fromEntries(abKeys.map(k=>[k,v]));
 const abCell=(c,state)=>{c.S=structuredClone(state);return c.cell(abKeys);};
 let abSeed=20261024;const abNext=()=>(abSeed=(Math.imul(abSeed,1664525)+1013904223)>>>0)%46+30;
