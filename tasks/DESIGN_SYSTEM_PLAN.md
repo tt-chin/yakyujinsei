@@ -7,9 +7,9 @@
 | 段 | 內容 | 預估分級 | 狀態 |
 |---|---|---|---|
 | 1 | token 盤點、補非顏色 token、修正字體指定 | L1／R2 | 本文件 §2，已核准，未實作 |
-| 2 | 元件化：特性標籤、球團徽章改用 class＋token，移除 `game.js` 的 hex | L2／R2 | 未計畫 |
-| 3 | 分享圖：`share-theme.js` 與 canvas 字體改讀同一份 token | L2／R2 | 未計畫 |
-| 4 | 版面 token（spacing、border 等），之後換模板以換 token 為主 | L2 | 未計畫 |
+| 2 | 元件化：特性標籤、球團徽章改用 class＋token，移除 `game.js` 的 hex | L2／R2 | 方向已決（§7.3），細部未計畫；hex 現位置見 §7.1 |
+| 3 | 分享圖：`share-theme.js` 與 canvas 字體改讀同一份 token | L2／R2 | 凍結處理已決（§7.3），細部未計畫 |
+| 4 | 版面 token（spacing、border 等），之後換模板以換 token 為主 | L2 | 未決（§7.3 建議暫緩） |
 
 各段各自一個 PR → `dev`，分開驗收。
 
@@ -119,3 +119,31 @@
   5. Quick 67 PASS／1 FAIL（`award-identity-policy.test`，即上述耦合）；更新後該入口單獨重跑 PASS，未重跑整個 Quick。`npb-return-e2e`、`replay-share-theme-e2e` 2／2 PASS（分享 PNG 不變）。
   6. reviewer：1 項（用途表錯誤）已更正，其餘無發現。
 - 未確認：Windows／手機的字體回退未實測；Full 未執行（L1，合併 `main` 前依既有流程）。
+
+## 7. 第 2～4 段現況盤點（2026-11-10，基準 `refactor/legacy-wrappers` `4fabbdc`，VERSION 1.16.0；scout 唯讀調查＋grep 抽查）
+
+§1 為 `2e69096` 時的數據；OOP 重構後 JS 內的表示碼已全部移出 `game.js`，行號以本節為準。
+
+### 7.1 JS 內的色碼與 inline style
+
+| 對象 | 位置 | 現況 | 測試耦合 |
+|---|---|---|---|
+| 退休卡特性標籤（HTML） | `docs/src/engine/career-retirement.js:276–285`（`tagStyle()` 與負面／已移除兩行） | 傳說・台湾／金布／`mrteam`／天才／負面／已移除以 inline style 寫死 hex；標準特性用 `.tag`（`base.css`，讀 `--metric-bg`、`--edge`、`--amber`）。特殊特性不隨主題變化，深色主題下仍為淺色底 | 未找到直接斷言；`game-view-dom-e2e` 的 DOM 比對是否涵蓋退休卡特性標籤未確認（其 `class="tag"` 命中為「通算評価」標籤） |
+| 分享圖特性標籤（canvas） | `docs/src/ui/share-image.js:146–152`（`tagColor()`） | 與上一列同一組色值的第二份副本；只有「已移除」不同（`#f1eeee`／`#b7aaad`／`#81757a` 對 HTML 的 `#8a8a8a`／`#4a4a4a`＋`opacity:.4`）；另有標準特性 `#fbe9ec`／`#c95b6c`／`#7f1d2d`，經 `shareTagPalette()` 調整對比 | `replay-share-theme-e2e` 逐像素比較（基準 `dc5ac871`） |
+| 球團徽章 | `docs/src/ui/career-presenter.js:29–44`（`board()`） | PRO 且有球團色時：白底 `#ffffff`、`padding:2px 8px`、`border-radius:6px`、`box-shadow:0 2px 4px rgba(0,0,0,0.4)`、圓點 `#cccccc`／球團色，皆 inline；白色球團改黑字 `#000000`。否則 `color:var(--amber)` | `career-presenter.test` 與 `9d25b096` 的 `boardModel` 比對，只核准一處差異（`rgba` 全形頓號，UI-BOARD-SHADOW-01）；`support/dom-snapshot.mjs:45` 讀 `#bd-team > span`；`event-fix-e2e:48–49` 量 `bd-team` 版面盒 |
+| 球團色（逐隊資料） | `docs/src/engine/league-catalog.js:30–64` `teamColorsByName`；`docs/src/data/jp-data.js` 的 `teams[].color`（NPB） | 屬資料，不是樣式；建構時 teamId 鍵覆蓋名稱鍵 | — |
+| 分享圖配色 | `docs/src/ui/share-theme.js`（4 主題約 32 個 hex，`shareTagPalette()` 後備 `#302719`） | 與 `themes.css` 各自手動維護，不讀 CSS | `replay-share-theme.test` 斷言各主題 `bg` hex 與 12 組標籤對比 |
+| 分享圖字體 | `docs/src/ui/share-image.js`，約 20 處 `c.font=` | 全為 `sans-serif`／`monospace` 字面值，不讀 `--sans`／`--mono`；無 `getComputedStyle` | 同上，逐像素比較 |
+
+### 7.2 凍結與其他約束
+
+- `tests/award-identity-policy.test.mjs` 的凍結清單取自 `287dd1a` 的 `git ls-tree docs/src`：當時已存在、且不在 `allowedB` 或個別例外的檔案，須與 `efd4710c` 逐位元組相同。本段相關檔案中只有 `share-theme.js` 與 `jp-data.js` 受凍結（現況與 `efd4710c` 相同）；`career-presenter.js`、`share-image.js`、`career-retirement.js`、`league-catalog.js` 在 `287dd1a` 不存在，不受凍結。`docs/styles/` 不在 `docs/src`，不受此測試凍結（scout 原稱上述 4 檔受凍結，抽查更正）。
+- `display-preferences.test.mjs` 以 `--([\w-]+):(#[\da-f]+)` 取主題區塊內的 hex token 檢查對比；新增的主題 token 須維持 hex 直寫。
+- 版面：`--space-scale` 只用於 `base.css:22`（`#dice` 的 gap）；padding／margin／gap 的 px 字面值多（scout 統計未核實，第 4 段計畫時重數）。`ui-foundation.test`、`career-movement-policy` 逐字比對部分 CSS。
+
+### 7.3 使用者決定（2026-11-10）
+
+1. 第 2 段採方案②：特性標籤改用 class＋token，並隨主題變色（有意的視覺變更，PATCH）。球團徽章改用 class＋token，外觀維持不變（依當時提示的選項內容；細部計畫時再確認）。`career-presenter.test` 的核准差異須追加。
+2. 第 3 段的凍結檔案採方案ⓐ：在 `award-identity-policy.test` 為 `share-theme.js` 追加精確的核准 overlay（比照 `approvedReplayShareEdits`），不另開取代模組。canvas 字體是否改為 `--sans`（分享 PNG 像素改變、需等待 web font 載入）未決。
+3. 第 4 段未決；建議暫緩至有具體換版需求。
+4. 各段仍各自一個 PR → `dev`；分支基準（等 PR #75 併入 dev，或疊在 `4fabbdc`）未決。

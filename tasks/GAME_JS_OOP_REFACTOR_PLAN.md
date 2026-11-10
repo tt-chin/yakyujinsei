@@ -5334,6 +5334,24 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 判斷：可刪的只有 `:88–89` 兩行，`_s` 與可重新指派須保留；R3 且要改約 7 個測試／工具檔，收益小於成本。
 - 使用者決定（2026-11-10）：`seedInit`／`R` 不成期；`fixed-seed-v160` 切片結尾的修正不做；`docs/design/*.md` 只在檔頭加註（`b920ede`）。
 
+### 3.27 第 42 期候補盤點（2026-11-10，基準 `refactor/legacy-wrappers` `4fabbdc`（PR #75 head，含第 40 期，未併 dev），`game.js` 395 行／40,809 bytes；scout 唯讀調查（acorn＋grep）＋grep 抽查，未做草稿）
+
+- 選期標準沿用 §3.23（物件導向／擴充性）。`game.js` 剩下的多為 import、組件建構接線與一行包裝；仍含規則或 `S` 寫入的區塊如下。
+
+| 候選 | 現況 | 物件導向／擴充的改善 | 主要測試耦合 | 分級 | 判斷 |
+|---|---|---|---|---|---|
+| A 守備位置領域：`DPN`、`DP_TH`、`DP_BAR`、`DP_MULT`、`DP_RANK` 與 `dpScore`、`dpBar`、`dpQual`、`dpList`、`dpMult`（`:98–124`） | 規則表留在 `game.js`，再注入 `DefensePositionReview`；`dpMult` 另由 `career-contract.js`、`career-movement.js` 使用；`DPN` 另注入 `CareerPresenter`、`CareerRetirement` | 守備位置規則表與資格判定由單一物件負責 | `event-integration.test` 以 `'function dpQual('`～`'const DP_RANK='`、`'function dpScore('`～`'function dposReview('` 文字切片；名稱引用：`ability-allocation.test`、`kbo-renewal-floor.test`、`npb-return-ui.test` | R3（年俸係數） | **第 42 期** |
+| B 選手衍生屬性：`ovr`、`playerType`、`abCost`、`toolGap`、`careerAllStars` 與 I-角色 `pitcherRole`、`isSP`、`roleN`（`:144–163`） | 皆為唯讀 `S` 的查詢，以 lambda 注入約 10 個組件（`shareImageView` 直接傳 `roleN` 參照） | I-角色得到自然的擁有者（唯讀的選手側寫物件） | `trait-policy.test` 以 `'function afterGamble('`～`'function pitcherRole('` 切片；`award-journal-native.test` 以名稱切 `isSP`；名稱引用約 13 個測試檔 | R3（能力、契約判定） | 改善大但耦合最多，留待之後 |
+| C 業餘入學：`setSchool`、`setAmateur`（`:332–333`） | 在 `game.js` 直接寫 `S`（`schoolId`、`schoolTier`、`team`、`lv`、`org`、`stage`、`stageYr`、`orgTeamId`、`corpYears`／`indYears`），以 `pickRecord` 抽 RNG；呼叫者只有 `amateur-career.js` | 由 `AmateurCareer` 負責 | `draft-signing-policy.test`、`smallschool-c-e2e`、`stage10-risk-e2e`、`support/stage6-browser` | R3（RNG） | **第 42 期** |
+| D 國際賽包裝：`intlEvents`～`maybeIntl`（`:345–352`） | 多為一行轉呼叫；`intlSelection` 讀 `S.lv`、`S.rehab`、`S.skipMid`、`S.seasonFactor` | 歸 `InternationalTournament` | `championship-intl`、`salary-flow`、`year-flow`、`verify-modularization`、`international-personal-stats(-e2e)`、`championship-intl-e2e` | R2–R3 | 收益小，不單獨成期 |
+| E `careerContract` 的 18 個一行包裝（`:302–319`）等 | 純轉呼叫 | 無實質改善；E2E 依名稱重綁，移除易造成靜默繞過 | 多 | — | 不做 |
+| F 殿堂評分包裝 `careerScore`、`defShare`、`honorScore`、`tierOf` 等（`:248–257`） | `retirement-hof-test-support` 以 `productionFunction` 依名稱切片 | — | 多 | — | 不做（沿用既有判斷） |
+
+- 抽查更正 scout：寫入 `S.role` 的是 `defense-position-review.js:42–48` 與 `season-stats.js:12`（非 `phasePre`）；`career-retirement.js:25` 的 `roleName3` 文字不同（「先発投手」「リリーバー」），不是 `roleN` 的重複，但 `:34` 內嵌一份與 `roleN` 相同的對照表。
+- 未核實：scout 所述 `salary-flow.test` 遮罩後 `R(` 計數為 9。C 會把 `pickRecord` 的呼叫點移出 `game.js`，起草時須重算 RNG 呼叫點計數與遮罩字串。
+- 其他約束：`verify-modularization.mjs` 逐字比對多個建構接線區塊（含 `newState` 一行，其中傳入 `pickRecord`）；`award-identity-policy.test` 只凍結 `287dd1a` 時已存在的 `docs/src` 檔案，`game.js` 在 `allowedB`。
+- 使用者決定（2026-11-10）：第 42 期做 A＋C；細部設計（D 表）、草稿實測與 T 表於下一步另立 §2tt，待批准後實作。
+
 ## 4. 使用者決定（2026-10-18）
 
 1. 前置 1：D2-G9-RELEASE 殘項未結案，仍可開始第 1 期的本機實作與驗證；重構 PR 併入 `dev` 的時機另行決定。
