@@ -34,6 +34,25 @@ export async function captureGameView(full){
     if(typeof dom.board!=='string'||dom.board.split(credits).length!==2)throw Error('CREDITS_MENU_CONTRACT');
     dom.board=dom.board.replace(credits,'');
   }
+  if(window.__expectDesignTokens02){
+    // Approved UI-DESIGN-TOKENS-02 (DESIGN_SYSTEM_PLAN §8 D6): validate the class markup of
+    // #bd-team exactly, then map it back to the old inline styles; every other #board byte stays strict.
+    const tpl=document.createElement('template');tpl.innerHTML=dom.board;
+    const team=tpl.content.querySelector('#bd-team'),kids=[...team.children];
+    const color=el=>{const m=(el.getAttribute('style')||'').match(/^--team-color:([^;"]+)$/);if(!m)throw Error('TEAM_BADGE_COLOR_CONTRACT');return m[1];};
+    const only=(el,attrs)=>{if(el.attributes.length!==attrs.length||attrs.some(a=>!el.hasAttribute(a)))throw Error('TEAM_BADGE_ATTR_CONTRACT');};
+    if(kids.length===1){
+      if(kids[0].className!=='team-name')throw Error('TEAM_NAME_CONTRACT');only(kids[0],['class']);
+      team.innerHTML='<span style="color:var(--amber);  font-weight:900;">'+kids[0].innerHTML+'</span>';
+    }else if(kids.length===2){
+      const [dot,label]=kids,white=dot.className==='team-badge-dot is-white';
+      if(!white&&dot.className!=='team-badge-dot'||label.className!=='team-name team-badge'+(white?' is-white':'')||dot.childNodes.length)throw Error('TEAM_BADGE_CONTRACT');
+      for(const el of kids)only(el,white?['class']:['class','style']);
+      const tc=white?null:color(dot);if(!white&&color(label)!==tc)throw Error('TEAM_BADGE_COLOR_CONTRACT');
+      team.innerHTML='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(white?'#cccccc':tc)+';margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba(0,0,0,0.2);"></span><span style="color:'+(white?'#000000':tc)+'; background:#ffffff; padding:2px 8px; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,0.4); font-weight:900;">'+label.innerHTML+'</span>';
+    }else if(kids.length)throw Error('TEAM_BADGE_CONTRACT');
+    dom.board=tpl.innerHTML;
+  }
   if(window.__expect1140){
     // Independently validate the approved TJ presentation before mapping only
     // that value back to the fixed historical view-model representation.
@@ -45,8 +64,10 @@ export async function captureGameView(full){
     const spans=[...document.querySelectorAll('#bd-team > span')];
     if(spans.length===2){
       for(const [i,expected] of ['0 0 2px rgba(0,0,0,0.2)','0 2px 4px rgba(0,0,0,0.4)'].entries()){
-        const probe=document.createElement('span');probe.style.boxShadow=expected;
-        if(spans[i].style.boxShadow!==probe.style.boxShadow)throw Error('BOARD_SHADOW_CONTRACT');
+        // Computed style: the shadow comes from inline styles on old baselines and from classes since UI-DESIGN-TOKENS-02.
+        const probe=document.createElement('span');probe.style.boxShadow=expected;document.body.append(probe);
+        const same=getComputedStyle(spans[i]).boxShadow===getComputedStyle(probe).boxShadow;probe.remove();
+        if(!same)throw Error('BOARD_SHADOW_CONTRACT');
       }
       for(const alpha of ['0.2','0.4']){
         const before='rgba(0,0,0,'+alpha+')';
@@ -71,6 +92,26 @@ export async function captureGameView(full){
   }
   const log=document.getElementById('log')?.cloneNode(true);
   const profile=[...log?.querySelectorAll('.card')||[]].find(e=>e.querySelector('h4')?.textContent==='キャリアプロフィール');
+  if(window.__expectDesignTokens02&&log){
+    // Approved UI-DESIGN-TOKENS-02 (DESIGN_SYSTEM_PLAN §8 D2/D5): retirement trait tags carry a category
+    // class instead of inline colors. Validate each tag, then restore the old inline style attribute.
+    const old={'tag':'','tag tag-legend':'background:#fff7dc;border-color:#c79520;color:#795b00','tag tag-goldcloth':'background:#fffbe0;border-color:#c5a800;color:#6f6000','tag tag-genius':'background:#f3f5f8;border-color:#9aa5b5;color:#4c5868','tag tag-negative':'background:#fff0f0;border-color:#c0392b;color:#a71930','tag tag-removed':'text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a'};
+    const tags=profile?[...profile.querySelectorAll('.tag')]:[];
+    if(log.querySelectorAll('.tag-legend,.tag-goldcloth,.tag-genius,.tag-negative,.tag-removed,.tag-mrteam,.team-badge,.team-badge-dot,.team-name').length!==tags.filter(t=>t.className!=='tag').length)throw Error('DESIGN_TOKENS_TAG_SCOPE');
+    for(const tag of tags){
+      const cls=tag.className;
+      if(cls==='tag tag-mrteam'){
+        const m=tag.getAttribute('style')?.match(/^--team-color:([^;"]+)$/);
+        if(!m||tag.attributes.length!==2)throw Error('DESIGN_TOKENS_MRTEAM_CONTRACT');
+        tag.setAttribute('style','background:#ffffff;border-color:'+m[1]+';color:'+m[1]);
+      }else{
+        if(!(cls in old)||tag.attributes.length!==1)throw Error('DESIGN_TOKENS_TAG_CONTRACT: '+cls);
+        tag.setAttribute('style',old[cls]);
+      }
+      tag.className='tag';
+    }
+    dom.log=log.outerHTML;
+  }
   if(window.__expect1140){
     const cards=[...log.querySelectorAll('[data-trait-name="優勝請負人"]')];
     if(cards.length!==(rawState.traits.championmaker?1:0))throw Error('CHAMPIONMAKER_ACQUISITION_CARD_COUNT');

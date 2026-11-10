@@ -147,3 +147,35 @@
 2. 第 3 段的凍結檔案採方案ⓐ：在 `award-identity-policy.test` 為 `share-theme.js` 追加精確的核准 overlay（比照 `approvedReplayShareEdits`），不另開取代模組。canvas 字體是否改為 `--sans`（分享 PNG 像素改變、需等待 web font 載入）未決。
 3. 第 4 段未決；建議暫緩至有具體換版需求。
 4. 各段仍各自一個 PR → `dev`；分支基準（等 PR #75 併入 dev，或疊在 `4fabbdc`）未決。
+
+## 8. 第 2 段細部計畫（UI-DESIGN-TOKENS-02；2026-11-11，基準 `990d941`（dev `ca81755`＋紀錄 commit），VERSION 1.16.0）
+
+- 分類：R2。不碰 `game.js`、RNG、`S`；但改共用測試基盤 `tests/support/dom-snapshot.mjs`（`game-view-dom-e2e`、`display-preferences-e2e` 共用），不適用純顯示例外，須跑 Quick；`game-view-dom-e2e` 屬 Full，定案碼跑一次本機 8 批 Full。
+- 現況（scout 調查＋抽查）：特性標籤見 `career-retirement.js:276–285`；球團徽章見 `career-presenter.js:29–41`。`career-presenter.test:74` 以字串比對 `9d25b096` 的 `boardModel`；`dom-snapshot.mjs:45–55` 讀 `#bd-team > span` 的 inline `style.boxShadow`；`game-view-dom-e2e` 逐步比對 `#log`／`#board` outerHTML（基準預設 `4f39a73`），退休卡 `.tag` 的 `style` 原樣進入比對。`career-retirement.js`、`career-presenter.js`、`docs/styles/*` 均不受 `award-identity-policy.test` 凍結。
+
+### 8.1 設計（D1～D7，使用者批准 2026-11-11）
+
+| # | 決定 |
+|---|---|
+| D1 | 分支 `ui/design-tokens-02`，自 `990d941`（PR #76 紀錄 commit 疊在最底），`--no-track`，push 明寫 refspec |
+| D2 | 特性標籤在 `.tag` 加分類 class：`tag-legend`（legend、taiwan）、`tag-goldcloth`、`tag-genius`、`tag-mrteam`、`tag-negative`、`tag-removed`；規則置於 `base.css` 的 `.tag` 旁；一般特性維持只有 `.tag` |
+| D3 | `themes.css` 4 主題各定義 `--tag-{legend,goldcloth,genius,negative}-{bg,edge,text}`、`--tag-removed-{text,edge}`；line-through 與 `opacity:.4` 留在 class |
+| D4 | standard、classic 沿用現值（外觀不變）；night、scoreboard 改深色底＋淺色字，色值於草稿算出並附 4 主題截圖，另經批准 |
+| D5 | mrteam 4 主題皆維持白底；球團色以 `style="--team-color:#…"` 傳入，無色時仍退回 `#a71930` |
+| D6 | 球團徽章改 `.team-badge`／`.team-badge-dot`＋token，4 主題外觀不變（白底、陰影、白色球團黑字、圓點 `#cccccc`）；球團色以 `--team-color` 傳入，非 PRO 維持 `var(--amber)` |
+| D7 | PATCH 1.16.0 → 1.16.1；CHANGELOG、RELEASE_NOTES（`update-release-notes.mjs`）、兩個測試的 VERSION 字面值同步 |
+
+### 8.2 測試（T1～T5）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `career-presenter.test` | 仍比對 `9d25b096` 的 `boardModel`，於 `rgba` 頓號修正外追加「舊 inline → 新 class」精確核准對照，每 fixture 斷言替換恰好一次；5 個 fixture 保留 |
+| T2 | `support/dom-snapshot.mjs` | `BOARD_SHADOW_CONTRACT` 改以 `getComputedStyle` 檢查（兩側通用）；新增候選側限定投影（旗標 `__expectDesignTokens02`），先做結構契約，再把 `#bd-team` 與退休卡 `.tag` 投影回舊 inline 寫法，`game-view-dom-e2e` 維持差異 0 |
+| T3 | 新 `design-tokens-02.test` | 7 個分類的 class 輸出；4 主題（含 standard 區塊）皆定義全部新 token；各主題各分類字色對底色 ≥ 4.5（removed 為刻意淡化，除外） |
+| T4 | 新 `design-tokens-02-e2e` | 瀏覽器 computed style：徽章 4 主題與舊 inline 相同；特性標籤 standard／classic 與舊相同，night／scoreboard 隨主題改變 |
+| T5 | 負控制 | T1～T4 的對照各自破壞須 FAIL |
+
+### 8.3 流程
+
+1. 草稿：實作＋T1～T4，算出 D4 深色色值，附 4 主題 × PC／手機截圖 → 使用者批准色值。
+2. 定案：相關測試、Quick、本機 8 批 Full、reviewer，版本與文件更新，PR → `dev`。
