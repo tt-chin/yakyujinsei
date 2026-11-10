@@ -5321,6 +5321,19 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 使用者決定（2026-11-08）：第 39 期做 I-TJ＋J＋I-格式，T3 採 `stat-format.js` 方案，分支自 `origin/dev`（`f3f05fa`）。
 - 使用者決定（2026-11-08）：第 40 期做 K＋L 的 `board`／`endGame`／`movement` 與 `LEGACY` 物件（`seedInit`／`R` 不做），`endGame` 文字替換原樣保留，基準 `origin/dev` `b9a45e0`（§2ss，D1–D8 待批准）。
 
+### 3.26 第 41 期候補盤點：`seedInit`／`R`（2026-11-10，基準 `refactor/legacy-wrappers` `823f0a1`，`game.js` 395 行／40,809 bytes；grep 與讀碼，未做 AST、未做草稿）
+
+- 現況：`:87` `let _s`；`:88–89` 舊 mulberry32 `function seedInit`／`function R`；`:298–300` 載入時重新指派為 `careerRng`（`Rng`）的包裝並同步 `_s=S.rngState|0`。`:300` 之前沒有 `R` 呼叫，`:88–89` 為死碼，只剩文字。
+- 測試耦合：
+  - 以正規式取出 `seedInit = function(seed){…}`／`R = function(){…}` 那一行放進 vm：`rng.test`、`award-journal-native.test`、`retirement-hof-test-support`、`tools/development-g9/verify-version-metadata`；工具 `award-runtime-support`、`legacy-effect-boundaries`、`legacy-slot-source-check`（逐字比對）。
+  - `support/rng-instrument` 對 `'function R(){'` 與 `'R = function(){'` 兩處插入計數器，`rng-instrument.test` 斷言兩處都插入。
+  - `fixed-seed-v160.test`（Quick）只斷言 `:88–89` 舊文字存在；切片結尾 `'function clamp'` 不存在（`clamp` 是 `const`），實際切到接近檔尾。
+  - `scripts/test-browser-save-runtime`／`-routes` 以 `R=function(){…}` 從外部重新包裝，`R` 須可重新指派。
+  - `event-fix`、`event-system`、`draft-income`、`npb-return`、`trait-system`、`display-preferences` 6 個 E2E 的 hook 讀 `rng:_s`，`_s` 與同步須保留。
+- 守備：正式 RNG 已由 `rng.test`（5 seed×8 抽的 golden，基準 `650e4dd`，含 `game.js` 包裝與 `_s` 同步）固定。`fixed-seed-v160` 的 `sample()` 是舊 v1.6.2 seed 雜湊的獨立重寫，與 `rng.js`（`fnv1a32('v1:'+seed)`）無關，守的是歷史演算法與死碼文字，不是守備缺口。
+- 判斷：可刪的只有 `:88–89` 兩行，`_s` 與可重新指派須保留；R3 且要改約 7 個測試／工具檔，收益小於成本。
+- 使用者決定（2026-11-10）：`seedInit`／`R` 不成期；`fixed-seed-v160` 切片結尾的修正不做；`docs/design/*.md` 只在檔頭加註（`b920ede`）。
+
 ## 4. 使用者決定（2026-10-18）
 
 1. 前置 1：D2-G9-RELEASE 殘項未結案，仍可開始第 1 期的本機實作與驗證；重構 PR 併入 `dev` 的時機另行決定。
