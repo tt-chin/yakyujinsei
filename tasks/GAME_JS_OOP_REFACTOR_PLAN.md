@@ -4762,7 +4762,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 | 本機 Full 第 2 次（同上） | `PASS`，`expected 114`、`acceptedPass 114`、`issues []`，plan 114 入口與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`、`RESOURCE_WAIT` 0 次，1,365 秒（macOS＋Brave 本機證據） |
 | reviewer | 無發現。已查：求值順序、TDZ（`careerMovement` 先於 `movementGate` 建構，模組求值期無同步呼叫）、`setTimeout` 時序與舊覆寫等價；Quick／Full 範圍內無 `LEGACY` 讀取者；K 刪除的綁定確由 bootstrap 覆蓋；測試未放寬或空轉；T2e 只限 `old` mode 正確（`oracle` 載入現行 `game.js`）。資訊性：`docs/design/*.md` 仍描述 `LEGACY`，屬文件、不在本期範圍 |
 
-- 交付：分支 `refactor/legacy-wrappers` 尚未 push、未開 PR。未做：Linux CI Full、Preview、實機確認、main 發布。
+- 交付：分支 `refactor/legacy-wrappers` 已 push，[PR #75](https://github.com/tt-chin/yakyujinsei/pull/75)（→ dev）開啟中；`docs/design/*.md` 4 檔檔頭加註 `LEGACY` 已移除、下文仍為 `ea951c2` 快照（reviewer 資訊性意見）。未做：Linux CI Full、Preview、實機確認、main 發布。
 - BACKLOG 新增：`endGame` 的「台幣→円」等文字替換只會改寫玩家名稱／seed，刪除屬 PATCH 規格變更，另案。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
