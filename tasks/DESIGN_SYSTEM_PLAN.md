@@ -1,17 +1,19 @@
 # 設計系統（表示 token）計畫
 
-狀態：第 1 段已核准（2026-10-24，§3 六點皆照建議；同日依 `357e852` 重掃 §1，追加 §2.2 漏列值處理、版本改為 1.13.6，經使用者核准），已實作（`fcb22a9`，結果見 §6），待 PR #26 合併；第 2～4 段未計畫。本文件只規劃表示層；不改遊戲規則、RNG、`S`、DOM 結構與順序（AGENTS §2）。不引入 build 工具、框架或 npm 依賴（AGENTS §5）：token 只用純 CSS 變數，必要時另加 JS 模組供 canvas 讀取。
+狀態（2026-11-11）：第 1 段已發布（1.13.6，結果見 §6，PR #26）；第 2 段已實作待驗收（1.16.1，§8.4，PR #77）；同日決定模板化路線 P1～P4（§9），P1＝第 3 段，細部計畫待寫（§10）。舊狀態：第 1 段已核准（2026-10-24，§3 六點皆照建議；同日依 `357e852` 重掃 §1，追加 §2.2 漏列值處理、版本改為 1.13.6，經使用者核准），已實作（`fcb22a9`）。本文件只規劃表示層；不改遊戲規則、RNG、`S`、DOM 結構與順序（AGENTS §2）。不引入 build 工具、框架或 npm 依賴（AGENTS §5）：token 只用純 CSS 變數，必要時另加 JS 模組供 canvas 讀取。
 
 ## 0. 總路線
 
-| 段 | 內容 | 預估分級 | 狀態 |
-|---|---|---|---|
-| 1 | token 盤點、補非顏色 token、修正字體指定 | L1／R2 | 本文件 §2，已核准，未實作 |
-| 2 | 元件化：特性標籤、球團徽章改用 class＋token，移除 `game.js` 的 hex | L2／R2 | 方向已決（§7.3），細部未計畫；hex 現位置見 §7.1 |
-| 3 | 分享圖：`share-theme.js` 與 canvas 字體改讀同一份 token | L2／R2 | 凍結處理已決（§7.3），細部未計畫 |
-| 4 | 版面 token（spacing、border 等），之後換模板以換 token 為主 | L2 | 未決（§7.3 建議暫緩） |
+| 段 | BACKLOG | 內容 | 預估分級 | 狀態 |
+|---|---|---|---|---|
+| 1 | UI-DESIGN-TOKENS-01 | token 盤點、補非顏色 token、修正字體指定 | L1／R2 | 已發布（1.13.6，§6） |
+| 2 | UI-DESIGN-TOKENS-02 | 元件化：特性標籤、球團徽章改用 class＋token | R2 | 已實作待驗收（1.16.1，§8.4，PR #77） |
+| 3（P1） | UI-DESIGN-TOKENS-03 | 分享圖顏色改讀 CSS token（單一來源）；canvas 字體移至 P4 | R2 | 路線已決（§9），細部計畫待寫（§10） |
+| P2 | UI-DESIGN-TOKENS-04 | 主題清單集中為單一定義 | R2 | 路線已決（§9），未計畫 |
+| P3 | UI-DESIGN-TOKENS-05 | 語意層＋基礎色推導（`color-mix()`）、對比測試改瀏覽器 | R2 | 路線已決（§9），未計畫 |
+| 4（P4） | UI-DESIGN-TOKENS-06 | 非顏色模板：字體（含 canvas）、字級、圓角、陰影、間距、JS 內 inline 版面值 | R2 | 路線已決（§9），未計畫 |
 
-各段各自一個 PR → `dev`，分開驗收。
+各段各自一個 PR → `dev`，分開驗收。分級為預估，各段細部計畫時依 AGENTS §6.1 重判。
 
 ## 1. 現況（2026-10-24 唯讀確認，基準 `origin/dev` `2e69096`；同日以 `357e852` 重掃，差異併記於各節）
 
@@ -144,8 +146,8 @@
 ### 7.3 使用者決定（2026-11-10）
 
 1. 第 2 段採方案②：特性標籤改用 class＋token，並隨主題變色（有意的視覺變更，PATCH）。球團徽章改用 class＋token，外觀維持不變（依當時提示的選項內容；細部計畫時再確認）。`career-presenter.test` 的核准差異須追加。
-2. 第 3 段的凍結檔案採方案ⓐ：在 `award-identity-policy.test` 為 `share-theme.js` 追加精確的核准 overlay（比照 `approvedReplayShareEdits`），不另開取代模組。canvas 字體是否改為 `--sans`（分享 PNG 像素改變、需等待 web font 載入）未決。
-3. 第 4 段未決；建議暫緩至有具體換版需求。
+2. 第 3 段的凍結檔案採方案ⓐ：在 `award-identity-policy.test` 為 `share-theme.js` 追加精確的核准 overlay（比照 `approvedReplayShareEdits`），不另開取代模組。canvas 字體是否改為 `--sans`（分享 PNG 像素改變、需等待 web font 載入）未決。（2026-11-11 由 §9 取代：canvas 字體移至 P4。）
+3. 第 4 段未決；建議暫緩至有具體換版需求。（2026-11-11 由 §9 取代：模板包含非顏色項目，第 4 段改為 P4 實施。）
 4. 各段仍各自一個 PR → `dev`；分支基準（等 PR #75 併入 dev，或疊在 `4fabbdc`）未決。
 
 ## 8. 第 2 段細部計畫（UI-DESIGN-TOKENS-02；2026-11-11，基準 `990d941`（dev `ca81755`＋紀錄 commit），VERSION 1.16.0）
@@ -196,3 +198,49 @@
 | reviewer | 無阻擋性發現。低優先 2 項已處理：`CURRENT_SPEC.md` 標頭開發版號、本節 D7 敘述。範圍外註記：分享圖（canvas）的特性標籤色仍為 `share-image.js` 內的固定色，屬第 3 段（UI-DESIGN-TOKENS-03） |
 
 - 未做：Linux CI Full、Preview、實機（手機）確認、main 發布。
+
+## 9. 模板化路線（2026-11-11 使用者決定）
+
+目標：能快速換模板。新增一套模板只需寫一個 CSS 主題區塊（約 12 個基礎色＋必要的覆寫）與主題清單一行；元件色自動推導，分享圖與測試自動跟上。使用者決定：①模板範圍包含顏色以外的字體、圓角、陰影、間距（P4 實施）；②支援主流瀏覽器，底線為 Baseline 2023（§9.3）；③依 P1 → P2 → P3 → P4 順序，各一個 PR → `dev`，各自細部計畫批准後實作。
+
+### 9.1 現況阻礙（HEAD `1152c03`，grep）
+
+1. 每個主題約 55 個手寫 hex（-02 的特性標籤占 14 個），沒有「基礎色 → 元件色」的分層。
+2. 顏色來源有多份：`themes.css`、`share-theme.js`（受凍結）、`share-image.js` 的 `tagColor()`。值已不一致：`edge` 4 主題皆不同（例 standard `#c9828e` 對 `--edge` `#d9a1aa`）；`soft` 無對應 token；`dim`／`bad` 在 night／scoreboard 不同。`bg`／`panel`／`text`／`accent` 4 主題一致。
+3. 主題清單寫死：`preferences.js:3` 的 `allowed.theme`；含 `scoreboard` 字樣的檔案共 14 個（產品 4、測試／測試腳本 10，部分附各主題 RGB 期待值）。
+4. `display-preferences.test` 以 `--x:#hex` regex 取主題區塊的值算對比，主題區塊內不能用 `var()`／`color-mix()`。
+5. token 名稱綁球場比喻（`--chalk`、`--amber`、`--clay`），換風格時名稱與實際顏色不符。
+6. 非顏色：字級字面值分散（§1.3）；`docs/src` 的 inline style 約 30 處（`career-retirement.js` 15 處，多為 margin／text-align／flex；`player-ability.js` 的動態寬度屬正當 inline）；canvas 字體約 20 處為 `sans-serif`／`monospace` 字面值。
+
+### 9.2 階段
+
+| 階段 | BACKLOG | 內容 | 解決 | 外觀 |
+|---|---|---|---|---|
+| P1 單一來源 | UI-DESIGN-TOKENS-03 | 分享圖於繪製時讀目前主題的 CSS token（套到隱藏探測元素的 `color`，讀 `getComputedStyle` 取得已解析的 rgb）；與 CSS 不同的值改為 CSS 內的分享圖專用 token（值照現值）；JS 色表不再是來源。建議同時讓 night／scoreboard 的分享圖特性標籤改讀 -02 的 `--tag-*`（有意的視覺變更，PATCH），於 §10 批准 | §9.1-2 | standard 不變（1.11.0 像素比對維持）；night／scoreboard 標籤依批准 |
+| P2 主題清單集中 | UI-DESIGN-TOKENS-04 | 主題 id 與名稱只定義一次；設定 UI 與測試由此清單迭代 | §9.1-3 | 不變 |
+| P3 語意層＋推導 | UI-DESIGN-TOKENS-05 | 每主題只定義約 12 個基礎色（如 `--bg`、`--surface`、`--text`、`--text-muted`、`--accent`、`--good`、`--bad`、`--border`）；元件色在主題區塊外以 `color-mix(in oklab,…)` 推導，需手調的值（例：-02 已批准的深色標籤值）於該主題區塊覆寫；舊名保留為別名逐步替換；對比測試改為瀏覽器 computed style，迭代主題清單 | §9.1-1、4、5 | 預設不變（推導值須等於現值，否則覆寫為現值） |
+| P4 非顏色模板 | UI-DESIGN-TOKENS-06 | 字體（含 canvas 改讀 `--sans`／`--mono`）、字級、圓角／陰影（第 1 段已有 token）、間距、JS 內 inline 版面值改 class | §9.1-6 | 細部計畫時決定 |
+
+P3 完成後新增模板的步驟：寫基礎色 → 主題清單加一行 → 跑對比測試 → 只手調 FAIL 的值。
+
+### 9.3 瀏覽器底線
+
+- Baseline 2023：Chrome／Edge 111+、Firefox 113+、Safari／iOS Safari 16.2+（`color-mix()` 支援起點）。不使用 relative color（`oklch(from …)`）等更新的語法。
+- 限制：`color-mix()` 寫在自訂屬性（`--x:color-mix(…)`）再以 `var(--x)` 引用時，不支援的瀏覽器在計算值階段判為無效，不會退回前一行宣告。P3 的推導值在底線以下的瀏覽器會整個失效，此為接受的代價。`stadium-background.css` 直接寫在屬性上的 `color-mix()`（前一行純色後備）不受影響。
+- 現況（scout 調查＋抽查）：`CURRENT_SPEC.md`、`AGENTS.md`、`docs/index.html` 均無最低瀏覽器版本記載；CI 只跑 Playwright 內建 Chromium，Firefox／Safari 只能於 Preview 手動確認。底線於第一個依賴它的階段（預定 P3）實作時寫入 `CURRENT_SPEC.md`。
+
+### 9.4 對先前決定的影響
+
+- §7.3-2 的 canvas 字體 → P4。§7.3-3（第 4 段暫緩）→ 改為 P4 實施。§3④（顏色不改名）→ P3 引入語意名稱，舊名保留為別名。§3③（字級 token）→ P4。
+- 2026-11-11 討論中，-03 曾建議「保留 JS 色表＋一致性測試」（方案 A），因與模板化目標衝突（P1 後仍須拆除），改為 P1。
+- 分支：-03 自 `1152c03`（`ui/design-tokens-02` HEAD）開 `ui/design-tokens-03`；PR #77 以 merge commit 併入後即為 `dev` 的祖先。push 待 PR #77 併入後另批。
+
+### 9.5 P1 前置調查（2026-11-11，scout 唯讀調查；標 ✓ 者已以 grep／`git cat-file` 抽查）
+
+1. ✓ `share-theme.js` 受凍結（`287dd1a` 存在，須與 `efd4710c` 相同），且不能刪除：`award-identity-policy.test:171` 對清單內每個檔案 `readFileSync`。修改須依 §7.3-2 方案ⓐ追加核准 overlay。✓ `share-image.js` 不受凍結（`287dd1a` 不存在）。
+2. ✓ `verify-modularization.mjs:208–209` 逐字斷言 `share-image.js` 含 `imageColor=getSharePalette(theme)`、`share-theme.js` 含 `standard:{bg:'#fff8f8'`。
+3. 繪製時機：`share-image.js:132` 以 `getDisplayPreferences().theme` 取主題；主題變更時 `preferences.js:49–56` 先 `apply()` 寫入 `data-theme`，再發 `yakyujinsei:displaychange`，`share-image.js:14–20` 的 listener 才重繪。分享圖只以目前主題繪製，繪製當下讀 computed style 可行。
+4. 使用中的色值鍵：`bg`、`edge`、`text`、`dim`、`accent`、`soft`、`bad`；`panel` 未用於繪圖。`tagColor()`（`share-image.js:145–153`）7 類固定 hex，mrteam 為白底＋球團色（`TEAM_COLOR`，無色時 `imageColor.accent`），結果經 `shareTagPalette()` 調整對比（standard 原樣返回）。
+5. `replay-share-theme-e2e` 的像素斷言：standard 主題、`rich()` fixture（含 legend、taiwan、goldcloth、genius、glass、mrteam 與已移除特性）在收入列以上與 `dc5ac871` 逐像素相同；4 主題各驗 (0,0) 像素 rgb；字級變更後 PNG 不變；下載／分享位元組與 PNG 相同。manifest 以 `--ui-only` 執行。
+6. `replay-share-theme.test` 在 Node（無 DOM）呼叫 `getSharePalette()`／`shareTagPalette()`，斷言各主題 `bg`、8 個鍵、回傳副本與 12 組標籤對比。
+7. `docs/src` 內 `share-image.js` 以外沒有 canvas／JS 側的顏色使用者。
