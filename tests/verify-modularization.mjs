@@ -205,8 +205,10 @@ assert.equal((data.match(/"eventKey"/g) || []).length, 2);
 assert.match(themeCss, /--button-detail:#6f303d/);
 assert.match(themeCss, /--primary-button-detail:#fff4f5/);
 assert.match(themeCss, /--bg:#fff8f8/);
-assert.match(shareImage, /imageColor=getSharePalette\(theme\)/);
-assert.match(await read('docs/src/ui/share-theme.js'), /standard:\{bg:'#fff8f8'/);
+// UI-DESIGN-TOKENS-03: share image colors are read from the CSS theme tokens; share-theme.js keeps no palette table.
+assert.match(shareImage, /imageColor=Object\.fromEntries\(Object\.entries\(SHARE_COLOR_TOKENS\)/);
+assert.match(shareImage, /const SHARE_COLOR_TOKENS=\{bg:'--bg',edge:'--share-edge'/);
+assert.doesNotMatch(await read('docs/src/ui/share-theme.js'), /palettes|getSharePalette|#[\da-f]{6}'?,/);
 assert.ok(baseCss.length > 8_000);
 
 assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 0);

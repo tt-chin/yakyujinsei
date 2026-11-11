@@ -1,4 +1,4 @@
-# 現行規格（正式公開 v1.14.1／開発版 v1.16.1）
+# 現行規格（正式公開 v1.14.1／開発版 v1.16.2）
 
 ### 開発版1.13.8：プレイヤー向け更新履歴
 
@@ -567,9 +567,9 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 - 共用shareReplayURLはclickの直接呼出鎖でnavigator.shareを呼ぶ。title「野球人生シミュレーター」、text「この野球人生をプレイしてみよう！」、既存replayURLのurlを渡す。現在origin／pathnameとencodeURIComponent(seed)を保持し、query／hashを除いてseedのみ。空／特殊Seed、旧rv／rules URLも同じ編碼政策。ゲームS／RNG／保存には触れない。
 - API非対応時のみ同一clickでClipboard API→execCommand→手動選択へ回退。コピー成功は「リプレイURLをコピーしました。」、失敗は「URLを長押し／選択してコピーしてください。」。AbortErrorは取消として成功／エラー／自動コピーを行わず、他エラーは「共有できませんでした。URLを長押し／選択してコピーしてください。」で手動選択を提示し、自動コピーしない。resolveで送達を宣言しない。ボタンdisabledで重入を防止しfinallyで復元。閉じた／再開したdialogへ古い共有結果を反映しない。
 - 引退URLのstatus／手動選択欄はsh-url-statusへ分離し、sh-outの画像・保存／画像共有・ダウンロード操作を破棄しない。
-- share-theme.jsのgetSharePaletteは8キーを保持。順序はbg／panel／edge／text／dim／accent／soft／bad。standardは#fff8f8／#ffffff／#c9828e／#3a1017／#875d64／#a71930／#6f4048／#c62828。nightは#0d1117／#161b22／#65758a／#f0f3f6／#b5bfca／#ff7187／#c3cad3／#ff817e。classicは#f4ecd8／#fffaf0／#9f8456／#302719／#6f6048／#8b2f22／#70513c／#a62f2f。scoreboardは#0d2318／#143222／#6c9278／#f4f0d9／#c0c9b6／#f0c75e／#b8c2ae／#ff8a82。未知／欠落主題はstandardへ回退し、返却値の変更で色盤を破壊しない。
+- 共有画像の色はPNG生成時に現在テーマのCSS token（docs/styles/themes.css）から読む（v1.16.2、UI-DESIGN-TOKENS-03）。bg＝--bg、edge＝--share-edge、text＝--chalk、dim＝--dim、accent＝--amber、soft＝--share-soft、bad＝--bad。透明なhost内の隠しprobe要素でvar()を解決する。不透明なrgb()（hex tokenはすべてこれ）はcanvasを使わず正確に解析し（Brave等の指紋対策によるcanvas読戻しの±1変動を避ける）、それ以外の計算値（color-mixのoklab()／color(srgb …)など）は1×1 canvasへ描いてsRGBの#rrggbbとして読み戻す。token欠落・無効値・不透明でない色は例外とし、文字色の継承や直前の色で代用しない。share-theme.jsは色盤を持たずshareTagPaletteだけを保持する（凍結ファイルへの承認overlay）。standard／classicの画像は1.16.1と同一、night／scoreboardのdim／badは画面の--dim／--badに揃う。
 - PNG生成時のgetDisplayPreferences().themeを採用。単一yakyujinsei:displaychange listenerで接続中の生成済みプレビューだけを主題変更時に同期再生成する。字級／密度のみの変更では再生成せず、未生成画像を勝手に生成しない。切離したプレビューは登録から除く。非同期生成競争を新規導入しない。
-- 同じ生成PNGのdata URLをプレビュー・ダウンロード・画像原生共有で共用。既存画像の文字／統計／評価／座標／寸法／920px論理幅・2倍出力／ファイル名を維持。standardのタグ配色も保持。その他主題は一般・金・黄・銀・負面・削除済み・球団の既存タグ底色／邊框の語意を維持し、4.5:1未満の文字色のみ#302719へ調整。削除線は調整後文字色を使う。
+- 同じ生成PNGのdata URLをプレビュー・ダウンロード・画像原生共有で共用。既存画像の文字／統計／評価／座標／寸法／920px論理幅・2倍出力／ファイル名を維持。タグ配色は金（歴史的選手・Team Taiwan）＝--tag-legend-*、黄＝--tag-goldcloth-*、銀＝--tag-genius-*、負面＝--tag-negative-*、一般＝--share-tag-*、削除済み＝--share-tag-removed-*（各bg／edge／text）、球団ゆかり＝白地＋球団色（無色時はaccent）。standard／classicは従来色、night／scoreboardは暗色（v1.16.2）。standard以外は4.5:1未満の文字色のみ#302719へ調整。削除線は調整後文字色を使う。
 - 薪資・契約・能力・イベント・成績・引退・殿堂・Seed／RNG・URL・DOMのゲーム内容は変更しない。保存／續玩、旧版エンジン、全面Canvas改写は追加しない。旧1.8草案のAPI／事件名は適用しない。
 
 ### 検収条件と確認範囲

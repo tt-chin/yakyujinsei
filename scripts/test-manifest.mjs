@@ -16,6 +16,7 @@ const browserProfiles = {
   'full-power-pitching-jp3-pitcher-02-e2e': {args:['--part=jp3-pitcher-02'],seconds:350,reason:'full-power-pitching-e2e S01-S02 for jp3-pitcher-02: full, normal and energy-saving P, each old/current/repeat (9 complete career runs); not a Quick entry.'},
   'international-personal-stats-e2e': {seconds:600,reason:'Tournament snapshots and result cards, T01-T14 browser matrix, six exact baseline S/RNG careers. No Quick profile.'},
   'design-tokens-02-e2e': {quick:[],seconds:15,reason:'UI-DESIGN-TOKENS-02: computed styles of the class-based team badge and retirement trait tags vs the pre-change inline styles, 4 themes x PC/mobile.'},
+  'design-tokens-03-e2e': {quick:[],seconds:40,reason:'UI-DESIGN-TOKENS-03: share PNG drawn from CSS theme tokens vs the pre-change tree (standard/classic byte-identical, night/scoreboard changed) and probe colors vs themes.css, 4 themes x PC/mobile.'},
   'trait-display-e2e': {seconds:180,reason:'All trait labels, acquisition-only explanation lifetime, retirement/PNG and exact pre-change P/IF S/RNG careers.'},
   'stage10-risk-e2e': {seconds:240,reason:'Pre-refactor investigation: natural trait routes, overseas salary flow, explicit return faults and passive LEGACY traces. Desired-behaviour failures remain FAIL; no Quick profile.'},
   'stage6-ability-e2e': {seconds:120,reason:'Original allocation matrix and stale-callback safety assertions; expectations preserved.'},

@@ -223,6 +223,8 @@
 
 P3 完成後新增模板的步驟：寫基礎色 → 主題清單加一行 → 跑對比測試 → 只手調 FAIL 的值。
 
+P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`、`color(srgb …)`，見 §10.1 D1 更正）。P1 的分享圖讀值對這類格式走 canvas 讀回（e2e 已驗證 `color-mix()` srgb／oklab），但 canvas 讀回受反指紋干擾：預設 Brave 實測 RGB ±1；Firefox resistFingerprinting、Safari 未實測，若讀回 alpha 0 則分享圖無法產生。P3 須擇一：分享圖用的 token 維持 hex、或以數學轉換解析 `oklab()`／`color(srgb …)` 不經 canvas、或加後備。P3 的對比測試若讀 computed style，也須先轉成 sRGB。
+
 ### 9.3 瀏覽器底線
 
 - Baseline 2023：Chrome／Edge 111+、Firefox 113+、Safari／iOS Safari 16.2+（`color-mix()` 支援起點）。不使用 relative color（`oklch(from …)`）等更新的語法。
@@ -244,3 +246,55 @@ P3 完成後新增模板的步驟：寫基礎色 → 主題清單加一行 → �
 5. `replay-share-theme-e2e` 的像素斷言：standard 主題、`rich()` fixture（含 legend、taiwan、goldcloth、genius、glass、mrteam 與已移除特性）在收入列以上與 `dc5ac871` 逐像素相同；4 主題各驗 (0,0) 像素 rgb；字級變更後 PNG 不變；下載／分享位元組與 PNG 相同。manifest 以 `--ui-only` 執行。
 6. `replay-share-theme.test` 在 Node（無 DOM）呼叫 `getSharePalette()`／`shareTagPalette()`，斷言各主題 `bg`、8 個鍵、回傳副本與 12 組標籤對比。
 7. `docs/src` 內 `share-image.js` 以外沒有 canvas／JS 側的顏色使用者。
+
+## 10. P1 細部計畫（UI-DESIGN-TOKENS-03；2026-11-11，基準 `9956ca3`，VERSION 1.16.1）
+
+- 分類：R2 純顯示變更例外（分享 PNG 配色）。不碰 `game.js`、RNG、`S`、共用測試基盤；測試變更限於期待值、核准 overlay 與新增 e2e。驗證：相關測試＋Quick＋4 主題 × PC／手機截圖＋reviewer；本機 Full 不跑（使用者決定，合併 `main` 前依既有流程）。
+- 前置事實見 §9.5。另：standard 的 legend／goldcloth／genius／negative 標籤色與 `tagColor()` 相同，classic 的 `--tag-*` 與 standard 相同；`shareTagPalette()` 比較的是標籤自身底色與字色（非分享圖底色），以 regex 解析 6 位 hex，night／classic／scoreboard 皆會套用（例：classic 的已移除標籤字色現為後備 `#302719`）。
+
+### 10.1 設計（D1～D8，使用者批准 2026-11-11）
+
+| # | 決定 |
+|---|---|
+| D1 | `share-image.js` 內加讀值函式（B'）：透明容器內的隱藏探測元素以 `color:var(--token)` 解析 token。computed color 為不透明 `rgb()`（所有 hex token）時直接解析，不碰 canvas；其他格式（`color-mix()` 的 `oklab(…)`、`color(srgb …)`）畫到 1×1 canvas、以 `getImageData` 讀回 sRGB（先 `clearRect` 並設透明 `fillStyle`，無法解析的顏色讀回 alpha 0）。token 未定義、值無效（探測元素繼承透明）或非不透明時 throw，不靜默繼承。結果為 `#rrggbb`。單一使用者，不另開模組。（更正 2026-11-11：原案以 regex 只解析 `rgb()`；reviewer 指出格式依賴後實測 Chrome 157，`color-mix(in oklab,…)` 為 `oklab(…)`、`in srgb` 為 `color(srgb …)`，原案在 P3 會失效，使用者選 B（全部改 canvas 讀值）。第二次 reviewer 指出：無效 token 會繼承文字色；canvas 讀回受反指紋干擾。實測預設 Brave（Farbling 開啟）1×1 讀回 RGB ±1、alpha 255，B 會使 Brave 上 standard／classic 不再逐位元組相同。使用者 2026-11-12 批准 B'：rgb() 直接解析、其餘才走 canvas，並加透明容器） |
+| D2 | `bg`→`--bg`、`text`→`--chalk`、`accent`→`--amber`；`edge`、`soft` 新增 `--share-edge`、`--share-soft`（值照現值）；`panel` 未使用，不對應 |
+| D3 | ⓐ `dim`→`--dim`、`bad`→`--bad`（night／scoreboard 文字色微變） |
+| D4 | legend（含 taiwan）／goldcloth／genius／negative 改讀 -02 的 `--tag-*`：standard／classic 不變，night／scoreboard 變深色 |
+| D5 | ⓑ 一般特性與已移除標籤新增 `--share-tag-{bg,edge,text}`、`--share-tag-removed-{bg,edge,text}`；standard／classic 照現值，night／scoreboard 另算深色值，附截圖另經批准 |
+| D6 | mrteam 維持白底＋球團色（無色時 `accent`）；所有標籤照舊經 `shareTagPalette()`（輸入 hex） |
+| D7 | `share-theme.js` 以核准 overlay 移除 `palettes` 與 `getSharePalette`，只保留 `shareTagPalette`（主題判定改為明列 night／classic／scoreboard，P2 再改讀主題清單） |
+| D8 | PATCH 1.16.1 → 1.16.2；`config.js`、CHANGELOG、RELEASE_NOTES（`update-release-notes.mjs`）、`CURRENT_SPEC.md` 標頭同步 |
+
+### 10.2 測試（T1～T6）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `replay-share-theme.test` | 移除 `getSharePalette` 斷言；改測 D1 讀值與 rgb→hex（假 computed style、token 未定義 throw）；`shareTagPalette` 12 組對比保留 |
+| T2 | `award-identity-policy.test` | `share-theme.js` 追加精確核准 overlay，每處替換恰好一次 |
+| T3 | `verify-modularization.mjs:208–209` | 改斷言新讀值方式與 `share-theme.js` 已無色表 |
+| T4 | 新 `design-tokens-03-e2e` | 4 主題各畫分享 PNG，與改動前 `9956ca3` 比較：standard／classic 逐位元組相同，night／scoreboard 不同；探測讀值等於期待 token 值 |
+| T5 | `replay-share-theme-e2e` | 不修改；standard 與 1.11.0 像素比較須照樣 PASS |
+| T6 | 負控制 | T1～T4 的對照各自破壞須 FAIL |
+
+### 10.3 流程
+
+1. 草稿：實作＋T1～T4，算出 D5 深色值，附 4 主題分享 PNG 截圖 → 使用者批准色值。
+2. 定案：相關測試、Quick、截圖、reviewer，版本與文件更新，commit → push（PR #77 併入後另批）→ PR → `dev`。
+
+### 10.4 結果（2026-11-12）
+
+- 實作自 `9956ca3`，VERSION 1.16.1 → 1.16.2（PATCH）。D5 深色值經使用者批准（2026-11-11）：night 一般特性 `#21262d`／`#465365`／`#ff7187`、已移除 `#21262d`／`#6b7480`／`#9aa3ad`；scoreboard 一般特性 `#193d29`／`#557863`／`#f0c75e`、已移除 `#193d29`／`#6b8273`／`#a2ad9a`（沿用退休卡 HTML 同主題的 `.tag` 與 `--tag-removed-*`）。字色對底色 5.16～7.49。
+- D1 經兩次修正為 B'（見 §10.1 D1 更正）。
+
+| 驗證 | 結果 |
+|---|---|
+| `design-tokens-03-e2e`（基準 `9956ca3`，1280／390 × 4 主題） | 16 項 PASS：standard／classic 分享 PNG 逐位元組相同，night／scoreboard 改變；探測讀值等於 `themes.css` hex；night／scoreboard 每個標籤 token 與 standard 不同；`color-mix()` srgb／oklab 讀回與獨立 sRGB／OKLab 計算相差 ≤1；無效 token throw |
+| `replay-share-theme-e2e --ui-only` | exit 0，standard 與 1.11.0 像素比較 PASS（T5，未修改） |
+| `replay-share-theme.test`／`award-identity-policy.test`／`verify-modularization`／`display-preferences.test`／`design-tokens-02.test`／`design-tokens-02-e2e` | PASS（`award-identity-policy` 135 cases／0 FAIL；`replay-share-theme` 19 cases） |
+| 負控制 | NC1～NC14 全部 FAIL（edge token 換掉、standard 標籤色、night token 缺、hex 補零、凍結檔改動、容器未移除、色頻順序、night 標籤回淺色、scoreboard 一般標籤回淺色、未重設透明 `fillStyle`、只解析 `rgb()`、無 `clearRect`、容器非透明、`rgb()` 走 canvas）。每次還原以 sha256 核對。NC8 初次在新 e2e 存活（只驗 PNG 有變），補「每個標籤 token 與 standard 不同」斷言後 FAIL；NC10、NC12 初次因假 canvas 不忽略無效 `fillStyle`、不疊加而存活或未測到，改假 canvas 後 FAIL；NC14 初次被前段斷言擋下，補對照值後由「rgb() 不建立 canvas」斷言 FAIL |
+| 預設 Brave（Farbling 開啟）實測 | 1×1 canvas 讀回 RGB ±1、alpha 255（每 origin 固定）；B' 讀 4 主題 100 個 token 與 `themes.css` 全部一致。自動化 e2e 停用 Farbling，CI 不涵蓋此情境；「rgb() 不建立 canvas」由單元測試＋NC14 保證 |
+| Quick | 90／90 PASS（新增 1 項；B' 定案碼，macOS＋Brave 本機） |
+| reviewer | 3 輪。第 1 輪：regex 格式依賴 → 實測後改 B。第 2 輪：無效 token 繼承文字色、canvas 受反指紋干擾、假 canvas 不疊加 → B'。第 3 輪：前述皆關閉，無中以上發現；低：`replay-share-theme.test` 未斷言總件數（既有寫法，未改） |
+| 對照圖 | `compare-night.png`、`compare-scoreboard.png` 與 16 張前後 PNG 存於 `.claude/reports/design-tokens-03/`（未 commit），供 PR 說明使用 |
+
+- 未做：Linux CI Full、Preview、Firefox／Safari 實機、手機實機、本機 Full（使用者決定不跑）、main 發布。

@@ -1,8 +1,41 @@
 import { VERSION } from '../config.js';
 import {incomeSummary} from './income-summary.js';
 import { getDisplayPreferences } from './preferences.js';
-import { getSharePalette, shareTagPalette } from './share-theme.js';
+import { shareTagPalette } from './share-theme.js';
 import {removedTraitLabel} from '../engine/trait-policy.js';
+
+// Share image colors come from the current theme's CSS tokens (UI-DESIGN-TOKENS-03, DESIGN_SYSTEM_PLAN §10 D1).
+// A hidden probe resolves var(--token). An opaque rgb() (every hex token) is parsed exactly, without a canvas,
+// because anti-fingerprinting (e.g. Brave farbling) shifts canvas read-back by ±1. Other computed formats
+// (color-mix keeps its space: oklab(), color(srgb …)) are painted on a 1x1 canvas and read back as sRGB bytes.
+// The probe sits in a transparent host, so an invalid token value inherits transparent instead of the text color;
+// missing, invalid or non-opaque tokens throw instead of drawing a wrong color. The result is #rrggbb because
+// shareTagPalette parses hex.
+const SHARE_COLOR_TOKENS={bg:'--bg',edge:'--share-edge',text:'--chalk',dim:'--dim',accent:'--amber',soft:'--share-soft',bad:'--bad'};
+const SHARE_TAG_TOKENS=['--tag-legend','--tag-goldcloth','--tag-genius','--tag-negative','--share-tag','--share-tag-removed'];
+export function readThemeColors(names,{documentRef=document,styleOf=el=>getComputedStyle(el)}={}){
+  const rootStyle=styleOf(documentRef.documentElement),host=documentRef.createElement('span'),probe=documentRef.createElement('span');
+  let pixel;
+  host.hidden=true;host.style.color='transparent';host.appendChild(probe);documentRef.body.appendChild(host);
+  try{
+    return Object.fromEntries(names.map(name=>{
+      if(!rootStyle.getPropertyValue(name).trim())throw Error('SHARE_COLOR_TOKEN_MISSING '+name);
+      probe.style.color=`var(${name})`;
+      const color=styleOf(probe).color,legacy=color.match(/^rgb\((\d+), (\d+), (\d+)\)$/);
+      let rgb;
+      if(legacy)rgb=legacy.slice(1).map(Number);
+      else{
+        if(!pixel){const canvas=documentRef.createElement('canvas');canvas.width=canvas.height=1;pixel=canvas.getContext('2d',{willReadFrequently:true});}
+        // An unparsable fillStyle is ignored, so clear and start transparent: a rejected color reads back alpha 0.
+        pixel.clearRect(0,0,1,1);pixel.fillStyle='rgba(0, 0, 0, 0)';pixel.fillStyle=color;pixel.fillRect(0,0,1,1);
+        const data=pixel.getImageData(0,0,1,1).data;
+        if(data[3]!==255)throw Error('SHARE_COLOR_UNRESOLVED '+name+' '+color);
+        rgb=[data[0],data[1],data[2]];
+      }
+      return [name,'#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('')];
+    }));
+  }finally{host.remove();}
+}
 
 // Retirement career image (canvas) with save/share buttons (OOP plan §2q).
 // The career state and seed are read through getters, so a new career (S/SEED reassigned) is seen at once.
@@ -129,7 +162,9 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   H+=120; // Four income rows plus space for the seed/version footer.
   cv.width=W*scale; cv.height=H*scale;
   c.scale(scale,scale);
-  const theme=getDisplayPreferences().theme,imageColor=getSharePalette(theme);
+  const theme=getDisplayPreferences().theme,color=readThemeColors([...Object.values(SHARE_COLOR_TOKENS),...SHARE_TAG_TOKENS.flatMap(n=>[n+'-bg',n+'-edge',n+'-text'])]);
+  const imageColor=Object.fromEntries(Object.entries(SHARE_COLOR_TOKENS).map(([key,name])=>[key,color[name]]));
+  const tokenTag=name=>({bg:color[name+'-bg'],bd:color[name+'-edge'],fg:color[name+'-text']});
   c.fillStyle=imageColor.bg; c.fillRect(0,0,W,H);
   c.strokeStyle=imageColor.edge; c.lineWidth=3; c.strokeRect(10,10,W-20,H-20);
   c.textBaseline='top';
@@ -143,13 +178,13 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   // 特性列(header 右方)。
   let y=126;
   function tagColor(o){
-    if(o.rem)return {bg:'#f1eeee',bd:'#b7aaad',fg:'#81757a'};
-    if(o.key==='legend'||o.key==='taiwan')return {bg:'#fff7dc',bd:'#c79520',fg:'#795b00'}; /* 金（歴史的選手・Team Taiwan）。 */
-    if(o.key==='goldcloth')return {bg:'#fffbe0',bd:'#c5a800',fg:'#6f6000'}; /* 黄。 */
+    if(o.rem)return tokenTag('--share-tag-removed');
+    if(o.key==='legend'||o.key==='taiwan')return tokenTag('--tag-legend'); /* 金（歴史的選手・Team Taiwan）。 */
+    if(o.key==='goldcloth')return tokenTag('--tag-goldcloth'); /* 黄。 */
     if(o.key==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||imageColor.accent; return {bg:'#ffffff',bd:tc,fg:tc}; }
-    if(o.key==='genius')return {bg:'#f3f5f8',bd:'#9aa5b5',fg:'#4c5868'}; /* 銀。 */
-    if(o.neg)return {bg:'#fff0f0',bd:'#c0392b',fg:'#a71930'};             /* 赤。 */
-    return {bg:'#fbe9ec',bd:'#c95b6c',fg:'#7f1d2d'};                      /* 赤系の標準特性。 */
+    if(o.key==='genius')return tokenTag('--tag-genius'); /* 銀。 */
+    if(o.neg)return tokenTag('--tag-negative');             /* 赤。 */
+    return tokenTag('--share-tag');                         /* 赤系の標準特性。 */
   }
   function drawTags(items){ items.forEach(function(o){ const t=o.label, col=tagColor(o);
     const readable=shareTagPalette(col,theme);
