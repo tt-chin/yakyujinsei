@@ -273,16 +273,17 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     const tr=[];
     const TN=traitNames();
     const posT={pos:['favorite','adking','legend','taiwan','goldcloth','mrteam','confidante','genius','late','disc','academy','intlace','franchise','clutch','phoenix','rubber','onetool','smallschool','grinder','combo','rainbow','oldghost','miraclegen','strongpitch','stronghit','championmaker','pitcherTC','hitterTC','nitenichi','iron'],neg:['glass','scum','yips','distract','cancer','ambience','thief','latepractice']};
-    const tagStyle=k=>{
-      if(k==='legend'||k==='taiwan')return 'background:#fff7dc;border-color:#c79520;color:#795b00'; /* 歴史的選手/台湾代表への貢献：金。 */
-      if(k==='goldcloth')return 'background:#fffbe0;border-color:#c5a800;color:#6f6000'; /* 黄金のユニフォーム：黄。 */
-      if(k==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#a71930'; return 'background:#ffffff;border-color:'+tc+';color:'+tc; }
-      if(k==='genius')return 'background:#f3f5f8;border-color:#9aa5b5;color:#4c5868';        /* 天才：銀。 */
-      return ''; /* 好影響：既定色はアンバー。 */
+    /* 色は themes.css の --tag-* トークン（base.css の .tag-* クラス）。 */
+    const tagAttrs=k=>{
+      if(k==='legend'||k==='taiwan')return ' class="tag tag-legend"'; /* 歴史的選手/台湾代表への貢献：金。 */
+      if(k==='goldcloth')return ' class="tag tag-goldcloth"'; /* 黄金のユニフォーム：黄。 */
+      if(k==='mrteam')return ' class="tag tag-mrteam" style="--team-color:'+(TEAM_COLOR[S.mrTeamName]||'#a71930')+'"'; /* 白地に球団色。 */
+      if(k==='genius')return ' class="tag tag-genius"'; /* 天才：銀。 */
+      return ' class="tag"'; /* 好影響：既定色はアンバー。 */
     };
-    posT.pos.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="${tagStyle(k)}">${TN[k]}</span>`); });
-    posT.neg.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="background:#fff0f0;border-color:#c0392b;color:#a71930">${TN[k]}</span>`); });
-    (S.removed||[]).forEach(lbl=>tr.push(`<span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${removedTraitLabel(lbl,S,teamNick)}</span>`));
+    posT.pos.forEach(k=>{ if(S.traits[k])tr.push(`<span${tagAttrs(k)}>${TN[k]}</span>`); });
+    posT.neg.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag tag-negative">${TN[k]}</span>`); });
+    (S.removed||[]).forEach(lbl=>tr.push(`<span class="tag tag-removed">${removedTraitLabel(lbl,S,teamNick)}</span>`));
     const lv=S.love;
     const exes=Array.isArray(lv.exes)?lv.exes:[];
     const cur=lv.st==='married'?`妻 ${lv.partner}（子ども${lv.kids}人）`:lv.st==='dating'?`交際中 ${lv.partner}（${lv.dyrs||0}年）`:lv.st==='divorced'?'離婚':'独身';

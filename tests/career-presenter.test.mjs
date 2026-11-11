@@ -66,12 +66,25 @@ const boardFixtures={
   'PRO colored':{orgTeamId:'red'},'PRO white':{orgTeamId:'white'},'PRO short white':{orgTeamId:'shortWhite'},'PRO no color':{orgTeamId:'none'},
   'position label':{dpos:'SS'},'pitcher role':{pos:'P',role:'SP'},genius:{traits:{genius:true}},'no salary':{currentSalary:undefined},
 };
+// Approved UI-DESIGN-TOKENS-02 (DESIGN_SYSTEM_PLAN §8 D6): the inline styles become classes and
+// --team-color; each old markup shape must match exactly one pattern, everything else stays strict.
+function approvedTeamBadgeClasses(html){
+  const plain=html.match(/^<span style="color:var\(--amber\);  font-weight:900;">([^<]*)<\/span>$/);
+  if(plain)return `<span class="team-name">${plain[1]}</span>`;
+  const badge=html.match(/^<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:([^;]+);margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba\(0,0,0,0\.2\);"><\/span><span style="color:([^;]+); background:#ffffff; padding:2px 8px; border-radius:6px; box-shadow:0 2px 4px rgba\(0,0,0,0\.4\); font-weight:900;">([^<]*)<\/span>$/);
+  assert.ok(badge,'unapproved board team markup: '+html);
+  const [,dot,text,name]=badge;
+  if(dot==='#cccccc'&&text==='#000000')return `<span class="team-badge-dot is-white"></span><span class="team-name team-badge is-white">${name}</span>`;
+  assert.equal(dot,text,'team color must match between dot and label');
+  return `<span class="team-badge-dot" style="--team-color:${dot}"></span><span class="team-name team-badge" style="--team-color:${dot}">${name}</span>`;
+}
 for(const [name,over] of Object.entries(boardFixtures))for(const phase of [0,1,2])test('board '+name+' phase '+phase,()=>{
   const state=boardState(over);
   const presenter=new CareerPresenter({getState:()=>state,labels:{...labels,POSN,DPN},TEAM_COLOR,...helpers,...boardHelpers});
   const expected=vm.runInContext(oldBoard+'\nboardModel(phase)',vm.createContext({S:boardState(over),phase,...boardDeps}));
   // Approved UI-BOARD-SHADOW-01: only the two invalid rgba separators change.
   expected.teamHtml=expected.teamHtml.replaceAll('rgba(0、0、0、0.4)','rgba(0,0,0,0.4)').replaceAll('rgba(0、0、0、0.2)','rgba(0,0,0,0.2)');
+  expected.teamHtml=approvedTeamBadgeClasses(expected.teamHtml);
   assert.deepEqual(shape(presenter.board(phase)),shape(expected));
 });
 assert.equal(Object.keys(boardFixtures).length,18);

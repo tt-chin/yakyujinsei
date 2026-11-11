@@ -4832,7 +4832,8 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 | 本機 Full（`local-full-batches.mjs`，8 批，乾淨 worktree，HEAD `dd6e309`，比較基準 `origin/main` `dfc8ff7`） | `PASS`，`expected 114`、`acceptedPass 114`、`issues []`，plan 與結果逐項對照（缺 0、多 0），8 批 exit 0，`sourceChanged false`、`resourceBlocked false`，1,110 秒（macOS＋Brave 本機證據） |
 | reviewer | 無發現。已查：搬移內容逐項等價（`filter` 回呼參數、`S` 讀取順序、`this` 綁定與 private field 搭配 instance spy）、模組求值期無 `defensePosition` 先用（無 TDZ）、移除的 import／包裝無文字或 hook 引用、測試未放寬且新側確實執行新模組、`amateur-career.js` 檔頭註解正確 |
 
-- 交付：分支 `refactor/defense-position-rules` push 後開 PR（→ dev）。未做：Linux CI（PR → dev 不觸發；併入 dev 後跑 Quick）、Preview、實機確認、main 發布。
+- 交付：分支 `refactor/defense-position-rules`（`2ab959a`）已 push，[PR #76](https://github.com/tt-chin/yakyujinsei/pull/76)（→ dev）已合併（2026-11-10，merge commit `ca81755`，tree 與 `2ab959a` 相同）；dev push Quick [Run 42850084284](https://github.com/tt-chin/yakyujinsei/actions/runs/42850084284)（Tests #178）87／87 PASS（job log 的 `counts`）。未做：Linux CI Full、Preview、實機確認、main 發布。
+- BACKLOG：重構第 42 期的進度併入現況摘要；設計系統第 2、3 段新增 `UI-DESIGN-TOKENS-02`／`-03`（`DESIGN_PENDING`）。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
