@@ -131,11 +131,11 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
         /* 初回投票選出基準：評価点が基準を明確に上回る(1.15×名人堂基準)場合のみ first-ballot、それ以外は需等 N 年。 */
         const th=TIER_TH[b][0];
         const fbMult={CPBL:1.15,KBO:1.15,NPB:1.12,MLB:1.2}[b]||1.2;
-        const firstNow = t.sc>=th*fbMult;
+        const firstNow = (t.rawSc??t.sc)>=th*fbMult;
         const ballotYr = firstNow?1:ri(2,6);
         if(firstNow){ firstBallot=true; firstBallotLeagues.push(cfg.lg); }
         hofLeagues.push(cfg.lg);
-        const pct=Math.min(99.1,75+ (t.sc-th)/th*40 + R()*6 - (ballotYr-1)*4);
+        const pct=Math.min(99.1,75+ ((t.rawSc??t.sc)-th)/th*40 + R()*6 - (ballotYr-1)*4);
         const votes=Math.round(cfg.total*Math.max(75,pct)/100);
         if(!S.hofInfo)S.hofInfo=[]; S.hofInfo.push({lg:cfg.lg,yr:ballotYr,pct:Math.max(75,pct).toFixed(1)}); /* 結果画像用。 */
         const cap=capTeam(b), phr=posLegendPhrase(b);
@@ -158,7 +158,11 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     /* リーグ別成績と評価。 */
     let tables='',evals=[],best=99; const tiersByLg={};
     ['MLB','NPB','KBO','CPBL','MINOR'].forEach(b=>{ if(S.stats[b]){ tables+=statTable(b);
-      if(b!=='MINOR'){ const t=tierOf(b); tiersByLg[b]=t; evals.push(`<span class="tag">${t.name}</span>（評価点${t.sc}）`); best=Math.min(best,t.i); } } });
+      if(b!=='MINOR'){ const t=tierOf(b); tiersByLg[b]=t; evals.push(`<span class="tag">${t.name}${t.reason?'（'+t.reason+'）':''}</span>（評価点${t.sc}${t.belowThreshold?'・基準未達':''}${t.hasFirstTeam===false?'・一軍成績の記録なし':''}）`);
+      if(t.details){const d=t.details;card('info',LG_N[b]+' 評価の内訳',`一軍成績：${Number(t.base.toFixed(2))}点<br>個人賞：${d.personal.reduce((n,r)=>n+r.sc,0)}点<br>球団優勝：${d.team.reduce((n,r)=>n+r.sc,0)}点<br>特性の功績：${d.other.reduce((n,r)=>n+r.sc,0)}点<br>国際大会・代表の栄誉：殿堂評価への加点なし${d.international.length?'（'+d.international.length+'件）':''}<br>${d.personal.concat(d.team,d.other).map(r=>r.text+'：'+r.sc+'点').join('<br>')}`);}
+       best=Math.min(best,t.i); } } });
+    const internationalHonors=[...new Set(Object.values(tiersByLg).flatMap(t=>t.details?.international.map(r=>r.text)||[]))];
+    if(internationalHonors.length)card('info','国際大会・代表の栄誉',internationalHonors.join('<br>')+'<br>各リーグの殿堂評価には加算しません。');
     if(best===99)best=4;
     retireScene(tiersByLg);
     /* 成就基準：CPBL名人堂 または 站上NPB/大リーグ。 */
@@ -269,16 +273,17 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     const tr=[];
     const TN=traitNames();
     const posT={pos:['favorite','adking','legend','taiwan','goldcloth','mrteam','confidante','genius','late','disc','academy','intlace','franchise','clutch','phoenix','rubber','onetool','smallschool','grinder','combo','rainbow','oldghost','miraclegen','strongpitch','stronghit','championmaker','pitcherTC','hitterTC','nitenichi','iron'],neg:['glass','scum','yips','distract','cancer','ambience','thief','latepractice']};
-    const tagStyle=k=>{
-      if(k==='legend'||k==='taiwan')return 'background:#fff7dc;border-color:#c79520;color:#795b00'; /* 歴史的選手/台湾代表への貢献：金。 */
-      if(k==='goldcloth')return 'background:#fffbe0;border-color:#c5a800;color:#6f6000'; /* 黄金のユニフォーム：黄。 */
-      if(k==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#a71930'; return 'background:#ffffff;border-color:'+tc+';color:'+tc; }
-      if(k==='genius')return 'background:#f3f5f8;border-color:#9aa5b5;color:#4c5868';        /* 天才：銀。 */
-      return ''; /* 好影響：既定色はアンバー。 */
+    /* 色は themes.css の --tag-* トークン（base.css の .tag-* クラス）。 */
+    const tagAttrs=k=>{
+      if(k==='legend'||k==='taiwan')return ' class="tag tag-legend"'; /* 歴史的選手/台湾代表への貢献：金。 */
+      if(k==='goldcloth')return ' class="tag tag-goldcloth"'; /* 黄金のユニフォーム：黄。 */
+      if(k==='mrteam')return ' class="tag tag-mrteam" style="--team-color:'+(TEAM_COLOR[S.mrTeamName]||'#a71930')+'"'; /* 白地に球団色。 */
+      if(k==='genius')return ' class="tag tag-genius"'; /* 天才：銀。 */
+      return ' class="tag"'; /* 好影響：既定色はアンバー。 */
     };
-    posT.pos.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="${tagStyle(k)}">${TN[k]}</span>`); });
-    posT.neg.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="background:#fff0f0;border-color:#c0392b;color:#a71930">${TN[k]}</span>`); });
-    (S.removed||[]).forEach(lbl=>tr.push(`<span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${removedTraitLabel(lbl,S,teamNick)}</span>`));
+    posT.pos.forEach(k=>{ if(S.traits[k])tr.push(`<span${tagAttrs(k)}>${TN[k]}</span>`); });
+    posT.neg.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag tag-negative">${TN[k]}</span>`); });
+    (S.removed||[]).forEach(lbl=>tr.push(`<span class="tag tag-removed">${removedTraitLabel(lbl,S,teamNick)}</span>`));
     const lv=S.love;
     const exes=Array.isArray(lv.exes)?lv.exes:[];
     const cur=lv.st==='married'?`妻 ${lv.partner}（子ども${lv.kids}人）`:lv.st==='dating'?`交際中 ${lv.partner}（${lv.dyrs||0}年）`:lv.st==='divorced'?'離婚':'独身';

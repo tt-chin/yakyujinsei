@@ -1,5 +1,7 @@
 # 現行S與RNG技術參考
 
+> 2026-11-10 補足（OOP 重構第 1–40 期，至 `22e33e0`）：`game.js` 的各領域已移入各模組，第 40 期拿掉 `LEGACY` 覆寫層，`board`／`movement`／`endGame` 各只剩一個宣告。下文的 overlay／`LEGACY` 描述與行號仍是 `ea951c2` 快照，不代表現行結構；現行模組分工見 [`tasks/GAME_JS_OOP_REFACTOR_PLAN.md`](../../tasks/GAME_JS_OOP_REFACTOR_PLAN.md)。
+
 > 1.11.8補足：既存S.intlTraitResults[eventKey]に任意personalStats={position,role,stats}を追加。新規出場では生成前後のintlStatの値差分を保存し、statsをprepare時にコピーする（通算と参照を共有しない）。投手G/IP/W/SV/SO/ER、野手G/PA/AB/H/HR/RBIだけ。既存結果の他フィールド、通算、完了辞書、RNGは不変。snapshot取得・保存・表示RNG0、順位pickとaddIntlStatsは従来の一回／順序を維持。旧結果を遡及補完せず、配列・保存機能を追加しない。以下の旧AST数値は再集計ではない。
 
 > 1.11.6現行補足：newState新增potSum0出生快照寫點（返回前、RNG0）；NPB回國context的running／actionCompleted／years／transaction是私有局部資料，不寫入S。原表格讀寫次數與行號固定於ea951c2，不當作新版本重盤點。[新驗收](../reviews/NPB_RETURN_GRINDER_FIX_ACCEPTANCE.md)。

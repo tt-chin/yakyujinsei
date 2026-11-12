@@ -70,19 +70,21 @@ for(const line of [
   for(const name of ['new YearFlow(','yearFlow.nextStep(','yearFlow.advance(','yearFlow.reportFlowOutcome(','yearFlow.phaseIntlPre(','yearFlow.startYear(','function nextStep(','function advance(','function reportFlowOutcome(','function phaseIntlPre(','function startYear('])assert.equal(text.split(name).length,2,'year flow wiring only once: '+name);
   assert.ok(!text.includes('advanceWithoutSalaryFinalization'),'the salary-finalizing advance override moved into YearFlow');
 }
-{// Phase 33: movement L2/L3 wiring. The wrapper stays a rebindable movement binding after LEGACY captures the
-  // CareerMovement wrapper; LEGACY and amateurCareer go by reference, other calls as late-binding lambdas.
+{// Phase 33: movement L2/L3 wiring. The movement declaration stays a rebindable game.js name that calls the gate (phase 40
+  // removed the LEGACY capture); careerMovement and amateurCareer go by reference, other calls as late-binding lambdas.
   const text=sourceText(game);
   for(const line of [
     "\nimport { MovementGate } from './movement-gate.js';\n",
-    '\n  movement=function(){return movementGate.movement();};\n'+
-      '  const movementGate=new MovementGate({getState:()=>S,LEGACY,amateurCareer,migrateSalaryV130State:()=>migrateSalaryV130State(),accrueForeignFirstTeamSeason:state=>accrueForeignFirstTeamSeason(state),contractStageFor:org=>contractStageFor(org),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected)});\n',
+    '\nfunction movement(){return movementGate.movement();}\n',
+    '\n  const movementGate=new MovementGate({getState:()=>S,careerMovement,amateurCareer,migrateSalaryV130State:()=>migrateSalaryV130State(),accrueForeignFirstTeamSeason:state=>accrueForeignFirstTeamSeason(state),contractStageFor:org=>contractStageFor(org),restorePendingChoice:(state,expected)=>restorePendingChoice(state,expected)});\n',
   ])assert.equal(text.split(line).length,2,'movement gate wiring, once: '+line.trim().slice(0,50));
-  for(const name of ['new MovementGate(','movementGate.movement(','\n  movement='])assert.equal(text.split(name).length,2,'movement gate wiring only once: '+name);
-  assert.ok(text.indexOf('  const LEGACY = { board, movement,')<text.indexOf('\n  movement=function(){return movementGate'),'LEGACY captures movement before the wrapper');
+  for(const name of ['new MovementGate(','movementGate.movement('])assert.equal(text.split(name).length,2,'movement gate wiring only once: '+name);
+  assert.ok(!text.includes('\n  movement='),'no movement override');
+  assert.ok(text.indexOf('\n  const careerMovement=new CareerMovement(')>0,'careerMovement construction');
+  assert.ok(text.indexOf('\n  const careerMovement=new CareerMovement(')<text.indexOf('\n  const movementGate=new MovementGate('),'careerMovement is built before the gate');
   for(const gone of ['professionalMoves','performMovement','MOVEMENT_CONTINUATION_AMBIGUOUS','  movement = function('])assert.ok(!text.includes(gone),'moved into MovementGate: '+gone);
 }
-{// Phase 34: the pre/mid-season steps. Both wrappers stay rebindable names (LEGACY captures them, YearFlow reads them through
+{// Phase 34: the pre/mid-season steps. Both wrappers stay rebindable names (YearFlow reads them through
   // yearSteps, E2E traces wrap them); the constructor follows phaseMid and passes every game.js call as a late-binding lambda.
   const text=sourceText(game);
   for(const line of [
@@ -93,7 +95,7 @@ for(const line of [
   for(const name of ['new SeasonPhases(','seasonPhases.phasePre(','seasonPhases.phaseMid(','function phasePre(','function phaseMid('])assert.equal(text.split(name).length,2,'season phases wiring only once: '+name);
   for(const gone of ['シーズン前特訓','let afterAsk=','const preAsk=afterAsk','開幕前の投球プラン','シーズン半ばの健康診断','PRESEASON_'])assert.ok(!text.includes(gone),'moved into SeasonPhases: '+gone);
 }
-{// Phase 35: the professional season. proSeason stays a rebindable name (LEGACY captures it, SeasonPhases reaches it through a
+{// Phase 35: the professional season. proSeason stays a rebindable name (SeasonPhases reaches it through a
   // late-binding lambda, E2E traces wrap it); the constructor follows the wrapper and passes every game.js call as a late-binding lambda.
   const text=sourceText(game);
   for(const line of [
@@ -154,6 +156,34 @@ for(const line of [
   for(const gone of ["{'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}",'S.tj+=base','return S.traits.rubber?100:50'])assert.ok(!text.includes(gone),'moved into PlayerInjury: '+gone);
   for(const moved of ["{'全力投球':1.25,'通常投球':1.0,'省エネ投球':0.65}",'S.tj+=base','return S.traits.rubber?100:50','  accrueTj(){this.#rules.accrueTj();}\n  tjGaugeLimit(){return this.#rules.tjGaugeLimit();}\n','return {tjGamble,afterGamble,rollInjury,accrueTj,tjGaugeLimit};'])assert.equal(injury.split(moved).length,2,'in PlayerInjury once: '+moved);
 }
+{// Phase 40 (K): the restart and seed bindings that the bootstrap block overwrote at load time are gone; each control
+  // is bound once, by the bootstrap block.
+  const text=sourceText(game);
+  for(const bound of ["$('btn-restart').onclick=","$('seed-re').onclick="])assert.equal(text.split(bound).length,2,'bound once: '+bound);
+  for(const gone of ["getElementById('btn-restart')",'(0).toString(36)',"$('seed-show').value=SEED;",'人生のこの部分を放棄して'])assert.ok(!text.includes(gone),'dead binding removed: '+gone);
+}
+{// Phase 40 (L): the LEGACY overlay is gone. board, movement and endGame are single module-level function declarations
+  // above the overlay marker (stage10-risk-e2e rebinds them there); board patches the name and salary itself and endGame
+  // keeps the text-node replacement after the retirement scene.
+  const text=sourceText(game),marker=text.indexOf('\n/* ================= 日本版仕様オーバーレイ 1.0.4 ================= */\n');
+  assert.ok(marker>0,'overlay marker');
+  const boardDecl=`
+function board(phase){ gameView.renderBoard(boardModel(phase));gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()}); }
+`;
+  const endGameDecl=`
+function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
+  /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
+  document.querySelectorAll('.card').forEach(c=>{
+    const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
+    for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeValue=n.nodeValue.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');
+  });
+},0);}
+`;
+  for(const decl of [boardDecl,endGameDecl]){assert.equal(text.split(decl).length,2,'merged declaration once: '+decl.slice(1,30));assert.ok(text.indexOf(decl)<marker,'above the overlay marker: '+decl.slice(1,30));}
+  for(const name of ['\nfunction board(','\nfunction movement(','\nfunction endGame('])assert.equal(text.split(name).length,2,'one declaration: '+name.trim());
+  assert.ok(text.indexOf('\nfunction movement(')<marker,'movement above the overlay marker');
+  for(const gone of ['LEGACY','legacyEndGame','board =','endGame='])assert.ok(!text.includes(gone),'overlay rebinding removed: '+gone);
+}
 assert.ok(game.includes('function newState(name,pos){return createInitialState(name,pos,{getState:()=>S,getSeed:()=>SEED,R,ri,pickRecord,DATA,POS_AB,teamRec,teamDisplay,traitPresentation});}'),'newState passes the current state, seed and RNG to createInitialState');
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
@@ -175,8 +205,10 @@ assert.equal((data.match(/"eventKey"/g) || []).length, 2);
 assert.match(themeCss, /--button-detail:#6f303d/);
 assert.match(themeCss, /--primary-button-detail:#fff4f5/);
 assert.match(themeCss, /--bg:#fff8f8/);
-assert.match(shareImage, /imageColor=getSharePalette\(theme\)/);
-assert.match(await read('docs/src/ui/share-theme.js'), /standard:\{bg:'#fff8f8'/);
+// UI-DESIGN-TOKENS-03: share image colors are read from the CSS theme tokens; share-theme.js keeps no palette table.
+assert.match(shareImage, /imageColor=Object\.fromEntries\(Object\.entries\(SHARE_COLOR_TOKENS\)/);
+assert.match(shareImage, /const SHARE_COLOR_TOKENS=\{bg:'--bg',edge:'--share-edge'/);
+assert.doesNotMatch(await read('docs/src/ui/share-theme.js'), /palettes|getSharePalette|#[\da-f]{6}'?,/);
 assert.ok(baseCss.length > 8_000);
 
 assert.equal((game.match(/cur>=66\?7:cur>=60\?4:cur>=55\?2:1/g) || []).length, 0);

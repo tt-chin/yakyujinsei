@@ -1,17 +1,19 @@
 # 設計系統（表示 token）計畫
 
-狀態：第 1 段已核准（2026-10-24，§3 六點皆照建議；同日依 `357e852` 重掃 §1，追加 §2.2 漏列值處理、版本改為 1.13.6，經使用者核准），已實作（`fcb22a9`，結果見 §6），待 PR #26 合併；第 2～4 段未計畫。本文件只規劃表示層；不改遊戲規則、RNG、`S`、DOM 結構與順序（AGENTS §2）。不引入 build 工具、框架或 npm 依賴（AGENTS §5）：token 只用純 CSS 變數，必要時另加 JS 模組供 canvas 讀取。
+狀態（2026-11-11）：第 1 段已發布（1.13.6，結果見 §6，PR #26）；第 2 段已實作待驗收（1.16.1，§8.4，PR #77）；同日決定模板化路線 P1～P4（§9），P1＝第 3 段，細部計畫待寫（§10）。舊狀態：第 1 段已核准（2026-10-24，§3 六點皆照建議；同日依 `357e852` 重掃 §1，追加 §2.2 漏列值處理、版本改為 1.13.6，經使用者核准），已實作（`fcb22a9`）。本文件只規劃表示層；不改遊戲規則、RNG、`S`、DOM 結構與順序（AGENTS §2）。不引入 build 工具、框架或 npm 依賴（AGENTS §5）：token 只用純 CSS 變數，必要時另加 JS 模組供 canvas 讀取。
 
 ## 0. 總路線
 
-| 段 | 內容 | 預估分級 | 狀態 |
-|---|---|---|---|
-| 1 | token 盤點、補非顏色 token、修正字體指定 | L1／R2 | 本文件 §2，已核准，未實作 |
-| 2 | 元件化：特性標籤、球團徽章改用 class＋token，移除 `game.js` 的 hex | L2／R2 | 未計畫 |
-| 3 | 分享圖：`share-theme.js` 與 canvas 字體改讀同一份 token | L2／R2 | 未計畫 |
-| 4 | 版面 token（spacing、border 等），之後換模板以換 token 為主 | L2 | 未計畫 |
+| 段 | BACKLOG | 內容 | 預估分級 | 狀態 |
+|---|---|---|---|---|
+| 1 | UI-DESIGN-TOKENS-01 | token 盤點、補非顏色 token、修正字體指定 | L1／R2 | 已發布（1.13.6，§6） |
+| 2 | UI-DESIGN-TOKENS-02 | 元件化：特性標籤、球團徽章改用 class＋token | R2 | 已實作待驗收（1.16.1，§8.4，PR #77） |
+| 3（P1） | UI-DESIGN-TOKENS-03 | 分享圖顏色改讀 CSS token（單一來源）；canvas 字體移至 P4 | R2 | 路線已決（§9），細部計畫待寫（§10） |
+| P2 | UI-DESIGN-TOKENS-04 | 主題清單集中為單一定義 | R2 | 路線已決（§9），未計畫 |
+| P3 | UI-DESIGN-TOKENS-05 | 語意層＋基礎色推導（`color-mix()`）、對比測試改瀏覽器 | R2 | 路線已決（§9），未計畫 |
+| 4（P4） | UI-DESIGN-TOKENS-06 | 非顏色模板：字體（含 canvas）、字級、圓角、陰影、間距、JS 內 inline 版面值 | R2 | 路線已決（§9），未計畫 |
 
-各段各自一個 PR → `dev`，分開驗收。
+各段各自一個 PR → `dev`，分開驗收。分級為預估，各段細部計畫時依 AGENTS §6.1 重判。
 
 ## 1. 現況（2026-10-24 唯讀確認，基準 `origin/dev` `2e69096`；同日以 `357e852` 重掃，差異併記於各節）
 
@@ -119,3 +121,180 @@
   5. Quick 67 PASS／1 FAIL（`award-identity-policy.test`，即上述耦合）；更新後該入口單獨重跑 PASS，未重跑整個 Quick。`npb-return-e2e`、`replay-share-theme-e2e` 2／2 PASS（分享 PNG 不變）。
   6. reviewer：1 項（用途表錯誤）已更正，其餘無發現。
 - 未確認：Windows／手機的字體回退未實測；Full 未執行（L1，合併 `main` 前依既有流程）。
+
+## 7. 第 2～4 段現況盤點（2026-11-10，基準 `refactor/legacy-wrappers` `4fabbdc`，VERSION 1.16.0；scout 唯讀調查＋grep 抽查）
+
+§1 為 `2e69096` 時的數據；OOP 重構後 JS 內的表示碼已全部移出 `game.js`，行號以本節為準。
+
+### 7.1 JS 內的色碼與 inline style
+
+| 對象 | 位置 | 現況 | 測試耦合 |
+|---|---|---|---|
+| 退休卡特性標籤（HTML） | `docs/src/engine/career-retirement.js:276–285`（`tagStyle()` 與負面／已移除兩行） | 傳說・台湾／金布／`mrteam`／天才／負面／已移除以 inline style 寫死 hex；標準特性用 `.tag`（`base.css`，讀 `--metric-bg`、`--edge`、`--amber`）。特殊特性不隨主題變化，深色主題下仍為淺色底 | 未找到直接斷言；`game-view-dom-e2e` 的 DOM 比對是否涵蓋退休卡特性標籤未確認（其 `class="tag"` 命中為「通算評価」標籤） |
+| 分享圖特性標籤（canvas） | `docs/src/ui/share-image.js:146–152`（`tagColor()`） | 與上一列同一組色值的第二份副本；只有「已移除」不同（`#f1eeee`／`#b7aaad`／`#81757a` 對 HTML 的 `#8a8a8a`／`#4a4a4a`＋`opacity:.4`）；另有標準特性 `#fbe9ec`／`#c95b6c`／`#7f1d2d`，經 `shareTagPalette()` 調整對比 | `replay-share-theme-e2e` 逐像素比較（基準 `dc5ac871`） |
+| 球團徽章 | `docs/src/ui/career-presenter.js:29–44`（`board()`） | PRO 且有球團色時：白底 `#ffffff`、`padding:2px 8px`、`border-radius:6px`、`box-shadow:0 2px 4px rgba(0,0,0,0.4)`、圓點 `#cccccc`／球團色，皆 inline；白色球團改黑字 `#000000`。否則 `color:var(--amber)` | `career-presenter.test` 與 `9d25b096` 的 `boardModel` 比對，只核准一處差異（`rgba` 全形頓號，UI-BOARD-SHADOW-01）；`support/dom-snapshot.mjs:45` 讀 `#bd-team > span`；`event-fix-e2e:48–49` 量 `bd-team` 版面盒 |
+| 球團色（逐隊資料） | `docs/src/engine/league-catalog.js:30–64` `teamColorsByName`；`docs/src/data/jp-data.js` 的 `teams[].color`（NPB） | 屬資料，不是樣式；建構時 teamId 鍵覆蓋名稱鍵 | — |
+| 分享圖配色 | `docs/src/ui/share-theme.js`（4 主題約 32 個 hex，`shareTagPalette()` 後備 `#302719`） | 與 `themes.css` 各自手動維護，不讀 CSS | `replay-share-theme.test` 斷言各主題 `bg` hex 與 12 組標籤對比 |
+| 分享圖字體 | `docs/src/ui/share-image.js`，約 20 處 `c.font=` | 全為 `sans-serif`／`monospace` 字面值，不讀 `--sans`／`--mono`；無 `getComputedStyle` | 同上，逐像素比較 |
+
+### 7.2 凍結與其他約束
+
+- `tests/award-identity-policy.test.mjs` 的凍結清單取自 `287dd1a` 的 `git ls-tree docs/src`：當時已存在、且不在 `allowedB` 或個別例外的檔案，須與 `efd4710c` 逐位元組相同。本段相關檔案中只有 `share-theme.js` 與 `jp-data.js` 受凍結（現況與 `efd4710c` 相同）；`career-presenter.js`、`share-image.js`、`career-retirement.js`、`league-catalog.js` 在 `287dd1a` 不存在，不受凍結。`docs/styles/` 不在 `docs/src`，不受此測試凍結（scout 原稱上述 4 檔受凍結，抽查更正）。
+- `display-preferences.test.mjs` 以 `--([\w-]+):(#[\da-f]+)` 取主題區塊內的 hex token 檢查對比；新增的主題 token 須維持 hex 直寫。
+- 版面：`--space-scale` 只用於 `base.css:22`（`#dice` 的 gap）；padding／margin／gap 的 px 字面值多（scout 統計未核實，第 4 段計畫時重數）。`ui-foundation.test`、`career-movement-policy` 逐字比對部分 CSS。
+
+### 7.3 使用者決定（2026-11-10）
+
+1. 第 2 段採方案②：特性標籤改用 class＋token，並隨主題變色（有意的視覺變更，PATCH）。球團徽章改用 class＋token，外觀維持不變（依當時提示的選項內容；細部計畫時再確認）。`career-presenter.test` 的核准差異須追加。
+2. 第 3 段的凍結檔案採方案ⓐ：在 `award-identity-policy.test` 為 `share-theme.js` 追加精確的核准 overlay（比照 `approvedReplayShareEdits`），不另開取代模組。canvas 字體是否改為 `--sans`（分享 PNG 像素改變、需等待 web font 載入）未決。（2026-11-11 由 §9 取代：canvas 字體移至 P4。）
+3. 第 4 段未決；建議暫緩至有具體換版需求。（2026-11-11 由 §9 取代：模板包含非顏色項目，第 4 段改為 P4 實施。）
+4. 各段仍各自一個 PR → `dev`；分支基準（等 PR #75 併入 dev，或疊在 `4fabbdc`）未決。
+
+## 8. 第 2 段細部計畫（UI-DESIGN-TOKENS-02；2026-11-11，基準 `990d941`（dev `ca81755`＋紀錄 commit），VERSION 1.16.0）
+
+- 分類：R2。不碰 `game.js`、RNG、`S`；但改共用測試基盤 `tests/support/dom-snapshot.mjs`（`game-view-dom-e2e`、`display-preferences-e2e` 共用），不適用純顯示例外，須跑 Quick；`game-view-dom-e2e` 屬 Full，定案碼跑一次本機 8 批 Full。
+- 現況（scout 調查＋抽查）：特性標籤見 `career-retirement.js:276–285`；球團徽章見 `career-presenter.js:29–41`。`career-presenter.test:74` 以字串比對 `9d25b096` 的 `boardModel`；`dom-snapshot.mjs:45–55` 讀 `#bd-team > span` 的 inline `style.boxShadow`；`game-view-dom-e2e` 逐步比對 `#log`／`#board` outerHTML（基準預設 `4f39a73`），退休卡 `.tag` 的 `style` 原樣進入比對。`career-retirement.js`、`career-presenter.js`、`docs/styles/*` 均不受 `award-identity-policy.test` 凍結。
+
+### 8.1 設計（D1～D7，使用者批准 2026-11-11）
+
+| # | 決定 |
+|---|---|
+| D1 | 分支 `ui/design-tokens-02`，自 `990d941`（PR #76 紀錄 commit 疊在最底），`--no-track`，push 明寫 refspec |
+| D2 | 特性標籤在 `.tag` 加分類 class：`tag-legend`（legend、taiwan）、`tag-goldcloth`、`tag-genius`、`tag-mrteam`、`tag-negative`、`tag-removed`；規則置於 `base.css` 的 `.tag` 旁；一般特性維持只有 `.tag` |
+| D3 | `themes.css` 4 主題各定義 `--tag-{legend,goldcloth,genius,negative}-{bg,edge,text}`、`--tag-removed-{text,edge}`；line-through 與 `opacity:.4` 留在 class |
+| D4 | standard、classic 沿用現值（外觀不變）；night、scoreboard 改深色底＋淺色字，色值於草稿算出並附 4 主題截圖，另經批准 |
+| D5 | mrteam 4 主題皆維持白底；球團色以 `style="--team-color:#…"` 傳入，無色時仍退回 `#a71930` |
+| D6 | 球團徽章改 `.team-badge`／`.team-badge-dot`＋token，4 主題外觀不變（白底、陰影、白色球團黑字、圓點 `#cccccc`）；球團色以 `--team-color` 傳入，非 PRO 維持 `var(--amber)` |
+| D7 | PATCH 1.16.0 → 1.16.1；`config.js`、CHANGELOG、RELEASE_NOTES（`update-release-notes.mjs`）同步。（更正：`verify-modularization`、`award-identity-policy.test` 已改為動態讀取 `config.js` 的 VERSION，無需改測試字面值） |
+
+### 8.2 測試（T1～T5）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `career-presenter.test` | 仍比對 `9d25b096` 的 `boardModel`，於 `rgba` 頓號修正外追加「舊 inline → 新 class」精確核准對照，每 fixture 斷言替換恰好一次；5 個 fixture 保留 |
+| T2 | `support/dom-snapshot.mjs` | `BOARD_SHADOW_CONTRACT` 改以 `getComputedStyle` 檢查（兩側通用）；新增候選側限定投影（旗標 `__expectDesignTokens02`），先做結構契約，再把 `#bd-team` 與退休卡 `.tag` 投影回舊 inline 寫法，`game-view-dom-e2e` 維持差異 0 |
+| T3 | 新 `design-tokens-02.test` | 7 個分類的 class 輸出；4 主題（含 standard 區塊）皆定義全部新 token；各主題各分類字色對底色 ≥ 4.5（removed 為刻意淡化，除外） |
+| T4 | 新 `design-tokens-02-e2e` | 瀏覽器 computed style：徽章 4 主題與舊 inline 相同；特性標籤 standard／classic 與舊相同，night／scoreboard 隨主題改變 |
+| T5 | 負控制 | T1～T4 的對照各自破壞須 FAIL |
+
+### 8.3 流程
+
+1. 草稿：實作＋T1～T4，算出 D4 深色色值，附 4 主題 × PC／手機截圖 → 使用者批准色值。
+2. 定案：相關測試、Quick、本機 8 批 Full、reviewer，版本與文件更新，PR → `dev`。
+
+### 8.4 結果（2026-11-11）
+
+- 實作 commit `8086480`（自 `990d941`）。D4 深色色值經使用者批准（2026-11-11）：night legend `#3a300f`／`#b8902a`／`#f2cc5c`、goldcloth `#33320c`／`#a89a1e`／`#e8dc5a`、genius `#262d38`／`#7d8899`／`#ccd4de`、negative `#3d1a1d`／`#d9534f`／`#ff8a8a`、removed 字 `#9aa3ad`／框 `#6b7480`；scoreboard legend `#3b3512`／`#b8962e`／`#f0cd6a`、goldcloth `#34370f`／`#a39a22`／`#e6de66`、genius `#25362c`／`#8a9a90`／`#d3dbd5`、negative `#3d1c19`／`#d0574c`／`#ff9088`、removed 字 `#a2ad9a`／框 `#6b8273`。字色對底色 6.8～9.3（standard 舊色 5.9～6.7）。
+
+| 驗證 | 結果 |
+|---|---|
+| `career-presenter.test`／`design-tokens-02.test`／`design-tokens-02-e2e` | 59／8 cases／80 項 computed style PASS |
+| `game-view-dom-e2e`（基準 `4f39a73`） | 8 段生涯 PASS，差異 0 |
+| 負控制 | NC1～NC7（presenter class、退休卡 class、standard token、night 對比、徽章 padding、night 未隨主題、白色圓點 token）全部 FAIL；每次還原以 shasum 核對。首輪因 zsh 不拆分變數未備份、突變累積，結果作廢並逐一反轉後以 bash 陣列重跑 |
+| 抵達負控制 | NC8～NC10（`dom-snapshot` 投影的徽章、一般標籤、特殊標籤字串）全部 FAIL：fixture 生涯確實經過 PRO 徽章（2029）與退休卡一般／特殊標籤（2058） |
+| 實機畫面（`yakyo-test-001` P 全生涯，4 主題 × 1280／390） | 退休卡：night／scoreboard 為深色變體，standard／classic 不變；看板 PRO 徽章截圖與改動前 `ca81755` 逐位元組相同（8／8）。390px 徽章折行為既有行為 |
+| Quick | 89／89 PASS（新增 2 項） |
+| 本機 Full（`local-full-batches.mjs`，8 批，HEAD `8086480`，基準 `origin/main` `dfc8ff7`） | `PASS`，`expected 116`、`acceptedPass 116`、`issues []`，plan 對照缺 0、多 0，8 批 exit 0，`sourceChanged false`，1,103 秒（macOS＋Brave 本機證據） |
+| reviewer | 無阻擋性發現。低優先 2 項已處理：`CURRENT_SPEC.md` 標頭開發版號、本節 D7 敘述。範圍外註記：分享圖（canvas）的特性標籤色仍為 `share-image.js` 內的固定色，屬第 3 段（UI-DESIGN-TOKENS-03） |
+
+- 未做：Linux CI Full、Preview、實機（手機）確認、main 發布。
+
+## 9. 模板化路線（2026-11-11 使用者決定）
+
+目標：能快速換模板。新增一套模板只需寫一個 CSS 主題區塊（約 12 個基礎色＋必要的覆寫）與主題清單一行；元件色自動推導，分享圖與測試自動跟上。使用者決定：①模板範圍包含顏色以外的字體、圓角、陰影、間距（P4 實施）；②支援主流瀏覽器，底線為 Baseline 2023（§9.3）；③依 P1 → P2 → P3 → P4 順序，各一個 PR → `dev`，各自細部計畫批准後實作。
+
+### 9.1 現況阻礙（HEAD `1152c03`，grep）
+
+1. 每個主題約 55 個手寫 hex（-02 的特性標籤占 14 個），沒有「基礎色 → 元件色」的分層。
+2. 顏色來源有多份：`themes.css`、`share-theme.js`（受凍結）、`share-image.js` 的 `tagColor()`。值已不一致：`edge` 4 主題皆不同（例 standard `#c9828e` 對 `--edge` `#d9a1aa`）；`soft` 無對應 token；`dim`／`bad` 在 night／scoreboard 不同。`bg`／`panel`／`text`／`accent` 4 主題一致。
+3. 主題清單寫死：`preferences.js:3` 的 `allowed.theme`；含 `scoreboard` 字樣的檔案共 14 個（產品 4、測試／測試腳本 10，部分附各主題 RGB 期待值）。
+4. `display-preferences.test` 以 `--x:#hex` regex 取主題區塊的值算對比，主題區塊內不能用 `var()`／`color-mix()`。
+5. token 名稱綁球場比喻（`--chalk`、`--amber`、`--clay`），換風格時名稱與實際顏色不符。
+6. 非顏色：字級字面值分散（§1.3）；`docs/src` 的 inline style 約 30 處（`career-retirement.js` 15 處，多為 margin／text-align／flex；`player-ability.js` 的動態寬度屬正當 inline）；canvas 字體約 20 處為 `sans-serif`／`monospace` 字面值。
+
+### 9.2 階段
+
+| 階段 | BACKLOG | 內容 | 解決 | 外觀 |
+|---|---|---|---|---|
+| P1 單一來源 | UI-DESIGN-TOKENS-03 | 分享圖於繪製時讀目前主題的 CSS token（套到隱藏探測元素的 `color`，讀 `getComputedStyle` 取得已解析的 rgb）；與 CSS 不同的值改為 CSS 內的分享圖專用 token（值照現值）；JS 色表不再是來源。建議同時讓 night／scoreboard 的分享圖特性標籤改讀 -02 的 `--tag-*`（有意的視覺變更，PATCH），於 §10 批准 | §9.1-2 | standard 不變（1.11.0 像素比對維持）；night／scoreboard 標籤依批准 |
+| P2 主題清單集中 | UI-DESIGN-TOKENS-04 | 主題 id 與名稱只定義一次；設定 UI 與測試由此清單迭代 | §9.1-3 | 不變 |
+| P3 語意層＋推導 | UI-DESIGN-TOKENS-05 | 每主題只定義約 12 個基礎色（如 `--bg`、`--surface`、`--text`、`--text-muted`、`--accent`、`--good`、`--bad`、`--border`）；元件色在主題區塊外以 `color-mix(in oklab,…)` 推導，需手調的值（例：-02 已批准的深色標籤值）於該主題區塊覆寫；舊名保留為別名逐步替換；對比測試改為瀏覽器 computed style，迭代主題清單 | §9.1-1、4、5 | 預設不變（推導值須等於現值，否則覆寫為現值） |
+| P4 非顏色模板 | UI-DESIGN-TOKENS-06 | 字體（含 canvas 改讀 `--sans`／`--mono`）、字級、圓角／陰影（第 1 段已有 token）、間距、JS 內 inline 版面值改 class | §9.1-6 | 細部計畫時決定 |
+
+P3 完成後新增模板的步驟：寫基礎色 → 主題清單加一行 → 跑對比測試 → 只手調 FAIL 的值。
+
+P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`、`color(srgb …)`，見 §10.1 D1 更正）。P1 的分享圖讀值對這類格式走 canvas 讀回（e2e 已驗證 `color-mix()` srgb／oklab），但 canvas 讀回受反指紋干擾：預設 Brave 實測 RGB ±1；Firefox resistFingerprinting、Safari 未實測，若讀回 alpha 0 則分享圖無法產生。P3 須擇一：分享圖用的 token 維持 hex、或以數學轉換解析 `oklab()`／`color(srgb …)` 不經 canvas、或加後備。P3 的對比測試若讀 computed style，也須先轉成 sRGB。
+
+### 9.3 瀏覽器底線
+
+- Baseline 2023：Chrome／Edge 111+、Firefox 113+、Safari／iOS Safari 16.2+（`color-mix()` 支援起點）。不使用 relative color（`oklch(from …)`）等更新的語法。
+- 限制：`color-mix()` 寫在自訂屬性（`--x:color-mix(…)`）再以 `var(--x)` 引用時，不支援的瀏覽器在計算值階段判為無效，不會退回前一行宣告。P3 的推導值在底線以下的瀏覽器會整個失效，此為接受的代價。`stadium-background.css` 直接寫在屬性上的 `color-mix()`（前一行純色後備）不受影響。
+- 現況（scout 調查＋抽查）：`CURRENT_SPEC.md`、`AGENTS.md`、`docs/index.html` 均無最低瀏覽器版本記載；CI 只跑 Playwright 內建 Chromium，Firefox／Safari 只能於 Preview 手動確認。底線於第一個依賴它的階段（預定 P3）實作時寫入 `CURRENT_SPEC.md`。
+
+### 9.4 對先前決定的影響
+
+- §7.3-2 的 canvas 字體 → P4。§7.3-3（第 4 段暫緩）→ 改為 P4 實施。§3④（顏色不改名）→ P3 引入語意名稱，舊名保留為別名。§3③（字級 token）→ P4。
+- 2026-11-11 討論中，-03 曾建議「保留 JS 色表＋一致性測試」（方案 A），因與模板化目標衝突（P1 後仍須拆除），改為 P1。
+- 分支：-03 自 `1152c03`（`ui/design-tokens-02` HEAD）開 `ui/design-tokens-03`；PR #77 以 merge commit 併入後即為 `dev` 的祖先。push 待 PR #77 併入後另批。
+
+### 9.5 P1 前置調查（2026-11-11，scout 唯讀調查；標 ✓ 者已以 grep／`git cat-file` 抽查）
+
+1. ✓ `share-theme.js` 受凍結（`287dd1a` 存在，須與 `efd4710c` 相同），且不能刪除：`award-identity-policy.test:171` 對清單內每個檔案 `readFileSync`。修改須依 §7.3-2 方案ⓐ追加核准 overlay。✓ `share-image.js` 不受凍結（`287dd1a` 不存在）。
+2. ✓ `verify-modularization.mjs:208–209` 逐字斷言 `share-image.js` 含 `imageColor=getSharePalette(theme)`、`share-theme.js` 含 `standard:{bg:'#fff8f8'`。
+3. 繪製時機：`share-image.js:132` 以 `getDisplayPreferences().theme` 取主題；主題變更時 `preferences.js:49–56` 先 `apply()` 寫入 `data-theme`，再發 `yakyujinsei:displaychange`，`share-image.js:14–20` 的 listener 才重繪。分享圖只以目前主題繪製，繪製當下讀 computed style 可行。
+4. 使用中的色值鍵：`bg`、`edge`、`text`、`dim`、`accent`、`soft`、`bad`；`panel` 未用於繪圖。`tagColor()`（`share-image.js:145–153`）7 類固定 hex，mrteam 為白底＋球團色（`TEAM_COLOR`，無色時 `imageColor.accent`），結果經 `shareTagPalette()` 調整對比（standard 原樣返回）。
+5. `replay-share-theme-e2e` 的像素斷言：standard 主題、`rich()` fixture（含 legend、taiwan、goldcloth、genius、glass、mrteam 與已移除特性）在收入列以上與 `dc5ac871` 逐像素相同；4 主題各驗 (0,0) 像素 rgb；字級變更後 PNG 不變；下載／分享位元組與 PNG 相同。manifest 以 `--ui-only` 執行。
+6. `replay-share-theme.test` 在 Node（無 DOM）呼叫 `getSharePalette()`／`shareTagPalette()`，斷言各主題 `bg`、8 個鍵、回傳副本與 12 組標籤對比。
+7. `docs/src` 內 `share-image.js` 以外沒有 canvas／JS 側的顏色使用者。
+
+## 10. P1 細部計畫（UI-DESIGN-TOKENS-03；2026-11-11，基準 `9956ca3`，VERSION 1.16.1）
+
+- 分類：R2 純顯示變更例外（分享 PNG 配色）。不碰 `game.js`、RNG、`S`、共用測試基盤；測試變更限於期待值、核准 overlay 與新增 e2e。驗證：相關測試＋Quick＋4 主題 × PC／手機截圖＋reviewer；本機 Full 不跑（使用者決定，合併 `main` 前依既有流程）。
+- 前置事實見 §9.5。另：standard 的 legend／goldcloth／genius／negative 標籤色與 `tagColor()` 相同，classic 的 `--tag-*` 與 standard 相同；`shareTagPalette()` 比較的是標籤自身底色與字色（非分享圖底色），以 regex 解析 6 位 hex，night／classic／scoreboard 皆會套用（例：classic 的已移除標籤字色現為後備 `#302719`）。
+
+### 10.1 設計（D1～D8，使用者批准 2026-11-11）
+
+| # | 決定 |
+|---|---|
+| D1 | `share-image.js` 內加讀值函式（B'）：透明容器內的隱藏探測元素以 `color:var(--token)` 解析 token。computed color 為不透明 `rgb()`（所有 hex token）時直接解析，不碰 canvas；其他格式（`color-mix()` 的 `oklab(…)`、`color(srgb …)`）畫到 1×1 canvas、以 `getImageData` 讀回 sRGB（先 `clearRect` 並設透明 `fillStyle`，無法解析的顏色讀回 alpha 0）。token 未定義、值無效（探測元素繼承透明）或非不透明時 throw，不靜默繼承。結果為 `#rrggbb`。單一使用者，不另開模組。（更正 2026-11-11：原案以 regex 只解析 `rgb()`；reviewer 指出格式依賴後實測 Chrome 157，`color-mix(in oklab,…)` 為 `oklab(…)`、`in srgb` 為 `color(srgb …)`，原案在 P3 會失效，使用者選 B（全部改 canvas 讀值）。第二次 reviewer 指出：無效 token 會繼承文字色；canvas 讀回受反指紋干擾。實測預設 Brave（Farbling 開啟）1×1 讀回 RGB ±1、alpha 255，B 會使 Brave 上 standard／classic 不再逐位元組相同。使用者 2026-11-12 批准 B'：rgb() 直接解析、其餘才走 canvas，並加透明容器） |
+| D2 | `bg`→`--bg`、`text`→`--chalk`、`accent`→`--amber`；`edge`、`soft` 新增 `--share-edge`、`--share-soft`（值照現值）；`panel` 未使用，不對應 |
+| D3 | ⓐ `dim`→`--dim`、`bad`→`--bad`（night／scoreboard 文字色微變） |
+| D4 | legend（含 taiwan）／goldcloth／genius／negative 改讀 -02 的 `--tag-*`：standard／classic 不變，night／scoreboard 變深色 |
+| D5 | ⓑ 一般特性與已移除標籤新增 `--share-tag-{bg,edge,text}`、`--share-tag-removed-{bg,edge,text}`；standard／classic 照現值，night／scoreboard 另算深色值，附截圖另經批准 |
+| D6 | mrteam 維持白底＋球團色（無色時 `accent`）；所有標籤照舊經 `shareTagPalette()`（輸入 hex） |
+| D7 | `share-theme.js` 以核准 overlay 移除 `palettes` 與 `getSharePalette`，只保留 `shareTagPalette`（主題判定改為明列 night／classic／scoreboard，P2 再改讀主題清單） |
+| D8 | PATCH 1.16.1 → 1.16.2；`config.js`、CHANGELOG、RELEASE_NOTES（`update-release-notes.mjs`）、`CURRENT_SPEC.md` 標頭同步 |
+
+### 10.2 測試（T1～T6）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `replay-share-theme.test` | 移除 `getSharePalette` 斷言；改測 D1 讀值與 rgb→hex（假 computed style、token 未定義 throw）；`shareTagPalette` 12 組對比保留 |
+| T2 | `award-identity-policy.test` | `share-theme.js` 追加精確核准 overlay，每處替換恰好一次 |
+| T3 | `verify-modularization.mjs:208–209` | 改斷言新讀值方式與 `share-theme.js` 已無色表 |
+| T4 | 新 `design-tokens-03-e2e` | 4 主題各畫分享 PNG，與改動前 `9956ca3` 比較：standard／classic 逐位元組相同，night／scoreboard 不同；探測讀值等於期待 token 值 |
+| T5 | `replay-share-theme-e2e` | 不修改；standard 與 1.11.0 像素比較須照樣 PASS |
+| T6 | 負控制 | T1～T4 的對照各自破壞須 FAIL |
+
+### 10.3 流程
+
+1. 草稿：實作＋T1～T4，算出 D5 深色值，附 4 主題分享 PNG 截圖 → 使用者批准色值。
+2. 定案：相關測試、Quick、截圖、reviewer，版本與文件更新，commit → push（PR #77 併入後另批）→ PR → `dev`。
+
+### 10.4 結果（2026-11-12）
+
+- 實作自 `9956ca3`，VERSION 1.16.1 → 1.16.2（PATCH）。D5 深色值經使用者批准（2026-11-11）：night 一般特性 `#21262d`／`#465365`／`#ff7187`、已移除 `#21262d`／`#6b7480`／`#9aa3ad`；scoreboard 一般特性 `#193d29`／`#557863`／`#f0c75e`、已移除 `#193d29`／`#6b8273`／`#a2ad9a`（沿用退休卡 HTML 同主題的 `.tag` 與 `--tag-removed-*`）。字色對底色 5.16～7.49。
+- D1 經兩次修正為 B'（見 §10.1 D1 更正）。
+
+| 驗證 | 結果 |
+|---|---|
+| `design-tokens-03-e2e`（基準 `9956ca3`，1280／390 × 4 主題） | 16 項 PASS：standard／classic 分享 PNG 逐位元組相同，night／scoreboard 改變；探測讀值等於 `themes.css` hex；night／scoreboard 每個標籤 token 與 standard 不同；`color-mix()` srgb／oklab 讀回與獨立 sRGB／OKLab 計算相差 ≤1；無效 token throw |
+| `replay-share-theme-e2e --ui-only` | exit 0，standard 與 1.11.0 像素比較 PASS（T5，未修改） |
+| `replay-share-theme.test`／`award-identity-policy.test`／`verify-modularization`／`display-preferences.test`／`design-tokens-02.test`／`design-tokens-02-e2e` | PASS（`award-identity-policy` 135 cases／0 FAIL；`replay-share-theme` 19 cases） |
+| 負控制 | NC1～NC14 全部 FAIL（edge token 換掉、standard 標籤色、night token 缺、hex 補零、凍結檔改動、容器未移除、色頻順序、night 標籤回淺色、scoreboard 一般標籤回淺色、未重設透明 `fillStyle`、只解析 `rgb()`、無 `clearRect`、容器非透明、`rgb()` 走 canvas）。每次還原以 sha256 核對。NC8 初次在新 e2e 存活（只驗 PNG 有變），補「每個標籤 token 與 standard 不同」斷言後 FAIL；NC10、NC12 初次因假 canvas 不忽略無效 `fillStyle`、不疊加而存活或未測到，改假 canvas 後 FAIL；NC14 初次被前段斷言擋下，補對照值後由「rgb() 不建立 canvas」斷言 FAIL |
+| 預設 Brave（Farbling 開啟）實測 | 1×1 canvas 讀回 RGB ±1、alpha 255（每 origin 固定）；B' 讀 4 主題 100 個 token 與 `themes.css` 全部一致。自動化 e2e 停用 Farbling，CI 不涵蓋此情境；「rgb() 不建立 canvas」由單元測試＋NC14 保證 |
+| Quick | 90／90 PASS（新增 1 項；B' 定案碼，macOS＋Brave 本機） |
+| reviewer | 3 輪。第 1 輪：regex 格式依賴 → 實測後改 B。第 2 輪：無效 token 繼承文字色、canvas 受反指紋干擾、假 canvas 不疊加 → B'。第 3 輪：前述皆關閉，無中以上發現；低：`replay-share-theme.test` 未斷言總件數（既有寫法，未改） |
+| 對照圖 | `compare-night.png`、`compare-scoreboard.png` 與 16 張前後 PNG 存於 `.claude/reports/design-tokens-03/`（未 commit），供 PR 說明使用 |
+
+- 未做：Linux CI Full、Preview、Firefox／Safari 實機、手機實機、本機 Full（使用者決定不跑）、main 發布。

@@ -72,7 +72,7 @@ export async function verifyBoardMenu(page,{width,screenshot}={}) {
   await toggle.focus();await page.keyboard.press('Enter');
   assert.equal(await toggle.getAttribute('aria-expanded'),'true');
   const ids=await panel.locator('button,a').evaluateAll(nodes=>nodes.map(n=>n.id));
-  assert.deepEqual(ids,['board-help','board-updates','board-credits','board-preferences','board-share','board-support','btn-restart']);
+  assert.deepEqual(ids,['board-help','board-updates','board-bug-report','board-credits','board-preferences','board-share','board-support','btn-restart']);
   await page.keyboard.press('ArrowDown');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'board-help');
   await page.keyboard.press('End');

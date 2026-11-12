@@ -1,5 +1,7 @@
 # 現行詳細設計書 — 野球人生
 
+> 2026-11-10 補足（OOP 重構第 1–40 期，至 `22e33e0`）：`game.js` 的各領域已移入各模組，第 40 期拿掉 `LEGACY` 覆寫層，`board`／`movement`／`endGame` 各只剩一個宣告。下文的 overlay／`LEGACY` 描述與行號仍是 `ea951c2` 快照，不代表現行結構；現行模組分工見 [`tasks/GAME_JS_OOP_REFACTOR_PLAN.md`](../../tasks/GAME_JS_OOP_REFACTOR_PLAN.md)。
+
 > 1.11.8：processIntlPhaseは既存addIntlStatsの前後差分をpersonalStatsとしてprepare／commitへ渡す。intlTraitResults[eventKey]に参加時position／roleと投手・野手の本大会数値を値コピーで保存。UIのinternational-personal-stats.jsが保存値から既存fmtIPと打率／防御率を整形し、既存大会結果カードの本文後へ追加する。旧結果は記録なし、再描画RNG0。通算、生成式、順位、報酬、特性と旧maybeIntlは不変。正式仕様はCURRENT_SPEC第15.4節。
 
 > 1.11.7表示補足：特性取得当時のみ説明、以後は名称。gameのtraitResultMarkup／archiveTraitResultsがDOMカードとWeakMapの寿命を管理し、S／Rは変更しない。navigationのonNavigate、次の選択／配分／共有で歸檔；新choose生成だけでは歸檔しない。buildTraitsViewModel、引退プロフィール、PNGは名称のみ。旧AST／行番号は下記固定快照のまま。[特性表示驗收](../reviews/TRAIT_DISPLAY_UNIFICATION_ACCEPTANCE.md)。

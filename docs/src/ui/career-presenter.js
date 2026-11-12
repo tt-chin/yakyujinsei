@@ -33,12 +33,13 @@ export class CareerPresenter {
       
       /* プロ入り済みで球団色が設定されている場合、白背景ラベルを適用。 */
       const isProColored = (S.stage === 'PRO' && TEAM_COLOR[S.orgTeamId]);
-      const txtColor = isProColored ? (isWhite ? '#000000' : tc) : 'var(--amber)';
-      const bgStyle = isProColored ? 'background:#ffffff; padding:2px 8px; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,0.4);' : '';
+      /* 見た目は base.css の .team-name／.team-badge／.team-badge-dot。白色球団は is-white で黒字・灰色の点。 */
+      const white = isWhite ? ' is-white' : '';
+      const color = isWhite ? '' : ` style="--team-color:${tc}"`;
       
-      const dot = isProColored ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isWhite ? '#cccccc' : tc};margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba(0,0,0,0.2);"></span>` : '';
+      const dot = isProColored ? `<span class="team-badge-dot${white}"${color}></span>` : '';
       
-      teamHtml = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
+      teamHtml = dot + (isProColored ? `<span class="team-name team-badge${white}"${color}>${t}</span>` : `<span class="team-name">${t}</span>`); }
     const age=S.age, year=S.year;
     const ovrValue=ovr(), clearTj=S.pos==='P', salaryText=Math.round((S.currentSalary||0)/10000).toLocaleString();
     return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase};

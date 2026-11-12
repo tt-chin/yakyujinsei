@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'hof-retirement-policy-e2e': {seconds:180,reason:'Approved HOF-only deltas: full pre-retirement S/choice/RNG equality, P/IF deterministic replay and frozen-rule retirement oracle, no blanket ignore.'},
   'browser-save-store-e2e': {quick:[],seconds:15,reason:'Real IndexedDB revision, quota and stale-write fault checks.'},
   'browser-save-runtime-e2e': {quick:[],seconds:40,reason:'Real reload S/RNG, first-step failure/retry, two tabs and unavailable storage UI.'},
   'browser-save-routes-e2e': {seconds:600,reason:'Every annual checkpoint in two natural and thirteen controlled career routes, exact S/RNG after real reload.'},
@@ -14,6 +15,8 @@ const browserProfiles = {
   'full-power-pitching-yakyo-test-001-e2e': {args:['--part=yakyo-test-001'],seconds:380,reason:'full-power-pitching-e2e S01-S02 for yakyo-test-001: full, normal and energy-saving P, each old/current/repeat (9 complete career runs); not a Quick entry.'},
   'full-power-pitching-jp3-pitcher-02-e2e': {args:['--part=jp3-pitcher-02'],seconds:350,reason:'full-power-pitching-e2e S01-S02 for jp3-pitcher-02: full, normal and energy-saving P, each old/current/repeat (9 complete career runs); not a Quick entry.'},
   'international-personal-stats-e2e': {seconds:600,reason:'Tournament snapshots and result cards, T01-T14 browser matrix, six exact baseline S/RNG careers. No Quick profile.'},
+  'design-tokens-02-e2e': {quick:[],seconds:15,reason:'UI-DESIGN-TOKENS-02: computed styles of the class-based team badge and retirement trait tags vs the pre-change inline styles, 4 themes x PC/mobile.'},
+  'design-tokens-03-e2e': {quick:[],seconds:40,reason:'UI-DESIGN-TOKENS-03: share PNG drawn from CSS theme tokens vs the pre-change tree (standard/classic byte-identical, night/scoreboard changed) and probe colors vs themes.css, 4 themes x PC/mobile.'},
   'trait-display-e2e': {seconds:180,reason:'All trait labels, acquisition-only explanation lifetime, retirement/PNG and exact pre-change P/IF S/RNG careers.'},
   'stage10-risk-e2e': {seconds:240,reason:'Pre-refactor investigation: natural trait routes, overseas salary flow, explicit return faults and passive LEGACY traces. Desired-behaviour failures remain FAIL; no Quick profile.'},
   'stage6-ability-e2e': {seconds:120,reason:'Original allocation matrix and stale-callback safety assertions; expectations preserved.'},
@@ -37,6 +40,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/approved-hof-comparison.mjs':['support','Strict approved-retirement comparison used by dedicated unit and E2E tests; not a standalone suite.'],
   'support/source-text.mjs': ['support','Strict UTF-8 source reader; CRLF-to-LF normalization only for source comparisons. Never normalizes frozen hash/binary evidence.'],
   'support/board-menu.mjs': ['support','Native header menu interaction and E2E assertions; preserves historical visible-button controls.'],
   'support/approved-school-oracle.mjs': ['support','Explicit approved C-school/COPY positive-control overlay; never an old-bug negative oracle. Raw old/new traces remain separate.'],

@@ -1,6 +1,7 @@
 :root{
   --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
   --sans:'Noto Sans JP','Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo',sans-serif;
+  --team-label-bg:#ffffff;--team-label-white-text:#000000;--team-dot-white:#cccccc;--team-label-shadow:rgba(0,0,0,0.4);--team-dot-shadow:rgba(0,0,0,0.2);
   --radius-xs:4px;--radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:14px;--radius-round:50%;
   --shadow-overlay:0 16px 48px var(--shadow-color);--shadow-board:0 6px 18px var(--board-shadow);--shadow-nav:0 4px 10px var(--nav-shadow);--shadow-popover:0 12px 32px var(--shadow-color);
 }
@@ -41,6 +42,17 @@ body{background:var(--bg);color:var(--chalk);font-family:var(--sans);font-size:c
 .card p{font-size:calc(14px * var(--font-scale,1))} .card p+p{margin-top:4px}
 .tag{display:inline-block;font-family:var(--mono);font-size:calc(12px * var(--font-scale,1));padding:0 6px;border-radius:var(--radius-xs);
   background:var(--metric-bg);border:1px solid var(--edge);color:var(--amber);margin:0 2px}
+.tag-legend{background:var(--tag-legend-bg);border-color:var(--tag-legend-edge);color:var(--tag-legend-text)}
+.tag-goldcloth{background:var(--tag-goldcloth-bg);border-color:var(--tag-goldcloth-edge);color:var(--tag-goldcloth-text)}
+.tag-genius{background:var(--tag-genius-bg);border-color:var(--tag-genius-edge);color:var(--tag-genius-text)}
+.tag-negative{background:var(--tag-negative-bg);border-color:var(--tag-negative-edge);color:var(--tag-negative-text)}
+.tag-removed{text-decoration:line-through;opacity:.4;color:var(--tag-removed-text);border-color:var(--tag-removed-edge)}
+.tag-mrteam{background:var(--team-label-bg);border-color:var(--team-color);color:var(--team-color)}
+.team-name{color:var(--amber);font-weight:900}
+.team-badge{color:var(--team-color);background:var(--team-label-bg);padding:2px 8px;border-radius:var(--radius-sm);box-shadow:0 2px 4px var(--team-label-shadow)}
+.team-badge.is-white{color:var(--team-label-white-text)}
+.team-badge-dot{display:inline-block;width:8px;height:8px;border-radius:var(--radius-round);background:var(--team-color);margin-right:6px;vertical-align:middle;box-shadow:0 0 2px var(--team-dot-shadow)}
+.team-badge-dot.is-white{background:var(--team-dot-white)}
 .up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}.hl{color:var(--amber);font-weight:700}
 .statline{font-family:var(--mono);font-size:calc(12.5px * var(--font-scale,1));color:var(--chalk);background:var(--metric-bg);border:1px dashed var(--edge);
   border-radius:var(--radius-sm);padding:6px 8px;margin-top:6px;line-height:1.7}

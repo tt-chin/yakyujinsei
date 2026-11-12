@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import {isDeepStrictEqual} from 'node:util';
-import {historicalCareer} from '../../tools/development-b/historical-comparison.mjs';
+import {historicalCareer,franchiseComparisonProof} from '../../tools/development-b/historical-comparison.mjs';
 // Diagnostic only: never normalizes or changes the compared state/expectations.
 export function findFirstDifference(a,b,p='$') {
   if(isDeepStrictEqual(a,b))return null;
   return walkDifference(a,b,p,new WeakMap(),{remaining:10000})||{path:p,before:'<non-JSON structural difference>',after:'<strict comparison differs>'};
 }
 function walkDifference(a,b,p,seen,budget) {
-  if(Object.is(a,b))return null;
+  if(Object.is(a,b)||(a&&b&&typeof a==='object'&&typeof b==='object'&&isDeepStrictEqual(a,b)))return null;
   if(--budget.remaining<0)return {path:p,before:'<diagnostic traversal limit>',after:'<strict comparison differs>'};
   if(a&&b&&typeof a==='object'&&typeof b==='object') {
     if(Object.getPrototypeOf(a)!==Object.getPrototypeOf(b))return {path:p,before:'<prototype differs>',after:'<prototype differs>'};
@@ -66,7 +66,8 @@ awards=(...args)=>{const before=JSON.parse(JSON.stringify(S)),callsBefore=window
 
 export function assertApprovedPhoenixCareer(old,now,expected,repeat,actionsKey,options={}) {
   assertSameCareer(now,repeat,'Same current engine / seed / strategy exact replay');
-  old=historicalCareer(old);now=historicalCareer(now,options);expected=historicalCareer(expected);
+  const franchiseProof=franchiseComparisonProof(now);
+  old=historicalCareer(old);now=historicalCareer(now,{...options,franchiseProof});expected=historicalCareer(expected);
   assertSameCareer(now,expected,'Full native historical control with ONLY the approved phoenix effect');
   assertSameCareer(now.rng,old.rng,'All main RNG values and before/after states unchanged');
   assert.equal(now.state.seed,'jp3-infielder-01');

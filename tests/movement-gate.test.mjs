@@ -5,7 +5,8 @@ import {readSourceText,sourceText} from './support/source-text.mjs';
 import {MovementGate} from '../docs/src/engine/movement-gate.js';
 
 // Phase 33 (OOP plan §2ll): movement L2 (service time, FA eligibility, LEGACY.movement) and L3 (the professional
-// same-year continuation guard) moved verbatim from game.js into MovementGate. Part 1 proves the module is the
+// same-year continuation guard) moved verbatim from game.js into MovementGate. Phase 40 (§2ss) replaced the LEGACY
+// dependency with careerMovement (a listed edit). Part 1 proves the module is the
 // base section plus the listed edits only; part 2 runs the base section in a vm and the module in the main realm on
 // the same stubs and compares the call log, errors and state after every call.
 const BASE='d4cd99d09ca6f4d578e4a1d03dbffbf05d60fb81';
@@ -20,18 +21,19 @@ const l3Body=oldGame.slice(l3Start,l3End);
 const oldSection=oldGame.slice(l2Start-L2HEAD.length+1,l3End+L3END.length);
 
 // ---- Part 1: verbatim move ----
-const HEADER=`// Season-end movement entry (OOP plan §2ll): the service-time accrual and FA eligibility before LEGACY.movement
-// (the CareerMovement wrapper), and the professional same-year continuation guard around it. The career state is
-// read at the start of each method through getState. LEGACY and amateurCareer are the game.js objects, passed by
-// reference; LEGACY.movement is the binding captured before this wrapper, so E2E traces that wrap it still see it.
-// Every other game.js function is an injected late-binding lambda. No draw site.
+const HEADER=`// Season-end movement entry (OOP plan §2ll, §2ss): the service-time accrual and FA eligibility before
+// careerMovement.movement(), and the professional same-year continuation guard around it. The career state is
+// read at the start of each method through getState. careerMovement and amateurCareer are the game.js objects,
+// passed by reference. Every other game.js function is an injected late-binding lambda. No draw site.
 `;
 assert.equal(l3Body.split('performMovement()').length,3,'two internal calls');
+assert.equal(l2Body.split('LEGACY.movement()').length,2,'one LEGACY.movement call in the base L2');
+const l2Current=l2Body.replace('LEGACY.movement()','careerMovement.movement()');// phase 40 listed edit
 const expected=HEADER+`export class MovementGate {
   #deps;
   #professionalMoves=new WeakMap();
   constructor(deps){this.#deps=deps;}
-  #performMovement(){const S=this.#deps.getState(),{LEGACY,amateurCareer,migrateSalaryV130State,accrueForeignFirstTeamSeason,contractStageFor}=this.#deps;${l2Body}}
+  #performMovement(){const S=this.#deps.getState(),{careerMovement,amateurCareer,migrateSalaryV130State,accrueForeignFirstTeamSeason,contractStageFor}=this.#deps;${l2Current}}
   movement(){const S=this.#deps.getState(),professionalMoves=this.#professionalMoves,{restorePendingChoice}=this.#deps;
 ${l3Body.replaceAll('performMovement()','this.#performMovement()')}
   }
@@ -44,8 +46,10 @@ assert.doesNotMatch(moduleText,/\b(?:R|ri|chance|pick|pickRecord)\(/,'no draw si
 // ---- Part 2: behaviour, old section (vm) vs module (main realm) ----
 function makeStubs(run){
   const log=run.log;// cfg is read live: play() replaces run.cfg before every call
+  // One object serves as LEGACY (base section in the vm) and careerMovement (module), so both sides log the same call.
+  const movementLayer={movement(){log.push(['legacy',run.S.year,run.S.lv]);if(run.cfg.legacyThrows)throw new Error('LEGACY_FAULT');}};
   return {
-    LEGACY:{movement(){log.push(['legacy',run.S.year,run.S.lv]);if(run.cfg.legacyThrows)throw new Error('LEGACY_FAULT');}},
+    LEGACY:movementLayer,careerMovement:movementLayer,
     amateurCareer:{seasonEndMovement(){log.push(['amateur',run.S.stage]);return !!run.cfg.amateur;}},
     migrateSalaryV130State(){log.push(['migrate']);},
     accrueForeignFirstTeamSeason(state){log.push(['accrueForeign',state===run.S]);return 0;},

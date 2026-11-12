@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {harness,arg,instrument} from './support/stage6-browser.mjs';
+import {routeHistoricalShareTheme,harness,arg,instrument} from './support/stage6-browser.mjs';
 import {TRAIT_LABELS,TRAIT_TEXT} from '../docs/src/engine/trait-policy.js';
 import {EVENT_TRAIT_TEXT} from '../docs/src/engine/event-policy.js';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
@@ -30,7 +30,7 @@ const hook=`window.__traitDisplay={
  step:()=>{if(S.done)return{done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));let b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows.sort((a,b)=>S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey])[0]||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S));delete before.version;const action=b.textContent;b.click();const after=JSON.parse(JSON.stringify(S));delete after.version;return{before,after,action};}
 };`;
 async function page(width,pos='IF',seed='trait-display',old=false){
- const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{
+ const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{if(old)await routeHistoricalShareTheme(p,baseline);
  await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(source):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook)});});}});await p.waitForFunction(()=>window.__traitDisplay&&!document.querySelector('#btn-start').disabled);return p;
 }
 const descriptions={...TRAIT_TEXT,...EVENT_TRAIT_TEXT};

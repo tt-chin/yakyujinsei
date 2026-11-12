@@ -45,6 +45,14 @@ export function instrumentAbility(source){
   const marker='    const touchedKeys={};';assert.equal(source.split(marker).length,2);
   return source.replace(marker,marker+allocationProbe('    '));
 }
+// Historical game-only controls must load their matching removed palette API.
+// This is page-local routing, never a production shim or a baseline replacement.
+export async function routeHistoricalShareTheme(page,ref){
+  assert.match(ref,/^[0-9a-f]{40}$/,'historical share theme requires the exact baseline SHA');
+  const body=execFileSync('git',['show',ref+':docs/src/ui/share-theme.js'],{cwd:root,encoding:'utf8',maxBuffer:20e6,stdio:['ignore','pipe','pipe']});
+  await page.route('**/src/ui/share-theme.js',route=>route.fulfill({body,contentType:'text/javascript; charset=utf-8'}));
+}
+
 export async function harness(name){
   const output=path.resolve(arg('output')||path.join(os.tmpdir(),name));await mkdir(output,{recursive:true});configureBrowserProgress(output);
   const preview=arg('preview'),canonical=x=>x.replace(/\r\n/g,'\n');let verifiedAssets=0;
