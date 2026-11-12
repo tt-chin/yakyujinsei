@@ -65,7 +65,7 @@ export function initializeInformationDialogs(){
       ['共有と表示設定','右上のメニューからSeed共有と表示設定を開けます。共有URLは途中の保存データではなく、そのSeedで新しい人生を始めるためのものです。'],
       ['再開について','各年の開始時に自動セーブされます。ページを閉じたり再読み込みしたりすると、最後にセーブに成功した年の最初から再開します。その年の未保存の操作は、もう一度プレイする必要があります。セーブできない場合は画面にお知らせします。「最初からやり直す」ではまずタイトルに戻ります。']]},
     updates:{title:'更新履歴',sections:releaseNotes.map(r=>[r.title,r.lines.join('\n')])},
-    credits:{title:'クレジット・使用素材',sections:[
+    credits:{title:'クレジット',sections:[
       ['背景写真','「エスコンフィールド北海道」\n撮影：高梨慎太郎'],
       ['出典','Wikimedia Commons','https://commons.wikimedia.org/wiki/File:エスコンフィールド北海道.jpg'],
       ['ライセンス','CC BY-SA 4.0','https://creativecommons.org/licenses/by-sa/4.0/'],

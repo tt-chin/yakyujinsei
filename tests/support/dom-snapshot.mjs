@@ -27,6 +27,7 @@ export async function captureGameView(full){
     const year=status.textContent.match(/^(\d{4})年/);if(year&&Number(year[1])>rawState.year)throw Error('SAVE_STATUS_FUTURE_YEAR');
     live.remove();dom.board=board.outerHTML;
   }
+  if(window.__expectMenu1163)dom.board=window.__projectMenu1163(dom.board);
   if(window.__expect1141){
     // Approved 1.14.1 UI-only delta: the credits menu button. Validate its exact
     // markup once, then drop only that button; every other #board byte stays strict.
@@ -168,4 +169,12 @@ export function projectHofLog(log,hofModels){
       if(nodes.length!==1||nodes[0].className!=='card gold'||nodes[0].attributes.length!==1||nodes[0].innerHTML!==expected.innerHTML)throw Error('HOF_RATING_DOM_CONTRACT');
       nodes[0].innerHTML='<h4>通算評価</h4>'+models.map(({old:t})=>`<span class="tag">${t.name}</span>（評価点${t.sc}）`).join('<br>');
     }
+}
+
+// Only the approved 1.16.3 menu delta; every other byte remains strict.
+export function projectMenu1163(markup){
+  const bug='\n        <a id="board-bug-report" href="https://x.com/dog_cat_150/status/2108694851286122963?a=2e3RG90AIYfT3G0SNBs&amp;s=20" target="_blank" rel="noopener noreferrer"><span class="menu-bullet" aria-hidden="true">•</span>不具合報告<span class="menu-external">別タブ ↗</span></a>';
+  const credits='<button type="button" id="board-credits" data-information="credits" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>クレジット</button>';
+  if(typeof markup!=='string'||markup.split(bug).length!==2||markup.split(credits).length!==2||markup.split('id="board-bug-report"').length!==2||markup.split('id="board-credits"').length!==2)throw Error('MENU_1163_CONTRACT');
+  return markup.replace(bug,'').replace(credits,credits.replace('クレジット</button>','クレジット・使用素材</button>'));
 }

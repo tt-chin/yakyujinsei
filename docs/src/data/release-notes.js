@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.3｜2026/11/13",
+    "lines": [
+      "- メニューに不具合報告のリンクを追加。",
+      "- クレジットの表記を統一。"
+    ]
+  },
+  {
     "title": "1.16.2｜2026/11/11",
     "lines": [
       "- ナイター・スコアボードで、引退記念の共有画像の特性タグも背景に合った色になりました。"
@@ -38,7 +45,7 @@ export const releaseNotes = [
     "title": "1.14.1｜2026/11/07",
     "lines": [
       "- エスコンフィールド北海道の背景写真を半透明で追加。",
-      "- 写真のクレジット・使用素材を確認できるようにしました。"
+      "- 写真のクレジットを確認できるようにしました。"
     ]
   },
   {
