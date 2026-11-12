@@ -22,6 +22,10 @@ const require=createRequire(import.meta.url),{chromium}=require(modulePath||'pla
 const preview=process.argv.find(v=>v.startsWith('--preview='))?.slice(10);
 const baselineRef=process.argv.find(v=>v.startsWith('--baseline='))?.slice(11)||'8dd244b';
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
+// The old-formula HOF projection (0de886d) maps the first-team HOF display (4bbcd3b) back to the
+// pre-4bbcd3b representation. A baseline that already contains 4bbcd3b is compared directly.
+const hofProjection=(()=>{try{execFileSync('git',['merge-base','--is-ancestor','4bbcd3bbfcb1cb7be238f9be8c47a3eea31edaa5',baselineRef],{cwd:root,stdio:['ignore','ignore','pipe']});return false;}
+  catch(error){if(error.status===1)return true;throw new Error(`HOF_PROJECTION_BASELINE ${baselineRef}: ${String(error.stderr||error.message).trim()}`);}})();
 const server=createServer(async(req,res)=>{
   try{
     const url=new URL(req.url,'http://localhost'),baseline=url.pathname.startsWith('/baseline/');
@@ -39,7 +43,7 @@ const server=createServer(async(req,res)=>{
     if(relative==='src/engine/game.js'){
       let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls');
       script+='\nwindow.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
-      if(!baseline)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
+      if(!baseline&&hofProjection)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       content=script;
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
