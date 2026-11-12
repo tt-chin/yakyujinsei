@@ -17,6 +17,7 @@
   --tag-legend-bg:#fff7dc;--tag-legend-edge:#c79520;--tag-legend-text:#795b00;--tag-goldcloth-bg:#fffbe0;--tag-goldcloth-edge:#c5a800;--tag-goldcloth-text:#6f6000;
   --tag-genius-bg:#f3f5f8;--tag-genius-edge:#9aa5b5;--tag-genius-text:#4c5868;--tag-negative-bg:#fff0f0;--tag-negative-edge:#c0392b;--tag-negative-text:#a71930;
   --tag-removed-text:#8a8a8a;--tag-removed-edge:#4a4a4a;
+  --share-edge:#c9828e;--share-soft:#6f4048;--share-tag-bg:#fbe9ec;--share-tag-edge:#c95b6c;--share-tag-text:#7f1d2d;--share-tag-removed-bg:#f1eeee;--share-tag-removed-edge:#b7aaad;--share-tag-removed-text:#81757a;
 }
 :root[data-theme="night"] {
   color-scheme:dark;
@@ -33,6 +34,7 @@
   --tag-legend-bg:#3a300f;--tag-legend-edge:#b8902a;--tag-legend-text:#f2cc5c;--tag-goldcloth-bg:#33320c;--tag-goldcloth-edge:#a89a1e;--tag-goldcloth-text:#e8dc5a;
   --tag-genius-bg:#262d38;--tag-genius-edge:#7d8899;--tag-genius-text:#ccd4de;--tag-negative-bg:#3d1a1d;--tag-negative-edge:#d9534f;--tag-negative-text:#ff8a8a;
   --tag-removed-text:#9aa3ad;--tag-removed-edge:#6b7480;
+  --share-edge:#65758a;--share-soft:#c3cad3;--share-tag-bg:#21262d;--share-tag-edge:#465365;--share-tag-text:#ff7187;--share-tag-removed-bg:#21262d;--share-tag-removed-edge:#6b7480;--share-tag-removed-text:#9aa3ad;
 }
 :root[data-theme="classic"] {
   color-scheme:light;
@@ -49,6 +51,7 @@
   --tag-legend-bg:#fff7dc;--tag-legend-edge:#c79520;--tag-legend-text:#795b00;--tag-goldcloth-bg:#fffbe0;--tag-goldcloth-edge:#c5a800;--tag-goldcloth-text:#6f6000;
   --tag-genius-bg:#f3f5f8;--tag-genius-edge:#9aa5b5;--tag-genius-text:#4c5868;--tag-negative-bg:#fff0f0;--tag-negative-edge:#c0392b;--tag-negative-text:#a71930;
   --tag-removed-text:#8a8a8a;--tag-removed-edge:#4a4a4a;
+  --share-edge:#9f8456;--share-soft:#70513c;--share-tag-bg:#fbe9ec;--share-tag-edge:#c95b6c;--share-tag-text:#7f1d2d;--share-tag-removed-bg:#f1eeee;--share-tag-removed-edge:#b7aaad;--share-tag-removed-text:#81757a;
 }
 :root[data-theme="scoreboard"] {
   color-scheme:dark;
@@ -65,6 +68,7 @@
   --tag-legend-bg:#3b3512;--tag-legend-edge:#b8962e;--tag-legend-text:#f0cd6a;--tag-goldcloth-bg:#34370f;--tag-goldcloth-edge:#a39a22;--tag-goldcloth-text:#e6de66;
   --tag-genius-bg:#25362c;--tag-genius-edge:#8a9a90;--tag-genius-text:#d3dbd5;--tag-negative-bg:#3d1c19;--tag-negative-edge:#d0574c;--tag-negative-text:#ff9088;
   --tag-removed-text:#a2ad9a;--tag-removed-edge:#6b8273;
+  --share-edge:#6c9278;--share-soft:#b8c2ae;--share-tag-bg:#193d29;--share-tag-edge:#557863;--share-tag-text:#f0c75e;--share-tag-removed-bg:#193d29;--share-tag-removed-edge:#6b8273;--share-tag-removed-text:#a2ad9a;
 }
 .btn small{color:var(--button-detail)}
 .btn.main small{color:var(--primary-button-detail)}

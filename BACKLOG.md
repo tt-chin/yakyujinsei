@@ -24,11 +24,11 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **42** | 原36項，加上本輪經本機補驗與使用者雙實機／文案／整體UI接受的4項，及2026-11-08 TEST-VACUOUS-ASSERT-01、TEST-LOCAL-FULL-MEMGATE-01；限定結案界線見各ID |
-| 未完成 | **30** | SUPPORT-01收款驗收、其他實機／事件、CI工具路徑與artifact缺口等保持未完成；2026-11-08新增TEST-VACUOUS-ASSERT-01、TEST-LOCAL-FULL-MEMGATE-01（皆同日完成）；2026-11-10新增UI-DESIGN-TOKENS-02、UI-DESIGN-TOKENS-03 |
+| 未完成 | **33** | SUPPORT-01收款驗收、其他實機／事件、CI工具路徑與artifact缺口等保持未完成；2026-11-08新增TEST-VACUOUS-ASSERT-01、TEST-LOCAL-FULL-MEMGATE-01（皆同日完成）；2026-11-10新增UI-DESIGN-TOKENS-02、UI-DESIGN-TOKENS-03；2026-11-11新增UI-DESIGN-TOKENS-04～06 |
 | P0 未完成 | **0** | 既有 P0 已按核准的結案標準關閉 |
 | BLOCKED | **4** | 三項實機／分享與ARTIFACT_COVERAGE_BLOCKED；BROWSER-SAVE-01技術阻擋已修復，轉IMPLEMENTED_UNVERIFIED待最終驗收 |
-| IMPLEMENTED_UNVERIFIED | **7** | 4項UI已接受結案；SUPPORT-01仍欠收款驗收，另原4項保留；2026-11-11 UI-DESIGN-TOKENS-02由DESIGN_PENDING轉入 |
-| DESIGN_PENDING | **7** | C級高校語意已定案並結案；其餘設計待決保持；2026-11-10新增UI-DESIGN-TOKENS-02／03；2026-11-11 -02轉IMPLEMENTED_UNVERIFIED |
+| IMPLEMENTED_UNVERIFIED | **8** | 4項UI已接受結案；SUPPORT-01仍欠收款驗收，另原4項保留；2026-11-11 UI-DESIGN-TOKENS-02由DESIGN_PENDING轉入；2026-11-12 UI-DESIGN-TOKENS-03轉入 |
+| DESIGN_PENDING | **9** | C級高校語意已定案並結案；其餘設計待決保持；2026-11-10新增UI-DESIGN-TOKENS-02／03；2026-11-11 -02轉IMPLEMENTED_UNVERIFIED；同日新增UI-DESIGN-TOKENS-04～06；2026-11-12 -03轉IMPLEMENTED_UNVERIFIED |
 | 其他候補／保留／混合 | **12** | 5項無狀態標籤候補（INJ-UI-01、EVT-01、INT-01、PLY-01、PLY-02）、承認済み保留1項、CI_PASS但工具路徑待處理、本機測試SIGSEGV、本機E2E時序逾時、TJ顯示規則、看板陰影表示、HIST-SPEC-CLAUSE-01；四項已接受UI已移入完成，不計入本列 |
 
 上次盤點歷史（2026-11-01，非本次現況）：**33 + 35 = 68**（2026-11-01新增TEST-DISPLAY-ENTER-TIMEOUT-01，總數由67增為68；同日新增TEST-EVENT-SIGSEGV-01，總數由66增為67；同日新增UI-BOARD-SHADOW-01，總數由65增為66；同日CODE-DEAD-01經PR #44併dev、Tests #111 Full通過後結案；該項補列時未計入總數，故總數由64更正為65；2026-10-24新增CI-ENV-PIN-01、CI-PITCHING-E2E-01；同日CI-ENV-PIN-01經PR #21合併後勾選；CI-PITCHING-E2E-01經PR #22合併後勾選；CI-FULL-BALANCE-01的實作`cdf0a25`已隨PR #21併dev，經使用者同意一併勾選；同日新增CI-FULL-STALE-01、UI-DESIGN-TOKENS-01；CI-FULL-STALE-01經PR #24／#25併dev、dev Full Run40093614384 92／92 PASS後勾選）。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
@@ -156,7 +156,7 @@
 
 - [x] **CODE-DEAD-01** — `MERGED / CI_PASS`（2026-11-01；PR #44併dev（`7de1fd1`））。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2cc：分支`refactor/code-dead-01`（`45cccd7`）已刪除`statBonus`、`checkTraitsMid`、`teamChampRate`、`teamListOf`、`CHEER_DEFAULT`、`ageGateUSA`、`nextContractId`、`settlePhaseEnd`的PRO不可達分支（三處共2,390 bytes，更正§3.18的3,548 bytes），以及掃描新發現的`CPBL_TEAMS`、`NPB_TEAMS`、`MLB_TEAMS`、`HS_CUPS`、`U_CUPS`、`currentAffiliation`、`faFlow`薄包裝、`selPos`。Quick 68／68、分組Full 93／93 PASS（macOS＋Brave本機證據），經PR #44併dev（`7de1fd1`，樹與`17b271b`相同），[Tests #111](https://github.com/tt-chin/yakyujinsei/actions/runs/41275581402) Linux Full（`17b271b`）8批全success，`expected 93`、`acceptedPass 93`、`issues []`（記於PR #44），結案條件已滿足。`game.js`未使用的import 86個（含本次新增5個）不動，第26期（§2ee，`refactor/run-draft`）再增5個（`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms`），併入後為91個，第28期（§2gg，`refactor/trait-result-card`）再增2個（`TRAIT_TEXT`、`EVENT_TRAIT_TEXT`），併入後為93個，第29期（§2hh，`refactor/initial-state`）再增3個（`highSchoolTier`、`installBirthHighSchool`、`ensureEventState`），併入後為96個，第30期（§2ii，`refactor/choice-prompt`）再增2個（`createChoiceActionToken`、`runChoiceAction`），併入後為98個：E2E注入的hook在模組內直接引用，刪除會造成`markSalaryPaid is not defined`；未使用的區域變數與`navigation.js`的`renderRecord` import不在本項範圍。
 
-## 3. 未完成工作（21 項；本節另保留已結案索引）
+## 3. 未完成工作（24 項；本節另保留已結案索引）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（3 項）
 
@@ -180,7 +180,7 @@
 - [x] **SHARE-111-DEVICE** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。iPhone／Android／PC原生分享、取消、PNG主題與圖片分享儲存：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。全量可到達日文文案、棒球術語與畫面位置仍待清查；COPY-001～005已於1.12.0完成實作及限定驗收，見[COPY驗收](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)，不再重做這五項。與v1.8.2的92事件翻譯替換分開管理；本輪1.13.3只修送別事件，不能據此結案全量COPY。
 
-### 3.4 P2 — 規格待決與保留（2項未完成；保留4項已完成索引）
+### 3.4 P2 — 規格待決與保留（5項未完成；保留4項已完成索引）
 
 - [x] **TRAIT-CHAMPIONMAKER** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。優勝請負人Preview：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
   - 歷史修復時點（2026-11-06，後續結果見§1）：KBO舊版比較未納入新增技術欄位，巨大斷言差異輸出造成OOM；原始FAIL保留。限定修正採舊優勝紀錄獨立oracle、原始digest驗證與逐步首差異診斷，不修改產品／Runner／golden。同版完整重播比較保留；比較器23項PASS、KBO限定與完整模式PASS、全新Quick 71 PASS／0 FAIL。證據：test-results/kbo-oom-fix-targeted/summary.json、test-results/kbo-oom-fix-full-profile/summary.json、test-results/kbo-oom-fix-quick/summary.json。整套Full修正前執行已中斷，原日誌與INTERRUPTED.json保留，尚未取得目前來源的整套Full PASS；Preview仍NOT_RUN，不結案。
@@ -189,7 +189,10 @@
 - [x] **UI-BOARD-SHADOW-01** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。球團名稱陰影Preview：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
 - [x] **UI-DESIGN-TOKENS-01** — `MERGED / RELEASED_SCOPE_LIMITED`（2026-11-02核對）。原訂結案條件為「PR合併後勾選」；PR #26合併`7ef43d368855c71f21ee40479dc560fcf542ee8b`與實作`fcb22a9`均為目前main `2fe5b25`祖先（git merge-base核對），1.13.6正式發布與指定來源Full證據見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)2026-10-31／11-01紀錄。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2／§6：第1段以Noto Sans JP起首的日文字體列取代Noto Sans TC，新增圓角／陰影token及字體載入斷言；原本機FAIL與重測記錄保留於計畫。僅結案此段已批准範圍，不代表Windows字體回退／手機實機或第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）已驗收，不擴大實作授權。
 - [ ] **UI-DESIGN-TOKENS-02** — `IMPLEMENTED_UNVERIFIED`（2026-11-10新增；2026-11-11實作，1.16.1，`ui/design-tokens-02` `8086480`，Quick 89／89、本機8批Full 116／116 PASS（macOS＋Brave本機證據），reviewer無阻擋性發現，見設計系統計畫§8.4；待PR併dev、Preview確認）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) 第2段，方向已決（§7.3）：退休卡特性標籤（`career-retirement.js`）改用class＋token並隨主題變色（有意的視覺變更，PATCH）；球團徽章（`career-presenter.js` `board()`）改用class＋token、外觀不變（細部計畫時再確認）。現況與測試耦合見§7.1／§7.2。完成條件：細部計畫與D表批准、實作、`career-presenter.test`核准差異追加、退休卡特性標籤補直接斷言、4主題×PC／手機顯示確認、版本與CHANGELOG更新、PR併dev。未授權實作。
-- [ ] **UI-DESIGN-TOKENS-03** — `DESIGN_PENDING`（2026-11-10新增）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) 第3段：分享圖配色改讀與CSS相同的token；受凍結的`share-theme.js`依§7.3採方案ⓐ（在`award-identity-policy.test`追加精確核准overlay）。canvas字體是否改為`--sans`（分享PNG像素改變、需等待web font載入）未決。完成條件：未決事項定案、細部計畫批准、`replay-share-theme-e2e`／`replay-share-theme.test`的核准差異、實作與PR併dev。未授權實作。第4段（版面token）未決，建議暫緩，不另立ID。
+- [ ] **UI-DESIGN-TOKENS-03** — `IMPLEMENTED_UNVERIFIED`（2026-11-10新增；2026-11-11依模板化路線改為P1；2026-11-12實作，1.16.2，`ui/design-tokens-03`，Quick 90／90 PASS（macOS＋Brave本機證據），NC1～NC14 FAIL，reviewer 3輪無中以上發現，見設計系統計畫§10.4；待PR #77併dev後push、PR併dev、Preview確認）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P1／§10：分享圖於繪製時讀目前主題的CSS token（`rgb()`直接解析，其他格式經canvas），新增`--share-edge`／`--share-soft`／`--share-tag-*`／`--share-tag-removed-*`；standard／classic分享PNG不變，night／scoreboard特性標籤改深色、dim／bad對齊畫面。`share-theme.js`以核准overlay移除色表。canvas字體移至UI-DESIGN-TOKENS-06。完成條件：PR併dev、Preview 4主題×PC／手機確認。
+- [ ] **UI-DESIGN-TOKENS-04** — `DESIGN_PENDING`（2026-11-11新增）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P2：主題id與名稱只定義一次，設定UI與測試由此清單迭代（現況`preferences.js:3`＋含`scoreboard`字樣的14個檔案）。外觀不變。完成條件：細部計畫批准、實作與PR併dev。未授權實作。
+- [ ] **UI-DESIGN-TOKENS-05** — `DESIGN_PENDING`（2026-11-11新增）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P3：每主題約12個基礎色，元件色在主題區塊外以`color-mix()`推導、手調值於主題區塊覆寫；舊名保留為別名；`display-preferences.test`的hex對比改為瀏覽器computed style並迭代主題清單。預設外觀不變。瀏覽器底線Baseline 2023（§9.3），實作時寫入`CURRENT_SPEC.md`。完成條件：細部計畫批准、實作與PR併dev。未授權實作。
+- [ ] **UI-DESIGN-TOKENS-06** — `DESIGN_PENDING`（2026-11-11新增；取代原「第4段暫緩、不另立ID」）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P4：非顏色模板——字體（含canvas改讀`--sans`／`--mono`，分享PNG像素改變、需等待web font）、字級、圓角／陰影、間距、JS內inline版面值改class。視覺變更範圍於細部計畫決定。完成條件：細部計畫批准、實作與PR併dev。未授權實作。
 
 ### 3.5 P2 — 未來功能候補（5項未完成；另保留5項已接受索引）
 

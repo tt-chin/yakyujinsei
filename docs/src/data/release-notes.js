@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.2｜2026/11/11",
+    "lines": [
+      "- ナイター・スコアボードで、引退記念の共有画像の特性タグも背景に合った色になりました。"
+    ]
+  },
+  {
     "title": "1.16.1｜2026/11/11",
     "lines": [
       "- ナイター・スコアボードで、引退時の特性タグが背景に合った色で見やすくなりました。"
