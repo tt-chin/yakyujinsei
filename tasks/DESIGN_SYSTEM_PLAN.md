@@ -337,7 +337,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ### 11.4 結果（2026-11-12）
 
-- 實作於 `ui/design-tokens-04`，接在 `0cc4500`（PR #78 的 -03 追加修正）之後。VERSION 維持 1.16.2（§9.3）。
+- 實作於 `ui/design-tokens-04`，接在 `0cc4500`（PR #78 的 -03 追加修正）之後。不升版本（§9.3）；合併 `dev`（`a6b3bc7`）後沿用其 1.16.3。
 - 變更：新增 `docs/src/ui/theme-catalog.js`；`preferences.js` 3 處（overlay 核准）；測試 9 檔改讀清單（T1、T3、T4），`award-identity-policy.test` 加 overlay（T2），另依 reviewer 低度建議把 `npb-return-e2e`、`replay-share-theme.test` 輸出訊息的件數改由清單長度計算（使用者批准）。
 
 | 驗證 | 結果 |

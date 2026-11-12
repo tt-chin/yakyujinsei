@@ -1,5 +1,6 @@
 // Focused UI acceptance only; no career simulation or historical baseline changes.
 import assert from 'node:assert/strict';
+import {projectMenu1163} from '../tests/support/dom-snapshot.mjs';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
@@ -33,22 +34,28 @@ try{
     const seed='日本語 +?&%/#"';
     await p.goto(base+'/?seed='+encodeURIComponent(seed)+'&rv=old#ignored');
     await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);
+    await p.locator('#start [data-information="credits"]').click();
+    const credits=p.locator('#information-credits');
+    await credits.waitFor({state:'visible'});
+    check(await credits.locator('h2').innerText()==='クレジット','home credits title');
+    check((await credits.innerText()).includes('CC BY-SA 4.0')&&(await credits.innerText()).includes('高梨慎太郎'),'credits license and attribution retained');
+    await credits.getByRole('button',{name:'閉じる',exact:true}).click();
     await p.locator('#btn-start').click();
     await p.locator('#board-menu-toggle').click();
-    const names=['遊び方','更新履歴','表示設定','共有','開発を応援','最初からやり直す'];
+    const names=['遊び方','更新履歴','不具合報告','クレジット','表示設定','共有','開発を応援','最初からやり直す'];
     const panel=p.locator('#board-menu-panel');
     const items=await panel.locator('button,a').evaluateAll(nodes=>nodes.map(n=>{
       const bullet=n.querySelector('.menu-bullet'),r=bullet?.getBoundingClientRect();
       const range=document.createRange();range.selectNodeContents(n.childNodes[1]);const text=range.getBoundingClientRect();
       return{bullet:bullet?.textContent,hidden:bullet?.getAttribute('aria-hidden'),x:r?.x,textX:text.x,height:n.getBoundingClientRect().height};
     }));
-    assert.equal(items.length,6);
-    for(let i=0;i<6;i++){
+    assert.equal(items.length,names.length);
+    for(let i=0;i<names.length;i++){
       check(items[i].bullet==='•'&&items[i].hidden==='true','decorative uniform bullet');
       check(Math.abs(items[i].x-items[0].x)<1&&Math.abs(items[i].textX-items[0].textX)<1,'bullet/text alignment');
       check(items[i].height>=44,'touch target');
-      const expectedName=names[i]+(i===4?' 別タブ ↗':'');
-      check(await panel.getByRole(i===4?'link':'button',{name:expectedName,exact:true}).count()===1,'accessible name excludes bullet: '+expectedName+' '+await panel.ariaSnapshot());
+      const expectedName=names[i]+([2,6].includes(i)?' 別タブ ↗':'');
+      check(await panel.getByRole([2,6].includes(i)?'link':'button',{name:expectedName,exact:true}).count()===1,'accessible name excludes bullet: '+expectedName+' '+await panel.ariaSnapshot());
     }
     check(await p.locator('#board-menu-toggle').innerText()==='☰\nメニュー'||(await p.locator('#board-menu-toggle').innerText()).replace(/\s/g,'')==='☰メニュー','top menu unchanged');
     const preserved=await p.evaluate(()=>{
@@ -58,6 +65,25 @@ try{
     check(preserved.target==='_blank'&&preserved.rel.includes('noopener')&&preserved.rel.includes('noreferrer')&&preserved.href==='https://ofuse.me/dcb7f92e'&&preserved.hint==='別タブ ↗','external hint/security retained');
     check(preserved.border==='1px','restart separator');
     check(await p.locator('#btn-restart').evaluate(n=>{const probe=document.createElement('span');probe.style.color='var(--bad)';n.append(probe);const same=getComputedStyle(probe).color===getComputedStyle(n).color;probe.remove();return same;}),'restart warning color');
+    const bugURL='https://x.com/dog_cat_150/status/2108694851286122963?a=2e3RG90AIYfT3G0SNBs&s=20';
+    const bug=p.locator('#board-bug-report');
+    check(await bug.getAttribute('href')===bugURL,'complete report URL and query');
+    check(await bug.getAttribute('target')==='_blank'&&await bug.getAttribute('rel')==='noopener noreferrer','report opens securely in new tab');
+    const boardMarkup=await p.locator('#board').evaluate(n=>n.outerHTML),projected=projectMenu1163(boardMarkup);
+    check(!projected.includes('board-bug-report')&&projected.includes('クレジット・使用素材</button>'),'exact historical menu projection');
+    for(const broken of [boardMarkup.replace('不具合報告','別の報告'),boardMarkup.replace('s=20','s=21'),boardMarkup.replace('クレジット</button>','資料</button>'),boardMarkup.replace('</header>',await bug.evaluate(n=>n.outerHTML)+'</header>')])assert.throws(()=>projectMenu1163(broken),'tampered menu must not be normalized');
+    await context.route('https://x.com/**',route=>route.abort());
+    const navigation=context.waitForEvent('request',{predicate:r=>r.isNavigationRequest()&&r.url()===bugURL});
+    const [popup]=await Promise.all([p.waitForEvent('popup'),bug.click()]);
+    await navigation;check(await popup.opener()===p,'report link actually opens separate tab');await popup.close();
+    check(await panel.isHidden(),'report closes menu');
+    await p.locator('#board-menu-toggle').click();await p.locator('#board-credits').click();
+    await credits.waitFor({state:'visible'});check(await credits.locator('h2').innerText()==='クレジット','menu credits title');
+    check(await credits.getByRole('button',{name:'閉じる',exact:true}).isVisible(),'credits close accessible in short viewport');
+    if(height!==300)await p.screenshot({path:path.join(output,`credits-${width}.png`)});
+    await p.keyboard.press('Escape');await p.waitForFunction(()=>document.activeElement.id==='board-menu-toggle');
+    await p.locator('#board-menu-toggle').click();
+    check(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no page horizontal overflow');
     if(height!==300)await p.screenshot({path:path.join(output,`menu-${width}.png`)});
     const open=async()=>{await p.locator('#board-menu-toggle').click();await p.locator('#board-share').click();await p.locator('#seed-share[open]').waitFor();};
     await p.locator('#board-share').click();
