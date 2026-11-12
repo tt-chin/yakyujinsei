@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 最新狀態核對：2026-11-13。dev已合併殿堂1.16.0與配色1.16.1／1.16.2；本次1.16.3選單文字與不具合報告已完成本機限定驗證，CI／Preview待推送後另行確認。未確認的實機、研究及artifact缺口保持未完成。
+> 最新狀態核對：2026-11-13。dev 86969a5（1.16.3）的Linux Full為117／117 PASS，已合併main；本次1.16.4為未提交的存檔確認流程修改，相關本機驗證PASS，整套Quick／Full及Preview待確認。未確認的實機、研究及artifact缺口保持未完成。
 > 以現有74個唯一ID的checkbox為準：已完成50項、未完成24項；本次不新增ID或提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
@@ -12,7 +12,7 @@
 
 ### 現況摘要（2026-11-13，優先於下方歷史紀錄）
 
-- **來源與版本：** dev基準`7d08f0c`為1.16.2，本次待提交工作樹為1.16.3；main `dfc8ff7`仍為1.15.1。不將dev更新稱為正式發布。
+- **來源與版本：** 本輪開發基準dev `86969a52df481d13d1dcdf5893bfeafa4488dd91`為1.16.3，已經PR #80合併main（`d08a859ba6ff24ebd713478817a161e72eca46df`）；本次待提交工作樹為1.16.4，不將本機修改稱為正式發布。
 - **殿堂四項：** [PR #74](https://github.com/tt-chin/yakyujinsei/pull/74)已合併dev（`4c15523`）。作業分支`0de886d`的[Linux Full 42497795539](https://github.com/tt-chin/yakyujinsei/actions/runs/42497795539)為112 PASS／0 FAIL／0 SKIP／0 BLOCKED，8批及Aggregate PASS；合併dev的[Quick 42551250884](https://github.com/tt-chin/yakyujinsei/actions/runs/42551250884)成功。原Full 42492930690的104 PASS／8 FAIL保留，不改寫。四項轉為CI_PASS／DEV_MERGED／PREVIEW_PENDING，未提供使用者新規則Preview／實機驗收，不勾選結案。
 - **UI-DESIGN-TOKENS-02／03：** [PR #77](https://github.com/tt-chin/yakyujinsei/pull/77)（`c66b78f`、1.16.1）與[PR #78](https://github.com/tt-chin/yakyujinsei/pull/78)（`7d08f0c`、1.16.2）均已合併dev；各dev push [Quick 43077212225](https://github.com/tt-chin/yakyujinsei/actions/runs/43077212225)及[Quick 43245735982](https://github.com/tt-chin/yakyujinsei/actions/runs/43245735982)成功。不再記為待PR／未授權實作；4主題×PC／手機Preview確認仍待完成，歷史本機Full不冒充新來源Linux Full。
 - **1.16.3案內選單：** 「クレジット」統一名稱、更新履歷後新增完整指定X連結的「不具合報告」。四種尺寸309項限定檢查PASS、語法／履歷生成／diff PASS；詳見末節。提交`a6b3bc7`的[Quick 43247767847](https://github.com/tt-chin/yakyujinsei/actions/runs/43247767847)成功；[Full 43247910213](https://github.com/tt-chin/yakyujinsei/actions/runs/43247910213)為117入口中111 PASS／6 FAIL（歷史引擎混用已移除getSharePalette的新模組），原FAIL保留。本輪限定測試接線修復及重測詳見末節，新來源CI待執行；Preview／實機未追加驗收，未正式發布。
@@ -500,3 +500,16 @@ Run43247910213／a6b3bc7的117入口為111 PASS／6 FAIL／0 SKIP／0 BLOCKED，
 限定驗證：scripts/test-historical-share-theme.mjs四個入口接線／基準檢查、四份完整原件一致性及四個無效／不存在基準拒絕通過；真實瀏覽器四個歷史引擎啟動＋現行模組隔離負控制5 PASS／0 FAIL／page errors 0。負控制在未套歷史route時重現原缺失export錯誤。原失敗full-power-pitching-e2e --part=fixtures完整入口30 PASS／0 FAIL／page errors 0，包含29個原fixture與IF舊／現行／批准phoenix控制／同版重播的完整狀態與主RNG比較。證據：test-results/historical-share-theme-fix-r2/與historical-share-theme-pitching-fixtures-r1/，另各有同名log。語法、diff與原自動入口集合檢查通過。
 
 本次為R2測試基礎接線修復，依使用者既有決定不跑本機整套Quick／Full；推送dev後由GitHub Quick驗證。新來源的六入口完整Linux重測與Full尚未執行，不以啟動檢查或單一入口PASS替代Full。不新增待辦ID、不更改checkbox、版本或發布履歷；不修改main或正式發布。
+
+
+### 2026-11-13：新生涯確認與存檔刪除流程（1.16.4，本機完成／CI待驗證）
+
+依本輪使用者決定，原生提醒改為沿用「遊び方」標題／可捲動內容／固定操作區的共用確認對話框。首頁「新しく始める」先確認，取消或Esc保留完整存檔；OK以既有版本核對交易立即刪除存檔，成功後才顯示選手建立表單，真正開始時不再詢問覆蓋。「最初からやり直す」仍先確認返回首頁並保留存檔。無法儲存時另明確確認本次不保存；刪除失敗或跨分頁衝突不得進入新生涯覆寫，必須重新讀取。沒有新增獨立刪除按鈕。
+
+影響分類R3（既有存檔刪除時機調整）。比較基準為上述完整dev SHA；投手／野手的初始狀態與第一操作比較，僅分別核對後投影VERSION與birth.createdVersion兩個版號欄位，其餘完整S、選擇與主RNG trace嚴格相等；同版完整重播嚴格一致。允許差異僅為核准的確認介面、OK時刪除與版本metadata，不改遊戲規則或RNG。
+
+本機限定驗證：Controller 14／14、codec 38／38、年度邊界4／4、career-entry 13／13 PASS；真實IndexedDB Runtime 13組PASS，涵蓋年度恢復、乾淨重試、拒絕存取、跨分頁衝突及投手／野手狀態／RNG比較。追加5種尺寸（1440×900、390×844、375×667、320×568、320×300）、4主題、Tab／Shift+Tab、取消／Esc焦點、重複點擊與過期確認共8組PASS。event-fix-e2e三種寬度PASS，draft-income-e2e相關quick profile 18 PASS／0 FAIL（不是整套Quick）。履歷生成及重複生成、模組檢查、語法及diff PASS。既有測試僅按已批准的確認／刪除時機調整預期，不修改Runner、CI、golden或其他遊戲斷言。
+
+證據：`test-results/save-confirmation-runtime-final-r3/`、`test-results/save-confirmation-theme-keyboard-r4/`及同名log、`test-results/save-confirmation-event-regression-r1.log`、`test-results/save-confirmation-draft-regression-r1.log`。早期Controller限定重測因舊測試未傳入明確確認參數而FAIL，修正該測試接線後14／14 PASS，原輸出保留；Runtime完成後出現profile cleanup timeout警告，瀏覽器已斷線、斷言與程序結果PASS，警告不隱藏。
+
+整套Quick／Full依既有使用者決定交由GitHub Actions，本機NOT_RUN；本次未提交推送，CI／Preview／iPhone Safari／Android Chrome實機NOT_RUN，不能以舊來源Full代替。本輪不更動74個唯一ID及50完成／24未完成checkbox，也不解除ARTIFACT_COVERAGE_BLOCKED。歷史1.16.3的Full111／6及後續來源117／117分開保留。

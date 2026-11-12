@@ -41,10 +41,12 @@ for(const name of ['docs/src/ui/information-dialog.js','docs/styles/information.
     const part=(text,start,end)=>{const a=text.indexOf(start),b=end?text.indexOf(end,a):text.length;assert.ok(a>=0&&b>a,'recognized dialog contract anchors');return text.slice(a,b);};
     assert.equal(part(current,'// The body is fixed','export function initializeInformationDialogs'),part(previous,'// The body is fixed','export function initializeInformationDialogs'),'scroll lock and observer lifecycle unchanged');
     const oldResume='このページを閉じたり再読み込みすると進行中の人生は失われます。「最初からやり直す」は確認後に新しく始めます。',newResume='各年の開始時に自動セーブされます。ページを閉じたり再読み込みしたりすると、最後にセーブに成功した年の最初から再開します。その年の未保存の操作は、もう一度プレイする必要があります。セーブできない場合は画面にお知らせします。「最初からやり直す」ではまずタイトルに戻ります。';
-    assert.equal(part(current,"    help:{","    updates:"),part(previous,"    help:{","    updates:").replace(oldResume,newResume),'help content changes only the approved annual-save explanation');
+    const expectedHelp=part(previous,"    help:{","    updates:").replace(oldResume,newResume).replace('「最初からやり直す」ではまずタイトルに戻ります。','「最初からやり直す」ではセーブデータを残してタイトルに戻ります。「新しく始める」で確認すると、セーブデータを削除して選手作成へ進みます。');
+    assert.equal(part(current,"    help:{","    updates:"),expectedHelp,'help changes only the approved annual-save and confirmed-discard explanation');
     assert.equal(part(current,'    let opener=null',null),part(previous,'    let opener=null',null),'close, focus restoration, keyboard and opening lifecycle unchanged');
     assert.ok(current.includes("updates:{title:'更新履歴',sections:releaseNotes.map(r=>[r.title,r.lines.join('\\n')])}"),'updates still use curated data');
-  }else assert.equal(current,previous,'dialog styles and generator preserved: '+name);
+  }else if(name==='docs/styles/information.css'){const approved='\n.confirmation-dialog .information-footer{gap:10px;flex-wrap:wrap}\n.confirmation-dialog .information-article{padding-block:8px}\n';assert.equal(current,previous.endsWith(approved)?previous:previous+approved,'only approved confirmation-specific style additions');}
+  else assert.equal(current,previous,'dialog styles and generator preserved: '+name);
 }
 const output=new URL('../docs/src/data/release-notes.js',import.meta.url);
 const hash=()=>createHash('sha256').update(readFileSync(output)).digest('hex');

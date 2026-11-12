@@ -6,10 +6,10 @@ export class BrowserSaveController {
  #saveFailureMessage(){if(!this.state.slot)return 'セーブできませんでした。この生涯の保存済みデータはありません。';if(this.state.slot.careerId!==this.state.careerId)return 'セーブできませんでした。今回の新しい生涯は保存されていません。以前の生涯のセーブデータは変更していません。';return 'セーブできませんでした。前回のセーブデータは変更していません。';}
  #show(message){this.state.message=message;this.#notify({...this.state});}
  async initialize(){try{const slot=await this.#store.read();this.state={...this.state,phase:'ready',slot:slot.save,revision:slot.revision,writable:false};this.#show(slot.save?'続きから再開できます。':'セーブデータはありません。');}catch(error){this.state.phase='unavailable';this.state.writable=false;this.#show(error.code==='SAVE_INCOMPATIBLE'?'このバージョンでは読み込めないセーブデータです。保存バージョン：'+(error.savedVersion||'不明')+'。元のデータは保持されています。セーブせずに始める場合、今回の進行状況は保存されません。':'セーブデータを確認できません。セーブせずに始める場合、今回の進行状況は保存されません。');}return this.state;}
- newCareer(){
+ newCareer({allowUnsaved=false}={}){
   if(!['ready','unavailable'].includes(this.state.phase))return false;
-  if(this.state.phase==='unavailable'){if(!globalThis.confirm('セーブデータを確認できません。今回の進行状況は保存されません。セーブせずに始めますか？'))return false;}
-  else if(this.state.slot&&!globalThis.confirm('新しい野球人生を始めると、現在のセーブデータが上書きされます。よろしいですか？'))return false;
+  if(this.state.phase==='unavailable'&&!allowUnsaved)return false;
+  if(this.state.phase==='ready'&&this.state.slot)return false;
   ++this.#generation;this.#store.cancelPendingWrites();this.state.careerId=globalThis.crypto.randomUUID();this.state.writable=this.state.phase==='ready';this.#show(this.state.writable?'年度開始時にセーブします。':'今回の進行状況は保存されません。');return true;
  }
  capture(state){
@@ -28,6 +28,14 @@ export class BrowserSaveController {
   catch(error){this.state.phase='restore-error';this.state.writable=false;this.#lock(true);this.#show('再開処理に失敗しました。セーブデータは上書きしていません。タイトルに戻るか、もう一度読み込んでください。');}
   finally{this.#restoring=false;}
  }
- async remove(){if(this.state.phase!=='ready')return;if(!globalThis.confirm('セーブデータを削除しますか？'))return;if(!globalThis.confirm('削除すると元に戻せません。本当に削除しますか？'))return;++this.#generation;this.#store.cancelPendingWrites();this.state.writable=false;this.state.phase='deleting';this.#show('セーブデータを削除しています…');try{const row=await this.#store.remove(this.state.revision);this.state.slot=null;this.state.phase='ready';this.state.revision=row.revision;this.state.writable=false;this.#show('セーブデータを削除しました。');}catch(error){this.state.writable=false;this.state.phase='unavailable';this.#show('削除できませんでした。保存済みデータを変更していません。');}}
+ async remove({confirmed=false}={}){
+  if(!confirmed||this.state.phase!=='ready'||!this.state.slot)return false;
+  const generation=++this.#generation;this.#store.cancelPendingWrites();this.state.writable=false;this.state.phase='deleting';this.#show('セーブデータを削除しています…');
+  const current=()=>generation===this.#generation&&this.state.phase==='deleting';let row;
+  try{row=await this.#store.remove(this.state.revision,{isCurrent:current});}
+  catch(error){if(!current())return false;this.state.phase='delete-error';this.#show(error.code==='SAVE_CONFLICT'?'別のタブでセーブデータが更新されました。削除せずに停止しました。もう一度読み込んでください。':'削除できませんでした。新しい人生は始めていません。もう一度読み込んでください。');return false;}
+  if(!current())return false;
+  this.state.slot=null;this.state.phase='ready';this.state.revision=row.revision;this.state.careerId=null;this.#show('セーブデータを削除しました。');return true;
+ }
  async settled(){await this.#queue;}
 }

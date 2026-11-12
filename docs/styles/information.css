@@ -37,3 +37,6 @@
  #desktop-career{left:calc(50% + 300px)}
  .desktop-overview .ui-panel{margin-bottom:14px}
 }
+
+.confirmation-dialog .information-footer{gap:10px;flex-wrap:wrap}
+.confirmation-dialog .information-article{padding-block:8px}
