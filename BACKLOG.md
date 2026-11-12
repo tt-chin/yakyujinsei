@@ -15,7 +15,7 @@
 - **來源與版本：** dev基準`7d08f0c`為1.16.2，本次待提交工作樹為1.16.3；main `dfc8ff7`仍為1.15.1。不將dev更新稱為正式發布。
 - **殿堂四項：** [PR #74](https://github.com/tt-chin/yakyujinsei/pull/74)已合併dev（`4c15523`）。作業分支`0de886d`的[Linux Full 42497795539](https://github.com/tt-chin/yakyujinsei/actions/runs/42497795539)為112 PASS／0 FAIL／0 SKIP／0 BLOCKED，8批及Aggregate PASS；合併dev的[Quick 42551250884](https://github.com/tt-chin/yakyujinsei/actions/runs/42551250884)成功。原Full 42492930690的104 PASS／8 FAIL保留，不改寫。四項轉為CI_PASS／DEV_MERGED／PREVIEW_PENDING，未提供使用者新規則Preview／實機驗收，不勾選結案。
 - **UI-DESIGN-TOKENS-02／03：** [PR #77](https://github.com/tt-chin/yakyujinsei/pull/77)（`c66b78f`、1.16.1）與[PR #78](https://github.com/tt-chin/yakyujinsei/pull/78)（`7d08f0c`、1.16.2）均已合併dev；各dev push [Quick 43077212225](https://github.com/tt-chin/yakyujinsei/actions/runs/43077212225)及[Quick 43245735982](https://github.com/tt-chin/yakyujinsei/actions/runs/43245735982)成功。不再記為待PR／未授權實作；4主題×PC／手機Preview確認仍待完成，歷史本機Full不冒充新來源Linux Full。
-- **1.16.3案內選單：** 「クレジット」統一名稱、更新履歷後新增完整指定X連結的「不具合報告」。四種尺寸309項限定檢查PASS、語法／履歷生成／diff PASS；詳見末節。本次Quick／Full、Preview／實機NOT_RUN，未正式發布。
+- **1.16.3案內選單：** 「クレジット」統一名稱、更新履歷後新增完整指定X連結的「不具合報告」。四種尺寸309項限定檢查PASS、語法／履歷生成／diff PASS；詳見末節。提交`a6b3bc7`的[Quick 43247767847](https://github.com/tt-chin/yakyujinsei/actions/runs/43247767847)成功；[Full 43247910213](https://github.com/tt-chin/yakyujinsei/actions/runs/43247910213)為117入口中111 PASS／6 FAIL（歷史引擎混用已移除getSharePalette的新模組），原FAIL保留。本輪限定測試接線修復及重測詳見末節，新來源CI待執行；Preview／實機未追加驗收，未正式發布。
 - **保留項目：** UI-DESIGN-TOKENS-04～06仍DESIGN_PENDING；背號、永久欠番未實作，投手平衡僅研究。ARTIFACT_COVERAGE_BLOCKED不因Full或artifact上傳成功解除。
 
 ### 早期版本與重構進度快照（保留原時點，非目前版本／待辦狀態）
@@ -489,3 +489,14 @@ feature/hof-evaluation-policy，自dev 25b815e，1.16.0工作樹。TEST-COMPARE-
 限定驗證：1280×900、320×568、390×844、320×300共309檢查PASS，包含完整URL／新分頁、安全屬性、無障礙名稱、對齊、クレジット標題與授權保留、關閉與焦點、既有分享操作；page／module errors 0。履歷來源／生成及重複生成一致性、語法與diff檢查PASS。證據：test-results/menu-credits-bugreport-1163-r2/及同名log；r1的測試工具重複節點拒絕檢查FAIL保留，r2已補強並通過。歷史DOM只精確驗證並投影本次批准的選單差異，其他DOM／S／RNG斷言保留，無修改golden。
 
 依AGENTS純顯示R2例外採限定驗證，本次Quick／Full、實機與Preview NOT_RUN；依使用者授權隨本次dev提交推送，推送後CI及Preview部署狀態另以對應Run核對，不將本地結果寫成發布完成。不新增ID或更改既有checkbox；本輪已依實際清單修正頁首與彙總統計。
+
+
+### 2026-11-13：Full歷史配色依賴接線修復（測試限定）
+
+Run43247910213／a6b3bc7的117入口為111 PASS／6 FAIL／0 SKIP／0 BLOCKED，八批完成。六個入口（投球fixture、兩個投球seed入口、國際賽、弱小校、特性顯示）的25次pageerror皆為舊game.js匯入現行share-theme.js不存在的getSharePalette，另有一次自然WBC覆蓋未到達的連鎖FAIL。原因是1.16.2移除舊API後，歷史game-only比較未載入配套舊模組；不是六個產品邏輯錯誤，也沒有OOM／Runner中斷證據。10個artifact已上傳；ARTIFACT_COVERAGE_BLOCKED仍獨立保留。原始下載與log存於test-results/ci-full-43247910213-analysis/及本機完整run log，不覆寫原FAIL。
+
+修復：tests/support/stage6-browser.mjs新增頁面限定routeHistoricalShareTheme，投球、國際賽、弱小校、特性顯示四個測試檔僅在old頁面呼叫，載入各自原固定40位SHA的完整share-theme.js原件。現行頁面、產品程式、VERSION 1.16.3、既有baseline、golden、斷言、RNG、timeout、Runner／CI及117入口集合不變；沒有恢復產品舊API或新增空函式。契約及執行方式見scripts/TESTING.md。
+
+限定驗證：scripts/test-historical-share-theme.mjs四個入口接線／基準檢查、四份完整原件一致性及四個無效／不存在基準拒絕通過；真實瀏覽器四個歷史引擎啟動＋現行模組隔離負控制5 PASS／0 FAIL／page errors 0。負控制在未套歷史route時重現原缺失export錯誤。原失敗full-power-pitching-e2e --part=fixtures完整入口30 PASS／0 FAIL／page errors 0，包含29個原fixture與IF舊／現行／批准phoenix控制／同版重播的完整狀態與主RNG比較。證據：test-results/historical-share-theme-fix-r2/與historical-share-theme-pitching-fixtures-r1/，另各有同名log。語法、diff與原自動入口集合檢查通過。
+
+本次為R2測試基礎接線修復，依使用者既有決定不跑本機整套Quick／Full；推送dev後由GitHub Quick驗證。新來源的六入口完整Linux重測與Full尚未執行，不以啟動檢查或單一入口PASS替代Full。不新增待辦ID、不更改checkbox、版本或發布履歷；不修改main或正式發布。

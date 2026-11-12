@@ -5,7 +5,7 @@ import {assertApprovedProducerRenameCareer} from '../tools/development-b/histori
 import {readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {harness,arg,instrument} from './support/stage6-browser.mjs';
+import {routeHistoricalShareTheme,harness,arg,instrument} from './support/stage6-browser.mjs';
 import {normalizeEventSeason} from '../docs/src/engine/event-season-policy.js';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
 import {productionFunction} from './retirement-hof-test-support.mjs';
@@ -70,7 +70,7 @@ const effortAnchor='/* 投球強度による成績補正。 */',effortProbe=`win
 function observe(s){if(!s.includes('let s6rng=[]'))s=instrument(s);const n=s.split(effortAnchor).length-1;if(n===1)s=s.replace(effortAnchor,effortAnchor+effortProbe);else assert.ok(n===0&&s.includes('new ProfessionalSeason('),'effort anchor in game.js or ProfessionalSeason');return injectOverlayHook(s,hook+phoenixAwardProbe);}
 function observeSeason(s){assert.equal(s.split(effortAnchor).length,2,'effort anchor in ProfessionalSeason');return s.replace(effortAnchor,effortAnchor+effortProbe);}
 const h=await harness('full-power-pitching'+(part?'-'+part:''));
-async function page(width,pos='P',seed='effort-test',old=false,approved=false){const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=old?(approved?approvedPhoenixPrior:prior):await response.text();await route.fulfill({response,body:observe(body)});});if(!old)await p.route('**/src/engine/professional-season.js',async route=>{const response=await route.fetch();await route.fulfill({response,body:observeSeason(await response.text())});});}});await p.waitForFunction(()=>window.__effortAudit&&!document.querySelector('#btn-start').disabled).catch(error=>{throw Error(error.message+' '+JSON.stringify(h.errors));});return p;}
+async function page(width,pos='P',seed='effort-test',old=false,approved=false){const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{if(old)await routeHistoricalShareTheme(p,baseline);await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=old?(approved?approvedPhoenixPrior:prior):await response.text();await route.fulfill({response,body:observe(body)});});if(!old)await p.route('**/src/engine/professional-season.js',async route=>{const response=await route.fetch();await route.fulfill({response,body:observeSeason(await response.text())});});}});await p.waitForFunction(()=>window.__effortAudit&&!document.querySelector('#btn-start').disabled).catch(error=>{throw Error(error.message+' '+JSON.stringify(h.errors));});return p;}
 const clean=s=>{s=structuredClone(s);delete s.version;return s;};
 const digest=s=>createHash('sha256').update(JSON.stringify(clean(s))).digest('hex');
 const allControls=['全力投球','通常投球','省エネ投球'];if(arg('effort')&&!allControls.includes(arg('effort')))throw Error('Unknown --effort');const controls=arg('effort')?[arg('effort')]:allControls;
