@@ -14,6 +14,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import {TRAIT_LABELS,TRAIT_TEXT} from '../docs/src/engine/trait-policy.js';
+import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const modulePath=process.argv.find(v=>v.startsWith('--playwright='))?.slice(13);
@@ -69,7 +70,7 @@ try{
   await page.goto(`${target}/?seed=display-settings-test`);await page.locator('#btn-start').waitFor();
   await page.locator('#in-name').fill('長い名前テスト');
   await page.locator('[data-open-preferences]').first().click();
-  for(const theme of ['standard','night','classic','scoreboard'])for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
+  for(const theme of THEME_IDS)for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
     await setPreferences(page,theme,fontSize,density);combinations++;
     for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[560,800],[1280,800]]){
       await page.setViewportSize({width,height});const size=await fits(page);assert.ok(size.width<=width,`${theme}/${fontSize}/${density} overflow ${JSON.stringify(size)}`);assert.ok(size.dialog<=size.dialogClient+1,'dialog overflow');
@@ -98,7 +99,7 @@ try{
   await page.locator('#act .abrow[aria-disabled="false"]').first().focus();await page.keyboard.press('Enter');
   await page.waitForFunction(markup=>document.querySelector('#act').innerHTML!==markup,trainingMarkup,{timeout:5000}).catch(e=>{if(e.name!=='TimeoutError')throw e;});
   assert.notEqual(await page.locator('#act').evaluate(el=>el.innerHTML),trainingMarkup,'retained row listener works');
-  for(const theme of ['standard','night','classic','scoreboard'])for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
+  for(const theme of THEME_IDS)for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
     await openBoardAction(page,'board-preferences');await setPreferences(page,theme,fontSize,density);await page.keyboard.press('Escape');
     for(const [view,tabs] of [['home',[]],['player',['ability','traits']],['career',['stats','achievements','contract','yearly']]]){
       await page.locator(`[data-main-view="${view}"]`).click();
@@ -149,7 +150,7 @@ try{
         for(let step=0;step<2000;step++){
           if(variant==='candidate'&&step%17===0){
             const before=await p.evaluate(()=>window.__displayRegression());
-            await openBoardAction(p,'board-preferences');await setPreferences(p,['standard','night','classic','scoreboard'][step%4],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
+            await openBoardAction(p,'board-preferences');await setPreferences(p,THEME_IDS[step%THEME_IDS.length],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
             assertSameCareer(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
           const result=await p.evaluate(({labels,texts})=>{

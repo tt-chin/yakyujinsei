@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {shareReplayURL,replayURL} from '../docs/src/ui/seed-share.js';
 import {shareTagPalette} from '../docs/src/ui/share-theme.js';
 import {readThemeColors} from '../docs/src/ui/share-image.js';
+import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
 let cases=0;
 for(const href of ['https://dev.yakyujinsei.pages.dev/sub/?rv=old&rules=old#x','https://yakyujinsei.com/?x=1'])for(const seed of ['', 'abc','日本語 +?&%/#"']){
  const url=replayURL(seed,href);assert.equal(new URL(url).origin,new URL(href).origin);assert.deepEqual([...new URL(url).searchParams.keys()],['seed']);assert.equal(new URL(url).searchParams.get('seed'),seed);assert.equal(new URL(url).hash,'');cases++;
@@ -39,7 +40,7 @@ const fakeDocument=(tokens,computed,pixels)=>{const hosts=[],canvases=[];const d
  assert.ok(host.removed&&host.hidden&&host.style.color==='transparent'&&host.children.length===1,'probe sits in a hidden transparent host that is always removed');cases++;}
 console.log(`${cases} replay sharing/activation/error/seed/theme-color cases PASS`);
 for(const theme of ['standard','toString',undefined]){const tag={bg:'#ffffff',bd:'#ffffff',fg:'#ffffff'};assert.equal(shareTagPalette(tag,theme),tag,String(theme));}
-for(const theme of ['night','classic','scoreboard'])for(const color of ['#ffffff','#FFC52F','#00A3E0','#81757a']){
+for(const theme of THEME_IDS.filter(t=>t!=='standard'))for(const color of ['#ffffff','#FFC52F','#00A3E0','#81757a']){
  const tag=shareTagPalette({bg:'#ffffff',bd:color,fg:color},theme);assert.equal(tag.bd,color);assert.notEqual(tag.fg,'#ffffff');cases++;
 }
-console.log('Standard/unknown themes keep tag colors and 12 semantic tag contrast cases PASS');
+console.log(`Standard/unknown themes keep tag colors and ${THEME_IDS.filter(t=>t!=='standard').length*4} semantic tag contrast cases PASS`);

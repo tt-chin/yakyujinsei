@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import {instrumentRng} from './support/rng-instrument.mjs';
+import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3),baseline='dc5ac871';
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const hook=`\nwindow.__shareTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),retire:()=>endGame('検証'),rich:()=>{S.honors=Array.from({length:35},(_,i)=>'2030年 日本シリーズ優勝 '+i);S.log=Array.from({length:35},(_,i)=>({y:2026+i,age:16+i,tm:'長い球団名の福岡シーホークス',line:'検証成績',st:i<3?null:{G:120,IP:180,W:15,L:5,SV:0,HLD:0,SO:190,BB:40,H:100,ER:40}}));S.removed=['旧特性'];Object.assign(S.traits,{legend:true,taiwan:true,goldcloth:true,genius:true,glass:true,mrteam:true});S.mrTeamName='福岡シーホークス';},image:()=>{const out=document.createElement('div');document.body.appendChild(out);shareImage([],out);return out.querySelector('img').src;}};`;
@@ -39,7 +40,9 @@ try{
    if(entry==='dialog'&&kind!=='pending'){await p.locator('#share-copy-seed').click();assert.equal((await p.evaluate(()=>window.__copies)).at(-1),seed);await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>document.activeElement.id),'board-menu-toggle');}
   }
   let standard;
-  for(const [theme,rgb] of [['standard',[255,248,248]],['night',[13,17,23]],['classic',[244,236,216]],['scoreboard',[13,35,24]],['standard',[255,248,248]]]){
+  const themeBg=[['standard',[255,248,248]],['night',[13,17,23]],['classic',[244,236,216]],['scoreboard',[13,35,24]],['standard',[255,248,248]]];
+  assert.deepEqual([...new Set(themeBg.map(([theme])=>theme))].sort(),[...THEME_IDS].sort(),'theme background expectations cover THEME_IDS');
+  for(const [theme,rgb] of themeBg){
    await openBoardAction(p,'board-preferences');await p.locator(`[name="theme"][value="${theme}"]`).check();await p.locator('#preferences-close').click();const png=await p.locator('#sh-out img').getAttribute('src');if(theme==='standard'){if(standard)assert.equal(png,standard);else standard=png;}const pixel=await p.evaluate(async()=>{const img=document.querySelector('#sh-out img');await img.decode();const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);return [...c.getContext('2d').getImageData(0,0,1,1).data].slice(0,3);});assert.deepEqual(pixel,rgb);
    const download=p.waitForEvent('download');await p.locator('#sh-dl').click();const d=await download;assert.equal((await readFile(await d.path())).toString('base64'),png.split(',')[1]);
    await p.evaluate(()=>{navigator.canShare=()=>true;Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__imageFile=data.files[0];}});});await p.locator('#sh-save').click();await p.waitForFunction(()=>window.__imageFile);const bytes=await p.evaluate(async()=>{const a=new Uint8Array(await window.__imageFile.arrayBuffer());let s='';for(const v of a)s+=String.fromCharCode(v);window.__imageFile=null;return btoa(s);});assert.equal(bytes,png.split(',')[1]);await writeFile(path.join(shots,`${arg('preview')?'preview':'local'}-${width}-${theme}.png`),Buffer.from(png.split(',')[1],'base64'));
