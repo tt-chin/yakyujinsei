@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {verifyBoardMenu} from '../tests/support/board-menu.mjs';
+import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
 const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 const root=fileURLToPath(new URL('../docs/',import.meta.url));
 const output=path.resolve(arg('output')||'test-results/ui-acceptance-20261105/desktop');
@@ -30,13 +31,13 @@ try{
     const actual=await p.evaluate(()=>({visible:getComputedStyle(document.querySelector('#desktop-career')).display!=='none',overflow:document.documentElement.scrollWidth>innerWidth}));
     assert.equal(actual.visible,width>=1180);assert.equal(actual.overflow,false);
     if(width>=1180){
-      const income=await p.evaluate(async()=>{
+      const income=await p.evaluate(async themes=>{
         const {renderCareer}=await import('/src/ui/player-detail.js');
         const target=document.querySelector('#desktop-career').lastElementChild,original=target.innerHTML;
         const detail=document.createElement('div');detail.hidden=true;document.body.append(detail);
         const model={contract:{history:[],description:'2029～2035年 長い球団名の複数年保証契約',remainingYears:'7年',guaranteedTotal:'1,234,567,890万円',schedule:['2029年 123,456,789万円','2030年 123,456,789万円'],incomeRows:['年俸・報酬','出来高','契約金・支度金','契約解除補償金','スポンサー収入','生涯総収入'].map((label,i)=>({label,value:(i+1)+',234,567,890円'}))}};
         const saved=[document.documentElement.dataset.theme,document.documentElement.dataset.fontSize];let cases=0;
-        try{for(const theme of ['standard','night','classic','scoreboard'])for(const font of ['small','medium','large']){
+        try{for(const theme of themes)for(const font of ['small','medium','large']){
           document.documentElement.dataset.theme=theme;document.documentElement.dataset.fontSize=font;
           renderCareer(target,model,'contract');renderCareer(detail,model,'contract');
           if(target.textContent!==detail.textContent)throw Error('Sidebar/detail mismatch');
@@ -44,8 +45,8 @@ try{
           for(const value of target.querySelectorAll('dt,dd'))if(value.scrollWidth>value.clientWidth+1)throw Error('Long income overflow');
           if(document.documentElement.scrollWidth>innerWidth)throw Error('Page overflow');cases++;
         }return cases;}finally{target.innerHTML=original;detail.remove();[document.documentElement.dataset.theme,document.documentElement.dataset.fontSize]=saved;}
-      });
-      assert.equal(income,12);results.push({case:'six nonzero long-income rows; sidebar/detail equality',width,combinations:income,status:'PASS'});
+      },[...THEME_IDS]);
+      assert.equal(income,THEME_IDS.length*3);results.push({case:'six nonzero long-income rows; sidebar/detail equality',width,combinations:income,status:'PASS'});
     }
     results.push({case:'sidebar breakpoint / no horizontal overflow',width,status:'PASS'});
   }

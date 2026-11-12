@@ -1,10 +1,17 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DEFAULT_PREFERENCES,normalizeDisplayPreferences,readDisplayPreferences,saveDisplayPreferences,PREFERENCES_STORAGE_KEY} from '../docs/src/ui/preferences.js';
+import {THEMES,THEME_IDS} from '../docs/src/ui/theme-catalog.js';
+
+// The only place the theme list is written out; every other test iterates THEME_IDS (UI-DESIGN-TOKENS-04).
+assert.deepEqual(THEMES.map(({id,label})=>[id,label]),[['standard','スタンダード'],['night','ナイター'],['classic','クラシック'],['scoreboard','スコアボード']]);
+assert.deepEqual(THEME_IDS,THEMES.map(theme=>theme.id));
+assert.ok(Object.isFrozen(THEMES)&&Object.isFrozen(THEME_IDS)&&THEMES.every(Object.isFrozen));
+assert.equal(DEFAULT_PREFERENCES.theme,THEME_IDS[0]);
 
 const store=new Map(),storage={getItem:key=>store.get(key)??null,setItem:(key,value)=>store.set(key,value)};
 assert.deepEqual(readDisplayPreferences(storage),DEFAULT_PREFERENCES);
-for(const theme of ['standard','night','classic','scoreboard'])for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
+for(const theme of THEME_IDS)for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
   const value={schemaVersion:1,theme,fontSize,density};
   assert.equal(saveDisplayPreferences(storage,value),true);
   assert.deepEqual(readDisplayPreferences(storage),value);
@@ -22,6 +29,9 @@ assert.match(html,/id="btn-start" disabled/);
 assert.match(main,/const game=await import\('\.\/engine\/game\.js'\);\s*await game\.initializeBrowserSave\(\);/);
 assert.doesNotMatch(source,/\b(?:R|ri|pick|chance|board)\s*\(|engine\/game|Math\.random|location|URLSearchParams|\bS\./);
 const css=readFileSync(new URL('../docs/styles/themes.css',import.meta.url),'utf8');
+assert.deepEqual([...css.matchAll(/:root\[data-theme="([^"]+)"\]/g)].map(m=>m[1]).sort(),[...THEME_IDS].sort(),'themes.css blocks match THEME_IDS');
+assert.match(css,new RegExp(`:root,\\s*:root\\[data-theme="${THEME_IDS[0]}"\\]\\s*\\{`),'default theme block is the first THEME_IDS entry');
+assert.match(html,new RegExp(`<html [^>]*data-theme="${THEME_IDS[0]}"`),'index.html default theme');
 const luminance=hex=>{let h=hex.slice(1);if(h.length===3)h=[...h].map(c=>c+c).join('');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);};
 const ratio=(a,b)=>{const x=luminance(a),y=luminance(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
 for(const block of css.matchAll(/:root\[data-theme="([^"]+)"\]\s*\{([^}]+)\}/g)){
@@ -34,4 +44,4 @@ for(const block of css.matchAll(/:root\[data-theme="([^"]+)"\]\s*\{([^}]+)\}/g))
 const base=readFileSync(new URL('../docs/styles/base.css',import.meta.url),'utf8');
 const loaded=[...html.matchAll(/fonts\.googleapis\.com\/css2\?([^"]+)"/g)].flatMap(m=>[...m[1].matchAll(/family=([^:&]+)/g)].map(f=>decodeURIComponent(f[1].replace(/\+/g,' '))));
 for(const name of ['sans','mono']){const first=base.match(new RegExp(`--${name}:'([^']+)'`))?.[1];assert.ok(loaded.includes(first),`--${name} first family ${first} is not loaded (${loaded.join(', ')})`);}
-console.log('Display preferences: 24 combinations, validation, storage failures, isolation, contrast and font loading passed.');
+console.log(`Display preferences: theme list, ${THEME_IDS.length*6} combinations, validation, storage failures, isolation, contrast and font loading passed.`);
