@@ -298,7 +298,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 | 對照圖 | `compare-night.png`、`compare-scoreboard.png` 與 16 張前後 PNG 存於 `.claude/reports/design-tokens-03/`（未 commit），供 PR 說明使用 |
 
 - 未做：Linux CI Full、Preview、Firefox／Safari 實機、手機實機、本機 Full（使用者決定不跑）、main 發布。
-- 追加修正（2026-11-12，-04 驗證時發現，`84b1e69`）：Full 限定的 `international-personal-stats-e2e`、`full-power-pitching-e2e`、`smallschool-c-e2e`、`trait-display-e2e` 以 stage6 `historical` 頁提供 7fd53e0 以前的 `game.js`（基準 `e602174`／`20920dd`／`0fd13c7`／`a0b880b`），其 `import { getSharePalette, shareTagPalette }` 在 D7 移除後連結失敗，`#btn-start` 不啟用、page.ready 逾時（本機於 `019a8e4` 重現 4 項 FAIL；`international-personal-stats-e2e` 35 PASS／15 FAIL）。Quick 不含這 4 項，P1 未跑 Full，事前的混合版本路由檢查漏列。修正：`tests/support/stage6-browser.mjs` 的 `historical` 分支另把 `share-theme.js` 指向 `efd4710c`（與 `9956ca3` 同 blob，凍結基準，在 `origin/main`）。修正後 4 項 PASS（`international-personal-stats-e2e` 50／0）、Quick 90／90 PASS（macOS＋Brave 本機）；reviewer 無中以上發現（低：pin 改用 `origin/main` 上的 `efd4710c`，已採納並重跑 `trait-display-e2e` PASS）。
+- 追加修正（2026-11-12，-04 驗證時發現，`84b1e69`）：Full 限定的 `international-personal-stats-e2e`、`full-power-pitching-e2e`、`smallschool-c-e2e`、`trait-display-e2e` 以 stage6 `historical` 頁提供 7fd53e0 以前的 `game.js`（基準 `e602174`／`20920dd`／`0fd13c7`／`a0b880b`），其 `import { getSharePalette, shareTagPalette }` 在 D7 移除後連結失敗，`#btn-start` 不啟用、page.ready 逾時（本機於 `019a8e4` 重現 4 項 FAIL；`international-personal-stats-e2e` 35 PASS／15 FAIL）。Quick 不含這 4 項，P1 未跑 Full，事前的混合版本路由檢查漏列。修正：`tests/support/stage6-browser.mjs` 的 `historical` 分支另把 `share-theme.js` 指向 `efd4710c`（與 `9956ca3` 同 blob，凍結基準，在 `origin/main`）。修正後 4 項 PASS（`international-personal-stats-e2e` 50／0）、Quick 90／90 PASS（macOS＋Brave 本機）；reviewer 無中以上發現（低：pin 改用 `origin/main` 上的 `efd4710c`，已採納並重跑 `trait-display-e2e` PASS）。`84b1e69`／`0cc4500` 於 PR #78 合併（`7d08f0c`，併入 `019a8e4`）之後才 push，未含於該 merge。其後 code owner 於 `dev` 以 `86969a5` 修正（`routeHistoricalShareTheme`：各 e2e 以自身基準 SHA 提供 `share-theme.js`，另加 `scripts/test-historical-share-theme.mjs`）；-04 合併 `dev` 時移除 `84b1e69` 的路由，改採 `86969a5`。
 
 ## 11. P2 細部計畫（UI-DESIGN-TOKENS-04；2026-11-12，基準 `019a8e4`，VERSION 1.16.2）
 
@@ -349,4 +349,5 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 | Quick | 90／90 PASS（macOS＋Brave 本機，最終 -04 樹：-03 追加修正＋本段全部變更） |
 | reviewer | 1 輪，無中以上發現；低：兩處輸出訊息件數寫死 → 已改，改後單獨重跑 `replay-share-theme.test`、`npb-return-e2e` PASS |
 
+- 再合併 `dev`（`86969a5`）後：移除 -04 原帶的 `84b1e69` 路由、改採 `routeHistoricalShareTheme`。`scripts/test-historical-share-theme.mjs` 7 項 PASS；`international-personal-stats-e2e`（50／0）、`full-power-pitching-e2e`、`smallschool-c-e2e`、`trait-display-e2e` PASS；Quick 90／90 PASS（macOS＋Brave 本機）。
 - 未做：Linux CI Full、Preview、Firefox／Safari 實機、本機 Full。

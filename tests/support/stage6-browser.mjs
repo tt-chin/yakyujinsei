@@ -45,6 +45,14 @@ export function instrumentAbility(source){
   const marker='    const touchedKeys={};';assert.equal(source.split(marker).length,2);
   return source.replace(marker,marker+allocationProbe('    '));
 }
+// Historical game-only controls must load their matching removed palette API.
+// This is page-local routing, never a production shim or a baseline replacement.
+export async function routeHistoricalShareTheme(page,ref){
+  assert.match(ref,/^[0-9a-f]{40}$/,'historical share theme requires the exact baseline SHA');
+  const body=execFileSync('git',['show',ref+':docs/src/ui/share-theme.js'],{cwd:root,encoding:'utf8',maxBuffer:20e6,stdio:['ignore','pipe','pipe']});
+  await page.route('**/src/ui/share-theme.js',route=>route.fulfill({body,contentType:'text/javascript; charset=utf-8'}));
+}
+
 export async function harness(name){
   const output=path.resolve(arg('output')||path.join(os.tmpdir(),name));await mkdir(output,{recursive:true});configureBrowserProgress(output);
   const preview=arg('preview'),canonical=x=>x.replace(/\r\n/g,'\n');let verifiedAssets=0;
@@ -57,9 +65,7 @@ export async function harness(name){
   const get=p=>p.evaluate(()=>window.__stage6.get());
   const save=async(id,data)=>writeFile(path.join(output,id+'.json'),JSON.stringify(data,null,2));
   async function page(width=1280,pos='P',seed='stage6-'+pos,{beforeLoad,historical=false}={}){const p=await observeBrowserOperation('page.create '+seed,()=>browser.newPage({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500}));if(preview)await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch(),body=await response.text();assert.equal(canonical(body),canonical(await readFile(path.join(root,'docs/src/engine/game.js'),'utf8')),'Preview game changed during test');await route.fulfill({response,body:instrument(body)});});if(preview)await p.route('**/src/engine/player-ability.js',async route=>{const response=await route.fetch(),body=await response.text();assert.equal(canonical(body),canonical(await readFile(path.join(root,'docs/src/engine/player-ability.js'),'utf8')),'Preview ability changed during test');await route.fulfill({response,body:instrumentAbility(body)});});p.on('pageerror',e=>errors.push({type:'pageerror',message:e.message}));p.on('console',m=>{if(m.type()==='error')errors.push({type:'console',message:m.text()});});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push({type:'asset',message:r.status()+' '+r.url()});});// Historical game-only fixtures retain the exact pre-save bootstrap they used before this feature.
-    // Historical game.js (pre-7fd53e0) imports getSharePalette, which UI-DESIGN-TOKENS-03 removed: serve the pre-03 share-theme.js with it.
-    if(historical){const bootstrap=execFileSync('git',['show','1a74e71954c4a0f1fbf311f3a6796e3ca7e0329b:docs/src/main.js'],{cwd:root,encoding:'utf8'});await p.route('**/src/main.js',route=>route.fulfill({body:bootstrap,contentType:'text/javascript'}));
-      const shareTheme=execFileSync('git',['show','efd4710c4c5c366ff3aba69c59180031c82ff18a:docs/src/ui/share-theme.js'],{cwd:root,encoding:'utf8'});await p.route('**/src/ui/share-theme.js',route=>route.fulfill({body:shareTheme,contentType:'text/javascript'}));}
+    if(historical){const bootstrap=execFileSync('git',['show','1a74e71954c4a0f1fbf311f3a6796e3ca7e0329b:docs/src/main.js'],{cwd:root,encoding:'utf8'});await p.route('**/src/main.js',route=>route.fulfill({body:bootstrap,contentType:'text/javascript'}));}
     if(beforeLoad)await beforeLoad(p);
     await observeBrowserOperation('page.goto '+seed,()=>p.goto((preview||'http://127.0.0.1:'+server.address().port)+'/?seed='+seed));await observeBrowserOperation('page.ready '+seed,()=>p.waitForFunction(()=>!document.querySelector('#btn-start').disabled));await p.locator('#seg-pos [data-v="'+pos+'"]').click();await observeBrowserOperation('page.start '+seed,()=>p.locator('#btn-start').click());return p;}
   async function test(id,input,action){const entry={id,input,status:'PASS',snapshots:[]};const start=Date.now();try{await observeBrowserOperation(name+'/'+id,()=>action(entry));}catch(e){entry.status='FAIL';entry.error=e.stack;}entry.seconds=(Date.now()-start)/1000;records.push(entry);await save(id,entry);console.log(entry.status+' '+id+(entry.error?' '+entry.error.split('\n')[0]:''));}

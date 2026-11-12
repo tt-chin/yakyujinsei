@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {assertApprovedProducerRenameCareer} from '../tools/development-b/historical-comparison.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {harness,arg,instrument} from './support/stage6-browser.mjs';
+import {routeHistoricalShareTheme,harness,arg,instrument} from './support/stage6-browser.mjs';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
 import {withApprovedPhoenixControl,phoenixAwardProbe,assertApprovedPhoenixCareer} from './support/first-difference.mjs';
 import {openBoardAction} from './support/board-menu.mjs';
@@ -24,7 +24,7 @@ const hook=`window.__intlDisplay={
  step:()=>{if(S.done)return {done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));const priority=n=>['vel','ctl','brk','con','pow','eye','spd'].includes(n.dataset.abilityKey)?0:1;rows.sort((a,b)=>priority(a)-priority(b)||S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey]);const b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows[0]||buttons.find(n=>/現在の球団に残留|宣言残留/.test(n.textContent))||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S)),action=b.textContent;b.click();return {before,after:JSON.parse(JSON.stringify(S)),action};}
 };`;
 async function page(width,pos='P',seed='intl-stats',old=false,approved=false){
- const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{
+ const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{if(old)await routeHistoricalShareTheme(p,baseline);
  await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(approved?approvedPhoenixPrior:prior):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook+phoenixAwardProbe)});});}});await p.waitForFunction(()=>window.__intlDisplay&&!document.querySelector('#btn-start').disabled);return p;
 }
 const clean=s=>{const copy=structuredClone(s);delete copy.version;for(const r of Object.values(copy.intlTraitResults||{}))delete r.personalStats;return copy;};
