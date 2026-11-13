@@ -378,10 +378,12 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 - v2 仍 > 0.1 的：`--potential-marker`（0.283）、`--focus-ring`（0.197）——各主題刻意用不同色相（standard 紅、classic 藍、night 黃），規則無法統一；`--share-tag-edge`、陰影系（`--board-shadow`、`--shadow-color`、`--overlay-bg`；standard／classic 帶色調、night／scoreboard 為黑）、`--warning-edge`、`--metric-glow`、`--tag-goldcloth-text`、`--primary-button-end`。
 - `display-preferences.test`／`design-tokens-02.test` 檢查的對比組合，現值與統一後皆無不合格。
 
-### 12.3 待決（code owner）
+### 12.3 方向（code owner）
 
 | 選項 | 內容 | 外觀 |
 |---|---|---|
 | A 統一 | 以 v2 為起點，為元件色定規則並套用到 4 主題；焦點框、潛力標記、陰影需另行設計 | 改變（PATCH），-02 已批准的標籤色與 night／scoreboard 分享圖隨之改變 |
 | B 只供新主題 | 推導公式寫在主題區塊外，現有 4 主題以現值覆寫 | 不變；新主題可由約 14 個基礎色起步，但不一致的現況保留 |
 | C 暫停 P3 | 無具體新主題計畫時不做 | 不變 |
+
+決定（2026-11-14，使用者轉達）：code owner 選 **A 統一**。§9.2 P3 以現值為準、外觀不變的前提不適用於 -05。細部計畫於本分支併入 `dev` 後，以最新 `dev` 另寫於 §13（v2 規則、焦點框／潛力標記／陰影的設計、允許差異、D／T 表）。UI 改版計畫（`tasks/UI_REDESIGN_PLAN.md`，PR #79）的階段 1a 即本項。
