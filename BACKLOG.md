@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 最新狀態核對：2026-11-13。dev 86969a5（1.16.3）的Linux Full為117／117 PASS，已合併main；本次1.16.4為未提交的存檔確認流程修改，相關本機驗證PASS，整套Quick／Full及Preview待確認。未確認的實機、研究及artifact缺口保持未完成。
+> 最新狀態核對：2026-11-13。dev 86969a5（1.16.3）的Linux Full為117／117 PASS，已合併main；1.16.4已推送dev c03df23，Quick成功、Full 116 PASS／1 FAIL；本輪修正唯一失敗的測試基準接線，限定驗證PASS，新來源CI／Preview待確認。未確認的實機、研究及artifact缺口保持未完成。
 > 以現有74個唯一ID的checkbox為準：已完成50項、未完成24項；本次不新增ID或提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
@@ -513,3 +513,14 @@ Run43247910213／a6b3bc7的117入口為111 PASS／6 FAIL／0 SKIP／0 BLOCKED，
 證據：`test-results/save-confirmation-runtime-final-r3/`、`test-results/save-confirmation-theme-keyboard-r4/`及同名log、`test-results/save-confirmation-event-regression-r1.log`、`test-results/save-confirmation-draft-regression-r1.log`。早期Controller限定重測因舊測試未傳入明確確認參數而FAIL，修正該測試接線後14／14 PASS，原輸出保留；Runtime完成後出現profile cleanup timeout警告，瀏覽器已斷線、斷言與程序結果PASS，警告不隱藏。
 
 整套Quick／Full依既有使用者決定交由GitHub Actions，本機NOT_RUN；本次未提交推送，CI／Preview／iPhone Safari／Android Chrome實機NOT_RUN，不能以舊來源Full代替。本輪不更動74個唯一ID及50完成／24未完成checkbox，也不解除ARTIFACT_COVERAGE_BLOCKED。歷史1.16.3的Full111／6及後續來源117／117分開保留。
+
+
+### 2026-11-13：display-preferences-e2e 歷史殿堂比較接線修復（測試限定）
+
+受驗dev `c03df23a3a9697586474394457b8fea21f23cbef`的[Full 43265174634](https://github.com/tt-chin/yakyujinsei/actions/runs/43265174634)為117入口中116 PASS／1 FAIL／0 SKIP／0 BLOCKED。唯一失敗在第8批display-preferences-e2e；測試無條件將main基準的殿堂模組掛至/hof-oracle/，但main `d08a859ba6ff24ebd713478817a161e72eca46df`已使用hof-evaluation-policy.js相依，該虛擬路由不存在，404導致引擎初始化中止、btn-start停用，30秒點擊等待逾時。Aggregate正確拒絕PASS，8個分批、plan及彙整artifact均成功上傳（只確認上傳，不宣稱完整保存契約通過）。同SHA [Quick 43265041516](https://github.com/tt-chin/yakyujinsei/actions/runs/43265041516)成功，不能替代Full。
+
+最小修復：依指定基準殿堂模組的實際相依介面判斷是否需要舊顯示投影；現代基準不載入舊oracle，也不投影殿堂退休DOM，完整文字、狀態、選擇與RNG仍嚴格比較。真正舊基準維持原凍結公式、可信award模組單一實例及原投影斷言。新增oracle請求路徑斷言：現代必須0次，舊基準必須實際載入；不是關閉殿堂驗證、全域忽略DOM／S或更換基準。
+
+限定重測PASS：以原CI兩個seed及完整main SHA執行原失敗入口，24種設定×6種尺寸通過；投手yakyo-test-001為543步／652次RNG，野手jp3-infielder-01為544步／549次RNG，至2058年退休全程一致；現代oracle請求0，Console／JS-CSS HTTP錯誤0。另以8dd244b舊基準執行--skip-careers，24種設定×6尺寸通過、舊oracle實際請求5次、錯誤0；這一項只證明舊載入與UI相容，不宣稱舊基準完整生涯驗證。證據：test-results/display-preferences-hof-fix-r1/及display-preferences-hof-legacy-r1/，保留原CI FAIL。
+
+本輪R2測試接線修復，不改產品、VERSION（維持1.16.4）、Runner、workflow、golden或其他斷言。本機整套Quick／Full依既有使用者指示NOT_RUN，新來源Linux Full及實機NOT_RUN；未推送或重跑CI，不解除ARTIFACT_COVERAGE_BLOCKED，不更改既有checkbox。
