@@ -20,7 +20,7 @@
 | 字體 | 正文與數字用易讀字體；像素字體如採用只限標題或裝飾 | OPTIONS §7.1 | 已採用 |
 | B 項 | B1 能力量條＋潛力、特性徽章；B3 突出目前事件與選項；B4 生涯路線圖（只畫已發生的經歷）；B2／B5 演出；B8 退休與分享圖 | OPTIONS §7.1／§7.2 | 建議；階段 0 驗收時確認範圍 |
 | 延後 | BGM、世界地圖、NPC 頭像 | OPTIONS §7.1 | 已採用 |
-| UI-DESIGN-TOKENS-05 | 設計系統 §12.3 的 A：統一現有 4 主題配色（外觀改變） | code owner 2026-11-14（使用者轉達） | 已決；細部計畫於 PR #84 併 `dev` 後另寫 |
+| UI-DESIGN-TOKENS-05 | 設計系統 §12.3 的 A：統一現有 4 主題配色（外觀改變） | code owner 2026-11-14（使用者轉達） | 方向已決（A）；決定紀錄已同步到設計系統 §12.3／BACKLOG（PR #84 `3713bd3`，未併 `dev`）；細部計畫與實作未批准 |
 
 ## 1. 現況盤點（`b327abe`）
 
@@ -131,7 +131,7 @@
 
 - `git diff --stat -- docs/ scripts/ tests/` 為空。
 - 用 Playwright＋Brave 依 320／390／1280px 開啟各頁：console error 0、無水平捲動（`scrollWidth <= clientWidth`）、截圖。
-- 正文與背景、標籤文字與底色的對比 ≥ 4.5:1（以 `rgb()` 解析 computed style 計算）。
+- 正文與背景、標籤文字與底色的對比 ≥ 4.5:1。讀 computed style 後在 Node 依 CSS Color 4 公式轉成 sRGB，支援 `rgb()`／`rgba()`、`oklab()`、`oklch()`、`color(srgb …)`（`color-mix()` 的結果不是 `rgb()`，設計系統 §9 的「P3 注意」已實測為 `oklab()`、`color(srgb …)`）；無法解析的格式一律 FAIL，不略過。有透明度時，先依實際的祖先背景鏈由下而上合成（source-over），再計算對比。背景是圖片（球場照片）時，以文字所在區塊的不透明底色計算；文字直接疊在照片上的位置列為人工確認項。不用 canvas 讀值（Brave 預設會對 `getImageData` 加入 ±1 雜訊）。
 - 手機上記錄「目前事件頂端 → 第一個選項」的捲動距離，並與現行畫面同一時點比較。
 
 ### 3.5 驗收與產出
@@ -156,7 +156,7 @@
 - 目標：能力量條顯示目前值與潛力，特性用徽章；首頁突出目前事件與選項，過往紀錄收進年度區塊；手機減少事件與選項間的往返捲動；桌面維持三欄。
 - 範圍：`ability-view.js`、`career-presenter.js`、`game-view.js`（`card`／`divider`／`renderChoices`）、`choice-prompt.js`、`desktop-overview.js`、`index.html`、`base.css`、`ui-navigation.css`、`information.css`。事件文字由 `game.js` 與 engine 模組以 HTML 字串產生，本階段只改容器與樣式，不改文字內容與產生順序。
 - 限制：`ability-view.js` 在 `award-identity-policy` 凍結範圍內，須核准 overlay 或改放新模組；`career-presenter.test` 的 view model 結構若要加欄位，須核准差異；`ui-foundation.test` 的 DOM 順序若要變更，須核准。
-- 須保留：選項防重複、`#act` 摺疊、S 與 RNG 次數（`game-view-dom-e2e` 只允許 DOM 差異）。
+- 須保留：選項防重複、`#act` 摺疊、§4.6 的狀態與 RNG 一致（`game-view-dom-e2e` 只允許核准的 DOM 差異）。
 - 允許差異：`game-view-dom-e2e` 的 DOM 快照，於細部計畫列出。
 
 ### 4.3 階段 3：B4 生涯年度路線圖
@@ -180,7 +180,8 @@
 
 ### 4.6 共通規則（各階段）
 
-- 顯示不得呼叫 `R`；同 seed 的 S 與 RNG 呼叫次數不變。
+- 顯示不得呼叫 `R`。相同 seed 與相同操作下，除逐項批准的顯示差異外，完整狀態（S）、選擇、RNG 呼叫順序、次數、輸出值及各步前後狀態均須一致；不能只比較呼叫次數。
+- 相關測試依各階段的實際影響選取；階段 0 的靜態設計稿不接入遊戲，不需執行遊戲回歸。依盤點，`game-view-dom-e2e` 比較 S 與 RNG 呼叫次數；是否也比較呼叫順序與輸出值，於階段 2 細部計畫確認，不足時補上。
 - 演出（B2／B5）：簡短、可略過、可關閉，遵守 `prefers-reduced-motion`；遊戲處理不等待動畫；重複操作、略過、離開畫面、舊 callback 都要安全。
 - 按可獨立驗收的完整畫面或互動範圍分批 PR 到 `dev`，每批列明允許的顯示差異，不整份略過歷史比較。
 - 每階段開工前以最新 `dev` 重新盤點；`game.js` 內仍有的 DOM 產生（`traitCard`、`allocUI` 等）屆時確認，不把程式搬回 `game.js`。
@@ -192,7 +193,7 @@
 3. B2／B5 演出放在哪個階段（例：成長演出隨階段 2，得獎演出隨階段 4）。
 4. 發布方式：每階段併 `dev` 後各自發布，或累積到一個 MINOR 一起發布。
 5. BACKLOG 登記時機：本計畫批准時登記，或階段 0 驗收後登記。
-6. （已決）UI-DESIGN-TOKENS-05：code owner 2026-11-14 選設計系統 §12.3 的 A（使用者轉達）；決定紀錄寫在 PR #84（`docs/design-tokens-04-merged`）的設計系統 §12.3 與 BACKLOG。
+6. UI-DESIGN-TOKENS-05：方向已決——code owner 2026-11-14 選設計系統 §12.3 的 A（使用者轉達）。決定紀錄已同步到 PR #84（`docs/design-tokens-04-merged` `3713bd3`）的設計系統 §12.3 與 BACKLOG，該 PR 尚未併 `dev`。細部計畫（設計系統 §13）與實作尚未批准。
 
 ## 6. 盤點限制
 
