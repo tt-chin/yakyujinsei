@@ -351,3 +351,4 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 - 再合併 `dev`（`86969a5`）後：移除 -04 原帶的 `84b1e69` 路由、改採 `routeHistoricalShareTheme`。`scripts/test-historical-share-theme.mjs` 7 項 PASS；`international-personal-stats-e2e`（50／0）、`full-power-pitching-e2e`、`smallschool-c-e2e`、`trait-display-e2e` PASS；Quick 90／90 PASS（macOS＋Brave 本機）。
 - 未做：Linux CI Full、Preview、Firefox／Safari 實機、本機 Full。
+- 合併（2026-11-13 補記）：PR #81 併 `dev`（`b4239d4`）；dev `b327abe` 的 [Quick 43349490876](https://github.com/tt-chin/yakyujinsei/actions/runs/43349490876) 與手動 [Full 43349530209](https://github.com/tt-chin/yakyujinsei/actions/runs/43349530209)（8 批＋Aggregate）success，隨 1.16.4 經 PR #83 併 `main`（`ca3ee32`）。BACKLOG 依完成條件「PR併dev」結案；Preview、Firefox／Safari 實機仍未做。

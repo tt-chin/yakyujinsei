@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
 > 最新狀態核對：2026-11-13。dev 86969a5（1.16.3）的Linux Full為117／117 PASS，已合併main；1.16.4已推送dev c03df23，Quick成功、Full 116 PASS／1 FAIL；本輪修正唯一失敗的測試基準接線，限定驗證PASS，新來源CI／Preview待確認。未確認的實機、研究及artifact缺口保持未完成。
-> 以現有74個唯一ID的checkbox為準：已完成50項、未完成24項；本次不新增ID或提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 以現有74個唯一ID的checkbox為準：已完成51項、未完成23項（UI-DESIGN-TOKENS-04依完成條件結案）；本次不新增ID或提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -16,7 +16,7 @@
 - **殿堂四項：** [PR #74](https://github.com/tt-chin/yakyujinsei/pull/74)已合併dev（`4c15523`）。作業分支`0de886d`的[Linux Full 42497795539](https://github.com/tt-chin/yakyujinsei/actions/runs/42497795539)為112 PASS／0 FAIL／0 SKIP／0 BLOCKED，8批及Aggregate PASS；合併dev的[Quick 42551250884](https://github.com/tt-chin/yakyujinsei/actions/runs/42551250884)成功。原Full 42492930690的104 PASS／8 FAIL保留，不改寫。四項轉為CI_PASS／DEV_MERGED／PREVIEW_PENDING，未提供使用者新規則Preview／實機驗收，不勾選結案。
 - **UI-DESIGN-TOKENS-02／03：** [PR #77](https://github.com/tt-chin/yakyujinsei/pull/77)（`c66b78f`、1.16.1）與[PR #78](https://github.com/tt-chin/yakyujinsei/pull/78)（`7d08f0c`、1.16.2）均已合併dev；各dev push [Quick 43077212225](https://github.com/tt-chin/yakyujinsei/actions/runs/43077212225)及[Quick 43245735982](https://github.com/tt-chin/yakyujinsei/actions/runs/43245735982)成功。不再記為待PR／未授權實作；4主題×PC／手機Preview確認仍待完成，歷史本機Full不冒充新來源Linux Full。
 - **1.16.3案內選單：** 「クレジット」統一名稱、更新履歷後新增完整指定X連結的「不具合報告」。四種尺寸309項限定檢查PASS、語法／履歷生成／diff PASS；詳見末節。提交`a6b3bc7`的[Quick 43247767847](https://github.com/tt-chin/yakyujinsei/actions/runs/43247767847)成功；[Full 43247910213](https://github.com/tt-chin/yakyujinsei/actions/runs/43247910213)為117入口中111 PASS／6 FAIL（歷史引擎混用已移除getSharePalette的新模組），原FAIL保留。本輪限定測試接線修復及重測詳見末節，新來源CI待執行；Preview／實機未追加驗收，未正式發布。
-- **保留項目：** UI-DESIGN-TOKENS-04～06仍DESIGN_PENDING；背號、永久欠番未實作，投手平衡僅研究。ARTIFACT_COVERAGE_BLOCKED不因Full或artifact上傳成功解除。
+- **保留項目：** UI-DESIGN-TOKENS-05～06仍DESIGN_PENDING（-04已結案）；背號、永久欠番未實作，投手平衡僅研究。ARTIFACT_COVERAGE_BLOCKED不因Full或artifact上傳成功解除。
 
 ### 早期版本與重構進度快照（保留原時點，非目前版本／待辦狀態）
 
@@ -31,11 +31,11 @@
 
 | 指標 | 數量 | 說明 |
 |---|---:|---|
-| 已完成 | **50** | 現有checkbox實際數量；含使用者已確認的7項實機／UI／OFUSE範圍及年度存檔第一期，不重新推定其他項目完成 |
-| 未完成 | **24** | 與50項完成合計74個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
+| 已完成 | **51** | 現有checkbox實際數量；含使用者已確認的7項實機／UI／OFUSE範圍及年度存檔第一期，不重新推定其他項目完成 |
+| 未完成 | **23** | 與51項完成合計74個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
 | P0 未完成 | **0** | 既有P0已按核准的結案標準關閉 |
 | BLOCKED | **1** | D2-CI-ARTIFACT-01的ARTIFACT_COVERAGE_BLOCKED；已獲使用者接受的實機／分享項目不再重複計入 |
-| IMPLEMENTED_UNVERIFIED | **7** | AUD-02、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01及UI-DESIGN-TOKENS-02／03／04；-02／03配色已合併，仍待Preview確認；-04待PR併dev |
+| IMPLEMENTED_UNVERIFIED | **6** | AUD-02、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01及UI-DESIGN-TOKENS-02／03；-02／03配色已合併，仍待Preview確認 |
 | CI_PASS／DEV_MERGED／PREVIEW_PENDING | **4** | HOF-BUCKET-DECISION-01、HOF-HONOR-POLICY-01、HOF-DISPLAY-ROUND-01、TEST-COMPARE-BASELINE-01；112入口Full與合併後Quick已通過，未冒充Preview／實機驗收 |
 | DESIGN_PENDING | **2** | UI-DESIGN-TOKENS-05～06，未實作 |
 | 其他候補／研究／殘項 | **10** | HIST-SPEC-CLAUSE-01、HOF-PITCHER-BALANCE-01、INJ-UI-01、INT-01、EVT-01、PLY-01／02、CI-LINUX-FULL-01舊工具路徑及兩項本機環境問題 |
@@ -200,7 +200,7 @@
 - [x] **UI-DESIGN-TOKENS-01** — `MERGED / RELEASED_SCOPE_LIMITED`（2026-11-02核對）。原訂結案條件為「PR合併後勾選」；PR #26合併`7ef43d368855c71f21ee40479dc560fcf542ee8b`與實作`fcb22a9`均為目前main `2fe5b25`祖先（git merge-base核對），1.13.6正式發布與指定來源Full證據見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)2026-10-31／11-01紀錄。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §2／§6：第1段以Noto Sans JP起首的日文字體列取代Noto Sans TC，新增圓角／陰影token及字體載入斷言；原本機FAIL與重測記錄保留於計畫。僅結案此段已批准範圍，不代表Windows字體回退／手機實機或第2～4段（特性標籤／球團徽章元件化、分享圖token、版面token）已驗收，不擴大實作授權。
 - [ ] **UI-DESIGN-TOKENS-02** — `IMPLEMENTED_UNVERIFIED`（2026-11-10新增；2026-11-11實作，1.16.1，`ui/design-tokens-02` `8086480`，Quick 89／89、本機8批Full 116／116 PASS（macOS＋Brave本機證據），reviewer無阻擋性發現，見設計系統計畫§8.4；PR #77已併dev（c66b78f）、dev Quick 43077212225成功，Preview確認待完成）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) 第2段，方向已決（§7.3）：退休卡特性標籤（`career-retirement.js`）改用class＋token並隨主題變色（有意的視覺變更，PATCH）；球團徽章（`career-presenter.js` `board()`）改用class＋token、外觀不變（細部計畫時再確認）。現況與測試耦合見§7.1／§7.2。完成條件：細部計畫與D表批准、實作、`career-presenter.test`核准差異追加、退休卡特性標籤補直接斷言、4主題×PC／手機顯示確認、版本與CHANGELOG更新、PR併dev。
 - [ ] **UI-DESIGN-TOKENS-03** — `IMPLEMENTED_UNVERIFIED`（2026-11-10新增；2026-11-11依模板化路線改為P1；2026-11-12實作，1.16.2，`ui/design-tokens-03`，Quick 90／90 PASS（macOS＋Brave本機證據），NC1～NC14 FAIL，reviewer 3輪無中以上發現，見設計系統計畫§10.4；PR #78已併dev（7d08f0c）、dev Quick 43245735982成功，Preview確認待完成；2026-11-12發現Full限定4項E2E因`getSharePalette`移除而FAIL，dev已以`86969a5`（`routeHistoricalShareTheme`）修正；-04分支原帶的同類修正`84b1e69`於合併dev時移除，見§10.4）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P1／§10：分享圖於繪製時讀目前主題的CSS token（`rgb()`直接解析，其他格式經canvas），新增`--share-edge`／`--share-soft`／`--share-tag-*`／`--share-tag-removed-*`；standard／classic分享PNG不變，night／scoreboard特性標籤改深色、dim／bad對齊畫面。`share-theme.js`以核准overlay移除色表。canvas字體移至UI-DESIGN-TOKENS-06。完成條件：PR併dev、Preview 4主題×PC／手機確認。
-- [ ] **UI-DESIGN-TOKENS-04** — `IMPLEMENTED_UNVERIFIED`（2026-11-11新增；2026-11-12細部計畫批准並實作，`ui/design-tokens-04`，版本不變，Quick 90／90 PASS（macOS＋Brave本機），T5無差異探測PASS，負控制8項FAIL，reviewer無中以上發現，見設計系統計畫§11.4；PR #78已併dev；待PR併dev）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P2／§11：主題id與名稱只在`docs/src/ui/theme-catalog.js`定義一次，`preferences.js`（overlay核准）與測試由此清單迭代；`themes.css`／`index.html`以雙向一致性測試對應；`share-theme.js:3`留待P3。外觀不變。完成條件：PR併dev。
+- [x] **UI-DESIGN-TOKENS-04** — `DEV_MERGED`（2026-11-11新增；2026-11-12細部計畫批准並實作，`ui/design-tokens-04`，版本不變，Quick 90／90 PASS（macOS＋Brave本機），T5無差異探測PASS，負控制8項FAIL，reviewer無中以上發現，見設計系統計畫§11.4；PR #81已併dev（`b4239d4`），dev手動Full 43349530209 8批與Aggregate success，隨1.16.4經PR #83併main（`ca3ee32`）；2026-11-13依完成條件結案）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P2／§11：主題id與名稱只在`docs/src/ui/theme-catalog.js`定義一次，`preferences.js`（overlay核准）與測試由此清單迭代；`themes.css`／`index.html`以雙向一致性測試對應；`share-theme.js:3`留待P3。外觀不變。完成條件：PR併dev。
 - [ ] **UI-DESIGN-TOKENS-05** — `DESIGN_PENDING`（2026-11-11新增）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P3：每主題約12個基礎色，元件色在主題區塊外以`color-mix()`推導、手調值於主題區塊覆寫；舊名保留為別名；`display-preferences.test`的hex對比改為瀏覽器computed style並迭代主題清單。預設外觀不變。瀏覽器底線Baseline 2023（§9.3），實作時寫入`CURRENT_SPEC.md`。完成條件：細部計畫批准、實作與PR併dev。未授權實作。
 - [ ] **UI-DESIGN-TOKENS-06** — `DESIGN_PENDING`（2026-11-11新增；取代原「第4段暫緩、不另立ID」）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P4：非顏色模板——字體（含canvas改讀`--sans`／`--mono`，分享PNG像素改變、需等待web font）、字級、圓角／陰影、間距、JS內inline版面值改class。視覺變更範圍於細部計畫決定。完成條件：細部計畫批准、實作與PR併dev。未授權實作。
 
