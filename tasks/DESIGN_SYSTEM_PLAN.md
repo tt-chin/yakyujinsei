@@ -351,3 +351,39 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 - 再合併 `dev`（`86969a5`）後：移除 -04 原帶的 `84b1e69` 路由、改採 `routeHistoricalShareTheme`。`scripts/test-historical-share-theme.mjs` 7 項 PASS；`international-personal-stats-e2e`（50／0）、`full-power-pitching-e2e`、`smallschool-c-e2e`、`trait-display-e2e` PASS；Quick 90／90 PASS（macOS＋Brave 本機）。
 - 未做：Linux CI Full、Preview、Firefox／Safari 實機、本機 Full。
+- 合併（2026-11-13 補記）：PR #81 併 `dev`（`b4239d4`）；dev `b327abe` 的 [Quick 43349490876](https://github.com/tt-chin/yakyujinsei/actions/runs/43349490876) 與手動 [Full 43349530209](https://github.com/tt-chin/yakyujinsei/actions/runs/43349530209)（8 批＋Aggregate）success，隨 1.16.4 經 PR #83 併 `main`（`ca3ee32`）。BACKLOG 依完成條件「PR併dev」結案；Preview、Firefox／Safari 實機仍未做。
+
+## 12. P3 探測結果與待決（UI-DESIGN-TOKENS-05；2026-11-13，基準 `origin/dev` `b327abe`）
+
+目的：P3 原訂「推導值須等於現值，否則覆寫為現值」（§9.2）。實作前先確認現有配色能否以共用規則推導；不能的話，決定要統一配色（外觀改變）還是只讓新主題用推導值。
+
+### 12.1 方法
+
+- 對 `themes.css` 的 50 個非基礎色 token，在 oklab／srgb 兩種空間、1～99% 整數比例，窮舉 `color-mix(A, B)` 的兩兩組合，取 4 主題平均 ΔE（OKLab）最小者作為「統一規則」。ΔE 取疊在該主題 `--bg` 與 `--chalk` 上兩者的較大值，半透明的差異也計入；約 0.02 為可察覺門檻。
+- v1 素材：12 個基礎色（`--bg`、`--panel`、`--panel2`、`--edge`、`--chalk`、`--dim`、`--amber`、`--clay`、`--good`、`--bad`、`--blue`、`--control-edge`）＋ white／black／transparent。v2 另加 `gold`（取自各主題 `--tag-legend-edge`）與 `highlight`（取自 `--potential-marker` 不透明值；classic 無黃色，暫用 standard 值）。
+- 顏色以 Node 依 CSS Color 4 公式計算，未經瀏覽器逐值實測；規則為機械搜尋的最近解，不是人工設計（例：`--tag-removed-text` 得到 `--blue` 混 `--gold`）。mock 元件為示意，不是遊戲實際畫面。
+- 檔案：`tasks/design-tokens-05/` 的 v1／v2 × 4 主題截圖、v2 互動報告 `unify-compare.html`（本機開啟）與資料 `unify-data.json`。
+
+### 12.2 結果
+
+| 統一後與現值的最大 ΔE | v1 | v2 |
+|---|---:|---:|
+| ≤ 0.02（幾乎相同） | 5 | 6 |
+| 0.02～0.05 | 16 | 19 |
+| 0.05～0.1 | 16 | 15 |
+| > 0.1（明顯不同） | 13 | 10 |
+
+- 4 主題都能以同一規則完全重現的只有 `--action-bg-end`；`--board-bg-start` 與 `--panel` 相同。現值為逐主題手調。
+- v2 主要改善標籤（`--tag-legend-edge` ΔE 0.154 → 0.002）。
+- v2 仍 > 0.1 的：`--potential-marker`（0.283）、`--focus-ring`（0.197）——各主題刻意用不同色相（standard 紅、classic 藍、night 黃），規則無法統一；`--share-tag-edge`、陰影系（`--board-shadow`、`--shadow-color`、`--overlay-bg`；standard／classic 帶色調、night／scoreboard 為黑）、`--warning-edge`、`--metric-glow`、`--tag-goldcloth-text`、`--primary-button-end`。
+- `display-preferences.test`／`design-tokens-02.test` 檢查的對比組合，現值與統一後皆無不合格。
+
+### 12.3 方向（code owner）
+
+| 選項 | 內容 | 外觀 |
+|---|---|---|
+| A 統一 | 以 v2 為起點，為元件色定規則並套用到 4 主題；焦點框、潛力標記、陰影需另行設計 | 改變（PATCH），-02 已批准的標籤色與 night／scoreboard 分享圖隨之改變 |
+| B 只供新主題 | 推導公式寫在主題區塊外，現有 4 主題以現值覆寫 | 不變；新主題可由約 14 個基礎色起步，但不一致的現況保留 |
+| C 暫停 P3 | 無具體新主題計畫時不做 | 不變 |
+
+決定（2026-11-14，使用者轉達）：code owner 選 **A 統一**。§9.2 P3 以現值為準、外觀不變的前提不適用於 -05。細部計畫於本分支併入 `dev` 後，以最新 `dev` 另寫於 §13（v2 規則、焦點框／潛力標記／陰影的設計、允許差異、D／T 表）。UI 改版計畫（`tasks/UI_REDESIGN_PLAN.md`，PR #79）的階段 1a 即本項。
