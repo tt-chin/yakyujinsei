@@ -14,6 +14,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import {TRAIT_LABELS,TRAIT_TEXT} from '../docs/src/engine/trait-policy.js';
+import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const modulePath=process.argv.find(v=>v.startsWith('--playwright='))?.slice(13);
@@ -21,6 +22,11 @@ const require=createRequire(import.meta.url),{chromium}=require(modulePath||'pla
 const preview=process.argv.find(v=>v.startsWith('--preview='))?.slice(10);
 const baselineRef=process.argv.find(v=>v.startsWith('--baseline='))?.slice(11)||'8dd244b';
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
+// Only pre-1.16 HOF baselines need the historical display projection.
+// Modern baselines keep all retirement markup strict and load no old oracle.
+const baselineHof=execFileSync('git',['show',`${baselineRef}:docs/src/engine/hall-of-fame-policy.js`],{cwd:root,maxBuffer:20*1024*1024}).toString();
+const legacyHofProjection=!baselineHof.includes("from './hof-evaluation-policy.js'");
+let hofOracleRequests=0;
 const server=createServer(async(req,res)=>{
   try{
     const url=new URL(req.url,'http://localhost'),baseline=url.pathname.startsWith('/baseline/');
@@ -30,7 +36,8 @@ const server=createServer(async(req,res)=>{
     // Frozen old formula, sharing the byte-identical trusted award module
     // instance with the candidate. A second module instance loses WeakMap trust.
     if(relative==='hof-oracle/hall-of-fame-policy.js'){
-      const original=execFileSync('git',['show',`${baselineRef}:docs/src/engine/hall-of-fame-policy.js`],{cwd:root,maxBuffer:20*1024*1024}).toString();
+      assert.ok(legacyHofProjection,'Modern HOF baselines must not load a legacy oracle');hofOracleRequests++;
+      const original=baselineHof;
       const dependency="'./award-consumer-policy.js'";assert(original.split(dependency).length<=2);
       if(original.includes(dependency))for(const file of ['award-consumer-policy.js','award-identity-policy.js'])assert.equal(sourceText(execFileSync('git',['show',`${baselineRef}:docs/src/engine/${file}`],{cwd:root,maxBuffer:20*1024*1024}).toString()),sourceText(await readFile(path.join(root,'docs/src/engine',file),'utf8')),'historical oracle requires unchanged trusted award dependency '+file);
       content=original.replace(dependency,"'/src/engine/award-consumer-policy.js'");
@@ -38,7 +45,7 @@ const server=createServer(async(req,res)=>{
     if(relative==='src/engine/game.js'){
       let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls');
       script+='\nwindow.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
-      if(!baseline)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
+      if(!baseline&&legacyHofProjection)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       content=script;
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
@@ -69,7 +76,7 @@ try{
   await page.goto(`${target}/?seed=display-settings-test`);await page.locator('#btn-start').waitFor();
   await page.locator('#in-name').fill('長い名前テスト');
   await page.locator('[data-open-preferences]').first().click();
-  for(const theme of ['standard','night','classic','scoreboard'])for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
+  for(const theme of THEME_IDS)for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
     await setPreferences(page,theme,fontSize,density);combinations++;
     for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[560,800],[1280,800]]){
       await page.setViewportSize({width,height});const size=await fits(page);assert.ok(size.width<=width,`${theme}/${fontSize}/${density} overflow ${JSON.stringify(size)}`);assert.ok(size.dialog<=size.dialogClient+1,'dialog overflow');
@@ -98,7 +105,7 @@ try{
   await page.locator('#act .abrow[aria-disabled="false"]').first().focus();await page.keyboard.press('Enter');
   await page.waitForFunction(markup=>document.querySelector('#act').innerHTML!==markup,trainingMarkup,{timeout:5000}).catch(e=>{if(e.name!=='TimeoutError')throw e;});
   assert.notEqual(await page.locator('#act').evaluate(el=>el.innerHTML),trainingMarkup,'retained row listener works');
-  for(const theme of ['standard','night','classic','scoreboard'])for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
+  for(const theme of THEME_IDS)for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
     await openBoardAction(page,'board-preferences');await setPreferences(page,theme,fontSize,density);await page.keyboard.press('Escape');
     for(const [view,tabs] of [['home',[]],['player',['ability','traits']],['career',['stats','achievements','contract','yearly']]]){
       await page.locator(`[data-main-view="${view}"]`).click();
@@ -149,7 +156,7 @@ try{
         for(let step=0;step<2000;step++){
           if(variant==='candidate'&&step%17===0){
             const before=await p.evaluate(()=>window.__displayRegression());
-            await openBoardAction(p,'board-preferences');await setPreferences(p,['standard','night','classic','scoreboard'][step%4],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
+            await openBoardAction(p,'board-preferences');await setPreferences(p,THEME_IDS[step%THEME_IDS.length],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
             assertSameCareer(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
           const result=await p.evaluate(({labels,texts})=>{
@@ -197,6 +204,7 @@ try{
       const last=snapshots[0].at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');console.log(`Fixed career ${seed}/${pos}: ${snapshots[0].length} actions, RNG ${last.calls}, retirement ${last.state.year}, exact match`);
     }
   }
+  if(!preview){assert.ok(legacyHofProjection?hofOracleRequests>0:hofOracleRequests===0,'HOF oracle is used only for legacy baselines');console.log(`HOF comparison: ${legacyHofProjection?'legacy frozen oracle':'modern strict retirement DOM'}; oracle requests ${hofOracleRequests}`);}
   console.log(`Console/HTTP errors: ${errors.length}`);
   if(errors.length)console.log(JSON.stringify(errors));
   assertSameCareer(errors,[],'Console or JS/CSS HTTP errors');console.log(`Display E2E passed (${channel}): ${combinations?`${combinations} combinations × 6 viewports, ${screenshots} screenshots`:'six-seed career comparison'}. ${artifacts}`);

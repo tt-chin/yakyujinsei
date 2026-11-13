@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
 
 const read=rel=>readFileSync(new URL('../'+rel,import.meta.url),'utf8').replace(/\r\n/g,'\n');
 let pass=0;const test=(name,fn)=>{fn();pass++;console.log('PASS '+name);};
@@ -39,7 +40,7 @@ test('no trait tag keeps an inline color',()=>assert.doesNotMatch(block,/(?<![\w
 
 // 2. Theme tokens: every theme defines every tag token; light themes keep the pre-change colors (D4).
 const themes=read('docs/styles/themes.css');
-const blocks=Object.fromEntries([['standard',/:root,\n:root\[data-theme="standard"\] \{([^}]+)\}/],...['night','classic','scoreboard'].map(t=>[t,new RegExp(`:root\\[data-theme="${t}"\\] \\{([^}]+)\\}`)])].map(([t,re])=>{
+const blocks=Object.fromEntries([['standard',/:root,\n:root\[data-theme="standard"\] \{([^}]+)\}/],...THEME_IDS.filter(t=>t!=='standard').map(t=>[t,new RegExp(`:root\\[data-theme="${t}"\\] \\{([^}]+)\\}`)])].map(([t,re])=>{
   const m=themes.match(re);assert.ok(m,'theme block '+t);
   return [t,Object.fromEntries([...m[1].matchAll(/--([\w-]+):(#[\da-f]{6})\b/g)].map(x=>[x[1],x[2]]))];
 }));

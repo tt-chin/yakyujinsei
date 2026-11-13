@@ -298,3 +298,56 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 | 對照圖 | `compare-night.png`、`compare-scoreboard.png` 與 16 張前後 PNG 存於 `.claude/reports/design-tokens-03/`（未 commit），供 PR 說明使用 |
 
 - 未做：Linux CI Full、Preview、Firefox／Safari 實機、手機實機、本機 Full（使用者決定不跑）、main 發布。
+- 追加修正（2026-11-12，-04 驗證時發現，`84b1e69`）：Full 限定的 `international-personal-stats-e2e`、`full-power-pitching-e2e`、`smallschool-c-e2e`、`trait-display-e2e` 以 stage6 `historical` 頁提供 7fd53e0 以前的 `game.js`（基準 `e602174`／`20920dd`／`0fd13c7`／`a0b880b`），其 `import { getSharePalette, shareTagPalette }` 在 D7 移除後連結失敗，`#btn-start` 不啟用、page.ready 逾時（本機於 `019a8e4` 重現 4 項 FAIL；`international-personal-stats-e2e` 35 PASS／15 FAIL）。Quick 不含這 4 項，P1 未跑 Full，事前的混合版本路由檢查漏列。修正：`tests/support/stage6-browser.mjs` 的 `historical` 分支另把 `share-theme.js` 指向 `efd4710c`（與 `9956ca3` 同 blob，凍結基準，在 `origin/main`）。修正後 4 項 PASS（`international-personal-stats-e2e` 50／0）、Quick 90／90 PASS（macOS＋Brave 本機）；reviewer 無中以上發現（低：pin 改用 `origin/main` 上的 `efd4710c`，已採納並重跑 `trait-display-e2e` PASS）。`84b1e69`／`0cc4500` 於 PR #78 合併（`7d08f0c`，併入 `019a8e4`）之後才 push，未含於該 merge。其後 code owner 於 `dev` 以 `86969a5` 修正（`routeHistoricalShareTheme`：各 e2e 以自身基準 SHA 提供 `share-theme.js`，另加 `scripts/test-historical-share-theme.mjs`）；-04 合併 `dev` 時移除 `84b1e69` 的路由，改採 `86969a5`。
+
+## 11. P2 細部計畫（UI-DESIGN-TOKENS-04；2026-11-12，基準 `019a8e4`，VERSION 1.16.2）
+
+- 分類：R2（共用 UI 控制碼、localStorage 正規化；外觀與行為不變）。不碰 `game.js`、RNG、`S`。依 AGENTS §9.3 不升版本。驗證：相關測試＋Quick＋reviewer。
+- 現況（HEAD `019a8e4`，grep）：主題清單在 `docs/src/ui/preferences.js:3`（id）與 `:43`（名稱，依索引對應），該檔受凍結（`award-identity-policy.test` 要求等於 `efd4710c`，目前無 overlay）；`share-theme.js:3` 明列非 standard 主題（凍結）；`themes.css` 4 個主題區塊、`index.html` 預設 `data-theme="standard"`。BACKLOG 的「14 個檔案」現為 17 個，其中 `career-presenter.js:8` 註解、`test-manifest.mjs` 說明字串、`award-identity-policy.test:14` 的 -03 overlay 字串不是清單使用處。基準比較型 e2e 以 `git show` 提供完整舊 `docs` 樹，新增 import 不影響；凍結檢查只列 `287dd1a` 既有檔案，新模組不受限。
+
+### 11.1 設計（D1～D8，使用者批准 2026-11-12）
+
+| # | 決定 |
+|---|---|
+| D1 | 新增 `docs/src/ui/theme-catalog.js`：匯出 `THEMES`（凍結的 `{id,label}` 陣列）與 `THEME_IDS`。不取名 `themes.js`，避免與 `themes.css` 混淆 |
+| D2 | `preferences.js` 3 處：加 import、`:3` 改 `theme:THEME_IDS`、`:43` 名稱改由 `THEMES` 取。`award-identity-policy.test` 追加精確核准 overlay。`DEFAULT_PREFERENCES.theme` 保留 `'standard'` 字面值，另以測試斷言等於清單第一項 |
+| D3 | `share-theme.js:3` 不動（它是分享圖標籤對比補強的主題規則，非清單；改動須再碰凍結檔）。新增主題時須手動加入，`replay-share-theme.test` 改讀清單後會 FAIL 提示。P3 再處理 |
+| D4 | CSS／HTML 維持另一份定義，新增雙向一致性測試：清單 id 與 `themes.css` 的 `:root[data-theme=…]` 區塊互相對應；`index.html` 預設值等於清單第一項 |
+| D5 | 防空轉：完整 4 個 id 與 4 個名稱只在 `display-preferences.test` 一處寫死；負控制刪除一個主題須 FAIL |
+| D6 | 無差異證明：4 主題下設定對話框 HTML 與 `019a8e4` 逐位元組相同；舊 localStorage 值的正規化結果相同 |
+| D7 | 測試分類：全主題迭代（`display-preferences.test:7`、`display-preferences-e2e:72/101/152`、`board-menu:10`、`test-ui-desktop-acceptance:39`（頁內 evaluate，頁內 import 或以參數傳入）、`international-personal-stats-e2e:50`、`npb-return-e2e:50`）與非 standard 子集（`design-tokens-02.test:42`、`replay-share-theme.test:42`）改讀清單；每主題期待值（`replay-share-theme-e2e:42` 背景 RGB）保留手寫並斷言鍵等於清單；與舊版比較的紀錄（`-02-e2e:33`、`-03-e2e:34`、`design-tokens-02.test:55`）與單一主題測試不動 |
+| D8 | 分支 `ui/design-tokens-04` 自 `019a8e4`（`--no-track`）；PR #78 併入 `dev` 後再 push、開 PR → `dev` |
+
+### 11.2 測試（T1～T7，使用者批准 2026-11-12）
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| T1 | `display-preferences.test` | 寫死 4 個 id 與名稱並斷言等於 `THEMES`；`THEMES`／元素凍結；`DEFAULT_PREFERENCES.theme === THEME_IDS[0]`；`themes.css` 區塊集合與 `THEME_IDS` 雙向一致；`index.html` 的 `data-theme` 等於預設；`:7` 迴圈改讀清單 |
+| T2 | `award-identity-policy.test` | `preferences.js` 追加 overlay，3 處替換各恰好一次 |
+| T3 | D7 所列迭代處 | 改讀 `THEME_IDS`（子集以 `filter`） |
+| T4 | `replay-share-theme-e2e` | 期待值的鍵等於 `THEME_IDS` |
+| T5 | 無差異探測（scratchpad，不 commit） | 以 `019a8e4` 完整樹與新樹各開頁，4 主題的對話框 `outerHTML`、`html` 的 dataset 與一組舊 localStorage 值（合法、非法主題、`schemaVersion` 不符、損壞 JSON）的正規化結果逐字相同；結果記於 §11.4 |
+| T6 | 負控制 | 清單刪一個主題、名稱對調、`themes.css` 少一區塊、`index.html` 預設改值、overlay 外多改一字、e2e 期待鍵少一個，各須 FAIL |
+| T7 | 回歸 | 相關單元與 e2e（`display-preferences`、`design-tokens-02`、`replay-share-theme`、`npb-return`、`international-personal-stats`、`test-ui-desktop-acceptance`、使用 `board-menu` 者）＋Quick＋reviewer |
+
+### 11.3 流程
+
+1. 實作＋T1～T4 → T5 探測 → T6 負控制 → T7。
+2. 文件：本節結果、BACKLOG -04 狀態；不升版本、不改 CHANGELOG／RELEASE_NOTES。commit → PR #78 併入後 push → PR → `dev`。
+
+### 11.4 結果（2026-11-12）
+
+- 實作於 `ui/design-tokens-04`，接在 `0cc4500`（PR #78 的 -03 追加修正）之後。不升版本（§9.3）；合併 `dev`（`a6b3bc7`）後沿用其 1.16.3。
+- 變更：新增 `docs/src/ui/theme-catalog.js`；`preferences.js` 3 處（overlay 核准）；測試 9 檔改讀清單（T1、T3、T4），`award-identity-policy.test` 加 overlay（T2），另依 reviewer 低度建議把 `npb-return-e2e`、`replay-share-theme.test` 輸出訊息的件數改由清單長度計算（使用者批准）。
+
+| 驗證 | 結果 |
+|---|---|
+| `display-preferences.test`／`design-tokens-02.test`／`replay-share-theme.test`／`award-identity-policy.test`（135 cases）／`verify-modularization`／`check-syntax` | PASS |
+| T5 無差異探測（scratchpad，基準 `019a8e4` 完整樹） | PASS：Node 244 組 normalize／read 相同；瀏覽器 1280／390 × 9 種 localStorage 值 × 6 個快照（載入、選 4 主題、重設），對話框 `outerHTML`、勾選、名稱、`html` dataset、儲存值逐字相同；無 Console 錯誤／404 |
+| T6 負控制 | 8 項全部 FAIL（清單刪主題 ×2〔單元＋T5〕、名稱對調 ×2、`themes.css` 少區塊、`index.html` 預設改值、overlay 外多改、e2e 期待鍵少一個），各由預期斷言報錯；sha256 核對還原 |
+| 相關 e2e | `design-tokens-02-e2e`、`design-tokens-03-e2e`、`display-preferences-e2e`、`npb-return-e2e`、`replay-share-theme-e2e`、`event-fix-e2e`、`test-ui-desktop-acceptance`（60 組合）PASS；`international-personal-stats-e2e` 初次 FAIL（35／15），於 `019a8e4` 乾淨 worktree 同樣 35／15，判定為 -03 既有問題（§10.4 追加修正）；修正後重跑 50／0 PASS（T14 32 例） |
+| Quick | 90／90 PASS（macOS＋Brave 本機，最終 -04 樹：-03 追加修正＋本段全部變更） |
+| reviewer | 1 輪，無中以上發現；低：兩處輸出訊息件數寫死 → 已改，改後單獨重跑 `replay-share-theme.test`、`npb-return-e2e` PASS |
+
+- 再合併 `dev`（`86969a5`）後：移除 -04 原帶的 `84b1e69` 路由、改採 `routeHistoricalShareTheme`。`scripts/test-historical-share-theme.mjs` 7 項 PASS；`international-personal-stats-e2e`（50／0）、`full-power-pitching-e2e`、`smallschool-c-e2e`、`trait-display-e2e` PASS；Quick 90／90 PASS（macOS＋Brave 本機）。
+- 未做：Linux CI Full、Preview、Firefox／Safari 實機、本機 Full。

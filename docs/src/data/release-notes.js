@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.4｜2026/11/13",
+    "lines": [
+      "- 確認メッセージをゲーム内の対話画面に統一。",
+      "- 新しく始める際の確認とセーブ削除の流れを整理。"
+    ]
+  },
+  {
     "title": "1.16.3｜2026/11/13",
     "lines": [
       "- メニューに不具合報告のリンクを追加。",

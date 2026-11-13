@@ -1,3 +1,4 @@
+import {confirmAction} from '../ui/confirmation-dialog.js';
 import {BrowserSaveController} from './browser-save-controller.js';
 import {hydrateSavedState} from './browser-save-runtime.js';
 import {createBrowserSaveUI} from '../ui/browser-save-ui.js';
@@ -358,16 +359,35 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   createSeedShareController({trigger:$('board-share'),getSeed:()=>S?.seed||$('seed-show').value||SEED});
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});
   const navigation=initNavigation({onNavigate:archiveTraitResults,onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
-  $('btn-start').onclick=()=>{if(!browserSave||browserSave.newCareer())startJapanese();};
+  let startPromptPending=false;
+  $('btn-start').onclick=()=>{
+    if(startPromptPending)return;
+    if(browserSave?.state.phase==='unavailable'){
+      const state=browserSave.state;startPromptPending=true;
+      confirmAction({title:'セーブせずに始める',message:'セーブデータを確認できません。今回の進行状況は保存されません。セーブせずに始めますか？'})
+        .then(ok=>{if(ok&&browserSave.state===state&&state.phase==='unavailable'&&browserSave.newCareer({allowUnsaved:true}))startJapanese();})
+        .finally(()=>{startPromptPending=false;});
+    }else if(!browserSave||browserSave.newCareer())startJapanese();
+  };
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();
-  $('btn-restart').onclick=()=>{if(confirm('この野球人生を終了して最初からやり直しますか？'))location.href=location.pathname;};
+  $('btn-restart').onclick=()=>{confirmAction({title:'タイトルに戻る',message:'タイトルに戻りますか？セーブデータは残ります。未保存の操作は、もう一度プレイする必要があります。'}).then(ok=>{if(ok)location.href=location.pathname;});};
 
 // Bootstrap completes storage inspection before enabling new-career controls.
 export async function initializeBrowserSave(){
  if(browserSave)return;
- const home=()=>{if(S&&!confirm('このタブの未保存の進行状況を破棄して、タイトルに戻りますか？'))return;location.href=location.pathname+location.search;};
- const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onDelete:()=>browserSave.remove(),onRetry:()=>browserSave.restore(),onHome:home});
+ const home=async()=>{if(S&&!await confirmAction({title:'タイトルに戻る',message:'このタブの未保存の操作を破棄して、タイトルに戻りますか？セーブデータは残ります。'}))return;location.href=location.pathname+location.search;};
+ let newPromptPending=false;
+ const fresh=async()=>{
+  if(newPromptPending||S||browserSave.state.phase!=='ready'||!browserSave.state.slot)return false;
+  const state=browserSave.state,revision=state.revision;newPromptPending=true;
+  try{
+   if(!await confirmAction({title:'新しく始める',message:'現在の進行状況を破棄して、新しく始めますか？\nOKを選ぶと、現在のセーブデータを削除します。'}))return false;
+   if(browserSave.state!==state||state.phase!=='ready'||state.revision!==revision)return false;
+   return await browserSave.remove({confirmed:true});
+  }finally{newPromptPending=false;}
+ };
+ const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onRetry:()=>browserSave.state.phase==='delete-error'?browserSave.initialize():browserSave.restore(),onHome:home});
  browserSave=new BrowserSaveController({notify:show,lock:locked=>{$('app').inert=locked;if(locked){++careerSession.choiceGeneration;careerSession.activeChoiceToken=null;}},restore:(envelope,{authorization}={})=>{
   const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});
   careerEntry.resume(candidate);

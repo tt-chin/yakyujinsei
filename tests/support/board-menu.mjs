@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {THEME_IDS} from '../../docs/src/ui/theme-catalog.js';
 
 // Native renderer fixture: long contracts and money must fit without touching game S.
 async function verifyDesktopContract(page,screenshot){
@@ -7,7 +8,7 @@ async function verifyDesktopContract(page,screenshot){
     for(const width of [1180,1280,1440,1876,2560]){
       await page.setViewportSize({width,height:900});
       await page.locator('#desktop-career').waitFor({state:'visible'});
-      for(const theme of ['standard','night','classic','scoreboard'])for(const font of ['small','medium','large']){
+      for(const theme of THEME_IDS)for(const font of ['small','medium','large']){
         const result=await page.evaluate(async({theme,font})=>{
           document.documentElement.dataset.theme=theme;document.documentElement.dataset.fontSize=font;
           const target=document.querySelector('#desktop-career').lastElementChild;

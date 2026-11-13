@@ -1,6 +1,7 @@
+import { THEMES, THEME_IDS } from './theme-catalog.js';
 export const PREFERENCES_STORAGE_KEY = 'yakyujinsei.display.v1';
 export const DEFAULT_PREFERENCES = Object.freeze({schemaVersion:1,theme:'standard',fontSize:'medium',density:'standard'});
-const allowed = {theme:['standard','night','classic','scoreboard'],fontSize:['small','medium','large'],density:['standard','compact']};
+const allowed = {theme:THEME_IDS,fontSize:['small','medium','large'],density:['standard','compact']};
 let preferences = {...DEFAULT_PREFERENCES};
 
 export function normalizeDisplayPreferences(value) {
@@ -40,7 +41,7 @@ export function initializeDisplayPreferences({documentRef=document,windowRef=win
   dialog.setAttribute('role','dialog');
   dialog.setAttribute('aria-modal','true');
   dialog.setAttribute('aria-labelledby','display-preferences-title');
-  const groups=[['theme','テーマ',['スタンダード','ナイター','クラシック','スコアボード']],['fontSize','文字サイズ',['小さめ','標準','大きめ']],['density','表示密度',['標準','コンパクト']]];
+  const groups=[['theme','テーマ',THEMES.map(theme=>theme.label)],['fontSize','文字サイズ',['小さめ','標準','大きめ']],['density','表示密度',['標準','コンパクト']]];
   dialog.innerHTML=`<h2 id="display-preferences-title" tabindex="-1">表示設定</h2>${groups.map(([key,title,labels])=>`<fieldset><legend>${title}</legend><div class="preference-options">${allowed[key].map((value,index)=>`<label><input type="radio" name="${key}" value="${value}"><span>${labels[index]}</span></label>`).join('')}</div></fieldset>`).join('')}<p id="preferences-save-status" role="status" aria-live="polite"></p><div class="preferences-actions"><button type="button" id="preferences-reset">初期設定に戻す</button><button type="button" id="preferences-close">閉じる</button></div>`;
   documentRef.body.append(dialog);
   const inputs=[...dialog.querySelectorAll('input')],status=dialog.querySelector('#preferences-save-status');
