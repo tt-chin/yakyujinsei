@@ -1,6 +1,6 @@
 # UI 改版選項（RPG／大富翁風格）
 
-狀態（2026-11-13）：**提案，待 code owner 決定方向**。非現行規格，不授權實作；`CURRENT_SPEC.md` 與 `BACKLOG.md` 未變更，方向決定後再登記 BACKLOG 項目並寫細部計畫。
+狀態（2026-11-14）：**code owner 已採用 §7 的方向**（使用者 2026-11-13 轉達），計畫見 `tasks/UI_REDESIGN_PLAN.md`。非現行規格，不授權實作；`CURRENT_SPEC.md` 與 `BACKLOG.md` 未變更，BACKLOG 項目另行登記。
 
 - 前提（使用者 2026-11-13）：新風格**取代**現有介面，不與現有 4 主題並存切換。
 - 本文對現有畫面的描述，依據 2026-11-12～13 作業中看過的程式碼（`docs/src/ui/*`、`docs/styles/*`、`docs/src/engine/game.js` 的繪製部分），未另做全面盤點；各項細部計畫時須重新盤點。
