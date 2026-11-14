@@ -552,7 +552,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 14. P4 細部計畫（UI-DESIGN-TOKENS-06／-07；2026-11-14，基準 `ui/design-tokens-05` `01566e2`，VERSION 1.16.5）
 
-狀態：**-06 T 表 2026-11-14 批准，已實作、本機驗證完成（§14.10），未 commit／PR**；-07 細部計畫未寫。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 於 2026-11-14 併入 `dev` `d5433e2` 後 fast-forward，對 `dev` 開 PR）。使用者 2026-11-14 決定：
+狀態：**-06 T 表 2026-11-14 批准，已實作、本機驗證完成（§14.10），`a216141` 開 [PR #86](https://github.com/tt-chin/yakyujinsei/pull/86) → `dev` 待合併**；-07 細部計畫未寫。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 於 2026-11-14 併入 `dev` `d5433e2` 後 fast-forward，對 `dev` 開 PR）。使用者 2026-11-14 決定：
 
 1. canvas 字體改讀 `--sans`／`--mono`；像素比較先寫入舊字體再比位元組；分享圖不隨字級設定改變。
 2. 字級與間距先以現值各做 token（外觀不變）；收斂為級距另立項。
