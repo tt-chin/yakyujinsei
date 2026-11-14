@@ -44,7 +44,7 @@ assert.ok(rules.every(n=>!BASE.includes(n)),'rule block must not redefine a base
 // :root blocks (radius, shadow, font, spacing); any other extra token fails.
 const rootTokens=rel=>[...readFileSync(new URL('../docs/styles/'+rel,import.meta.url),'utf8').matchAll(/(?:^|\})\s*:root\s*\{([^}]*)\}/g)].flatMap(m=>[...m[1].matchAll(/(--[\w-]+)\s*:\s*([^;]*)/g)]).filter(m=>!/^(?:#|rgba?\()/.test(m[2].trim())).map(m=>m[1]);
 const NON_COLOR=new Set([...rootTokens('base.css'),...rootTokens('preferences.css')]);
-assert.ok(['--radius-md','--fs-12','--shadow-die','--font-scale','--sans'].every(n=>NON_COLOR.has(n))&&!NON_COLOR.has('--team-label-bg'),'non-color token whitelist');
+assert.ok(['--radius-md','--fs-sm','--shadow-die','--font-scale','--sans'].every(n=>NON_COLOR.has(n))&&!NON_COLOR.has('--team-label-bg'),'non-color token whitelist');
 const checkThemeBlocks=parsed=>{for(const theme of THEME_IDS){
   const own=Object.keys(parsed.themes[theme]).filter(n=>!(theme===parsed.defaultTheme&&n==='--disabled-opacity')&&!NON_COLOR.has(n));
   assert.deepEqual([...own].sort(),[...BASE].sort(),`${theme} block defines exactly the 17 base colors plus whitelisted non-color tokens`);
