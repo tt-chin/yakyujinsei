@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
 > 最新狀態核對：2026-11-13。dev 86969a5（1.16.3）的Linux Full為117／117 PASS，已合併main；1.16.4已推送dev c03df23，Quick成功、Full 116 PASS／1 FAIL；本輪修正唯一失敗的測試基準接線，限定驗證PASS，新來源CI／Preview待確認。未確認的實機、研究及artifact缺口保持未完成。
-> 以現有77個唯一ID的checkbox為準：已完成54項、未完成23項（UI-DESIGN-TOKENS-04／05／06／07依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 以現有78個唯一ID的checkbox為準：已完成54項、未完成24項（UI-DESIGN-TOKENS-04／05／06／07依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -32,12 +32,12 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **54** | 現有checkbox實際數量；含使用者已確認的7項實機／UI／OFUSE範圍及年度存檔第一期，不重新推定其他項目完成 |
-| 未完成 | **23** | 與54項完成合計77個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
+| 未完成 | **24** | 與54項完成合計78個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
 | P0 未完成 | **0** | 既有P0已按核准的結案標準關閉 |
 | BLOCKED | **1** | D2-CI-ARTIFACT-01的ARTIFACT_COVERAGE_BLOCKED；已獲使用者接受的實機／分享項目不再重複計入 |
 | IMPLEMENTED_UNVERIFIED | **7** | AUD-02、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01、UI-DESIGN-TOKENS-02／03及UI-SEED-SHOW-COLOR-01；-02／03配色已合併，仍待Preview確認；UI-SEED-SHOW-COLOR-01清理PR待合併 |
 | CI_PASS／DEV_MERGED／PREVIEW_PENDING | **4** | HOF-BUCKET-DECISION-01、HOF-HONOR-POLICY-01、HOF-DISPLAY-ROUND-01、TEST-COMPARE-BASELINE-01；112入口Full與合併後Quick已通過，未冒充Preview／實機驗收 |
-| DESIGN_PENDING | **1** | UI-DESIGN-TOKENS-08，未實作 |
+| DESIGN_PENDING | **2** | UI-DESIGN-TOKENS-08（細部計畫§16待批准）、UI-DESIGN-TOKENS-09，未實作 |
 | 其他候補／研究／殘項 | **10** | HIST-SPEC-CLAUSE-01、HOF-PITCHER-BALANCE-01、INJ-UI-01、INT-01、EVT-01、PLY-01／02、CI-LINUX-FULL-01舊工具路徑及兩項本機環境問題 |
 
 
@@ -166,7 +166,7 @@
 
 - [x] **CODE-DEAD-01** — `MERGED / CI_PASS`（2026-11-01；PR #44併dev（`7de1fd1`））。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2cc：分支`refactor/code-dead-01`（`45cccd7`）已刪除`statBonus`、`checkTraitsMid`、`teamChampRate`、`teamListOf`、`CHEER_DEFAULT`、`ageGateUSA`、`nextContractId`、`settlePhaseEnd`的PRO不可達分支（三處共2,390 bytes，更正§3.18的3,548 bytes），以及掃描新發現的`CPBL_TEAMS`、`NPB_TEAMS`、`MLB_TEAMS`、`HS_CUPS`、`U_CUPS`、`currentAffiliation`、`faFlow`薄包裝、`selPos`。Quick 68／68、分組Full 93／93 PASS（macOS＋Brave本機證據），經PR #44併dev（`7de1fd1`，樹與`17b271b`相同），[Tests #111](https://github.com/tt-chin/yakyujinsei/actions/runs/41275581402) Linux Full（`17b271b`）8批全success，`expected 93`、`acceptedPass 93`、`issues []`（記於PR #44），結案條件已滿足。`game.js`未使用的import 86個（含本次新增5個）不動，第26期（§2ee，`refactor/run-draft`）再增5個（`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms`），併入後為91個，第28期（§2gg，`refactor/trait-result-card`）再增2個（`TRAIT_TEXT`、`EVENT_TRAIT_TEXT`），併入後為93個，第29期（§2hh，`refactor/initial-state`）再增3個（`highSchoolTier`、`installBirthHighSchool`、`ensureEventState`），併入後為96個，第30期（§2ii，`refactor/choice-prompt`）再增2個（`createChoiceActionToken`、`runChoiceAction`），併入後為98個：E2E注入的hook在模組內直接引用，刪除會造成`markSalaryPaid is not defined`；未使用的區域變數與`navigation.js`的`renderRecord` import不在本項範圍。
 
-## 3. 未完成工作（23 項；本節另保留已結案索引）
+## 3. 未完成工作（24 項；本節另保留已結案索引）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（3 項）
 
@@ -190,7 +190,7 @@
 - [x] **SHARE-111-DEVICE** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。iPhone／Android／PC原生分享、取消、PNG主題與圖片分享儲存：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。全量可到達日文文案、棒球術語與畫面位置仍待清查；COPY-001～005已於1.12.0完成實作及限定驗收，見[COPY驗收](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)，不再重做這五項。與v1.8.2的92事件翻譯替換分開管理；本輪1.13.3只修送別事件，不能據此結案全量COPY。
 
-### 3.4 P2 — 規格待決與保留（4項未完成；保留5項已完成索引）
+### 3.4 P2 — 規格待決與保留（5項未完成；保留5項已完成索引）
 
 - [x] **TRAIT-CHAMPIONMAKER** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-08）。優勝請負人Preview：使用者在本對話明確確認「已實作、待驗收或決策的都已驗收完成」，依前一則逐項列出的已實作待驗收範圍記為使用者驗收結案；未新增代理測試或提供裝置／付款原始紀錄，不虛構型號、OS、交易金額或測試步驟。原有實作及測試／未驗時點見文末「已實作項目驗收結案」歷史原文。
   - 歷史修復時點（2026-11-06，後續結果見§1）：KBO舊版比較未納入新增技術欄位，巨大斷言差異輸出造成OOM；原始FAIL保留。限定修正採舊優勝紀錄獨立oracle、原始digest驗證與逐步首差異診斷，不修改產品／Runner／golden。同版完整重播比較保留；比較器23項PASS、KBO限定與完整模式PASS、全新Quick 71 PASS／0 FAIL。證據：test-results/kbo-oom-fix-targeted/summary.json、test-results/kbo-oom-fix-full-profile/summary.json、test-results/kbo-oom-fix-quick/summary.json。整套Full修正前執行已中斷，原日誌與INTERRUPTED.json保留，尚未取得目前來源的整套Full PASS；Preview仍NOT_RUN，不結案。
@@ -204,7 +204,8 @@
 - [x] **UI-DESIGN-TOKENS-05** — `DEV_MERGED`（2026-11-11新增；2026-11-13 P3探測完成：現值無法以共用規則重現，統一後的視覺比較見設計系統計畫§12；2026-11-14 code owner選§12.3 A統一（使用者轉達）；細部計畫§13經PR #85提出，使用者2026-11-14批准，本機實作於`ui/design-tokens-05-impl`，Quick 90／90、本機Full 117／117 PASS（macOS＋Brave，非CI），見§13.9；1.16.5，併入PR #85；PR #85已併dev（`d5433e2`），dev push Quick 43561784095成功，Preview的`config.js`／`themes.css`／`share-image.js`與dev逐位元組一致，4主題×PC／手機畫面未確認；2026-11-14依完成條件結案）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P3：每主題約12個基礎色，元件色在主題區塊外以`color-mix()`推導、手調值於主題區塊覆寫；舊名保留為別名；`display-preferences.test`的hex對比改為瀏覽器computed style並迭代主題清單。外觀依A改變（PATCH；-02已批准的標籤色與night／scoreboard分享圖隨之改變，焦點框、潛力標記、陰影另行設計）。瀏覽器底線Baseline 2023（§9.3），實作時寫入`CURRENT_SPEC.md`。完成條件：細部計畫批准、實作與PR併dev（皆已完成）。
 - [x] **UI-DESIGN-TOKENS-06** — `DEV_MERGED`（2026-11-11新增；2026-11-14拆出canvas字體為UI-DESIGN-TOKENS-07；同日T表批准並於分支`ui/design-tokens-06`實作，[PR #86](https://github.com/tt-chin/yakyujinsei/pull/86)；PR #86已併dev（`08b3aca`），dev push Quick 43580585124成功，4主題×PC／手機Preview畫面未確認；2026-11-14依完成條件結案）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §9 P4／§14：字級（`--fs-*` 19個）、圓角（7／9／12px）、陰影（5個）以現值改token；`index.html`、`career-retirement.js`、`share-image.js`寫死的inline版面值移入`base.css`規則；主題區塊可覆寫非顏色token。間距不做token（W1 c，併入UI-DESIGN-TOKENS-08）。外觀不變，版本不變（挙動不変）。本機驗證（macOS＋Brave，非CI）：Quick 91／91、8批Full 119／119 PASS；`design-tokens-06-e2e`對`d5433e2`比computed style＋尺寸33,024次0差異；負控制7項皆在預期斷言FAIL。完成條件：PR併dev。
 - [x] **UI-DESIGN-TOKENS-07** — `DEV_MERGED`（2026-11-14由UI-DESIGN-TOKENS-06拆出；同日細部計畫（W6／W7、D／T表）批准並於分支`ui/design-tokens-07`實作，1.16.6；本機驗證（macOS＋Brave，非CI）：Quick 92／92、8批Full 121／121 PASS，負控制7項皆在預期斷言FAIL，reviewer無中以上發現，見§15.5；[PR #87](https://github.com/tt-chin/yakyujinsei/pull/87)已併dev（`62f80c0`），dev push [Quick 43590931500](https://github.com/tt-chin/yakyujinsei/actions/runs/43590931500)成功，4主題×PC／手機Preview畫面未確認；2026-11-14依完成條件結案）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §14.6／§15：分享圖canvas字體（`share-image.js` 20處）改讀`--sans`／`--mono`，繪製前等待web font載入；分享PNG像素改變（PATCH），不隨字級設定改變；像素比較先寫入舊字體再比位元組。完成條件：細部計畫批准（2026-11-14已批准）、實作與PR併dev。
-- [ ] **UI-DESIGN-TOKENS-08** — `DESIGN_PENDING`（2026-11-14新增，使用者決定「收斂為級距另立項」）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §14 決定2／§14.5 W1：字級（-06的`--fs-<px>`）、間距（CSS約160處寫死、約25種值，-06不做token）、圓角收斂為語意級距並改名；外觀會微調。完成條件：細部計畫批准、實作與PR併dev。未授權實作。
+- [ ] **UI-DESIGN-TOKENS-08** — `DESIGN_PENDING`（2026-11-14新增，使用者決定「收斂為級距另立項」）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §14 決定2／§14.5 W1：字級（-06的`--fs-<px>`）、間距（CSS約160處寫死、約25種值，-06不做token）、圓角收斂為語意級距並改名；外觀會微調。完成條件：細部計畫批准、實作與PR併dev。未授權實作。2026-11-14使用者決定（§16.2 W1～W6）：本ID限字級（19→13級，t-shirt名）與圓角（7／9／12px併入8／10／14px），間距拆為UI-DESIGN-TOKENS-09；草稿驗證見§16.4，D／T表（§16.5／§16.6）待批准，W7（code owner批准外觀）未決。
+- [ ] **UI-DESIGN-TOKENS-09** — `DESIGN_PENDING`（2026-11-14由UI-DESIGN-TOKENS-08拆出）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §16.2 W3／W4：margin／padding／gap寫死值（2026-11-14盤點168宣告；定位值、負值、`auto`、`calc`、`env`不在範圍）收斂為級距2／4／6／8／10／12／16／20／24／32／40／60，不乘`--space-scale`（compact維持元件token）；外觀會微調。完成條件：細部計畫批准、實作與PR併dev。未授權實作。
 - [ ] **UI-SEED-SHOW-COLOR-01** — `IMPLEMENTED_UNVERIFIED`（2026-11-14新增；同日更正前提並改為清理，見本條末）。[設計系統計畫](tasks/DESIGN_SYSTEM_PLAN.md) §14.5 W3：首頁`#seed-show`的背景／文字／邊框寫死為`#fff`／`#a71930`／`#d9a1aa`（`index.html:49`），不隨主題變色；-06只照值移入class。改用主題token屬顏色變更（PATCH）。完成條件：配色批准、實作與PR併dev。未授權實作。**更正（2026-11-14）**：上述「不隨主題變色」只依`base.css`判斷，有誤。`themes.css:86`自1.7.0（`2bad9c7`）起以不分主題的`!important`規則將背景／文字／邊框改為`--metric-bg`／`--amber`／`--control-edge`，-06前的inline與現在`base.css:162`的寫死色皆被覆蓋；本機Brave（擋Google Fonts）讀computed style，4主題三色皆等於對應token。使用者決定（2026-11-14）改為移除`base.css:162`無效的寫死色（保留`border:1px solid`），外觀不變、版本不變，分支`ui/seed-show-dead-colors`。新完成條件：PR併dev。
 
 ### 3.5 P2 — 未來功能候補（5項未完成；另保留5項已接受索引）
