@@ -1,7 +1,9 @@
 // UI-DESIGN-TOKENS-06 (tasks/DESIGN_SYSTEM_PLAN.md §14 T3): font-size, radius and shadow tokens keep the pre-change
 // values, no stylesheet multiplies a px font size by --font-scale outside the tokens, and the fixed inline layout values
 // of index.html / career-retirement.js / share-image.js live in base.css rules. Computed-style equality is proven by
-// design-tokens-06-e2e; this test pins the source shape.
+// design-tokens-06-e2e at the time; this test pins the source shape. UI-DESIGN-TOKENS-08 (§16.6 T1) replaced the 19
+// --fs-<px> tokens with 13 scale steps and merged the 7/9/12px component radii into --radius-md/-lg/-xl; the font-size and
+// radius cases below pin that shape (computed style: design-tokens-08-e2e).
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 
@@ -13,32 +15,34 @@ assert.ok(rootBlock,'base.css starts with its :root block');
 const rootTokens=Object.fromEntries([...rootBlock.matchAll(/(--[\w-]+):([^;]*);/g)].map(m=>[m[1],m[2]]));
 const allCss=Object.values(styles).join('\n'),outsideRoot=allCss.replace(rootBlock,'');
 
-const PX=[8,10,10.5,11,12,12.5,13,13.5,14,14.5,15,16,17,18,20,22,24,28,34];
-const fsName=px=>'--fs-'+String(px).replace('.','-');
-test('base.css defines the 19 --fs-* tokens as calc(<px>px * var(--font-scale,1))',()=>{
-  assert.deepEqual(Object.keys(rootTokens).filter(n=>n.startsWith('--fs-')),PX.map(fsName));
-  for(const px of PX)assert.equal(rootTokens[fsName(px)],`calc(${px}px * var(--font-scale,1))`,fsName(px));
+const FS={'--fs-3xs':8,'--fs-2xs':10,'--fs-xs':11,'--fs-sm':12,'--fs-md':13,'--fs-lg':14,'--fs-xl':15,'--fs-2xl':16,'--fs-3xl':18,'--fs-4xl':20,'--fs-5xl':24,'--fs-6xl':28,'--fs-7xl':34};
+test('base.css defines the 13 --fs-* scale tokens as calc(<px>px * var(--font-scale,1))',()=>{
+  assert.deepEqual(Object.keys(rootTokens).filter(n=>n.startsWith('--fs-')),Object.keys(FS));
+  for(const [name,px] of Object.entries(FS))assert.equal(rootTokens[name],`calc(${px}px * var(--font-scale,1))`,name);
+  assert.doesNotMatch(allCss,/--fs-\d+(?:-5)?(?![a-z\d])/,'old --fs-<px> name left');
 });
 // 59 former calc() sites plus 5 moved inline 11/12px sizes (scaled before by the preferences.css [style*=] rules).
 test('every var(--fs-*) is defined and every token is used (64 sites)',()=>{
   const used=[...outsideRoot.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
   assert.equal(used.length,64);
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
-  assert.deepEqual(PX.map(fsName).filter(n=>!used.includes(n)),[],'unused --fs token');
+  assert.deepEqual(Object.keys(FS).filter(n=>!used.includes(n)),[],'unused --fs token');
 });
 test('--font-scale is multiplied only by the tokens and the two .abrow widths',()=>{
   const sites=Object.entries(styles).flatMap(([f,css])=>[...css.replace(f==='base.css'?rootBlock:'\0','').matchAll(/[^;{}]*var\(--font-scale[^;}]*/g)].map(m=>f+' '+m[0].trim()));
   assert.deepEqual(sites,['preferences.css width:calc(74px * var(--font-scale))','preferences.css width:calc(58px * var(--font-scale))']);
 });
 const SHADOW={'--shadow-glow':'0 0 8px var(--amber)','--shadow-team-badge':'0 2px 4px var(--team-label-shadow)','--shadow-team-dot':'0 0 2px var(--team-dot-shadow)','--shadow-die':'inset 0 -3px 0 var(--dice-shadow)','--shadow-current':'inset 0 -2px 0 var(--amber)'};
-const RADIUS={'--radius-link':'7px','--radius-die':'9px','--radius-menu':'12px'};
-test('shadow and radius tokens keep the pre-change values and replace every literal',()=>{
-  for(const [name,value] of Object.entries({...SHADOW,...RADIUS})){
+test('shadow tokens keep the pre-change values and replace every literal; component radii merged (-08)',()=>{
+  for(const [name,value] of Object.entries(SHADOW)){
     assert.equal(rootTokens[name],value,name);
     assert.ok(outsideRoot.includes(`var(${name})`),name+' used');
   }
   for(const value of Object.values(SHADOW))assert.ok(!outsideRoot.includes(value),'literal shadow left: '+value);
   assert.deepEqual([...outsideRoot.matchAll(/border-radius:(7|9|12)px/g)].map(m=>m[0]),[],'literal 7/9/12px radius left');
+  assert.doesNotMatch(allCss,/--radius-(?:link|die|menu)\b/,'component radius token left');
+  for(const [sel,token] of [['.salary-detail-link','--radius-md'],['.die','--radius-lg'],['#board-menu-panel','--radius-xl']])
+    assert.match(allCss,new RegExp('(?:^|\\n)'+sel.replace(/[.#]/g,'\\$&')+'\\{[^}]*border-radius:var\\('+token+'\\)'),sel);
 });
 // §14.3 D3: the rules that took over the inline values (also the hit list of design-tokens-06-e2e).
 const RULES=['#app-version','#btn-start','#seed-show','#seed-re','.home-credit','.home-credit a','#bd-tj','.card p.retire-league','table.fin .cell-nowrap','table.fin .cell-left','table.fin .ama-line','.card h4.intl-heading','.share-actions','#sh-img,#sh-url,#sh-save,#sh-dl','#sh-out','#sh-url-status .replay-url-input','.share-image-preview','.share-image-actions','.statline.share-image-hint'];
