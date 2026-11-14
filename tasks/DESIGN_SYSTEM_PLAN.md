@@ -552,7 +552,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 14. P4 細部計畫（UI-DESIGN-TOKENS-06／-07；2026-11-14，基準 `ui/design-tokens-05` `01566e2`，VERSION 1.16.5）
 
-狀態：**草稿，待批准**。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 尚未併入 `dev`，併入後改對 `dev` 開 PR）。使用者 2026-11-14 決定：
+狀態：**草稿；W1～W5 已定（§14.5），T 表待草稿驗證後補**。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 於 2026-11-14 併入 `dev` `d5433e2` 後 fast-forward，對 `dev` 開 PR）。使用者 2026-11-14 決定：
 
 1. canvas 字體改讀 `--sans`／`--mono`；像素比較先寫入舊字體再比位元組；分享圖不隨字級設定改變。
 2. 字級與間距先以現值各做 token（外觀不變）；收斂為級距另立項。
@@ -581,7 +581,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 | # | 檔案 | 內容 |
 |---|---|---|
-| D1 | `docs/styles/base.css` | `:root` 新增字級 token `--fs-<px>`（例 `--fs-12`、`--fs-10-5`；值 `calc(<px>px*var(--font-scale,1))`），59 處改 `var(--fs-*)`；陰影 token 5 個（`--shadow-glow`、`--shadow-team-badge`、`--shadow-team-dot`、`--shadow-die`、`--shadow-current`）；圓角與間距依 W1／W2 |
+| D1 | `docs/styles/base.css` | `:root` 新增字級 token `--fs-<px>`（例 `--fs-12`、`--fs-10-5`；值 `calc(<px>px*var(--font-scale,1))`），59 處改 `var(--fs-*)`；陰影 token 5 個（`--shadow-glow`、`--shadow-team-badge`、`--shadow-team-dot`、`--shadow-die`、`--shadow-current`）；圓角 7／9／12px 新增元件名 token（W2 a）；間距不做 token（W1 c） |
 | D2 | `docs/styles/themes.css` | 不實際覆寫；註明主題區塊可覆寫非顏色 token |
 | D3 | `docs/styles/base.css`、`docs/index.html`、`docs/src/engine/career-retirement.js`、`docs/src/ui/share-image.js` | §14.2 的 inline 固定值改 class，值照舊（class 名稱於草稿時列表批准） |
 | D4 | 其他 `docs/styles/*.css` | 字級、圓角、陰影改用 D1 的 token |
@@ -595,23 +595,23 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 - 原文比對：`career-movement-policy`（`base.css` 表格規則）、`ui-foundation`（`#main-nav`、`#view-home #log{flex:1}`）、`test-release-notes`（`information.css` 只允許特定新增）。改到這些規則時需列核准差異。`verify-modularization:191` 以 `[^>]*` 容許 `#app-version` 的屬性。
 - 外觀不變的證明：新 E2E 在舊／新兩版逐元素比較 computed style（字級、間距、圓角、陰影、對齊、white-space），PC／手機 × 4 主題 × 3 種字級設定。
 
-### 14.5 待決
+### 14.5 決定（2026-11-14，使用者：W1～W5 照建議）
 
 - W1 間距：
   - a：全部現值各做一個 token（約 25 個 `--sp-<px>`，改 160 處，含複合值）。
   - b：只為出現 3 次以上的值做 token，其餘保留字面值。
   - c：-06 不做間距 token，併入級距收斂的項目。
-  - 建議 c：數值命名的 token 在收斂時要再全部改名，160 處等於改兩次；`--space-scale`／密度 token 已涵蓋目前的調整需求。
+  - **採 c**：數值命名的 token 在收斂時要再全部改名，160 處等於改兩次；`--space-scale`／密度 token 已涵蓋目前的調整需求。
 - W2 圓角 7／9／12px（現有 token 為 4／6／8／10／14px）：
   - a：新增元件名 token（如 `--radius-die`、`--radius-menu`、`--radius-link`），外觀不變。
   - b：併入現有 token，外觀改 1～2px。
-  - 0／1px／2px（重置、細線、裝飾）保留字面值。建議 a。
-- W3 `#seed-show` 的寫死色：-06 照值移入 class；改用主題 token 屬顏色變更，另記 BACKLOG。
+  - 0／1px／2px（重置、細線、裝飾）保留字面值。**採 a**。
+- W3 `#seed-show` 的寫死色：**-06 照值移入 class**；改用主題 token 屬顏色變更，另記 BACKLOG。
 - W4 快照差異：
   - a：擴充 `dom-snapshot.mjs` 投影（-02 前例）。
   - b：inline 改 class 只做快照外的元素（首頁區），退休卡與分享區延後。
-  - 建議 a。
-- W5 `#app-version` 的 `font-family:monospace`：-06 照值移入 class；改 `var(--mono)` 屬字體變更，併入 -07。
+  - **採 a**。
+- W5 `#app-version` 的 `font-family:monospace`：**-06 照值移入 class**；改 `var(--mono)` 屬字體變更，併入 -07。
 
 ### 14.6 -07 概要（細部 D／T 表於 -06 批准後另寫）
 
@@ -621,4 +621,4 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ### 14.7 流程
 
-W1～W5 決定 → scratchpad 草稿（-06 D1～D4，測試不改）→ Quick＋本機 8 批 Full，FAIL 對應 T 表（§13.7 同法）→ 補 -06 T 表 → 批准 → 實作。
+~~W1～W5 決定~~（已定）→ scratchpad 草稿（-06 D1～D4，測試不改）→ Quick＋本機 8 批 Full，FAIL 對應 T 表（§13.7 同法）→ 補 -06 T 表 → 批准 → 實作。
