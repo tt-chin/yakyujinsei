@@ -709,7 +709,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 16. -08 細部計畫（UI-DESIGN-TOKENS-08：字級＋圓角級距；2026-11-14，基準 `ui/seed-show-dead-colors` `9d9e781`（`dev` `62f80c0`＋PR #88），VERSION 1.16.6）
 
-狀態：**W1～W6 已定（使用者 2026-11-14），草稿驗證完成（§16.4）；D／T 表待批准，W7 未決**。分支 `ui/design-tokens-08`（自 `9d9e781`，疊在 PR #88 上：兩者都改 `base.css:162`）。間距另立 UI-DESIGN-TOKENS-09。
+狀態：**W1～W6 已定、T 表批准（使用者 2026-11-14），草稿驗證完成（§16.4）；W7：依 -05 前例先以 PR 附前後對照圖（`tasks/design-tokens-08/`）請 code owner 確認外觀，確認後於同一 PR 實作**。分支 `ui/design-tokens-08`（自 `9d9e781`，疊在 PR #88 上：兩者都改 `base.css:162`）。間距另立 UI-DESIGN-TOKENS-09。
 
 ### 16.1 範圍與分級
 
@@ -724,7 +724,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 - W3／W4 屬 -09：間距級距 2／4／6／8／10／12／16／20／24／32／40／60，不乘 `--space-scale`（compact 維持元件 token）。
 - W5 圓角 7→8（`--radius-md`）、9→10（`--radius-lg`）、12→14（`--radius-xl`）；0／1／2px 字面值保留。
 - W6 拆為 -08（字級＋圓角）與 -09（間距），各一個 PR。
-- W7（未決）：外觀變更是否先經 code owner 批准（-05 前例）。
+- W7：外觀變更先經 code owner 確認（-05 前例），對照圖隨 PR 提出（使用者 2026-11-14）。
 
 ### 16.3 對應表
 
@@ -762,13 +762,13 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 | D4 | 版本 1.16.7 | `config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`node scripts/update-release-notes.mjs`、`CURRENT_SPEC.md` 標頭 |
 | D5 | `BACKLOG.md` | -08 狀態 |
 
-### 16.6 T 表（待批准；AGENTS §6.3：舊期待值隨已批准規格變更）
+### 16.6 T 表（使用者 2026-11-14 批准；AGENTS §6.3：舊期待值隨已批准規格變更）
 
 | # | 測試 | 變更 |
 |---|---|---|
 | T1 | `design-tokens-06.test` | 「19 個 `--fs-*`」「元件名圓角 3 個」兩項改為 -08 的期待：13 個名字與值、64 處皆已定義且每個 token 都被使用、舊名（`--fs-<數字>`、`--radius-link／die／menu`）在 `docs/styles` 不存在。其他斷言不變 |
 | T2 | `display-preferences.test:47` | 白名單斷言的 `--fs-12` 改 `--fs-sm` |
 | T3 | `design-tokens-06-e2e` → 新增 `design-tokens-08-e2e`（Full） | 以 -06 harness 為底，基準 `9d9e781`；old 側注入 `:root` 覆寫，使舊 token 取 §16.3 的新值（`--fs-17:calc(16px * var(--font-scale,1))`、`--radius-menu:14px` 等），之後要求 41 屬性＋相對尺寸完全相等（不需差異白名單，版面位移也一併檢查）。比較範圍補 `#dice`、`#act` 的能力列（`.abrow`）、`#main-nav`、年俸明細連結 |
-| T4 | `design-tokens-06-e2e` 的去留 | 其「對 `d5433e2` 0 差異」在 -08 後不可能成立且無法逆推（16／17 合併）。提議：從 manifest 移除並刪檔，-06 的證明保留於 §14.10 與 git 歷史；T3 承接其 harness。刪檔屬破壞性操作，需另行批准 |
+| T4 | `design-tokens-06-e2e` 的去留 | 其「對 `d5433e2` 0 差異」在 -08 後不可能成立且無法逆推（16／17 合併）。從 manifest 移除並刪檔（使用者 2026-11-14 批准），-06 的證明保留於 §14.10 與 git 歷史；T3 承接其 harness |
 | T5 | 負控制 | T3 注入值錯一個（`--fs-17` 映到 18px）→ T3 FAIL；漏一個 token 的注入 → T3 FAIL；`.die` 不在比較範圍（移除新增的 root）→ T3 的「每個值改變的 selector 至少命中 1 個元素」斷言 FAIL；T1 放回一個 `--fs-12` 引用 → T1 FAIL |
 | T6 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer；4 主題 × PC／手機 × 3 字級截圖目視 |
