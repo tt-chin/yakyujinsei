@@ -709,11 +709,11 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 16. -08 細部計畫（UI-DESIGN-TOKENS-08：字級＋圓角級距；2026-11-14，基準 `ui/seed-show-dead-colors` `9d9e781`（`dev` `62f80c0`＋PR #88），VERSION 1.16.6）
 
-狀態：**W1～W6 已定、T 表批准（使用者 2026-11-14），草稿驗證完成（§16.4）；W7：依 -05 前例先以 PR 附前後對照圖（`tasks/design-tokens-08/`）請 code owner 確認外觀，確認後於同一 PR 實作**。分支 `ui/design-tokens-08`（自 `9d9e781`，疊在 PR #88 上：兩者都改 `base.css:162`）。間距另立 UI-DESIGN-TOKENS-09。
+狀態：**W1～W6 已定、T 表批准（使用者 2026-11-14），草稿驗證完成（§16.4）；計畫與對照圖（`tasks/design-tokens-08/`）經 [PR #89](https://github.com/tt-chin/yakyujinsei/pull/89) 併入 `dev`（`41a39a0`，code owner 確認外觀＝W7）；實作於 `ui/design-tokens-08-impl`（自 `41a39a0`），本機驗證完成（§16.7），實作 PR 待提出**。分支 `ui/design-tokens-08`（自 `9d9e781`，疊在 PR #88 上：兩者都改 `base.css:162`）。間距另立 UI-DESIGN-TOKENS-09。
 
 ### 16.1 範圍與分級
 
-- 字級 19 個 `--fs-<px>`（64 處）收斂為 13 級並改語意名；圓角元件名 token `--radius-link`／`--radius-die`／`--radius-menu`（7／9／12px）併入現有 token。值改變的只有 15 處（字級 12、圓角 3），其餘 49 處只改名。
+- 字級 19 個 `--fs-<px>`（64 處）收斂為 13 級並改語意名；圓角元件名 token `--radius-link`／`--radius-die`／`--radius-menu`（7／9／12px）併入現有 token。值改變的只有 14 處（字級 11、圓角 3），其餘 53 處字級只改名（第 1 版草稿含 `.field input` 16→15 時為 12 處；PR #89 本文的「15／49」為修正前的數字）。
 - 外觀微調，R2（純顯示例外，AGENTS §6.1），PATCH 1.16.7。不碰 `game.js`、RNG、`S`、DOM；`docs/src` 與分享圖不引用 `--fs-*`（canvas 用固定 px，-07 只讀 `--sans`／`--mono`）。
 - 不在範圍：間距（-09）、陰影、`.85em`／`1em`／`#save-live` 的 `11px`、`preferences.css` 的 `[style*="font-size:…"]` 3 條（只改引用的 token 名）。
 
@@ -772,3 +772,13 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 | T4 | `design-tokens-06-e2e` 的去留 | 其「對 `d5433e2` 0 差異」在 -08 後不可能成立且無法逆推（16／17 合併）。從 manifest 移除並刪檔（使用者 2026-11-14 批准），-06 的證明保留於 §14.10 與 git 歷史；T3 承接其 harness |
 | T5 | 負控制 | T3 注入值錯一個（`--fs-17` 映到 18px）→ T3 FAIL；漏一個 token 的注入 → T3 FAIL；`.die` 不在比較範圍（移除新增的 root）→ T3 的「每個值改變的 selector 至少命中 1 個元素」斷言 FAIL；T1 放回一個 `--fs-12` 引用 → T1 FAIL |
 | T6 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer；4 主題 × PC／手機 × 3 字級截圖目視 |
+
+### 16.7 實作結果（2026-11-14，`ui/design-tokens-08-impl`，基準 `41a39a0`＋工作樹）
+
+- D1～D4 照 §16.5：CSS 由草稿 script 機械轉換（與 §16.4 第 2 版草稿逐位元組相同）；`CURRENT_SPEC.md` token 兩條與標頭、`config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`docs/src/data/release-notes.js` 更新為 1.16.7。值改變的字級為 11 處（§16.1）。
+- T1：`design-tokens-06.test` 8 項 PASS（13 個名字與值、64 處、舊名 `/--fs-\d+(?:-5)?(?![a-z\d])/` 與 `--radius-link／die／menu` 不存在、三個 selector 的圓角 token）。T2：`display-preferences.test` PASS。
+- T3：`design-tokens-08-e2e` 45,072 次比較 0 差異（連跑 2 次），13 個改值 selector 全部命中（`#start .sub` 4、`.seg button` 16、`#bd-name` 8、`.bd-cell b` 32、`#bd-team` 8、`.statline` 4、`.lamp` 24、`#main-nav button` 12、`.abrow .nm` 24、`.abrow .progress` 24、`.die` 14、`#board-menu-panel` 8、`.salary-detail-link` 4），約 25 秒。與 T 表的差異：①切換組合後等 2 個 frame 再取值——初版在 IF／1280／large 的 standard、classic 出現 `#act` 高度 587→600px 的差異，原因是 `#act` 的 `max-height` 讀 `--display-sticky-height`，該值由 `preferences.js` 的 ResizeObserver 非同步寫入，新舊兩側取值時機不同（測試時序，非產品差異）；②`.salary-detail-link` 只在職業合約卡出現，於退休後的 `#log` 末尾兩側同樣注入一個。
+- T4：`design-tokens-06-e2e` 已刪除並自 manifest 移除。
+- T5 負控制（就地突變、shasum 確認還原）：`--fs-17` 映到 18px → T3 差異 9,936；漏注入 `--fs-22` → T3 差異 672；移除 `#act` root → T3「changed selectors that matched no compared element」；放回 `--fs-12` 引用 → T1「old --fs-<px> name left」；`.die` 改回 `--radius-die` → T1「component radius token left」。皆 exit 1。
+- T6：相關測試 PASS → Quick 92／92 PASS → 本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`，含 `design-tokens-08-e2e`、不含 `-06-e2e`）→ reviewer 無中以上發現（low 2 項：§16.1 保留修正前數字的說明、e2e 檔頭註解換行，皆未改）。截圖目視：§16.4 的 4 主題 × 1280／390 截圖與本實作 CSS 逐位元組相同，字級設定只在 standard 目視，small／large 由 T3 的等值比較涵蓋。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
