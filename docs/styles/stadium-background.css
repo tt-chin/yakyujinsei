@@ -11,16 +11,16 @@ body::before{--stadium-shade:linear-gradient(to bottom,rgba(0,0,0,.5) 0%,rgba(0,
 
 /* Mobile home: expose the title photo, keep opaque text and controls. */
 @media(max-width:699px){
- #start .wrap{width:calc(100% - 28px);padding:12px 0 32px;min-height:0;background:transparent}
+ #start .wrap{width:calc(100% - 28px);padding:var(--space-md) 0 var(--space-3xl);min-height:0;background:transparent}
  body:has(#start:not([style*="display: none"])) #app{visibility:hidden}
- #start .home-title{min-height:190px;display:flex;flex-direction:column;justify-content:center;padding:10px 8px;border-radius:var(--radius-lg);background:linear-gradient(#080d1433,#080d144d),url('../assets/escon-background/escon-mobile.webp') center 80%/cover no-repeat;text-shadow:0 1px 3px #080d14}
+ #start .home-title{min-height:190px;display:flex;flex-direction:column;justify-content:center;padding:var(--space-sm) var(--space-xs);border-radius:var(--radius-lg);background:linear-gradient(#080d1433,#080d144d),url('../assets/escon-background/escon-mobile.webp') center 80%/cover no-repeat;text-shadow:0 1px 3px #080d14}
  #start h1{font-size:var(--fs-6xl);overflow-wrap:anywhere}
- #start .sub{margin-bottom:16px;color:#fff}
+ #start .sub{margin-bottom:var(--space-lg);color:#fff}
  #start .home-title #app-version{color:#fff!important}
  #start .home-title h1 em{text-shadow:0 1px 2px #fff,0 0 5px #fff}
- #start .home-controls,#start .browser-save-panel{padding:16px;border:1px solid var(--edge);border-radius:var(--radius-lg);background:var(--panel);background:color-mix(in srgb,var(--panel) 83%,transparent)}
+ #start .home-controls,#start .browser-save-panel{padding:var(--space-lg);border:1px solid var(--edge);border-radius:var(--radius-lg);background:var(--panel);background:color-mix(in srgb,var(--panel) 83%,transparent)}
  #start .home-controls .field:first-child{margin-top:0}
  #start .seedline{overflow-wrap:anywhere}
  #start .start-information .btn{background:var(--panel);background:color-mix(in srgb,var(--panel) 85%,transparent)}
- #start .wrap footer{padding:8px;background:var(--panel);border-radius:var(--radius-md)}
+ #start .wrap footer{padding:var(--space-xs);background:var(--panel);border-radius:var(--radius-md)}
 }
