@@ -658,7 +658,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 15. -07 細部計畫（UI-DESIGN-TOKENS-07；2026-11-14，基準 `dev` `08b3aca`，VERSION 1.16.5）
 
-狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5）**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
+狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5），`102f5bf` 開 [PR #87](https://github.com/tt-chin/yakyujinsei/pull/87) → `dev` 待合併**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
 
 ### 15.1 決定（2026-11-14，使用者）
 
