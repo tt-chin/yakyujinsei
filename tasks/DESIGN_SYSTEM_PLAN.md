@@ -606,7 +606,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
   - a：新增元件名 token（如 `--radius-die`、`--radius-menu`、`--radius-link`），外觀不變。
   - b：併入現有 token，外觀改 1～2px。
   - 0／1px／2px（重置、細線、裝飾）保留字面值。**採 a**。
-- W3 `#seed-show` 的寫死色：**-06 照值移入 class**；改用主題 token 屬顏色變更，另記 BACKLOG。
+- W3 `#seed-show` 的寫死色：**-06 照值移入 class**；改用主題 token 屬顏色變更，另記 BACKLOG。**更正（2026-11-14）**：前提有誤，`themes.css:86`（1.7.0 起）的 `!important` 規則已讓 `#seed-show` 隨主題變色，寫死色無效（瀏覽器 computed style 確認）；改為移除無效值，外觀不變，見 BACKLOG UI-SEED-SHOW-COLOR-01。
 - W4 快照差異：
   - a：擴充 `dom-snapshot.mjs` 投影（-02 前例）。
   - b：inline 改 class 只做快照外的元素（首頁區），退休卡與分享區延後。
@@ -658,7 +658,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 15. -07 細部計畫（UI-DESIGN-TOKENS-07；2026-11-14，基準 `dev` `08b3aca`，VERSION 1.16.5）
 
-狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5），`102f5bf` 開 [PR #87](https://github.com/tt-chin/yakyujinsei/pull/87) → `dev` 待合併**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
+狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5），`102f5bf` 開 [PR #87](https://github.com/tt-chin/yakyujinsei/pull/87)，2026-11-14 併入 `dev`（`62f80c0`），dev push [Quick 43590931500](https://github.com/tt-chin/yakyujinsei/actions/runs/43590931500) 成功，結案；4 主題 × PC／手機 Preview 畫面未確認**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
 
 ### 15.1 決定（2026-11-14，使用者）
 
@@ -706,3 +706,69 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 - 追加（2026-11-14，使用者批准，T 表外的測試修正）：①`design-tokens-03-e2e` 的 new 側也寫入通用字體，使「新 PNG 與基準不同」只反映顏色（改前字型差異就會讓它成立）；負控制：new 側在繪製時寫入 1.16.4 顏色 → `share PNG must follow the derived theme tokens` FAIL（第一版負控制的顏色殘留到後續 probe 檢查，先在 `--share-edge` 斷言 FAIL，改為繪製後移除再重做）。②`replay-share-theme-e2e` 的主題迴圈 context 以空 CSS 回應 Google Fonts，兩次 standard 的位元組比較不受字型載入時序影響。兩項修正後再跑本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`），為最終結果；前一次 121／121 保留為修正前紀錄。
 - 內容多的卡片（35 條頭銜、35 年年表、長球團名，standard／1280／投手、野手，scratch，未納入版控）：新舊 PNG 高度相同（1840×3444），兩欄換行、年表截斷無重疊。
 - macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+## 16. -08 細部計畫（UI-DESIGN-TOKENS-08：字級＋圓角級距；2026-11-14，基準 `ui/seed-show-dead-colors` `9d9e781`（`dev` `62f80c0`＋PR #88），VERSION 1.16.6）
+
+狀態：**W1～W6 已定、T 表批准（使用者 2026-11-14），草稿驗證完成（§16.4）；W7：依 -05 前例先以 PR 附前後對照圖（`tasks/design-tokens-08/`）請 code owner 確認外觀，確認後於同一 PR 實作**。分支 `ui/design-tokens-08`（自 `9d9e781`，疊在 PR #88 上：兩者都改 `base.css:162`）。間距另立 UI-DESIGN-TOKENS-09。
+
+### 16.1 範圍與分級
+
+- 字級 19 個 `--fs-<px>`（64 處）收斂為 13 級並改語意名；圓角元件名 token `--radius-link`／`--radius-die`／`--radius-menu`（7／9／12px）併入現有 token。值改變的只有 15 處（字級 12、圓角 3），其餘 49 處只改名。
+- 外觀微調，R2（純顯示例外，AGENTS §6.1），PATCH 1.16.7。不碰 `game.js`、RNG、`S`、DOM；`docs/src` 與分享圖不引用 `--fs-*`（canvas 用固定 px，-07 只讀 `--sans`／`--mono`）。
+- 不在範圍：間距（-09）、陰影、`.85em`／`1em`／`#save-live` 的 `11px`、`preferences.css` 的 `[style*="font-size:…"]` 3 條（只改引用的 token 名）。
+
+### 16.2 決定（2026-11-14，使用者）
+
+- W1 字級 19→13 級（草稿後修正 2 處：保留 16，避免 iOS Safari 在姓名輸入框 `font-size`<16px 時聚焦放大；17→16，避免 18px 在 390px 寬把 `#bd-name` 旁的守備位置擠成「投•••」）。
+- W2 t-shirt 名，舊 `--fs-<px>` 刪除、不留別名（專案外無引用）。
+- W3／W4 屬 -09：間距級距 2／4／6／8／10／12／16／20／24／32／40／60，不乘 `--space-scale`（compact 維持元件 token）。
+- W5 圓角 7→8（`--radius-md`）、9→10（`--radius-lg`）、12→14（`--radius-xl`）；0／1／2px 字面值保留。
+- W6 拆為 -08（字級＋圓角）與 -09（間距），各一個 PR。
+- W7：外觀變更先經 code owner 確認（-05 前例），對照圖隨 PR 提出（使用者 2026-11-14）。
+
+### 16.3 對應表
+
+| 新 token | px | 舊 token（處數） | 變化 |
+|---|---:|---|---|
+| `--fs-3xs` | 8 | 8（1） | — |
+| `--fs-2xs` | 10 | 10（1） | — |
+| `--fs-xs` | 11 | 10.5（3）、11（8） | 燈號 `.lamp`、`.abrow .progress`、導覽按鈕 +0.5 |
+| `--fs-sm` | 12 | 12（18）、12.5（2） | `#bd-team`、`.statline` −0.5 |
+| `--fs-md` | 13 | 13（5） | — |
+| `--fs-lg` | 14 | 13.5（2）、14（6）、14.5（1） | `.abrow .nm`、`#start .sub` +0.5；`.seg button` −0.5 |
+| `--fs-xl` | 15 | 15（4） | — |
+| `--fs-2xl` | 16 | 16（1）、17（2） | `#bd-name`、`.bd-cell b` −1 |
+| `--fs-3xl` | 18 | 18（1） | — |
+| `--fs-4xl` | 20 | 20（5）、22（1） | `.die` −2 |
+| `--fs-5xl`／`--fs-6xl`／`--fs-7xl` | 24／28／34 | 各 1 | — |
+
+圓角：`.salary-detail-link` 7→8、`.die` 9→10、`#board-menu-panel` 12→14。
+
+### 16.4 草稿驗證（2026-11-14，scratch worktree，`9d9e781`＋草稿，測試未改）
+
+- 第 1 版（W1 原案 19→12 級）：Quick 90／92、本機 8 批 Full 118／121（121 項全執行，missing／extra 0）。FAIL 3 項皆為預期：`design-tokens-06.test`（19 個名字）、`display-preferences.test`（白名單含 `--fs-12`）、`design-tokens-06-e2e`（對 `d5433e2` 0 差異）。原文比對類（`career-movement-policy`、`ui-foundation`、`test-release-notes`）未 FAIL。
+- computed style 差異（`design-tokens-06-e2e` 改 `--baseline=9d9e781`、輸出全部差異；修正後的第 2 版）：字級／圓角差異只在 §16.3 所列元素，`letter-spacing`／`line-height` 隨字級等比，其餘為版面位置連帶移動；`#in-name` 無差異。該 e2e 的比較範圍不含 `.die`、`.abrow`、`.salary-detail-link`、`#main-nav`。
+- 截圖（`.claude/reports/design-tokens-08/`，未納入版控）：4 主題 × 1280／390 × 首頁／生涯／選單，新舊皆有差異（預期）。第 2 版 390px 的 `#bd-name` 截斷較基準少。
+- 第 2 版只重跑差異探測與截圖，未重跑 Quick／Full（測試耦合與第 1 版相同：同樣的檔案、同樣的 token 改名）。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 16.5 D 表
+
+| # | 檔案 | 內容 |
+|---|---|---|
+| D1 | `docs/styles/base.css` | `:root` 的 19 個 `--fs-<px>` 改為 §16.3 的 13 個；刪 `--radius-link`／`--radius-die`／`--radius-menu` |
+| D2 | `docs/styles/*.css`（7 檔） | 64 處 `var(--fs-*)` 與 3 處元件名圓角改引用新 token（草稿 script 機械轉換） |
+| D3 | `CURRENT_SPEC.md` | 文字サイズ／角丸トークン兩條改為新名稱與值 |
+| D4 | 版本 1.16.7 | `config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`node scripts/update-release-notes.mjs`、`CURRENT_SPEC.md` 標頭 |
+| D5 | `BACKLOG.md` | -08 狀態 |
+
+### 16.6 T 表（使用者 2026-11-14 批准；AGENTS §6.3：舊期待值隨已批准規格變更）
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | `design-tokens-06.test` | 「19 個 `--fs-*`」「元件名圓角 3 個」兩項改為 -08 的期待：13 個名字與值、64 處皆已定義且每個 token 都被使用、舊名（`--fs-<數字>`、`--radius-link／die／menu`）在 `docs/styles` 不存在。其他斷言不變 |
+| T2 | `display-preferences.test:47` | 白名單斷言的 `--fs-12` 改 `--fs-sm` |
+| T3 | `design-tokens-06-e2e` → 新增 `design-tokens-08-e2e`（Full） | 以 -06 harness 為底，基準 `9d9e781`；old 側注入 `:root` 覆寫，使舊 token 取 §16.3 的新值（`--fs-17:calc(16px * var(--font-scale,1))`、`--radius-menu:14px` 等），之後要求 41 屬性＋相對尺寸完全相等（不需差異白名單，版面位移也一併檢查）。比較範圍補 `#dice`、`#act` 的能力列（`.abrow`）、`#main-nav`、年俸明細連結 |
+| T4 | `design-tokens-06-e2e` 的去留 | 其「對 `d5433e2` 0 差異」在 -08 後不可能成立且無法逆推（16／17 合併）。從 manifest 移除並刪檔（使用者 2026-11-14 批准），-06 的證明保留於 §14.10 與 git 歷史；T3 承接其 harness |
+| T5 | 負控制 | T3 注入值錯一個（`--fs-17` 映到 18px）→ T3 FAIL；漏一個 token 的注入 → T3 FAIL；`.die` 不在比較範圍（移除新增的 root）→ T3 的「每個值改變的 selector 至少命中 1 個元素」斷言 FAIL；T1 放回一個 `--fs-12` 引用 → T1 FAIL |
+| T6 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer；4 主題 × PC／手機 × 3 字級截圖目視 |
