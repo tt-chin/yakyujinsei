@@ -202,8 +202,9 @@ assert.equal(careerEntryModule.split("history.replaceState(null,'',`?seed=${enco
 assert.equal((data.match(/"teamId"/g) || []).length, 90);
 assert.equal((data.match(/"schoolId"/g) || []).length, 85);
 assert.equal((data.match(/"eventKey"/g) || []).length, 2);
-assert.match(themeCss, /--button-detail:#6f303d/);
-assert.match(themeCss, /--primary-button-detail:#fff4f5/);
+// UI-DESIGN-TOKENS-05: button detail colors are derived rules, not per-theme hex.
+assert.ok(themeCss.includes('--button-detail:color-mix(in srgb, var(--chalk) 45%, var(--control-edge));'));
+assert.ok(themeCss.includes('--primary-button-detail:color-mix(in oklab, var(--clay) 5%, white);'));
 assert.match(themeCss, /--bg:#fff8f8/);
 // UI-DESIGN-TOKENS-03: share image colors are read from the CSS theme tokens; share-theme.js keeps no palette table.
 assert.match(shareImage, /imageColor=Object\.fromEntries\(Object\.entries\(SHARE_COLOR_TOKENS\)/);

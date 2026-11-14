@@ -13,6 +13,28 @@ import {removedTraitLabel} from '../engine/trait-policy.js';
 // shareTagPalette parses hex.
 const SHARE_COLOR_TOKENS={bg:'--bg',edge:'--share-edge',text:'--chalk',dim:'--dim',accent:'--amber',soft:'--share-soft',bad:'--bad'};
 const SHARE_TAG_TOKENS=['--tag-legend','--tag-goldcloth','--tag-genius','--tag-negative','--share-tag','--share-tag-removed'];
+// color-mix() tokens compute to oklab()/oklch()/color(srgb …) (UI-DESIGN-TOKENS-05). They are converted here with the
+// CSS Color 4 formulas, so derived share colors never depend on canvas read-back; only unknown formats use the canvas.
+const srgbByte=v=>Math.round(255*Math.min(1,Math.max(0,v)));
+const encodeSrgb=c=>srgbByte(Math.abs(c)<=0.0031308?12.92*c:Math.sign(c)*(1.055*Math.abs(c)**(1/2.4)-0.055));
+function oklabToRgb(L,a,b){
+  const l=(L+0.3963377774*a+0.2158037573*b)**3,m=(L-0.1055613458*a-0.0638541728*b)**3,s=(L-0.0894841775*a-1.2914855480*b)**3;
+  return [4.0767416621*l-3.3077115913*m+0.2309699292*s,-1.2684380046*l+2.6097574011*m-0.3413193965*s,-0.0041960863*l-0.7034186147*m+1.7076147010*s].map(encodeSrgb);
+}
+const NUM='(-?[\\d.]+(?:[eE][+-]?\\d+)?%?)';
+const num=(v,scale=1)=>v.endsWith('%')?parseFloat(v)/100*scale:parseFloat(v);
+export function parseComputedColor(color){
+  let m=color.match(/^rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+(?:[eE][+-]?\d+)?%?))?\)$/);
+  if(m)return {rgb:m.slice(1,4).map(Number),alpha:m[4]===undefined?1:num(m[4])};
+  const alphaOf=v=>v===undefined?1:num(v);
+  m=color.match(new RegExp(`^color\\(srgb ${NUM} ${NUM} ${NUM}(?: / ${NUM})?\\)$`));
+  if(m)return {rgb:m.slice(1,4).map(v=>srgbByte(num(v))),alpha:alphaOf(m[4])};
+  m=color.match(new RegExp(`^oklab\\(${NUM} ${NUM} ${NUM}(?: / ${NUM})?\\)$`));
+  if(m)return {rgb:oklabToRgb(num(m[1]),num(m[2],0.4),num(m[3],0.4)),alpha:alphaOf(m[4])};
+  m=color.match(new RegExp(`^oklch\\(${NUM} ${NUM} ${NUM}(?: / ${NUM})?\\)$`));
+  if(m){const C=num(m[2],0.4),h=parseFloat(m[3])*Math.PI/180;return {rgb:oklabToRgb(num(m[1]),C*Math.cos(h),C*Math.sin(h)),alpha:alphaOf(m[4])};}
+  return null;
+}
 export function readThemeColors(names,{documentRef=document,styleOf=el=>getComputedStyle(el)}={}){
   const rootStyle=styleOf(documentRef.documentElement),host=documentRef.createElement('span'),probe=documentRef.createElement('span');
   let pixel;
@@ -21,9 +43,9 @@ export function readThemeColors(names,{documentRef=document,styleOf=el=>getCompu
     return Object.fromEntries(names.map(name=>{
       if(!rootStyle.getPropertyValue(name).trim())throw Error('SHARE_COLOR_TOKEN_MISSING '+name);
       probe.style.color=`var(${name})`;
-      const color=styleOf(probe).color,legacy=color.match(/^rgb\((\d+), (\d+), (\d+)\)$/);
+      const color=styleOf(probe).color,parsed=parseComputedColor(color);
       let rgb;
-      if(legacy)rgb=legacy.slice(1).map(Number);
+      if(parsed){if(parsed.alpha!==1)throw Error('SHARE_COLOR_UNRESOLVED '+name+' '+color);rgb=parsed.rgb;}
       else{
         if(!pixel){const canvas=documentRef.createElement('canvas');canvas.width=canvas.height=1;pixel=canvas.getContext('2d',{willReadFrequently:true});}
         // An unparsable fillStyle is ignored, so clear and start transparent: a rejected color reads back alpha 0.

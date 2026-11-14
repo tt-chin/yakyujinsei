@@ -390,7 +390,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 13. P3 細部計畫（UI-DESIGN-TOKENS-05；2026-11-14，基準 `origin/dev` `629addc`，VERSION 1.16.4）
 
-狀態：**計畫草案，待批准**。方向依 §12.3 A（code owner 2026-11-14 選定）；以下為使用者 2026-11-14 選定：焦點框與潛力標記保留各主題色相、列為基礎色；主按鈕與陰影的色調也列為基礎色（`--primary`、`--shadow-base`），陰影 token 以共用比例推導；§13.8 的 4 項待決已定案。
+狀態：**使用者 2026-11-14 批准並實作完成**。實作先在本機分支 `ui/design-tokens-05-impl`（自 `f54483d`）完成，之後依使用者決定併入 PR #85（與計畫同一個 PR）。結果見 §13.9。方向依 §12.3 A（code owner 2026-11-14 選定）；以下為使用者 2026-11-14 選定：焦點框與潛力標記保留各主題色相、列為基礎色；主按鈕與陰影的色調也列為基礎色（`--primary`、`--shadow-base`），陰影 token 以共用比例推導；§13.8 的 4 項待決已定案。
 
 ### 13.1 範圍與分級
 
@@ -524,3 +524,28 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 2. 規則表：採用；主按鈕與陰影改列基礎色（`--primary`、`--shadow-base`，§13.2／§13.3），基礎色 15 → 17。
 3. legend 與 goldcloth：不另區分（兩者都有文字標示）。
 4. 分享圖的標籤對比：納入 T2；`--share-tag-removed-*` 比照畫面不列合格條件。
+
+### 13.9 結果（2026-11-14，本機）
+
+- 實作於本機分支 `ui/design-tokens-05-impl`（自 `f54483d`），之後併入 PR #85。VERSION 1.16.4 → 1.16.5（D4，PATCH；`dev` 仍為 1.16.4）。D1／D2 取自 §13.7 草稿（`themes.css` 與草稿逐位元組相同；48 條規則字串與 §13.3 表一致）。D2 依 reviewer 低度建議，指數改為 `[eE][+-]?\d+`，`rgba()` 的 alpha 也接受指數與 %。
+- T1 `tests/support/theme-colors.mjs`：解析 4 主題 × 48 個值，與 `unify-v4.json` 最大差 1／255（只有浮點捨入，例如 alpha 0.3×255＝76.5）。`629addc` 的 245 個 hex 值解析回原值。新檔登記於 `scripts/test-manifest.mjs`（support）。
+- 與 §13.6 的差異：
+  - T2 另加核准 golden：48 條規則字串與 4 × 48 個解析值對照 `unify-v4.json`（±1／255）。原表只有標籤 token 有 golden，其他推導 token 改百分比時不會 FAIL。
+  - T2 另加 `composite()` 單元斷言（reviewer 低度）。
+  - T5 的 §13.7 試作檔已不存在，依 §13.6 重寫。
+  - T5／T8 的「不經 canvas」以包裝 `document.createElement` 計數驗證。
+- 負控制：N1～N11 共 13 項全部 FAIL 在預期的斷言，每項以 shasum 核對還原。
+  - 刪規則、改 % ×2、oklab 號誤、主題區塊混入元件色、降低對比、非預乘混色、停用 oklab／`color(srgb)` 分支、T5 與 T8 不寫入舊色、指數 regex 退回、`composite` 改錯。
+  - golden 原放在結構／對比斷言之前，會遮蔽 N4／N5，已移到其後。
+
+| 驗證 | 結果 |
+|---|---|
+| T8 試作（`replay-share-theme-e2e --ui-only`） | PASS：寫入 `629addc` standard 分享色後與 1.11.0 像素比較 PASS，比較範圍與排除列未改 |
+| 相關單元／e2e（T2～T8） | PASS：`design-tokens-02-e2e` 80 項、`design-tokens-03-e2e` 20 項（standard／classic 寫入舊色後與 `9956ca3` 逐位元組相同，4 主題推導色 PNG 皆不同） |
+| Quick | 90／90 PASS（最終碼） |
+| 本機 Full（8 批） | 117／117 PASS（最終碼；117 個不重複項目、117 份 log、`sourceChanged:false`；`test-results/local-full-2026-11-14T02-44-59-543Z-fa67408a`）。reviewer 修正前另有一次 117／117 PASS |
+| reviewer | 1 輪，無正確性問題；低 2 項（`composite` 未被測、指數格式）已修，修後重跑 Quick／Full |
+| D4 之後 | Quick 90／90 PASS（依使用者指示不重跑 Full；測試以動態方式讀 VERSION） |
+
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。對照截圖沿用 §13.4 的 `v4-*.png`（草稿 `themes.css` 與本次相同），本次未重拍。
+- 未做：Linux CI（PR 指向 `dev`，feature 分支的 push 不觸發 CI）、Preview、Firefox／Safari 與手機實機。
