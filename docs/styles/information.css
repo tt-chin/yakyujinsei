@@ -3,7 +3,7 @@
 .information-dialog::backdrop{background:var(--overlay-bg)}
 .information-header,.information-footer{min-width:0;padding:12px 20px;background:var(--panel)}
 .information-header{border-bottom:1px solid var(--control-edge)}
-.information-dialog h2{color:var(--amber);margin:0;font-size:calc(20px * var(--font-scale,1));line-height:1.4}
+.information-dialog h2{color:var(--amber);margin:0;font-size:var(--fs-20);line-height:1.4}
 .information-scroll-frame{position:relative;min-height:0;min-width:0;overflow:hidden}
 .information-content{height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 30px 0 20px}
 .information-content::-webkit-scrollbar{display:none}

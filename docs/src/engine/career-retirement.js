@@ -79,7 +79,7 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     <tr><td>${st.yr}</td><td>${st.G}</td><td>${st.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${st.H}</td><td>${st.HR}</td><td>${st.RBI}</td><td>${st.SB}</td><td>${st.DEF>0?'+':''}${st.DEF||0}</td></tr>`;
     }
     const asN=st.AS||0;
-    return `<p style="margin-top:8px"><b>${LG_N[bucket]}</b>${asN?` · オールスター ${asN}回選出`:''}</p><table class="fin">${rows}</table>`;
+    return `<p class="retire-league"><b>${LG_N[bucket]}</b>${asN?` · オールスター ${asN}回選出`:''}</p><table class="fin">${rows}</table>`;
   }
   const FAN={
    0:['{n}引退とか無理…俺の青春も終わった','いつか子どもを球場へ連れてきて、「父ちゃんは{n}のプレーを生で見たんだぞ」って自慢するわ。','海外メディア、もう殿堂入りの得票率を計算してて草。心配ゼロかよ。','日本野球を世界へ連れていってくれてありがとう','このクラスは一世代に一人出るかどうかだろ','引退試合のチケット即完売。転売価格5倍で草'],
@@ -195,14 +195,14 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
       const amaLogs = S.log.filter(r => !r.st);
       const proLogs = S.log.filter(r => r.st);
       if(amaLogs.length > 0){
-        const amaRows = amaLogs.map(r=>`<tr><td style="white-space:nowrap">${r.y}</td><td style="white-space:nowrap">${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}</td><td style="text-align:left;font-size:11px;${r.inj?'color:var(--bad);font-weight:700;':''}">${r.line}</td></tr>`).join('');
-        card('','キャリア年表（アマチュア成績）',`<table class="fin"><tr><th>年</th><th>年齢</th><th style="text-align:left">チーム</th><th style="text-align:left">成績</th></tr>${amaRows}</table>`);
+        const amaRows = amaLogs.map(r=>`<tr><td class="cell-nowrap">${r.y}</td><td class="cell-nowrap">${r.age}</td><td class="cell-left cell-nowrap">${r.tm}</td><td class="ama-line"${r.inj?' style="color:var(--bad);font-weight:700;"':''}>${r.line}</td></tr>`).join('');
+        card('','キャリア年表（アマチュア成績）',`<table class="fin"><tr><th>年</th><th>年齢</th><th class="cell-left">チーム</th><th class="cell-left">成績</th></tr>${amaRows}</table>`);
       }
       if(proLogs.length > 0){
         const isP = S.pos === 'P';
         const head = isP
-          ? `<tr><th>年</th><th>年齢</th><th style="text-align:left">チーム</th><th>G</th><th>IP</th><th>W</th><th>L</th><th>SV</th><th>HLD</th><th>SO</th><th>BB</th><th>ERA</th><th>WHIP</th></tr>`
-          : `<tr><th>年</th><th>年齢</th><th style="text-align:left">チーム</th><th>G</th><th>PA</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>H</th><th>HR</th><th>RBI</th><th>SB</th><th>DEF</th></tr>`;
+          ? `<tr><th>年</th><th>年齢</th><th class="cell-left">チーム</th><th>G</th><th>IP</th><th>W</th><th>L</th><th>SV</th><th>HLD</th><th>SO</th><th>BB</th><th>ERA</th><th>WHIP</th></tr>`
+          : `<tr><th>年</th><th>年齢</th><th class="cell-left">チーム</th><th>G</th><th>PA</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>H</th><th>HR</th><th>RBI</th><th>SB</th><th>DEF</th></tr>`;
         const rows = proLogs.map(r => {
           const cS = r.inj ? 'color:var(--bad);font-weight:700;' : '';
           const s = r.st || {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
@@ -226,9 +226,9 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     let intlTable='';
     if(S.intlCount>0){ const IS=S.intlStat;
       if(S.pos==='P'){ const era=IS.IP>0?(IS.ER*9/IS.IP).toFixed(2):'-';
-        intlTable=`<h4 style="margin:12px 0 4px">国際大会通算（日本代表・${S.intlCount}大会）</h4><table class="st"><tr><th>出場</th><th>投球回</th><th>勝利</th><th>セーブ</th><th>奪三振</th><th>ERA</th></tr><tr><td>${IS.G}</td><td>${fmtIP(IS.IP)}</td><td>${IS.W}</td><td>${IS.SV}</td><td>${IS.SO}</td><td>${era}</td></tr></table>`;
+        intlTable=`<h4 class="intl-heading">国際大会通算（日本代表・${S.intlCount}大会）</h4><table class="st"><tr><th>出場</th><th>投球回</th><th>勝利</th><th>セーブ</th><th>奪三振</th><th>ERA</th></tr><tr><td>${IS.G}</td><td>${fmtIP(IS.IP)}</td><td>${IS.W}</td><td>${IS.SV}</td><td>${IS.SO}</td><td>${era}</td></tr></table>`;
       } else { const avg=IS.AB>0?(IS.H/IS.AB).toFixed(3).replace(/^0/,''):'-';
-        intlTable=`<h4 style="margin:12px 0 4px">国際大会通算（日本代表・${S.intlCount}大会）</h4><table class="st"><tr><th>出場</th><th>打席</th><th>打率</th><th>安打</th><th>本塁打</th><th>打点</th></tr><tr><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td></tr></table>`;
+        intlTable=`<h4 class="intl-heading">国際大会通算（日本代表・${S.intlCount}大会）</h4><table class="st"><tr><th>出場</th><th>打席</th><th>打率</th><th>安打</th><th>本塁打</th><th>打点</th></tr><tr><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td></tr></table>`;
       }
     }
     card('','通算成績',(tables||'<p>（プロレベルの試合実績なし）</p>')+intlTable);
@@ -327,10 +327,10 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     /* ワンタップ共有。 */
     const sh=document.createElement('div'); sh.className='card';
     sh.innerHTML=`<div class="title">この野球人生を共有</div>
-    <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn main" id="sh-img" style="flex:1">📸 キャリア画像を作成</button>
-      <button class="btn" id="sh-url" style="flex:1">🔗 リプレイURLを共有</button>
-    </div><div id="sh-url-status" role="status" aria-live="polite"></div><div id="sh-out" style="margin-top:8px"></div>`;
+    <div class="row2 share-actions">
+      <button class="btn main" id="sh-img">📸 キャリア画像を作成</button>
+      <button class="btn" id="sh-url">🔗 リプレイURLを共有</button>
+    </div><div id="sh-url-status" role="status" aria-live="polite"></div><div id="sh-out"></div>`;
     $('log').appendChild(sh);
     const imgBtn=sh.querySelector('#sh-img'),urlBtn=sh.querySelector('#sh-url'),shareOut=sh.querySelector('#sh-out');
     imgBtn.type=urlBtn.type='button';
@@ -349,7 +349,7 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
       const status=sh.querySelector('#sh-url-status');status.replaceChildren();urlBtn.disabled=true;
       try{
         const result=await shareReplayURL(url);status.textContent=result.message;
-        if(result.manual){const input=document.createElement('input');input.value=url;input.readOnly=true;input.setAttribute('aria-label','リプレイURL');input.style.cssText='width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:var(--panel);border:1px solid var(--edge);border-radius:6px';status.appendChild(input);input.focus();input.select();}
+        if(result.manual){const input=document.createElement('input');input.value=url;input.readOnly=true;input.setAttribute('aria-label','リプレイURL');input.className='replay-url-input';status.appendChild(input);input.focus();input.select();}
       }finally{urlBtn.disabled=false;}
     });
     choose('',[

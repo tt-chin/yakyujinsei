@@ -352,12 +352,12 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   for(const previous of shareImagePreviews.keys())if(!previous.isConnected)shareImagePreviews.delete(previous);
   shareImagePreviews.set(out,{evals,theme});
   const fileName='野球人生リザルト_'+S.name+'.png';
-  out.innerHTML=`<img src="${url}" style="width:100%;border-radius:8px" alt="引退リザルト画像">
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn main" id="sh-save" style="flex:1">💾 保存／画像を共有</button>
-      <button class="btn" id="sh-dl" style="flex:1">端末へダウンロード</button>
+  out.innerHTML=`<img src="${url}" class="share-image-preview" alt="引退リザルト画像">
+    <div class="share-image-actions">
+      <button class="btn main" id="sh-save">💾 保存／画像を共有</button>
+      <button class="btn" id="sh-dl">端末へダウンロード</button>
     </div>
-    <div class="statline" style="margin-top:6px">ボタンが使えない場合は,画像を長押しして保存できます</div>`;
+    <div class="statline share-image-hint">ボタンが使えない場合は,画像を長押しして保存できます</div>`;
   /* ダウンロードリンク（PC・予備）。 */
   out.querySelector('#sh-dl').onclick=()=>{ const a=document.createElement('a'); a.href=url; a.download=fileName;
     document.body.appendChild(a); a.click(); a.remove(); };

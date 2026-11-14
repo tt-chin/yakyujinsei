@@ -14,7 +14,7 @@ body::before{--stadium-shade:linear-gradient(to bottom,rgba(0,0,0,.5) 0%,rgba(0,
  #start .wrap{width:calc(100% - 28px);padding:12px 0 32px;min-height:0;background:transparent}
  body:has(#start:not([style*="display: none"])) #app{visibility:hidden}
  #start .home-title{min-height:190px;display:flex;flex-direction:column;justify-content:center;padding:10px 8px;border-radius:var(--radius-lg);background:linear-gradient(#080d1433,#080d144d),url('../assets/escon-background/escon-mobile.webp') center 80%/cover no-repeat;text-shadow:0 1px 3px #080d14}
- #start h1{font-size:calc(28px * var(--font-scale,1));overflow-wrap:anywhere}
+ #start h1{font-size:var(--fs-28);overflow-wrap:anywhere}
  #start .sub{margin-bottom:16px;color:#fff}
  #start .home-title #app-version{color:#fff!important}
  #start .home-title h1 em{text-shadow:0 1px 2px #fff,0 0 5px #fff}

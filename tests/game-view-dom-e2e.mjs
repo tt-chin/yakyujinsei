@@ -26,6 +26,8 @@ const credits1141=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],
 const menu1163=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('id="board-bug-report"');
 // UI-DESIGN-TOKENS-02 (1.16.1) moved the team badge and retirement trait tag colors to classes; older baselines use inline styles.
 const designTokens02=!execFileSync('git',['show',`${baselineRef}:docs/styles/base.css`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('.team-badge{');
+// UI-DESIGN-TOKENS-06 moved fixed inline layout values (#bd-tj, retirement card) to CSS rules; older baselines use inline styles.
+const designTokens06=!execFileSync('git',['show',`${baselineRef}:docs/styles/base.css`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('#bd-tj{');
 // Harness self-check only: a DOM-only change on the candidate side (year header text) must FAIL.
 const negativeControl=process.argv.includes('--negative-control');
 const server=createServer(async(req,res)=>{
@@ -45,7 +47,7 @@ const server=createServer(async(req,res)=>{
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
       if(!baseline)content+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__verifyFranchise=${verifyFranchiseGrant.toString()};window.__projectFranchise=${projectFranchiseField.toString()};\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
-      if(!baseline)content+='\nwindow.__projectMenu1163='+projectMenu1163.toString()+';window.__expectMenu1163='+menu1163+';window.__expectBrowserSave=true;window.__expectIncomeDisplay=true;window.__expect1140='+championmaker+';window.__expect1141='+credits1141+';window.__expectDesignTokens02='+designTokens02+';window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
+      if(!baseline)content+='\nwindow.__projectMenu1163='+projectMenu1163.toString()+';window.__expectMenu1163='+menu1163+';window.__expectBrowserSave=true;window.__expectIncomeDisplay=true;window.__expect1140='+championmaker+';window.__expect1141='+credits1141+';window.__expectDesignTokens02='+designTokens02+';window.__expectDesignTokens06='+designTokens06+';window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
       if(negativeControl&&!baseline)content+='\nconst __negativeDivider=divider;divider=function(t){__negativeDivider(t+\' \');};';
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
@@ -69,7 +71,7 @@ async function career(variant,{seed,pos,balanced},viewport,stopAt=-1){
       for(let step=0;step<2500;step++){
         const s=await snap(step===stopAt);
         if(step===stopAt)return {full:s};
-        steps.push(s);if(s.done)return {steps};
+        steps.push(s);if(s.done)return {steps,tokens06:{board:window.__designTokens06Board||0,log:window.__designTokens06Log||0}};
         const b=choose(balanced);if(!b)throw Error('No actionable choice at step '+step);b.click();
       }
       throw Error('CAREER_LIMIT');
@@ -108,7 +110,9 @@ try{
       assert.fail(`${label} differs from ${baselineRef} at step ${at} (year ${base.steps[at]?.year}) ${d?d.path+': '+near(d.before,d.after).join(' -> '):'(length only)'}`);
     }
     const last=base.steps.at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');
-    console.log(`PASS ${label}: ${base.steps.length} steps, RNG ${last.calls}, retirement ${last.year}, verified approved HOF/provenance display; remaining DOM/S/RNG strict`);
+    // UI-DESIGN-TOKENS-06 projection must actually run: #bd-tj on every step, retirement-card elements at least once.
+    if(designTokens06){assert.equal(head.tokens06.board,head.steps.length,'DESIGN_TOKENS_06_BOARD_PROJECTION_COUNT');assert.ok(head.tokens06.log>0,'DESIGN_TOKENS_06_LOG_PROJECTION_COUNT');}
+    console.log(`PASS ${label}: ${base.steps.length} steps, RNG ${last.calls}, retirement ${last.year}, verified approved HOF/provenance display${designTokens06?`, tokens-06 projection board ${head.tokens06.board}/log ${head.tokens06.log}`:''}; remaining DOM/S/RNG strict`);
   }
   assert.deepEqual(errors,[],'Console or page errors');
   console.log(`GameView DOM E2E passed: ${cases.length*viewports.length} careers vs ${baselineRef}`);
