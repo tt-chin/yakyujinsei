@@ -549,3 +549,76 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 - macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。對照截圖沿用 §13.4 的 `v4-*.png`（草稿 `themes.css` 與本次相同），本次未重拍。
 - 未做：Linux CI（PR 指向 `dev`，feature 分支的 push 不觸發 CI）、Preview、Firefox／Safari 與手機實機。
+
+## 14. P4 細部計畫（UI-DESIGN-TOKENS-06／-07；2026-11-14，基準 `ui/design-tokens-05` `01566e2`，VERSION 1.16.5）
+
+狀態：**草稿，待批准**。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 尚未併入 `dev`，併入後改對 `dev` 開 PR）。使用者 2026-11-14 決定：
+
+1. canvas 字體改讀 `--sans`／`--mono`；像素比較先寫入舊字體再比位元組；分享圖不隨字級設定改變。
+2. 字級與間距先以現值各做 token（外觀不變）；收斂為級距另立項。
+3. 主題區塊可覆寫非顏色 token。
+4. 拆為 -06（外觀不變）與 -07（canvas 字體，PNG 改變）；不併入 PR #85，維持 §9「各一個 PR」。
+
+### 14.1 範圍與分級
+
+- -06：字級、間距、圓角、陰影改 token（值不變）；`docs/src` 與 `index.html` 寫死的 inline 版面值改 class；主題區塊可覆寫非顏色 token。外觀不變，R2（純顯示例外，AGENTS §6.1）。版本不變（AGENTS §9.3，挙動不変）。
+- -07：`share-image.js` 的 20 處 canvas 字體改讀 token，繪製前等待字型載入。分享 PNG 改變，R2，PATCH。
+- 不在範圍：級距收斂、新主題、UI 改版（`tasks/UI_REDESIGN_PLAN.md`）。執行時計算的 inline 值保留：能力條寬度與潛力位置、球團色、受傷醒目（`cS`）、`display`／`pointer-events` 切換、`navigation`／`preferences`／`information-dialog` 的量測值。受 `award-identity-policy` 凍結的檔案（`preferences.js`、`navigation.js`、`seed-share.js`）中沒有 -06 要改的值。
+
+### 14.2 現況（`01566e2`，grep 核對）
+
+- 字級：CSS 59 處 `calc(Npx*var(--font-scale[,1]))`，19 種值：12px ×16、14px ×6、11／13／20px 各 ×5、15px ×4、10.5px ×3、12.5／13.5／17px 各 ×2、8／10／14.5／16／18／22／24／28／34px 各 ×1。另有 `.85em`（`board-menu.css`）、`1em`（`information.css`）、`11px`（`browser-save.css` `#save-live`，不隨字級設定）。§1.3 的舊統計已過時。
+- 圓角未用 token：`base.css` 2px（菱形）、9px（骰子）、1px（潛力線）、7px（年俸明細連結）；`board-menu.css` 12px、0；inline 6px ×2（`index.html:49`、`career-retirement.js:352`）、8px（`share-image.js:355`）。
+- 陰影未用 token：5 處（`.lamp.on i` 光暈、`.team-badge`、`.team-badge-dot`、`.die` inset、導覽選取 inset），顏色已是 token。
+- 間距：CSS 160 處寫死（另 11 處已用 `var()`），基本值約 25 種，含負值、`auto`、`env()`。
+- inline 固定值：
+  - `index.html`：`#app-version`（37，含 `font-family:monospace`）、`#btn-start`（47）、`#seed-show`（49，含寫死色 `#fff`／`#a71930`／`#d9a1aa`，不隨主題）、`#seed-re`（50）、首頁 footer 與連結（53）、`#bd-tj`（58，位於 `#board` 內）。57／83／91／92 的 `display:none` 屬切換，不動。
+  - `career-retirement.js`：82、198（`white-space`／`text-align`／`font-size:11px`）、199、204、205、229、231、330～333、352（`style.cssText`）。
+  - `share-image.js`：355～360。
+- canvas 字體：`share-image.js` 20 處（`sans-serif` 12、`monospace` 8），全部寫死。`docs/src` 與 `tests` 皆無 `document.fonts`。字型由 Google Fonts 載入（`index.html:20`，`display=swap`）。
+
+### 14.3 -06 設計（草案）
+
+| # | 檔案 | 內容 |
+|---|---|---|
+| D1 | `docs/styles/base.css` | `:root` 新增字級 token `--fs-<px>`（例 `--fs-12`、`--fs-10-5`；值 `calc(<px>px*var(--font-scale,1))`），59 處改 `var(--fs-*)`；陰影 token 5 個（`--shadow-glow`、`--shadow-team-badge`、`--shadow-team-dot`、`--shadow-die`、`--shadow-current`）；圓角與間距依 W1／W2 |
+| D2 | `docs/styles/themes.css` | 不實際覆寫；註明主題區塊可覆寫非顏色 token |
+| D3 | `docs/styles/base.css`、`docs/index.html`、`docs/src/engine/career-retirement.js`、`docs/src/ui/share-image.js` | §14.2 的 inline 固定值改 class，值照舊（class 名稱於草稿時列表批准） |
+| D4 | 其他 `docs/styles/*.css` | 字級、圓角、陰影改用 D1 的 token |
+| D5 | `CURRENT_SPEC.md` | token 表補非顏色 token 與主題覆寫規則 |
+| D6 | `BACKLOG.md` | -06 狀態 |
+
+### 14.4 測試耦合（已查）
+
+- `game-view-dom-e2e`、`display-preferences-e2e`、`scripts/test-share-url-menu.mjs` 經 `tests/support/dom-snapshot.mjs` 比對每步 `#log`／`#act`／`#board` 的 outerHTML 與固定基準。退休卡（`career-retirement.js`，經 `card()` 進 `#log`）、`#sh-out`（`share-image.js`）與 `#bd-tj` 都在快照內，inline 改 class 會產生差異。-02 的前例：快照端把新 class 投影回舊 inline（`dom-snapshot.mjs` 約 40～110 行）。
+- `display-preferences.test:45` 斷言主題區塊恰為 17 個基礎色；D2 需改為「17 個基礎色＋非顏色 token 白名單」。
+- 原文比對：`career-movement-policy`（`base.css` 表格規則）、`ui-foundation`（`#main-nav`、`#view-home #log{flex:1}`）、`test-release-notes`（`information.css` 只允許特定新增）。改到這些規則時需列核准差異。`verify-modularization:191` 以 `[^>]*` 容許 `#app-version` 的屬性。
+- 外觀不變的證明：新 E2E 在舊／新兩版逐元素比較 computed style（字級、間距、圓角、陰影、對齊、white-space），PC／手機 × 4 主題 × 3 種字級設定。
+
+### 14.5 待決
+
+- W1 間距：
+  - a：全部現值各做一個 token（約 25 個 `--sp-<px>`，改 160 處，含複合值）。
+  - b：只為出現 3 次以上的值做 token，其餘保留字面值。
+  - c：-06 不做間距 token，併入級距收斂的項目。
+  - 建議 c：數值命名的 token 在收斂時要再全部改名，160 處等於改兩次；`--space-scale`／密度 token 已涵蓋目前的調整需求。
+- W2 圓角 7／9／12px（現有 token 為 4／6／8／10／14px）：
+  - a：新增元件名 token（如 `--radius-die`、`--radius-menu`、`--radius-link`），外觀不變。
+  - b：併入現有 token，外觀改 1～2px。
+  - 0／1px／2px（重置、細線、裝飾）保留字面值。建議 a。
+- W3 `#seed-show` 的寫死色：-06 照值移入 class；改用主題 token 屬顏色變更，另記 BACKLOG。
+- W4 快照差異：
+  - a：擴充 `dom-snapshot.mjs` 投影（-02 前例）。
+  - b：inline 改 class 只做快照外的元素（首頁區），退休卡與分享區延後。
+  - 建議 a。
+- W5 `#app-version` 的 `font-family:monospace`：-06 照值移入 class；改 `var(--mono)` 屬字體變更，併入 -07。
+
+### 14.6 -07 概要（細部 D／T 表於 -06 批准後另寫）
+
+- `share-image.js`：`getComputedStyle` 讀 `--sans`／`--mono` 組成 `ctx.font`，px 值不變，不讀 `--font-scale`（`replay-share-theme-e2e:54` 的斷言維持）。
+- 繪製前以 `document.fonts.load()` 等待所需字型（含 bold）。若分享圖產生因此改為非同步，`hof-first-ballot-e2e`、`championship-intl-e2e`、`trait-display-e2e` 與 `__shareTest` 的同步呼叫需調整（三者只攔截 `fillText` 文字並檢查 PNG 前綴，不比較像素）。
+- 像素比較：`replay-share-theme-e2e`（1.11.0，`dc5ac871`）與 `design-tokens-03-e2e`（`9956ca3`）寫入舊字體（`sans-serif`／`monospace`）後比位元組，另斷言新字體 PNG 不同。字型能否載入依環境；CI 能否連到 Google Fonts 未確認，W6：比較時寫入舊字體，或擋掉 Google Fonts 請求。
+
+### 14.7 流程
+
+W1～W5 決定 → scratchpad 草稿（-06 D1～D4，測試不改）→ Quick＋本機 8 批 Full，FAIL 對應 T 表（§13.7 同法）→ 補 -06 T 表 → 批准 → 實作。
