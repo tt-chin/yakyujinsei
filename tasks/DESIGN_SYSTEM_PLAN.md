@@ -387,3 +387,165 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 | C 暫停 P3 | 無具體新主題計畫時不做 | 不變 |
 
 決定（2026-11-14，使用者轉達）：code owner 選 **A 統一**。§9.2 P3 以現值為準、外觀不變的前提不適用於 -05。細部計畫於本分支併入 `dev` 後，以最新 `dev` 另寫於 §13（v2 規則、焦點框／潛力標記／陰影的設計、允許差異、D／T 表）。UI 改版計畫（`tasks/UI_REDESIGN_PLAN.md`，PR #79）的階段 1a 即本項。
+
+## 13. P3 細部計畫（UI-DESIGN-TOKENS-05；2026-11-14，基準 `origin/dev` `629addc`，VERSION 1.16.4）
+
+狀態：**使用者 2026-11-14 批准並實作完成**。實作先在本機分支 `ui/design-tokens-05-impl`（自 `f54483d`）完成，之後依使用者決定併入 PR #85（與計畫同一個 PR）。結果見 §13.9。方向依 §12.3 A（code owner 2026-11-14 選定）；以下為使用者 2026-11-14 選定：焦點框與潛力標記保留各主題色相、列為基礎色；主按鈕與陰影的色調也列為基礎色（`--primary`、`--shadow-base`），陰影 token 以共用比例推導；§13.8 的 4 項待決已定案。
+
+### 13.1 範圍與分級
+
+- 目標：每個主題只寫 17 個基礎色；48 個元件色在主題區塊外以 `color-mix()` 規則推導，4 主題共用同一套規則。外觀改變（-02 已批准的標籤色、4 主題的分享圖都改變）。
+- 分級：R2（純顯示例外，AGENTS §6.1）。只改 CSS token 與分享圖讀色，不改狀態、RNG、事件順序；`share-image.js` 的讀色改動限於把 computed color 轉成 sRGB。期待值的變更逐項列在 §13.4。
+- 版本：PATCH（1.16.4 → 1.16.5，實作時以當時 `dev` 的 VERSION 為準）。
+- 不在範圍：非顏色 token（-06）、新主題、UI 改版（`tasks/UI_REDESIGN_PLAN.md`）。
+
+### 13.2 基礎色（每主題 17 個）
+
+| 類別 | token |
+|---|---|
+| 既有 12 個 | `--bg`、`--panel`、`--panel2`、`--edge`、`--chalk`、`--dim`、`--amber`、`--clay`、`--good`、`--bad`、`--blue`、`--control-edge` |
+| 新增 | `--gold`（值取自各主題現行 `--tag-legend-edge`） |
+| 由元件色改列基礎色 | `--focus-ring`、`--potential-marker`（各主題刻意不同色相，值不變） |
+| 新增（主按鈕、陰影） | `--primary`（值取自各主題現行 `--primary-button-start`）、`--shadow-base`（standard `#3a101780`、classic `#30271980`＝各自 `--chalk` 的 50% 透明度；night／scoreboard `#000`） |
+
+- §12 v2 的 `highlight` 不採用：以 5% 為步進對所有組合重搜時，15 個基礎色（不含 `highlight`）與加上 `highlight` 的 16 個，ΔE > 0.1 的 token 都是 8 個（2026-11-14 scratchpad 搜尋，未另存檔）。
+- `--primary`／`--shadow-base` 的理由：共用規則重現不了現值（§13.3「主按鈕」「陰影」）。以新增的 2 個基礎色（與其他基礎色或黑白混合）重搜全部 48 個 token，另有 `--start-glow`（0.073 → 0.052，`--primary` 混 `--panel2`）與 `--share-tag-edge`（0.169 → 0.100）可改善，不在本次範圍，未採用。
+- `color-scheme` 與 `--disabled-opacity`（只在 standard 區塊）照舊。
+
+### 13.3 推導規則
+
+- 位置：`themes.css` 的 4 個主題區塊之後新增一個 `:root { … }` 區塊，放 48 條規則；主題區塊不再定義元件色。主題屬性在 `<html>` 上，規則在同一元素計算，故每個主題各自套用。
+- 規則由機械搜尋取最近解（5% 步進、oklab／srgb），以下 3 條改用語意較清楚的規則（ΔE 相近）：`--tag-removed-text`（原為 `--blue` 混 `--gold`，改為 `--dim` 混 `--panel`）、`--tag-genius-edge`（原為白混黑的固定灰，改為 `--dim` 混 `--panel`）、`--tag-genius-bg`（改為 `--panel` 混 `--blue`）。
+- 主按鈕：原草案 `color-mix(in oklab, var(--clay) 75%／60%, black)` 使 standard 由鮮紅變暗褐紅（ΔE 0.093／0.106）。以 15 個基礎色加黑白、srgb／oklab／oklch、5% 步進，含「兩色混合後再混黑」的兩層巢狀重搜：以 4 主題最大 ΔE 為目標，start 最佳 0.076，但 standard 的 OKLCH 彩度只剩約 0.10（現值 0.175）；以 standard 優先則 start 為 standard 0.066、scoreboard 0.139。4 主題現值的色相與彩度本來就不一致（standard 鮮紅、scoreboard 暗橄欖），故 start 改為基礎色 `--primary`，end 由其推導。
+- 陰影：原草案 `--shadow-base: color-mix(in oklab, var(--bg) 40%, black)` 使 standard／classic 的遮罩由帶色調變灰（ΔE 0.112／0.121）；同上重搜，共用規則中仍以此式最佳，且透明度須 4 主題共用（現值亮色主題約為暗色主題的一半）。故 `--shadow-base` 改為帶透明度的基礎色，4 個陰影 token 為它與 `transparent` 的混合，比例共用。
+- 每條規則、4 主題的現值／新值與 ΔE：`tasks/design-tokens-05/unify-v4.json`。Brave（`BraveFarbling` 關閉）實測草稿 4 主題 × 48 個 token 的 computed color（192 個值），與該檔的新值最大差 1／255；草稿 `themes.css` 的規則字串與該檔一致。下表 ΔE 為 OKLab 距離，取疊在該主題 `--bg` 與 `--chalk` 上兩者的較大值；約 0.02 為可察覺門檻。
+
+| token | 規則 | ΔE std | night | classic | scoreboard |
+|---|---|---:|---:|---:|---:|
+| `--body-glow` | `color-mix(in oklab, var(--panel2) 85%, var(--control-edge))` | 0.043 | 0.024 | 0.016 | 0.010 |
+| `--start-glow` | `color-mix(in oklab, var(--panel2) 85%, var(--control-edge))` | 0.073 | 0.024 | 0.016 | 0.010 |
+| `--board-bg-start` | `var(--panel)` | 0.000 | 0.000 | 0.000 | 0.000 |
+| `--board-bg-end` | `var(--panel2)` | 0.023 | 0.000 | 0.000 | 0.000 |
+| `--action-bg-start` | `color-mix(in oklab, var(--panel) 95%, transparent)` | 0.016 | 0.013 | 0.009 | 0.012 |
+| `--action-bg-end` | `color-mix(in oklab, var(--bg) 95%, transparent)` | 0.000 | 0.000 | 0.000 | 0.000 |
+| `--metric-bg` | `color-mix(in srgb, var(--panel) 90%, var(--control-edge))` | 0.019 | 0.006 | 0.009 | 0.008 |
+| `--bar-bg` | `color-mix(in oklab, var(--panel2) 90%, white)` | 0.028 | 0.021 | 0.010 | 0.020 |
+| `--metric-glow` | `color-mix(in oklab, var(--clay) 5%, transparent)` | 0.094 | 0.024 | 0.019 | 0.025 |
+| `--lamp-bg` | `color-mix(in srgb, var(--panel) 65%, var(--dim))` | 0.052 | 0.019 | 0.046 | 0.062 |
+| `--primary-button-start` | `var(--primary)` | 0.000 | 0.000 | 0.000 | 0.000 |
+| `--primary-button-end` | `color-mix(in oklab, var(--primary) 85%, black)` | 0.011 | 0.010 | 0.016 | 0.025 |
+| `--primary-button-text` | `white` | 0.000 | 0.000 | 0.020 | 0.042 |
+| `--primary-button-edge` | `color-mix(in srgb, var(--chalk) 20%, var(--amber))` | 0.039 | 0.053 | 0.046 | 0.026 |
+| `--button-detail` | `color-mix(in srgb, var(--chalk) 45%, var(--control-edge))` | 0.059 | 0.003 | 0.045 | 0.011 |
+| `--primary-button-detail` | `color-mix(in oklab, var(--clay) 5%, white)` | 0.005 | 0.005 | 0.012 | 0.032 |
+| `--warning-edge` | `var(--bad)` | 0.137 | 0.000 | 0.000 | 0.000 |
+| `--dice-bg` | `color-mix(in srgb, var(--panel) 95%, white)` | 0.000 | 0.002 | 0.001 | 0.012 |
+| `--dice-shadow` | `color-mix(in oklab, var(--bad) 10%, transparent)` | 0.019 | 0.041 | 0.018 | 0.043 |
+| `--dice-stitch` | `color-mix(in oklab, var(--gold) 30%, transparent)` | 0.038 | 0.035 | 0.040 | 0.039 |
+| `--dice-six` | `var(--bad)` | 0.044 | 0.000 | 0.000 | 0.000 |
+| `--bar-start` | `var(--clay)` | 0.072 | 0.000 | 0.000 | 0.000 |
+| `--board-shadow` | `color-mix(in oklab, var(--shadow-base) 30%, transparent)` | 0.025 | 0.028 | 0.010 | 0.027 |
+| `--shadow-color` | `color-mix(in oklab, var(--shadow-base) 55%, transparent)` | 0.005 | 0.013 | 0.005 | 0.013 |
+| `--overlay-bg` | `color-mix(in oklab, var(--shadow-base) 60%, transparent)` | 0.025 | 0.000 | 0.022 | 0.000 |
+| `--nav-shadow` | `color-mix(in oklab, var(--shadow-base) 20%, transparent)` | 0.017 | 0.000 | 0.005 | 0.000 |
+| `--tag-legend-bg` | `color-mix(in srgb, var(--panel) 85%, var(--gold))` | 0.025 | 0.038 | 0.033 | 0.041 |
+| `--tag-legend-edge` | `var(--gold)` | 0.000 | 0.000 | 0.000 | 0.000 |
+| `--tag-legend-text` | `color-mix(in srgb, var(--chalk) 50%, var(--gold))` | 0.034 | 0.078 | 0.017 | 0.057 |
+| `--tag-goldcloth-bg` | `color-mix(in srgb, var(--panel) 90%, var(--gold))` | 0.026 | 0.062 | 0.029 | 0.030 |
+| `--tag-goldcloth-edge` | `color-mix(in srgb, var(--panel2) 5%, var(--gold))` | 0.045 | 0.044 | 0.044 | 0.032 |
+| `--tag-goldcloth-text` | `color-mix(in srgb, var(--chalk) 50%, var(--gold))` | 0.054 | 0.105 | 0.031 | 0.090 |
+| `--tag-genius-bg` | `color-mix(in srgb, var(--panel) 95%, var(--blue))` | 0.008 | 0.043 | 0.016 | 0.017 |
+| `--tag-genius-edge` | `color-mix(in srgb, var(--dim) 65%, var(--panel))` | 0.052 | 0.035 | 0.070 | 0.039 |
+| `--tag-genius-text` | `color-mix(in srgb, var(--chalk) 45%, var(--dim))` | 0.095 | 0.012 | 0.085 | 0.026 |
+| `--tag-negative-bg` | `color-mix(in srgb, var(--panel) 95%, var(--bad))` | 0.010 | 0.057 | 0.015 | 0.090 |
+| `--tag-negative-edge` | `color-mix(in srgb, var(--bg) 15%, var(--bad))` | 0.047 | 0.050 | 0.041 | 0.065 |
+| `--tag-negative-text` | `color-mix(in srgb, var(--chalk) 15%, var(--bad))` | 0.032 | 0.007 | 0.043 | 0.004 |
+| `--tag-removed-text` | `color-mix(in srgb, var(--dim) 80%, var(--panel))` | 0.044 | 0.045 | 0.046 | 0.028 |
+| `--tag-removed-edge` | `color-mix(in srgb, var(--dim) 65%, black)` | 0.045 | 0.008 | 0.048 | 0.020 |
+| `--share-edge` | `color-mix(in srgb, var(--panel2) 15%, var(--control-edge))` | 0.027 | 0.006 | 0.009 | 0.009 |
+| `--share-soft` | `color-mix(in srgb, var(--panel2) 25%, var(--chalk))` | 0.019 | 0.031 | 0.030 | 0.008 |
+| `--share-tag-bg` | `color-mix(in srgb, var(--panel) 95%, var(--chalk))` | 0.024 | 0.000 | 0.022 | 0.009 |
+| `--share-tag-edge` | `var(--edge)` | 0.169 | 0.000 | 0.147 | 0.000 |
+| `--share-tag-text` | `var(--amber)` | 0.085 | 0.000 | 0.051 | 0.000 |
+| `--share-tag-removed-bg` | `color-mix(in srgb, var(--panel) 95%, var(--chalk))` | 0.014 | 0.000 | 0.014 | 0.009 |
+| `--share-tag-removed-edge` | `color-mix(in srgb, var(--panel) 45%, var(--dim))` | 0.012 | 0.017 | 0.037 | 0.006 |
+| `--share-tag-removed-text` | `color-mix(in srgb, var(--panel) 40%, var(--chalk))` | 0.017 | 0.020 | 0.028 | 0.029 |
+
+統計：48 個中 ΔE ≤ 0.02 有 10 個、≤ 0.05 有 32 個、≤ 0.1 有 45 個；> 0.1 的 3 個是 `--warning-edge`、`--tag-goldcloth-text`、`--share-tag-edge`。完全不變的 4 個：`--board-bg-start`、`--action-bg-end`、`--tag-legend-edge`、`--primary-button-start`。
+
+### 13.4 允許差異
+
+| 項目 | 內容 |
+|---|---|
+| 畫面配色 | 4 主題的 48 個元件色改為 §13.3 的推導值；基礎色不變。對照截圖（左現值 `629addc`、右草稿）：`tasks/design-tokens-05/v4-{theme}.png` 為 `jp3-pitcher-02` 投手開局的能力分配畫面（1280／390px）；`v4-{theme}-detail.png` 為特性標籤、主按鈕、遮罩、記分板陰影的示意，以及 `design-tokens-03-e2e` 的分享圖（1280）。目視可見的差異：標籤底色略淡、night／scoreboard 的「短所」標籤與分享圖標籤變淡；主按鈕、遮罩、陰影與現值目視無差異 |
+| 特性標籤 | standard／classic 的 13 個標籤 token 改變（-02 原為「外觀不變」）；night／scoreboard 仍與 standard 不同 |
+| 骰子 | `--dice-shadow`、`--dice-stitch` 原只在 standard 定義、其他主題沿用 standard 值；改為各主題依規則推導 |
+| 合併為同值的 token | 4 主題都相同：`--body-glow` ＝ `--start-glow`；`--warning-edge` ＝ `--dice-six` ＝ `--bad`；`--tag-legend-text` ＝ `--tag-goldcloth-text`；`--share-tag-bg` ＝ `--share-tag-removed-bg`。另 `--bar-start` ＝ `--clay`、`--share-tag-text` ＝ `--amber`、`--share-tag-edge` ＝ `--edge`。legend 與 goldcloth 只剩底色 85%／90% 之差，邊框也幾乎相同（standard `#c79520`／`#ca992a`；現值 `#c79520`／`#c5a800`） |
+| 分享圖 | 4 主題的 PNG 都改變（`--share-*`、標籤色）；版面、文字、座標不變 |
+| 對比 | `display-preferences.test` 的 34 組與 `design-tokens-02.test` 的 4 組標籤，另加 `--primary-button-detail` 對 `--primary-button-end`，以及分享圖的 `--share-tag-text`／`--share-tag-bg`、`--share-soft`／`--bg`，每主題 41 組，4 主題全部合格（主按鈕：文字對 start 6.18 以上、對 end 8.48 以上，detail 對 end 7.97 以上）。「已移除特性」文字對 `--panel` 為 standard 3.66、classic 3.77（standard 現值 3.45），未達 4.5；該標籤本來就以 `opacity:.4` 刻意淡化，不列為合格條件。分享圖：`--share-tag-text`／`--share-tag-bg` 5.77 以上，`--share-soft`／`--bg` 6.22 以上（納入 T2）；`--share-tag-removed-text`／`-bg` 為 3.65～5.57（現值 3.83～5.95，standard／classic 現值已低於 4.5，classic 3.83 → 3.65），比照畫面的「已移除」不列為合格條件 |
+| 不變 | 狀態、選擇、RNG、DOM、顯示文字 |
+
+### 13.5 D 表（變更檔案）
+
+| # | 檔案 | 內容 |
+|---|---|---|
+| D1 | `docs/styles/themes.css` | §13.2 基礎色＋§13.3 規則區塊；主題區塊刪除元件色 |
+| D2 | `docs/src/ui/share-image.js` | `readThemeColors` 先以 `parseComputedColor()` 依 CSS Color 4 公式轉換 `rgb()`／`rgba()`、`color(srgb …)`、`oklab()`、`oklch()`（含 %、alpha）；不透明才採用，半透明丟出 `SHARE_COLOR_UNRESOLVED`；只有無法辨識的格式才走 canvas。避免 Brave 等的 canvas 讀值雜訊影響推導 token（§9「P3 注意」）。`287dd1a` 之後新增的檔案，不受 `award-identity-policy` 凍結檢查 |
+| D3 | `CURRENT_SPEC.md` | 色彩 token 表（約 257～278 行）改為基礎色＋推導規則；`color-mix()` 瀏覽器底線 Baseline 2023；分享圖讀色（約 574 行）補記數學轉換；對比自動檢查（約 286 行）改述檢查方式 |
+| D4 | `docs/src/config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`、`docs/src/data/release-notes.js`（`node scripts/update-release-notes.mjs` 產生） | 1.16.5 |
+| D5 | `BACKLOG.md` | -05 狀態更新 |
+
+### 13.6 T 表
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | 新增 `tests/support/theme-colors.mjs` | Node 版 token 解析：讀 `themes.css` 的基礎色與規則，支援 `var()`、`color-mix(in srgb|oklab, A p%, B)`、`white`／`black`／`transparent`、8 位 hex（帶透明度的基礎色 `--shadow-base`）；無法解析的語法一律丟錯，不略過。供 T2～T5 共用 |
+| T2 | `display-preferences.test` | 對比改用 T1 的解析值（半透明先疊在 `--bg` 上），同一組 pair 不再因 hex regex 而略過或 crash；新增分享圖 2 組（`--share-tag-text`／`--share-tag-bg`、`--share-soft`／`--bg`）；另斷言每個主題區塊恰有 17 個基礎色、規則區塊定義全部 48 個元件色、主題區塊不含元件色 |
+| T3 | `design-tokens-02.test` | 「標籤 token 都是 hex」改為「都能由 T1 解析」；「standard／classic 保留舊色」改為等於 `unify-v4.json` 的新值（核准 golden）；「night／scoreboard 與 standard 不同」與標籤 4.5:1 保留 |
+| T4 | `design-tokens-02-e2e` | standard／classic 的「computed style 等於舊 inline」改為：顏色等於 T1 的新值（±1／255），非顏色屬性仍等於舊 inline |
+| T5 | `design-tokens-03-e2e` | `readThemeColors` 讀值改與 T1 的新值比較（±1／255），不再要求 hex。standard／classic「PNG 與 `9956ca3` 相同」改為：把舊版的分享 token 值寫入 `documentElement.style` 後產生的 PNG 與 `9956ca3` 位元組相同（證明版面與繪製路徑不變；寫入值取自 `629addc` 的 `themes.css`，`readThemeColors` 讀回值也須等於該值），另斷言 4 主題在新配色下的 PNG 與舊版不同。`--dt03-srgb`／`--dt03-oklab` 改斷言不經 canvas |
+| T6 | `replay-share-theme.test` | 假 canvas 改用無法辨識的格式（如 `lab()`）測 canvas 後備；新增 `parseComputedColor` 案例：`rgb`／`rgba`／`color(srgb)`／`oklab`／`oklch`、%、alpha、未知格式回傳 `null`；`oklab` 不建立 canvas；半透明丟錯 |
+| T7 | `verify-modularization` | `--bg:#fff8f8` 保留；`--button-detail`、`--primary-button-detail` 的 hex 斷言改為斷言其規則字串 |
+| T8 | `replay-share-theme-e2e`（Full） | standard PNG 與 1.11.0 的像素比較：與 T5 相同，先把 1.11.0 standard 的分享色寫入 token 再產生 PNG，比較範圍與排除列不變 |
+| T9 | 負控制 | 刪一條規則、改一個百分比、`oklab` 轉換改錯號、主題區塊混入元件色、降低一組對比、T5 不寫入舊色，各應 FAIL 於預期的斷言 |
+| T10 | 回歸 | 相關單元與 e2e → Quick → 本機 Full → reviewer；PC／手機 4 主題截圖目視 |
+
+### 13.7 草稿驗證（實作前，2026-11-14）
+
+- scratchpad 草稿只含 D1（17 個基礎色）、D2，測試未改：Quick 90 項 84 PASS／6 FAIL；本機 8 批 Full 117 項 110 PASS／7 FAIL（117 項全部執行，missing／extra 0）。15 個基礎色的前一版草稿結果相同。
+- FAIL 全部對應 T2～T8：`design-tokens-02-e2e`、`design-tokens-02.test`、`design-tokens-03-e2e`、`display-preferences.test`、`replay-share-theme.test`、`verify-modularization`，以及 Full 限定的 `replay-share-theme-e2e`。`game-view-dom-e2e`、`display-preferences-e2e` 與 4 項混合版本 E2E（`routeHistoricalShareTheme`）PASS。
+- 草稿 4 主題 × 48 個 token 的 computed color 與 `unify-v4.json` 最大差 1／255，規則字串一致。
+- T5 試作（scratch clone 上改寫的 `design-tokens-03-e2e`）：把 `629addc` 的 25 個分享 token 值寫入 `documentElement.style` 後，standard／classic × 1280／390 的 PNG 與 `9956ca3` 位元組相同（8 項 PASS），讀回值等於寫入值；不寫入時 FAIL 於「byte-identical to 9956ca3」（負控制時關閉讀值斷言，避免先 FAIL 在讀值）。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 13.8 決定（2026-11-14，使用者）
+
+1. T5／T8：採「舊色寫入 token 後比較位元組」。試作見 §13.7。
+2. 規則表：採用；主按鈕與陰影改列基礎色（`--primary`、`--shadow-base`，§13.2／§13.3），基礎色 15 → 17。
+3. legend 與 goldcloth：不另區分（兩者都有文字標示）。
+4. 分享圖的標籤對比：納入 T2；`--share-tag-removed-*` 比照畫面不列合格條件。
+
+### 13.9 結果（2026-11-14，本機）
+
+- 實作於本機分支 `ui/design-tokens-05-impl`（自 `f54483d`），之後併入 PR #85。VERSION 1.16.4 → 1.16.5（D4，PATCH；`dev` 仍為 1.16.4）。D1／D2 取自 §13.7 草稿（`themes.css` 與草稿逐位元組相同；48 條規則字串與 §13.3 表一致）。D2 依 reviewer 低度建議，指數改為 `[eE][+-]?\d+`，`rgba()` 的 alpha 也接受指數與 %。
+- T1 `tests/support/theme-colors.mjs`：解析 4 主題 × 48 個值，與 `unify-v4.json` 最大差 1／255（只有浮點捨入，例如 alpha 0.3×255＝76.5）。`629addc` 的 245 個 hex 值解析回原值。新檔登記於 `scripts/test-manifest.mjs`（support）。
+- 與 §13.6 的差異：
+  - T2 另加核准 golden：48 條規則字串與 4 × 48 個解析值對照 `unify-v4.json`（±1／255）。原表只有標籤 token 有 golden，其他推導 token 改百分比時不會 FAIL。
+  - T2 另加 `composite()` 單元斷言（reviewer 低度）。
+  - T5 的 §13.7 試作檔已不存在，依 §13.6 重寫。
+  - T5／T8 的「不經 canvas」以包裝 `document.createElement` 計數驗證。
+- 負控制：N1～N11 共 13 項全部 FAIL 在預期的斷言，每項以 shasum 核對還原。
+  - 刪規則、改 % ×2、oklab 號誤、主題區塊混入元件色、降低對比、非預乘混色、停用 oklab／`color(srgb)` 分支、T5 與 T8 不寫入舊色、指數 regex 退回、`composite` 改錯。
+  - golden 原放在結構／對比斷言之前，會遮蔽 N4／N5，已移到其後。
+
+| 驗證 | 結果 |
+|---|---|
+| T8 試作（`replay-share-theme-e2e --ui-only`） | PASS：寫入 `629addc` standard 分享色後與 1.11.0 像素比較 PASS，比較範圍與排除列未改 |
+| 相關單元／e2e（T2～T8） | PASS：`design-tokens-02-e2e` 80 項、`design-tokens-03-e2e` 20 項（standard／classic 寫入舊色後與 `9956ca3` 逐位元組相同，4 主題推導色 PNG 皆不同） |
+| Quick | 90／90 PASS（最終碼） |
+| 本機 Full（8 批） | 117／117 PASS（最終碼；117 個不重複項目、117 份 log、`sourceChanged:false`；`test-results/local-full-2026-11-14T02-44-59-543Z-fa67408a`）。reviewer 修正前另有一次 117／117 PASS |
+| reviewer | 1 輪，無正確性問題；低 2 項（`composite` 未被測、指數格式）已修，修後重跑 Quick／Full |
+| D4 之後 | Quick 90／90 PASS（依使用者指示不重跑 Full；測試以動態方式讀 VERSION） |
+
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。對照截圖沿用 §13.4 的 `v4-*.png`（草稿 `themes.css` 與本次相同），本次未重拍。
+- 未做：Linux CI（PR 指向 `dev`，feature 分支的 push 不觸發 CI）、Preview、Firefox／Safari 與手機實機。

@@ -51,6 +51,7 @@ const nonTests = {
   'support/rng-instrument.mjs': ['support','E2E RNG call counter: careerRng.onDraw on current game.js, legacy R text replace on old baselines; throws on miss.'],
   'support/career-session-access.mjs': ['support','E2E hook accessor __cs for career flow state: careerSession.<name> on current game.js, bare bindings on old baselines; throws on miss.'],
   'support/overlay-hook.mjs': ['support','E2E hook injection point: before the overlay IIFE end on old baselines, one shared block at module end once the overlay is unwrapped; throws on miss.'],
+  'support/theme-colors.mjs': ['support','Node resolver for themes.css base colors + color-mix() rules (UI-DESIGN-TOKENS-05); throws on unsupported syntax. Imported by theme/share tests.'],
   'retirement-hof-test-support.mjs': ['support','Imported VM fixtures; not an executable test.'],
   'retirement-hof-analysis.mjs': ['analysis','Requires approved captured pilot/vote input; rewrites historical report data. Run explicitly outside automatic profiles.'],
   'retirement-hof-report.mjs': ['report','Rewrites historical approved report; not an automatic regression.'],

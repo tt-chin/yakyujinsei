@@ -1,4 +1,4 @@
-# 現行規格（正式公開 v1.14.1／開発版 v1.16.4）
+# 現行規格（正式公開 v1.14.1／開発版 v1.16.5）
 
 ### 開発版1.16.3：案内メニュー
 
@@ -254,6 +254,8 @@ v1.11.5の安全性修正：能力配分の行・Undo・全リセット・確定
 - `src/ui/preferences.js`が設定値・検証・保存・ダイアログを所有する。main.jsで設定適用後にengineを読み込む。themes.cssが色変数を所有し、jp-theme.cssは定義を持たない互換入口。base.css／ui-navigation.cssは意味別トークンを参照し、preferences.cssが文字倍率・密度・設定UIを所有する。
 - フォント（1.13.6）：base.cssが`--sans`（本文）・`--mono`（数値・seed）を所有する。各先頭字体はindex.htmlのGoogle Fonts読込（Noto Sans JP 400／500／700／900、IBM Plex Mono 500／700）と一致させ、display-preferences.testで検証する。
 - 角丸・影トークン（1.13.6、base.cssの`:root`、全テーマ共通）：`--radius-xs`4px、`--radius-sm`6px、`--radius-md`8px、`--radius-lg`10px、`--radius-xl`14px、`--radius-round`50%。複合値は`var(--radius-lg) var(--radius-lg) 0 0`のように組み合わせる。影は層の用途だけをトークン化し、`--shadow-overlay`（ダイアログ）、`--shadow-board`（記分板）、`--shadow-nav`（ナビ）、`--shadow-popover`（ボードメニュー）とする。単回の0／1／2／7／9／12px角丸、装飾的な光彩（`0 0 8px var(--amber)`）とinset影は字面値のまま。
+- 色トークンの構成（v1.16.5、UI-DESIGN-TOKENS-05）：各テーマ区画は基礎色17個（`--bg`、`--panel`、`--panel2`、`--edge`、`--chalk`、`--dim`、`--amber`、`--clay`、`--good`、`--bad`、`--blue`、`--control-edge`、`--gold`、`--primary`、`--shadow-base`、`--focus-ring`、`--potential-marker`）だけを定義する。部品色48個は4テーマ区画の後の`:root`区画で`color-mix(in srgb|oklab, …)`規則により基礎色から導出し、規則は4テーマ共通（html要素上で各テーマの基礎色を使って計算される）。テーマ区画に部品色を書かない。規則・各テーマの値・旧値との差は[tasks/design-tokens-05/unify-v4.json](tasks/design-tokens-05/unify-v4.json)と設計系統計画§13。`color-scheme`、`--disabled-opacity`（standard区画のみ）は従来どおり。
+- 対応ブラウザの下限はBaseline 2023（Chrome／Edge 111+、Firefox 113+、Safari／iOS Safari 16.2+、`color-mix()`の対応起点）。下限未満では自訂属性に書いた`color-mix()`が計算値で無効となり、部品色が失効する（受容済み）。relative color（`oklch(from …)`）等は使わない。
 - 色トークンの用途（themes.css、4テーマ共通名。名称は球場・黒板の比喩を維持する）：
 
 | トークン | 用途 |
@@ -265,6 +267,9 @@ v1.11.5の安全性修正：能力配分の行・Undo・全リセット・確定
 | `--chalk`／`--dim` | 本文／補助文字 |
 | `--amber` | 強調（球団名・数値・点灯ランプ） |
 | `--clay`／`--good`／`--bad`／`--blue` | カード見出し記号（通常／好結果／悪結果／情報）。good・badは上昇・下降表示にも使う |
+| `--gold` | 金系特性タグ・サイコロ縫い目の基礎色（基礎色） |
+| `--primary` | 主要ボタン背景の基礎色（基礎色、`--primary-button-start`／`-end`の元） |
+| `--shadow-base` | 影・背景幕の色調（基礎色。明るいテーマは`--chalk`の50%透明、暗いテーマは黒。影4種はこれと`transparent`の共通比率の混合） |
 | `--body-glow`／`--start-glow` | 本文・開始画面背景の光彩 |
 | `--board-bg-start`／`--board-bg-end` | 記分板背景のグラデーション |
 | `--action-bg-start`／`--action-bg-end` | 操作区の背景 |
@@ -283,7 +288,7 @@ v1.11.5の安全性修正：能力配分の行・Undo・全リセット・確定
 - 非同期起動中は開始ボタンをdisabledとし、engine初期化後にmain.jsから有効化する。読み込み中のクリックを未登録handlerへ送らない。
 - htmlのdata-theme／data-font-size／data-densityだけを切り替える。S、URL、RNG、キャリア記録へ保存しない。ゲームの描画・選択・board処理を再実行せず、現在タブ・操作DOM・listener・配分途中状態を保持する。
 - `getDisplayPreferences().theme`が後続画像テーマ機能用の公開インターフェース。変更通知は`yakyujinsei:displaychange`（detailは設定のコピー）。v1.7.0ではCanvasのimageColor・画像レイアウトを変更しない。
-- standardは従来の主要配色を保持する。対比度基準のため緑色提示を#216c3dへ、操作境界を#ad717dへ調整した。全テーマの主要文字4.5:1、操作境界・focus3:1以上を自動検証する。
+- standardは従来の主要配色を保持する。対比度基準のため緑色提示を#216c3dへ、操作境界を#ad717dへ調整した。全テーマの主要文字4.5:1、操作境界・focus3:1以上を自動検証する（v1.16.5以降はtests/support/theme-colors.mjsで規則を解決した値で検証し、半透明色は--bgに重ねてから測る。主要ボタン補足文字、特性タグ、共有画像の`--share-tag-text`／`--share-tag-bg`・`--share-soft`／`--bg`も対象。「除外済み特性」はopacity:.4の意図的な淡色のため対象外）。
 - 検証：設定単体24組合せ・保存例外、PC／モバイルサイズ320/375/390/430/560/1280、Chrome／Edge、Tab／Shift+Tab／Escape、選択DOM・配分listener保持。固定操作の投手3seed・野手3seedをv1.6.2と全生涯比較し、バージョン番号を除くゲーム状態・ログ・選択肢・引退・RNG消費回数に差異0。実機iOS Safari／Android Chromeは未確認。
 
 ## 9. 運用と更新
@@ -571,7 +576,7 @@ v1.11.6：復帰候補contextは同一S・年度・元契約に結び、実行�
 - 共用shareReplayURLはclickの直接呼出鎖でnavigator.shareを呼ぶ。title「野球人生シミュレーター」、text「この野球人生をプレイしてみよう！」、既存replayURLのurlを渡す。現在origin／pathnameとencodeURIComponent(seed)を保持し、query／hashを除いてseedのみ。空／特殊Seed、旧rv／rules URLも同じ編碼政策。ゲームS／RNG／保存には触れない。
 - API非対応時のみ同一clickでClipboard API→execCommand→手動選択へ回退。コピー成功は「リプレイURLをコピーしました。」、失敗は「URLを長押し／選択してコピーしてください。」。AbortErrorは取消として成功／エラー／自動コピーを行わず、他エラーは「共有できませんでした。URLを長押し／選択してコピーしてください。」で手動選択を提示し、自動コピーしない。resolveで送達を宣言しない。ボタンdisabledで重入を防止しfinallyで復元。閉じた／再開したdialogへ古い共有結果を反映しない。
 - 引退URLのstatus／手動選択欄はsh-url-statusへ分離し、sh-outの画像・保存／画像共有・ダウンロード操作を破棄しない。
-- 共有画像の色はPNG生成時に現在テーマのCSS token（docs/styles/themes.css）から読む（v1.16.2、UI-DESIGN-TOKENS-03）。bg＝--bg、edge＝--share-edge、text＝--chalk、dim＝--dim、accent＝--amber、soft＝--share-soft、bad＝--bad。透明なhost内の隠しprobe要素でvar()を解決する。不透明なrgb()（hex tokenはすべてこれ）はcanvasを使わず正確に解析し（Brave等の指紋対策によるcanvas読戻しの±1変動を避ける）、それ以外の計算値（color-mixのoklab()／color(srgb …)など）は1×1 canvasへ描いてsRGBの#rrggbbとして読み戻す。token欠落・無効値・不透明でない色は例外とし、文字色の継承や直前の色で代用しない。share-theme.jsは色盤を持たずshareTagPaletteだけを保持する（凍結ファイルへの承認overlay）。standard／classicの画像は1.16.1と同一、night／scoreboardのdim／badは画面の--dim／--badに揃う。
+- 共有画像の色はPNG生成時に現在テーマのCSS token（docs/styles/themes.css）から読む（v1.16.2、UI-DESIGN-TOKENS-03）。bg＝--bg、edge＝--share-edge、text＝--chalk、dim＝--dim、accent＝--amber、soft＝--share-soft、bad＝--bad。透明なhost内の隠しprobe要素でvar()を解決する。rgb()／rgba()、color(srgb …)、oklab()、oklch()（%・alphaを含む）は`parseComputedColor()`がCSS Color 4の式でsRGBへ換算し、canvasを使わない（v1.16.5、color-mix()で導出したtokenがBrave等の指紋対策によるcanvas読戻しの±1変動を受けないため）。それ以外の計算値だけを1×1 canvasへ描いてsRGBの#rrggbbとして読み戻す。token欠落・無効値・不透明でない色は例外とし、文字色の継承や直前の色で代用しない。share-theme.jsは色盤を持たずshareTagPaletteだけを保持する（凍結ファイルへの承認overlay）。night／scoreboardのdim／badは画面の--dim／--badに揃う。v1.16.5で`--share-*`・タグ色が導出値になり、4テーマとも画像の配色が変わる（版面・文字・座標は不変。1.16.4の色をtokenへ書き込むとstandard／classicは1.16.1と同一）。
 - PNG生成時のgetDisplayPreferences().themeを採用。単一yakyujinsei:displaychange listenerで接続中の生成済みプレビューだけを主題変更時に同期再生成する。字級／密度のみの変更では再生成せず、未生成画像を勝手に生成しない。切離したプレビューは登録から除く。非同期生成競争を新規導入しない。
 - 同じ生成PNGのdata URLをプレビュー・ダウンロード・画像原生共有で共用。既存画像の文字／統計／評価／座標／寸法／920px論理幅・2倍出力／ファイル名を維持。タグ配色は金（歴史的選手・Team Taiwan）＝--tag-legend-*、黄＝--tag-goldcloth-*、銀＝--tag-genius-*、負面＝--tag-negative-*、一般＝--share-tag-*、削除済み＝--share-tag-removed-*（各bg／edge／text）、球団ゆかり＝白地＋球団色（無色時はaccent）。standard／classicは従来色、night／scoreboardは暗色（v1.16.2）。standard以外は4.5:1未満の文字色のみ#302719へ調整。削除線は調整後文字色を使う。
 - 薪資・契約・能力・イベント・成績・引退・殿堂・Seed／RNG・URL・DOMのゲーム内容は変更しない。保存／續玩、旧版エンジン、全面Canvas改写は追加しない。旧1.8草案のAPI／事件名は適用しない。
