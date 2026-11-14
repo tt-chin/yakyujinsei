@@ -18,7 +18,7 @@ const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright')
 const baseline=arg('baseline')||'9956ca3',legacyTree='629addc';
 
 const special=['legend','taiwan','goldcloth','genius','mrteam','glass','scum','yips','distract','cancer','ambience','thief','latepractice'];
-const hook=`\nwindow.__shareColorTest={rich:()=>{S.removed=['旧特性'];Object.assign(S.traits,{legend:true,taiwan:true,goldcloth:true,genius:true,glass:true,mrteam:true});S.mrTeamName='福岡シーホークス';const plain=Object.keys(traitNames()).find(k=>!${JSON.stringify(special)}.includes(k));S.traits[plain]=true;return plain;},image:()=>{const out=document.createElement('div');document.body.appendChild(out);shareImage([],out);return out.querySelector('img').src;}};`;
+const hook=`\nwindow.__shareColorTest={rich:()=>{S.removed=['旧特性'];Object.assign(S.traits,{legend:true,taiwan:true,goldcloth:true,genius:true,glass:true,mrteam:true});S.mrTeamName='福岡シーホークス';const plain=Object.keys(traitNames()).find(k=>!${JSON.stringify(special)}.includes(k));S.traits[plain]=true;return plain;},image:async()=>{const out=document.createElement('div');document.body.appendChild(out);await shareImage([],out);return out.querySelector('img').src;}};`;
 const server=createServer(async(req,res)=>{try{
   const u=new URL(req.url,'http://localhost'),old=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname.replace(/^\/(baseline\/)?/,''))||'index.html';
   if(rel.includes('..'))throw Error('path');
@@ -71,13 +71,13 @@ try{
         assert.equal(await p.evaluate(()=>document.documentElement.dataset.theme),theme);
         const plain=await p.evaluate(()=>window.__shareColorTest.rich());assert.ok(plain,'a plain trait exists');
         if(run==='legacy'){
-          await p.evaluate(legacy=>{for(const [n,v] of Object.entries(legacy))document.documentElement.style.setProperty(n,v);},legacy);
+          await p.evaluate(legacy=>{for(const [n,v] of Object.entries(legacy))document.documentElement.style.setProperty(n,v);document.documentElement.style.setProperty('--sans','sans-serif');document.documentElement.style.setProperty('--mono','monospace');},legacy);
           const read=await readShare(p,tokenNames);
           assert.deepEqual(read.colors,legacy,`${width} ${theme} legacy colors read back as written`);assert.equal(read.canvases,0,`${width} ${theme} legacy read without canvas`);
         }
-        const png=await p.evaluate(()=>{const proto=CanvasRenderingContext2D.prototype,fill=proto.fillText;
+        const png=await p.evaluate(async()=>{const proto=CanvasRenderingContext2D.prototype,fill=proto.fillText;
           proto.fillText=function(t,...r){if(/^\d+\.\d+\.\d+$/.test(String(t)))return;return fill.call(this,t,...r);};
-          try{return window.__shareColorTest.image();}finally{proto.fillText=fill;}});
+          try{return await window.__shareColorTest.image();}finally{proto.fillText=fill;}});
         pngs[run]=png;
         if(arg('shots')){await mkdir(arg('shots'),{recursive:true});await writeFile(path.join(arg('shots'),`design-tokens-03-${theme}-${width}-${{old:'before',legacy:'legacy',new:'after'}[run]}.png`),Buffer.from(png.split(',')[1],'base64'));}
         if(run==='new'){

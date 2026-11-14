@@ -59,6 +59,32 @@ export function readThemeColors(names,{documentRef=document,styleOf=el=>getCompu
   }finally{host.remove();}
 }
 
+// Share image fonts come from the --sans/--mono tokens (UI-DESIGN-TOKENS-07, DESIGN_SYSTEM_PLAN §15).
+// Pixel sizes stay fixed (the image ignores --font-scale). A missing token throws, like a missing color token,
+// because the canvas silently keeps its previous font when given an invalid font string.
+export function readThemeFonts({documentRef=document,styleOf=el=>getComputedStyle(el)}={}){
+  const computed=styleOf(documentRef.documentElement),fonts={};
+  for(const [key,name] of [['sans','--sans'],['mono','--mono']]){
+    const value=computed.getPropertyValue(name).trim();
+    if(!value)throw new Error('SHARE_FONT_TOKEN_MISSING: '+name);
+    fonts[key]=value;
+  }
+  return fonts;
+}
+// Web fonts are split by unicode-range, so each weight/family is loaded with the exact text the image draws.
+// A failed or slow load must not block the image: it is drawn with whatever fonts are available.
+// After one timeout the wait is skipped for the rest of the session, so repeated renders do not pay it again.
+const SHARE_FONT_TIMEOUT_MS=3000;
+let shareFontWaitTimedOut=false;
+async function waitForShareFonts(textsByFont,{fontSet=document.fonts}={}){
+  if(shareFontWaitTimedOut||!fontSet||typeof fontSet.load!=='function')return;
+  const loads=[...textsByFont].map(([font,text])=>fontSet.load(font,text).catch(()=>[]));
+  let timer;
+  const timeout=new Promise(resolve=>{timer=setTimeout(()=>{shareFontWaitTimedOut=true;resolve();},SHARE_FONT_TIMEOUT_MS);});
+  try{await Promise.race([Promise.all(loads),timeout]);}finally{clearTimeout(timer);}
+}
+const shareRenderSeq=new WeakMap();
+
 // Retirement career image (canvas) with save/share buttons (OOP plan §2q).
 // The career state and seed are read through getters, so a new career (S/SEED reassigned) is seen at once.
 // renderShareImage is the former game.js shareImage body; game.js helpers and tables are injected.
@@ -70,14 +96,24 @@ export class ShareImage {
       const theme=getDisplayPreferences().theme;
       for(const [out,preview] of this.#previews){
         if(!out.isConnected){this.#previews.delete(out);continue;}
-        if(preview.theme!==theme)this.render(preview.evals,out);
+        if(preview.theme!==theme)this.render(preview.evals,out).catch(err=>console.error(err));
       }
     });
   }
-  render(evals,out){renderShareImage(this.#deps,this.#previews,evals,out);}
+  render(evals,out){return renderShareImage(this.#deps,this.#previews,evals,out);}
 }
 
-function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playerType,primaryPos,traitNames,fmtIP,slgOf,fmtMoney},shareImagePreviews,evals,out){
+async function renderShareImage(deps,shareImagePreviews,evals,out){
+  const seq=(shareRenderSeq.get(out)||0)+1;shareRenderSeq.set(out,seq);
+  const textsByFont=new Map();
+  drawShareImage(deps,shareImagePreviews,evals,out,textsByFont);
+  await waitForShareFonts(textsByFont);
+  if(shareRenderSeq.get(out)!==seq)return; // a newer render of this container won
+  drawShareImage(deps,shareImagePreviews,evals,out,null);
+}
+
+// collect is a Map while collecting text for font loading (nothing is drawn or written to out), null when drawing.
+function drawShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playerType,primaryPos,traitNames,fmtIP,slgOf,fmtMoney},shareImagePreviews,evals,out,collect){
   const S=getState(),SEED=getSeed();
   const isP=S.pos==='P';
   const tiers=evals.map(t=>t.replace(/<[^>]+>/g,''));
@@ -142,7 +178,10 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   /* 改行計算のため,CanvasとContextを先に作り文字幅を測定。 */
   const cv=document.createElement('canvas');
   const c=cv.getContext('2d');
-  c.font='13px sans-serif';
+  const {sans,mono}=readThemeFonts();
+  // The collecting pass shadows fillText on this throwaway context only; the prototype is untouched.
+  if(collect)c.fillText=t=>{const key=c.font.replace(/[\d.]+px/,'16px');collect.set(key,(collect.get(key)||'')+t);};
+  c.font='13px '+sans;
 
   /* 処理栄誉二欄改行。 */
   const colW=(W-PAD*2)/2, maxTextW=colW-20;
@@ -166,7 +205,7 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   const honorsTotalHeight = Math.max(leftH, rightH);
   /* 預估総高さ。 */
   const traitTags=keepTr.concat(remTr);
-  c.font='12px sans-serif';
+  c.font='12px '+sans;
   let measuredTagX=PAD,tagRows=traitTags.length?1:0;
   traitTags.forEach(o=>{const width=c.measureText(o.label).width+16;if(measuredTagX+width>W-PAD&&measuredTagX>PAD){tagRows++;measuredTagX=PAD;}measuredTagX+=width+8;});
   let H=150; // header
@@ -182,7 +221,7 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   if(proLogs.length > 0) H += 34 + proLogs.length * 20 + 24;
 
   H+=120; // Four income rows plus space for the seed/version footer.
-  cv.width=W*scale; cv.height=H*scale;
+  if(!collect){cv.width=W*scale; cv.height=H*scale;}
   c.scale(scale,scale);
   const theme=getDisplayPreferences().theme,color=readThemeColors([...Object.values(SHARE_COLOR_TOKENS),...SHARE_TAG_TOKENS.flatMap(n=>[n+'-bg',n+'-edge',n+'-text'])]);
   const imageColor=Object.fromEntries(Object.entries(SHARE_COLOR_TOKENS).map(([key,name])=>[key,color[name]]));
@@ -193,9 +232,9 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   const posN={P:roleN(S.role)+'投手',C:'捕手',IF:'内野手',OF:'外野手'}[S.pos];
 
   // Header
-  c.fillStyle=imageColor.dim; c.font='13px sans-serif'; c.fillText('野球人生シミュレーター・引退記念',PAD,30);
-  c.fillStyle=imageColor.accent; c.font='bold 36px sans-serif'; c.fillText(S.name,PAD,52);
-  c.fillStyle=imageColor.text; c.font='15px sans-serif';
+  c.fillStyle=imageColor.dim; c.font='13px '+sans; c.fillText('野球人生シミュレーター・引退記念',PAD,30);
+  c.fillStyle=imageColor.accent; c.font='bold 36px '+sans; c.fillText(S.name,PAD,52);
+  c.fillStyle=imageColor.text; c.font='15px '+sans;
   c.fillText(`${primaryPos()}｜${playerType()}｜${hist.length?hist[0].y:'?'}–${S.year}｜引退時${S.age}歳${S.pos==='P'&&S.tjCount?`｜TJ×${S.tjCount}`:''}`,PAD,98);
   // 特性列(header 右方)。
   let y=126;
@@ -210,7 +249,7 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   }
   function drawTags(items){ items.forEach(function(o){ const t=o.label, col=tagColor(o);
     const readable=shareTagPalette(col,theme);
-    c.font='12px sans-serif'; const w=c.measureText(t).width+16;
+    c.font='12px '+sans; const w=c.measureText(t).width+16;
     if(tagx+w>W-PAD&&tagx>PAD){tagx=PAD;y+=26;}
     c.fillStyle=col.bg; c.strokeStyle=col.bd; c.lineWidth=1;
     c.fillRect(tagx,y,w,20); c.strokeRect(tagx,y,w,20);
@@ -220,21 +259,21 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   }); }
   var tagx=PAD;
   if(traitTags.length){ drawTags(traitTags); y+=30; }
-  c.font='13px sans-serif';c.fillStyle=imageColor.text;
+  c.font='13px '+sans;c.fillStyle=imageColor.text;
 
   function hr(){ c.strokeStyle=imageColor.edge; c.lineWidth=1; c.beginPath(); c.moveTo(PAD,y); c.lineTo(W-PAD,y); c.stroke(); y+=12; }
-  function sectionTitle(t){ c.fillStyle=imageColor.dim; c.font='bold 13px sans-serif'; c.fillText(t,PAD,y); y+=22; }
+  function sectionTitle(t){ c.fillStyle=imageColor.dim; c.font='bold 13px '+sans; c.fillText(t,PAD,y); y+=22; }
 
   // 評価。
   hr(); sectionTitle('通算評価');
-  c.font='bold 16px sans-serif'; c.fillStyle=imageColor.accent;
+  c.font='bold 16px '+sans; c.fillStyle=imageColor.accent;
   tiers.forEach(function(t){ c.fillText('★ '+t,PAD,y); y+=24; }); y+=6;
 
   // 通算成績表。
   hr(); sectionTitle('通算成績');
   const cols=isP?[['League',90],['Yrs',36],['G',48],['IP',54],['W',36],['L',36],['SV',48],['HLD',48],['SO',52],['BB',48],['ERA',52],['WHIP',54]]
                 :[['League',80],['Yrs',34],['G',40],['PA',46],['AVG',48],['OBP',48],['SLG',48],['OPS',48],['H',44],['HR',38],['RBI',44],['SB',40],['DEF',40]];
-  function row(cells,head){ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?imageColor.dim:imageColor.text;
+  function row(cells,head){ let x=PAD; c.font=(head?'bold ':'')+'13px '+mono; c.fillStyle=head?imageColor.dim:imageColor.text;
     cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=cols[i][1]; }); y+=head?24:26; }
   row(cols.map(cc=>cc[0]),true);
   leagues.forEach(function(b){ const st=S.stats[b];
@@ -253,7 +292,7 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   // 国際大会通算成績。
   if(S.intlCount>0){ const IS=S.intlStat;
     hr(); sectionTitle('国際大会通算（日本代表 '+S.intlCount+' 大会）');
-    const rowIntl=(cells,head)=>{ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?imageColor.dim:imageColor.text;
+    const rowIntl=(cells,head)=>{ let x=PAD; c.font=(head?'bold ':'')+'13px '+mono; c.fillStyle=head?imageColor.dim:imageColor.text;
       cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=ic[i][1]; }); y+=head?24:28; };
     var ic;
     if(isP){ const era=IS.IP>0?(IS.ER*9/IS.IP).toFixed(2):'-';
@@ -270,7 +309,7 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
 
   // 栄誉(横2列,長文は自動改行)。
   hr(); sectionTitle('通算タイトル（'+honors.length+' 件）');
-  c.font='13px sans-serif'; c.fillStyle=imageColor.soft;
+  c.font='13px '+sans; c.fillStyle=imageColor.soft;
   let startY = y;
   let currY = startY;
   honorBlocks.forEach(function(b, i){
@@ -285,9 +324,9 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
   if(amaLogs.length > 0){
     hr(); sectionTitle('キャリア年表（アマチュア成績）');
     const hc=[['年',48],['年齢',40],['チーム',150],['成績',W-PAD*2-238]];
-    let x=PAD; c.font='bold 12px monospace'; c.fillStyle=imageColor.dim;
+    let x=PAD; c.font='bold 12px '+mono; c.fillStyle=imageColor.dim;
     hc.forEach(function(h){ c.fillText(h[0],x,y); x+=h[1]; }); y+=20;
-    c.font='11px monospace';
+    c.font='11px '+mono;
     amaLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?imageColor.bad:imageColor.text;
       const cells=[String(r.y),String(r.age),r.tm,r.line];
       cells.forEach(function(cell,i){
@@ -301,9 +340,9 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
     const hc = isP
       ? [['年',46],['年齢',36],['チーム',124],['G',45],['IP',55],['W',36],['L',36],['SV',42],['HLD',42],['SO',46],['BB',46],['ERA',52],['WHIP',54]]
       : [['年',46],['年齢',34],['チーム',120],['G',36],['PA',42],['AVG',46],['OBP',46],['SLG',46],['OPS',46],['H',40],['HR',36],['RBI',40],['SB',36],['DEF',40]];
-    let x=PAD; c.font='bold 12px monospace'; c.fillStyle=imageColor.dim;
+    let x=PAD; c.font='bold 12px '+mono; c.fillStyle=imageColor.dim;
     hc.forEach(function(h){ c.fillText(h[0],x,y); x+=h[1]; }); y+=20;
-    c.font='12px monospace';
+    c.font='12px '+mono;
     proLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?imageColor.bad:imageColor.text;
       const tmS=r.tm;
       const s = r.st || {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
@@ -330,12 +369,12 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
     y+=4;
   }
 
-  c.fillStyle=imageColor.accent; c.font='bold 16px sans-serif';
+  c.fillStyle=imageColor.accent; c.font='bold 16px '+sans;
   const income=incomeSummary(S),incomeGap=24,incomeWidth=(W-PAD*2-incomeGap)/2;
   function incomeCell(entry,x,width){
     const text=entry.label+' '+fmtMoney(entry.amount);
-    let size=16;c.font='bold '+size+'px sans-serif';
-    while(c.measureText(text).width>width&&size>6){size-=0.25;c.font='bold '+size+'px sans-serif';}
+    let size=16;c.font='bold '+size+'px '+sans;
+    while(c.measureText(text).width>width&&size>6){size-=0.25;c.font='bold '+size+'px '+sans;}
     c.fillText(text,x,y);
   }
   incomeCell(income[0],PAD,incomeWidth);incomeCell(income[1],PAD+incomeWidth+incomeGap,incomeWidth);y+=26;
@@ -345,9 +384,10 @@ function renderShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playe
 
 
 
-  c.fillStyle=imageColor.dim; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
+  c.fillStyle=imageColor.dim; c.font='11px '+mono; c.fillText('seed: '+SEED,PAD,H-40);
   c.textAlign='right'; c.fillText(VERSION,W-PAD,H-40); c.textAlign='left';
 
+  if(collect)return;
   const url=cv.toDataURL('image/png');
   for(const previous of shareImagePreviews.keys())if(!previous.isConnected)shareImagePreviews.delete(previous);
   shareImagePreviews.set(out,{evals,theme});

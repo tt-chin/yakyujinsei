@@ -658,7 +658,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 15. -07 細部計畫（UI-DESIGN-TOKENS-07；2026-11-14，基準 `dev` `08b3aca`，VERSION 1.16.5）
 
-狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者）**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
+狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5）**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
 
 ### 15.1 決定（2026-11-14，使用者）
 
@@ -696,3 +696,11 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 | T5 | 新增 `tests/design-tokens-07.test.mjs`（Quick） | 無 `sans-serif'`／`monospace'` 字面值、20 處用 token；`readThemeFonts` 去空白、缺少時丟錯 |
 | T6 | 負控制 | 拿掉等待 → T4①；拿掉 wrapper 的 `return` → T4①；拿掉世代編號 → T4⑤；拿掉逾時記憶 → T4②；還原字面值 → T4④、T5；拿掉舊字體寫入 → T2。各須在該斷言 FAIL |
 | T7 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer → 4 主題 × PC／手機新舊截圖 |
+
+### 15.5 實作結果（2026-11-14，`ui/design-tokens-07`，HEAD `5b704c2`＋工作樹）
+
+- D1～D4 照 §15.3（D1 與 §15.2 草稿相同）。T4 逾時情境的上限依 reviewer 意見由 6 秒放寬為 10 秒（下限 2.8 秒不變）。
+- T4：`design-tokens-07-e2e` 4 項 PASS，約 7 秒（攔住→放行、卡住：首次約 3.7 秒、第 2 次約 10 ms、空樣式表：約 50 ms、26 次 `fillText` 皆為 token 字族、兩次描畫只寫入 1 次）。T5：`design-tokens-07.test` 4 項 PASS。
+- T6 負控制（scratch worktree 突變、還原後比對雜湊）：拿掉等待 → T4①「no image while the font files are held」；拿掉 wrapper 的 `return` → T4①「button still says 作成中」；拿掉世代編號 → T4⑤「only one render writes the container」；拿掉逾時記憶 → T4②「second render does not wait again」（3,023 ms）；還原字面值 → T5 `doesNotMatch`、T4④「every fillText font is a token family list」；拿掉舊字體寫入 → `design-tokens-03-e2e:108`、`replay-share-theme-e2e` 位元組比較。皆 exit 1、`ERR_ASSERTION`。
+- T7：相關測試 PASS → Quick 92／92 PASS（T4 上限放寬前；該檔只在 Full）→ 本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`，放寬後的定案碼）→ reviewer 無中以上發現（low 3 項：描畫兩次的成本、兩次 `getState()` 之間的等待、T4 上限過緊；第 3 項已改）。截圖（`.claude/reports/design-tokens-07/`，未納入版控）：基準 `08b3aca` 對工作樹，4 主題 × 1280／390 × 投手／野手，16 組 PNG 尺寸相同（1840×932），字形改為 Noto Sans JP／IBM Plex Mono，版面位置不變。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。

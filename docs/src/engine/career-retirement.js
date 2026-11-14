@@ -337,7 +337,7 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     imgBtn.addEventListener('click',()=>{
       archiveTraitResults();
       imgBtn.disabled=true; imgBtn.textContent='⏳ キャリア画像を作成中…';
-      requestAnimationFrame(()=>{try{shareImage(evals,shareOut);imgBtn.textContent='✅ キャリア画像を作成しました';}
+      requestAnimationFrame(async()=>{try{await shareImage(evals,shareOut);imgBtn.textContent='✅ キャリア画像を作成しました';}
         catch(err){console.error(err);shareOut.innerHTML='<div class="statline" role="alert">画像を作成できませんでした。「もう一度作成する」から再試行してください。</div>';imgBtn.textContent='⚠️ もう一度作成する';}
         finally{imgBtn.disabled=false;}
       });
