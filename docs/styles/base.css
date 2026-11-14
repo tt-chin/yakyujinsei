@@ -159,7 +159,7 @@ body.salary-detail-open{overflow:hidden}
 /* UI-DESIGN-TOKENS-06: former inline layout values (values unchanged). */
 #app-version{margin-left:8px;font-family:monospace;font-size:var(--fs-11);font-weight:500;letter-spacing:.04em;color:var(--dim);white-space:nowrap;vertical-align:middle}
 #btn-start{margin-top:28px}
-#seed-show{width:120px;background:#fff;color:#a71930;border:1px solid #d9a1aa;border-radius:var(--radius-sm);padding:2px 6px;font-family:inherit;font-size:var(--fs-12);text-align:center}
+#seed-show{width:120px;border:1px solid;border-radius:var(--radius-sm);padding:2px 6px;font-family:inherit;font-size:var(--fs-12);text-align:center}
 #seed-re{color:var(--blue)}
 .home-credit{text-align:center;margin-top:22px;color:var(--dim);font-size:var(--fs-12)}
 .home-credit a{color:var(--amber);text-decoration:none}

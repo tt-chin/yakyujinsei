@@ -606,7 +606,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
   - a：新增元件名 token（如 `--radius-die`、`--radius-menu`、`--radius-link`），外觀不變。
   - b：併入現有 token，外觀改 1～2px。
   - 0／1px／2px（重置、細線、裝飾）保留字面值。**採 a**。
-- W3 `#seed-show` 的寫死色：**-06 照值移入 class**；改用主題 token 屬顏色變更，另記 BACKLOG。
+- W3 `#seed-show` 的寫死色：**-06 照值移入 class**；改用主題 token 屬顏色變更，另記 BACKLOG。**更正（2026-11-14）**：前提有誤，`themes.css:86`（1.7.0 起）的 `!important` 規則已讓 `#seed-show` 隨主題變色，寫死色無效（瀏覽器 computed style 確認）；改為移除無效值，外觀不變，見 BACKLOG UI-SEED-SHOW-COLOR-01。
 - W4 快照差異：
   - a：擴充 `dom-snapshot.mjs` 投影（-02 前例）。
   - b：inline 改 class 只做快照外的元素（首頁區），退休卡與分享區延後。
@@ -658,7 +658,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 15. -07 細部計畫（UI-DESIGN-TOKENS-07；2026-11-14，基準 `dev` `08b3aca`，VERSION 1.16.5）
 
-狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5），`102f5bf` 開 [PR #87](https://github.com/tt-chin/yakyujinsei/pull/87) → `dev` 待合併**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
+狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5），`102f5bf` 開 [PR #87](https://github.com/tt-chin/yakyujinsei/pull/87)，2026-11-14 併入 `dev`（`62f80c0`），dev push [Quick 43590931500](https://github.com/tt-chin/yakyujinsei/actions/runs/43590931500) 成功，結案；4 主題 × PC／手機 Preview 畫面未確認**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
 
 ### 15.1 決定（2026-11-14，使用者）
 
