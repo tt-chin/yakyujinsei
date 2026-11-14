@@ -3,7 +3,8 @@
 // tests/support/theme-colors.mjs (±1/255) and are read without a canvas. With the 629addc share colors written
 // into documentElement.style, standard and classic stay byte-identical to the pre-change tree (9956ca3), which
 // proves layout and drawing are unchanged; with the derived colors every theme's PNG differs from it.
-// The VERSION footer text is skipped on both sides (the release bump changes it). --shots=<dir> writes the
+// Since 1.16.6 (UI-DESIGN-TOKENS-07) the legacy and new runs write the generic fonts sans-serif/monospace, so fonts never
+// cause or hide a difference. The VERSION footer text is skipped on both sides (the release bump changes it). --shots=<dir> writes the
 // before/after PNGs of every theme and viewport.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -75,6 +76,9 @@ try{
           const read=await readShare(p,tokenNames);
           assert.deepEqual(read.colors,legacy,`${width} ${theme} legacy colors read back as written`);assert.equal(read.canvases,0,`${width} ${theme} legacy read without canvas`);
         }
+        // 1.16.6 (UI-DESIGN-TOKENS-07): the share image draws with --sans/--mono; every compared run writes the pre-1.16.6
+        // generic fonts, so a PNG difference from the baseline can only come from the colors.
+        if(run==='new')await p.evaluate(()=>{document.documentElement.style.setProperty('--sans','sans-serif');document.documentElement.style.setProperty('--mono','monospace');});
         const png=await p.evaluate(async()=>{const proto=CanvasRenderingContext2D.prototype,fill=proto.fillText;
           proto.fillText=function(t,...r){if(/^\d+\.\d+\.\d+$/.test(String(t)))return;return fill.call(this,t,...r);};
           try{return await window.__shareColorTest.image();}finally{proto.fillText=fill;}});
