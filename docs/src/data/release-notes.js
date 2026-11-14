@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.8｜2026/11/15",
+    "lines": [
+      "- 画面の余白の段階を整理し、一部の余白をわずかに調整。"
+    ]
+  },
+  {
     "title": "1.16.7｜2026/11/14",
     "lines": [
       "- 文字サイズと角丸の段階を整理し、一部の文字の大きさをわずかに調整。"
