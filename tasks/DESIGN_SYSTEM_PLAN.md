@@ -785,7 +785,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 17. -09 細部計畫（UI-DESIGN-TOKENS-09：間距級距；2026-11-14，基準 `dev` `f8afd8e`，VERSION 1.16.7）
 
-狀態：**W8～W11 已定（使用者 2026-11-14），W12＝A（code owner 2026-11-14，對照圖 `tasks/design-tokens-09/`，[PR #91](https://github.com/tt-chin/yakyujinsei/pull/91)）；選項 C 的草稿驗證見 §17.5；D／T 表待寫；實作接在同一 PR（使用者 2026-11-14）**。分支 `ui/design-tokens-09`（自 `f8afd8e`）。
+狀態：**W8～W11 已定（使用者 2026-11-14），W12＝A（code owner 2026-11-14，對照圖 `tasks/design-tokens-09/`，[PR #91](https://github.com/tt-chin/yakyujinsei/pull/91)）；草稿驗證見 §17.5（選項 C）／§17.6（選項 A）；D／T 表（§17.7／§17.8）批准（使用者 2026-11-15）；實作接在同一 PR（使用者 2026-11-14），本機驗證完成（§17.10），1.16.8**。分支 `ui/design-tokens-09`（自 `f8afd8e`）。
 
 ### 17.1 範圍與分級
 
@@ -830,6 +830,43 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 - 截圖：4 主題 × 1280／390 × 首頁／生涯／選單（`.claude/reports/design-tokens-09/`，未納入版控），目視僅 390 standard 首頁與生涯；W12 對照圖（現況／A／B／C × 390 生涯頂部 2 倍、年俸明細）見 `tasks/design-tokens-09/`。選項 A／B 只做截圖，未跑 Full。
 - macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
 
-### 17.6 後續
+### 17.6 選項 A 草稿驗證（2026-11-15，同一 scratch worktree，CSS 換為 A，測試未改）
 
-依 W12＝A 重做草稿 → harness 補對話框、分頁、360px → 全部截圖目視 → D／T 表送批准 → 實作。
+- 本機 8 批 Full：121 項全執行（missing／extra 0，`sourceChanged:false`），120 PASS、1 FAIL。FAIL 為預期的 `design-tokens-08-e2e`（差異 24,816）。
+- T2 原型（§17.8，scratch）：82,272 次比較 0 差異，約 2 分鐘；§17.4 的 36 條改值宣告（34 個 selector 項目，360px media rule 單列）全部命中比較元素。原型初版的桌面總覽根節點設成 `#view-host`，`#desktop-career .ui-data-list`、`.desktop-overview .ui-panel` 未命中；改為 `#desktop-player`／`#desktop-career`（`#app` 直屬）後命中。
+- 原型關閉舊側改寫（觀察模式）：差異 66,272，34 個項目各有至少 1 個符合的元素出現間距差異（以元素歸屬，同一元素符合多條規則時共計；`#lamps` 的 `gap` 為無效宣告，其觀察來自同規則的 `margin-top`）。初版年俸明細 fixture 只在沒有任何 `dl` 時注入，畫面已有的 `dl.income-summary` 被 `base.css:144` 覆蓋，`.salary-detail-dialog dl` 無觀察；改為沒有 `dl:not(.income-summary)` 時注入後觀察到。
+- 截圖（standard，1280／390／360 × 遊び方、表示設定、年俸明細、選手 2 分頁、生涯 3 分頁，`.claude/reports/design-tokens-09/states/`，未納入版控）：新舊對照目視 360 選手分頁、390 年俸明細，無擠壓或溢出；390 遊び方／表示設定／年度別只看新側，無擠壓或溢出（年度別為「記録なし」，表格內距由 T2 的 fixture 涵蓋）。其餘未目視。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 17.7 D 表
+
+| # | 檔案 | 內容 |
+|---|---|---|
+| D1 | `docs/styles/base.css` | `:root` 新增 `--space-4xs`～`--space-5xl` 12 個（§17.3 W10），置於 `--fs-*` 行之後 |
+| D2 | `docs/styles/*.css`（8 檔） | 只含 px／`0` 的間距宣告中 172 個 px 字面值改 `var(--space-*)`，值改變 39 處（36 宣告，§17.4）；含 `calc`／`var`／`env`／`auto`／負值的宣告、`0`、密度元件 token 不動（scratch script 機械轉換） |
+| D3 | `CURRENT_SPEC.md` | 新增「間隔トークン」一條（12 段の名前と値、`--space-scale` を掛けない、対象外の宣言） |
+| D4 | 版本 1.16.8 | `config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`node scripts/update-release-notes.mjs`、`CURRENT_SPEC.md` 標頭 |
+| D5 | `BACKLOG.md`、本節 | -09 狀態與實作結果 |
+
+### 17.8 T 表（AGENTS §6.3：舊期待值隨已批准規格變更）
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | `design-tokens-06.test` | 追加 3 項：①`base.css` `:root` 的 12 個 `--space-*` 名字與值（`--space-scale` 除外）；②`docs/styles` 的 margin／padding／gap 宣告先去掉 `var(--space-*)` 再判斷，頂層的正 px 字面值只允許出現在 W12＝A 不動的 7 條宣告（`#board`、`#log`、`.salary-detail-dialog` 的 padding，`stadium-background.css` 的 `#start .wrap` margin，`#main-nav`、`#view-player,#view-career` 的 padding，`.ui-ability-guide` 的 margin），以檔案＋selector＋屬性固定；③每個 `--space-*`（`--space-scale` 除外）都被引用、每個引用都有定義。其他斷言不變 |
+| T2 | 新增 `design-tokens-09-e2e`（Full，manifest `seconds` 約 130） | 以 -08 harness 為底，基準 `f8afd8e`。舊側所有 `styles/*.css` 依 W8 表把間距宣告的 px 字面值改寫為新 px 值（含 `calc`／`auto`／負值的宣告整條不動，與 W12＝A 同規則；測試內獨立實作，不讀 token），之後要求 41 屬性＋相對尺寸完全相等。狀態：首頁、生涯初期（含 `#act-toggle`）、選手 2 分頁、生涯 4 分頁、桌面總覽（1280）、遊び方、表示設定、年俸明細、退休後；寬度 1280／390（投手、野手）＋360（投手，生涯初期與分頁）。新開生涯沒有的列以 fixture 注入，新舊兩側相同（`.ui-stat-level`、`.ui-yearly-table`、`.contract-yearly-salaries`、年俸明細的 `h3`／`dl:not(.income-summary)`／`ul`／`.salary-market-components strong`／`.contract-schedule>div`）。每條改值宣告的 selector 至少命中 1 個比較元素（360px media rule 只在 360 計） |
+| T3 | `design-tokens-08-e2e` 的去留 | 對 `9d9e781` 0 差異在 -09 後不成立（-08 前例 T4）：從 manifest 移除並刪檔，-08 的證明保留於 §16.7 與 git 歷史；T2 承接其 harness。`design-tokens-06.test:6` 註解的檔名一併改為 T2 |
+| T4 | 負控制 | ①`--space-md` 改 13px → T2 FAIL；②T2 的對應表 14→16 → T2 FAIL；③`.btn` 引用 `--space-sm`（錯一級）→ T2 FAIL；④拿掉年俸明細的比較 → T2「changed selectors that matched no compared element」；⑤拿掉 360px → 同上（360 media rule）；⑥留一處 `padding:14px` → T1 FAIL；⑦半轉換 `padding:var(--space-sm) 14px` → T1 FAIL；⑧T2 關閉舊側改寫 → FAIL，且 34 個項目各有間距差異（證明狀態與 fixture 觸及改值，§17.6 觀察模式）。皆就地突變、shasum 確認還原 |
+| T5 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer → 4 主題 × 1280／390 截圖目視 |
+
+### 17.9 後續
+
+PR #91 合併 dev → dev push Quick → BACKLOG 結案；Preview 4 主題 × PC／手機確認另行。
+
+### 17.10 實作結果（2026-11-15，`ui/design-tokens-09`，基準 `f8afd8e`）
+
+- D1～D4 照 §17.7：CSS 由草稿 script 機械轉換（與 §17.6 的 A 草稿逐位元組相同）；`CURRENT_SPEC.md` 新增間隔トークン一條並刪除字級條末的「余白の級距は…未実装」，版本 1.16.7→1.16.8（`config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`docs/src/data/release-notes.js`、`CURRENT_SPEC.md` 標頭）。
+- T1：`design-tokens-06.test` 11 項 PASS。T2：`design-tokens-09-e2e` 82,272 次比較 0 差異，34 個項目全部命中，約 2 分 17 秒；rewrite 函式為正式版重寫（與原型不同實作），結果一致。T3：`design-tokens-08-e2e` 刪除並自 manifest 移除，`design-tokens-06.test` 檔頭註解改指 T2。
+- T4 負控制（就地突變、shasum 確認還原，皆 exit 1、ERR_ASSERTION）：①`--space-md` 13px → 差異 40,144；②對應表 14→16 → 10,272；③`.btn` 左右引用 `--space-sm` → 2,208；④拿掉年俸明細比較 → 「changed selectors that matched no compared element」（年俸明細 7 項）；⑤拿掉 360px → 同斷言（360 media rule）；⑥`.browser-save-panel` 寫回 `padding:14px` → T1 保留清單多出該宣告；⑦`.btn` 半轉換 `var(--space-sm) 14px` → 同上；⑧關閉舊側改寫 → 差異 67,232，34／34 項目有間距差異。
+- reviewer：無缺陷；low 1 項——T1／T2 的屬性比對未含邏輯屬性（`padding-inline`／`padding-block` 等）。本次轉換的 2 處（`#main-nav padding-inline` 6px、`.information-article padding-block` 8px）在級距上、值不變，但 T1 擋不到將來的寫死值；已擴充兩檔的屬性比對（含 `-inline`／`-block`／`-start`／`-end`），負控制：`#main-nav` 寫回 `padding-inline:6px` → T1 FAIL。
+- T5：Quick 92／92 PASS（擴充屬性比對前；擴充後 T1 重跑 PASS）→ 最終程式碼重跑 T2 PASS → 本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`，含 `design-tokens-09-e2e`、不含 `-08-e2e`）。截圖：最終版 4 主題 × 1280／390 × 首頁／生涯／選單（`.claude/reports/design-tokens-09/`，未納入版控），目視 390 scoreboard 生涯、390 night 首頁、1280 classic 選單，無擠壓或溢出；其餘未目視。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
