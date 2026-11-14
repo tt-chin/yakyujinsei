@@ -54,6 +54,16 @@ export async function captureGameView(full){
     }else if(kids.length)throw Error('TEAM_BADGE_CONTRACT');
     dom.board=tpl.innerHTML;
   }
+  if(window.__expectDesignTokens06){
+    // Approved UI-DESIGN-TOKENS-06 (DESIGN_SYSTEM_PLAN §14): #bd-tj lost its inline style to a CSS rule.
+    // Validate it carries only its id, then restore the old inline style; every other #board byte stays strict.
+    const tpl=document.createElement('template');tpl.innerHTML=dom.board;
+    const tj=tpl.content.querySelectorAll('#bd-tj');
+    if(tj.length!==1||tj[0].attributes.length!==1)throw Error('DESIGN_TOKENS_06_BOARD_CONTRACT');
+    tj[0].setAttribute('style','color:var(--dim);font-size:11px;margin-left:6px;white-space:nowrap');
+    window.__designTokens06Board=(window.__designTokens06Board||0)+1;
+    dom.board=tpl.innerHTML;
+  }
   if(window.__expect1140){
     // Independently validate the approved TJ presentation before mapping only
     // that value back to the fixed historical view-model representation.
@@ -111,6 +121,31 @@ export async function captureGameView(full){
       }
       tag.className='tag';
     }
+    dom.log=log.outerHTML;
+  }
+  if(window.__expectDesignTokens06&&log){
+    // Approved UI-DESIGN-TOKENS-06 (DESIGN_SYSTEM_PLAN §14): fixed inline layout values of the retirement
+    // card became classes / id rules. Validate each element's exact attributes, then restore the old inline style.
+    const exact=(el,attrs)=>{if(el.attributes.length!==attrs.length||attrs.some(a=>!el.hasAttribute(a)))throw Error('DESIGN_TOKENS_06_ATTR_CONTRACT: '+el.outerHTML.slice(0,80));};
+    const restore=(el,style)=>{el.removeAttribute('class');el.setAttribute('style',style);};
+    let n=0;
+    for(const el of log.querySelectorAll('.cell-nowrap,.cell-left,.ama-line,.retire-league,.intl-heading,.share-actions,.replay-url-input,.share-image-preview,.share-image-actions,.share-image-hint')){
+      const c=el.className;n++;
+      if(c==='cell-nowrap'&&el.tagName==='TD'){exact(el,['class']);restore(el,'white-space:nowrap');}
+      else if(c==='cell-left cell-nowrap'&&el.tagName==='TD'){exact(el,['class']);restore(el,'text-align:left;white-space:nowrap');}
+      else if(c==='cell-left'&&el.tagName==='TH'){exact(el,['class']);restore(el,'text-align:left');}
+      else if(c==='ama-line'&&el.tagName==='TD'){const inj=el.getAttribute('style');if(inj!==null&&inj!=='color:var(--bad);font-weight:700;')throw Error('DESIGN_TOKENS_06_INJ_CONTRACT');exact(el,inj===null?['class']:['class','style']);el.removeAttribute('style');restore(el,'text-align:left;font-size:11px;'+(inj||''));}
+      else if(c==='retire-league'&&el.tagName==='P'){exact(el,['class']);restore(el,'margin-top:8px');}
+      else if(c==='intl-heading'&&el.tagName==='H4'){exact(el,['class']);restore(el,'margin:12px 0 4px');}
+      else if(c==='row2 share-actions'&&el.tagName==='DIV'){exact(el,['class']);el.className='row2';el.setAttribute('style','display:flex;gap:8px;flex-wrap:wrap');}
+      else if(c==='replay-url-input'&&el.tagName==='INPUT'){exact(el,['readonly','aria-label','class']);el.removeAttribute('class');el.style.cssText='width:100%;margin-top:6px;padding:8px;color:var(--chalk);background:var(--panel);border:1px solid var(--edge);border-radius:6px';}
+      else if(c==='share-image-preview'&&el.tagName==='IMG'){exact(el,['src','class','alt']);el.removeAttribute('class');el.removeAttribute('alt');el.setAttribute('style','width:100%;border-radius:8px');el.setAttribute('alt','引退リザルト画像');}
+      else if(c==='share-image-actions'&&el.tagName==='DIV'){exact(el,['class']);restore(el,'display:flex;gap:8px;margin-top:8px');}
+      else if(c==='statline share-image-hint'&&el.tagName==='DIV'){exact(el,['class']);el.className='statline';el.setAttribute('style','margin-top:6px');}
+      else throw Error('DESIGN_TOKENS_06_CLASS_CONTRACT: '+el.tagName+'.'+c);
+    }
+    for(const id of ['sh-img','sh-url','sh-save','sh-dl','sh-out']){const el=log.querySelector('#'+id);if(!el)continue;if(el.hasAttribute('style'))throw Error('DESIGN_TOKENS_06_ID_CONTRACT: '+id);const type=el.getAttribute('type');el.removeAttribute('type');el.setAttribute('style',id==='sh-out'?'margin-top:8px':'flex:1');if(type!==null)el.setAttribute('type',type);n++;}
+    window.__designTokens06Log=(window.__designTokens06Log||0)+n;
     dom.log=log.outerHTML;
   }
   if(window.__expect1140){

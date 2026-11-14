@@ -17,6 +17,7 @@ const browserProfiles = {
   'international-personal-stats-e2e': {seconds:600,reason:'Tournament snapshots and result cards, T01-T14 browser matrix, six exact baseline S/RNG careers. No Quick profile.'},
   'design-tokens-02-e2e': {quick:[],seconds:15,reason:'UI-DESIGN-TOKENS-02: computed styles of the class-based team badge and retirement trait tags vs the pre-change inline styles, 4 themes x PC/mobile.'},
   'design-tokens-03-e2e': {quick:[],seconds:40,reason:'UI-DESIGN-TOKENS-03: share PNG drawn from CSS theme tokens vs the pre-change tree (standard/classic byte-identical, night/scoreboard changed) and probe colors vs themes.css, 4 themes x PC/mobile.'},
+  'design-tokens-06-e2e': {seconds:30,reason:'UI-DESIGN-TOKENS-06: computed style + layout of every #start/#board/#log element vs the pre-change tree (d5433e2), 4 themes x 3 font sizes x 2 densities x PC/mobile x P/IF, web fonts blocked; every new class/id rule must match. No Quick profile.'},
   'trait-display-e2e': {seconds:180,reason:'All trait labels, acquisition-only explanation lifetime, retirement/PNG and exact pre-change P/IF S/RNG careers.'},
   'stage10-risk-e2e': {seconds:240,reason:'Pre-refactor investigation: natural trait routes, overseas salary flow, explicit return faults and passive LEGACY traces. Desired-behaviour failures remain FAIL; no Quick profile.'},
   'stage6-ability-e2e': {seconds:120,reason:'Original allocation matrix and stale-callback safety assertions; expectations preserved.'},

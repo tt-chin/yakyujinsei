@@ -40,11 +40,22 @@ const themes=themeColors(css),rules=Object.keys(themes.rules);
 assert.deepEqual([...themes.order].sort(),[...THEME_IDS].sort(),'theme blocks parsed');
 assert.equal(rules.length,48,'rule block defines the 48 component colors');
 assert.ok(rules.every(n=>!BASE.includes(n)),'rule block must not redefine a base color');
-for(const theme of THEME_IDS){
-  const own=Object.keys(themes.themes[theme]).filter(n=>!(theme===themes.defaultTheme&&n==='--disabled-opacity'));
-  assert.deepEqual([...own].sort(),[...BASE].sort(),`${theme} block defines exactly the 17 base colors`);
-  for(const name of rules)themes.color(theme,name);
-}
+// UI-DESIGN-TOKENS-06 (§14.3 D2): a theme block may also override a non-color token of the base.css / preferences.css
+// :root blocks (radius, shadow, font, spacing); any other extra token fails.
+const rootTokens=rel=>[...readFileSync(new URL('../docs/styles/'+rel,import.meta.url),'utf8').matchAll(/(?:^|\})\s*:root\s*\{([^}]*)\}/g)].flatMap(m=>[...m[1].matchAll(/(--[\w-]+)\s*:\s*([^;]*)/g)]).filter(m=>!/^(?:#|rgba?\()/.test(m[2].trim())).map(m=>m[1]);
+const NON_COLOR=new Set([...rootTokens('base.css'),...rootTokens('preferences.css')]);
+assert.ok(['--radius-md','--fs-12','--shadow-die','--font-scale','--sans'].every(n=>NON_COLOR.has(n))&&!NON_COLOR.has('--team-label-bg'),'non-color token whitelist');
+const checkThemeBlocks=parsed=>{for(const theme of THEME_IDS){
+  const own=Object.keys(parsed.themes[theme]).filter(n=>!(theme===parsed.defaultTheme&&n==='--disabled-opacity')&&!NON_COLOR.has(n));
+  assert.deepEqual([...own].sort(),[...BASE].sort(),`${theme} block defines exactly the 17 base colors plus whitelisted non-color tokens`);
+}};
+checkThemeBlocks(themes);
+for(const theme of THEME_IDS)for(const name of rules)themes.color(theme,name);
+{const withToken=extra=>themeColors(css.replace(':root[data-theme="night"] {',':root[data-theme="night"] {'+extra));
+  checkThemeBlocks(withToken('--radius-md:0;--shadow-die:none;'));
+  assert.throws(()=>checkThemeBlocks(withToken('--unknown-token:0;')),/night block defines exactly/);
+  assert.throws(()=>checkThemeBlocks(withToken('--team-label-bg:#000;')),/night block defines exactly/);
+  assert.throws(()=>checkThemeBlocks(withToken('--metric-bg:#000;')),/night block defines exactly/);}
 const solid=(theme,name)=>{const c=themes.color(theme,name);return c.alpha<1?composite(c,themes.color(theme,'--bg')):c;};
 // composite() is source-over in 8-bit sRGB; translucent colors must be composited before a contrast ratio.
 assert.deepEqual(composite({rgb:[1,1,1],alpha:.5},{rgb:[0,0,0],alpha:1}).rgb.map(v=>Math.round(v*255)),[128,128,128]);

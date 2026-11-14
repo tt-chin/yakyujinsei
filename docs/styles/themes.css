@@ -1,3 +1,4 @@
+/* Theme blocks hold the 17 base colours. They may also override a non-colour token of the base.css / preferences.css :root blocks (radius, shadow, font, spacing; UI-DESIGN-TOKENS-06, DESIGN_SYSTEM_PLAN §14). */
 :root,
 :root[data-theme="standard"] {
   color-scheme:light;

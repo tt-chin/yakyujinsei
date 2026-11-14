@@ -552,7 +552,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 14. P4 細部計畫（UI-DESIGN-TOKENS-06／-07；2026-11-14，基準 `ui/design-tokens-05` `01566e2`，VERSION 1.16.5）
 
-狀態：**草稿；W1～W5 已定（§14.5），T 表待草稿驗證後補**。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 於 2026-11-14 併入 `dev` `d5433e2` 後 fast-forward，對 `dev` 開 PR）。使用者 2026-11-14 決定：
+狀態：**-06 T 表 2026-11-14 批准，已實作、本機驗證完成（§14.10），未 commit／PR**；-07 細部計畫未寫。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 於 2026-11-14 併入 `dev` `d5433e2` 後 fast-forward，對 `dev` 開 PR）。使用者 2026-11-14 決定：
 
 1. canvas 字體改讀 `--sans`／`--mono`；像素比較先寫入舊字體再比位元組；分享圖不隨字級設定改變。
 2. 字級與間距先以現值各做 token（外觀不變）；收斂為級距另立項。
@@ -583,8 +583,8 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 |---|---|---|
 | D1 | `docs/styles/base.css` | `:root` 新增字級 token `--fs-<px>`（例 `--fs-12`、`--fs-10-5`；值 `calc(<px>px*var(--font-scale,1))`），59 處改 `var(--fs-*)`；陰影 token 5 個（`--shadow-glow`、`--shadow-team-badge`、`--shadow-team-dot`、`--shadow-die`、`--shadow-current`）；圓角 7／9／12px 新增元件名 token（W2 a）；間距不做 token（W1 c） |
 | D2 | `docs/styles/themes.css` | 不實際覆寫；註明主題區塊可覆寫非顏色 token |
-| D3 | `docs/styles/base.css`、`docs/index.html`、`docs/src/engine/career-retirement.js`、`docs/src/ui/share-image.js` | §14.2 的 inline 固定值改 class，值照舊（class 名稱於草稿時列表批准） |
-| D4 | 其他 `docs/styles/*.css` | 字級、圓角、陰影改用 D1 的 token |
+| D3 | `docs/styles/base.css`、`docs/index.html`、`docs/src/engine/career-retirement.js`、`docs/src/ui/share-image.js` | §14.2 的 inline 固定值移入 `base.css`，值照舊。有 id 的元素用 id 規則（`#app-version`、`#btn-start`、`#seed-show`、`#seed-re`、`#bd-tj`、`#sh-img`／`#sh-url`／`#sh-save`／`#sh-dl`、`#sh-out`），其餘用 class：`.home-credit`、`.retire-league`、`.cell-nowrap`、`.cell-left`、`.ama-line`、`.intl-heading`、`.share-actions`、`.replay-url-input`、`.share-image-preview`、`.share-image-actions`、`.share-image-hint`。原本 inline 勝過一般規則，class 規則加上容器前綴維持優先（例 `table.fin .cell-left` 勝過 `table.fin td{text-align:right}`）。受傷醒目改為只在受傷時輸出 `style` |
+| D4 | 其他 `docs/styles/*.css` | 字級、圓角、陰影改用 D1 的 token。不改：`.85em`、`1em`（相對值）、`#save-live` 的 `11px`（原本就不隨字級設定）、`preferences.css` 的 `[style*="font-size:…"]` 3 條（舊版 DOM 混用的 E2E 仍會用到）、`calc(74px／58px * var(--font-scale))`（寬度，不是字級） |
 | D5 | `CURRENT_SPEC.md` | token 表補非顏色 token 與主題覆寫規則 |
 | D6 | `BACKLOG.md` | -06 狀態 |
 
@@ -622,3 +622,35 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 ### 14.7 流程
 
 ~~W1～W5 決定~~（已定）→ scratchpad 草稿（-06 D1～D4，測試不改）→ Quick＋本機 8 批 Full，FAIL 對應 T 表（§13.7 同法）→ 補 -06 T 表 → 批准 → 實作。
+
+### 14.8 草稿驗證（2026-11-14，scratch worktree，基準 `d5433e2`）
+
+- 草稿含 D1、D3、D4（`--fs-*` 19 個、59 處；陰影 token 5 個；圓角 token 3 個；inline 改 class／id 規則），測試未改：
+  - Quick 90／90 PASS。
+  - 本機 8 批 Full 116／117 PASS，117 項全部執行（missing／extra 0，`sourceChanged:false`）。唯一 FAIL 是 `game-view-dom-e2e`：step 0 的 `$.dom.board`（`#bd-tj` 沒有 `style`），與 §14.4 預期相同。
+- 快照投影試作（T1）後，`game-view-dom-e2e` 單獨重跑 PASS（149 s）。第 1 版 FAIL 在退休卡（step 542）：`#sh-img`／`#sh-url` 的 `type` 屬性是執行時加上的，舊 DOM 的屬性順序為 class、id、style、type，投影需先移除 `type` 再補回。
+- computed style 對照 probe（T2 試作）：舊版 `d5433e2` 與草稿，`#start`、`#board`、`#log` 每個元素的 41 個屬性加上相對於根元素的位置與尺寸；4 主題 × 3 字級 × 2 密度 × 1280／390 × 投手／野手，退休後產生分享圖並觸發手動 URL 輸入框。
+  - 擋掉 Google Fonts 時差異 0（29,376 次比較），舊版對舊版的對照組也是 0。
+  - 不擋時新舊與對照組都有 0.02～0.5px 的寬度差（web font 載入時序），因此 T2 須擋掉字型請求。
+  - 未涵蓋 `.retire-league`（測試資料沒有 `S.stats`），T2 須補。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 14.9 T 表（-06，2026-11-14 批准）
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | `tests/support/dom-snapshot.mjs`、`game-view-dom-e2e` | 基準的 `base.css` 沒有 `#bd-tj{` 時設 `__expectDesignTokens06`。`#board`：`#bd-tj` 只能有 id，投影回舊 inline。`#log`：逐一核對 §14.3 D3 的 class 元素的確切屬性，投影回舊 inline（`.replay-url-input` 以 `style.cssText` 重現舊的序列化；按鈕保留 `type` 的順序）；未列的 class 組合丟錯。投影計數須大於 0，避免靜默略過 |
+| T2 | 新增 `tests/design-tokens-06-e2e.mjs`（Full，登記 manifest） | §14.8 probe 正式化：固定基準 `d5433e2` 對目前碼，computed style＋相對尺寸全等；擋 Google Fonts、停用 transition；補 `S.stats` 讓 `.retire-league` 出現；斷言每個新 class／id 規則至少命中 1 個元素 |
+| T3 | 新增 `tests/design-tokens-06.test.mjs`（Quick） | `base.css` 定義 19 個 `--fs-*`，值皆為 `calc(<px>px * var(--font-scale,1))`；`docs/styles` 的字級宣告不再有 `calc(<n>px * var(--font-scale…))`；陰影 5 個、圓角 3 個 token 值等於原值；`index.html`、`career-retirement.js`、`share-image.js` 不再有 §14.2 的固定 inline 值（白名單：`--team-color`、受傷醒目、`display:none` 切換） |
+| T4 | `display-preferences.test` | 主題區塊：顏色 token 恰為 17 個基礎色，另可含非顏色 token（白名單＝`base.css`／`preferences.css` 的 `:root` 非顏色 token）；fixture：`--radius-md:0` 通過、未知 token FAIL |
+| T5 | 負控制 | 還原 `#bd-tj` inline → T1 FAIL；`.cell-left` 改 right → T2 FAIL；`--fs-12` 改 13px → T2、T3 FAIL；刪掉 `.ama-line` 投影 → T1 FAIL；投影計數歸零 → T1 FAIL；主題區塊放未知 token → T4 FAIL；T2 不擋字型 → 對照組出現差異（記錄，不列合格條件） |
+| T6 | 回歸 | 相關單元與 e2e → Quick → 本機 Full → reviewer；PC／手機 × 4 主題截圖目視 |
+
+### 14.10 實作結果（2026-11-14，`ui/design-tokens-06`，HEAD `5d0c849`＋工作樹）
+
+- D1～D5 照 §14.3；D2 只在 `themes.css` 開頭加註解。與 T 表的差異：`var(--fs-*)` 為 64 處（原 59 處 `calc()`＋5 處由 inline 11／12px 移入的規則；舊值靠 `preferences.css` `[style*=…]` 縮放，等值）。
+- T1：`#board` 每步投影 1 次、`#log` 至少 1 次，否則 FAIL。本機 Full 中 8 場生涯 board／log 計數：543／112、374／22、544／134、518／58（PC、手機各 4 場相同）。
+- T2：`design-tokens-06-e2e` 33,024 次比較 0 差異，22 條新規則全部命中，約 21 秒。
+- T5 負控制（scratch worktree 突變）：`#bd-tj` 還原 inline → `DESIGN_TOKENS_06_BOARD_CONTRACT`；刪 `.ama-line` 投影 → `DESIGN_TOKENS_06_CLASS_CONTRACT: TD.ama-line`；投影計數歸零 → `DESIGN_TOKENS_06_LOG_PROJECTION_COUNT`；`.cell-left` 改 right、`--fs-12` 改 13px → T2 差異；`--fs-12` 改 13px → T3 值斷言；主題區塊未知 token → T4。皆 exit 1。T2 不擋字型這次 0 差異（§14.8 時有 0.02～0.5px），時序依環境，維持擋字型。
+- T6：相關測試 PASS → Quick 91／91 PASS → 本機 8 批 Full 119／119 PASS（expected 119，`sourceChanged:false`，1,130 s）→ reviewer 無發現。截圖（`.claude/reports/design-tokens-06/`，未納入版控）：首頁 PC／手機新舊位元組相同；退休卡 4 主題 × PC／手機的新舊差異只在手動 URL 輸入框的網址文字（測試伺服器路徑 `/old-P/`／`/new-P/`），其餘像素相同。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
