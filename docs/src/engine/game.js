@@ -247,7 +247,7 @@ function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
 },0);}
 /* 結算圖（Canvas 產生 PNG、可長按儲存または自動下載）。 */
 const shareImageView=new ShareImage({getState:()=>S,getSeed:()=>SEED,LG_N,TEAM_COLOR,teamNick,roleN,playerType,primaryPos,traitNames,fmtIP,slgOf,fmtMoney});
-function shareImage(evals,out){shareImageView.render(evals,out);}
+function shareImage(evals,out){return shareImageView.render(evals,out);}
 /* 開始設定。 */
 (function(){ const t=document.getElementById('act-toggle');
   if(t)t.onclick=()=>{ document.getElementById('act').classList.toggle('collapsed');

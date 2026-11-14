@@ -552,7 +552,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 14. P4 細部計畫（UI-DESIGN-TOKENS-06／-07；2026-11-14，基準 `ui/design-tokens-05` `01566e2`，VERSION 1.16.5）
 
-狀態：**-06 T 表 2026-11-14 批准，已實作、本機驗證完成（§14.10），`a216141` 開 [PR #86](https://github.com/tt-chin/yakyujinsei/pull/86) → `dev` 待合併**；-07 細部計畫未寫。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 於 2026-11-14 併入 `dev` `d5433e2` 後 fast-forward，對 `dev` 開 PR）。使用者 2026-11-14 決定：
+狀態：**-06 已實作（§14.10），[PR #86](https://github.com/tt-chin/yakyujinsei/pull/86) 2026-11-14 併入 `dev`（`08b3aca`），dev push Quick 43580585124 成功，結案**；-07 細部計畫見 §15。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 於 2026-11-14 併入 `dev` `d5433e2` 後 fast-forward，對 `dev` 開 PR）。使用者 2026-11-14 決定：
 
 1. canvas 字體改讀 `--sans`／`--mono`；像素比較先寫入舊字體再比位元組；分享圖不隨字級設定改變。
 2. 字級與間距先以現值各做 token（外觀不變）；收斂為級距另立項。
@@ -653,4 +653,56 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 - T2：`design-tokens-06-e2e` 33,024 次比較 0 差異，22 條新規則全部命中，約 21 秒。
 - T5 負控制（scratch worktree 突變）：`#bd-tj` 還原 inline → `DESIGN_TOKENS_06_BOARD_CONTRACT`；刪 `.ama-line` 投影 → `DESIGN_TOKENS_06_CLASS_CONTRACT: TD.ama-line`；投影計數歸零 → `DESIGN_TOKENS_06_LOG_PROJECTION_COUNT`；`.cell-left` 改 right、`--fs-12` 改 13px → T2 差異；`--fs-12` 改 13px → T3 值斷言；主題區塊未知 token → T4。皆 exit 1。T2 不擋字型這次 0 差異（§14.8 時有 0.02～0.5px），時序依環境，維持擋字型。
 - T6：相關測試 PASS → Quick 91／91 PASS → 本機 8 批 Full 119／119 PASS（expected 119，`sourceChanged:false`，1,130 s）→ reviewer 無發現。截圖（`.claude/reports/design-tokens-06/`，未納入版控）：首頁 PC／手機新舊位元組相同；退休卡 4 主題 × PC／手機的新舊差異只在手動 URL 輸入框的網址文字（測試伺服器路徑 `/old-P/`／`/new-P/`），其餘像素相同。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+- 2026-11-14 PR #86 併入 `dev`（`08b3aca`，樹與 `d434674` 相同），dev push [Quick 43580585124](https://github.com/tt-chin/yakyujinsei/actions/runs/43580585124) 成功；4 主題 × PC／手機 Preview 畫面未確認。
+
+## 15. -07 細部計畫（UI-DESIGN-TOKENS-07；2026-11-14，基準 `dev` `08b3aca`，VERSION 1.16.5）
+
+狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5），`102f5bf` 開 [PR #87](https://github.com/tt-chin/yakyujinsei/pull/87) → `dev` 待合併**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
+
+### 15.1 決定（2026-11-14，使用者）
+
+- **W6（像素比較）**：比較側把 `--sans`／`--mono` 寫回 `sans-serif`／`monospace` 後與舊 PNG 位元組相同，證明圖的唯一變化是字型。只擋 Google Fonts 不夠（macOS 會改用 Hiragino，仍與 `sans-serif` 不同）。「新字型 PNG 與舊 PNG 不同」不作合格條件（字型載入成功、改用備用字型、canvas 拒收錯誤字串都會不同）；改以 `fillText` 時的 `ctx.font` 等於 token 判定，與網路無關。
+- **W7（等待字型）**：B，`render` 改為非同步。順序固定為「收集文字 → 等字型 → 量寬並繪製」（換行、自動縮字依賴 `measureText`；Noto Sans JP 以 unicode-range 分檔，須以實際文字載入），由繪製程式自己負責。另加逾時改用現有字型繪製，並以世代編號丟棄過期的重畫。
+
+### 15.2 草稿驗證（scratch worktree，基準 `d434674`＝`08b3aca` 的樹）
+
+- 草稿只改 `share-image.js`、`career-retirement.js`、`game.js`，測試未改：Quick 89／91（`design-tokens-03-e2e`：同步 hook；`event-integration.test`：exit null，`.ips` 為 SIGSEGV、Heap／MarkCompact，單獨重跑 3 次 PASS，FAIL 保留）；本機 8 批 Full 112／119，119 項全部執行（missing／extra 0，`sourceChanged:false`），7 項 FAIL 皆為 `shareImage([],out)` 後同步讀 `out.querySelector('img').src`（`Cannot read properties of null`）：`championship-intl-e2e`、`design-tokens-03-e2e`、`event-system-e2e`、`income-display-e2e`、`replay-share-theme-e2e`、`trait-display-e2e`、`trait-system-e2e`。
+- 7 個 hook 補 `await` 後：5 項 PASS，2 項像素比較 FAIL（預期）；以空 CSS 回應 Google Fonts（`abort` 會產生測試不允許的 console 錯誤）時 5 項亦 PASS。W6 原型（比較側寫入舊字體）：2 項像素比較 PASS（位元組相同）。
+- 草稿中發現：等待後檢查 `out.isConnected` 會使未放入 document 的容器不繪製（`income-display-e2e` 的 hook，舊碼照畫），已移除，只留世代編號。
+- 失敗模式 probe（1280，投手）：字型可載入，首次 316～436 ms（Plex Mono 於等待中才載入）；樣式表被擋，`fonts.load` 回傳 0 個 face，10 ms；字型檔被擋，`fonts.load` reject `NetworkError`，捕捉後繪製，11 ms；字型檔卡住，3,033 ms 後繪製，第 2 次 9 ms。四者皆產生圖片，無頁面錯誤。
+- 突變（拿掉字型等待）：只有 `replay-share-theme-e2e:50` 因載入時序偶然 FAIL，其餘 PASS，故須 T4 的確定性測試。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 15.3 D 表
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| D1 | `docs/src/ui/share-image.js` | 新增 `readThemeFonts()`（讀 `--sans`／`--mono`、去空白，缺少時丟 `SHARE_FONT_TOKEN_MISSING`）；`render` 改為非同步：收集輪（只遮蔽該臨時 context 的 `fillText`，不設 canvas 尺寸、不輸出）→ 以「粗細＋字族」分組、帶實際文字 `document.fonts.load()`（reject 捕捉；逾時 3 秒，逾時一次後本工作階段不再等）→ 世代編號不符則放棄 → 繪製。20 處字體字串改用 token，px 不變、不讀 `--font-scale`。主題切換重畫加 `.catch(console.error)` |
+| D2 | `docs/src/engine/career-retirement.js` | rAF 回呼改 `async`、`await shareImage(...)`；`archiveTraitResults()` 維持在等待之前 |
+| D3 | `docs/src/engine/game.js` | `shareImage` wrapper 回傳 promise |
+| D4 | 版本與文件 | 1.16.6：`config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`＋`update-release-notes.mjs`、`CURRENT_SPEC.md`（頁首、共有画像の字體一句）、BACKLOG -07 |
+
+允許差異：分享 PNG 的字形、換行、自動縮字與可能的圖高；圖於字型等待後出現（首次最多約 3 秒）。S、RNG、DOM 結構不變。
+
+### 15.4 T 表
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | 7 個 e2e 的 hook（§15.2） | `async`／`await shareImage`（機械修改；舊基準側 `await undefined` 不受影響） |
+| T2 | `design-tokens-03-e2e`、`replay-share-theme-e2e` | 比較側寫入 `--sans:sans-serif`、`--mono:monospace`，維持位元組相同（W6） |
+| T3 | `replay-share-theme-e2e:50` | 切換主題後等重畫完成再讀 `src`（改非同步後的競態） |
+| T4 | 新增 `tests/design-tokens-07-e2e.mjs`（Full） | Google Fonts CSS 以假 `@font-face` 回應、攔住假字型檔請求，不用網路：①攔住時點 `#sh-img` 無圖、按鈕為作成中，放行（404）後才出圖，按鈕在圖出現後才變 ✅；②一直卡住時約 3 秒後出圖、第 2 次立即；③空樣式表時立即出圖；④每次 `fillText` 的 `font` 字族等於 token；⑤攔住時切換主題，最後只留最新主題的圖 |
+| T5 | 新增 `tests/design-tokens-07.test.mjs`（Quick） | 無 `sans-serif'`／`monospace'` 字面值、20 處用 token；`readThemeFonts` 去空白、缺少時丟錯 |
+| T6 | 負控制 | 拿掉等待 → T4①；拿掉 wrapper 的 `return` → T4①；拿掉世代編號 → T4⑤；拿掉逾時記憶 → T4②；還原字面值 → T4④、T5；拿掉舊字體寫入 → T2。各須在該斷言 FAIL |
+| T7 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer → 4 主題 × PC／手機新舊截圖 |
+
+### 15.5 實作結果（2026-11-14，`ui/design-tokens-07`，HEAD `5b704c2`＋工作樹）
+
+- D1～D4 照 §15.3（D1 與 §15.2 草稿相同）。T4 逾時情境的上限依 reviewer 意見由 6 秒放寬為 10 秒（下限 2.8 秒不變）。
+- T4：`design-tokens-07-e2e` 4 項 PASS，約 7 秒（攔住→放行、卡住：首次約 3.7 秒、第 2 次約 10 ms、空樣式表：約 50 ms、26 次 `fillText` 皆為 token 字族、兩次描畫只寫入 1 次）。T5：`design-tokens-07.test` 4 項 PASS。
+- T6 負控制（scratch worktree 突變、還原後比對雜湊）：拿掉等待 → T4①「no image while the font files are held」；拿掉 wrapper 的 `return` → T4①「button still says 作成中」；拿掉世代編號 → T4⑤「only one render writes the container」；拿掉逾時記憶 → T4②「second render does not wait again」（3,023 ms）；還原字面值 → T5 `doesNotMatch`、T4④「every fillText font is a token family list」；拿掉舊字體寫入 → `design-tokens-03-e2e:108`、`replay-share-theme-e2e` 位元組比較。皆 exit 1、`ERR_ASSERTION`。
+- T7：相關測試 PASS → Quick 92／92 PASS（T4 上限放寬前；該檔只在 Full）→ 本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`，放寬後的定案碼）→ reviewer 無中以上發現（low 3 項：描畫兩次的成本、兩次 `getState()` 之間的等待、T4 上限過緊；第 3 項已改）。截圖（`.claude/reports/design-tokens-07/`，未納入版控）：基準 `08b3aca` 對工作樹，4 主題 × 1280／390 × 投手／野手，16 組 PNG 尺寸相同（1840×932），字形改為 Noto Sans JP／IBM Plex Mono，版面位置不變。
+- 追加（2026-11-14，使用者批准，T 表外的測試修正）：①`design-tokens-03-e2e` 的 new 側也寫入通用字體，使「新 PNG 與基準不同」只反映顏色（改前字型差異就會讓它成立）；負控制：new 側在繪製時寫入 1.16.4 顏色 → `share PNG must follow the derived theme tokens` FAIL（第一版負控制的顏色殘留到後續 probe 檢查，先在 `--share-edge` 斷言 FAIL，改為繪製後移除再重做）。②`replay-share-theme-e2e` 的主題迴圈 context 以空 CSS 回應 Google Fonts，兩次 standard 的位元組比較不受字型載入時序影響。兩項修正後再跑本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`），為最終結果；前一次 121／121 保留為修正前紀錄。
+- 內容多的卡片（35 條頭銜、35 年年表、長球團名，standard／1280／投手、野手，scratch，未納入版控）：新舊 PNG 高度相同（1840×3444），兩欄換行、年表截斷無重疊。
 - macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。

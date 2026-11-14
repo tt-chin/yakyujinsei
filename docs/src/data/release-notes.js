@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.6｜2026/11/14",
+    "lines": [
+      "- 引退記念の共有画像の文字を、画面と同じフォントで表示するように変更。"
+    ]
+  },
+  {
     "title": "1.16.5｜2026/11/14",
     "lines": [
       "- テーマの配色を整理し、ボタンや特性タグなどの色を微調整。",
