@@ -1,6 +1,6 @@
 {
  "source": "origin/dev 629addc docs/styles/themes.css",
- "method": "v3 (DESIGN_SYSTEM_PLAN §13): 15 base colours per theme; each component colour is one color-mix() rule (5% steps; a few rules replaced by semantically clearer ones); shadows mix --shadow-base (= --bg 40% + black, oklab) with transparent. ΔE = OKLab distance, max of compositing over the theme's --bg and --chalk. Node implementation of CSS Color 4; the draft was checked in Brave (Quick/Full), values not yet browser-verified one by one.",
+ "method": "v4 (DESIGN_SYSTEM_PLAN §13): 17 base colours per theme; each component colour is one color-mix() rule (5% steps; a few rules replaced by semantically clearer ones); shadows mix the --shadow-base base colour (light themes: --chalk at 50% alpha; dark themes: black) with transparent; --primary base colour = previous --primary-button-start. ΔE = OKLab distance, max of compositing over the theme's --bg and --chalk. Node implementation of CSS Color 4; Brave (BraveFarbling off) computed colours of the draft match \"unified\" within 1/255 for all 4 themes x 48 tokens.",
  "themes": [
   "standard",
   "night",
@@ -22,9 +22,10 @@
   "control-edge",
   "gold",
   "focus-ring",
-  "potential-marker"
+  "potential-marker",
+  "primary",
+  "shadow-base"
  ],
- "shadowBase": "color-mix(in oklab, var(--bg) 40%, black)",
  "tokens": [
   {
    "name": "body-glow",
@@ -248,7 +249,7 @@
   },
   {
    "name": "primary-button-start",
-   "rule": "color-mix(in oklab, var(--clay) 75%, black)",
+   "rule": "var(--primary)",
    "current": {
     "standard": "#b62a42",
     "night": "#92253d",
@@ -256,21 +257,21 @@
     "scoreboard": "#665010"
    },
    "unified": {
-    "standard": "#88303d",
-    "night": "#932e3e",
-    "classic": "#793d25",
-    "scoreboard": "#975d2f"
+    "standard": "#b62a42",
+    "night": "#92253d",
+    "classic": "#8b2f22",
+    "scoreboard": "#665010"
    },
    "dE": {
-    "standard": 0.093,
-    "night": 0.016,
-    "classic": 0.043,
-    "scoreboard": 0.105
+    "standard": 0,
+    "night": 0,
+    "classic": 0,
+    "scoreboard": 0
    }
   },
   {
    "name": "primary-button-end",
-   "rule": "color-mix(in oklab, var(--clay) 60%, black)",
+   "rule": "color-mix(in oklab, var(--primary) 85%, black)",
    "current": {
     "standard": "#96182e",
     "night": "#72182d",
@@ -278,16 +279,16 @@
     "scoreboard": "#493908"
    },
    "unified": {
-    "standard": "#64212a",
-    "night": "#6c1f2c",
-    "classic": "#582a19",
-    "scoreboard": "#6f4320"
+    "standard": "#922033",
+    "night": "#751c2f",
+    "classic": "#6f2419",
+    "scoreboard": "#513f0a"
    },
    "dE": {
-    "standard": 0.106,
-    "night": 0.016,
-    "classic": 0.035,
-    "scoreboard": 0.086
+    "standard": 0.011,
+    "night": 0.01,
+    "classic": 0.016,
+    "scoreboard": 0.025
    }
   },
   {
@@ -520,21 +521,21 @@
     "scoreboard": "#00000055"
    },
    "unified": {
-    "standard": "#4845454d",
-    "night": "#0101024d",
-    "classic": "#44423b4d",
-    "scoreboard": "#0104024d"
+    "standard": "#3a101726",
+    "night": "#0000004c",
+    "classic": "#30271926",
+    "scoreboard": "#0000004c"
    },
    "dE": {
-    "standard": 0.091,
-    "night": 0.026,
-    "classic": 0.079,
-    "scoreboard": 0.028
+    "standard": 0.025,
+    "night": 0.028,
+    "classic": 0.01,
+    "scoreboard": 0.027
    }
   },
   {
    "name": "shadow-color",
-   "rule": "color-mix(in oklab, var(--shadow-base) 50%, transparent)",
+   "rule": "color-mix(in oklab, var(--shadow-base) 55%, transparent)",
    "current": {
     "standard": "#3a101744",
     "night": "#00000088",
@@ -542,16 +543,16 @@
     "scoreboard": "#00000088"
    },
    "unified": {
-    "standard": "#48454580",
-    "night": "#01010280",
-    "classic": "#44423b80",
-    "scoreboard": "#01040280"
+    "standard": "#3a101746",
+    "night": "#0000008c",
+    "classic": "#30271946",
+    "scoreboard": "#0000008c"
    },
    "dE": {
-    "standard": 0.1,
-    "night": 0.03,
-    "classic": 0.105,
-    "scoreboard": 0.032
+    "standard": 0.005,
+    "night": 0.013,
+    "classic": 0.005,
+    "scoreboard": 0.013
    }
   },
   {
@@ -564,16 +565,16 @@
     "scoreboard": "#00000099"
    },
    "unified": {
-    "standard": "#48454599",
-    "night": "#01010299",
-    "classic": "#44423b99",
-    "scoreboard": "#01040299"
+    "standard": "#3a10174c",
+    "night": "#00000099",
+    "classic": "#3027194c",
+    "scoreboard": "#00000099"
    },
    "dE": {
-    "standard": 0.112,
-    "night": 0.004,
-    "classic": 0.121,
-    "scoreboard": 0.009
+    "standard": 0.025,
+    "night": 0,
+    "classic": 0.022,
+    "scoreboard": 0
    }
   },
   {
@@ -586,16 +587,16 @@
     "scoreboard": "#00000033"
    },
    "unified": {
-    "standard": "#48454533",
-    "night": "#01010233",
-    "classic": "#44423b33",
-    "scoreboard": "#01040233"
+    "standard": "#3a10171a",
+    "night": "#00000033",
+    "classic": "#3027191a",
+    "scoreboard": "#00000033"
    },
    "dE": {
-    "standard": 0.057,
-    "night": 0.003,
-    "classic": 0.047,
-    "scoreboard": 0.004
+    "standard": 0.017,
+    "night": 0,
+    "classic": 0.005,
+    "scoreboard": 0
    }
   },
   {
@@ -1086,5 +1087,19 @@
  "contrastFails": [
   "standard tag-removed-text/panel 3.66<4.5",
   "classic tag-removed-text/panel 3.77<4.5"
- ]
+ ],
+ "baseValues": {
+  "primary": {
+   "standard": "#b62a42",
+   "night": "#92253d",
+   "classic": "#8b2f22",
+   "scoreboard": "#665010"
+  },
+  "shadow-base": {
+   "standard": "#3a101780",
+   "night": "#000000",
+   "classic": "#30271980",
+   "scoreboard": "#000000"
+  }
+ }
 }
