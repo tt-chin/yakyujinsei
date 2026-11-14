@@ -709,7 +709,7 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 ## 16. -08 細部計畫（UI-DESIGN-TOKENS-08：字級＋圓角級距；2026-11-14，基準 `ui/seed-show-dead-colors` `9d9e781`（`dev` `62f80c0`＋PR #88），VERSION 1.16.6）
 
-狀態：**W1～W6 已定、T 表批准（使用者 2026-11-14），草稿驗證完成（§16.4）；計畫與對照圖（`tasks/design-tokens-08/`）經 [PR #89](https://github.com/tt-chin/yakyujinsei/pull/89) 併入 `dev`（`41a39a0`，code owner 確認外觀＝W7）；實作於 `ui/design-tokens-08-impl`（自 `41a39a0`），本機驗證完成（§16.7），實作 PR 待提出**。分支 `ui/design-tokens-08`（自 `9d9e781`，疊在 PR #88 上：兩者都改 `base.css:162`）。間距另立 UI-DESIGN-TOKENS-09。
+狀態：**W1～W6 已定、T 表批准（使用者 2026-11-14），草稿驗證完成（§16.4）；計畫與對照圖（`tasks/design-tokens-08/`）經 [PR #89](https://github.com/tt-chin/yakyujinsei/pull/89) 併入 `dev`（`41a39a0`，code owner 確認外觀＝W7）；實作於 `ui/design-tokens-08-impl`（自 `41a39a0`），本機驗證完成（§16.7），實作經 [PR #90](https://github.com/tt-chin/yakyujinsei/pull/90) 併入 `dev`（`f8afd8e`）**。分支 `ui/design-tokens-08`（自 `9d9e781`，疊在 PR #88 上：兩者都改 `base.css:162`）。間距另立 UI-DESIGN-TOKENS-09。
 
 ### 16.1 範圍與分級
 
@@ -782,3 +782,54 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 - T5 負控制（就地突變、shasum 確認還原）：`--fs-17` 映到 18px → T3 差異 9,936；漏注入 `--fs-22` → T3 差異 672；移除 `#act` root → T3「changed selectors that matched no compared element」；放回 `--fs-12` 引用 → T1「old --fs-<px> name left」；`.die` 改回 `--radius-die` → T1「component radius token left」。皆 exit 1。
 - T6：相關測試 PASS → Quick 92／92 PASS → 本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`，含 `design-tokens-08-e2e`、不含 `-06-e2e`）→ reviewer 無中以上發現（low 2 項：§16.1 保留修正前數字的說明、e2e 檔頭註解換行，皆未改）。截圖目視：§16.4 的 4 主題 × 1280／390 截圖與本實作 CSS 逐位元組相同，字級設定只在 standard 目視，small／large 由 T3 的等值比較涵蓋。
 - macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+## 17. -09 細部計畫（UI-DESIGN-TOKENS-09：間距級距；2026-11-14，基準 `dev` `f8afd8e`，VERSION 1.16.7）
+
+狀態：**W8～W11 已定（使用者 2026-11-14），W12 待 code owner 決定（對照圖 `tasks/design-tokens-09/`）；草稿驗證完成（§17.5）；D／T 表於 W12 決定後撰寫**。分支 `ui/design-tokens-09`（自 `f8afd8e`）。
+
+### 17.1 範圍與分級
+
+- `docs/styles/*.css` 的 margin／padding／gap（含 `row-gap`／`column-gap` 與 `-top`／`-right`／`-bottom`／`-left`）寫死值收斂為 §16.2 W3 的 12 級，並改引用 `--space-*` token。外觀微調，R2（純顯示例外，AGENTS §6.1），PATCH。不碰 `game.js`、RNG、`S`、DOM。
+- 不在範圍：`calc()`／`var()`／`env()` 內部、負值、`auto`、`0`（W11）、密度元件 token（`preferences.css:1`／`:4` 的 `--log-padding`、`--card-*`、`--choice-gap`；W4）、定位值。
+
+### 17.2 盤點（`f8afd8e`，scratch script 機械計數）
+
+- 8 個 CSS 檔 175 宣告（`base.css` 90）：152 處只含 px 或 `0`（其中 10 處為 `0`），23 處含 `calc`／`var`／`env`、`auto` 或負值。`index.html`、`docs/src` 無 inline 間距（-06 已移入 CSS）。BACKLOG 原記「168 宣告」為較早的計數，以本節為準。
+- 不在級距上的值 12 種：3、5、7、9、11、14、18、22、26、28、30、36px。
+- `base.css` 的 `#lamps{gap:14px}` 被 `preferences.css` 的 `#lamps{gap:8px}` 覆蓋，為無效宣告；照規則轉換，不另處理。
+
+### 17.3 決定（2026-11-14，使用者）
+
+- W8 對應：取最近的級距，距離相同時取小的。3→2、5→4、7→6、9→8、11→10、14→12、18→16、22→20、26→24、28→24、30→32、36→32。
+- W9 含 `calc`／`auto`／負值的宣告：只換其中的純 px 部分（W12 可能改變此項）。
+- W10 命名：`--space-4xs`(2)、`3xs`(4)、`2xs`(6)、`xs`(8)、`sm`(10)、`md`(12)、`lg`(16)、`xl`(20)、`2xl`(24)、`3xl`(32)、`4xl`(40)、`5xl`(60)，值為純 px，不乘 `--space-scale`（W4）。
+- W11 `0` 維持字面值。
+- W12（待 code owner）：W9 會讓 `#board` 左右 14→12，而 `#log`／`.card` 的 `--log-padding`／`--card-padding-x` 仍為 14，生涯畫面板面格子與卡片的左緣由對齊變為差 2px；`.salary-detail-dialog` 上方 18→16、下方 `calc(18px + env(…))` 仍為 18。
+
+| 選項 | 內容 | 板面格子／卡片左緣 | 改值 |
+|---|---|---|---|
+| A（建議） | W9 改為含 `calc`／`auto`／負值的宣告整條不動 | 14／14（同現況） | 39 處（36 宣告）；`#board` 的 14、`#log` 上方 14、對話框上方 18 留在級距外 |
+| B | 照 W9，另將標準密度的 `--log-padding`、`--card-padding-x` 14→12，`calc` 內 18→16（`.salary-detail-dialog`）、14→12（`.ui-panel`） | 12／12 | 所有卡片內距改變；compact 的 9／5px 仍在級距外 |
+| C | 照 W9，接受錯位 | 12／14 | 42 處（39 宣告） |
+
+### 17.4 改值（選項 C；A 為 14→12 7 處、18→16 4 處，其餘相同）
+
+| 舊 → 新 | 處數 | 舊 → 新 | 處數 |
+|---|---:|---|---:|
+| 14 → 12 | 9 | 18 → 16 | 5 |
+| 3 → 2 | 6 | 22 → 20 | 4 |
+| 5 → 4 | 5 | 11 → 10 | 3 |
+| 7 → 6 | 5 | 9／26／28／30／36 → 8／24／24／32／32 | 各 1 |
+
+### 17.5 草稿驗證（2026-11-14，scratch worktree，`d30907b`（`docs/` 與 `f8afd8e` 相同）＋選項 C 草稿，測試未改）
+
+- 本機 8 批 Full：121 項全執行（missing／extra 0），120 PASS、1 FAIL。FAIL 為預期的 `design-tokens-08-e2e`（對 `9d9e781` 要求 0 差異，實得 56,464）。Quick 未單獨執行。
+- 差異分類（`design-tokens-08-e2e` 的 scratch 副本，基準改 `f8afd8e`、輸出全部差異）：margin／padding／gap 差異皆為 W8 的對應；例外只有 `#board-menu` 的 `margin-left`（宣告為 `auto`，計算值隨版面變動）。其餘為位置與尺寸連帶移動，無顏色、字級差異。
+- T3 方法原型：舊側 CSS 的間距字面值依 W8 表改寫後，45,072 次比較 0 差異。
+- 比較範圍缺口：39 條改值宣告中約 20 條在現有 harness 未被觀察——年俸明細對話框（`.salary-detail-dialog*`、`.contract-*`、`.salary-market-components`）、資訊對話框（`.information-*`）、`#display-preferences fieldset`、選手／生涯分頁（`.ui-stat-level`、`.ui-yearly-table`、`#desktop-career`、`.desktop-overview`）、`#act-toggle`、`@media(max-width:360px)` 的導覽列（harness 只有 1280／390）。T 表需補這些狀態。
+- 截圖：4 主題 × 1280／390 × 首頁／生涯／選單（`.claude/reports/design-tokens-09/`，未納入版控），目視僅 390 standard 首頁與生涯；W12 對照圖（現況／A／B／C × 390 生涯頂部 2 倍、年俸明細）見 `tasks/design-tokens-09/`。選項 A／B 只做截圖，未跑 Full。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 17.6 後續
+
+W12 決定後：依決定重做草稿 → harness 補對話框、分頁、360px → 全部截圖目視 → D／T 表送批准 → 實作。
