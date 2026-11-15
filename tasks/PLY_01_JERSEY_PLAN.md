@@ -247,5 +247,66 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 
 - 負控制（實作時執行）：選號步驟內呼叫 R()、覆寫過去紀錄、改號寫入能力或收入、IND 出現選號、`jerseyStep` 移到存檔前、dom-snapshot 各投影契約（多刪／少刪）、P1 略過條件放寬至任意按鈕。
 - 文案已確認（使用者 2026-11-15）：J5 各句、J7「（背番号不明）」、對話框（標題「背番号を選ぶ」「背番号の変更」、確定鈕「この背番号にする」「変更する」、說明「{年}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。」）。
-- 草稿尚未經 reviewer 審查；`scripts/test-share-url-menu.mjs` 未執行；Linux CI、Preview、實機未驗證。
-- 正式實作已授權（使用者 2026-11-15）；從 `wip/ply-01-draft` 開始，尚需 T8 `jersey-e2e`、上列負控制、reviewer、T9 版本與文件。
+- 草稿已經 reviewer 審查並修正（§11）；`scripts/test-share-url-menu.mjs` 未執行；Linux CI、Preview、實機未驗證。
+- 正式實作已授權（使用者 2026-11-15）；進度見 §11，尚需 T8 `jersey-e2e`、上列負控制、T9 版本與文件、最終 reviewer 與 Full。
+
+## 11. 正式實作進度與審查修正（2026-11-15）
+
+**分支**：`feat/ply-01-jersey`（自 `origin/dev` `21b4ff9`，`--no-track`，**本機、未 push、未開 PR**）。
+- `9315543`：草稿 32 檔原樣帶入（與 `wip/ply-01-draft` `0d617a6` 的 docs/tests/scripts 內容一致，壓成一個 commit）。
+- `2c2874c`：入團對話框說明改為 §10 核准原文（補「過去の年度の背番号は変わりません。」）。
+- `4ff917d`：reviewer 審查修正 A1～A4、B1～B7（使用者 2026-11-15 依建議核准）。
+- 驗證（macOS＋Brave 157，本機）：`4ff917d` 的 Quick 98／98 PASS（98 入口全數執行）；`jersey-policy.test` 17／17 PASS。Full、CI、Preview 未執行。
+
+**審查修正（明確缺陷）**
+| # | 內容 | 實作 |
+|---|---|---|
+| A1 | 退休後面板 `#N` 仍顯示、「背番号変更」仍可按（違反 J1） | `currentJerseyNumber` 於 `done` 時回 `null`；`CareerRetirement.endGame` 設 `done` 後呼叫注入的 `jerseyRetired`（隱藏 `#bd-number`、停用 `#board-number`）。`game.js` 的 `endGame` 宣告文字由 `verify-modularization` 固定，不可改 |
+| A2 | 續玩時若待選號，面板為 `index.html` 預設值 | `promptJerseyEntry` 顯示選項前 `board(0)`（不消耗 RNG） |
+| A3 | 對話框選號後的接續動作無錯誤保護 | 對話框回傳號碼後，以該號碼重新顯示兩鈕提示，再程式點擊主按鈕；沿用 `runChoiceAction` 的連點防護、錯誤卡與恢復 |
+| A4 | 取消入團對話框後焦點遺失 | 重新顯示提示後焦點移到第一個按鈕 |
+
+**審查修正（新規格決定，使用者 2026-11-15）**
+| # | 決定 | 實作 |
+|---|---|---|
+| B1 | 當年職業球季列已存在後（休賽期）的選單改號，生效年度＝下一年；對話框說明顯示該年 | `jerseyChangeYear(state)`；`appendJerseyRecord(state,number,year)` |
+| B2 | D4 補號文案只在「無任何紀錄且最後一個年度列為職業球季」時使用；IND／CORP 之後簽職業球團為一般入團（J5） | `isLegacyJerseyEntry` |
+| B3 | 入團對話框欄位標籤「背番号」；選單對話框維持「新しい背番号」「現在の背番号 #N」 | `chooseJerseyNumber({fieldLabel})` |
+| B4 | 季中交易分段卡、全年受傷卡不帶號碼（產品不變）；`dom-snapshot` 僅對有 `.tag` 的「シーズン成績」卡要求號碼，無 `.tag` 者須為「（今季はけがで全休）」 | `tests/support/dom-snapshot.mjs` |
+| B5 | 紀錄達 960 筆後停用選單改號（存檔陣列上限 1024；入團每季至多 1 筆） | `JERSEY_MENU_LIMIT` |
+| B6 | 讀檔驗證每筆紀錄：`teamId` 為職業球團（非 IND／CORP）、`year` 為整數且不大於存檔年度、號碼合法、僅三個欄位；不符以 `SAVE_JERSEY` 拒絕 | `isValidJerseyHistory`、`browser-save-codec.js` |
+| B7 | D4「不明」期間以不含交易前綴（A→）與級別後綴的球團名稱分段與顯示 | `jerseyPeriods(...,unknownTeam)`；`game.js` 以 `leagueCatalog.teamMaster` 解析（`verify-modularization` 禁止 `game.js` 出現 `DATA.teams.map(`） |
+| — | 季中交易年度列「A→B」顯示 A 的號碼、退休卡該年歸 A 期間（D3／J1 一致，維持） | 不改；T8 固定此行為 |
+
+**T8 `tests/jersey-e2e.mjs` 設計（使用者 2026-11-15 核准）**
+- 架構：沿用 `scripts/test-browser-save-runtime.mjs`：本機 server 提供目前 `docs/` 與 `/baseline/`（`75ab10b`，1.16.13，同源、存檔可互通），並注入 probe 讀取 `S` 與每次 R 抽取。
+- 案例：
+
+| 案例 | 進入方式 |
+|---|---|
+| 首次入團選號只出現一次、記當年、第一鈕 `main`、P／C／IF／OF 預設照 W3 | 自然生涯 |
+| 「背番号を選ぶ」後取消回兩鈕提示、無紀錄；0 與 00 分開；A3 經主按鈕確認；A4 焦點 | 自然生涯 |
+| 選單改號：同年多次全保留、不覆寫過去；空窗期停用（J1）；B1 休賽期改號記下一年；A1 退休後停用 | 自然生涯 |
+| 轉隊／交易沿用、MiLB↔MLB 不再問、IND／CORP 不出現、回同隊不出現（J3）、B2 文案 | fixture 設狀態後呼叫真實移籍函式（標註「fixture」；參考 `stage10-risk-e2e` C-*／G-stay-*、`contract-salary-e2e` milb-demotion-*） |
+| D4：`/baseline/` 玩到職業並存檔，以目前版本續玩，補號一次；下一年度存檔後不再出現；A2 面板；B7 不明期間 | 實際產生的舊存檔（T9 改版後再跑一次） |
+| J2①：年初選號後、下一次存檔前重新載入，續玩再問一次 | 自然生涯 |
+| J2②：年中改號後、下一次存檔前續玩不保留；下一年度存檔後保留 | 自然生涯 |
+| 無 RNG：同 seed 兩次（預設 vs 對話框選號＋選單改號），R 值序列與 `rngState` 完全相同，刪除 `jerseyHistory` 後狀態完全相同 | 自然生涯 |
+| 二重操作：入團主按鈕、`#jersey-ok` 各連點兩次，只 1 筆紀錄、流程只前進 1 步 | 自然生涯 |
+| B6：竄改存檔（未知 teamId、非法號碼、未來年度、多餘欄位）讀檔被拒 | 存檔注入 |
+| 顯示：面板、成績卡、年度別、退休卡；1280／390 截圖；Console 0 | 自然生涯 |
+
+**負控制對應（實作時執行，須在指定斷言 FAIL）**
+| 負控制 | 攔截 |
+|---|---|
+| 選號步驟內呼叫 `R()` | T8 無 RNG 比較 |
+| 覆寫過去紀錄 | T8 選單改號、`jersey-policy.test` |
+| 改號寫入能力或收入 | T8 刪除 `jerseyHistory` 後的狀態比較 |
+| IND 出現選號 | T8 IND／CORP 案例 |
+| `jerseyStep` 移到存檔前 | T8 J2① |
+| `dom-snapshot` 投影多刪／少刪 | `game-view-dom-e2e` 投影契約 |
+| P1 略過條件放寬至任意按鈕 | 各 P1 測試的計數檢查 |
+| 移除 `jerseyRetired` 呼叫（A1）、移除 `board(0)`（A2）、B1 改回 `S.year`、移除 B6 驗證 | T8 對應案例 |
+
+**下一步**：T8 → 負控制 → T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ reviewer → 4 組 Full → push dev 前請使用者確認。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
+
