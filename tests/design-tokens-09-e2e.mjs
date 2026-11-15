@@ -49,7 +49,23 @@ const PROPS=['font-size','font-family','font-weight','letter-spacing','line-heig
 // The rules whose value changed (§17.4, 36 declarations); each must match a compared element on the new side.
 // '@360 ' counts only at 360 px (the max-width:360px copy of the tab-button rule).
 const RULES=['.bd-cell','#lamps','.lamp','.btn','.abrow','.contract-yearly-salaries','#start .wrap','#start h1','#start .sub','.field','.field input','.seg button','.seedline','#act-toggle','.salary-detail-dialog h2','.salary-detail-dialog h3','.salary-detail-dialog dl','.salary-detail-dialog ul','.salary-market-components strong','.contract-schedule>div','.salary-detail-link','#btn-start','.home-credit','.browser-save-panel','.information-content','.information-dialog section','.information-dialog button','#desktop-career .ui-data-list','.desktop-overview .ui-panel','#display-preferences fieldset','#main-nav button,#player-tabs button,#career-tabs button','.ui-stat-level','.ui-yearly-table th,.ui-yearly-table td','@360 #main-nav button,#player-tabs button,#career-tabs button'];
-const snap=(page,roots)=>page.evaluate(([roots,PROPS,SEL])=>{const out=[];for(const r of roots){const rootEl=document.querySelector(r);if(!rootEl)throw Error('missing root '+r);const R=rootEl.getBoundingClientRect();for(const el of [rootEl,...rootEl.querySelectorAll('*')]){const cs=getComputedStyle(el),b=el.getBoundingClientRect();out.push({tag:el.tagName,id:el.id,rect:[b.x-R.x,b.y-R.y,b.width,b.height].map(v=>Math.round(v*100)/100),s:PROPS.map(k=>cs.getPropertyValue(k)),m:SEL.map((q,i)=>el.matches(q)?i:-1).filter(i=>i>=0)});}}return out;},[roots,PROPS,RULES.map(r=>r.replace(/^@360 /,''))]);
+// PLY-01 (jersey numbers) adds #bd-number and the #board-number menu item on the candidate side only; they are excluded from the
+// compared elements by explicit selector (contract: each exists exactly once and is a hidden/empty badge or the 背番号変更 item).
+// The menu toggle lost its visible メニュー label span and the retirement card gained a 背番号 heading+table: both are mapped back
+// on the candidate side (restoreJerseyToggle / removeJerseyLog) with contract checks, so every other element stays strictly compared.
+const JERSEY_EXCLUDE=['#bd-number','#board-number'];let jerseyExcluded=0,jerseyToggle=0,jerseyLog=0;
+async function restoreJerseyToggle(page){jerseyToggle+=await page.evaluate(()=>{
+  const toggle=document.querySelectorAll('#board-menu-toggle'),num=document.querySelectorAll('#bd-number'),change=document.querySelectorAll('#board-number');
+  if(toggle.length!==1||num.length!==1||change.length!==1)throw Error('JERSEY_LAYOUT_COUNT');
+  if(num[0].textContent!==''||!num[0].hidden||change[0].textContent!=='•背番号変更'||!change[0].disabled)throw Error('JERSEY_LAYOUT_ITEMS');
+  const t=toggle[0];if(t.children.length!==1||t.textContent!=='☰')throw Error('JERSEY_TOGGLE_CONTRACT');
+  const label=document.createElement('span');label.textContent='メニュー';t.append(label);return 1;});}
+async function removeJerseyLog(page){jerseyLog+=await page.evaluate(()=>{
+  const heading=document.querySelectorAll('#log h4.jersey-heading'),table=document.querySelectorAll('#log table.jersey-table');
+  if(heading.length!==1||table.length!==1||heading[0].nextElementSibling!==table[0]||heading[0].textContent!=='背番号'||table[0].className!=='fin jersey-table'||!table[0].rows.length)throw Error('JERSEY_LOG_CONTRACT');
+  for(const tr of table[0].rows){const c=[...tr.children];if(c.length!==3||c[0].className!=='cell-left'||c[1].className!=='cell-nowrap'||c[2].className!=='cell-nowrap'||c[2].textContent!=='不明')throw Error('JERSEY_LOG_ROW');}
+  heading[0].remove();table[0].remove();return 1;});}
+const snap=(page,roots,exclude=[])=>page.evaluate(([roots,PROPS,SEL,EX])=>{const out=[];for(const r of roots){const rootEl=document.querySelector(r);if(!rootEl)throw Error('missing root '+r);const R=rootEl.getBoundingClientRect();for(const el of [rootEl,...rootEl.querySelectorAll('*')]){if(EX.length&&el.closest(EX.join(',')))continue;const cs=getComputedStyle(el),b=el.getBoundingClientRect();out.push({tag:el.tagName,id:el.id,rect:[b.x-R.x,b.y-R.y,b.width,b.height].map(v=>Math.round(v*100)/100),s:PROPS.map(k=>cs.getPropertyValue(k)),m:SEL.map((q,i)=>el.matches(q)?i:-1).filter(i=>i>=0)});}}return out;},[roots,PROPS,RULES.map(r=>r.replace(/^@360 /,'')),exclude]);
 const combos=[];for(const theme of ['standard','night','classic','scoreboard'])for(const fontSize of ['small','standard','large'])for(const density of ['standard','compact'])combos.push({theme,fontSize,density});
 const errors=[],hits=Object.fromEntries(RULES.map(r=>[r,0])),observed={};let compared=0,diffs=[];
 
@@ -66,12 +82,13 @@ async function open(variant,pos,width){
   const config=await page.evaluate(async()=>{const r=await fetch('./src/config.js');return r.text();});
   assert.equal(version,'v'+config.match(/VERSION\s*=\s*['"]([^'"]+)/)[1],'native version matches its source');
   await page.locator('#app-version').evaluate((e,v)=>e.textContent='v'+v,comparisonVersion);
+  if(variant==='new')await restoreJerseyToggle(page);
   return page;
 }
 async function compare(pages,label,roots){
   for(const c of combos){
     const s={};
-    for(const v of ['old','new']){const p=pages[v];await p.mouse.move(0,0);await p.evaluate(c=>{document.activeElement?.blur?.();const r=document.documentElement;r.dataset.theme=c.theme;r.dataset.fontSize=c.fontSize;r.dataset.density=c.density;return document.fonts.ready.then(()=>new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(()=>res(0)))));},c);await p.evaluate(({source,roots})=>{const project=eval('('+source+')');for(const selector of roots){const root=document.querySelector(selector);const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(walk.nextNode())walk.currentNode.nodeValue=project(walk.currentNode.nodeValue,['ミスターシーホークス','UKミスター']);}},{source:projectDisplayNameCopy.toString(),roots});s[v]=await snap(p,roots);}
+    for(const v of ['old','new']){const p=pages[v];await p.mouse.move(0,0);await p.evaluate(c=>{document.activeElement?.blur?.();const r=document.documentElement;r.dataset.theme=c.theme;r.dataset.fontSize=c.fontSize;r.dataset.density=c.density;return document.fonts.ready.then(()=>new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(()=>res(0)))));},c);await p.evaluate(({source,roots})=>{const project=eval('('+source+')');for(const selector of roots){const root=document.querySelector(selector);const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(walk.nextNode())walk.currentNode.nodeValue=project(walk.currentNode.nodeValue,['ミスターシーホークス','UKミスター']);}},{source:projectDisplayNameCopy.toString(),roots});if(v==='new')jerseyExcluded+=await p.evaluate(([roots,ex])=>roots.reduce((n,r)=>{const el=document.querySelector(r);return n+(el?el.querySelectorAll(ex.join(',')).length+(el.matches(ex.join(','))?1:0):0);},0),[roots,JERSEY_EXCLUDE]);s[v]=await snap(p,roots,v==='new'?JERSEY_EXCLUDE:[]);}
     assert.ok(s.old.length>5,label+' compared elements');assert.equal(s.new.length,s.old.length,label+' element count');
     for(let i=0;i<s.old.length;i++){const a=s.old[i],b=s.new[i],at=`${label} ${c.theme}/${c.fontSize}/${c.density} #${i} ${a.tag}${a.id?'#'+a.id:''}`;
       assert.equal(b.tag,a.tag,at+' tag');compared++;
@@ -130,6 +147,7 @@ try{
           while(walk.nextNode()){const t=walk.currentNode.nodeValue,k=t.split(find).length-1;if(k){n+=k;if(replace!==null)walk.currentNode.nodeValue=t.split(find).join(replace);}}return n;},[find,replace]);
         assert.equal(hits,1,`career ${pos}/${width} ${v} fan-board Mr line`);
       }
+      await removeJerseyLog(pages.new);
       await compare(pages,`career ${pos}/${width}`,['#board','#log']);
     }
     for(const p of Object.values(pages))await p.context().close();
@@ -138,6 +156,7 @@ try{
   for(const d of diffs.slice(0,20))console.error(d);
   if(diffs.length)console.error(`rules whose elements show a spacing difference (${Object.keys(observed).length}/${RULES.length}): `+JSON.stringify(observed));
   assert.equal(diffs.length,0,`computed style / layout differs from ${baseline} (${diffs.length})`);
+  assert.ok(jerseyExcluded>0&&jerseyToggle>0&&jerseyLog>0,'PLY-01 projections must actually run');
   const missed=RULES.filter(r=>!hits[r]);assert.deepEqual(missed,[],'changed selectors that matched no compared element');
   assert.deepEqual(errors,[],'Console or page errors');
   console.log(`PASS design-tokens-09: ${compared} element x combo comparisons vs ${baseline} with the approved mapping, 0 differences; ${RULES.length} changed selectors all matched (${RULES.map(r=>r+' '+hits[r]).join(', ')})`);

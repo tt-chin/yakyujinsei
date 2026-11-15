@@ -41,7 +41,7 @@ try{
     const label=width+'x'+height;
     // Precondition: on phones at least one item centre lies inside #act, so the old stacking would have covered it.
     if(width<500){const over=r.items.filter(i=>i.cy>r.actTop).map(i=>i.id);assert.ok(over.length>0,label+' precondition: an item centre lies below #act top '+Math.round(r.actTop));console.log(label+' items over #act: '+over.join(','));}
-    assert.deepEqual(r.items.map(i=>i.id),['board-help','board-updates','board-bug-report','board-credits','board-preferences','board-share','board-support','btn-restart'],label+' menu items');
+    assert.deepEqual(r.items.map(i=>i.id),['board-help','board-updates','board-bug-report','board-credits','board-number','board-preferences','board-share','board-support','btn-restart'],label+' menu items');
     for(const item of r.items){assert.ok(item.inViewport,label+' '+item.id+' inside the viewport');assert.ok(item.hit,label+' '+item.id+' is the hit target (covered by '+item.by+')');}
     await p.screenshot({path:path.join(artifacts,label+'-menu-over-allocation.png')});
     // A real click (actionability includes the hit-target check) on the lowest item opens its confirmation.
@@ -50,7 +50,7 @@ try{
     await p.locator('#confirmation-cancel').click();
     assert.equal(await p.locator('#confirmation-dialog[open]').count(),0,label+' confirmation closed by cancel');
     assert.equal(await p.locator('#act .abrow').count()>0,true,label+' allocation still in place after cancel');
-    console.log('PASS '+label+': 8 menu items hit-testable over the allocation panel, タイトルに戻る opens its confirmation');
+    console.log('PASS '+label+': 9 menu items hit-testable over the allocation panel, タイトルに戻る opens its confirmation');
     await ctx.close();
   }
   assert.deepEqual(errors,[],'console errors / JS-CSS 404');

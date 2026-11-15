@@ -33,8 +33,10 @@ const G='const S=getState();';
 // The two state reads: the start of proSeason and of resumeProfessionalSeason. Nothing in these bodies reads S after a deferral.
 let body=indent(oldPortion+'\n'+oldSeason);
 body=once(body,'  function proSeason(){\n','  function proSeason(){\n    '+G+'\n','proSeason start');
+// PLY-01 W2b: the season card tag appends the current number; jerseyLabel is optional for harnesses without it.
+body=once(body,"${S.dpos?'｜'+S.dpos:''}</span><div class=\"statline\">${statLine(st)}</div>`);","${S.dpos?'｜'+S.dpos:''}${jerseyLabel?.()||''}</span><div class=\"statline\">${statLine(st)}</div>`);",'season card number');
 body=once(body,'  function resumeProfessionalSeason(entry){\n','  function resumeProfessionalSeason(entry){\n    '+G+'\n','resume start');
-const DEPS='getState,LV,clamp,simSeason,applyEventSeason,consumeEventSeason,normalizeEventSeason,bucketOf,accStat,accLevelStat,card,statLine,isSP,toolGap,careerAllStars,traitCard,removeTrait,board,awards,classifyMarketInjury,recordSalaryEvaluation,captureSeasonChampionship,tjAccrue,tjGamble,demotionAudit,tradeCheck,maybeIntl,nextStep,resumeSeasonEnd,restorePendingChoice,seasonRng:{R}';
+const DEPS='getState,jerseyLabel,LV,clamp,simSeason,applyEventSeason,consumeEventSeason,normalizeEventSeason,bucketOf,accStat,accLevelStat,card,statLine,isSP,toolGap,careerAllStars,traitCard,removeTrait,board,awards,classifyMarketInjury,recordSalaryEvaluation,captureSeasonChampionship,tjAccrue,tjGamble,demotionAudit,tradeCheck,maybeIntl,nextStep,resumeSeasonEnd,restorePendingChoice,seasonRng:{R}';
 const expected=HEADER+`export class ProfessionalSeason {
   #rules;
   constructor(deps){this.#rules=professionalSeasonRules(deps);}

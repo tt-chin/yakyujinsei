@@ -18,6 +18,8 @@ import { EVENT_CATALOG } from '../data/event-cards-jp.js';
 import { EVENT_MODES, eventEligible, eventOdds, effectiveCategory, eventTier, eventPlan, eventInjury, eventIncome, eventTraitUnlocks, EVENT_TRAIT_TEXT, validateEventCatalog } from './event-policy.js';
 import { ensureEventState, beginEvent, eventDrawPool, applyEvent, beginEventSeason, consumeEventSeason, resetEventYear } from './event-state-policy.js';
 import { createInitialState } from './initial-state.js';
+import { jerseyEntryPending, proposedJerseyNumber, isLegacyJerseyEntry, appendJerseyRecord, currentJerseyNumber, canChangeJersey, jerseyPeriods } from './jersey-policy.js';
+import { chooseJerseyNumber } from '../ui/jersey-dialog.js';
 import { createSeedShareController, replayURL, shareReplayURL } from '../ui/seed-share.js';
 import { ShareImage } from '../ui/share-image.js';
 import { DefensePositionReview } from './defense-position-review.js';
@@ -211,7 +213,7 @@ function demotionAudit(cont){return careerMovement.demotionAudit(cont);}
 function tradeCheck(cont){return careerMovement.tradeCheck(cont);}
 function rollInjury(){playerInjury.rollInjury();}
 function proSeason(){return professionalSeason.proSeason();}
-const professionalSeason=new ProfessionalSeason({getState:()=>S,LV,clamp,simSeason:lv=>simSeason(lv),applyEventSeason:(st,options)=>applyEventSeason(st,options),consumeEventSeason:state=>consumeEventSeason(state),normalizeEventSeason:(st,options)=>normalizeEventSeason(st,options),bucketOf:lv=>bucketOf(lv),accStat:(bucket,st)=>accStat(bucket,st),accLevelStat:(levelKey,st)=>accLevelStat(levelKey,st),card:(cls,title,html)=>card(cls,title,html),statLine:st=>statLine(st),isSP:()=>isSP(),toolGap:()=>toolGap(),careerAllStars:()=>careerAllStars(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),removeTrait:(key,label)=>removeTrait(key,label),board:phase=>board(phase),awards:(bucket,st)=>awards(bucket,st),classifyMarketInjury:input=>classifyMarketInjury(input),recordSalaryEvaluation:st=>recordSalaryEvaluation(st),captureSeasonChampionship:state=>captureSeasonChampionship(state),tjAccrue:()=>tjAccrue(),tjGamble:cont=>tjGamble(cont),demotionAudit:cont=>demotionAudit(cont),tradeCheck:cont=>tradeCheck(cont),maybeIntl:done=>maybeIntl(done),nextStep:()=>nextStep(),resumeSeasonEnd:()=>resumeSeasonEnd(),restorePendingChoice:()=>restorePendingChoice(),seasonRng:{R:()=>R()}});
+const professionalSeason=new ProfessionalSeason({getState:()=>S,jerseyLabel:()=>jerseyLabelText(),LV,clamp,simSeason:lv=>simSeason(lv),applyEventSeason:(st,options)=>applyEventSeason(st,options),consumeEventSeason:state=>consumeEventSeason(state),normalizeEventSeason:(st,options)=>normalizeEventSeason(st,options),bucketOf:lv=>bucketOf(lv),accStat:(bucket,st)=>accStat(bucket,st),accLevelStat:(levelKey,st)=>accLevelStat(levelKey,st),card:(cls,title,html)=>card(cls,title,html),statLine:st=>statLine(st),isSP:()=>isSP(),toolGap:()=>toolGap(),careerAllStars:()=>careerAllStars(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),removeTrait:(key,label)=>removeTrait(key,label),board:phase=>board(phase),awards:(bucket,st)=>awards(bucket,st),classifyMarketInjury:input=>classifyMarketInjury(input),recordSalaryEvaluation:st=>recordSalaryEvaluation(st),captureSeasonChampionship:state=>captureSeasonChampionship(state),tjAccrue:()=>tjAccrue(),tjGamble:cont=>tjGamble(cont),demotionAudit:cont=>demotionAudit(cont),tradeCheck:cont=>tradeCheck(cont),maybeIntl:done=>maybeIntl(done),nextStep:()=>nextStep(),resumeSeasonEnd:()=>resumeSeasonEnd(),restorePendingChoice:()=>restorePendingChoice(),seasonRng:{R:()=>R()}});
 function awards(bucket,st){seasonAwards.awards(bucket,st);}
 const seasonAwards=new SeasonAwards({getState:()=>S,getSeed:()=>SEED,LV,clamp,traitPresentation,isSP:()=>isSP(),teamNick,renderCheckpointCard:(owner,key,args)=>renderCheckpointCard(owner,key,args),journalRng:{R:()=>R()},annualAwardTransaction,preallocateAwardSlots,captureAwardSlot,prepareAwardReceipt,commitAwardReceipt,awardPlan,awardInputs,prepareD2AwardDecisions,recordAwardDecisions,completeAwardDecisions,getAwardDefinition,hasCurrentAwardEffect});
 function renderCheckpointCard(owner,key,args){checkpointRenderer.render(owner,key,args);}
@@ -233,7 +235,7 @@ function primaryPos(){return careerRetirement.primaryPos();}
 function capTeam(bucket){return careerRetirement.capTeam(bucket);}
 function defShare(bucket){return defenseShareFor(S.stats[bucket],S.pos);}
 function posLegendPhrase(bucket){return careerRetirement.posLegendPhrase(bucket);}
-const careerRetirement=new CareerRetirement({getState:()=>S,getSeed:()=>SEED,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$:id=>$(id),fmtMoney:yen=>fmtMoney(yen),fmtIP:ip=>fmtIP(ip),slgOf:st=>slgOf(st),card:(cls,title,html)=>card(cls,title,html),divider:t=>divider(t),choose:(title,opts)=>choose(title,opts),actClear:()=>actClear(),defShare:bucket=>defShare(bucket),tierOf:bucket=>tierOf(bucket),traitNames:()=>traitNames(),teamNick:team=>teamNick(team),archiveTraitResults:()=>archiveTraitResults(),shareImage:(evals,out)=>shareImage(evals,out),rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}});
+const careerRetirement=new CareerRetirement({getState:()=>S,jerseyPeriods:()=>jerseyPeriods(S.log,S.jerseyHistory,id=>jerseyTeamName(id)),getSeed:()=>SEED,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$:id=>$(id),fmtMoney:yen=>fmtMoney(yen),fmtIP:ip=>fmtIP(ip),slgOf:st=>slgOf(st),card:(cls,title,html)=>card(cls,title,html),divider:t=>divider(t),choose:(title,opts)=>choose(title,opts),actClear:()=>actClear(),defShare:bucket=>defShare(bucket),tierOf:bucket=>tierOf(bucket),traitNames:()=>traitNames(),teamNick:team=>teamNick(team),archiveTraitResults:()=>archiveTraitResults(),shareImage:(evals,out)=>shareImage(evals,out),rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}});
 function honorScore(bucket){
   return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S});
 }
@@ -333,9 +335,18 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function processIntlPhase(phase,done){internationalTournament.process(phase,done);}
   const internationalTournament=new InternationalTournament({getState:()=>S,normalizeInternationalState,validateInternationalEntry,prepareInternationalResult,commitInternationalResult,INTLACE_UNLOCK_TEXT,internationalPersonalStats,renderInternationalPersonalStats,intlEvents:year=>intlEvents(year),intlPhase:e=>intlPhase(e),intlThreshold:e=>intlThreshold(e),intlSelection:e=>intlSelection(e),addIntlStats:()=>addIntlStats(),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),displayTrait:key=>displayTrait(key),fmtIP:ip=>fmtIP(ip),pick:a=>pick(a)});
   function maybeIntl(done){processIntlPhase('POST',done);}
+  // PLY-01 W8: one year-start step before phasePre; it runs after the year-start save and draws no RNG.
+  function jerseyStep(){if(!jerseyEntryPending(S))return nextStep();promptJerseyEntry();}
+  function jerseyTeamName(teamId){return teamRec(teamId)?.name||String(teamId);}
+  function promptJerseyEntry(){const state=S,team=jerseyTeamName(state.orgTeamId),number=proposedJerseyNumber(state),legacy=isLegacyJerseyEntry(state);
+    const accept=picked=>{appendJerseyRecord(state,picked);nextStep();};
+    choose(legacy?`${team}での背番号が記録されていません。背番号はどうする？`:`${team}と契約しました。背番号はどうする？`,[
+      {t:legacy?`背番号 ${number} にする`:`背番号 ${number} で入団する`,main:true,f:()=>accept(number)},
+      {t:'背番号を選ぶ',f:()=>{chooseJerseyNumber({title:'背番号を選ぶ',summary:`${team}`,note:`${state.year}年シーズンから有効。能力・成績・年俸には影響しません。`,selected:number,confirmLabel:'この背番号にする'}).then(picked=>{if(S!==state||!jerseyEntryPending(state))return;if(picked===null)promptJerseyEntry();else accept(picked);});}}]);}
+  function jerseyLabelText(){const number=currentJerseyNumber(S);return number===null?'':` · #${number}`;}
   function phaseIntlPre(){return yearFlow.phaseIntlPre();}
   function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}
-  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]});
+  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[jerseyStep,phasePre,phaseIntlPre,phaseMid,phaseEnd]});
 
   function daibaFarewell(cont){return careerMovement.daibaFarewell(cont);}
 
@@ -372,6 +383,9 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   };
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();
+  $('board-number').onclick=()=>{const state=S;if(!canChangeJersey(state))return;const current=currentJerseyNumber(state);
+    chooseJerseyNumber({title:'背番号の変更',summary:`${jerseyTeamName(state.orgTeamId)}　現在の背番号 #${current}`,note:`${state.year}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。`,selected:current,confirmLabel:'変更する'})
+      .then(picked=>{if(picked===null||S!==state||!canChangeJersey(state)||picked===currentJerseyNumber(state))return;appendJerseyRecord(state,picked);gameView.setBoardNumber(`#${picked}`);});};
   $('btn-restart').onclick=()=>{confirmAction({title:'タイトルに戻る',message:'タイトルに戻りますか？セーブデータは残ります。未保存の操作は、もう一度プレイする必要があります。'}).then(ok=>{if(ok)location.href=location.pathname;});};
 
 // Bootstrap completes storage inspection before enabling new-career controls.
