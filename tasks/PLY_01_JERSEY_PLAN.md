@@ -325,5 +325,28 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 
 **既有問題（未處理，與 PLY-01 無關）**：`scripts/ci-full-batches.test.mjs` 寫死 `assert.equal(ids.length,106)`，`fullIds()` 在 HEAD `ae2c738` 為 128（加入 `jersey-e2e` 後 129），乾淨 HEAD 上同樣 2 項 FAIL。只在 CI `linux-smoke` 模式執行，不在 Quick／Full。
 
+**負控制執行計畫（2026-11-16 提出，待使用者核准；下一個 session 執行）**
+- 隔離：在 scratchpad 建 `HEAD`（`5e302f6` 或之後的 docs commit）的 git worktree，只在其中植入變異，不動工作樹。
+- 每項流程：替換字串先斷言恰好出現 1 次 → 植入後斷言已改 → 只跑對應測試 → `git checkout` 還原並以 shasum 確認。腳本用 bash 陣列（避開 zsh word-split）。
+- 判定：exit code 非 0，且失敗的是指定斷言（`ERR_ASSERTION` 加斷言訊息）；只出現「FAIL」字樣不算。
+
+| # | 植入 | 預期失敗 |
+|---|---|---|
+| N1 | `promptJerseyEntry` 內呼叫 `R()` | `entry-*`「年初存檔到提示之間 0 次抽取」、`rng-identity` |
+| N2 | `accept` 內呼叫 `R()`（預設與改號兩條路徑都會多抽一次，互相比較抓不到，靠 baseline 比較） | `rng-identity` 與 baseline 的全 R 值比較 |
+| N3 | `appendJerseyRecord` 改為覆寫最後一筆 | `menu-change`、`jersey-policy.test` |
+| N4 | 選單改號時 `S.careerEarnings+=1` | `rng-identity` variant 的 S 比較 |
+| N5 | `isJerseyEligible` 讓 IND 也有資格 | `fixture-ind` |
+| N6 | 年初存檔 capture 前先寫入紀錄（模擬 `jerseyStep` 移到存檔前） | `resume-entry-unsaved`（J2①） |
+| N7 | 移除 `jerseyRetired` 呼叫（A1） | `entry-*` 的 A1 斷言 |
+| N8 | 移除 `board(0)`（A2） | `resume-entry-unsaved`、`legacy-save` 的 A2 斷言 |
+| N9 | `jerseyChangeYear` 改回 `S.year`（B1） | `menu-change` 的 B1 斷言 |
+| N10 | 移除 codec 的 `SAVE_JERSEY` 檢查（B6） | `save-tamper` |
+| N11 | `tests/support/dom-snapshot.mjs` 投影多刪一項、少刪一項（各一次） | `game-view-dom-e2e` 投影契約 |
+| N12 | P1 略過條件放寬至任意按鈕 | 各 P1 測試的計數檢查 |
+
+- N12 範圍：先派 scout 唯讀盤點約 15 個 E2E 中的 P1 略過位置與是否有計數斷言，再提出具體變異點請使用者核准。
+- 預估：N1～N10 約 5 分鐘（`jersey-e2e --only=<案例>`、`jersey-policy.test`）；N11 約 10 分鐘（`game-view-dom-e2e` 約 300 秒 ×2）；N12 待盤點。
+
 **下一步**：負控制（上表，`fixture-trade` 取代「季中交易」對應）→ T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ T9 後重跑 `jersey-e2e`（D4 跨版）→ reviewer → 4 組 Full → push dev 前請使用者確認。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
 
