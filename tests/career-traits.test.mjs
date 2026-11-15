@@ -86,9 +86,12 @@ test('internal calls go through the injected traitCard/displayTrait lambdas',()=
   assert.deepEqual(Object.keys(names),Object.keys(TRAIT_LABELS));assert.equal(hits.length,Object.keys(TRAIT_LABELS).length);assert.ok(hits.every(([n,k])=>n==='displayTrait'&&names[k]==='D:'+k));
 });
 
-test('label passes teamNick through the injected lambda',()=>{
-  const nicks=[];const traits=new CareerTraits({getState:()=>base(),traitPresentation:new WeakMap(),card:()=>{},board:()=>{},teamNick:t=>{nicks.push(t);return 'N';},traitCard:()=>{},displayTrait:()=>{}});
-  assert.equal(traits.label('mrteam'),traitLabel('mrteam',base(),()=> 'N'));assert.deepEqual(nicks,['阪神']);
+test('Mr. Team uses the approved acquired-team ID map, never the old injected tail fallback',()=>{
+  for(const [id,label] of [['NPB_CL_HAN','ミスターストライプス'],['KBO_CHANGWON_DINOS','ミスター昌原ダイナソーズ'],['UNKNOWN','ミスター'],[null,'ミスター']]){
+    const state=base({mrTeamName:id,orgTeamId:'NPB_PL_FUK'}),before=structuredClone(state),nicks=[];
+    const traits=new CareerTraits({getState:()=>state,traitPresentation:new WeakMap(),card:()=>{},board:()=>{},teamNick:t=>{nicks.push(t);return 'N';},traitCard:()=>{},displayTrait:()=>{}});
+    assert.equal(traits.label('mrteam'),label);assert.deepEqual(nicks,[]);assert.deepEqual(state,before);
+  }
 });
 
 console.log(pass+' career-traits checks PASS');

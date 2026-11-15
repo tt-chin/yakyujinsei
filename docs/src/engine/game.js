@@ -1,3 +1,4 @@
+import {generatePlayerName} from '../data/player-names.js';
 import {confirmAction} from '../ui/confirmation-dialog.js';
 import {BrowserSaveController} from './browser-save-controller.js';
 import {hydrateSavedState} from './browser-save-runtime.js';
@@ -269,7 +270,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function fnv1a32(str){ let h=0x811C9DC5; for(const b of new TextEncoder().encode(str)){h^=b;h=Math.imul(h,0x01000193)>>>0;} return h>>>0; }
   function generateSeed(){ const a=new Uint32Array(2);crypto.getRandomValues(a);return (a[0].toString(36)+a[1].toString(36)).slice(0,8); }
   function deriveSeedInt(seed,salt){ return fnv1a32('v1\0'+seed+'\0'+salt); }
-  function deriveDefaultName(seed,pos){ const names={P:['投山翔太'],C:['強肩剛'],IF:['守田巧'],OF:['走川隼人']}[pos];return names[deriveSeedInt(seed,'defaultName:'+pos)%names.length]; }
+  function deriveDefaultName(seed,pos){ return generatePlayerName(); }
   function normalizePlayerName(raw,seed,pos){ const n=[...String(raw??'').normalize('NFKC').trim().replace(/[\u0000-\u001f\u007f-\u009f]/g,'')].slice(0,10).join('');return n||deriveDefaultName(seed,pos); }
   function escapeHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function teamRec(id){return leagueCatalog.teamRec(id);}

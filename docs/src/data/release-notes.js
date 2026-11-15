@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.10｜2026/11/15",
+    "lines": [
+      "- 選手名を空欄にすると、ランダムな名前で新しい野球人生を始められるよう改善。"
+    ]
+  },
+  {
     "title": "1.16.9｜2026/11/15",
     "lines": [
       "- 特性・選手タイプ・引退評価の名称を整理。",

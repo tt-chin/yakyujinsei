@@ -1,10 +1,11 @@
+import {createHash} from 'node:crypto';
 // UI-DESIGN-TOKENS-03 (tasks/DESIGN_SYSTEM_PLAN.md §10 T4): the share image reads its colors from the CSS
 // theme tokens. UI-DESIGN-TOKENS-05 (§13 T5) derives those tokens with color-mix(): the probe-read colors equal
 // tests/support/theme-colors.mjs (±1/255) and are read without a canvas. With the 629addc share colors written
 // into documentElement.style, standard and classic stay byte-identical to the pre-change tree (9956ca3), which
 // proves layout and drawing are unchanged; with the derived colors every theme's PNG differs from it.
 // Since 1.16.6 (UI-DESIGN-TOKENS-07) the legacy and new runs write the generic fonts sans-serif/monospace, so fonts never
-// cause or hide a difference. The VERSION footer text is skipped on both sides (the release bump changes it). --shots=<dir> writes the
+// cause or hide a difference. Exact approved NAME-07/08 copy is checked separately, then shared by both runs. The VERSION footer text is skipped on both sides (the release bump changes it). --shots=<dir> writes the
 // before/after PNGs of every theme and viewport.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -17,15 +18,22 @@ import {themeColors,legacyShareColors,SHARE_TOKEN_NAMES} from './support/theme-c
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.slice(name.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const baseline=arg('baseline')||'9956ca3',legacyTree='629addc';
+const output=path.resolve(arg('output')||'test-results/design-tokens-03-copy-control');await mkdir(output,{recursive:true});
 
 const special=['legend','taiwan','goldcloth','genius','mrteam','glass','scum','yips','distract','cancer','ambience','thief','latepractice'];
-const hook=`\nwindow.__shareColorTest={rich:()=>{S.removed=['旧特性'];Object.assign(S.traits,{legend:true,taiwan:true,goldcloth:true,genius:true,glass:true,mrteam:true});S.mrTeamName='福岡シーホークス';const plain=Object.keys(traitNames()).find(k=>!${JSON.stringify(special)}.includes(k));S.traits[plain]=true;return plain;},image:async()=>{const out=document.createElement('div');document.body.appendChild(out);await shareImage([],out);return out.querySelector('img').src;}};`;
+const hook=`\nwindow.__shareColorTest={rich:()=>{S.removed=['旧特性'];Object.assign(S.traits,{legend:true,taiwan:true,goldcloth:true,genius:true,glass:true,mrteam:true});S.mrTeamName='NPB_PL_FUK';const plain=Object.keys(traitNames()).find(k=>!${JSON.stringify(special)}.includes(k));S.traits[plain]=true;return plain;},copy:()=>({mrteam:displayTrait('mrteam'),type:playerType(),position:primaryPos()}),state:()=>JSON.parse(JSON.stringify(S)),setApprovedCopy:label=>{const original=displayTrait,originalType=playerType;displayTrait=key=>key==='mrteam'?label:original(key);playerType=()=>{const value=originalType();return value==='期待の若手'?'発展途上型':value;};},image:async()=>{const out=document.createElement('div');document.body.appendChild(out);await shareImage([],out);return out.querySelector('img').src;}};`;
 const server=createServer(async(req,res)=>{try{
   const u=new URL(req.url,'http://localhost'),old=u.pathname.startsWith('/baseline/'),rel=decodeURIComponent(u.pathname.replace(/^\/(baseline\/)?/,''))||'index.html';
   if(rel.includes('..'))throw Error('path');
   if(rel==='favicon.ico'){res.writeHead(204);return res.end();}
   let body=old?execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:20e6}):await readFile(path.join(root,'docs',rel));
-  if(rel==='src/engine/game.js')body=body.toString()+hook;
+  if(rel==='src/engine/game.js'){
+    // Both historical/current factories capture playerType by value. Forward only this display
+    // dependency through the test hook so the exact approved NAME-08 mapping reaches the PNG.
+    const binding='teamNick,roleN,playerType,primaryPos,traitNames,fmtIP,slgOf,fmtMoney});';
+    const source=body.toString();assert.equal(source.split(binding).length,2,'one exact share display binding');
+    body=source.replace(binding,'teamNick,roleN,playerType:()=>playerType(),primaryPos,traitNames,fmtIP,slgOf,fmtMoney});')+hook;
+  }
   const type={js:'text/javascript',css:'text/css',html:'text/html',png:'image/png',webp:'image/webp',svg:'image/svg+xml',woff2:'font/woff2'}[rel.split('.').pop()]||'application/octet-stream';
   res.writeHead(200,{'content-type':type+'; charset=utf-8'});res.end(body);
 }catch{res.writeHead(404);res.end();}});
@@ -55,11 +63,15 @@ const hexBytes=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 const near=(hex,bytes,label)=>{const got=rgb(hex).map(v=>Math.round(v*255));assert.ok(got.every((v,i)=>Math.abs(v-bytes[i])<=1),`${label}: ${hex} vs ${bytes}`);};
 let mixChecks=0;
 const browser=await chromium.launch({channel:arg('browser')||'chrome',headless:true}),errors=[];
-let checks=0,failure;
+let checks=0,copyChecks=0,negativeChecks=0,failure,cleanupWarning;const copyEvidence=[],rawEvidence=[];
+const pngHash=png=>createHash('sha256').update(Buffer.from(png.split(',')[1],'base64')).digest('hex');
+const identical=(a,b,label)=>assert.ok(a===b,label+'; actual SHA256='+pngHash(a)+' expected SHA256='+pngHash(b));
+const different=(a,b,label)=>assert.ok(a!==b,label+'; SHA256='+pngHash(a));
+const draw=p=>p.evaluate(async()=>{const proto=CanvasRenderingContext2D.prototype,fill=proto.fillText,texts=[];proto.fillText=function(t,...r){if(/^\d+\.\d+\.\d+$/.test(String(t)))return;texts.push({text:String(t),x:r[0],y:r[1],font:this.font});return fill.call(this,t,...r);};try{return {png:await window.__shareColorTest.image(),texts};}finally{proto.fillText=fill;}});
 try{
   for(const width of [1280,390]){
     for(const [theme,legacyCompare] of Object.entries(legacyIdentical)){
-      const pngs={},legacy=legacyShareColors(legacyCss,theme);
+      const pngs={},raws={},copies={},legacy=legacyShareColors(legacyCss,theme);
       for(const run of ['old',...(legacyCompare?['legacy']:[]),'new']){
         const old=run==='old';
         const ctx=await browser.newContext({viewport:{width,height:900},isMobile:width<500,hasTouch:width<500}),p=await ctx.newPage();
@@ -68,7 +80,7 @@ try{
         await p.addInitScript(t=>{try{localStorage.setItem('yakyujinsei.display.v1',JSON.stringify({schemaVersion:1,theme:t,fontSize:'medium',density:'standard'}));}catch{}},theme);
         await p.goto(local+(old?'/baseline/':'/')+'?seed=design-tokens-03');
         await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
-        await p.locator('#seg-pos [data-v="P"]').click();await p.locator('#btn-start').click();
+        await p.locator('#seg-pos [data-v="P"]').click();await p.locator('#in-name').fill('投山翔太');await p.locator('#btn-start').click();
         assert.equal(await p.evaluate(()=>document.documentElement.dataset.theme),theme);
         const plain=await p.evaluate(()=>window.__shareColorTest.rich());assert.ok(plain,'a plain trait exists');
         if(run==='legacy'){
@@ -79,11 +91,29 @@ try{
         // 1.16.6 (UI-DESIGN-TOKENS-07): the share image draws with --sans/--mono; every compared run writes the pre-1.16.6
         // generic fonts, so a PNG difference from the baseline can only come from the colors.
         if(run==='new')await p.evaluate(()=>{document.documentElement.style.setProperty('--sans','sans-serif');document.documentElement.style.setProperty('--mono','monospace');});
-        const png=await p.evaluate(async()=>{const proto=CanvasRenderingContext2D.prototype,fill=proto.fillText;
-          proto.fillText=function(t,...r){if(/^\d+\.\d+\.\d+$/.test(String(t)))return;return fill.call(this,t,...r);};
-          try{return await window.__shareColorTest.image();}finally{proto.fillText=fill;}});
-        pngs[run]=png;
-        if(arg('shots')){await mkdir(arg('shots'),{recursive:true});await writeFile(path.join(arg('shots'),`design-tokens-03-${theme}-${width}-${{old:'before',legacy:'legacy',new:'after'}[run]}.png`),Buffer.from(png.split(',')[1],'base64'));}
+        const before=await p.evaluate(()=>window.__shareColorTest.state()),copy=await p.evaluate(()=>window.__shareColorTest.copy());
+        assert.equal(copy.mrteam,old?'UKミスター':'ミスターシーホークス','validate native approved copy before any fixture control');
+        assert.equal(copy.type,old?'期待の若手':'発展途上型','NAME-08 native copy is checked before applying its exact approved mapping');
+        copies[run]=copy;raws[run]=await draw(p);
+        assert.equal(raws[run].texts.filter(v=>v.text.includes('｜'+copy.type+'｜')).length,1,'one complete native subtitle is rendered');
+        await p.evaluate(()=>window.__shareColorTest.setApprovedCopy('ミスターシーホークス'));
+        const rendered=await draw(p),png=rendered.png;pngs[run]=png;
+        assert.deepEqual(await p.evaluate(()=>window.__shareColorTest.state()),before,'copy fixture and both renders keep complete S/RNG');
+        copyEvidence.push({width,theme,run,native:copy,rawSha256:pngHash(raws[run].png),controlledSha256:pngHash(png)});copyChecks++;
+        if(theme==='standard'&&width===1280&&run==='legacy'){
+          for(const [token,value] of [['--bg','#00ff00'],['--sans','serif']]){
+            const saved=await p.evaluate(({token,value})=>{const r=document.documentElement.style,old=r.getPropertyValue(token);r.setProperty(token,value);return old;},{token,value});
+            different((await draw(p)).png,png,'negative control detects '+token);
+            await p.evaluate(({token,saved})=>document.documentElement.style.setProperty(token,saved),{token,saved});identical((await draw(p)).png,png,'negative control restore '+token);negativeChecks++;
+          }
+          await p.evaluate(()=>window.__shareColorTest.setApprovedCopy('ミスター改変'));different((await draw(p)).png,png,'negative control detects copy change');await p.evaluate(()=>window.__shareColorTest.setApprovedCopy('ミスターシーホークス'));identical((await draw(p)).png,png,'copy restore');negativeChecks++;
+          assert.deepEqual(await p.evaluate(()=>window.__shareColorTest.state()),before,'negative controls do not modify career state');
+        }
+        if(run!=='old'){
+          assert.deepEqual(rendered.texts.map(v=>v.text),raws.old.texts.map(v=>v.text==='UKミスター'?'ミスターシーホークス':v.text.replace('｜期待の若手｜','｜発展途上型｜')),'only the explicitly approved NAME-07/08 copy changes');
+          assert.equal(copy.type,copies.old.type==='期待の若手'?'発展途上型':copies.old.type);assert.equal(copy.position,copies.old.position);
+        }
+        if(arg('shots')){await mkdir(arg('shots'),{recursive:true});for(const [kind,value] of [['controlled',png],['raw',raws[run].png]])await writeFile(path.join(arg('shots'),`design-tokens-03-${theme}-${width}-${run}-${kind}.png`),Buffer.from(value.split(',')[1],'base64'));}
         if(run==='new'){
           const read=await readShare(p,tokenNames);
           assert.equal(read.canvases,0,`${width} ${theme} share colors are converted without a canvas`);
@@ -108,13 +138,25 @@ try{
         await ctx.close();
       }
       assert.ok(Object.values(pngs).every(s=>s.startsWith('data:image/png;base64,')&&s.length>10_000),'PNG drawn');
-      assert.notEqual(pngs.new,pngs.old,`${width} ${theme} share PNG must follow the derived theme tokens`);checks++;
-      if(legacyCompare){assert.equal(pngs.legacy,pngs.old,`${width} ${theme} share PNG with ${legacyTree} colors byte-identical to ${baseline}`);checks++;}
+      different(pngs.new,pngs.old,`${width} ${theme} share PNG must follow the derived theme tokens`);checks++;
+      if(legacyCompare){
+        different(raws.legacy.png,raws.old.png,'raw pre-control PNG reproduces native NAME-07/08 copy mismatch');
+        identical(pngs.legacy,pngs.old,`${width} ${theme} complete PNG with exact approved NAME-07/08 copy and shared fonts and ${legacyTree} colors byte-identical to ${baseline}`);checks++;
+        rawEvidence.push({width,theme,before:pngHash(raws.old.png),after:pngHash(raws.legacy.png),controlled:pngHash(pngs.legacy),copyBefore:copies.old.mrteam,copyAfter:copies.legacy.mrteam,typeBefore:copies.old.type,typeAfter:copies.legacy.type});
+        if(theme==='standard'&&width===1280){
+          const probe=await browser.newPage();const diff=await probe.evaluate(async images=>{const imgs=await Promise.all(images.map(src=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src;})));const W=Math.max(...imgs.map(i=>i.width)),H=Math.max(...imgs.map(i=>i.height)),data=imgs.map(i=>{const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');ctx.drawImage(i,0,0);return ctx.getImageData(0,0,W,H).data;});let count=0,x0=W,y0=H,x1=-1,y1=-1;for(let i=0;i<data[0].length;i+=4)if([0,1,2,3].some(k=>data[0][i+k]!==data[1][i+k])){const x=i/4%W,y=Math.floor(i/4/W);count++;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}return {sizes:imgs.map(i=>[i.width,i.height]),pixels:count,bounds:count?{x0,y0,x1,y1}:null};},[raws.old.png,raws.legacy.png]);await probe.close();assert.ok(diff.pixels>0);rawEvidence.at(-1).pixelDiff=diff;
+        }
+      }
     }
   }
   assert.deepEqual(errors,[]);
-  assert.equal(checks,2*(4*2+2));assert.equal(mixChecks,1);
+  assert.equal(checks,2*(4*2+2));assert.equal(mixChecks,1);assert.equal(copyChecks,20);assert.equal(negativeChecks,3);
   console.log(`design-tokens-03-e2e: ${checks} checks PASS (2 viewports x 4 themes: probe colors vs theme-colors without canvas, derived PNG differs from ${baseline}; standard/classic with ${legacyTree} colors byte-identical to ${baseline}); color-mix srgb/oklab read-back and invalid-token rejection PASS.`);
 }catch(e){failure=e;}
-finally{await browser.close();server.close();}
-if(failure)throw failure;
+finally{
+  server.closeAllConnections();server.close();let timer;
+  try{await Promise.race([browser.close(),new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('BROWSER_CLOSE_TIMEOUT')),15000))]);}
+  catch(e){if(e.message==='BROWSER_CLOSE_TIMEOUT'&&!browser.isConnected()){cleanupWarning='Disconnected browser profile cleanup timed out';console.warn(cleanupWarning);}else failure??=e;}finally{clearTimeout(timer);}
+  await writeFile(path.join(output,'summary.json'),JSON.stringify({checks,copyChecks,negativeChecks,mixChecks,PASS:failure?0:checks,FAIL:failure?1:0,baseline,legacyTree,copyEvidence,rawEvidence,errors,cleanupWarning,failure:failure?.stack},null,2));
+}
+if(failure){console.error(failure.stack);process.exit(1);}process.exit(0);

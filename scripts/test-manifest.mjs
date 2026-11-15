@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'player-random-name-e2e': {seconds:120,reason:'Blank/typed names: isolated crypto draws, exact short P/IF state and RNG comparison, same-seed different names, real save/resume/year advance and PNG; no full career.'},
   'hof-retirement-policy-e2e': {seconds:180,reason:'Approved HOF-only deltas: full pre-retirement S/choice/RNG equality, P/IF deterministic replay and frozen-rule retirement oracle, no blanket ignore.'},
   'browser-save-store-e2e': {quick:[],seconds:15,reason:'Real IndexedDB revision, quota and stale-write fault checks.'},
   'browser-save-runtime-e2e': {quick:[],seconds:40,reason:'Real reload S/RNG, first-step failure/retry, two tabs and unavailable storage UI.'},

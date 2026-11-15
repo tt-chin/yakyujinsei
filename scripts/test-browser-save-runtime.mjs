@@ -52,7 +52,7 @@ async function startComparison(){
   for(const variant of ['baseline','current','repeat']){
    const old=variant==='baseline',version=versions[old?0:1],context=await browser.newContext(),p=await context.newPage();
    await p.goto('http://127.0.0.1:'+server.address().port+(old?'/baseline/':'/')+'?seed=confirmation-state-'+pos);
-   await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();
+   await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#in-name').fill('確認比較太郎');await p.locator('#btn-start').click();
    await p.waitForFunction(()=>document.querySelector('#save-live').textContent.includes('開始時点をセーブしました'));
    const snapshots=[];
    for(let step=0;step<2;step++){
