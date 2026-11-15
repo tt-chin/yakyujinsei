@@ -210,10 +210,10 @@
 
 ### 3.5 P2 — 未來功能候補（5項未完成；另保留5項已接受索引）
 
-- [ ] **INJ-UI-01** — 一般受傷風險細項顯示；計算與 UI 維持單一資料來源。
+- [ ] **INJ-UI-01** — 一般受傷風險細項顯示；計算與 UI 維持單一資料來源。2026-11-15細部計畫草案：I2（顯示總值＋細目）使用者決定；I1（健康診斷前是否公開總故障率）待code owner決定；實作屬R3。[細部計畫](tasks/P2_DISPLAY_DECISIONS_PLAN.md)
 - [ ] **PLY-01** — `SPEC_APPROVED / NOT_IMPLEMENTED`。球團／年度／字串背號履歷，0與00分開；系統固定預設、玩家可改，轉隊優先沿用，同隊可改並記生效年；0、00、1～99只排明確禁號，不模擬隊友占用，不消耗生涯RNG、不影響能力收入成績殿堂。固定選號次序及舊資料處理待實作盤點。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。2026-11-15細部計畫草案：D1～D4（固定候選順序、禁號空清單、只增不改紀錄、舊存檔自載入後第一季補號）使用者決定；W1～W6（改號入口、顯示位置、候選表、紀錄觸發、欄位、適用球團）附示意圖`tasks/ply-01/`待code owner決定，見[細部計畫](tasks/PLY_01_JERSEY_PLAN.md)。未授權實作。
-- [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)
-- [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。
+- [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)。2026-11-15細部計畫草案：N1（列表位置）、N2（是否列未出場大會）待code owner決定；須同步修改CURRENT_SPEC §15.1「大会別履歴一覧は追加しない」。[細部計畫](tasks/P2_DISPLAY_DECISIONS_PLAN.md)
+- [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。2026-11-15：E1（提示標題＋結果卡）、E2（徽章）、E3（年度事件履歷，要做）使用者決定；E1＋E2另以分支實作，E3顯示位置待code owner決定。[細部計畫](tasks/P2_DISPLAY_DECISIONS_PLAN.md)
 - [x] **UI-06** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。遊び方內容與整體UI由使用者接受；使用者確認iPhone Safari與Android Chrome實機的開關、捲動、觸控、分享及顯示操作均OK。結合[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)11組對話框本機驗證，在本ID範圍結案；裝置型號／OS／瀏覽器版本未提供，實機結果為使用者回報，非本機自動測試。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
 - [x] **UI-07** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。更新履歷文案與整體UI由使用者接受，雙實機操作通過；結合51版／50摘要核對與本機對話框驗證，在本ID範圍結案。原始詳細歷史及FAIL保留，不將實機確認延伸為全部遊戲規則或其他版本驗收。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
 
