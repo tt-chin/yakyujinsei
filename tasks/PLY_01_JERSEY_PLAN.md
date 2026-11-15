@@ -1,6 +1,6 @@
-# PLY-01 背號履歷：細部計畫（草案，待 code owner 決定 W1～W6）
+# PLY-01 背號履歷：細部計畫（草案，W1～W6 已決定；W7、W8 待 code owner 決定）
 
-狀態：**D1～D4 已定（使用者 2026-11-15）；W1～W6 待 code owner 決定；未授權實作。**
+狀態：**D1～D4 已定（使用者 2026-11-15）；W1～W6 已由 code owner 決定（2026-11-15，PR #95 留言）；新增 W7（規格衝突）、W8（選號步驟位置）待 code owner 決定；未授權實作。** Code owner 留言明示「不代表授權立即實作、合併或部署」。
 上位規格：[殿堂評價與背號履歷：已批准、待實作規格](HOF_JERSEY_APPROVED_SPEC.md) §4（PLY-01）、§5（PLY-02 永久欠番，不在本計畫範圍）。
 調查基準：`origin/dev` `1494a24`（1.16.10）。示意圖：`tasks/ply-01/`（以 seed `hof111-pilot-04`、內野手、固定名「山田太郎」的真實生涯為底，只在瀏覽器內插入 DOM，非實作畫面）。
 
@@ -25,7 +25,18 @@
 | D3 | 同年多次改號 | **只增不改的紀錄**：每次入團／改號追加一筆（球團、生效年度、號碼），同年多筆依追加順序保留；顯示時同一年取最後一筆。不覆寫過去年度 |
 | D4 | 舊存檔 | 過去年度顯示「不明」；自載入後**第一個賽季**起，為當時所屬球團補上預設號碼（生效年度＝該季）。不補造之前的歷史 |
 
-## 3. 請 code owner 決定（W1～W6）
+### Code owner 決定（2026-11-15，PR #95 留言）
+
+| # | 事項 | 決定 |
+|---|---|---|
+| W1 | 改號入口 | **B**：入團時增加選號步驟 |
+| W2 | 顯示位置 | **a、b、c、d**。a 生涯面板顯示背號，且面板的選單按鈕**不顯示「メニュー」文字，只顯示 ☰**；b 每季成績卡；c 退休卡背號履歷；d キャリア → 年度別。e 分享圖**不做** |
+| W3 | 預設候選順序 | 照 §3 草案 |
+| W4 | 生效時點與紀錄觸發 | 照 §3 草案 |
+| W5 | 狀態欄位 | 照 §3 草案：可選欄位 `S.jerseyHistory: [{teamId, year, number}]`，`number` 為字串，不列為舊存檔必填 |
+| W6 | 適用球團 | **A**：NPB、KBO、CPBL、MiLB／MLB，不含 IND／CORP |
+
+## 3. 原選項（W1～W6 已決定，保留供參照）
 
 ### W1 改號入口
 
@@ -75,26 +86,97 @@ A 的改號限制（建議）：只在生涯進行中、所屬職業球團時可
 | **A（建議）** | 職業：NPB、KBO、CPBL、MiLB／MLB |
 | B | A＋獨立聯盟（IND）＋社會人（CORP） |
 
+### 新待決事項（W7、W8；2026-11-15 依 W1＝B 整理）
+
+#### W7 同球團主動改號（規格衝突）
+
+`HOF_JERSEY_APPROVED_SPEC.md` §4 寫「允許同球團主動改號」，但 W1＝B 只在入團時提供選號，留在同一球團期間沒有改號入口。依 AGENTS §1 不自行補足，請 code owner 選擇：
+
+| 選項 | 內容 | 影響 |
+|---|---|---|
+| ① | B＋同球團續約時也提供選號（「背番号 X のまま／背番号を変更する」） | 續約畫面多一步，逐步比較的位移範圍再擴大 |
+| ② | 改為 C（B＋選單內的改號入口，即原 W1＝A 的對話框） | 主流程只在入團時多一步；選單多一個項目，`#board-menu-panel` 的 DOM 改變 |
+| ③ | 只在入團時選號，不提供同球團改號 | **須修改已批准規格 §4**（刪除同球團主動改號），另行批准 |
+
+#### W8 選號步驟的插入位置（實作設計）
+
+`signTo` 有 13 個以上呼叫點，多數在選項回呼中呼叫後立刻接著顯示下一個選擇（例如 `support/stage6-browser.mjs:32` 的「契約を受諾」→「契約後」）。若在 `signTo` 內部顯示選號，會被呼叫端隨後的 `choose()` 蓋掉。
+
+| 選項 | 內容 | 影響 |
+|---|---|---|
+| **甲（建議）** | 集中一處：所屬職業球團與 `S.jerseyHistory` 最後一筆的 `teamId` 不同時，在**下一個年度開始前**（季前處理之前）插入選號步驟；隊內交易也由同一判斷涵蓋 | 只改一個接點，13 個呼叫點不動；`signTo` 本身維持 RNG 0；顯示時點是入團後的第一個賽季開始前，而非按下入團按鈕的當下；舊存檔（D4）在載入後第一季也會經由同一判斷出現一次選號（預設號碼為第一個選項） |
+| 乙 | 每個呼叫點各自在 `signTo` 之後、下一個 `choose()` 之前插入選號 | 選號緊接在入團之後；要改 13 個以上呼叫點，漏改風險高，逐點都需測試 |
+
 ## 4. 修改前後差異
 
 **會改變（玩家看得到）**
-- 依 W1、W2 的選擇，新增改號入口與背號顯示。
+- 入團時多一個選號步驟（W1＝B；位置依 W8）。**主流程的點擊步數與 `#act` 的 DOM 順序會改變。**
+- 背號顯示：生涯面板、每季成績卡、退休卡背號履歷、キャリア → 年度別（W2 a～d）。
+- 生涯面板的選單按鈕只顯示 ☰，可見的「メニュー」文字移除；`aria-label="メニュー"`（`docs/index.html:59`）保留，無障礙名稱不變。
 - 新狀態欄位 `S.jerseyHistory`，存入存檔。
 
 **不會改變**
 - RNG：演算法、呼叫順序、抽取次數完全不變（D1 為固定規則）。
 - 能力、成長、收入、出場、成績、獎項、殿堂評分與判定、退休時點（規格 §4）。
-- 既有選項、事件順序、存檔格式版本（`schemaVersion` 不變）；1.16.10 以前的存檔可讀。
-- W1＝A 時，主流程的點擊步數與 DOM 順序不變（只有 W2 指定處多出號碼文字）。
+- 既有選項的內容與順序、事件順序、存檔格式版本（`schemaVersion` 不變）；1.16.10 以前的存檔可讀。
+- 選號步驟本身不消耗 RNG；新增步驟以外的操作順序不變。
 
-**允許的狀態差異**：只有 `S.jerseyHistory`（及 W2 顯示文字）。其他任何狀態或 RNG 差異都視為回歸。
+**允許的差異**：狀態只有 `S.jerseyHistory`；畫面只有選號步驟、W2 a～d 的背號文字與選單按鈕的「メニュー」文字。其他任何狀態、RNG 次數或 RNG 順序的差異都視為回歸。
 
-## 5. 實作與驗證計畫（R3；W1～W6 決定後再展開 T 表）
+## 5. 實作與驗證計畫（R3；W7、W8 決定後定稿）
 
-- 分類：R3（永久狀態、存檔）。版本：MINOR（新功能），1.16.10 → 1.17.0，同步 `CHANGELOG.md`／`RELEASE_NOTES.md`／`CURRENT_SPEC.md`。
+- 分類：R3（永久狀態、存檔、主流程步驟）。版本：MINOR（新功能），1.16.10 → 1.17.0，同步 `CHANGELOG.md`／`RELEASE_NOTES.md`／`CURRENT_SPEC.md`。
 - 新模組（例如 `docs/src/engine/jersey-policy.js`）放預設選號與紀錄規則，`game.js` 只做接線（`docs/src` 既有檔案凍結斷言見 `award-identity-policy.test`）。
-- 受影響的測試（比對完整狀態 S）：`game-view-dom-e2e`、`contract-salary-e2e`、`draft-income-e2e`、`hof-retirement-comparison.test`、`npb-farewell.test`、`event-fix-e2e`、`trait-policy.test`。處理方式：只在新版一側剔除 `jerseyHistory` 再比對，並另加斷言證明剔除的只有這個欄位。
-- RNG：`salary-flow.test` 的各模組抽取次數必須不變。
-- 新增測試：預設選號（四守備位置）、轉隊沿用、同年多次改號全數保留且不覆寫、「0」≠「00」、取消不留紀錄、舊存檔（1.16.10 fixture）讀取＋第一季補號、存檔往返。
-- 負控制：在選號中呼叫 RNG、覆寫過去年度、改號寫入能力或收入，各自應在預期斷言 FAIL。
-- 驗證：固定 seed 投手／野手前後比較（狀態只差 `jerseyHistory`、RNG 次數一致）、Quick、8 批 Full、W2 指定畫面 PC／手機截圖。
+
+### 5.1 T 表（草案）
+
+| T | 內容 | 主要檔案 |
+|---|---|---|
+| T1 | 純函式：預設號碼（W3）、號碼字串驗證（「0」≠「00」，「1」～「99」）、紀錄追加（D3）、顯示用「某年度的號碼」查詢 | 新 `jersey-policy.js` |
+| T2 | 狀態與存檔：`S.jerseyHistory` 初始值、存檔契約 `types` 登記（不列 `required`）、舊存檔 D4 補號 | `initial-state.js`、`browser-save-state-contract.js` |
+| T3 | 選號步驟：依 W8 插入；「背番号 X で入団する／背番号を選ぶ」，選號畫面可取消（取消不留紀錄）；隊內交易涵蓋（W4）；適用範圍 W6 | W8 甲：年度開始前的接點一處 |
+| T4 | W7 的同球團改號入口（依決定） | — |
+| T5 | 顯示 W2 a～d | 生涯面板、每季成績卡、退休卡、年度別 |
+| T6 | 選單按鈕只顯示 ☰ | `docs/index.html:59` |
+| T7 | 測試期待值更新與新增測試（見 §5.2、§5.3） | `tests/` |
+| T8 | 版本與文件 | `config.js` 等 |
+
+### 5.2 受影響的既有測試（2026-11-15 盤點，`1494a24`）
+
+**逐步驅動生涯、對舊 SHA 比較（多一步 → 步數或 digest 位移，須核准期待值更新）**
+
+| 入口 | 模式 | 比較對象 | 受影響原因 |
+|---|---|---|---|
+| `game-view-dom-e2e` | Full | 每步 DOM＋狀態＋RNG 次數 vs `4f39a73` | 選號步驟位移；另外 `dom.board`（`support/dom-snapshot.mjs:20`）含選單按鈕文字，☰ 變更會從第 0 步起不同 |
+| `contract-salary-e2e` | Full | 每步紀錄 vs `37121fb` | 選號步驟位移 |
+| `hof-first-ballot-e2e` | Full | 完整生涯 vs `925987d` | 同上 |
+| `international-personal-stats-e2e` | Full | 6 條固定 seed 生涯 vs `e602174` | 同上 |
+| `kbo-renewal-e2e` | Quick／Full | 每步紀錄、RNG state vs `f3efb0a` | 同上 |
+| `draft-income-e2e` | Full | 3 條路線的 RNG state／次數（`tests/fixtures/draft-income-routes.json`）及新舊生涯比較 | 路線經過入團時多一步 |
+
+這些驅動程式都用 `/…|入団/` 的正規式選按鈕（例：`game-view-dom-e2e.mjs:63`），會選中「背番号 X で入団する」，所以會自然走預設號碼路線。處理方式：只在新版一側略過選號步驟並剔除 `jerseyHistory` 再比較，另加斷言證明被略過或剔除的只有這些。
+
+**直接依文字操作入團、或斷言入團動作一次完成**
+
+| 入口 | 模式 | 內容 |
+|---|---|---|
+| `bug-act-01-02-e2e` | Quick（fixture）／Full | `:52-53` 按「指名を受けて入団」後斷言動作數＋1（`ACTION_NOT_ONCE`）；`:76` 斷言 `signTo` RNG 0 且 `S.ct` 已設定 |
+| `draft-income-e2e` | Full | `:83` 依文字點「指名を受けて入団」；`:89` 斷言入團不增加 RNG |
+| `stage10-risk-e2e` | Full | 在 `choose()` 回呼中直接呼叫 `signTo`，並有在 `signTo` 前注入故障的案例 |
+| `full-power-pitching-e2e`、`stage6-state-transaction-e2e`、`stage7-safety-e2e`（經 `support/stage6-browser.mjs:32`） | Full | fixture 直接呼叫 `signTo` 後接著顯示下一個選擇 |
+
+W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixture 預期不受影響；選號步驟出現在下一年度開始前，需確認各測試是否會走到該時點（實作前逐一確認）。
+
+**選單按鈕文字**
+
+- `scripts/test-share-url-menu.mjs:60` 斷言按鈕文字為「☰メニュー」（`top menu unchanged`），須更新期待值（不在自動 manifest）。
+- 其他使用 `#board-menu-toggle` 的測試（`support/board-menu.mjs` 等）只當點擊目標或檢查 `aria-expanded`，不受影響。
+
+**不受影響（已確認）**：`season-phases.test`、`npb-return-ui.test`、`draft-signing-policy.test` 以樁替代 `signTo`；`career-movement-policy`、`salary-flow.test`、`verify-modularization` 只比對原始碼文字（W8＝甲時呼叫點不變）；`event-system-e2e`、`retirement-hof-pilot` 只比對同版兩次執行（選號為固定規則，兩次一致）。
+
+### 5.3 新增測試與驗證
+
+- 新增：預設選號（四守備位置）、轉隊沿用、同年多次改號全數保留且不覆寫、「0」≠「00」、取消不留紀錄、適用範圍外（IND／CORP）不出現選號、舊存檔（1.16.10 fixture）讀取＋第一季補號、存檔往返。
+- 負控制：在選號中呼叫 RNG、覆寫過去年度、改號寫入能力或收入、IND 也出現選號，各自應在預期斷言 FAIL。
+- 驗證：固定 seed 投手／野手前後比較（狀態只差 `jerseyHistory`、RNG 次數與順序一致）、Quick、8 批 Full、W2 指定畫面與選單按鈕的 PC／手機截圖（4 主題）。
+

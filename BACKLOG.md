@@ -177,7 +177,7 @@
 
 ### 3.2 P1 — 退休與殿堂研究、決策（5 項）
 
-- [ ] **HOF-NATURAL-SAMPLE-01** — `IMPLEMENTED_UNVERIFIED`。現有固定案例及 50 條完成生涯，但自然生涯沒有足夠到達 KBO／MLB 一軍的樣本；四聯盟比較與 4,000 有效生涯目標尚未完成。先改進研究路線與樣本品質，**不修改殿堂規則**。2026-11-15：研究工具`retirement-hof-pilot`在1.16.10重放斷言FAIL（隨機空白姓名，非遊戲bug；暫存副本填固定名後PASS）；研究路線草案（S1姓名修正～S5擴大，H1～H4待決）見[研究計畫](tasks/HOF_NATURAL_SAMPLE_PLAN.md)，未授權實作。
+- [ ] **HOF-NATURAL-SAMPLE-01** — `IMPLEMENTED_UNVERIFIED`。現有固定案例及 50 條完成生涯，但自然生涯沒有足夠到達 KBO／MLB 一軍的樣本；四聯盟比較與 4,000 有效生涯目標尚未完成。先改進研究路線與樣本品質，**不修改殿堂規則**。2026-11-15：研究工具`retirement-hof-pilot`在1.16.10重放斷言FAIL（隨機空白姓名，非遊戲bug；暫存副本填固定名後PASS）；研究路線草案見[研究計畫](tasks/HOF_NATURAL_SAMPLE_PLAN.md)；同日依code owner審查建議改寫第二版（策略拆成聯盟×育成兩維度、投手／野手分組分階段試跑、兩個手動重放入口另案），H1～H4尚未正式批准，未授權實作。
 - [ ] **HOF-BUCKET-DECISION-01** — `CI_PASS / DEV_MERGED / PREVIEW_PENDING`（2026-11-13核對；PR #74、Full 42497795539與合併Quick 42551250884，詳見§1現況摘要）。四聯盟殿堂只計當聯盟一軍；二軍／育成／MiLB保留紀錄但不計入，未知歷史階級不推測。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
 - [ ] **HOF-PITCHER-BALANCE-01** — `RESEARCH_ONLY / NOT_IMPLEMENTED`。只調查SP／MR／CL與指標，暫不採A／B／C或改係數；不影響另已批准的一軍篩選及國際榮譽變更。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。2026-11-15併入[研究計畫](tasks/HOF_NATURAL_SAMPLE_PLAN.md) S4（角色別分析，只出報告）。
 - [ ] **HOF-HONOR-POLICY-01** — `CI_PASS / DEV_MERGED / PREVIEW_PENDING`（2026-11-13核對；PR #74、Full 42497795539與合併Quick 42551250884，詳見§1現況摘要）。保留MVP／最優秀投手至少明星、部門獎至少主力並展示實際理由。個人獎與球隊優勝按取得當年聯盟，不能重複加分；國際榮譽獨立展示、各聯盟分數及下限貢獻為0。移除現NPB國際加分是規則變更，非純UI。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
@@ -211,7 +211,7 @@
 ### 3.5 P2 — 未來功能候補（5項未完成；另保留5項已接受索引）
 
 - [ ] **INJ-UI-01** — 一般受傷風險細項顯示；計算與 UI 維持單一資料來源。2026-11-15細部計畫草案：I2（顯示總值＋細目）使用者決定；I1（健康診斷前是否公開總故障率）待code owner決定；實作屬R3。[細部計畫](tasks/P2_DISPLAY_DECISIONS_PLAN.md)
-- [ ] **PLY-01** — `SPEC_APPROVED / NOT_IMPLEMENTED`。球團／年度／字串背號履歷，0與00分開；系統固定預設、玩家可改，轉隊優先沿用，同隊可改並記生效年；0、00、1～99只排明確禁號，不模擬隊友占用，不消耗生涯RNG、不影響能力收入成績殿堂。固定選號次序及舊資料處理待實作盤點。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。2026-11-15細部計畫草案：D1～D4（固定候選順序、禁號空清單、只增不改紀錄、舊存檔自載入後第一季補號）使用者決定；W1～W6（改號入口、顯示位置、候選表、紀錄觸發、欄位、適用球團）附示意圖`tasks/ply-01/`待code owner決定，見[細部計畫](tasks/PLY_01_JERSEY_PLAN.md)。未授權實作。
+- [ ] **PLY-01** — `SPEC_APPROVED / NOT_IMPLEMENTED`。球團／年度／字串背號履歷，0與00分開；系統固定預設、玩家可改，轉隊優先沿用，同隊可改並記生效年；0、00、1～99只排明確禁號，不模擬隊友占用，不消耗生涯RNG、不影響能力收入成績殿堂。固定選號次序及舊資料處理待實作盤點。[批准規格](tasks/HOF_JERSEY_APPROVED_SPEC.md)。2026-11-15細部計畫草案：D1～D4（固定候選順序、禁號空清單、只增不改紀錄、舊存檔自載入後第一季補號）使用者決定；W1～W6（改號入口、顯示位置、候選表、紀錄觸發、欄位、適用球團）附示意圖`tasks/ply-01/`；同日code owner決定W1＝B（入團時選號）、W2＝a～d（選單按鈕只顯示☰；分享圖不做）、W3～W5照草案、W6＝A（職業球團）。新增待決W7（規格§4「同球團主動改號」與W1＝B衝突）、W8（選號步驟插入位置），見[細部計畫](tasks/PLY_01_JERSEY_PLAN.md)。未授權實作。
 - [ ] **INT-01** — 各項國際賽事履歷；重用既有結果，不增加 RNG 抽選。1.11.8僅補既存大会結果卡的本大会個人成績及personalStats快照，未新增履歷列表，本ID仍未完成。[本大会顯示驗收](docs/reviews/INTL_EVENT_STATS_DISPLAY_ACCEPTANCE.md)。2026-11-15細部計畫草案：N1（列表位置）、N2（是否列未出場大會）待code owner決定；須同步修改CURRENT_SPEC §15.1「大会別履歴一覧は追加しない」。[細部計畫](tasks/P2_DISPLAY_DECISIONS_PLAN.md)
 - [ ] **EVT-01** — 事件分類顯示；不得改變抽選候選及順序。2026-11-15：E1（提示標題＋結果卡）、E2（徽章）、E3（年度事件履歷，要做）使用者決定；E1＋E2另以分支實作，E3顯示位置待code owner決定。[細部計畫](tasks/P2_DISPLAY_DECISIONS_PLAN.md)
 - [x] **UI-06** — `USER_ACCEPTED / CLOSED_SCOPE_LIMITED`（2026-11-05）。遊び方內容與整體UI由使用者接受；使用者確認iPhone Safari與Android Chrome實機的開關、捲動、觸控、分享及顯示操作均OK。結合[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)11組對話框本機驗證，在本ID範圍結案；裝置型號／OS／瀏覽器版本未提供，實機結果為使用者回報，非本機自動測試。證據來源：本對話使用者對三項確認回覆「兩者，YES，TES」（TES依上下文理解為YES），及[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)五項UI補驗紀錄。
