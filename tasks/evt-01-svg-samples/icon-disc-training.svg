@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="トレーニング">
+  <title>トレーニング</title>
+  <circle cx="12" cy="12" r="11.5" fill="currentColor" fill-opacity=".18"/>
+  <g transform="translate(12 12) scale(.68) translate(-12 -12)" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6M7.5 7v10M16.5 7v10M20 9v6M7.5 12h9"/></g>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100" width="160" height="100" role="img" aria-label="ボブルヘッドのポーズ相談">
+  <title>ボブルヘッドのポーズ相談</title>
+  <path d="M6 90h148" stroke="currentColor" stroke-opacity=".5" stroke-width="2"/>
+  <rect x="42" y="78" width="48" height="12" rx="2" fill="currentColor" fill-opacity=".5"/>
+  <rect x="56" y="54" width="20" height="24" rx="5" fill="currentColor"/>
+  <path d="M56 60 46 70M76 60 86 52" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+  <path d="M66 54l-4-2 8-2-8-2 8-2-4-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="66" cy="30" r="16" fill="currentColor" fill-opacity=".35" stroke="currentColor" stroke-width="2"/>
+  <path d="M50 28a16 16 0 0 1 32 0z" fill="currentColor"/>
+  <path d="M80 28h10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="61" cy="35" r="1.8" fill="currentColor"/><circle cx="72" cy="35" r="1.8" fill="currentColor"/>
+  <path d="M42 22a26 26 0 0 0 0 18M92 40a26 26 0 0 0 0-18" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>
+  <rect x="112" y="48" width="34" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/>
+  <rect x="116" y="43" width="10" height="5" rx="1" fill="currentColor"/>
+  <circle cx="129" cy="60" r="7" fill="none" stroke="currentColor" stroke-width="2.5"/>
+  <path d="M108 40 102 34M112 36 110 28M104 46 96 44" stroke="currentColor" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/>
+</svg>
