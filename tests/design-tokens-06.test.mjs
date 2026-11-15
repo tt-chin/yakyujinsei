@@ -71,10 +71,10 @@ test('px margin/padding/gap go through var(--space-*) outside the 7 untouched de
   }
   assert.deepEqual(kept.sort(),[...KEEP_PX].sort());
 });
-// EVT-01 (1.16.11) added 2: .event-badge padding and margin-right.
-test('every var(--space-*) is defined and every step is used (174 sites, -09 + EVT-01)',()=>{
+// EVT-01 (1.16.11) added 2: .event-badge padding and margin-right. EVT-01 E3 (1.16.12) added 5: sticky event details left and width, .ui-yearly-events-body margin, its li margin, badge margin-right.
+test('every var(--space-*) is defined and every step is used (179 sites, -09 + EVT-01 + E3)',()=>{
   const used=[...outsideRoot.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,174);
+  assert.equal(used.length,179);
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');
   assert.deepEqual(Object.keys(SPACE).filter(n=>!used.includes(n)),[],'unused --space token');
 });

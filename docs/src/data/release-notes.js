@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.12｜2026/11/15",
+    "lines": [
+      "- キャリアの年度別に、その年に起きたイベントの履歴を表示（折りたたみ式）。"
+    ]
+  },
+  {
     "title": "1.16.11｜2026/11/15",
     "lines": [
       "- イベントの見出しに分類バッジを表示し、種類がひと目で分かるよう改善。"

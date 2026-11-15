@@ -101,6 +101,24 @@ export async function captureGameView(full){
     if(JSON.stringify(income)!==JSON.stringify(expected))throw Error('INCOME_VIEW_CONTRACT_MISMATCH');
     delete views.career.contract.incomeRows;
   }
+  // Approved 1.16.12 EVT-01 E3 delta: career().events (year event rows). Check it against the saved events in S
+  // (every occurrence exactly once, under the last S.log row of its year or in 今季, sequence order), then drop it.
+  const history=views.career.events;
+  if(history!==undefined){
+    const processed=rawState.processedEventIDs,isRecord=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+    if(!isRecord(processed)){if(history?.status!=='missing')throw Error('EVENT_HISTORY_STATUS');}
+    else{
+      const years=(Array.isArray(rawState.log)?rawState.log:[]).map(r=>r.y),last=new Map();years.forEach((y,i)=>last.set(y,i));
+      const order=ids=>ids.slice().sort((a,b)=>processed[a].year-processed[b].year||Number(a.split(':')[1])-Number(b.split(':')[1]));
+      const ids=Object.keys(processed).filter(id=>isRecord(processed[id]));
+      const want={afterRow:{},current:order(ids.filter(id=>!(Number.isInteger(processed[id].year)&&last.has(processed[id].year))))};
+      for(const [y,i] of last){const g=order(ids.filter(id=>processed[id].year===y));if(g.length)want.afterRow[i]=g;}
+      const got={afterRow:Object.fromEntries(Object.entries(history?.afterRow||{}).map(([i,items])=>[i,items.map(x=>x.occurrenceID)])),current:(history?.current||[]).map(x=>x.occurrenceID)};
+      if(history?.status!=='ok'||JSON.stringify(got)!==JSON.stringify({afterRow:Object.fromEntries(Object.entries(want.afterRow).sort(([a],[b])=>a-b)),current:want.current}))throw Error('EVENT_HISTORY_CONTRACT');
+      for(const items of [...Object.values(history.afterRow),history.current])for(const x of items){const r=processed[x.occurrenceID];if(x.category!==(['training','encounter','endorsement'].includes(r.category)?r.category:null))throw Error('EVENT_HISTORY_CATEGORY');}
+    }
+    delete views.career.events;
+  }
   const log=document.getElementById('log')?.cloneNode(true);
   const profile=[...log?.querySelectorAll('.card')||[]].find(e=>e.querySelector('h4')?.textContent==='キャリアプロフィール');
   if(window.__expectDesignTokens02&&log){

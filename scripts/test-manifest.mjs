@@ -33,6 +33,7 @@ const browserProfiles = {
   'event-system-e2e': {seconds:150},
   'event-fix-e2e': {seconds:15},
   'event-category-badge-e2e': {quick:[],seconds:20,reason:'EVT-01: real-career event prompt and result-card category badges (draw-time effective category, saved result category), 1280/390 px, 4 themes.'},
+  'event-history-e2e': {quick:[],seconds:40,reason:'EVT-01 E3: real-career キャリア → 年度別 event rows (every occurrence, saved category, 今季 row), collapsed/expanded inside the scroll box, 1280/390 px, 4 themes.'},
   'global-contract-market-e2e': {args:['--quick'], seconds:30},
   'hof-first-ballot-e2e': {seconds:50},
   'game-view-dom-e2e': {seconds:300,reason:'OOP phase 2 GameView guard: P/IF fixed-seed careers at 1280/390, per-step #log/#act/#board DOM, S and RNG count identical to fixed baseline 2a11a64. No Quick profile.'},

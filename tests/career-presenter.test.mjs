@@ -47,7 +47,18 @@ for(const [name,state] of Object.entries(fixtures))test(name+': presenter equals
   }
   const values=[['pay','年俸・報酬',Number(state.careerBaseSalary||0)+Number(state.corpIncome||0)],['incentive','出来高',Number(state.careerIncentive||0)],['signing','契約金・支度金',Number(state.careerSigningBonus||0)+Number(state.careerDevelopmentStipend||0)],['buyout','契約解除補償金',Number(state.careerBuyout||0)],['outside','スポンサー収入',Number(state.careerOutsideIncome||0)],['total','生涯総収入',Number(state.careerEarnings||0)]];
   expected.career=Object.freeze({...expected.career,contract:Object.freeze({...expected.career.contract,incomeRows:Object.freeze(values.map(([key,label,value])=>Object.freeze({key,label,value:helpers.fmtMoney(value)})))})});
+  // EVT-01 E3 (1.16.12): career() adds events; these fixtures have no processedEventIDs, so it is the missing-record model
+  // (content is covered by career-event-history.test). Every other career field stays exact.
+  expected.career=Object.freeze({...expected.career,events:Object.freeze({status:'missing',afterRow:Object.freeze({}),current:Object.freeze([])})});
   for(const method of ['player','career','ability','traits','record'])assert.deepEqual(shape(presenter[method]()),shape(expected[method]),method);
+});
+// EVT-01 E3 (1.16.12): career().events uses the injected ABL labels and fmtMoney (wiring check; content in career-event-history.test).
+test('career events use the injected ABL and fmtMoney',()=>{
+  const state={log:[{y:2031,age:22,tm:'A',line:'x'}],processedEventIDs:{'2031:1:1':{cardID:1,mode:'bold',success:true,category:'endorsement',year:2031,abilityDelta:2,target:'pow',statDelta:0,injuryAdded:0,incomeYen:5000000}}};
+  const events=new CareerPresenter({getState:()=>state,labels,...helpers}).career().events;
+  assert.equal(events.status,'ok');
+  assert.deepEqual(events.afterRow[0][0].effects,[labels.ABL.pow+'：+2','スポンサー収入：¥5000000']);
+  assert.notEqual(labels.ABL.pow,'pow');
 });
 test('state is read on every call (new career after S is reassigned)',()=>{
   let S=fixtures['P minimal'];const presenter=new CareerPresenter({getState:()=>S,labels,...helpers});

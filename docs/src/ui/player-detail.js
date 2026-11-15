@@ -1,4 +1,5 @@
 import { renderRecord } from './record-view.js';
+import { appendYearEvents } from './career-event-history.js';
 
 const emptyText = (text='記録なし') => { const p=document.createElement('p'); p.className='ui-empty'; p.textContent=text; return p; };
 const panel = title => { const section=document.createElement('section'); section.className='ui-panel'; const h=document.createElement('h2'); h.textContent=title; section.appendChild(h); return section; };
@@ -17,8 +18,8 @@ export function renderCareer(container, model, tab) {
     const history=panel('契約・年俸決定履歴');history.appendChild(list(model.contract.history));container.appendChild(history);return;
   }
   const section=panel('年度別');
-  if(!model.yearly.length){section.appendChild(emptyText());container.appendChild(section);return;}
+  if(!model.yearly.length&&!model.events?.current?.length&&model.events?.status!=='missing'){section.appendChild(emptyText());container.appendChild(section);return;}
   const scroll=document.createElement('div');scroll.className='ui-yearly-scroll';const table=document.createElement('table');table.className='ui-yearly-table';
   const thead=document.createElement('thead');const hr=document.createElement('tr');['年度','年齢','所属','成績'].forEach(label=>{const th=document.createElement('th');th.textContent=label;hr.appendChild(th);});thead.appendChild(hr);table.appendChild(thead);
-  const tbody=document.createElement('tbody');model.yearly.forEach(row=>{const tr=document.createElement('tr');[row.year,row.age,row.team,row.summary].forEach(val=>{const td=document.createElement('td');td.textContent=String(val??'');tr.appendChild(td);});tbody.appendChild(tr);});table.appendChild(tbody);scroll.appendChild(table);section.appendChild(scroll);container.appendChild(section);
+  const tbody=document.createElement('tbody');model.yearly.forEach((row,i)=>{const tr=document.createElement('tr');[row.year,row.age,row.team,row.summary].forEach(val=>{const td=document.createElement('td');td.textContent=String(val??'');tr.appendChild(td);});tbody.appendChild(tr);appendYearEvents(tbody,model.events,i);});appendYearEvents(tbody,model.events,'current');table.appendChild(tbody);scroll.appendChild(table);section.appendChild(scroll);container.appendChild(section);
 }
