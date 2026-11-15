@@ -72,6 +72,15 @@
   --tag-negative-text:color-mix(in srgb, var(--chalk) 15%, var(--bad));
   --tag-removed-text:color-mix(in srgb, var(--dim) 80%, var(--panel));
   --tag-removed-edge:color-mix(in srgb, var(--dim) 65%, black);
+  --event-training-bg:color-mix(in srgb, var(--panel) 90%, var(--good));
+  --event-training-edge:var(--good);
+  --event-training-text:color-mix(in srgb, var(--chalk) 35%, var(--good));
+  --event-encounter-bg:color-mix(in srgb, var(--panel) 90%, var(--blue));
+  --event-encounter-edge:var(--blue);
+  --event-encounter-text:color-mix(in srgb, var(--chalk) 35%, var(--blue));
+  --event-endorsement-bg:color-mix(in srgb, var(--panel) 90%, var(--gold));
+  --event-endorsement-edge:color-mix(in srgb, var(--chalk) 25%, var(--gold));
+  --event-endorsement-text:color-mix(in srgb, var(--chalk) 50%, var(--gold));
   --share-edge:color-mix(in srgb, var(--panel2) 15%, var(--control-edge));
   --share-soft:color-mix(in srgb, var(--panel2) 25%, var(--chalk));
   --share-tag-bg:color-mix(in srgb, var(--panel) 95%, var(--chalk));

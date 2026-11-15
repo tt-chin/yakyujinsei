@@ -5,6 +5,7 @@
 // reads getState() live.
 import { EVENT_MODES, eventOdds, effectiveCategory, eventTier, eventPlan, eventInjury, eventIncome, EVENT_TRAIT_TEXT } from './event-policy.js';
 import { eventDrawPool, beginEvent, applyEvent } from './event-state-policy.js';
+import { EVENT_CATEGORY_LABEL, eventCategoryBadge } from '../ui/event-category-badge.js';
 
 export class SeasonEvents {
   #rules;
@@ -19,7 +20,7 @@ function seasonEventRules({getState,EVENTS,POS_AB,ABL,choose,card,board,fmtMoney
   function eventChoiceSummary(ev,mode){
     const S=getState();
     const category=effectiveCategory(ev,S.stage),tier=eventTier(S.traits),good=eventPlan(category,mode,tier,true),bad=eventPlan(category,mode,tier,false);
-    const label={training:'トレーニング',encounter:'日常・交流',endorsement:'広報・スポンサー'}[category];
+    const label=EVENT_CATEGORY_LABEL[category];
     const effect=plan=>[plan.ability>0?'育成点+'+plan.ability:plan.ability<0?'能力'+plan.ability:'',plan.stat?'今季成績点'+(plan.stat>0?'+':'')+plan.stat:''].filter(Boolean).join('・');
     const risk=eventInjury(ev,mode,false,S.traits),income=good.cash?eventIncome(S.lv,mode,true,S.traits):0;
     return label+'｜成功率 '+evOdds()[mode]+'%｜成功：'+effect(good)+'／失敗：'+effect(bad)+(good.cash?'｜成功時スポンサー収入：'+fmtMoney(income):'')+(risk?'｜失敗時故障リスク加算+'+risk+'ポイント':'');
@@ -31,7 +32,7 @@ function seasonEventRules({getState,EVENTS,POS_AB,ABL,choose,card,board,fmtMoney
       if(!pool.length){card('info','イベント','今年まだ引いていない対象のイベントカードがないため、次へ進みます。');done();return;}
       const ev=pick(pool),pending=beginEvent(S,ev);
       const after=()=>{board(1);drawEvents(n-1,done);};
-      choose('イベント｜'+ev.n+'――'+ev.intro,EVENT_MODES.map(mode=>({t:ev.choices[mode].label,warn:mode==='bold',main:mode==='norm',s:eventChoiceSummary(ev,mode),f:()=>resolveEvent(ev,mode,after,pending.eventOccurrenceID)})));
+      choose(eventCategoryBadge(effectiveCategory(ev,S.stage))+'イベント｜'+ev.n+'――'+ev.intro,EVENT_MODES.map(mode=>({t:ev.choices[mode].label,warn:mode==='bold',main:mode==='norm',s:eventChoiceSummary(ev,mode),f:()=>resolveEvent(ev,mode,after,pending.eventOccurrenceID)})));
     }}]);
   }
   function renderEventResult(ev,result){
@@ -45,7 +46,7 @@ function seasonEventRules({getState,EVENTS,POS_AB,ABL,choose,card,board,fmtMoney
     if(result.overflowStat)out.push('能力80の超過分：今季成績点+'+result.overflowStat);
     if(result.injuryAdded)out.push('今季の故障リスク加算+'+result.injuryAdded+'ポイント（故障確定ではありません）');
     if(result.incomeYen)out.push('スポンサー収入：'+fmtMoney(result.incomeYen));
-    card(result.success?'good':'bad','イベントカード｜'+ev.n,escape(ev.choices[result.mode][result.success?'good':'bad'])+'<br>'+out.map(escape).join('｜'));
+    card(result.success?'good':'bad',eventCategoryBadge(result.category)+'イベントカード｜'+ev.n,escape(ev.choices[result.mode][result.success?'good':'bad'])+'<br>'+out.map(escape).join('｜'));
     const node=logTarget().lastElementChild;if(node){node.dataset.eventOccurrenceId=result.eventOccurrenceID;node.dataset.cardId=String(result.cardID);}
   }
   function resolveEvent(ev,mode,done,occurrenceID){

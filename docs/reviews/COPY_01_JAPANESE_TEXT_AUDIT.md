@@ -358,3 +358,150 @@ FUTURE_D2_DEPENDENCY：沢村賞、新防御率獎、最多勝利與勝率賞是
 
 純日文語感提案須由日本母語棒球迷校閱；社群稱號未取得可驗來源者UNVERIFIED，不以主觀偏好列P0。沒有改遊戲、RNG、Seed算法、main、VERSION、CHANGELOG、BACKLOG checkbox、D2檔案；未commit/push/merge/deploy。只讀瀏覽過程正常遊戲會自然消耗R，沒有修改其算法或挑選結果。
 
+## 2026-11-15 再核對（dev `1494a24`、1.16.10）
+
+只更新本文件與BACKLOG說明；未修改遊戲、文案或測試。上方2026-10-13的逐筆內容保留為歷史記錄，其中「來源」行號以本節為準。方法：以各筆「現行日文」為固定字串搜尋`docs/index.html`與`docs/src/`（排除生成的`release-notes.js`），找不到時以特徵片段再搜；只靜態對位，未做動態畫面驗證。
+
+### COPY-001～026 現在位置
+
+| ID | 舊狀態 | 現在位置（`1494a24`） | 判定 |
+|---|---|---|---|
+| COPY-001 | 1.12.0實作 | `docs/src/ui/ability-view.js:17-18` | 已套用 |
+| COPY-002 | 1.12.0實作 | `docs/src/engine/season-phases.js:68` | 已套用 |
+| COPY-003 | 1.12.0實作 | `docs/src/engine/season-phases.js:68` | 已套用 |
+| COPY-004 | 1.12.0實作 | `docs/src/engine/career-retirement.js:341` | 已套用 |
+| COPY-005 | 1.12.0實作 | `docs/src/engine/player-romance.js:157` | 已套用 |
+| COPY-006 | PROPOSAL | `docs/src/engine/player-romance.js:157` | 仍存在 |
+| COPY-007 | PROPOSAL | `docs/index.html:48`、`docs/src/ui/information-dialog.js:63`（同句另有「同じSeed」） | 仍存在 |
+| COPY-008 | PROPOSAL | `docs/src/ui/seed-share.js:24` | 仍存在 |
+| COPY-009 | PROPOSAL | `docs/src/ui/seed-share.js:24` | 仍存在 |
+| COPY-010 | PROPOSAL | `docs/src/ui/seed-share.js:24` | 仍存在 |
+| COPY-011 | NEEDS_REVIEW | `docs/src/ui/record-view.js:18` | 仍存在 |
+| COPY-012 | NEEDS_REVIEW | `docs/src/ui/record-view.js:14` | 仍存在 |
+| COPY-013 | PROPOSAL | `docs/index.html:75`、`docs/src/ui/game-view.js:38` | 仍存在 |
+| COPY-014 | NEEDS_REVIEW | `docs/src/engine/season-phases.js:22` | 仍存在 |
+| COPY-015 | NEEDS_REVIEW | `docs/src/ui/share-image.js:403` | 仍存在 |
+| COPY-016 | KEEP | `docs/index.html:47`、`docs/src/ui/browser-save-ui.js:19` | 維持 |
+| COPY-017 | KEEP | `docs/src/engine/season-phases.js:75`、`professional-season.js:55`、`player-injury.js:130` | 維持 |
+| COPY-018 | KEEP | 原文已不存在；現為「国内FAを宣言」「海外FAを宣言」兩個選項（`docs/src/engine/career-movement.js:204-205`） | 原文消失，新文字未審 |
+| COPY-019 | KEEP | `docs/src/engine/international-tournament.js:58` | 維持 |
+| COPY-020 | FUTURE_D2_DEPENDENCY | `docs/src/engine/award-identity-policy.js:5`等獎項識別處 | 維持（識別依賴不變） |
+| COPY-021 | FUTURE_D2_DEPENDENCY | `docs/src/engine/award-consumer-policy.js:61,63`、`award-identity-policy.js:11`（別名）；顯示名為「最優秀中継ぎ投手賞」（`season-awards.js:92`） | 維持 |
+| COPY-022 | KEEP | `docs/src/engine/award-consumer-policy.js:61`、`award-identity-policy.js:8`（別名） | 維持 |
+| COPY-023 | LEGACY_OR_UNREACHABLE | 不存在（「延長研修」0筆）。`34c9c7b`（重構4-A，2026-10-23）刪除被新版覆寫的舊`pathChoiceHS()`（刪除前`game.js:2038`，文字在`:2040`） | 已隨重構移除 |
+| COPY-024 | LEGACY_OR_UNREACHABLE | 不存在（「裁判所」0筆）。`34c9c7b`刪除舊`pathChoiceU4()`（刪除前`game.js:2058`，文字在`:2063`）；新版`amateur-career.js`保留「大学卒業を機に現役を退いた。」 | 已隨重構移除 |
+| COPY-025 | KEEP | `docs/src/ui/preferences.js:45` | 維持 |
+| COPY-026 | KEEP | `docs/src/ui/choice-prompt.js:31` | 維持 |
+
+小計：已套用5、仍存在10（006～015）、維持9、已移除2。COPY-018的新選項文字列為後續審查對象，不沿用舊KEEP判定。
+
+### 新候選（本次追加，均未修改）
+
+審查對象限於上次稽核之後才獨立成模組的薪資說明、分享圖文字，以及本次偶然發現的位置；不是全量清查。
+
+#### COPY-027 — P2／PROPOSAL
+
+- 畫面：私生活（能力超過潛在能力時的加分說明）
+- 來源：`docs/src/engine/player-romance.js:174`
+- 現行日文：（${ABL[k]}潜在的な限界に達しました)
+- 建議日文：（${ABL[k]}が潜在能力に達しました）
+- 修改理由：括號全形開、半形關；「潜在的な限界」與術語表的「潜在能力」不一致。
+- 狀態：PROPOSAL
+
+#### COPY-028 — P2／PROPOSAL
+
+- 畫面：分享圖PNG（殿堂入り里程碑）
+- 來源：`docs/src/ui/share-image.js:132`
+- 現行日文：${lg}殿堂入り・${yr}年目,得票率${pct}%
+- 建議日文：${lg}殿堂入り・${yr}年目、得票率${pct}%
+- 修改理由：日文中混入半形逗號（與COPY-015同類）。canvas文字，需像素／截圖確認。
+- 狀態：PROPOSAL
+
+#### COPY-029 — P3／NEEDS_REVIEW
+
+- 畫面：分享圖PNG（多聯盟通算）
+- 來源：`docs/src/ui/share-image.js:139`、`141`
+- 現行日文：リーグ横断通算：…
+- 建議日文：全リーグ通算：…（候選，待母語者確認）
+- 修改理由：「リーグ横断」可懂但不常見。
+- 狀態：NEEDS_REVIEW
+
+#### COPY-030 — P2／PROPOSAL
+
+- 畫面：年俸明細
+- 來源：`docs/src/engine/salary-explanation-policy.js:67`（理由文）、`docs/src/ui/salary-detail.js:11`（標題「跨リーグ年俸内訳」與項目「跨リーグ係数」）
+- 現行日文：跨リーグ移籍の上昇率上限を適用しました／跨リーグ年俸内訳／跨リーグ係数
+- 建議日文：リーグ間移籍の上昇率上限を適用しました／リーグ間移籍の年俸内訳／リーグ間換算係数
+- 修改理由：「跨」為中文用法，日文不以「跨リーグ」表達。
+- 影響範圍：`tests/global-contract-market-e2e.mjs`比對「跨リーグ」文字，修正時需同步期待值。
+- 狀態：PROPOSAL
+
+#### COPY-031 — P2／NEEDS_REVIEW
+
+- 畫面：年俸明細
+- 來源：`docs/src/engine/salary-explanation-policy.js:70`
+- 現行日文：年齢・認可一軍年資により外国プロ例外を適用しました
+- 建議日文：年齢と一軍在籍年数により、外国プロ選手の例外を適用しました（候選）
+- 修改理由：（2026-11-15更正：先前寫「年資」「認可」是中文用語，不正確——「認可」本身是日文。）問題在「認可一軍年資」整體不自然，且資格範圍（哪些聯盟／階級的年資符合）未釐清。需先核對實際例外規則，再提出精確日文。
+- 狀態：NEEDS_REVIEW
+
+#### COPY-032 — P3／PROPOSAL
+
+- 畫面：年俸明細
+- 來源：`docs/src/engine/salary-explanation-policy.js:78`
+- 現行日文：過去年の詳細評価がないため旧方式の値を使用しました
+- 建議日文：過去の年度の詳細評価がないため、旧方式の値を使用しました
+- 修改理由：「過去年」不自然。
+- 狀態：PROPOSAL
+
+#### COPY-033 — P3／PROPOSAL
+
+- 畫面：分享圖PNG與引退「通算成績」卡
+- 來源：`docs/src/ui/share-image.js:297`（「国際大会通算（日本代表 N 大会）」）、`docs/src/engine/career-retirement.js:229`、`231`（「国際大会通算（日本代表・N大会）」）
+- 建議日文：兩處統一為「国際大会通算（日本代表・N大会）」
+- 修改理由：同一資訊表記不一致。
+- 狀態：PROPOSAL
+
+### 未涵蓋與下一步
+
+- COPY-007～010的同族用語另有`docs/src/ui/information-dialog.js:66`「Seed共有」「そのSeedで」，實作時一併統一。
+- 繁體中文只在註解與`event-cards-jp.js`的`sourceName`（不顯示）中出現；未發現玩家可見的英文佔位字。
+- 上次「後續條件」所列的完整AST字串清單、92事件外層、Master名稱逐項審查、動態畫面驗證仍未完成；本次再核對不構成COPY-01全面驗收。
+- 下一步（C2）：由使用者決定採用哪些PROPOSAL／NEEDS_REVIEW；C3把採用項目做成一個PATCH（R2純顯示例外），並同步受影響的測試期待值。
+
+### 2026-11-15 code owner 決定（PR #96 留言 08:18）
+
+已決定的方向不等同實作授權；本節只記錄決定，未修改遊戲文案。
+
+| ID | 決定 |
+|---|---|
+| COPY-006 | 採「謝罪し、もう一度チャンスをくれるよう彼女に頼む」 |
+| COPY-007～010 | 玩家可見表記統一為「シード」，含`information-dialog.js:63`、`:66`同族用語；URL參數`seed`與邏輯識別值不變 |
+| COPY-011 | 先確認成績分組是否含高中／二軍等，再決定名稱 |
+| COPY-012 | 先確認年數是否含全休及實際計數定義，再決定名稱 |
+| COPY-013 | 允許試改「年俸（万円）」：320／375／390／430px、各字級與密度下標籤不截斷、不換行、不擠壓鄰近資訊、巨大年俸不溢出時採用；否則維持「年俸（万）」，不擅改無關版面。保留完整無障礙名稱，詳細畫面的單位與計算不變。背景：`6a31b27`（2026-10-10、v1.10.3）曾刻意由「現在年俸（万円）」縮短為「年俸（万）」並追加aria-label，非漏寫 |
+| COPY-014 | 採「年齢による衰えは進みますが、追加トレーニングで能力を補うことはできます。」；不承諾必定恢復，實作前核對完整拼接句 |
+| COPY-015 | 採日文標點與清楚的長按儲存提示；不改分享／下載行為 |
+| COPY-023／024 | 隨`34c9c7b`刪除的結論成立（刪除位置見上方位置表）；不需修正文案 |
+| COPY-027 | 修正全半形括號與「潜在的な限界」。該分支為g＝0且over＞0，可能原本已達到或超過潛在能力，不能寫成本次才「達しました」；採表達既有狀態與轉換結果的方向，例「潜在能力に達しているため、今季成績ボーナスに加算しました。」，須涵蓋恰達與已超過，核對完整句避免重複 |
+| COPY-028 | PNG里程碑的半形逗號改「、」，另作截圖／像素差異與版面確認 |
+| COPY-029 | 名稱採「主要4リーグ一軍通算」，合計範圍為NPB／MLB／KBO／CPBL各自的一軍；排除二軍、育成、MiLB、獨立聯盟、社會人；無一軍紀錄時不顯示此里程碑。**不只是改名**：若現行合計混入其他層級，須調整本項顯示合計的資料來源與篩選，另列狀態不變、各層級排除、跨聯盟合計與舊資料驗證；不得改變原始生涯統計、獎項、薪資或殿堂計算 |
+| COPY-030 | 「跨リーグ」改為「リーグ間移籍／リーグ間換算」相應用語，同步`global-contract-market-e2e`的字串期待；不改換算公式 |
+| COPY-031 | 先核對實際例外規則（哪些聯盟／階級的年資符合資格），再提出精確日文（上方修改理由已更正） |
+| COPY-032 | 採「過去の年度の詳細評価がないため、旧方式の値を使用しました」 |
+| COPY-033 | 統一為「国際大会通算（日本代表・N大会）」，核對PNG與引退卡版面 |
+
+實作與驗收界線：純文案修正須核對完整句、各引用位置、操作識別耦合與受影響的測試期待，不做全域字串替換；PNG的批准文案／合計變更只限定驗證差異，不放寬整張圖片的比較；COPY-029的一軍合計調整獨立列出影響分類、資料來源與測試，不與純文案混稱。COPY-001～005不重做，92事件不全面重翻；COPY-01全量清查與動態驗收仍未完成，不據此結案。
+
+### 2026-11-15 補充核對：COPY-011／012／031（PR #96 留言 08:57）
+
+code owner於08:57留言提出核對結果與建議文字；本節照留言記為「建議」，非正式採用、亦非實作授權。各項依據已於dev `1494a24`對照程式碼確認，未修改遊戲文案或測試。上方各項原始條目與08:18決定表保留為歷史。
+
+| ID | 現行日文 | 建議日文 | 核對依據 |
+|---|---|---|---|
+| COPY-011 | 階級別通算成績 | カテゴリー別通算成績 | `docs/src/ui/career-presenter.js:18`的`record()`分組為NPB（一軍／二軍／育成）、KBO、台湾プロ野球、MLB、MiLB、独立リーグ、社会人野球，不含高中／大學；標題於`docs/src/ui/record-view.js:18`。只改標題，不改統計內容與分組 |
+| COPY-012 | プレー年数（數值「N年」） | 経過シーズン数（數值「Nシーズン」） | 數值為`model.seasons`＝`Array.isArray(S.log)?S.log.length:0`（`career-presenter.js:18`）；`S.log`含業餘年度與全休／傷休年度（`docs/src/engine/amateur-career.js:84`、`:113`，`docs/src/engine/season-phases.js:27`），不是實際出賽年數。顯示於`record-view.js:14`。計算不變 |
+| COPY-031 | 年齢・認可一軍年資により外国プロ例外を適用しました | 米国国際契約の制限対象外として扱いました | `docs/src/engine/cross-league-market-policy.js:24`–`25`：移籍目標為MLB／MiLB、來源非MLB／MiLB且未受限制時為`FOREIGN_PRO_EXEMPT`；不受限制的條件為既有美國經歷，或`age>=25&&serviceYears>=6`，兩條路徑都會產生此代碼。年資只計NPB1／KBO1／CPBL1且`seasonFactor>=.5`，以年度鍵記錄（`:3`、`:11`–`:13`）。建議句與既有`MLB_INTL_RESTRICTED`「米国国際契約の制限対象として扱いました」成對（`docs/src/engine/salary-explanation-policy.js:69`–`70`）。不改資格公式、年資、契約或年俸 |
+
+驗收提醒（摘自留言）：核對完整拼接字串與受影響測試期待；COPY-012加「シーズン」單位後檢查手機換行／截斷；COPY-031至少涵蓋「年齡年資達標」「僅既有美國經歷」「仍受限制」三種案例，確認說明與實際判定一致。現行字串的測試引用：`tests/record-condition-fix.test.mjs`、`tests/information-architecture.test.mjs`（實作前再逐一核對）。
+

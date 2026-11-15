@@ -13,7 +13,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {findFirstDifference} from './support/first-difference.mjs';
 import {instrumentRng} from './support/rng-instrument.mjs';
-import {GAME_VIEW_HOOK,captureGameView,projectHofLog,projectMenu1163} from './support/dom-snapshot.mjs';
+import {GAME_VIEW_HOOK,captureGameView,projectHofLog,projectMenu1163,projectEventBadges} from './support/dom-snapshot.mjs';
 import {verifyFranchiseGrant,projectFranchiseField} from '../tools/development-b/historical-comparison.mjs';
 import {JP_DATA} from '../docs/src/data/jp-data.js';
 import {baselineNeedsChampionmakerProjection,projectChampionmakerState} from '../tools/development-b/championmaker-state-oracle.mjs';
@@ -27,6 +27,8 @@ const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/a
 // 1.14.1 added the credits menu button; older baselines lack it (see dom-snapshot.mjs).
 const credits1141=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('id="board-credits"');
 const menu1163=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('id="board-bug-report"');
+// EVT-01 (1.16.11): baselines without the badge module get the approved badge projection on the candidate side only.
+const eventBadge=!execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/event-category-badge.js'],{cwd:root,encoding:'utf8'}).trim();
 // UI-DESIGN-TOKENS-02 (1.16.1) moved the team badge and retirement trait tag colors to classes; older baselines use inline styles.
 const designTokens02=!execFileSync('git',['show',`${baselineRef}:docs/styles/base.css`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('.team-badge{');
 // UI-DESIGN-TOKENS-06 moved fixed inline layout values (#bd-tj, retirement card) to CSS rules; older baselines use inline styles.
@@ -50,7 +52,7 @@ const server=createServer(async(req,res)=>{
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
       if(!baseline)content+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__verifyFranchise=${verifyFranchiseGrant.toString()};window.__projectFranchise=${projectFranchiseField.toString()};\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
-      if(!baseline)content+='\nwindow.__projectDisplayNameCopy='+(projectNames?projectDisplayNameCopy.toString():'null')+';window.__approvedMrTeamNames='+JSON.stringify(TEAM_NICKNAMES)+';window.__mrDisplayPair=()=>{if(!S.traits.mrteam)return null;const expected=\'ミスター\'+(typeof S.mrTeamName===\'string\'&&Object.hasOwn(window.__approvedMrTeamNames,S.mrTeamName)?window.__approvedMrTeamNames[S.mrTeamName]:\'\');if(displayTrait(\'mrteam\')!==expected)throw Error(\'MR_COPY_CONTRACT\');return[expected,teamNick(S.mrTeamName||\'\')+\'ミスター\'];};\nwindow.__projectMenu1163='+projectMenu1163.toString()+';window.__expectMenu1163='+menu1163+';window.__expectBrowserSave=true;window.__expectIncomeDisplay=true;window.__expect1140='+championmaker+';window.__expect1141='+credits1141+';window.__expectDesignTokens02='+designTokens02+';window.__expectDesignTokens06='+designTokens06+';window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
+      if(!baseline)content+='\nwindow.__projectDisplayNameCopy='+(projectNames?projectDisplayNameCopy.toString():'null')+';window.__approvedMrTeamNames='+JSON.stringify(TEAM_NICKNAMES)+';window.__mrDisplayPair=()=>{if(!S.traits.mrteam)return null;const expected=\'ミスター\'+(typeof S.mrTeamName===\'string\'&&Object.hasOwn(window.__approvedMrTeamNames,S.mrTeamName)?window.__approvedMrTeamNames[S.mrTeamName]:\'\');if(displayTrait(\'mrteam\')!==expected)throw Error(\'MR_COPY_CONTRACT\');return[expected,teamNick(S.mrTeamName||\'\')+\'ミスター\'];};\nwindow.__projectMenu1163='+projectMenu1163.toString()+';window.__projectEventBadges='+projectEventBadges.toString()+';window.__expectEventBadge='+eventBadge+';window.__expectMenu1163='+menu1163+';window.__expectBrowserSave=true;window.__expectIncomeDisplay=true;window.__expect1140='+championmaker+';window.__expect1141='+credits1141+';window.__expectDesignTokens02='+designTokens02+';window.__expectDesignTokens06='+designTokens06+';window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
       if(negativeControl&&!baseline)content+='\nconst __negativeDivider=divider;divider=function(t){__negativeDivider(t+\' \');};';
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
