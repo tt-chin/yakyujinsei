@@ -38,7 +38,10 @@ const channel=arg('browser')||arg('channel')||'chrome';
 const browser=await chromium.launch({channel,headless:true}),started=Date.now(),errors=[];
 console.log('Browser '+channel+' '+browser.version());
 const wire=(p,list=errors)=>{p.on('pageerror',e=>list.push(e.message));p.on('console',m=>{if(m.type()==='error')list.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))list.push(r.status()+' '+r.url());});};
-async function start(p,url,pos){await p.goto(url);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();}
+async function start(p,url,pos){await p.goto(url);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();
+ // Fix the test input on historical/current/repeat runs; blank product names intentionally vary.
+ await p.locator('#in-name').fill({P:'投山翔太',C:'強肩剛',IF:'守田巧',OF:'走川隼人'}[pos]);
+ await p.locator('#btn-start').click();}
 // Balanced IF negative route remains unchanged. Positive P historical controls
 // select the real normal-pitching UI option; full-power differences have a dedicated suite.
 function action(balanced){const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));if(balanced)rows.sort((a,b)=>{const priority=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return priority(a)-priority(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});return buttons.find(e=>e.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];}

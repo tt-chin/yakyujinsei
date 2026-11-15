@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 最新狀態核對：2026-11-15。dev基準f3bffee（1.16.9）；本次1.16.10包含空白姓名隨機組合及顯示名稱改版後4個測試修復，限定單元／瀏覽器驗證PASS。原Quick Run 43659492683為88 PASS／4 FAIL，原結果保留；新來源整套Quick／Full未執行，push後的CI與Preview待確認，不宣稱正式發布。ARTIFACT_COVERAGE_BLOCKED維持。
+> 最新狀態核對：2026-11-15。dev 9fa1b60（1.16.10）的Quick Run 43666590311為91 PASS／1 FAIL，上輪4個顯示測試已通過；唯一KBO重播失敗已確認為空白姓名隨機化使狀態雜湊不同。本輪僅固定該測試的新舊／重播開局姓名，限定入口PASS，保留完整狀態與RNG斷言；新提交CI／Preview待確認，Full未執行，不宣稱正式發布。ARTIFACT_COVERAGE_BLOCKED維持。
 > 以現有80個唯一ID的checkbox為準：已完成56項、未完成24項（UI-DESIGN-TOKENS-04／05／06／07／08與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
@@ -579,3 +579,14 @@ GitHub Quick Run 43659492683、受驗SHA f3bffeee49cd6a9cca3f56b9118bf164992bd8a
 ### 2026-11-15提交狀態同步
 
 使用者授權核對BACKLOG後commit／push至dev。本次範圍為1.16.10空白選手名改善、必要測試與上述4個Quick失敗入口修復，共17個精確檔案；不納入test-results或本機路徑資料。上一節「未commit／push」為限定驗證當時的歷史狀態，現由本次提交授權取代。原限定驗證結果不變，整套Quick／Full及新來源Linux CI尚未驗證；推送後依既有workflow自動Quick，不另外手動啟動Full。UI-PLAYER-RANDOM-NAME-01及UI-MRTEAM-NICKNAME-01維持IMPLEMENTED_UNVERIFIED，不提前結案；80唯一ID、56完成／24未完成，artifact限制及原始FAIL保留。
+
+
+### 2026-11-15追加：KBO重播的固定姓名輸入（1.16.10維持）
+
+Quick [Run 43666590311](https://github.com/tt-chin/yakyujinsei/actions/runs/43666590311)，受驗9fa1b6077e029b2035289ecaaec54d5845e866e2，91 PASS／1 FAIL／0 SKIP／0 BLOCKED；上輪career-traits、hof-retirement-comparison、design-tokens-07與design-tokens-03四入口均已在Linux通過。唯一kbo-renewal-e2e停於same seed/strategy replay的records[0].digest，原因是未填姓名的新生涯依1.16.10規格使用獨立隨機姓名。四次開局診斷確認空白兩次僅S.name不同，固定同名後完整初始狀態與RNG呼叫數一致。日誌中的KBO_PACKAGE_FLOOR_CAP_CONFLICT是舊基準刻意重現並驗證的失敗，不是本次現行程式失敗。原91／1及先前88／4保留，不改寫。
+
+使用者授權修正後commit／push。僅在tests/kbo-renewal-e2e.mjs的共用start，以UI明確填入原角色預設姓名（P投山翔太／C強肩剛／IF守田巧／OF走川隼人），套用至舊版、現行、重播及fixture。未刪除S.name或digest、未放寬完整狀態／RNG／薪資斷言；不改產品、golden、基準SHA、Runner、CI或VERSION，仍1.16.10。
+
+限定重測該入口--quick PASS（不是整套Quick）：404次操作、677次RNG、2050退休，同版完整重播相等；歷史失敗前390筆狀態／操作／RNG比較通過原核准championmaker差異檢查；2049降格續約及保證契約／排程斷言通過；1280／320／390px的到期、降格、續約、雙擊、原生薪資一次性支付與RNG檢查PASS，Console／JS-CSS404為0，約39.4秒。原測試的Windows已斷線profile收尾逾時警告仍保留，程序exit 0。語法與diff檢查PASS。證據test-results/quick-43666590311-failed.log、kbo-name-probe-43666590311.json／log、kbo-fixed-name-quick-r1.log；不納入Git。
+
+本機整套Quick／Full、Full專用額外正向路線及新來源Linux CI未執行，不稱為全套回歸PASS。僅提交本測試及BACKLOG，push後依既有workflow自動Quick，不額外啟動Full或持續監控；main及正式站不變，Preview待確認。80唯一ID、56完成／24未完成，原限制保持。
