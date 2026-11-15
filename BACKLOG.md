@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
 > 最新狀態核對：2026-11-15。dev 4b65a70（1.16.10）的Linux Full Run 43667459804為122入口、114 PASS／8 FAIL／0 SKIP／0 BLOCKED，8批Artifact及Aggregate紀錄已保存；KBO與隨機姓名入口PASS。八個失敗為舊比較姓名／已批准文案／版號差異，已做本機限定測試修復，未宣稱新來源CI或整套Full通過。版號及產品不變，Preview／實機與ARTIFACT_COVERAGE_BLOCKED仍維持原狀。
-> 以現有80個唯一ID的checkbox為準：已完成58項、未完成22項（UI-DESIGN-TOKENS-04／05／06／07／08／09與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80；同日-09經PR #91併dev後結案；同日依使用者決定HIST-SPEC-CLAUSE-01改為按需追溯並結案）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 以現有81個唯一ID的checkbox為準：已完成58項、未完成23項（UI-DESIGN-TOKENS-04／05／06／07／08／09與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80；同日-09經PR #91併dev後結案；同日依使用者決定HIST-SPEC-CLAUSE-01改為按需追溯並結案；同日新增TEST-DT09-DEV-FAIL-01，總數80→81）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -33,13 +33,13 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **58** | 現有checkbox實際數量；含使用者已確認的7項實機／UI／OFUSE範圍及年度存檔第一期，不重新推定其他項目完成 |
-| 未完成 | **22** | 與58項完成合計80個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
+| 未完成 | **23** | 與58項完成合計81個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
 | P0 未完成 | **0** | 既有P0已按核准的結案標準關閉 |
 | BLOCKED | **1** | D2-CI-ARTIFACT-01的ARTIFACT_COVERAGE_BLOCKED；已獲使用者接受的實機／分享項目不再重複計入 |
 | IMPLEMENTED_UNVERIFIED | **8** | AUD-02、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01、UI-DESIGN-TOKENS-02／03、UI-MRTEAM-NICKNAME-01、UI-PLAYER-RANDOM-NAME-01；-02／03配色已合併，仍待Preview確認 |
 | CI_PASS／DEV_MERGED／PREVIEW_PENDING | **4** | HOF-BUCKET-DECISION-01、HOF-HONOR-POLICY-01、HOF-DISPLAY-ROUND-01、TEST-COMPARE-BASELINE-01；112入口Full與合併後Quick已通過，未冒充Preview／實機驗收 |
 | DESIGN_PENDING | **0** | — |
-| 其他候補／研究／殘項 | **9** | HOF-PITCHER-BALANCE-01、INJ-UI-01、INT-01、EVT-01、PLY-01／02、CI-LINUX-FULL-01舊工具路徑及兩項本機環境問題 |
+| 其他候補／研究／殘項 | **10** | HOF-PITCHER-BALANCE-01、INJ-UI-01、INT-01、EVT-01、PLY-01／02、CI-LINUX-FULL-01舊工具路徑、兩項本機環境問題及TEST-DT09-DEV-FAIL-01 |
 
 
 上次盤點歷史（2026-11-01，非本次現況）：**33 + 35 = 68**（2026-11-01新增TEST-DISPLAY-ENTER-TIMEOUT-01，總數由67增為68；同日新增TEST-EVENT-SIGSEGV-01，總數由66增為67；同日新增UI-BOARD-SHADOW-01，總數由65增為66；同日CODE-DEAD-01經PR #44併dev、Tests #111 Full通過後結案；該項補列時未計入總數，故總數由64更正為65；2026-10-24新增CI-ENV-PIN-01、CI-PITCHING-E2E-01；同日CI-ENV-PIN-01經PR #21合併後勾選；CI-PITCHING-E2E-01經PR #22合併後勾選；CI-FULL-BALANCE-01的實作`cdf0a25`已隨PR #21併dev，經使用者同意一併勾選；同日新增CI-FULL-STALE-01、UI-DESIGN-TOKENS-01；CI-FULL-STALE-01經PR #24／#25併dev、dev Full Run40093614384 92／92 PASS後勾選）。保留本輪C級高校結案同步；另依已批准4-A執行期證據與合併紀錄，將CONTRACT-LEGACY-01列為限定範圍已完成；恢復更新時漏列的UI-TJ-GAUGE-01與CI-FULL-BALANCE-01，兩者均未授權實作。其餘ID不改checkbox。D2-G9-RELEASE僅以發布範圍結案；CI-LINUX-FULL-01舊工具路徑未處理、D2-CI-ARTIFACT-01保持ARTIFACT_COVERAGE_BLOCKED。各版測試數字只代表原受驗範圍，歷史統計與FAIL不改寫。
@@ -167,7 +167,7 @@
 
 - [x] **CODE-DEAD-01** — `MERGED / CI_PASS`（2026-11-01；PR #44併dev（`7de1fd1`））。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2cc：分支`refactor/code-dead-01`（`45cccd7`）已刪除`statBonus`、`checkTraitsMid`、`teamChampRate`、`teamListOf`、`CHEER_DEFAULT`、`ageGateUSA`、`nextContractId`、`settlePhaseEnd`的PRO不可達分支（三處共2,390 bytes，更正§3.18的3,548 bytes），以及掃描新發現的`CPBL_TEAMS`、`NPB_TEAMS`、`MLB_TEAMS`、`HS_CUPS`、`U_CUPS`、`currentAffiliation`、`faFlow`薄包裝、`selPos`。Quick 68／68、分組Full 93／93 PASS（macOS＋Brave本機證據），經PR #44併dev（`7de1fd1`，樹與`17b271b`相同），[Tests #111](https://github.com/tt-chin/yakyujinsei/actions/runs/41275581402) Linux Full（`17b271b`）8批全success，`expected 93`、`acceptedPass 93`、`issues []`（記於PR #44），結案條件已滿足。`game.js`未使用的import 86個（含本次新增5個）不動，第26期（§2ee，`refactor/run-draft`）再增5個（`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms`），併入後為91個，第28期（§2gg，`refactor/trait-result-card`）再增2個（`TRAIT_TEXT`、`EVENT_TRAIT_TEXT`），併入後為93個，第29期（§2hh，`refactor/initial-state`）再增3個（`highSchoolTier`、`installBirthHighSchool`、`ensureEventState`），併入後為96個，第30期（§2ii，`refactor/choice-prompt`）再增2個（`createChoiceActionToken`、`runChoiceAction`），併入後為98個：E2E注入的hook在模組內直接引用，刪除會造成`markSalaryPaid is not defined`；未使用的區域變數與`navigation.js`的`renderRecord` import不在本項範圍。
 
-## 3. 未完成工作（20 項；另2項UI-MRTEAM-NICKNAME-01、UI-PLAYER-RANDOM-NAME-01列於文末2026-11-15紀錄，合計22項；本節另保留已結案索引）
+## 3. 未完成工作（21 項；另2項UI-MRTEAM-NICKNAME-01、UI-PLAYER-RANDOM-NAME-01列於文末2026-11-15紀錄，合計23項；本節另保留已結案索引）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（2項未完成；保留1項已完成索引）
 
@@ -238,7 +238,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 本輪驗證（2026-10-21，HEAD 2a11a64加工作樹／1.13.1）：R2／L2；原方向鍵冒泡FAIL已修復並保留首次紀錄；首輪Quick60 PASS／3 FAIL，初始化位置及精確版號斷言修復後，最終Quick62 PASS／1 FAIL。剩餘award-identity-policy.test為未修改B1快照工作樹CRLF與原Git LF hash差異，未修改HEAD測試亦可重現；舊G9凍結來源契約對後續UI／版號調整亦須另審，不自行放寬。相關4入口與直接3入口PASS，投手／野手固定Seed主RNG652／549比較不變；原生Menu／Share fixture S／RNG不變。Full NOT_RUN（本批局部UI，無遊戲規則／RNG改動）；OFUSE實際付款、iPhone／Android原生分享NOT_RUN。原FAIL及新log留在忽略的test-results/menu-20261021-*；來源hash清單menu-20261021-source-audit.json。未commit／push／部署，待使用者審查。
 
-### 3.6 P1 — CI殘項（5項未完成；另保留1項已完成發布索引、4項已併dev的CI項目及2項本機測試修復）
+### 3.6 P1 — CI殘項（6項未完成；另保留1項已完成發布索引、4項已併dev的CI項目及2項本機測試修復）
 
 - [x] **TEST-VERSION-LITERAL-01** — `FIXED / LOCAL_QUICK_PASS`。修復前（2026-11-02）award-identity-policy.test與verify-modularization硬編碼預期1.13.7，在1.13.8 FAIL；原始兩份log仍保留於test-results/release-notes-1138-quick-20261102/。使用者批准後改讀config的VERSION，檢查正式三段版號及只變更原版本字面值，其餘config原文、B1／A凍結hash與負面斷言保留，不任意接受額外程式。限定6／6及最終本機Quick69／69 PASS（[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)summary）。僅結案此版本比較問題，不將原FAIL改記PASS，不代表Full／Linux或部署完成。
 
@@ -252,6 +252,7 @@ PC側欄顯示修正（2026-10-21，1.13.2；基準1bc65dfc2b8ba226930b23dca85a0
 
 - [ ] **TEST-EVENT-SIGSEGV-01** — `LOCAL_ARM64_ONLY / 未修正`（2026-11-01）。`event-integration.test`在macOS arm64間歇SIGSEGV（`signal: SIGSEGV`、log空白），單輪Full出現時須記為FAIL，不得改記PASS。macOS crash report的stack全部相同：`vm.runInContext` → `Array.map` → `Builtins_BaselineOutOfLinePrologue` → `Runtime_StackGuardWithGap` → mark-compact → `ClearStaleLeftTrimmedPointerVisitor`，讀取位址`0xe`，對應測試第57行`dpCell`迴圈，屬V8層崩潰。實測（`294e4be`同樹，平行32）：Node 24.14 arm64 62／1280、Node 24.15 arm64 52／1280、Node 24.14 arm64加`--no-sparkplug` 0／320（乾淨`9e6129f`）、Node 24.15 x64經Rosetta 0／640及`--always-sparkplug` 0／320。推定只影響arm64，Linux x64 CI未實測，只有至今未出現的紀錄；V8根因未確認，公開回報未找到。`NODE_OPTIONS`不接受`--no-sparkplug`，無免改repo的本機避開方式。使用者未批准修改測試入口；出現時比對最新`.ips`時間與首幀後重跑，FAIL照實記錄。結案條件：升級Node後arm64平行量測為0，或經批准調整該入口的執行參數。
 - [ ] **TEST-DISPLAY-ENTER-TIMEOUT-01** — `LOCAL_LOAD_ONLY / 未修正`（2026-11-01）。`display-preferences-e2e:87`（`retained row listener works`）在本機4組平行Full下，按Enter後5秒內`#act`未改變而FAIL；單輪Full出現時須記為FAIL，不得改記PASS。第29期草稿（基準`4116389`）93 PASS／1 FAIL，單獨重跑3／3 PASS；未在基準做同負載對照，Linux CI尚無此紀錄。同入口同一位置曾有按Enter後立即讀DOM的時序競爭（計畫`5e7a6f1`紀錄），`01d1c38`改為等待內容變化，本次是該等待逾時。本項只記錄，未改測試。完成條件：查明是負載延遲或按鍵未處理後再決定處置，不放寬斷言。
+- [ ] **TEST-DT09-DEV-FAIL-01** — `LOCAL_FAIL / 未調查`（2026-11-15）。`design-tokens-09-e2e`在dev `1494a24`（1.16.10）本機（macOS＋Brave 157）單獨執行即FAIL：`computed style / layout differs from f8afd8e (176)`，差異集中於退休狀態P／IF 1280寬的`#log`高度（P/1280 standard/small/standard首見`MAIN#log` 2973.56→2951.97px），390／360寬無新增差異。EVT-01分支（1.16.11）前後同為176，與分類徽章無關；1.16.10時本機曾得0差異（`full122-tokens09-final-r2`），原因與是否只在本機發生均未確認。原始log保留於當時scratchpad，不改寫為PASS；Linux CI結果未確認。
 - [x] **TEST-VACUOUS-ASSERT-01** — `FIXED / 本機驗證`（2026-11-08，`refactor/checkpoint-renderer` `ab4fbb1`，併入[PR #66](https://github.com/tt-chin/yakyujinsei/pull/66)，尚未併入dev）。斷言改以helper確認`recordSalaryEvaluation(entry.st);`、`captureSeasonChampionship(S);`、`runSeasonPipeline(0)`在`professional-season.js`各恰好一次，並比對`評價＜快照＜pipeline`的位置；同一test的其他斷言不變。突變4項（快照移到pipeline之後、刪除、移到評價之前、重複）皆由新斷言以`ERR_ASSERTION`抓到；舊斷言對「快照移到pipeline之後」仍PASS（恆真確認）。本機Quick 81／81 PASS（`ab4fbb1`乾淨worktree，與第36期合併後，macOS＋Brave）；Full未在此組合重跑（與已Full PASS的`a08764f`只差此test一行，Full內執行方式相同）。屬只改測試，不升版本。以下為原記錄：`championship-intl.test:81`第二個斷言`indexOf('  captureSeasonChampionship(S);')<indexOf('runSeasonPipeline(0)')`目前恆真：`dc5ac87`（v1.11.0）加入時目標字串存在，`efd4710`（2026-10-15）起`game.js`中該呼叫前為`{`而非兩個空白，`indexOf`恆為−1。第35期（計畫§2nn D9）只改指向`professional-season.js`，未改語意。完成條件：改為實際比對呼叫位置的順序斷言（championship快照在pipeline開始之前），以突變確認順序對調時FAIL，不放寬其他斷言。
 - [x] **TEST-LOCAL-FULL-MEMGATE-01** — `FIXED / 本機驗證`（2026-11-08，`fix/local-full-memgate` `a4f1b8e`，尚未併入dev）。新增`parseVmStat`、`readAvailableMemory`：darwin以`vm_stat`的(free＋speculative＋inactive)×頁大小估算可用量；purgeable已含於active／inactive，不重複加計。非darwin或`vm_stat`失敗／格式不符時回退`os.freemem()`。2 GiB門檻與60秒等待不變；記憶體樣本保留`osFreeMemory`並新增`availableMemory`。`local-full-batches.test` 14／14 PASS，突變6項（去掉inactive、加purgeable、預設改回`os.freemem`、失敗不回退、非darwin呼叫`vm_stat`、降低門檻）皆以`ERR_ASSERTION`抓到。乾淨worktree（`a4f1b8e`，macOS＋Brave）：Quick 81／81 PASS；本機Full 107／107 PASS（8批、`resourceBlocked false`、`RESOURCE_WAIT` 0次，1,121秒），期間`os.freemem`最低823 MiB、新估算最低22,326 MiB。CI workflow未變。以下為原記錄：`scripts/local-full-batches.mjs`的記憶體門檻以`os.freemem()`判定（最少2 GiB、等待60秒），macOS上不計vm_stat的inactive／purgeable頁面。2026-11-08第35期本機Full：可用1,668 MiB、inactive約30 GB時派發前`RESOURCE_WAIT`逾時，0／100執行（記為NOT_RUN），關閉應用程式後重跑100／100 PASS。完成條件：darwin以free＋inactive＋purgeable（或等效可回收量）估算並保留記憶體保護，`local-full-batches.test`補對應案例；屬測試基礎變更（AGENTS 6.1 R2），需另行批准，CI workflow不變。
 - [ ] **D2-CI-ARTIFACT-01** — `ARTIFACT_COVERAGE_BLOCKED`。已實際執行Linux CI、短路徑Smoke與分批上傳；第1批保存成功不能解除完整原件保存缺口。bounded collector仍未接入正式CI；原始S／RNG／Decision／Receipt的可還原保存契約、容量／敏感路徑及還原驗證未完成。[缺口](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)／[分批限制](docs/reviews/LINUX_CI_FULL_1130_STABILITY_ACCEPTANCE.md)。本項維持未完成，不重跑Full、不刪證據。
@@ -614,3 +615,12 @@ Quick [Run 43666590311](https://github.com/tt-chin/yakyujinsei/actions/runs/4366
 最終日誌：full122-contract-career-final-r2、full122-act-replays-r1、full122-npb-r1、full122-hof-r1、full122-share-ui-final-r3、full122-display-careers-r1、full122-game-dom-final-r3、full122-game-dom-negative-r1、full122-tokens09-final-r2、full122-copy-policy-final-r4。test manifest的122個Full ID（含syntax）已與原CI plan逐項核對完全相同，只有新helper的import-only分類。語法、相對引用與diff檢查PASS。12個本機修改／新增檔，未暫存／提交／推送；19項單元與上述限定入口不取代新的Linux Full驗收，原114／8、歷史中途FAIL及ARTIFACT_COVERAGE_BLOCKED均保留。
 
 提交狀態補記：使用者於上述限定驗證完成後明確授權COMMIT／PUSH，本次12檔提交至dev；前文未提交為當時歷史狀態。推送後依既有workflow自動Quick，新來源CI與Preview待確認；未授權main反映／正式發布，亦未另外啟動Full。
+
+### 2026-11-15追加：EVT-01 E1＋E2 事件分類徽章（1.16.11，本機驗證）
+
+依使用者決定E1（提示標題＋結果卡）、E2（徽章）實作於`feat/evt-01-category-badge`（基準dev `1494a24`）。新模組`docs/src/ui/event-category-badge.js`（分類名一表，`eventChoiceSummary`共用）；提示標題用抽選當下的`effectiveCategory`（HS／U／CORP的encounter顯示為トレーニング），結果卡用`processedEventIDs`保存的`category`，不重算；未知分類不顯示徽章。新增`--event-{training,encounter,endorsement}-{bg,edge,text}` 9個token（4主題文字對背景≥4.5:1）。抽選候選／順序、成功率、效果、RNG、存檔不變。E3（年度事件履歷）未實作，EVT-01不勾選。
+
+測試期待值變更（使用者逐項批准）：`event-copy.test`一條只替換一次的核准替換；`support/dom-snapshot.mjs`的徽章投影（新版一側，`game-view-dom-e2e`）與DOM移除（`display-preferences-e2e`），均有契約檢查；`design-tokens-06.test`字級使用處64→65、間距使用處172→174；`display-preferences.test`元件色48→57，-05 golden比對只排除明列的9個EVT-01 token（規則字串另由`event-category-badge.test`固定）。新增`event-category-badge.test`（7項）與`event-category-badge-e2e`（Quick＋Full）。
+
+本機驗證（macOS＋Brave 157，非CI）：Quick 94／94 PASS；8批Full 124入口123 PASS／1 FAIL（`test-results/local-full-2026-11-15T07-53-16-101Z-3142ddc8`，sourceChanged false、缺0多0），唯一FAIL為dev既有的`design-tokens-09-e2e`（TEST-DT09-DEV-FAIL-01，dev `1494a24`單獨執行同為176差異）。負控制：單元4項（原始分類、結果重算、標籤錯誤、說明用原始分類）、DOM投影與移除各6項契約案例、token排除4項，均在預期斷言FAIL。修正前第一次Full的`game-view-dom-e2e`因投影位置錯誤FAIL、`display-preferences-e2e`與`design-tokens-09-e2e`FAIL，原始結果保留於`test-results/local-full-2026-11-15T07-11-51-609Z-dba73c7b`。reviewer無高／中發現，低1項（摘要字串48→57）已修正。Linux CI、Preview與實機未驗證。
+

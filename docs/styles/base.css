@@ -50,6 +50,11 @@ body{background:var(--bg);color:var(--chalk);font-family:var(--sans);font-size:v
 .tag-genius{background:var(--tag-genius-bg);border-color:var(--tag-genius-edge);color:var(--tag-genius-text)}
 .tag-negative{background:var(--tag-negative-bg);border-color:var(--tag-negative-edge);color:var(--tag-negative-text)}
 .tag-removed{text-decoration:line-through;opacity:.4;color:var(--tag-removed-text);border-color:var(--tag-removed-edge)}
+.event-badge{display:inline-block;flex:none;font-size:var(--fs-sm);font-weight:700;letter-spacing:0;line-height:1.5;padding:0 var(--space-2xs);
+  border:1px solid;border-radius:var(--radius-xs);margin-right:var(--space-2xs);white-space:nowrap}
+.event-badge-training{background:var(--event-training-bg);border-color:var(--event-training-edge);color:var(--event-training-text)}
+.event-badge-encounter{background:var(--event-encounter-bg);border-color:var(--event-encounter-edge);color:var(--event-encounter-text)}
+.event-badge-endorsement{background:var(--event-endorsement-bg);border-color:var(--event-endorsement-edge);color:var(--event-endorsement-text)}
 .tag-mrteam{background:var(--team-label-bg);border-color:var(--team-color);color:var(--team-color)}
 .team-name{color:var(--amber);font-weight:900}
 .team-badge{color:var(--team-color);background:var(--team-label-bg);padding:var(--space-4xs) var(--space-xs);border-radius:var(--radius-sm);box-shadow:var(--shadow-team-badge)}

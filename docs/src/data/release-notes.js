@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.11｜2026/11/15",
+    "lines": [
+      "- イベントの見出しに分類バッジを表示し、種類がひと目で分かるよう改善。"
+    ]
+  },
+  {
     "title": "1.16.10｜2026/11/15",
     "lines": [
       "- 選手名を空欄にすると、ランダムな名前で新しい野球人生を始められるよう改善。"

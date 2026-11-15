@@ -176,6 +176,8 @@ export async function captureGameView(full){
       dom.log=log.outerHTML;
     }
   }
+  // Last, after every projection that re-clones #log from the page (EVT-01 badge strip must see the final markup).
+  if(window.__expectEventBadge){dom.log=window.__projectEventBadges(dom.log);dom.act=window.__projectEventBadges(dom.act);}
   const snapshot={dom,state,calls,views};
   if(full)return snapshot;
   const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(snapshot))));
@@ -212,4 +214,31 @@ export function projectMenu1163(markup){
   const credits='<button type="button" id="board-credits" data-information="credits" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>クレジット</button>';
   if(typeof markup!=='string'||markup.split(bug).length!==2||markup.split(credits).length!==2||markup.split('id="board-bug-report"').length!==2||markup.split('id="board-credits"').length!==2)throw Error('MENU_1163_CONTRACT');
   return markup.replace(bug,'').replace(credits,credits.replace('クレジット</button>','クレジット・使用素材</button>'));
+}
+
+// Only the approved 1.16.11 EVT-01 delta: one category badge before each event prompt / result-card title.
+// Every badge must carry the label of its own category, no event title may lack one, and nothing else may change.
+export function projectEventBadges(markup){
+  if(markup===null)return markup;
+  if(typeof markup!=='string')throw Error('EVENT_BADGE_CONTRACT');
+  const labels={training:'トレーニング',encounter:'日常・交流',endorsement:'広報・スポンサー'};
+  if(markup.includes('<h4>イベントカード｜')||markup.includes('<div class="title">イベント｜'))throw Error('EVENT_BADGE_MISSING');
+  const badge=/<span class="event-badge event-badge-([a-z]+)">([^<]*)<\/span>(?=イベント(?:カード)?｜)/g;
+  const out=markup.replace(badge,(whole,kind,label)=>{if(!Object.hasOwn(labels,kind)||labels[kind]!==label)throw Error('EVENT_BADGE_LABEL');return '';});
+  if(out.includes('event-badge'))throw Error('EVENT_BADGE_UNEXPECTED');
+  return out;
+}
+
+// Browser-side DOM variant of projectEventBadges for E2Es that compare text or layout: removes each EVT-01 badge
+// from a (detached or live) root after the same contract checks. Returns the labels removed, in document order.
+export function removeEventBadges(root){
+  const labels={training:'トレーニング',encounter:'日常・交流',endorsement:'広報・スポンサー'},removed=[];
+  for(const title of root.querySelectorAll('h4,div.title')){const t=title.firstChild;if(t?.nodeType===3&&/^イベント(?:カード)?｜/.test(t.nodeValue))throw Error('EVENT_BADGE_MISSING');}
+  for(const badge of [...root.querySelectorAll('.event-badge')]){
+    const kind=badge.className.match(/^event-badge event-badge-([a-z]+)$/)?.[1],parent=badge.parentElement,next=badge.nextSibling;
+    if(!kind||!Object.hasOwn(labels,kind)||badge.textContent!==labels[kind]||badge.attributes.length!==1||badge.children.length)throw Error('EVENT_BADGE_LABEL');
+    if(!parent||!(parent.tagName==='H4'||parent.matches('div.title'))||parent.firstChild!==badge||next?.nodeType!==3||!/^イベント(?:カード)?｜/.test(next.nodeValue))throw Error('EVENT_BADGE_UNEXPECTED');
+    badge.remove();removed.push(labels[kind]);
+  }
+  return removed;
 }

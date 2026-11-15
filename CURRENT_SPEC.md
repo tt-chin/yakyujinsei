@@ -1,4 +1,8 @@
-# 現行規格（正式公開 v1.14.1／開発版 v1.16.10）
+# 現行規格（正式公開 v1.14.1／開発版 v1.16.11）
+
+### 開発版1.16.11：イベント分類バッジ
+
+イベントの選択画面の見出し（#act）と結果カードの見出し（#log）の先頭に分類バッジを1つ表示する（EVT-01のE1・E2）。表示名はtraining＝トレーニング、encounter＝日常・交流、endorsement＝広報・スポンサー（ui/event-category-badge.jsの一表、選択肢説明文の分類名も同じ表）。選択画面は抽選時点のeffectiveCategory（HS／U／CORPのencounterはtraining）、結果カードはprocessedEventIDsの結果に保存されたcategoryを使い、現在の特性・段階で再計算しない。保存分類が不明ならバッジなしで見出しは従来どおり。配色は4テーマ共通トークン--event-{training,encounter,endorsement}-{bg,edge,text}で、文字対背景4.5:1以上。抽選候補・順序・成功率・効果・RNG・保存データは変更しない。年度別のイベント履歴（E3）は未実装。
 
 ### 開発版1.16.10：空欄の選手名
 
