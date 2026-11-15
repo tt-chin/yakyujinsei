@@ -49,3 +49,15 @@ assert.ok(Object.keys(finalTH).length>=4);assert.equal(tierCells,Object.keys(fin
 console.log('Historical tier core matrix retained; new state-aware adapter covered separately.');
 console.log(`${cases.length} synthetic grid + ${special.length} special + ${assertions-cases.length} boundary/characterization cases PASS; approved state-aware evaluation plus unchanged historical score core`);
 export {cases};
+
+// NAME-02/03: preserve half-share, sorting, filtering and role selection exactly.
+const {CareerRetirement}=await import('../docs/src/engine/career-retirement.js');
+const oldRetirementSource=execFileSync('git',['show','38ed1bbd7a9752d8b12059ed31859620bcc0fdad:docs/src/engine/career-retirement.js']).toString().replace(/from '([^']+)'/g,(_,specifier)=>'from '+JSON.stringify(new URL(specifier,new URL('../docs/src/engine/career-retirement.js',import.meta.url)).href));
+const {CareerRetirement:OldRetirement}=await import('data:text/javascript;base64,'+Buffer.from(oldRetirementSource).toString('base64'));
+const positionCases=[{pos:'P',role:'SP'},{pos:'P',roleYears:{SP:2,MR:2,CL:2}},{pos:'P',roleYears:{SP:3,MR:2,CL:1}},{pos:'P',roleYears:{SP:4,MR:1}},{pos:'IF',dpos:'SS'},{pos:'IF',dposYears:{SS:2,'2B':2,'3B':2}},{pos:'IF',dposYears:{SS:3,'2B':2,'3B':1}},{pos:'IF',dposYears:{DH:2}},{pos:'IF',dposYears:{DH:2,'—':2}},{pos:'IF',dposYears:{SS:2,'2B':2,DH:2}}];
+for(const state of positionCases){
+ const before=structuredClone(state),args={getState:()=>state,DPN:{SS:'遊撃手','2B':'二塁手','3B':'三塁手',DH:'指名打者'},POSN:{IF:'内野手'},rng:{R:()=>{throw Error('unexpected RNG');},ri:()=>{throw Error('unexpected RNG');}}};
+ const old=new OldRetirement(args).primaryPos(),expected=old.replace(/^スインガー\(/,'スイングマン(').replace(/^ツールマン\(/,'ユーティリティープレーヤー(');
+ assert.equal(new CareerRetirement(args).primaryPos(),expected);assert.deepEqual(state,before);
+}
+console.log('PASS '+positionCases.length+' NAME primary-position boundary/missing/DH cases; no state/RNG changes');

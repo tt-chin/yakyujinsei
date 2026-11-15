@@ -17,8 +17,8 @@ import {CheckpointRenderer} from '../docs/src/ui/checkpoint-renderer.js';
 assert.equal(Object.keys(policy.TRAIT_LABELS).length,38);
 assert.deepEqual(policy.DEFERRED_TRAITS,['nitenichi'],'only approved championmaker is enabled; nitenichi stays deferred');
 assert.equal(JP_DATA.teams.find(t=>t.teamId==='NPB_CL_HAN').name,'阪神ストライプス');
-const labelState={mrTeamName:'阪神ストライプス',legendLeague:'NPB',rainbowLg:'MLB',tripleCrownHistory:{hitterTC:[{league:'NPB'},{league:'NPB'},{league:'KBO'}]}};
-assert.equal(policy.traitLabel('mrteam',labelState,()=> 'ストライプス'),'ストライプスミスター');
+const labelState={mrTeamName:'NPB_CL_HAN',legendLeague:'NPB',rainbowLg:'MLB',tripleCrownHistory:{hitterTC:[{league:'NPB'},{league:'NPB'},{league:'KBO'}]}};
+assert.equal(policy.traitLabel('mrteam',labelState,()=> 'ストライプス'),'ミスターストライプス');
 assert.equal(policy.traitLabel('legend',labelState),'NPB歴史に残る名選手');
 assert.equal(policy.traitLabel('rainbow',labelState),'MLB渡り鳥');
 assert.equal(policy.traitLabel('hitterTC',labelState),'NPB・KBO打撃三冠王');
@@ -148,3 +148,21 @@ for(const [bucket,league,lv] of [['NPB','NPB','NPB1'],['KBO','KBO','KBO1'],['CPB
 }
 assert.doesNotMatch(fs.readFileSync(new URL('../docs/src/engine/trait-policy.js',import.meta.url),'utf8'),/\b(?:R|ri|pick|chance|random)\s*\(/);
 console.log('38 labels, deferred IDs, child/marriage guards, first-team cumulative tenure, HS wins, MVP/age/triple-crown boundaries, one-use decline, safe failure/idempotency and original awards RNG calls passed.');
+
+// NAME-07: all approved professional IDs, transfer, invalid/prototype IDs and legacy text.
+const {TEAM_NICKNAMES,teamNicknameFor}=await import('../docs/src/data/team-nicknames.js');
+const professional=JP_DATA.teams.filter(t=>['NPB','KBO','CPBL','MLB'].includes(t.org));
+assert.equal(professional.length,58);assert.equal(Object.keys(TEAM_NICKNAMES).length,58);
+assert.deepEqual(Object.keys(TEAM_NICKNAMES).sort(),professional.map(t=>t.teamId).sort());assert.ok(Object.isFrozen(TEAM_NICKNAMES));
+for(const team of professional){
+ const state={mrTeamName:team.teamId,orgTeamId:'OTHER_TEAM',traits:{mrteam:true},rngState:42},before=structuredClone(state);
+ assert.equal(policy.traitLabel('mrteam',state,()=>{throw Error('must not infer a nickname');}),'ミスター'+TEAM_NICKNAMES[team.teamId]);assert.deepEqual(state,before);
+}
+for(const [id,nick] of [['NPB_CL_HAN','ストライプス'],['NPB_CL_TOK','グランズ'],['KBO_CHANGWON_DINOS','昌原ダイナソーズ'],['CPBL_TAIPEI_DINOS','台北ダイナソーズ'],['CPBL_TAINAN_LIONS','ライオンズ'],['MLB_AL_BOS','レッドソックス'],['MLB_AL_CWS','ホワイトソックス'],['MLB_NL_ARI','ダイヤモンドバックス']])assert.equal(teamNicknameFor(id),nick);
+for(const id of [null,undefined,'',' ','UNKNOWN','NPB_CL_HAN ','阪神ストライプス','CORP','IND','__proto__','constructor','toString',{},[],12]){
+ const state={mrTeamName:id,orgTeamId:'NPB_CL_HAN',traits:{mrteam:true},rngState:123},before=structuredClone(state);
+ assert.equal(teamNicknameFor(id),'');assert.equal(policy.traitLabel('mrteam',state,()=> 'AN'),'ミスター');assert.deepEqual(state,before);
+}
+assert.equal(policy.removedTraitLabel('ミスター・チーム',{mrTeamName:'NPB_CL_HAN'}),'ミスターストライプス');
+assert.equal(policy.removedTraitLabel('ANミスター',{mrTeamName:'NPB_CL_HAN'}),'ANミスター','unidentified old free text is preserved');
+console.log('PASS 58 approved Mr. Team IDs, exact examples, unknown/prototype IDs, transfer and unchanged stored state');

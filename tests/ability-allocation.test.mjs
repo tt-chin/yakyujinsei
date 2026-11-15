@@ -43,13 +43,17 @@ const abDpos=[undefined,null,'SS','2B','3B','CF','RF','LF','C','1B','DH','XX'];
 const abTraits=[undefined,{},{yips:true},{onetool:true},{yips:true,onetool:true}].flatMap(traits=>[undefined,'代打'].map(toolRole=>({traits,toolRole})));
 let abCells=0;const abTypes=new Set(),abRoles=new Set();
 for(const pos of ['P','C','IF','OF'])for(const dpos of abDpos)for(const {traits,toolRole} of abTraits)for(const ab of abAbilities){
-  const state={pos,dpos,traits,toolRole,ab},A=abCell(abOld,state);
+  const state={pos,dpos,traits,toolRole,ab},old=JSON.parse(abCell(abOld,state));
+  if(old.r.type==='期待の若手')old.r.type='発展途上型'; // NAME-08 only; all numbers, classification branches and immutability remain strict.
+  const A=JSON.stringify(old);
   assert.equal(abCell(abNew,state),A,`ability evaluation equivalence ${JSON.stringify(state)}`);const a=JSON.parse(A);assert.ok(a.unchanged);abTypes.add(a.r.type);abRoles.add(a.r.gap.role);abCells++;}
 for(const pos of ['P','C','IF','OF'])for(const key of abKeys)for(const cur of [54,55,56,59,60,61,63,64,65,66,67,71,72,73])for(const pot of [undefined,{},{[key]:0},{[key]:cur-1},{[key]:cur},{[key]:cur+1}]){
-  const state={pos,dpos:null,traits:{},ab:{...abUniform(50),[key]:cur},pot},A=abCell(abOld,state);
+  const state={pos,dpos:null,traits:{},ab:{...abUniform(50),[key]:cur},pot},old=JSON.parse(abCell(abOld,state));
+  if(old.r.type==='期待の若手')old.r.type='発展途上型';
+  const A=JSON.stringify(old);
   assert.equal(abCell(abNew,state),A,`ability step cost equivalence ${JSON.stringify(state)}`);assert.ok(JSON.parse(A).unchanged);abCells++;}
 assert.equal(abCells,4*abDpos.length*abTraits.length*abAbilities.length+4*abKeys.length*14*6,'ability evaluation equivalence cell count');
-for(const label of ['期待の若手','鉄腕','剛腕','変化球の魔術師','精密機械','リードの達人','大砲タイプ','安打製造機','選球眼の鬼','韋駄天','守備職人','オールラウンダー','代打ユーティリティー'])assert.ok(abTypes.has(label),label);
+for(const label of ['発展途上型','鉄腕','剛腕','変化球の魔術師','精密機械','リードの達人','大砲タイプ','安打製造機','選球眼の鬼','韋駄天','守備職人','オールラウンダー','代打ユーティリティー'])assert.ok(abTypes.has(label),label);
 assert.deepEqual([...abRoles].sort(),['代打','代走','守備固め'].sort());
 const abPitcher=JSON.parse(abCell(abNew,{pos:'P',dpos:undefined,traits:undefined,ab:abUniform(60)})).r;assert.equal(typeof abPitcher.ovr,'number');assert.match(abPitcher.type,/^E:TypeError:/);
 console.log('Ability allocation v1.6.1 checks passed.');

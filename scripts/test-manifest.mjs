@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'player-random-name-e2e': {seconds:120,reason:'Blank/typed names: isolated crypto draws, exact short P/IF state and RNG comparison, same-seed different names, real save/resume/year advance and PNG; no full career.'},
   'hof-retirement-policy-e2e': {seconds:180,reason:'Approved HOF-only deltas: full pre-retirement S/choice/RNG equality, P/IF deterministic replay and frozen-rule retirement oracle, no blanket ignore.'},
   'browser-save-store-e2e': {quick:[],seconds:15,reason:'Real IndexedDB revision, quota and stale-write fault checks.'},
   'browser-save-runtime-e2e': {quick:[],seconds:40,reason:'Real reload S/RNG, first-step failure/retry, two tabs and unavailable storage UI.'},
@@ -16,7 +17,9 @@ const browserProfiles = {
   'full-power-pitching-jp3-pitcher-02-e2e': {args:['--part=jp3-pitcher-02'],seconds:350,reason:'full-power-pitching-e2e S01-S02 for jp3-pitcher-02: full, normal and energy-saving P, each old/current/repeat (9 complete career runs); not a Quick entry.'},
   'international-personal-stats-e2e': {seconds:600,reason:'Tournament snapshots and result cards, T01-T14 browser matrix, six exact baseline S/RNG careers. No Quick profile.'},
   'design-tokens-02-e2e': {quick:[],seconds:15,reason:'UI-DESIGN-TOKENS-02: computed styles of the class-based team badge and retirement trait tags vs the pre-change inline styles, 4 themes x PC/mobile.'},
-  'design-tokens-03-e2e': {quick:[],seconds:40,reason:'UI-DESIGN-TOKENS-03: share PNG drawn from CSS theme tokens vs the pre-change tree (standard/classic byte-identical, night/scoreboard changed) and probe colors vs themes.css, 4 themes x PC/mobile.'},
+  'design-tokens-03-e2e': {quick:[],seconds:40,reason:'UI-DESIGN-TOKENS-03: share PNG drawn from CSS theme tokens vs the pre-change tree (standard/classic byte-identical with the 1.16.4 colors and generic fonts written, night/scoreboard changed) and probe colors vs themes.css, 4 themes x PC/mobile.'},
+  'design-tokens-09-e2e': {seconds:130,reason:'UI-DESIGN-TOKENS-09: computed style + layout vs f8afd8e with its px margin/padding/gap rewritten to the approved spacing steps (whole calc/auto/negative declarations untouched): home, early career, player/career tabs, desktop overview, help dialog, display preferences, salary detail, retirement; 4 themes x 3 font sizes x 2 densities x 1280/390 (P/IF) + 360 (P), web fonts blocked; every changed rule must match. Replaces design-tokens-08-e2e. No Quick profile.'},
+  'design-tokens-07-e2e': {seconds:15,reason:'UI-DESIGN-TOKENS-07: share image waits for its web fonts (fake @font-face, no network): held, refused, hung (3 s timeout, no second wait) and empty stylesheet; fillText fonts are the --sans/--mono families; only the newer of two renders writes the container. No Quick profile.'},
   'trait-display-e2e': {seconds:180,reason:'All trait labels, acquisition-only explanation lifetime, retirement/PNG and exact pre-change P/IF S/RNG careers.'},
   'stage10-risk-e2e': {seconds:240,reason:'Pre-refactor investigation: natural trait routes, overseas salary flow, explicit return faults and passive LEGACY traces. Desired-behaviour failures remain FAIL; no Quick profile.'},
   'stage6-ability-e2e': {seconds:120,reason:'Original allocation matrix and stale-callback safety assertions; expectations preserved.'},
@@ -47,10 +50,12 @@ const nonTests = {
   'support/baseline-initial-potential.mjs': ['support','Approved birth-potential adapter for positive historical UI comparisons; unadapted fixed-seed S/R proof stays separate. Not executable.'],
   'support/stage6-browser.mjs': ['support','Test-only native browser fixture and state/RNG/DOM trace; imported by Stage 6 probes.'],
   'support/first-difference.mjs': ['support','Read-only first-difference diagnostic, imported by historical E2E controls.'],
+  'support/display-name-comparison.mjs': ['support','Exact approved display-name pairs for DOM/layout comparisons; no state or RNG projection. Tested by career-traits.test.'],
   'support/dom-snapshot.mjs': ['support','Browser-side per-step #log/#act/#board DOM, S and RNG snapshot; imported by game-view-dom-e2e.'],
   'support/rng-instrument.mjs': ['support','E2E RNG call counter: careerRng.onDraw on current game.js, legacy R text replace on old baselines; throws on miss.'],
   'support/career-session-access.mjs': ['support','E2E hook accessor __cs for career flow state: careerSession.<name> on current game.js, bare bindings on old baselines; throws on miss.'],
   'support/overlay-hook.mjs': ['support','E2E hook injection point: before the overlay IIFE end on old baselines, one shared block at module end once the overlay is unwrapped; throws on miss.'],
+  'support/theme-colors.mjs': ['support','Node resolver for themes.css base colors + color-mix() rules (UI-DESIGN-TOKENS-05); throws on unsupported syntax. Imported by theme/share tests.'],
   'retirement-hof-test-support.mjs': ['support','Imported VM fixtures; not an executable test.'],
   'retirement-hof-analysis.mjs': ['analysis','Requires approved captured pilot/vote input; rewrites historical report data. Run explicitly outside automatic profiles.'],
   'retirement-hof-report.mjs': ['report','Rewrites historical approved report; not an automatic regression.'],

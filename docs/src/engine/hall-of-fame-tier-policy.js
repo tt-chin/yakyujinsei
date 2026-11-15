@@ -1,5 +1,7 @@
 // Hall-of-fame career score and tier (OOP plan §2j, phase 8).
 // Pure rules: callers pass stats, position and the final TIER_TH/LG_N entries explicitly; no DOM, S or RNG.
+const HOF_TIER_LABELS=Object.freeze(['殿堂','スター選手','レギュラー選手','一軍定着に届かず','実績を残せず']);
+export function hofTierNameFor(leagueName,i){return leagueName+' '+HOF_TIER_LABELS[i];}
 export function careerScoreFor(st,position){
   if(position==='P')return st.W*13+st.SV*6+st.SO*0.9+st.IP*0.35;
   return st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+Math.max(0,st.DEF||0)*6;
@@ -16,5 +18,5 @@ export function hallOfFameTier({baseScore,honor,thresholds,leagueName}){
   /* タイトル最低条件：MVP/最優秀投手賞は最低でもスター級;部門タイトルは最低でもレギュラー級。 */
   if(honor.mvp||honor.aceN)i=Math.min(i,1);
   else if(honor.king)i=Math.min(i,2);
-  return {i,sc:Math.round(sc),name:leagueName+['殿堂','スター選手','デイリープレイヤー','フリンジプレイヤー','ページ上の乗客'][i]};
+  return {i,sc:Math.round(sc),name:hofTierNameFor(leagueName,i)};
 }

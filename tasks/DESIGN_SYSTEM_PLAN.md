@@ -351,3 +351,522 @@ P3 注意：推導 token 的 computed color 不是 `rgb()`（實測 `oklab(…)`
 
 - 再合併 `dev`（`86969a5`）後：移除 -04 原帶的 `84b1e69` 路由、改採 `routeHistoricalShareTheme`。`scripts/test-historical-share-theme.mjs` 7 項 PASS；`international-personal-stats-e2e`（50／0）、`full-power-pitching-e2e`、`smallschool-c-e2e`、`trait-display-e2e` PASS；Quick 90／90 PASS（macOS＋Brave 本機）。
 - 未做：Linux CI Full、Preview、Firefox／Safari 實機、本機 Full。
+- 合併（2026-11-13 補記）：PR #81 併 `dev`（`b4239d4`）；dev `b327abe` 的 [Quick 43349490876](https://github.com/tt-chin/yakyujinsei/actions/runs/43349490876) 與手動 [Full 43349530209](https://github.com/tt-chin/yakyujinsei/actions/runs/43349530209)（8 批＋Aggregate）success，隨 1.16.4 經 PR #83 併 `main`（`ca3ee32`）。BACKLOG 依完成條件「PR併dev」結案；Preview、Firefox／Safari 實機仍未做。
+
+## 12. P3 探測結果與待決（UI-DESIGN-TOKENS-05；2026-11-13，基準 `origin/dev` `b327abe`）
+
+目的：P3 原訂「推導值須等於現值，否則覆寫為現值」（§9.2）。實作前先確認現有配色能否以共用規則推導；不能的話，決定要統一配色（外觀改變）還是只讓新主題用推導值。
+
+### 12.1 方法
+
+- 對 `themes.css` 的 50 個非基礎色 token，在 oklab／srgb 兩種空間、1～99% 整數比例，窮舉 `color-mix(A, B)` 的兩兩組合，取 4 主題平均 ΔE（OKLab）最小者作為「統一規則」。ΔE 取疊在該主題 `--bg` 與 `--chalk` 上兩者的較大值，半透明的差異也計入；約 0.02 為可察覺門檻。
+- v1 素材：12 個基礎色（`--bg`、`--panel`、`--panel2`、`--edge`、`--chalk`、`--dim`、`--amber`、`--clay`、`--good`、`--bad`、`--blue`、`--control-edge`）＋ white／black／transparent。v2 另加 `gold`（取自各主題 `--tag-legend-edge`）與 `highlight`（取自 `--potential-marker` 不透明值；classic 無黃色，暫用 standard 值）。
+- 顏色以 Node 依 CSS Color 4 公式計算，未經瀏覽器逐值實測；規則為機械搜尋的最近解，不是人工設計（例：`--tag-removed-text` 得到 `--blue` 混 `--gold`）。mock 元件為示意，不是遊戲實際畫面。
+- 檔案：`tasks/design-tokens-05/` 的 v1／v2 × 4 主題截圖、v2 互動報告 `unify-compare.html`（本機開啟）與資料 `unify-data.json`。
+
+### 12.2 結果
+
+| 統一後與現值的最大 ΔE | v1 | v2 |
+|---|---:|---:|
+| ≤ 0.02（幾乎相同） | 5 | 6 |
+| 0.02～0.05 | 16 | 19 |
+| 0.05～0.1 | 16 | 15 |
+| > 0.1（明顯不同） | 13 | 10 |
+
+- 4 主題都能以同一規則完全重現的只有 `--action-bg-end`；`--board-bg-start` 與 `--panel` 相同。現值為逐主題手調。
+- v2 主要改善標籤（`--tag-legend-edge` ΔE 0.154 → 0.002）。
+- v2 仍 > 0.1 的：`--potential-marker`（0.283）、`--focus-ring`（0.197）——各主題刻意用不同色相（standard 紅、classic 藍、night 黃），規則無法統一；`--share-tag-edge`、陰影系（`--board-shadow`、`--shadow-color`、`--overlay-bg`；standard／classic 帶色調、night／scoreboard 為黑）、`--warning-edge`、`--metric-glow`、`--tag-goldcloth-text`、`--primary-button-end`。
+- `display-preferences.test`／`design-tokens-02.test` 檢查的對比組合，現值與統一後皆無不合格。
+
+### 12.3 方向（code owner）
+
+| 選項 | 內容 | 外觀 |
+|---|---|---|
+| A 統一 | 以 v2 為起點，為元件色定規則並套用到 4 主題；焦點框、潛力標記、陰影需另行設計 | 改變（PATCH），-02 已批准的標籤色與 night／scoreboard 分享圖隨之改變 |
+| B 只供新主題 | 推導公式寫在主題區塊外，現有 4 主題以現值覆寫 | 不變；新主題可由約 14 個基礎色起步，但不一致的現況保留 |
+| C 暫停 P3 | 無具體新主題計畫時不做 | 不變 |
+
+決定（2026-11-14，使用者轉達）：code owner 選 **A 統一**。§9.2 P3 以現值為準、外觀不變的前提不適用於 -05。細部計畫於本分支併入 `dev` 後，以最新 `dev` 另寫於 §13（v2 規則、焦點框／潛力標記／陰影的設計、允許差異、D／T 表）。UI 改版計畫（`tasks/UI_REDESIGN_PLAN.md`，PR #79）的階段 1a 即本項。
+
+## 13. P3 細部計畫（UI-DESIGN-TOKENS-05；2026-11-14，基準 `origin/dev` `629addc`，VERSION 1.16.4）
+
+狀態：**使用者 2026-11-14 批准並實作完成**。實作先在本機分支 `ui/design-tokens-05-impl`（自 `f54483d`）完成，之後依使用者決定併入 PR #85（與計畫同一個 PR）。結果見 §13.9。方向依 §12.3 A（code owner 2026-11-14 選定）；以下為使用者 2026-11-14 選定：焦點框與潛力標記保留各主題色相、列為基礎色；主按鈕與陰影的色調也列為基礎色（`--primary`、`--shadow-base`），陰影 token 以共用比例推導；§13.8 的 4 項待決已定案。
+
+### 13.1 範圍與分級
+
+- 目標：每個主題只寫 17 個基礎色；48 個元件色在主題區塊外以 `color-mix()` 規則推導，4 主題共用同一套規則。外觀改變（-02 已批准的標籤色、4 主題的分享圖都改變）。
+- 分級：R2（純顯示例外，AGENTS §6.1）。只改 CSS token 與分享圖讀色，不改狀態、RNG、事件順序；`share-image.js` 的讀色改動限於把 computed color 轉成 sRGB。期待值的變更逐項列在 §13.4。
+- 版本：PATCH（1.16.4 → 1.16.5，實作時以當時 `dev` 的 VERSION 為準）。
+- 不在範圍：非顏色 token（-06）、新主題、UI 改版（`tasks/UI_REDESIGN_PLAN.md`）。
+
+### 13.2 基礎色（每主題 17 個）
+
+| 類別 | token |
+|---|---|
+| 既有 12 個 | `--bg`、`--panel`、`--panel2`、`--edge`、`--chalk`、`--dim`、`--amber`、`--clay`、`--good`、`--bad`、`--blue`、`--control-edge` |
+| 新增 | `--gold`（值取自各主題現行 `--tag-legend-edge`） |
+| 由元件色改列基礎色 | `--focus-ring`、`--potential-marker`（各主題刻意不同色相，值不變） |
+| 新增（主按鈕、陰影） | `--primary`（值取自各主題現行 `--primary-button-start`）、`--shadow-base`（standard `#3a101780`、classic `#30271980`＝各自 `--chalk` 的 50% 透明度；night／scoreboard `#000`） |
+
+- §12 v2 的 `highlight` 不採用：以 5% 為步進對所有組合重搜時，15 個基礎色（不含 `highlight`）與加上 `highlight` 的 16 個，ΔE > 0.1 的 token 都是 8 個（2026-11-14 scratchpad 搜尋，未另存檔）。
+- `--primary`／`--shadow-base` 的理由：共用規則重現不了現值（§13.3「主按鈕」「陰影」）。以新增的 2 個基礎色（與其他基礎色或黑白混合）重搜全部 48 個 token，另有 `--start-glow`（0.073 → 0.052，`--primary` 混 `--panel2`）與 `--share-tag-edge`（0.169 → 0.100）可改善，不在本次範圍，未採用。
+- `color-scheme` 與 `--disabled-opacity`（只在 standard 區塊）照舊。
+
+### 13.3 推導規則
+
+- 位置：`themes.css` 的 4 個主題區塊之後新增一個 `:root { … }` 區塊，放 48 條規則；主題區塊不再定義元件色。主題屬性在 `<html>` 上，規則在同一元素計算，故每個主題各自套用。
+- 規則由機械搜尋取最近解（5% 步進、oklab／srgb），以下 3 條改用語意較清楚的規則（ΔE 相近）：`--tag-removed-text`（原為 `--blue` 混 `--gold`，改為 `--dim` 混 `--panel`）、`--tag-genius-edge`（原為白混黑的固定灰，改為 `--dim` 混 `--panel`）、`--tag-genius-bg`（改為 `--panel` 混 `--blue`）。
+- 主按鈕：原草案 `color-mix(in oklab, var(--clay) 75%／60%, black)` 使 standard 由鮮紅變暗褐紅（ΔE 0.093／0.106）。以 15 個基礎色加黑白、srgb／oklab／oklch、5% 步進，含「兩色混合後再混黑」的兩層巢狀重搜：以 4 主題最大 ΔE 為目標，start 最佳 0.076，但 standard 的 OKLCH 彩度只剩約 0.10（現值 0.175）；以 standard 優先則 start 為 standard 0.066、scoreboard 0.139。4 主題現值的色相與彩度本來就不一致（standard 鮮紅、scoreboard 暗橄欖），故 start 改為基礎色 `--primary`，end 由其推導。
+- 陰影：原草案 `--shadow-base: color-mix(in oklab, var(--bg) 40%, black)` 使 standard／classic 的遮罩由帶色調變灰（ΔE 0.112／0.121）；同上重搜，共用規則中仍以此式最佳，且透明度須 4 主題共用（現值亮色主題約為暗色主題的一半）。故 `--shadow-base` 改為帶透明度的基礎色，4 個陰影 token 為它與 `transparent` 的混合，比例共用。
+- 每條規則、4 主題的現值／新值與 ΔE：`tasks/design-tokens-05/unify-v4.json`。Brave（`BraveFarbling` 關閉）實測草稿 4 主題 × 48 個 token 的 computed color（192 個值），與該檔的新值最大差 1／255；草稿 `themes.css` 的規則字串與該檔一致。下表 ΔE 為 OKLab 距離，取疊在該主題 `--bg` 與 `--chalk` 上兩者的較大值；約 0.02 為可察覺門檻。
+
+| token | 規則 | ΔE std | night | classic | scoreboard |
+|---|---|---:|---:|---:|---:|
+| `--body-glow` | `color-mix(in oklab, var(--panel2) 85%, var(--control-edge))` | 0.043 | 0.024 | 0.016 | 0.010 |
+| `--start-glow` | `color-mix(in oklab, var(--panel2) 85%, var(--control-edge))` | 0.073 | 0.024 | 0.016 | 0.010 |
+| `--board-bg-start` | `var(--panel)` | 0.000 | 0.000 | 0.000 | 0.000 |
+| `--board-bg-end` | `var(--panel2)` | 0.023 | 0.000 | 0.000 | 0.000 |
+| `--action-bg-start` | `color-mix(in oklab, var(--panel) 95%, transparent)` | 0.016 | 0.013 | 0.009 | 0.012 |
+| `--action-bg-end` | `color-mix(in oklab, var(--bg) 95%, transparent)` | 0.000 | 0.000 | 0.000 | 0.000 |
+| `--metric-bg` | `color-mix(in srgb, var(--panel) 90%, var(--control-edge))` | 0.019 | 0.006 | 0.009 | 0.008 |
+| `--bar-bg` | `color-mix(in oklab, var(--panel2) 90%, white)` | 0.028 | 0.021 | 0.010 | 0.020 |
+| `--metric-glow` | `color-mix(in oklab, var(--clay) 5%, transparent)` | 0.094 | 0.024 | 0.019 | 0.025 |
+| `--lamp-bg` | `color-mix(in srgb, var(--panel) 65%, var(--dim))` | 0.052 | 0.019 | 0.046 | 0.062 |
+| `--primary-button-start` | `var(--primary)` | 0.000 | 0.000 | 0.000 | 0.000 |
+| `--primary-button-end` | `color-mix(in oklab, var(--primary) 85%, black)` | 0.011 | 0.010 | 0.016 | 0.025 |
+| `--primary-button-text` | `white` | 0.000 | 0.000 | 0.020 | 0.042 |
+| `--primary-button-edge` | `color-mix(in srgb, var(--chalk) 20%, var(--amber))` | 0.039 | 0.053 | 0.046 | 0.026 |
+| `--button-detail` | `color-mix(in srgb, var(--chalk) 45%, var(--control-edge))` | 0.059 | 0.003 | 0.045 | 0.011 |
+| `--primary-button-detail` | `color-mix(in oklab, var(--clay) 5%, white)` | 0.005 | 0.005 | 0.012 | 0.032 |
+| `--warning-edge` | `var(--bad)` | 0.137 | 0.000 | 0.000 | 0.000 |
+| `--dice-bg` | `color-mix(in srgb, var(--panel) 95%, white)` | 0.000 | 0.002 | 0.001 | 0.012 |
+| `--dice-shadow` | `color-mix(in oklab, var(--bad) 10%, transparent)` | 0.019 | 0.041 | 0.018 | 0.043 |
+| `--dice-stitch` | `color-mix(in oklab, var(--gold) 30%, transparent)` | 0.038 | 0.035 | 0.040 | 0.039 |
+| `--dice-six` | `var(--bad)` | 0.044 | 0.000 | 0.000 | 0.000 |
+| `--bar-start` | `var(--clay)` | 0.072 | 0.000 | 0.000 | 0.000 |
+| `--board-shadow` | `color-mix(in oklab, var(--shadow-base) 30%, transparent)` | 0.025 | 0.028 | 0.010 | 0.027 |
+| `--shadow-color` | `color-mix(in oklab, var(--shadow-base) 55%, transparent)` | 0.005 | 0.013 | 0.005 | 0.013 |
+| `--overlay-bg` | `color-mix(in oklab, var(--shadow-base) 60%, transparent)` | 0.025 | 0.000 | 0.022 | 0.000 |
+| `--nav-shadow` | `color-mix(in oklab, var(--shadow-base) 20%, transparent)` | 0.017 | 0.000 | 0.005 | 0.000 |
+| `--tag-legend-bg` | `color-mix(in srgb, var(--panel) 85%, var(--gold))` | 0.025 | 0.038 | 0.033 | 0.041 |
+| `--tag-legend-edge` | `var(--gold)` | 0.000 | 0.000 | 0.000 | 0.000 |
+| `--tag-legend-text` | `color-mix(in srgb, var(--chalk) 50%, var(--gold))` | 0.034 | 0.078 | 0.017 | 0.057 |
+| `--tag-goldcloth-bg` | `color-mix(in srgb, var(--panel) 90%, var(--gold))` | 0.026 | 0.062 | 0.029 | 0.030 |
+| `--tag-goldcloth-edge` | `color-mix(in srgb, var(--panel2) 5%, var(--gold))` | 0.045 | 0.044 | 0.044 | 0.032 |
+| `--tag-goldcloth-text` | `color-mix(in srgb, var(--chalk) 50%, var(--gold))` | 0.054 | 0.105 | 0.031 | 0.090 |
+| `--tag-genius-bg` | `color-mix(in srgb, var(--panel) 95%, var(--blue))` | 0.008 | 0.043 | 0.016 | 0.017 |
+| `--tag-genius-edge` | `color-mix(in srgb, var(--dim) 65%, var(--panel))` | 0.052 | 0.035 | 0.070 | 0.039 |
+| `--tag-genius-text` | `color-mix(in srgb, var(--chalk) 45%, var(--dim))` | 0.095 | 0.012 | 0.085 | 0.026 |
+| `--tag-negative-bg` | `color-mix(in srgb, var(--panel) 95%, var(--bad))` | 0.010 | 0.057 | 0.015 | 0.090 |
+| `--tag-negative-edge` | `color-mix(in srgb, var(--bg) 15%, var(--bad))` | 0.047 | 0.050 | 0.041 | 0.065 |
+| `--tag-negative-text` | `color-mix(in srgb, var(--chalk) 15%, var(--bad))` | 0.032 | 0.007 | 0.043 | 0.004 |
+| `--tag-removed-text` | `color-mix(in srgb, var(--dim) 80%, var(--panel))` | 0.044 | 0.045 | 0.046 | 0.028 |
+| `--tag-removed-edge` | `color-mix(in srgb, var(--dim) 65%, black)` | 0.045 | 0.008 | 0.048 | 0.020 |
+| `--share-edge` | `color-mix(in srgb, var(--panel2) 15%, var(--control-edge))` | 0.027 | 0.006 | 0.009 | 0.009 |
+| `--share-soft` | `color-mix(in srgb, var(--panel2) 25%, var(--chalk))` | 0.019 | 0.031 | 0.030 | 0.008 |
+| `--share-tag-bg` | `color-mix(in srgb, var(--panel) 95%, var(--chalk))` | 0.024 | 0.000 | 0.022 | 0.009 |
+| `--share-tag-edge` | `var(--edge)` | 0.169 | 0.000 | 0.147 | 0.000 |
+| `--share-tag-text` | `var(--amber)` | 0.085 | 0.000 | 0.051 | 0.000 |
+| `--share-tag-removed-bg` | `color-mix(in srgb, var(--panel) 95%, var(--chalk))` | 0.014 | 0.000 | 0.014 | 0.009 |
+| `--share-tag-removed-edge` | `color-mix(in srgb, var(--panel) 45%, var(--dim))` | 0.012 | 0.017 | 0.037 | 0.006 |
+| `--share-tag-removed-text` | `color-mix(in srgb, var(--panel) 40%, var(--chalk))` | 0.017 | 0.020 | 0.028 | 0.029 |
+
+統計：48 個中 ΔE ≤ 0.02 有 10 個、≤ 0.05 有 32 個、≤ 0.1 有 45 個；> 0.1 的 3 個是 `--warning-edge`、`--tag-goldcloth-text`、`--share-tag-edge`。完全不變的 4 個：`--board-bg-start`、`--action-bg-end`、`--tag-legend-edge`、`--primary-button-start`。
+
+### 13.4 允許差異
+
+| 項目 | 內容 |
+|---|---|
+| 畫面配色 | 4 主題的 48 個元件色改為 §13.3 的推導值；基礎色不變。對照截圖（左現值 `629addc`、右草稿）：`tasks/design-tokens-05/v4-{theme}.png` 為 `jp3-pitcher-02` 投手開局的能力分配畫面（1280／390px）；`v4-{theme}-detail.png` 為特性標籤、主按鈕、遮罩、記分板陰影的示意，以及 `design-tokens-03-e2e` 的分享圖（1280）。目視可見的差異：標籤底色略淡、night／scoreboard 的「短所」標籤與分享圖標籤變淡；主按鈕、遮罩、陰影與現值目視無差異 |
+| 特性標籤 | standard／classic 的 13 個標籤 token 改變（-02 原為「外觀不變」）；night／scoreboard 仍與 standard 不同 |
+| 骰子 | `--dice-shadow`、`--dice-stitch` 原只在 standard 定義、其他主題沿用 standard 值；改為各主題依規則推導 |
+| 合併為同值的 token | 4 主題都相同：`--body-glow` ＝ `--start-glow`；`--warning-edge` ＝ `--dice-six` ＝ `--bad`；`--tag-legend-text` ＝ `--tag-goldcloth-text`；`--share-tag-bg` ＝ `--share-tag-removed-bg`。另 `--bar-start` ＝ `--clay`、`--share-tag-text` ＝ `--amber`、`--share-tag-edge` ＝ `--edge`。legend 與 goldcloth 只剩底色 85%／90% 之差，邊框也幾乎相同（standard `#c79520`／`#ca992a`；現值 `#c79520`／`#c5a800`） |
+| 分享圖 | 4 主題的 PNG 都改變（`--share-*`、標籤色）；版面、文字、座標不變 |
+| 對比 | `display-preferences.test` 的 34 組與 `design-tokens-02.test` 的 4 組標籤，另加 `--primary-button-detail` 對 `--primary-button-end`，以及分享圖的 `--share-tag-text`／`--share-tag-bg`、`--share-soft`／`--bg`，每主題 41 組，4 主題全部合格（主按鈕：文字對 start 6.18 以上、對 end 8.48 以上，detail 對 end 7.97 以上）。「已移除特性」文字對 `--panel` 為 standard 3.66、classic 3.77（standard 現值 3.45），未達 4.5；該標籤本來就以 `opacity:.4` 刻意淡化，不列為合格條件。分享圖：`--share-tag-text`／`--share-tag-bg` 5.77 以上，`--share-soft`／`--bg` 6.22 以上（納入 T2）；`--share-tag-removed-text`／`-bg` 為 3.65～5.57（現值 3.83～5.95，standard／classic 現值已低於 4.5，classic 3.83 → 3.65），比照畫面的「已移除」不列為合格條件 |
+| 不變 | 狀態、選擇、RNG、DOM、顯示文字 |
+
+### 13.5 D 表（變更檔案）
+
+| # | 檔案 | 內容 |
+|---|---|---|
+| D1 | `docs/styles/themes.css` | §13.2 基礎色＋§13.3 規則區塊；主題區塊刪除元件色 |
+| D2 | `docs/src/ui/share-image.js` | `readThemeColors` 先以 `parseComputedColor()` 依 CSS Color 4 公式轉換 `rgb()`／`rgba()`、`color(srgb …)`、`oklab()`、`oklch()`（含 %、alpha）；不透明才採用，半透明丟出 `SHARE_COLOR_UNRESOLVED`；只有無法辨識的格式才走 canvas。避免 Brave 等的 canvas 讀值雜訊影響推導 token（§9「P3 注意」）。`287dd1a` 之後新增的檔案，不受 `award-identity-policy` 凍結檢查 |
+| D3 | `CURRENT_SPEC.md` | 色彩 token 表（約 257～278 行）改為基礎色＋推導規則；`color-mix()` 瀏覽器底線 Baseline 2023；分享圖讀色（約 574 行）補記數學轉換；對比自動檢查（約 286 行）改述檢查方式 |
+| D4 | `docs/src/config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`、`docs/src/data/release-notes.js`（`node scripts/update-release-notes.mjs` 產生） | 1.16.5 |
+| D5 | `BACKLOG.md` | -05 狀態更新 |
+
+### 13.6 T 表
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | 新增 `tests/support/theme-colors.mjs` | Node 版 token 解析：讀 `themes.css` 的基礎色與規則，支援 `var()`、`color-mix(in srgb|oklab, A p%, B)`、`white`／`black`／`transparent`、8 位 hex（帶透明度的基礎色 `--shadow-base`）；無法解析的語法一律丟錯，不略過。供 T2～T5 共用 |
+| T2 | `display-preferences.test` | 對比改用 T1 的解析值（半透明先疊在 `--bg` 上），同一組 pair 不再因 hex regex 而略過或 crash；新增分享圖 2 組（`--share-tag-text`／`--share-tag-bg`、`--share-soft`／`--bg`）；另斷言每個主題區塊恰有 17 個基礎色、規則區塊定義全部 48 個元件色、主題區塊不含元件色 |
+| T3 | `design-tokens-02.test` | 「標籤 token 都是 hex」改為「都能由 T1 解析」；「standard／classic 保留舊色」改為等於 `unify-v4.json` 的新值（核准 golden）；「night／scoreboard 與 standard 不同」與標籤 4.5:1 保留 |
+| T4 | `design-tokens-02-e2e` | standard／classic 的「computed style 等於舊 inline」改為：顏色等於 T1 的新值（±1／255），非顏色屬性仍等於舊 inline |
+| T5 | `design-tokens-03-e2e` | `readThemeColors` 讀值改與 T1 的新值比較（±1／255），不再要求 hex。standard／classic「PNG 與 `9956ca3` 相同」改為：把舊版的分享 token 值寫入 `documentElement.style` 後產生的 PNG 與 `9956ca3` 位元組相同（證明版面與繪製路徑不變；寫入值取自 `629addc` 的 `themes.css`，`readThemeColors` 讀回值也須等於該值），另斷言 4 主題在新配色下的 PNG 與舊版不同。`--dt03-srgb`／`--dt03-oklab` 改斷言不經 canvas |
+| T6 | `replay-share-theme.test` | 假 canvas 改用無法辨識的格式（如 `lab()`）測 canvas 後備；新增 `parseComputedColor` 案例：`rgb`／`rgba`／`color(srgb)`／`oklab`／`oklch`、%、alpha、未知格式回傳 `null`；`oklab` 不建立 canvas；半透明丟錯 |
+| T7 | `verify-modularization` | `--bg:#fff8f8` 保留；`--button-detail`、`--primary-button-detail` 的 hex 斷言改為斷言其規則字串 |
+| T8 | `replay-share-theme-e2e`（Full） | standard PNG 與 1.11.0 的像素比較：與 T5 相同，先把 1.11.0 standard 的分享色寫入 token 再產生 PNG，比較範圍與排除列不變 |
+| T9 | 負控制 | 刪一條規則、改一個百分比、`oklab` 轉換改錯號、主題區塊混入元件色、降低一組對比、T5 不寫入舊色，各應 FAIL 於預期的斷言 |
+| T10 | 回歸 | 相關單元與 e2e → Quick → 本機 Full → reviewer；PC／手機 4 主題截圖目視 |
+
+### 13.7 草稿驗證（實作前，2026-11-14）
+
+- scratchpad 草稿只含 D1（17 個基礎色）、D2，測試未改：Quick 90 項 84 PASS／6 FAIL；本機 8 批 Full 117 項 110 PASS／7 FAIL（117 項全部執行，missing／extra 0）。15 個基礎色的前一版草稿結果相同。
+- FAIL 全部對應 T2～T8：`design-tokens-02-e2e`、`design-tokens-02.test`、`design-tokens-03-e2e`、`display-preferences.test`、`replay-share-theme.test`、`verify-modularization`，以及 Full 限定的 `replay-share-theme-e2e`。`game-view-dom-e2e`、`display-preferences-e2e` 與 4 項混合版本 E2E（`routeHistoricalShareTheme`）PASS。
+- 草稿 4 主題 × 48 個 token 的 computed color 與 `unify-v4.json` 最大差 1／255，規則字串一致。
+- T5 試作（scratch clone 上改寫的 `design-tokens-03-e2e`）：把 `629addc` 的 25 個分享 token 值寫入 `documentElement.style` 後，standard／classic × 1280／390 的 PNG 與 `9956ca3` 位元組相同（8 項 PASS），讀回值等於寫入值；不寫入時 FAIL 於「byte-identical to 9956ca3」（負控制時關閉讀值斷言，避免先 FAIL 在讀值）。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 13.8 決定（2026-11-14，使用者）
+
+1. T5／T8：採「舊色寫入 token 後比較位元組」。試作見 §13.7。
+2. 規則表：採用；主按鈕與陰影改列基礎色（`--primary`、`--shadow-base`，§13.2／§13.3），基礎色 15 → 17。
+3. legend 與 goldcloth：不另區分（兩者都有文字標示）。
+4. 分享圖的標籤對比：納入 T2；`--share-tag-removed-*` 比照畫面不列合格條件。
+
+### 13.9 結果（2026-11-14，本機）
+
+- 實作於本機分支 `ui/design-tokens-05-impl`（自 `f54483d`），之後併入 PR #85。VERSION 1.16.4 → 1.16.5（D4，PATCH；`dev` 仍為 1.16.4）。D1／D2 取自 §13.7 草稿（`themes.css` 與草稿逐位元組相同；48 條規則字串與 §13.3 表一致）。D2 依 reviewer 低度建議，指數改為 `[eE][+-]?\d+`，`rgba()` 的 alpha 也接受指數與 %。
+- T1 `tests/support/theme-colors.mjs`：解析 4 主題 × 48 個值，與 `unify-v4.json` 最大差 1／255（只有浮點捨入，例如 alpha 0.3×255＝76.5）。`629addc` 的 245 個 hex 值解析回原值。新檔登記於 `scripts/test-manifest.mjs`（support）。
+- 與 §13.6 的差異：
+  - T2 另加核准 golden：48 條規則字串與 4 × 48 個解析值對照 `unify-v4.json`（±1／255）。原表只有標籤 token 有 golden，其他推導 token 改百分比時不會 FAIL。
+  - T2 另加 `composite()` 單元斷言（reviewer 低度）。
+  - T5 的 §13.7 試作檔已不存在，依 §13.6 重寫。
+  - T5／T8 的「不經 canvas」以包裝 `document.createElement` 計數驗證。
+- 負控制：N1～N11 共 13 項全部 FAIL 在預期的斷言，每項以 shasum 核對還原。
+  - 刪規則、改 % ×2、oklab 號誤、主題區塊混入元件色、降低對比、非預乘混色、停用 oklab／`color(srgb)` 分支、T5 與 T8 不寫入舊色、指數 regex 退回、`composite` 改錯。
+  - golden 原放在結構／對比斷言之前，會遮蔽 N4／N5，已移到其後。
+
+| 驗證 | 結果 |
+|---|---|
+| T8 試作（`replay-share-theme-e2e --ui-only`） | PASS：寫入 `629addc` standard 分享色後與 1.11.0 像素比較 PASS，比較範圍與排除列未改 |
+| 相關單元／e2e（T2～T8） | PASS：`design-tokens-02-e2e` 80 項、`design-tokens-03-e2e` 20 項（standard／classic 寫入舊色後與 `9956ca3` 逐位元組相同，4 主題推導色 PNG 皆不同） |
+| Quick | 90／90 PASS（最終碼） |
+| 本機 Full（8 批） | 117／117 PASS（最終碼；117 個不重複項目、117 份 log、`sourceChanged:false`；`test-results/local-full-2026-11-14T02-44-59-543Z-fa67408a`）。reviewer 修正前另有一次 117／117 PASS |
+| reviewer | 1 輪，無正確性問題；低 2 項（`composite` 未被測、指數格式）已修，修後重跑 Quick／Full |
+| D4 之後 | Quick 90／90 PASS（依使用者指示不重跑 Full；測試以動態方式讀 VERSION） |
+
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。對照截圖沿用 §13.4 的 `v4-*.png`（草稿 `themes.css` 與本次相同），本次未重拍。
+- 未做：Linux CI（PR 指向 `dev`，feature 分支的 push 不觸發 CI）、Preview、Firefox／Safari 與手機實機。
+
+## 14. P4 細部計畫（UI-DESIGN-TOKENS-06／-07；2026-11-14，基準 `ui/design-tokens-05` `01566e2`，VERSION 1.16.5）
+
+狀態：**-06 已實作（§14.10），[PR #86](https://github.com/tt-chin/yakyujinsei/pull/86) 2026-11-14 併入 `dev`（`08b3aca`），dev push Quick 43580585124 成功，結案**；-07 細部計畫見 §15。分支 `ui/design-tokens-06`（自 `01566e2`；PR #85 於 2026-11-14 併入 `dev` `d5433e2` 後 fast-forward，對 `dev` 開 PR）。使用者 2026-11-14 決定：
+
+1. canvas 字體改讀 `--sans`／`--mono`；像素比較先寫入舊字體再比位元組；分享圖不隨字級設定改變。
+2. 字級與間距先以現值各做 token（外觀不變）；收斂為級距另立項。
+3. 主題區塊可覆寫非顏色 token。
+4. 拆為 -06（外觀不變）與 -07（canvas 字體，PNG 改變）；不併入 PR #85，維持 §9「各一個 PR」。
+
+### 14.1 範圍與分級
+
+- -06：字級、間距、圓角、陰影改 token（值不變）；`docs/src` 與 `index.html` 寫死的 inline 版面值改 class；主題區塊可覆寫非顏色 token。外觀不變，R2（純顯示例外，AGENTS §6.1）。版本不變（AGENTS §9.3，挙動不変）。
+- -07：`share-image.js` 的 20 處 canvas 字體改讀 token，繪製前等待字型載入。分享 PNG 改變，R2，PATCH。
+- 不在範圍：級距收斂、新主題、UI 改版（`tasks/UI_REDESIGN_PLAN.md`）。執行時計算的 inline 值保留：能力條寬度與潛力位置、球團色、受傷醒目（`cS`）、`display`／`pointer-events` 切換、`navigation`／`preferences`／`information-dialog` 的量測值。受 `award-identity-policy` 凍結的檔案（`preferences.js`、`navigation.js`、`seed-share.js`）中沒有 -06 要改的值。
+
+### 14.2 現況（`01566e2`，grep 核對）
+
+- 字級：CSS 59 處 `calc(Npx*var(--font-scale[,1]))`，19 種值：12px ×16、14px ×6、11／13／20px 各 ×5、15px ×4、10.5px ×3、12.5／13.5／17px 各 ×2、8／10／14.5／16／18／22／24／28／34px 各 ×1。另有 `.85em`（`board-menu.css`）、`1em`（`information.css`）、`11px`（`browser-save.css` `#save-live`，不隨字級設定）。§1.3 的舊統計已過時。
+- 圓角未用 token：`base.css` 2px（菱形）、9px（骰子）、1px（潛力線）、7px（年俸明細連結）；`board-menu.css` 12px、0；inline 6px ×2（`index.html:49`、`career-retirement.js:352`）、8px（`share-image.js:355`）。
+- 陰影未用 token：5 處（`.lamp.on i` 光暈、`.team-badge`、`.team-badge-dot`、`.die` inset、導覽選取 inset），顏色已是 token。
+- 間距：CSS 160 處寫死（另 11 處已用 `var()`），基本值約 25 種，含負值、`auto`、`env()`。
+- inline 固定值：
+  - `index.html`：`#app-version`（37，含 `font-family:monospace`）、`#btn-start`（47）、`#seed-show`（49，含寫死色 `#fff`／`#a71930`／`#d9a1aa`，不隨主題）、`#seed-re`（50）、首頁 footer 與連結（53）、`#bd-tj`（58，位於 `#board` 內）。57／83／91／92 的 `display:none` 屬切換，不動。
+  - `career-retirement.js`：82、198（`white-space`／`text-align`／`font-size:11px`）、199、204、205、229、231、330～333、352（`style.cssText`）。
+  - `share-image.js`：355～360。
+- canvas 字體：`share-image.js` 20 處（`sans-serif` 12、`monospace` 8），全部寫死。`docs/src` 與 `tests` 皆無 `document.fonts`。字型由 Google Fonts 載入（`index.html:20`，`display=swap`）。
+
+### 14.3 -06 設計（草案）
+
+| # | 檔案 | 內容 |
+|---|---|---|
+| D1 | `docs/styles/base.css` | `:root` 新增字級 token `--fs-<px>`（例 `--fs-12`、`--fs-10-5`；值 `calc(<px>px*var(--font-scale,1))`），59 處改 `var(--fs-*)`；陰影 token 5 個（`--shadow-glow`、`--shadow-team-badge`、`--shadow-team-dot`、`--shadow-die`、`--shadow-current`）；圓角 7／9／12px 新增元件名 token（W2 a）；間距不做 token（W1 c） |
+| D2 | `docs/styles/themes.css` | 不實際覆寫；註明主題區塊可覆寫非顏色 token |
+| D3 | `docs/styles/base.css`、`docs/index.html`、`docs/src/engine/career-retirement.js`、`docs/src/ui/share-image.js` | §14.2 的 inline 固定值移入 `base.css`，值照舊。有 id 的元素用 id 規則（`#app-version`、`#btn-start`、`#seed-show`、`#seed-re`、`#bd-tj`、`#sh-img`／`#sh-url`／`#sh-save`／`#sh-dl`、`#sh-out`），其餘用 class：`.home-credit`、`.retire-league`、`.cell-nowrap`、`.cell-left`、`.ama-line`、`.intl-heading`、`.share-actions`、`.replay-url-input`、`.share-image-preview`、`.share-image-actions`、`.share-image-hint`。原本 inline 勝過一般規則，class 規則加上容器前綴維持優先（例 `table.fin .cell-left` 勝過 `table.fin td{text-align:right}`）。受傷醒目改為只在受傷時輸出 `style` |
+| D4 | 其他 `docs/styles/*.css` | 字級、圓角、陰影改用 D1 的 token。不改：`.85em`、`1em`（相對值）、`#save-live` 的 `11px`（原本就不隨字級設定）、`preferences.css` 的 `[style*="font-size:…"]` 3 條（舊版 DOM 混用的 E2E 仍會用到）、`calc(74px／58px * var(--font-scale))`（寬度，不是字級） |
+| D5 | `CURRENT_SPEC.md` | token 表補非顏色 token 與主題覆寫規則 |
+| D6 | `BACKLOG.md` | -06 狀態 |
+
+### 14.4 測試耦合（已查）
+
+- `game-view-dom-e2e`、`display-preferences-e2e`、`scripts/test-share-url-menu.mjs` 經 `tests/support/dom-snapshot.mjs` 比對每步 `#log`／`#act`／`#board` 的 outerHTML 與固定基準。退休卡（`career-retirement.js`，經 `card()` 進 `#log`）、`#sh-out`（`share-image.js`）與 `#bd-tj` 都在快照內，inline 改 class 會產生差異。-02 的前例：快照端把新 class 投影回舊 inline（`dom-snapshot.mjs` 約 40～110 行）。
+- `display-preferences.test:45` 斷言主題區塊恰為 17 個基礎色；D2 需改為「17 個基礎色＋非顏色 token 白名單」。
+- 原文比對：`career-movement-policy`（`base.css` 表格規則）、`ui-foundation`（`#main-nav`、`#view-home #log{flex:1}`）、`test-release-notes`（`information.css` 只允許特定新增）。改到這些規則時需列核准差異。`verify-modularization:191` 以 `[^>]*` 容許 `#app-version` 的屬性。
+- 外觀不變的證明：新 E2E 在舊／新兩版逐元素比較 computed style（字級、間距、圓角、陰影、對齊、white-space），PC／手機 × 4 主題 × 3 種字級設定。
+
+### 14.5 決定（2026-11-14，使用者：W1～W5 照建議）
+
+- W1 間距：
+  - a：全部現值各做一個 token（約 25 個 `--sp-<px>`，改 160 處，含複合值）。
+  - b：只為出現 3 次以上的值做 token，其餘保留字面值。
+  - c：-06 不做間距 token，併入級距收斂的項目。
+  - **採 c**：數值命名的 token 在收斂時要再全部改名，160 處等於改兩次；`--space-scale`／密度 token 已涵蓋目前的調整需求。
+- W2 圓角 7／9／12px（現有 token 為 4／6／8／10／14px）：
+  - a：新增元件名 token（如 `--radius-die`、`--radius-menu`、`--radius-link`），外觀不變。
+  - b：併入現有 token，外觀改 1～2px。
+  - 0／1px／2px（重置、細線、裝飾）保留字面值。**採 a**。
+- W3 `#seed-show` 的寫死色：**-06 照值移入 class**；改用主題 token 屬顏色變更，另記 BACKLOG。**更正（2026-11-14）**：前提有誤，`themes.css:86`（1.7.0 起）的 `!important` 規則已讓 `#seed-show` 隨主題變色，寫死色無效（瀏覽器 computed style 確認）；改為移除無效值，外觀不變，見 BACKLOG UI-SEED-SHOW-COLOR-01。
+- W4 快照差異：
+  - a：擴充 `dom-snapshot.mjs` 投影（-02 前例）。
+  - b：inline 改 class 只做快照外的元素（首頁區），退休卡與分享區延後。
+  - **採 a**。
+- W5 `#app-version` 的 `font-family:monospace`：**-06 照值移入 class**；改 `var(--mono)` 屬字體變更，併入 -07。
+
+### 14.6 -07 概要（細部 D／T 表於 -06 批准後另寫）
+
+- `share-image.js`：`getComputedStyle` 讀 `--sans`／`--mono` 組成 `ctx.font`，px 值不變，不讀 `--font-scale`（`replay-share-theme-e2e:54` 的斷言維持）。
+- 繪製前以 `document.fonts.load()` 等待所需字型（含 bold）。若分享圖產生因此改為非同步，`hof-first-ballot-e2e`、`championship-intl-e2e`、`trait-display-e2e` 與 `__shareTest` 的同步呼叫需調整（三者只攔截 `fillText` 文字並檢查 PNG 前綴，不比較像素）。
+- 像素比較：`replay-share-theme-e2e`（1.11.0，`dc5ac871`）與 `design-tokens-03-e2e`（`9956ca3`）寫入舊字體（`sans-serif`／`monospace`）後比位元組，另斷言新字體 PNG 不同。字型能否載入依環境；CI 能否連到 Google Fonts 未確認，W6：比較時寫入舊字體，或擋掉 Google Fonts 請求。
+
+### 14.7 流程
+
+~~W1～W5 決定~~（已定）→ scratchpad 草稿（-06 D1～D4，測試不改）→ Quick＋本機 8 批 Full，FAIL 對應 T 表（§13.7 同法）→ 補 -06 T 表 → 批准 → 實作。
+
+### 14.8 草稿驗證（2026-11-14，scratch worktree，基準 `d5433e2`）
+
+- 草稿含 D1、D3、D4（`--fs-*` 19 個、59 處；陰影 token 5 個；圓角 token 3 個；inline 改 class／id 規則），測試未改：
+  - Quick 90／90 PASS。
+  - 本機 8 批 Full 116／117 PASS，117 項全部執行（missing／extra 0，`sourceChanged:false`）。唯一 FAIL 是 `game-view-dom-e2e`：step 0 的 `$.dom.board`（`#bd-tj` 沒有 `style`），與 §14.4 預期相同。
+- 快照投影試作（T1）後，`game-view-dom-e2e` 單獨重跑 PASS（149 s）。第 1 版 FAIL 在退休卡（step 542）：`#sh-img`／`#sh-url` 的 `type` 屬性是執行時加上的，舊 DOM 的屬性順序為 class、id、style、type，投影需先移除 `type` 再補回。
+- computed style 對照 probe（T2 試作）：舊版 `d5433e2` 與草稿，`#start`、`#board`、`#log` 每個元素的 41 個屬性加上相對於根元素的位置與尺寸；4 主題 × 3 字級 × 2 密度 × 1280／390 × 投手／野手，退休後產生分享圖並觸發手動 URL 輸入框。
+  - 擋掉 Google Fonts 時差異 0（29,376 次比較），舊版對舊版的對照組也是 0。
+  - 不擋時新舊與對照組都有 0.02～0.5px 的寬度差（web font 載入時序），因此 T2 須擋掉字型請求。
+  - 未涵蓋 `.retire-league`（測試資料沒有 `S.stats`），T2 須補。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 14.9 T 表（-06，2026-11-14 批准）
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | `tests/support/dom-snapshot.mjs`、`game-view-dom-e2e` | 基準的 `base.css` 沒有 `#bd-tj{` 時設 `__expectDesignTokens06`。`#board`：`#bd-tj` 只能有 id，投影回舊 inline。`#log`：逐一核對 §14.3 D3 的 class 元素的確切屬性，投影回舊 inline（`.replay-url-input` 以 `style.cssText` 重現舊的序列化；按鈕保留 `type` 的順序）；未列的 class 組合丟錯。投影計數須大於 0，避免靜默略過 |
+| T2 | 新增 `tests/design-tokens-06-e2e.mjs`（Full，登記 manifest） | §14.8 probe 正式化：固定基準 `d5433e2` 對目前碼，computed style＋相對尺寸全等；擋 Google Fonts、停用 transition；補 `S.stats` 讓 `.retire-league` 出現；斷言每個新 class／id 規則至少命中 1 個元素 |
+| T3 | 新增 `tests/design-tokens-06.test.mjs`（Quick） | `base.css` 定義 19 個 `--fs-*`，值皆為 `calc(<px>px * var(--font-scale,1))`；`docs/styles` 的字級宣告不再有 `calc(<n>px * var(--font-scale…))`；陰影 5 個、圓角 3 個 token 值等於原值；`index.html`、`career-retirement.js`、`share-image.js` 不再有 §14.2 的固定 inline 值（白名單：`--team-color`、受傷醒目、`display:none` 切換） |
+| T4 | `display-preferences.test` | 主題區塊：顏色 token 恰為 17 個基礎色，另可含非顏色 token（白名單＝`base.css`／`preferences.css` 的 `:root` 非顏色 token）；fixture：`--radius-md:0` 通過、未知 token FAIL |
+| T5 | 負控制 | 還原 `#bd-tj` inline → T1 FAIL；`.cell-left` 改 right → T2 FAIL；`--fs-12` 改 13px → T2、T3 FAIL；刪掉 `.ama-line` 投影 → T1 FAIL；投影計數歸零 → T1 FAIL；主題區塊放未知 token → T4 FAIL；T2 不擋字型 → 對照組出現差異（記錄，不列合格條件） |
+| T6 | 回歸 | 相關單元與 e2e → Quick → 本機 Full → reviewer；PC／手機 × 4 主題截圖目視 |
+
+### 14.10 實作結果（2026-11-14，`ui/design-tokens-06`，HEAD `5d0c849`＋工作樹）
+
+- D1～D5 照 §14.3；D2 只在 `themes.css` 開頭加註解。與 T 表的差異：`var(--fs-*)` 為 64 處（原 59 處 `calc()`＋5 處由 inline 11／12px 移入的規則；舊值靠 `preferences.css` `[style*=…]` 縮放，等值）。
+- T1：`#board` 每步投影 1 次、`#log` 至少 1 次，否則 FAIL。本機 Full 中 8 場生涯 board／log 計數：543／112、374／22、544／134、518／58（PC、手機各 4 場相同）。
+- T2：`design-tokens-06-e2e` 33,024 次比較 0 差異，22 條新規則全部命中，約 21 秒。
+- T5 負控制（scratch worktree 突變）：`#bd-tj` 還原 inline → `DESIGN_TOKENS_06_BOARD_CONTRACT`；刪 `.ama-line` 投影 → `DESIGN_TOKENS_06_CLASS_CONTRACT: TD.ama-line`；投影計數歸零 → `DESIGN_TOKENS_06_LOG_PROJECTION_COUNT`；`.cell-left` 改 right、`--fs-12` 改 13px → T2 差異；`--fs-12` 改 13px → T3 值斷言；主題區塊未知 token → T4。皆 exit 1。T2 不擋字型這次 0 差異（§14.8 時有 0.02～0.5px），時序依環境，維持擋字型。
+- T6：相關測試 PASS → Quick 91／91 PASS → 本機 8 批 Full 119／119 PASS（expected 119，`sourceChanged:false`，1,130 s）→ reviewer 無發現。截圖（`.claude/reports/design-tokens-06/`，未納入版控）：首頁 PC／手機新舊位元組相同；退休卡 4 主題 × PC／手機的新舊差異只在手動 URL 輸入框的網址文字（測試伺服器路徑 `/old-P/`／`/new-P/`），其餘像素相同。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+- 2026-11-14 PR #86 併入 `dev`（`08b3aca`，樹與 `d434674` 相同），dev push [Quick 43580585124](https://github.com/tt-chin/yakyujinsei/actions/runs/43580585124) 成功；4 主題 × PC／手機 Preview 畫面未確認。
+
+## 15. -07 細部計畫（UI-DESIGN-TOKENS-07；2026-11-14，基準 `dev` `08b3aca`，VERSION 1.16.5）
+
+狀態：**W6／W7 與 D／T 表 2026-11-14 批准（使用者），已實作、本機驗證完成（§15.5），`102f5bf` 開 [PR #87](https://github.com/tt-chin/yakyujinsei/pull/87)，2026-11-14 併入 `dev`（`62f80c0`），dev push [Quick 43590931500](https://github.com/tt-chin/yakyujinsei/actions/runs/43590931500) 成功，結案；4 主題 × PC／手機 Preview 畫面未確認**；分支 `ui/design-tokens-07`（自 `08b3aca`）。分級 R2（分享 PNG 改變、按鈕的處理順序改為等待字型；S、RNG、DOM 結構不變），版本 PATCH 1.16.6。
+
+### 15.1 決定（2026-11-14，使用者）
+
+- **W6（像素比較）**：比較側把 `--sans`／`--mono` 寫回 `sans-serif`／`monospace` 後與舊 PNG 位元組相同，證明圖的唯一變化是字型。只擋 Google Fonts 不夠（macOS 會改用 Hiragino，仍與 `sans-serif` 不同）。「新字型 PNG 與舊 PNG 不同」不作合格條件（字型載入成功、改用備用字型、canvas 拒收錯誤字串都會不同）；改以 `fillText` 時的 `ctx.font` 等於 token 判定，與網路無關。
+- **W7（等待字型）**：B，`render` 改為非同步。順序固定為「收集文字 → 等字型 → 量寬並繪製」（換行、自動縮字依賴 `measureText`；Noto Sans JP 以 unicode-range 分檔，須以實際文字載入），由繪製程式自己負責。另加逾時改用現有字型繪製，並以世代編號丟棄過期的重畫。
+
+### 15.2 草稿驗證（scratch worktree，基準 `d434674`＝`08b3aca` 的樹）
+
+- 草稿只改 `share-image.js`、`career-retirement.js`、`game.js`，測試未改：Quick 89／91（`design-tokens-03-e2e`：同步 hook；`event-integration.test`：exit null，`.ips` 為 SIGSEGV、Heap／MarkCompact，單獨重跑 3 次 PASS，FAIL 保留）；本機 8 批 Full 112／119，119 項全部執行（missing／extra 0，`sourceChanged:false`），7 項 FAIL 皆為 `shareImage([],out)` 後同步讀 `out.querySelector('img').src`（`Cannot read properties of null`）：`championship-intl-e2e`、`design-tokens-03-e2e`、`event-system-e2e`、`income-display-e2e`、`replay-share-theme-e2e`、`trait-display-e2e`、`trait-system-e2e`。
+- 7 個 hook 補 `await` 後：5 項 PASS，2 項像素比較 FAIL（預期）；以空 CSS 回應 Google Fonts（`abort` 會產生測試不允許的 console 錯誤）時 5 項亦 PASS。W6 原型（比較側寫入舊字體）：2 項像素比較 PASS（位元組相同）。
+- 草稿中發現：等待後檢查 `out.isConnected` 會使未放入 document 的容器不繪製（`income-display-e2e` 的 hook，舊碼照畫），已移除，只留世代編號。
+- 失敗模式 probe（1280，投手）：字型可載入，首次 316～436 ms（Plex Mono 於等待中才載入）；樣式表被擋，`fonts.load` 回傳 0 個 face，10 ms；字型檔被擋，`fonts.load` reject `NetworkError`，捕捉後繪製，11 ms；字型檔卡住，3,033 ms 後繪製，第 2 次 9 ms。四者皆產生圖片，無頁面錯誤。
+- 突變（拿掉字型等待）：只有 `replay-share-theme-e2e:50` 因載入時序偶然 FAIL，其餘 PASS，故須 T4 的確定性測試。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 15.3 D 表
+
+| # | 檔案 | 變更 |
+|---|---|---|
+| D1 | `docs/src/ui/share-image.js` | 新增 `readThemeFonts()`（讀 `--sans`／`--mono`、去空白，缺少時丟 `SHARE_FONT_TOKEN_MISSING`）；`render` 改為非同步：收集輪（只遮蔽該臨時 context 的 `fillText`，不設 canvas 尺寸、不輸出）→ 以「粗細＋字族」分組、帶實際文字 `document.fonts.load()`（reject 捕捉；逾時 3 秒，逾時一次後本工作階段不再等）→ 世代編號不符則放棄 → 繪製。20 處字體字串改用 token，px 不變、不讀 `--font-scale`。主題切換重畫加 `.catch(console.error)` |
+| D2 | `docs/src/engine/career-retirement.js` | rAF 回呼改 `async`、`await shareImage(...)`；`archiveTraitResults()` 維持在等待之前 |
+| D3 | `docs/src/engine/game.js` | `shareImage` wrapper 回傳 promise |
+| D4 | 版本與文件 | 1.16.6：`config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`＋`update-release-notes.mjs`、`CURRENT_SPEC.md`（頁首、共有画像の字體一句）、BACKLOG -07 |
+
+允許差異：分享 PNG 的字形、換行、自動縮字與可能的圖高；圖於字型等待後出現（首次最多約 3 秒）。S、RNG、DOM 結構不變。
+
+### 15.4 T 表
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | 7 個 e2e 的 hook（§15.2） | `async`／`await shareImage`（機械修改；舊基準側 `await undefined` 不受影響） |
+| T2 | `design-tokens-03-e2e`、`replay-share-theme-e2e` | 比較側寫入 `--sans:sans-serif`、`--mono:monospace`，維持位元組相同（W6） |
+| T3 | `replay-share-theme-e2e:50` | 切換主題後等重畫完成再讀 `src`（改非同步後的競態） |
+| T4 | 新增 `tests/design-tokens-07-e2e.mjs`（Full） | Google Fonts CSS 以假 `@font-face` 回應、攔住假字型檔請求，不用網路：①攔住時點 `#sh-img` 無圖、按鈕為作成中，放行（404）後才出圖，按鈕在圖出現後才變 ✅；②一直卡住時約 3 秒後出圖、第 2 次立即；③空樣式表時立即出圖；④每次 `fillText` 的 `font` 字族等於 token；⑤攔住時切換主題，最後只留最新主題的圖 |
+| T5 | 新增 `tests/design-tokens-07.test.mjs`（Quick） | 無 `sans-serif'`／`monospace'` 字面值、20 處用 token；`readThemeFonts` 去空白、缺少時丟錯 |
+| T6 | 負控制 | 拿掉等待 → T4①；拿掉 wrapper 的 `return` → T4①；拿掉世代編號 → T4⑤；拿掉逾時記憶 → T4②；還原字面值 → T4④、T5；拿掉舊字體寫入 → T2。各須在該斷言 FAIL |
+| T7 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer → 4 主題 × PC／手機新舊截圖 |
+
+### 15.5 實作結果（2026-11-14，`ui/design-tokens-07`，HEAD `5b704c2`＋工作樹）
+
+- D1～D4 照 §15.3（D1 與 §15.2 草稿相同）。T4 逾時情境的上限依 reviewer 意見由 6 秒放寬為 10 秒（下限 2.8 秒不變）。
+- T4：`design-tokens-07-e2e` 4 項 PASS，約 7 秒（攔住→放行、卡住：首次約 3.7 秒、第 2 次約 10 ms、空樣式表：約 50 ms、26 次 `fillText` 皆為 token 字族、兩次描畫只寫入 1 次）。T5：`design-tokens-07.test` 4 項 PASS。
+- T6 負控制（scratch worktree 突變、還原後比對雜湊）：拿掉等待 → T4①「no image while the font files are held」；拿掉 wrapper 的 `return` → T4①「button still says 作成中」；拿掉世代編號 → T4⑤「only one render writes the container」；拿掉逾時記憶 → T4②「second render does not wait again」（3,023 ms）；還原字面值 → T5 `doesNotMatch`、T4④「every fillText font is a token family list」；拿掉舊字體寫入 → `design-tokens-03-e2e:108`、`replay-share-theme-e2e` 位元組比較。皆 exit 1、`ERR_ASSERTION`。
+- T7：相關測試 PASS → Quick 92／92 PASS（T4 上限放寬前；該檔只在 Full）→ 本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`，放寬後的定案碼）→ reviewer 無中以上發現（low 3 項：描畫兩次的成本、兩次 `getState()` 之間的等待、T4 上限過緊；第 3 項已改）。截圖（`.claude/reports/design-tokens-07/`，未納入版控）：基準 `08b3aca` 對工作樹，4 主題 × 1280／390 × 投手／野手，16 組 PNG 尺寸相同（1840×932），字形改為 Noto Sans JP／IBM Plex Mono，版面位置不變。
+- 追加（2026-11-14，使用者批准，T 表外的測試修正）：①`design-tokens-03-e2e` 的 new 側也寫入通用字體，使「新 PNG 與基準不同」只反映顏色（改前字型差異就會讓它成立）；負控制：new 側在繪製時寫入 1.16.4 顏色 → `share PNG must follow the derived theme tokens` FAIL（第一版負控制的顏色殘留到後續 probe 檢查，先在 `--share-edge` 斷言 FAIL，改為繪製後移除再重做）。②`replay-share-theme-e2e` 的主題迴圈 context 以空 CSS 回應 Google Fonts，兩次 standard 的位元組比較不受字型載入時序影響。兩項修正後再跑本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`），為最終結果；前一次 121／121 保留為修正前紀錄。
+- 內容多的卡片（35 條頭銜、35 年年表、長球團名，standard／1280／投手、野手，scratch，未納入版控）：新舊 PNG 高度相同（1840×3444），兩欄換行、年表截斷無重疊。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+## 16. -08 細部計畫（UI-DESIGN-TOKENS-08：字級＋圓角級距；2026-11-14，基準 `ui/seed-show-dead-colors` `9d9e781`（`dev` `62f80c0`＋PR #88），VERSION 1.16.6）
+
+狀態：**W1～W6 已定、T 表批准（使用者 2026-11-14），草稿驗證完成（§16.4）；計畫與對照圖（`tasks/design-tokens-08/`）經 [PR #89](https://github.com/tt-chin/yakyujinsei/pull/89) 併入 `dev`（`41a39a0`，code owner 確認外觀＝W7）；實作於 `ui/design-tokens-08-impl`（自 `41a39a0`），本機驗證完成（§16.7），實作經 [PR #90](https://github.com/tt-chin/yakyujinsei/pull/90) 併入 `dev`（`f8afd8e`）**。分支 `ui/design-tokens-08`（自 `9d9e781`，疊在 PR #88 上：兩者都改 `base.css:162`）。間距另立 UI-DESIGN-TOKENS-09。
+
+### 16.1 範圍與分級
+
+- 字級 19 個 `--fs-<px>`（64 處）收斂為 13 級並改語意名；圓角元件名 token `--radius-link`／`--radius-die`／`--radius-menu`（7／9／12px）併入現有 token。值改變的只有 14 處（字級 11、圓角 3），其餘 53 處字級只改名（第 1 版草稿含 `.field input` 16→15 時為 12 處；PR #89 本文的「15／49」為修正前的數字）。
+- 外觀微調，R2（純顯示例外，AGENTS §6.1），PATCH 1.16.7。不碰 `game.js`、RNG、`S`、DOM；`docs/src` 與分享圖不引用 `--fs-*`（canvas 用固定 px，-07 只讀 `--sans`／`--mono`）。
+- 不在範圍：間距（-09）、陰影、`.85em`／`1em`／`#save-live` 的 `11px`、`preferences.css` 的 `[style*="font-size:…"]` 3 條（只改引用的 token 名）。
+
+### 16.2 決定（2026-11-14，使用者）
+
+- W1 字級 19→13 級（草稿後修正 2 處：保留 16，避免 iOS Safari 在姓名輸入框 `font-size`<16px 時聚焦放大；17→16，避免 18px 在 390px 寬把 `#bd-name` 旁的守備位置擠成「投•••」）。
+- W2 t-shirt 名，舊 `--fs-<px>` 刪除、不留別名（專案外無引用）。
+- W3／W4 屬 -09：間距級距 2／4／6／8／10／12／16／20／24／32／40／60，不乘 `--space-scale`（compact 維持元件 token）。
+- W5 圓角 7→8（`--radius-md`）、9→10（`--radius-lg`）、12→14（`--radius-xl`）；0／1／2px 字面值保留。
+- W6 拆為 -08（字級＋圓角）與 -09（間距），各一個 PR。
+- W7：外觀變更先經 code owner 確認（-05 前例），對照圖隨 PR 提出（使用者 2026-11-14）。
+
+### 16.3 對應表
+
+| 新 token | px | 舊 token（處數） | 變化 |
+|---|---:|---|---|
+| `--fs-3xs` | 8 | 8（1） | — |
+| `--fs-2xs` | 10 | 10（1） | — |
+| `--fs-xs` | 11 | 10.5（3）、11（8） | 燈號 `.lamp`、`.abrow .progress`、導覽按鈕 +0.5 |
+| `--fs-sm` | 12 | 12（18）、12.5（2） | `#bd-team`、`.statline` −0.5 |
+| `--fs-md` | 13 | 13（5） | — |
+| `--fs-lg` | 14 | 13.5（2）、14（6）、14.5（1） | `.abrow .nm`、`#start .sub` +0.5；`.seg button` −0.5 |
+| `--fs-xl` | 15 | 15（4） | — |
+| `--fs-2xl` | 16 | 16（1）、17（2） | `#bd-name`、`.bd-cell b` −1 |
+| `--fs-3xl` | 18 | 18（1） | — |
+| `--fs-4xl` | 20 | 20（5）、22（1） | `.die` −2 |
+| `--fs-5xl`／`--fs-6xl`／`--fs-7xl` | 24／28／34 | 各 1 | — |
+
+圓角：`.salary-detail-link` 7→8、`.die` 9→10、`#board-menu-panel` 12→14。
+
+### 16.4 草稿驗證（2026-11-14，scratch worktree，`9d9e781`＋草稿，測試未改）
+
+- 第 1 版（W1 原案 19→12 級）：Quick 90／92、本機 8 批 Full 118／121（121 項全執行，missing／extra 0）。FAIL 3 項皆為預期：`design-tokens-06.test`（19 個名字）、`display-preferences.test`（白名單含 `--fs-12`）、`design-tokens-06-e2e`（對 `d5433e2` 0 差異）。原文比對類（`career-movement-policy`、`ui-foundation`、`test-release-notes`）未 FAIL。
+- computed style 差異（`design-tokens-06-e2e` 改 `--baseline=9d9e781`、輸出全部差異；修正後的第 2 版）：字級／圓角差異只在 §16.3 所列元素，`letter-spacing`／`line-height` 隨字級等比，其餘為版面位置連帶移動；`#in-name` 無差異。該 e2e 的比較範圍不含 `.die`、`.abrow`、`.salary-detail-link`、`#main-nav`。
+- 截圖（`.claude/reports/design-tokens-08/`，未納入版控）：4 主題 × 1280／390 × 首頁／生涯／選單，新舊皆有差異（預期）。第 2 版 390px 的 `#bd-name` 截斷較基準少。
+- 第 2 版只重跑差異探測與截圖，未重跑 Quick／Full（測試耦合與第 1 版相同：同樣的檔案、同樣的 token 改名）。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 16.5 D 表
+
+| # | 檔案 | 內容 |
+|---|---|---|
+| D1 | `docs/styles/base.css` | `:root` 的 19 個 `--fs-<px>` 改為 §16.3 的 13 個；刪 `--radius-link`／`--radius-die`／`--radius-menu` |
+| D2 | `docs/styles/*.css`（7 檔） | 64 處 `var(--fs-*)` 與 3 處元件名圓角改引用新 token（草稿 script 機械轉換） |
+| D3 | `CURRENT_SPEC.md` | 文字サイズ／角丸トークン兩條改為新名稱與值 |
+| D4 | 版本 1.16.7 | `config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`node scripts/update-release-notes.mjs`、`CURRENT_SPEC.md` 標頭 |
+| D5 | `BACKLOG.md` | -08 狀態 |
+
+### 16.6 T 表（使用者 2026-11-14 批准；AGENTS §6.3：舊期待值隨已批准規格變更）
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | `design-tokens-06.test` | 「19 個 `--fs-*`」「元件名圓角 3 個」兩項改為 -08 的期待：13 個名字與值、64 處皆已定義且每個 token 都被使用、舊名（`--fs-<數字>`、`--radius-link／die／menu`）在 `docs/styles` 不存在。其他斷言不變 |
+| T2 | `display-preferences.test:47` | 白名單斷言的 `--fs-12` 改 `--fs-sm` |
+| T3 | `design-tokens-06-e2e` → 新增 `design-tokens-08-e2e`（Full） | 以 -06 harness 為底，基準 `9d9e781`；old 側注入 `:root` 覆寫，使舊 token 取 §16.3 的新值（`--fs-17:calc(16px * var(--font-scale,1))`、`--radius-menu:14px` 等），之後要求 41 屬性＋相對尺寸完全相等（不需差異白名單，版面位移也一併檢查）。比較範圍補 `#dice`、`#act` 的能力列（`.abrow`）、`#main-nav`、年俸明細連結 |
+| T4 | `design-tokens-06-e2e` 的去留 | 其「對 `d5433e2` 0 差異」在 -08 後不可能成立且無法逆推（16／17 合併）。從 manifest 移除並刪檔（使用者 2026-11-14 批准），-06 的證明保留於 §14.10 與 git 歷史；T3 承接其 harness |
+| T5 | 負控制 | T3 注入值錯一個（`--fs-17` 映到 18px）→ T3 FAIL；漏一個 token 的注入 → T3 FAIL；`.die` 不在比較範圍（移除新增的 root）→ T3 的「每個值改變的 selector 至少命中 1 個元素」斷言 FAIL；T1 放回一個 `--fs-12` 引用 → T1 FAIL |
+| T6 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer；4 主題 × PC／手機 × 3 字級截圖目視 |
+
+### 16.7 實作結果（2026-11-14，`ui/design-tokens-08-impl`，基準 `41a39a0`＋工作樹）
+
+- D1～D4 照 §16.5：CSS 由草稿 script 機械轉換（與 §16.4 第 2 版草稿逐位元組相同）；`CURRENT_SPEC.md` token 兩條與標頭、`config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`docs/src/data/release-notes.js` 更新為 1.16.7。值改變的字級為 11 處（§16.1）。
+- T1：`design-tokens-06.test` 8 項 PASS（13 個名字與值、64 處、舊名 `/--fs-\d+(?:-5)?(?![a-z\d])/` 與 `--radius-link／die／menu` 不存在、三個 selector 的圓角 token）。T2：`display-preferences.test` PASS。
+- T3：`design-tokens-08-e2e` 45,072 次比較 0 差異（連跑 2 次），13 個改值 selector 全部命中（`#start .sub` 4、`.seg button` 16、`#bd-name` 8、`.bd-cell b` 32、`#bd-team` 8、`.statline` 4、`.lamp` 24、`#main-nav button` 12、`.abrow .nm` 24、`.abrow .progress` 24、`.die` 14、`#board-menu-panel` 8、`.salary-detail-link` 4），約 25 秒。與 T 表的差異：①切換組合後等 2 個 frame 再取值——初版在 IF／1280／large 的 standard、classic 出現 `#act` 高度 587→600px 的差異，原因是 `#act` 的 `max-height` 讀 `--display-sticky-height`，該值由 `preferences.js` 的 ResizeObserver 非同步寫入，新舊兩側取值時機不同（測試時序，非產品差異）；②`.salary-detail-link` 只在職業合約卡出現，於退休後的 `#log` 末尾兩側同樣注入一個。
+- T4：`design-tokens-06-e2e` 已刪除並自 manifest 移除。
+- T5 負控制（就地突變、shasum 確認還原）：`--fs-17` 映到 18px → T3 差異 9,936；漏注入 `--fs-22` → T3 差異 672；移除 `#act` root → T3「changed selectors that matched no compared element」；放回 `--fs-12` 引用 → T1「old --fs-<px> name left」；`.die` 改回 `--radius-die` → T1「component radius token left」。皆 exit 1。
+- T6：相關測試 PASS → Quick 92／92 PASS → 本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`，含 `design-tokens-08-e2e`、不含 `-06-e2e`）→ reviewer 無中以上發現（low 2 項：§16.1 保留修正前數字的說明、e2e 檔頭註解換行，皆未改）。截圖目視：§16.4 的 4 主題 × 1280／390 截圖與本實作 CSS 逐位元組相同，字級設定只在 standard 目視，small／large 由 T3 的等值比較涵蓋。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+## 17. -09 細部計畫（UI-DESIGN-TOKENS-09：間距級距；2026-11-14，基準 `dev` `f8afd8e`，VERSION 1.16.7）
+
+狀態：**W8～W11 已定（使用者 2026-11-14），W12＝A（code owner 2026-11-14，對照圖 `tasks/design-tokens-09/`，[PR #91](https://github.com/tt-chin/yakyujinsei/pull/91)）；草稿驗證見 §17.5（選項 C）／§17.6（選項 A）；D／T 表（§17.7／§17.8）批准（使用者 2026-11-15）；實作接在同一 PR（使用者 2026-11-14），本機驗證完成（§17.10），1.16.8**。分支 `ui/design-tokens-09`（自 `f8afd8e`）。
+
+### 17.1 範圍與分級
+
+- `docs/styles/*.css` 的 margin／padding／gap（含 `row-gap`／`column-gap` 與 `-top`／`-right`／`-bottom`／`-left`）寫死值收斂為 §16.2 W3 的 12 級，並改引用 `--space-*` token。外觀微調，R2（純顯示例外，AGENTS §6.1），PATCH。不碰 `game.js`、RNG、`S`、DOM。
+- 不在範圍：`calc()`／`var()`／`env()` 內部、負值、`auto`、`0`（W11）、密度元件 token（`preferences.css:1`／`:4` 的 `--log-padding`、`--card-*`、`--choice-gap`；W4）、定位值。
+
+### 17.2 盤點（`f8afd8e`，scratch script 機械計數）
+
+- 8 個 CSS 檔 175 宣告（`base.css` 90）：152 處只含 px 或 `0`（其中 10 處為 `0`），23 處含 `calc`／`var`／`env`、`auto` 或負值。`index.html`、`docs/src` 無 inline 間距（-06 已移入 CSS）。BACKLOG 原記「168 宣告」為較早的計數，以本節為準。
+- 不在級距上的值 12 種：3、5、7、9、11、14、18、22、26、28、30、36px。
+- `base.css` 的 `#lamps{gap:14px}` 被 `preferences.css` 的 `#lamps{gap:8px}` 覆蓋，為無效宣告；照規則轉換，不另處理。
+
+### 17.3 決定（2026-11-14，使用者）
+
+- W8 對應：取最近的級距，距離相同時取小的。3→2、5→4、7→6、9→8、11→10、14→12、18→16、22→20、26→24、28→24、30→32、36→32。
+- W9 含 `calc`／`auto`／負值的宣告：原定只換其中的純 px 部分；依 W12＝A 改為整條不動。
+- W10 命名：`--space-4xs`(2)、`3xs`(4)、`2xs`(6)、`xs`(8)、`sm`(10)、`md`(12)、`lg`(16)、`xl`(20)、`2xl`(24)、`3xl`(32)、`4xl`(40)、`5xl`(60)，值為純 px，不乘 `--space-scale`（W4）。
+- W11 `0` 維持字面值。
+- W12＝A（code owner 2026-11-14）：W9 會讓 `#board` 左右 14→12，而 `#log`／`.card` 的 `--log-padding`／`--card-padding-x` 仍為 14，生涯畫面板面格子與卡片的左緣由對齊變為差 2px；`.salary-detail-dialog` 上方 18→16、下方 `calc(18px + env(…))` 仍為 18。
+
+| 選項 | 內容 | 板面格子／卡片左緣 | 改值 |
+|---|---|---|---|
+| **A（採用）** | W9 改為含 `calc`／`auto`／負值的宣告整條不動 | 14／14（同現況） | 39 處（36 宣告）；`#board` 的 14、`#log` 上方 14、對話框上方 18 留在級距外 |
+| B | 照 W9，另將標準密度的 `--log-padding`、`--card-padding-x` 14→12，`calc` 內 18→16（`.salary-detail-dialog`）、14→12（`.ui-panel`） | 12／12 | 所有卡片內距改變；compact 的 9／5px 仍在級距外 |
+| C | 照 W9，接受錯位 | 12／14 | 42 處（39 宣告） |
+
+### 17.4 改值（選項 A：39 處、36 宣告）
+
+| 舊 → 新 | 處數 | 舊 → 新 | 處數 |
+|---|---:|---|---:|
+| 14 → 12 | 7 | 18 → 16 | 4 |
+| 3 → 2 | 6 | 22 → 20 | 4 |
+| 5 → 4 | 5 | 11 → 10 | 3 |
+| 7 → 6 | 5 | 9／26／28／30／36 → 8／24／24／32／32 | 各 1 |
+
+### 17.5 草稿驗證（2026-11-14，scratch worktree，`d30907b`（`docs/` 與 `f8afd8e` 相同）＋選項 C 草稿，測試未改）
+
+- 本機 8 批 Full：121 項全執行（missing／extra 0），120 PASS、1 FAIL。FAIL 為預期的 `design-tokens-08-e2e`（對 `9d9e781` 要求 0 差異，實得 56,464）。Quick 未單獨執行。
+- 差異分類（`design-tokens-08-e2e` 的 scratch 副本，基準改 `f8afd8e`、輸出全部差異）：margin／padding／gap 差異皆為 W8 的對應；例外只有 `#board-menu` 的 `margin-left`（宣告為 `auto`，計算值隨版面變動）。其餘為位置與尺寸連帶移動，無顏色、字級差異。
+- T3 方法原型：舊側 CSS 的間距字面值依 W8 表改寫後，45,072 次比較 0 差異。
+- 比較範圍缺口：39 條改值宣告中約 20 條在現有 harness 未被觀察——年俸明細對話框（`.salary-detail-dialog*`、`.contract-*`、`.salary-market-components`）、資訊對話框（`.information-*`）、`#display-preferences fieldset`、選手／生涯分頁（`.ui-stat-level`、`.ui-yearly-table`、`#desktop-career`、`.desktop-overview`）、`#act-toggle`、`@media(max-width:360px)` 的導覽列（harness 只有 1280／390）。T 表需補這些狀態。
+- 截圖：4 主題 × 1280／390 × 首頁／生涯／選單（`.claude/reports/design-tokens-09/`，未納入版控），目視僅 390 standard 首頁與生涯；W12 對照圖（現況／A／B／C × 390 生涯頂部 2 倍、年俸明細）見 `tasks/design-tokens-09/`。選項 A／B 只做截圖，未跑 Full。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 17.6 選項 A 草稿驗證（2026-11-15，同一 scratch worktree，CSS 換為 A，測試未改）
+
+- 本機 8 批 Full：121 項全執行（missing／extra 0，`sourceChanged:false`），120 PASS、1 FAIL。FAIL 為預期的 `design-tokens-08-e2e`（差異 24,816）。
+- T2 原型（§17.8，scratch）：82,272 次比較 0 差異，約 2 分鐘；§17.4 的 36 條改值宣告（34 個 selector 項目，360px media rule 單列）全部命中比較元素。原型初版的桌面總覽根節點設成 `#view-host`，`#desktop-career .ui-data-list`、`.desktop-overview .ui-panel` 未命中；改為 `#desktop-player`／`#desktop-career`（`#app` 直屬）後命中。
+- 原型關閉舊側改寫（觀察模式）：差異 66,272，34 個項目各有至少 1 個符合的元素出現間距差異（以元素歸屬，同一元素符合多條規則時共計；`#lamps` 的 `gap` 為無效宣告，其觀察來自同規則的 `margin-top`）。初版年俸明細 fixture 只在沒有任何 `dl` 時注入，畫面已有的 `dl.income-summary` 被 `base.css:144` 覆蓋，`.salary-detail-dialog dl` 無觀察；改為沒有 `dl:not(.income-summary)` 時注入後觀察到。
+- 截圖（standard，1280／390／360 × 遊び方、表示設定、年俸明細、選手 2 分頁、生涯 3 分頁，`.claude/reports/design-tokens-09/states/`，未納入版控）：新舊對照目視 360 選手分頁、390 年俸明細，無擠壓或溢出；390 遊び方／表示設定／年度別只看新側，無擠壓或溢出（年度別為「記録なし」，表格內距由 T2 的 fixture 涵蓋）。其餘未目視。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。
+
+### 17.7 D 表
+
+| # | 檔案 | 內容 |
+|---|---|---|
+| D1 | `docs/styles/base.css` | `:root` 新增 `--space-4xs`～`--space-5xl` 12 個（§17.3 W10），置於 `--fs-*` 行之後 |
+| D2 | `docs/styles/*.css`（8 檔） | 只含 px／`0` 的間距宣告中 172 個 px 字面值改 `var(--space-*)`，值改變 39 處（36 宣告，§17.4）；含 `calc`／`var`／`env`／`auto`／負值的宣告、`0`、密度元件 token 不動（scratch script 機械轉換） |
+| D3 | `CURRENT_SPEC.md` | 新增「間隔トークン」一條（12 段の名前と値、`--space-scale` を掛けない、対象外の宣言） |
+| D4 | 版本 1.16.8 | `config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`node scripts/update-release-notes.mjs`、`CURRENT_SPEC.md` 標頭 |
+| D5 | `BACKLOG.md`、本節 | -09 狀態與實作結果 |
+
+### 17.8 T 表（AGENTS §6.3：舊期待值隨已批准規格變更）
+
+| # | 測試 | 變更 |
+|---|---|---|
+| T1 | `design-tokens-06.test` | 追加 3 項：①`base.css` `:root` 的 12 個 `--space-*` 名字與值（`--space-scale` 除外）；②`docs/styles` 的 margin／padding／gap 宣告先去掉 `var(--space-*)` 再判斷，頂層的正 px 字面值只允許出現在 W12＝A 不動的 7 條宣告（`#board`、`#log`、`.salary-detail-dialog` 的 padding，`stadium-background.css` 的 `#start .wrap` margin，`#main-nav`、`#view-player,#view-career` 的 padding，`.ui-ability-guide` 的 margin），以檔案＋selector＋屬性固定；③每個 `--space-*`（`--space-scale` 除外）都被引用、每個引用都有定義。其他斷言不變 |
+| T2 | 新增 `design-tokens-09-e2e`（Full，manifest `seconds` 約 130） | 以 -08 harness 為底，基準 `f8afd8e`。舊側所有 `styles/*.css` 依 W8 表把間距宣告的 px 字面值改寫為新 px 值（含 `calc`／`auto`／負值的宣告整條不動，與 W12＝A 同規則；測試內獨立實作，不讀 token），之後要求 41 屬性＋相對尺寸完全相等。狀態：首頁、生涯初期（含 `#act-toggle`）、選手 2 分頁、生涯 4 分頁、桌面總覽（1280）、遊び方、表示設定、年俸明細、退休後；寬度 1280／390（投手、野手）＋360（投手，生涯初期與分頁）。新開生涯沒有的列以 fixture 注入，新舊兩側相同（`.ui-stat-level`、`.ui-yearly-table`、`.contract-yearly-salaries`、年俸明細的 `h3`／`dl:not(.income-summary)`／`ul`／`.salary-market-components strong`／`.contract-schedule>div`）。每條改值宣告的 selector 至少命中 1 個比較元素（360px media rule 只在 360 計） |
+| T3 | `design-tokens-08-e2e` 的去留 | 對 `9d9e781` 0 差異在 -09 後不成立（-08 前例 T4）：從 manifest 移除並刪檔，-08 的證明保留於 §16.7 與 git 歷史；T2 承接其 harness。`design-tokens-06.test:6` 註解的檔名一併改為 T2 |
+| T4 | 負控制 | ①`--space-md` 改 13px → T2 FAIL；②T2 的對應表 14→16 → T2 FAIL；③`.btn` 引用 `--space-sm`（錯一級）→ T2 FAIL；④拿掉年俸明細的比較 → T2「changed selectors that matched no compared element」；⑤拿掉 360px → 同上（360 media rule）；⑥留一處 `padding:14px` → T1 FAIL；⑦半轉換 `padding:var(--space-sm) 14px` → T1 FAIL；⑧T2 關閉舊側改寫 → FAIL，且 34 個項目各有間距差異（證明狀態與 fixture 觸及改值，§17.6 觀察模式）。皆就地突變、shasum 確認還原 |
+| T5 | 回歸 | 相關單元與 e2e → Quick → 本機 8 批 Full → reviewer → 4 主題 × 1280／390 截圖目視 |
+
+### 17.9 後續
+
+PR #91 合併 dev → dev push Quick → BACKLOG 結案；Preview 4 主題 × PC／手機確認另行。
+
+### 17.10 實作結果（2026-11-15，`ui/design-tokens-09`，基準 `f8afd8e`）
+
+- D1～D4 照 §17.7：CSS 由草稿 script 機械轉換（與 §17.6 的 A 草稿逐位元組相同）；`CURRENT_SPEC.md` 新增間隔トークン一條並刪除字級條末的「余白の級距は…未実装」，版本 1.16.7→1.16.8（`config.js`、`CHANGELOG.md`、`RELEASE_NOTES.md`→`docs/src/data/release-notes.js`、`CURRENT_SPEC.md` 標頭）。
+- T1：`design-tokens-06.test` 11 項 PASS。T2：`design-tokens-09-e2e` 82,272 次比較 0 差異，34 個項目全部命中，約 2 分 17 秒；rewrite 函式為正式版重寫（與原型不同實作），結果一致。T3：`design-tokens-08-e2e` 刪除並自 manifest 移除，`design-tokens-06.test` 檔頭註解改指 T2。
+- T4 負控制（就地突變、shasum 確認還原，皆 exit 1、ERR_ASSERTION）：①`--space-md` 13px → 差異 40,144；②對應表 14→16 → 10,272；③`.btn` 左右引用 `--space-sm` → 2,208；④拿掉年俸明細比較 → 「changed selectors that matched no compared element」（年俸明細 7 項）；⑤拿掉 360px → 同斷言（360 media rule）；⑥`.browser-save-panel` 寫回 `padding:14px` → T1 保留清單多出該宣告；⑦`.btn` 半轉換 `var(--space-sm) 14px` → 同上；⑧關閉舊側改寫 → 差異 67,232，34／34 項目有間距差異。
+- reviewer：無缺陷；low 1 項——T1／T2 的屬性比對未含邏輯屬性（`padding-inline`／`padding-block` 等）。本次轉換的 2 處（`#main-nav padding-inline` 6px、`.information-article padding-block` 8px）在級距上、值不變，但 T1 擋不到將來的寫死值；已擴充兩檔的屬性比對（含 `-inline`／`-block`／`-start`／`-end`），負控制：`#main-nav` 寫回 `padding-inline:6px` → T1 FAIL。
+- T5：Quick 92／92 PASS（擴充屬性比對前；擴充後 T1 重跑 PASS）→ 最終程式碼重跑 T2 PASS → 本機 8 批 Full 121／121 PASS（expected 121，missing／extra 0，`sourceChanged:false`，含 `design-tokens-09-e2e`、不含 `-08-e2e`）。截圖：最終版 4 主題 × 1280／390 × 首頁／生涯／選單（`.claude/reports/design-tokens-09/`，未納入版控），目視 390 scoreboard 生涯、390 night 首頁、1280 classic 選單，無擠壓或溢出；其餘未目視。
+- macOS＋Brave（`BraveFarbling` 關閉）本機結果，非 CI。

@@ -147,3 +147,21 @@ for(const [from,to,c] of [
   assert.notEqual(JSON.stringify(run('new',c,Mutated)),JSON.stringify(run('old',c)),'mutation is caught: '+from.slice(0,40));
 }
 console.log(`career-entry.test: ${compared} old/new cases equal`);
+
+// Blank-name data and entropy are independent of the career seed/RNG.
+const {PLAYER_FAMILY_NAMES,PLAYER_GIVEN_NAMES,randomNameIndex,generatePlayerName}=await import('../docs/src/data/player-names.js');
+assert.equal(PLAYER_FAMILY_NAMES.length,46);assert.equal(PLAYER_GIVEN_NAMES.length,50);
+for(const pool of [PLAYER_FAMILY_NAMES,PLAYER_GIVEN_NAMES]){assert.equal(new Set(pool).size,pool.length);assert.ok(Object.isFrozen(pool));}
+assert.equal(PLAYER_FAMILY_NAMES.filter(n=>n==='山本').length,1);assert.equal(PLAYER_FAMILY_NAMES.filter(n=>n==='佐々木').length,1);assert.equal(PLAYER_FAMILY_NAMES.filter(n=>n==='吉田').length,1);
+for(let family=0;family<46;family++)for(let given=0;given<50;given++){
+ const bounds=[],indices=[family,given],name=generatePlayerName({randomIndex:length=>{bounds.push(length);return indices.shift();}});
+ assert.deepEqual(bounds,[46,50]);assert.equal(name,PLAYER_FAMILY_NAMES[family]+PLAYER_GIVEN_NAMES[given]);assert.ok([...name].length<=10,'generated name respects existing limit');
+}
+for(const length of [46,50]){
+ const limit=Math.floor(0x100000000/length)*length;let draws=0;
+ const cryptoRef={getRandomValues:word=>{word[0]=draws++?length-1:limit;return word;}};
+ assert.equal(randomNameIndex(length,cryptoRef),length-1);assert.equal(draws,2,'reject biased tail before selecting');
+ for(let i=0;i<length;i++)assert.equal(randomNameIndex(length,{getRandomValues:word=>{word[0]=i;return word;}}),i);
+}
+for(const length of [0,-1,1.5,NaN,0x100000001])assert.throws(()=>randomNameIndex(length),RangeError);
+console.log('PASS random names: 46/50 unique pools, all 2300 combinations, independent draws, existing length limit and unbiased boundary rejection');

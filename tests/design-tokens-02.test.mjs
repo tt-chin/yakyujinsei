@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
+import {themeColors,contrastRatio} from './support/theme-colors.mjs';
 
 const read=rel=>readFileSync(new URL('../'+rel,import.meta.url),'utf8').replace(/\r\n/g,'\n');
 let pass=0;const test=(name,fn)=>{fn();pass++;console.log('PASS '+name);};
@@ -38,27 +39,26 @@ test('mrteam without a team color keeps the #a71930 fallback',()=>{
 });
 test('no trait tag keeps an inline color',()=>assert.doesNotMatch(block,/(?<![\w-])(?:background|color|border-color|opacity|text-decoration):/));
 
-// 2. Theme tokens: every theme defines every tag token; light themes keep the pre-change colors (D4).
-const themes=read('docs/styles/themes.css');
-const blocks=Object.fromEntries([['standard',/:root,\n:root\[data-theme="standard"\] \{([^}]+)\}/],...THEME_IDS.filter(t=>t!=='standard').map(t=>[t,new RegExp(`:root\\[data-theme="${t}"\\] \\{([^}]+)\\}`)])].map(([t,re])=>{
-  const m=themes.match(re);assert.ok(m,'theme block '+t);
-  return [t,Object.fromEntries([...m[1].matchAll(/--([\w-]+):(#[\da-f]{6})\b/g)].map(x=>[x[1],x[2]]))];
-}));
-const oldColors={legend:['#fff7dc','#c79520','#795b00'],goldcloth:['#fffbe0','#c5a800','#6f6000'],genius:['#f3f5f8','#9aa5b5','#4c5868'],negative:['#fff0f0','#c0392b','#a71930']};
-const tokenNames=[...Object.keys(oldColors).flatMap(k=>['bg','edge','text'].map(p=>`tag-${k}-${p}`)),'tag-removed-text','tag-removed-edge'];
-test('all four themes define all tag tokens as hex',()=>{for(const [t,tokens] of Object.entries(blocks))for(const name of tokenNames)assert.match(tokens[name]||'',/^#[\da-f]{6}$/,t+' --'+name);});
-test('standard and classic keep the pre-change colors',()=>{
-  for(const t of ['standard','classic']){
-    for(const [k,[bg,edge,text]] of Object.entries(oldColors))assert.deepEqual([blocks[t][`tag-${k}-bg`],blocks[t][`tag-${k}-edge`],blocks[t][`tag-${k}-text`]],[bg,edge,text],t+' '+k);
-    assert.deepEqual([blocks[t]['tag-removed-text'],blocks[t]['tag-removed-edge']],['#8a8a8a','#4a4a4a'],t+' removed');
+// 2. Theme tokens: every theme resolves every tag token (UI-DESIGN-TOKENS-05 derives them with color-mix()).
+// standard/classic equal the approved -05 values (tasks/design-tokens-05/unify-v4.json, DESIGN_SYSTEM_PLAN §13.3).
+const themes=read('docs/styles/themes.css'),colors=themeColors(themes);
+const approved=JSON.parse(read('tasks/design-tokens-05/unify-v4.json'));
+const tagKinds=['legend','goldcloth','genius','negative'];
+const tokenNames=[...tagKinds.flatMap(k=>['bg','edge','text'].map(p=>`tag-${k}-${p}`)),'tag-removed-text','tag-removed-edge'];
+const bytes=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
+test('all four themes resolve all tag tokens to opaque colors',()=>{for(const t of THEME_IDS)for(const name of tokenNames){const c=colors.color(t,'--'+name);assert.equal(c.alpha,1,t+' --'+name);assert.match(colors.hex(t,'--'+name),/^#[\da-f]{6}$/,t+' --'+name);}});
+test('standard and classic equal the approved -05 colors',()=>{
+  let n=0;
+  for(const t of ['standard','classic'])for(const name of tokenNames){
+    const want=approved.tokens.find(x=>x.name===name)?.unified[t];assert.ok(want,'approved value '+name);
+    const got=colors.hex(t,'--'+name);assert.ok(bytes(got).every((v,i)=>Math.abs(v-bytes(want)[i])<=1),`${t} --${name}: ${got} vs ${want}`);n++;
   }
+  assert.equal(n,2*tokenNames.length);
 });
-test('night and scoreboard change every tag color',()=>{for(const t of ['night','scoreboard'])for(const name of tokenNames)assert.notEqual(blocks[t][name],blocks.standard[name],t+' --'+name);});
-const lum=hex=>{const c=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=0.03928?v/12.92:((v+0.055)/1.055)**2.4);return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];};
-const ratio=(a,b)=>{const [x,y]=[lum(a),lum(b)].sort((p,q)=>q-p);return (x+0.05)/(y+0.05);};
+test('night and scoreboard change every tag color',()=>{for(const t of ['night','scoreboard'])for(const name of tokenNames)assert.notEqual(colors.hex(t,'--'+name),colors.hex('standard','--'+name),t+' --'+name);});
 test('tag text meets 4.5:1 on its tag background in every theme',()=>{
-  for(const [t,tokens] of Object.entries(blocks))for(const k of Object.keys(oldColors)){
-    const r=ratio(tokens[`tag-${k}-text`],tokens[`tag-${k}-bg`]);assert.ok(r>=4.5,`${t} ${k} ${r.toFixed(2)}`);
+  for(const t of THEME_IDS)for(const k of tagKinds){
+    const r=contrastRatio(colors.color(t,`--tag-${k}-text`),colors.color(t,`--tag-${k}-bg`));assert.ok(r>=4.5,`${t} ${k} ${r.toFixed(2)}`);
   }
 });
 

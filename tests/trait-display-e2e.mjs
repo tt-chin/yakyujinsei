@@ -15,6 +15,10 @@ const h=await harness('trait-display'),labels=Object.keys(TRAIT_LABELS);
 const runTest=h.test;h.test=(id,input,action)=>!arg('cases')||id.startsWith(arg('cases'))?runTest(id,input,action):Promise.resolve();
 const hook=`window.__traitDisplay={
  get:()=>window.__stage6.get(),
+ patch:v=>Object.assign(S,v),
+ labels:()=>({position:primaryPos(),type:playerType(),traits:traitNames()}),
+ tier:bucket=>tierOf(bucket),
+ emptyLeague:()=>{const st={...blankStat(),yr:1};S.stats.NPB={...st};S.statsByLevel??={};S.statsByLevel.NPB1={...st};},
  clear:()=>{$('log').replaceChildren();_curYearBody=null;},
  model:()=>buildTraitsViewModel(),
  acquire:(key,description)=>traitCard(key,displayTrait(key),description),
@@ -26,7 +30,7 @@ const hook=`window.__traitDisplay={
  choose:()=>choose('次の操作',[{t:'次へ',f:()=>card('info','次へ','進行しました。')}]),
  saveChoice:()=>{window.__traitStale=$('act').querySelector('button').onclick;},
  stale:()=>window.__traitStale(),
- share:()=>{const out=document.createElement('div'),texts=[],original=CanvasRenderingContext2D.prototype.fillText;document.body.appendChild(out);CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(text);return original.call(this,text,...args);};try{shareImage([],out);const png=out.querySelector('img').src;out.remove();return {texts,png};}finally{CanvasRenderingContext2D.prototype.fillText=original;}},
+ share:async(evals=[])=>{const out=document.createElement('div'),texts=[],boxes=[],original=CanvasRenderingContext2D.prototype.fillText;document.body.appendChild(out);CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(text);boxes.push({text:String(text),x:args[0],y:args[1],width:this.measureText(String(text)).width});return original.call(this,text,...args);};try{await shareImage(evals,out);const png=out.querySelector('img').src;out.remove();return {texts,png,boxes};}finally{CanvasRenderingContext2D.prototype.fillText=original;}},
  step:()=>{if(S.done)return{done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));let b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows.sort((a,b)=>S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey])[0]||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S));delete before.version;const action=b.textContent;b.click();const after=JSON.parse(JSON.stringify(S));delete after.version;return{before,after,action};}
 };`;
 async function page(width,pos='IF',seed='trait-display',old=false){
@@ -35,6 +39,62 @@ async function page(width,pos='IF',seed='trait-display',old=false){
 }
 const descriptions={...TRAIT_TEXT,...EVENT_TRAIT_TEXT};
 try{
+ for(const width of [1280,320,390])for(const pos of ['P','IF'])await h.test('display-name-'+width+'-'+pos,{width,pos,fixture:true},async()=>{
+  const p=await page(width,pos);
+  for(const theme of ['standard','night','classic','scoreboard']){
+   await p.evaluate(({pos,theme})=>{
+    window.__stage6.fixture({pos,ability:40,age:42});window.__traitDisplay.clear();
+    window.__traitDisplay.patch({mrTeamName:'NPB_CL_HAN',orgTeamId:'NPB_CL_YOM',roleYears:{SP:2,MR:2,CL:2},dposYears:{SS:1,'2B':1,'3B':1,CF:1,RF:1,LF:1,'1B':1,C:1},franchiseAchievement:{year:2030,league:'NPB',teamId:'NPB_CL_HAN'}});
+    window.__traitDisplay.emptyLeague();
+    document.documentElement.dataset.theme=theme;document.documentElement.dataset.fontSize='large';
+    window.__traitDisplay.acquire('franchise','この球団での実績により取得。');window.__traitDisplay.acquire('mrteam','同じ球団での実績により取得。');
+   },{pos,theme});
+   const names=await p.evaluate(()=>window.__traitDisplay.labels());
+   assert.equal(names.type,'発展途上型');assert.match(names.position,pos==='P'?/^スイングマン\(/:/^ユーティリティープレーヤー\(/);
+   assert.equal(names.traits.mrteam,'ミスターストライプス');assert.equal(names.traits.franchise,'フランチャイズプレーヤー');
+   for(const key of ['franchise','mrteam'])assert.equal(await p.locator('[data-trait-result="'+key+'"]').getAttribute('data-trait-name'),names.traits[key]);
+   const before=await h.get(p),model=await p.evaluate(()=>window.__traitDisplay.model());
+   assert.ok(model.active.includes(names.traits.mrteam));assert.ok(model.active.includes(names.traits.franchise));
+   await p.locator('[data-main-view="player"]').click();await p.locator('[data-player-tab="traits"]').click();
+   assertSameCareer((await h.get(p)).state,before.state);assertSameCareer((await h.get(p)).rng,before.rng);
+   assert.doesNotMatch(await p.locator('#log').innerText(),/神カード/);assert.equal(await p.locator('[data-trait-result]').count(),0,'archive keeps labels and drops acquisition decoration');
+   await p.locator('[data-main-view="home"]').click();
+   const unchanged=await h.get(p),image=await p.evaluate(()=>window.__traitDisplay.share([window.__traitDisplay.tier('NPB').name]));
+   assertSameCareer(await h.get(p),unchanged,'all render-only labels and PNG keep complete state/RNG/control');
+   assert.ok(image.texts.includes('★ NPB 実績を残せず'),'PNG uses shared league/tier name');
+   assert.ok(image.texts.includes(names.traits.mrteam));assert.ok(image.texts.includes(names.traits.franchise));assert.ok(image.texts.some(t=>String(t).startsWith(names.position+'｜発展途上型｜')));
+   for(const box of image.boxes.filter(b=>b.y===98||b.text===names.traits.mrteam||b.text===names.traits.franchise))assert.ok(box.x>=0&&box.x+box.width<=886,'PNG name clipping: '+box.text);
+   await p.locator('[data-main-view="player"]').click();await p.locator('[data-player-tab="traits"]').click();
+   assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'traits viewport overflow');
+   await p.screenshot({path:h.output+'/names-'+width+'-'+pos+'-'+theme+'.png',fullPage:true});
+   if(theme==='classic'&&width===390){const {writeFile}=await import('node:fs/promises');await writeFile(h.output+'/career-names-'+pos+'.png',Buffer.from(image.png.split(',')[1],'base64'));}
+   // Long labels and the two same-name cities use the acquired team, not the current team.
+   for(const [id,label] of [['MLB_NL_ARI','ミスターダイヤモンドバックス'],['KBO_CHANGWON_DINOS','ミスター昌原ダイナソーズ'],['CPBL_TAIPEI_DINOS','ミスター台北ダイナソーズ'],['UNKNOWN','ミスター'],[null,'ミスター']]){
+    await p.evaluate(id=>window.__traitDisplay.patch({mrTeamName:id}),id);const beforeLabel=await h.get(p);
+    await p.locator('[data-main-view="home"]').click();await p.locator('[data-main-view="player"]').click();await p.locator('[data-player-tab="traits"]').click();
+    const model=await p.evaluate(()=>window.__traitDisplay.model());assert.ok(model.active.includes(label));assert.ok((await p.locator('#view-player').innerText()).includes(label));
+    const image=await p.evaluate(()=>window.__traitDisplay.share());assert.ok(image.texts.includes(label));
+    for(const box of image.boxes.filter(b=>b.text===label))assert.ok(box.x>=0&&box.x+box.width<=886,'nickname PNG clipping: '+label);
+    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'nickname viewport overflow');
+    assertSameCareer((await h.get(p)).state,beforeLabel.state);assertSameCareer((await h.get(p)).rng,beforeLabel.rng);
+   }
+  }
+  await p.evaluate(()=>{window.__traitDisplay.patch({mrTeamName:'NPB_CL_HAN'});window.__traitDisplay.retire();});
+  const profile=await p.locator('#log .card').filter({has:p.locator('h4',{hasText:'キャリアプロフィール'})}).innerText();
+  assert.match(profile,/ミスター/);assert.match(profile,/フランチャイズプレーヤー/);assert.doesNotMatch(profile,/スインガー|ツールマン|期待の若手/);
+  await p.close();
+ });
+ await h.test('display-name-return-title',{width:390,fixture:true},async()=>{
+  const p=await page(390);await p.waitForFunction(()=>document.querySelector('#save-live').textContent.includes('開始時点をセーブしました'));
+  const read=()=>p.evaluate(async()=>JSON.parse(JSON.stringify(await new (await import('/src/engine/browser-save-store.js')).BrowserSaveStore().read())));
+  await p.locator('#board-menu-toggle').click();await p.locator('#board-preferences').click();await p.locator('[name="theme"][value="night"]').check();await p.locator('[name="fontSize"][value="large"]').check();await p.locator('#preferences-close').click();
+  const saved=await read(),preferences=await p.evaluate(()=>localStorage.getItem('yakyujinsei.display.v1')),before=await h.get(p);assert.ok(preferences,'non-empty saved display preferences are exercised');
+  await p.locator('#board-menu-toggle').click();const button=p.locator('#btn-restart');assert.equal(await p.getByRole('button',{name:'タイトルに戻る',exact:true}).count(),1);assert.equal(await button.getAttribute('title'),'タイトルに戻る');
+  await button.click();await p.locator('#confirmation-dialog').waitFor({state:'visible'});await p.locator('#confirmation-cancel').click();assertSameCareer(await read(),saved);assertSameCareer((await h.get(p)).state,before.state);assertSameCareer((await h.get(p)).rng,before.rng);
+  await p.locator('#board-menu-toggle').click();await button.click();await p.locator('#confirmation-dialog').waitFor({state:'visible'});const nav=p.waitForURL(url=>!url.search);await p.locator('#confirmation-ok').click();await nav;await p.locator('#save-continue').waitFor({state:'visible'});
+  assertSameCareer(await read(),saved,'title return keeps entire stored career');assert.equal(await p.evaluate(()=>localStorage.getItem('yakyujinsei.display.v1')),preferences);
+  await p.close();
+ });
  for(const width of [1280,320,360,390]){
   await h.test('all-labels-history-share-'+width,{width,fixture:true,ids:labels},async()=>{
    const p=await page(width,'IF','trait-display',arg('source')==='baseline');

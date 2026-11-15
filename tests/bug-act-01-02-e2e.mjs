@@ -34,7 +34,9 @@ async function page(width,seed,pos){
  await p.addInitScript(()=>document.addEventListener('click',e=>{const b=e.target.closest?.('#act button');if(b?.innerText.includes('指名を受けて入団'))window.__lastAcceptance=b.onclick;},true));
  if(arg('preview'))await p.route('**/src/engine/game.js',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:instrument(await r.text())});});
  if(arg('preview'))await p.route('**/src/ui/choice-prompt.js',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:instrumentChoice(await r.text())});});
- await p.goto(target+'/?seed='+seed);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();return p;
+ await p.goto(target+'/?seed='+seed);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+pos+'"]').click();
+ // Identical explicit input preserves full-state/RNG replay; blank product names intentionally vary.
+ await p.locator('#in-name').fill({P:'投山翔太',C:'強肩剛',IF:'守田巧',OF:'走川隼人'}[pos]);await p.locator('#btn-start').click();return p;
 }
 // Same deterministic first-row/balanced priorities as the existing career suite.
 function select(balanced){const a=document.querySelector('#act'),rows=[...a.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...a.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));if(balanced)rows.sort((a,b)=>{const rank=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return rank(a)-rank(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});return rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];}
@@ -66,7 +68,7 @@ async function career(seed,pos,balanced,width,replay=false){
 try{
  console.log('HEAD '+sha+' Chrome '+browser.version()+' target '+target);
  if(arg('preview')){const p=await browser.newPage();await p.goto(target);const files=execFileSync('git',['ls-files','docs'],{encoding:'utf8'}).trim().split(/\r?\n/).filter(f=>/\.(html|js|css)$/.test(f));for(const f of files){const actual=await p.evaluate(async rel=>(await fetch('./'+rel,{cache:'no-store'})).text(),f.slice(5));assert.equal(actual.replace(/\r\n/g,'\n'),(await readFile(path.join(root,f),'utf8')).replace(/\r\n/g,'\n'),f);}await p.close();console.log('PASS latest Preview assets '+files.length);}
- if(!arg('diagnostic-seed'))for(const width of [1280,320,390])for(const pos of ['P','IF'])for(const from of ['HS','U','CORP','IND'])for(const development of [false,true]){
+ if(!arg('diagnostic-seed')&&!process.argv.includes('--replay-only'))for(const width of [1280,320,390])for(const pos of ['P','IF'])for(const from of ['HS','U','CORP','IND'])for(const development of [false,true]){
   const seed='act-signing-'+from+(development?'-dev':'')+(development&&from==='CORP'&&pos==='IF'?'-1':'');
   const p=await page(width,seed,pos);await p.evaluate(({from,development})=>window.__actAudit.draft(from,development),{from,development});const before=await p.evaluate(()=>window.__actAudit.get());
   console.log('DRAFT fixture '+JSON.stringify({seed,pos,from,development,width,type:before.state.draftRights?.type,dom:before.dom}));
@@ -86,7 +88,7 @@ try{
   await p.screenshot({path:path.join(output,`draft-${from}-${pos}-${width}-${development}.png`)});await writeFile(path.join(output,`draft-${from}-${pos}-${width}-${development}.json`),JSON.stringify({seed,pos,from,development,width,...control}));checks.push({bug:'ACT-02',seed,pos,from,development,width,status:'PASS',nextLabel:next.label,acceptanceRng:after.calls-before.calls,actions:nextAfter.actions-before.actions,continuedYear:continuation.final.state.year});await p.close();console.log(`PASS draft ${from}/${pos}/${width}/${development?'DEVELOPMENT':'CONTROL'} contract/result/next/pointer/listener/single-action/next-year`);
  }
  if(arg('diagnostic-seed'))await career(arg('diagnostic-seed'),'P',false,1280);
- if(!arg('diagnostic-seed'))for(const width of [1280,320,390])for(const [seed,pos]of [['k55l221a','P'],['oscuxs1w','IF']]){
+ if(!arg('diagnostic-seed')&&!process.argv.includes('--replay-only'))for(const width of [1280,320,390])for(const [seed,pos]of [['k55l221a','P'],['oscuxs1w','IF']]){
   const p=await page(width,seed,pos);let checked=false;const history=[];
   for(let i=0;i<150;i++){
    const meta=await p.evaluate(code=>{const b=eval('('+code+')')(false);if(!b)throw Error('NO_ACTION');const kind=b.matches('.abrow')?'.abrow':'button';return{kind,index:[...document.querySelectorAll('#act '+kind)].indexOf(b),label:b.innerText,before:window.__actAudit.get()};},select.toString());
@@ -97,8 +99,10 @@ try{
   assert.ok(checked);await p.close();console.log(`PASS Playwright pointer result/next/stale/navigation ${seed}/${pos}/${width}`);
  }
  if(!arg('diagnostic-seed')&&!process.argv.includes('--fixtures-only')){
+  if(!process.argv.includes('--replay-only')){
   for(const [seed,pos]of [['k55l221a','P'],...['P','C','IF','OF'].map(pos=>['oscuxs1w',pos])])for(const balanced of [false,true])await career(seed,pos,balanced,1280);
   for(const width of [320,390])await career('k55l221a','P',false,width);
+  }
   for(const [seed,pos]of [['yakyo-test-001','P'],['jp3-infielder-01','IF']]){const a=await career(seed,pos,false,1280),b=await career(seed,pos,false,1280,true);assertSameCareer(b,a,'full state/DOM/actions/RNG repeat');console.log('PASS exact replay '+seed+'/'+pos);}
  }
  assertSameCareer(errors,[]);await writeFile(path.join(output,'summary.json'),JSON.stringify({sha,target,results,checks,errors,seconds:(Date.now()-started)/1000},null,2));console.log('PASS Console/JS-CSS404 0; seconds '+(Date.now()-started)/1000+'; evidence '+output);

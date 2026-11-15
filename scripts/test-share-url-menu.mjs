@@ -42,7 +42,7 @@ try{
     await credits.getByRole('button',{name:'閉じる',exact:true}).click();
     await p.locator('#btn-start').click();
     await p.locator('#board-menu-toggle').click();
-    const names=['遊び方','更新履歴','不具合報告','クレジット','表示設定','共有','開発を応援','最初からやり直す'];
+    const names=['遊び方','更新履歴','不具合報告','クレジット','表示設定','共有','開発を応援','タイトルに戻る'];
     const panel=p.locator('#board-menu-panel');
     const items=await panel.locator('button,a').evaluateAll(nodes=>nodes.map(n=>{
       const bullet=n.querySelector('.menu-bullet'),r=bullet?.getBoundingClientRect();

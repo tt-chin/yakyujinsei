@@ -21,7 +21,7 @@ window.__champTest={${getter},
  change:v=>Object.assign(S,v),intl:phase=>processIntlPhase(phase,()=>window.__adv++),adv:()=>window.__adv,
  season:()=>{const saved=[tjGamble,demotionAudit,tradeCheck,maybeIntl,nextStep];tjGamble=c=>c();demotionAudit=c=>{S.lv='NPB2';c();};tradeCheck=c=>c();maybeIntl=c=>c();nextStep=()=>{};try{proSeason();}finally{[tjGamble,demotionAudit,tradeCheck,maybeIntl,nextStep]=saved;}},
  retire:()=>endGame('優勝・国際特性の表示検証'),
- share:()=>{const out=document.createElement('div');document.body.appendChild(out);const text=[],base=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(t,...a){text.push(t);return base.call(this,t,...a);};try{shareImage([],out);return {png:out.querySelector('img').src,text};}finally{CanvasRenderingContext2D.prototype.fillText=base;out.remove();}}
+ share:async()=>{const out=document.createElement('div');document.body.appendChild(out);const text=[],base=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(t,...a){text.push(t);return base.call(this,t,...a);};try{await shareImage([],out);return {png:out.querySelector('img').src,text};}finally{CanvasRenderingContext2D.prototype.fillText=base;out.remove();}}
 };`;
 function instrument(content,old=false){content=instrumentRng(content,'__rngCalls');return injectOverlayHook(content,old?`window.__champTest={${getter}};`:hook);}
 const cache=new Map();
