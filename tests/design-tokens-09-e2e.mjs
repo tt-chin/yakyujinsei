@@ -123,7 +123,7 @@ try{
       for(const p of Object.values(pages))await p.evaluate(()=>{const b=document.createElement('button');b.type='button';b.className='salary-detail-link';b.textContent='内訳を見る';document.getElementById('log').append(b);});
       // 1.16.9 moved the Mr title quotes in the retirement fan-board line (old 'UK『ミスター』', new '『ミスターシーホークス』').
       // projectDisplayNameCopy maps only the name, so restore the old quote placement on the new side: exactly one hit, and the
-      // old side must hold exactly the old line. Without this the texts differ and only fonts that wrap both alike pass.
+      // old side must contain the old line tail exactly once. Without this the texts differ and only fonts that wrap both alike pass.
       const MR_OLD='UK『ミスター』の称号にふさわしい',MR_NEW='『ミスターシーホークス』の称号にふさわしい';
       for(const [v,find,replace] of [['old',MR_OLD,null],['new',MR_NEW,MR_OLD]]){
         const hits=await pages[v].evaluate(([find,replace])=>{let n=0;const walk=document.createTreeWalker(document.getElementById('log'),NodeFilter.SHOW_TEXT);
