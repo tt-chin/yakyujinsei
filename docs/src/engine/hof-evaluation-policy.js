@@ -1,6 +1,7 @@
 // Approved league-specific retirement evaluation. Read-only: never repairs historical S.
+import {TRAIT_LABELS} from './trait-policy.js';
 import {consumerTreatmentView,isInternationalHonor} from './award-consumer-policy.js';
-import {careerScoreFor} from './hall-of-fame-tier-policy.js';
+import {careerScoreFor,hofTierNameFor} from './hall-of-fame-tier-policy.js';
 const levels={NPB:'NPB1',MLB:'MLB',KBO:'KBO1',CPBL:'CPBL1'};
 const labels={NPB:'NPB',MLB:'メジャーリーグ',KBO:'KBO',CPBL:'台湾プロ野球'};
 const titles={NPB:'日本一',MLB:'ワールドシリーズチャンピオン',KBO:'韓国シリーズ優勝',CPBL:'台湾シリーズ優勝'};
@@ -24,7 +25,7 @@ export function hofHonorBreakdown(state,bucket){
  for(const text of state.honors||[]){const m=/^(\d{4}) (.+)$/.exec(text);if(m&&m[2]===titles[bucket])years.add(+m[1]);}
  for(const year of [...years].sort((a,b)=>a-b))team.push({year,league:bucket,key:JSON.stringify([year,bucket,'TEAM_CHAMPIONSHIP']),text:year+' '+titles[bucket],sc:90});
  for(const text of new Set(state.honors||[]))if(isInternationalHonor(text))international.push({text,sc:0});
- const f=state.franchiseAchievement;if(state.traits?.franchise&&f&&Number.isInteger(f.year)&&f.league===bucket&&typeof f.teamId==='string'&&f.teamId)other.push({year:f.year,league:bucket,teamId:f.teamId,key:JSON.stringify([f.year,f.league,f.teamId,'FRANCHISE']),text:'神カード',sc:200});
+ const f=state.franchiseAchievement;if(state.traits?.franchise&&f&&Number.isInteger(f.year)&&f.league===bucket&&typeof f.teamId==='string'&&f.teamId)other.push({year:f.year,league:bucket,teamId:f.teamId,key:JSON.stringify([f.year,f.league,f.teamId,'FRANCHISE']),text:TRAIT_LABELS.franchise,sc:200});
  const honor={sc:0,mvp:0,aceN:0,king:0};for(const row of [...personal,...team,...other])for(const k of Object.keys(honor))honor[k]+=row[k]||0;
  return {personal,team,international,other,unknown,honor};
 }
@@ -38,5 +39,5 @@ export function evaluateLeagueHof(state,bucket,thresholds,leagueName){
  // 0.01 point precision; a near-boundary rounding-up is explicitly identified.
  const sc=Number(rawSc.toFixed(2)),threshold=thresholds.find(t=>rawSc<t&&sc>=t);
  return {i,sc,rawSc,pureTier,base,reason,belowThreshold:threshold!==undefined,hasFirstTeam:!!st,details,
- name:leagueName+['殿堂','スター選手','デイリープレイヤー','フリンジプレイヤー','ページ上の乗客'][i]};
+ name:hofTierNameFor(leagueName,i)};
 }

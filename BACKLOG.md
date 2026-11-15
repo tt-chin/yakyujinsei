@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
 > 最新狀態核對：2026-11-13。dev 86969a5（1.16.3）的Linux Full為117／117 PASS，已合併main；1.16.4已推送dev c03df23，Quick成功、Full 116 PASS／1 FAIL；本輪修正唯一失敗的測試基準接線，限定驗證PASS，新來源CI／Preview待確認。未確認的實機、研究及artifact缺口保持未完成。
-> 以現有78個唯一ID的checkbox為準：已完成56項、未完成22項（UI-DESIGN-TOKENS-04／05／06／07／08與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 以現有79個唯一ID的checkbox為準：已完成56項、未完成23項（UI-DESIGN-TOKENS-04／05／06／07／08與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -32,10 +32,10 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **56** | 現有checkbox實際數量；含使用者已確認的7項實機／UI／OFUSE範圍及年度存檔第一期，不重新推定其他項目完成 |
-| 未完成 | **22** | 與56項完成合計78個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
+| 未完成 | **23** | 與56項完成合計79個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
 | P0 未完成 | **0** | 既有P0已按核准的結案標準關閉 |
 | BLOCKED | **1** | D2-CI-ARTIFACT-01的ARTIFACT_COVERAGE_BLOCKED；已獲使用者接受的實機／分享項目不再重複計入 |
-| IMPLEMENTED_UNVERIFIED | **7** | AUD-02、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01、UI-DESIGN-TOKENS-02／03／09；-02／03配色已合併，仍待Preview確認；-09本機實作完成（1.16.8），PR #91待合併 |
+| IMPLEMENTED_UNVERIFIED | **8** | AUD-02、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01、UI-DESIGN-TOKENS-02／03／09、UI-MRTEAM-NICKNAME-01；-02／03配色已合併，仍待Preview確認；-09本機實作完成（1.16.8），PR #91待合併 |
 | CI_PASS／DEV_MERGED／PREVIEW_PENDING | **4** | HOF-BUCKET-DECISION-01、HOF-HONOR-POLICY-01、HOF-DISPLAY-ROUND-01、TEST-COMPARE-BASELINE-01；112入口Full與合併後Quick已通過，未冒充Preview／實機驗收 |
 | DESIGN_PENDING | **0** | — |
 | 其他候補／研究／殘項 | **10** | HIST-SPEC-CLAUSE-01、HOF-PITCHER-BALANCE-01、INJ-UI-01、INT-01、EVT-01、PLY-01／02、CI-LINUX-FULL-01舊工具路徑及兩項本機環境問題 |
@@ -528,3 +528,25 @@ Run43247910213／a6b3bc7的117入口為111 PASS／6 FAIL／0 SKIP／0 BLOCKED，
 限定重測PASS：以原CI兩個seed及完整main SHA執行原失敗入口，24種設定×6種尺寸通過；投手yakyo-test-001為543步／652次RNG，野手jp3-infielder-01為544步／549次RNG，至2058年退休全程一致；現代oracle請求0，Console／JS-CSS HTTP錯誤0。另以8dd244b舊基準執行--skip-careers，24種設定×6尺寸通過、舊oracle實際請求5次、錯誤0；這一項只證明舊載入與UI相容，不宣稱舊基準完整生涯驗證。證據：test-results/display-preferences-hof-fix-r1/及display-preferences-hof-legacy-r1/，保留原CI FAIL。
 
 本輪R2測試接線修復，不改產品、VERSION（維持1.16.4）、Runner、workflow、golden或其他斷言。本機整套Quick／Full依既有使用者指示NOT_RUN，新來源Linux Full及實機NOT_RUN；未推送或重跑CI，不解除ARTIFACT_COVERAGE_BLOCKED，不更改既有checkbox。
+
+
+### 2026-11-15：顯示名稱統一（1.16.9，本機限定驗證／未提交）
+
+依使用者提供的DISPLAY_NAME_REVISION_20261115.md及實作授權處理NAME-01～09。franchise取得卡與殿堂明細共用正式名稱；mrteam改為ミスター＋原暱稱、仍依取得球團；退休多角色／多守位改名，半數判斷與排序原封不動；兩個殿堂入口共用五級名稱及半形空白；既有低能力分支改為発展途上型；選單及遊び方改為タイトルに戻る，保存與控制流程不變。長達八守位的名稱在PNG副標題會超寬，限定該行超寬才縮小字級，全文保留。版本1.16.8→1.16.9，更新正式／玩家履歷與現行名稱規格，未推送或發布。
+
+R2純顯示例外：不執行整套Quick／Full或完整生涯。固定比較來源38ed1bbd7a9752d8b12059ed31859620bcc0fdad；216組兩入口HOF對照只允許name與franchise明細text改變，其餘完整數值／details／輸入狀態相等；10組退休角色／守位含半數邊界、缺失與DH-only只允許前綴；6組實際特性取得前段完整S、cards、board順序相等，RNG不得呼叫。既有能力類型大量歷史對照只投影r.type的期待の若手→発展途上型，其餘計算及狀態不變；TraitResultCard 57,506組與原凍結函式對照PASS，保留神カード等歷史辨識。共6個相關單元入口及award-identity凍結保護135項PASS。
+
+畫面限定驗證：1280／320／390×投手／野手×4主題×最大字級，取得卡、歸檔、特性清單、退休概要、實際canvas文字與邊界、唯讀S／RNG檢查；另驗證返回首頁取消／確認的完整IndexedDB存檔及非空顯示設定保留。共7組聚焦案例，無Console／pageerror／JS-CSS404；證據test-results/display-name-browser-final-r6/，PNG預覽career-names-P.png／career-names-IF.png。未執行Safari／Android實機、CI、整套Quick／Full，不將本機結果稱為正式發布或全套回歸PASS。
+
+原始失敗保留：unit-r1／r2為兩處舊能力文字期待未投影，限定修正該欄位後unit-r3及final-unit-r4通過；browser-r1為三個長多守位PNG超寬及一個按鈕innerText換行誤判，縮小超寬副標題／以無障礙名稱驗證後通過；release-notes-r1誤認HEAD既有token化樣式尚未新增確認框CSS，檢查改為相同內容直接逐字確認，不重加歷史raw CSS，r2通過；browser-final-r5新增PNG評價斷言漏列既有「★ 」前綴而FAIL，改為嚴格驗證完整「★ NPB 実績を残せず」後限定重測，原FAIL保留。履歷來源／生成／日期／重複生成、修改JS語法及diff已檢查。不改歷史快照、golden、Runner或CI。
+
+- [ ] **UI-MRTEAM-NICKNAME-01** — `IMPLEMENTED_UNVERIFIED`（2026-11-15本機完成／待使用者審查）。同日最初保留AN的決定已由後續TEAM_ID_NICKNAME_MAP.md與實作授權取代；58隊明示對照已接入1.16.9，不升版。完整S／RNG、未知／空／表外ID、轉隊後取得球團、取得標題與內文、清單／歸檔／退休／PNG均完成限定驗證；CI、Preview、實機未驗證，不提前勾選結案。新來源與證據見下節。
+
+
+### 2026-11-15追加：58隊球團ID暱稱（併入1.16.9，未提交）
+
+使用者提供TEAM_ID_NICKNAME_MAP.md並指示實作，取代上一輪暫保留AN的處理。新增docs/src/data/team-nicknames.js，明示NPB 12／KBO 10／CPBL 6／MLB 30隊的唯讀對照；traitLabel('mrteam')只讀取得時S.mrTeamName，未知、空、非字串、表外或原型屬性名稱回傳基本稱號ミスター，不截ID尾碼、不推測目前球團。取得標題與內文改共用同一正式label；清單、退休概要、球迷文字、PNG沿用既有共享來源。昌原／台北ダイナソーズ保留城市名。不改一般teamNick、其他球團顯示、取得條件、數值、RNG、存檔或舊自由文字。VERSION維持1.16.9，更新同版CHANGELOG、RELEASE_NOTES→既有生成器、CURRENT_SPEC。
+
+限定驗證：58隊對照與使用者原表／現行JP_DATA逐項一致；新增所有58隊、8個明確暱稱案例、未知／空／歷史名稱／表外／原型key、轉隊後取得球團與完整狀態不變檢查。實際movement取得前段僅允許mrteam標題與內文的已批准名稱差異，完整S、board順序及RNG仍嚴格比較。PC1280／320／390×投手／野手×4主題×最大字級，驗證ミスターストライプス、長ダイヤモンドバックス、昌原／台北、未知ID的清單與PNG及邊界，維持所有既有NAME測試。7組瀏覽器案例PASS／0 FAIL，Console／pageerror／JS-CSS404為0。
+
+證據：test-results/team-nickname-unit-r1.log、team-nickname-browser-r1/（含更新PNG預覽career-names-P.png／career-names-IF.png）、team-nickname-release-notes-r1.log；最終相關單元／凍結與模組檢查另存team-nickname-final-checks-r1.log。原display-name-*所有FAIL／PASS保留。整套Quick／Full、完整生涯、CI、Preview、手機實機NOT_RUN，不宣稱全套回歸或發布完成；不commit、push或部署。

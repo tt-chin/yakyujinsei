@@ -1,6 +1,14 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.9｜2026/11/15",
+    "lines": [
+      "- 特性・選手タイプ・引退評価の名称を整理。",
+      "- タイトルに戻る操作の表記と、引退画像の長い名前の表示を改善。",
+      "- 「ミスター」の球団別名称を修正。"
+    ]
+  },
+  {
     "title": "1.16.8｜2026/11/15",
     "lines": [
       "- 画面の余白の段階を整理し、一部の余白をわずかに調整。"

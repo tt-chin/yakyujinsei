@@ -33,7 +33,7 @@ export function playerTypeFor({ability,position,traits,toolRole}){
   if(traits.onetool&&toolRole)return toolRole+'ユーティリティー';
   if(position==='P'){
     const m=Math.max(a.vel,a.ctl,a.brk);
-    if(m<52)return '期待の若手';
+    if(m<52)return '発展途上型';
     if(a.sta>=m&&a.sta>=62)return '鉄腕';
     if(m===a.vel)return '剛腕'; if(m===a.brk)return '変化球の魔術師'; return '精密機械';
   }
@@ -42,7 +42,7 @@ export function playerTypeFor({ability,position,traits,toolRole}){
   const dv=position==='C'?(a.rng+a.fld+a.cat)/3:(a.rng+a.fld+a.arm)/3;
   const cand=[['大砲タイプ',a.pow],['安打製造機',a.con],['選球眼の鬼',a.eye],['韋駄天',a.spd],['守備職人',dv]];
   cand.sort((x,y)=>y[1]-x[1]);
-  if(cand[0][1]<52)return '期待の若手';
+  if(cand[0][1]<52)return '発展途上型';
   if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return 'オールラウンダー';
   return cand[0][0];
 }

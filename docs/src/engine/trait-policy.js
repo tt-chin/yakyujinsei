@@ -1,3 +1,4 @@
+import {teamNicknameFor} from '../data/team-nicknames.js';
 import {parseAwardHonor} from './award-identity-policy.js';
 // Display and deterministic trait decisions only. No RNG or persistence.
 export const TRAIT_LABELS = Object.freeze({
@@ -21,7 +22,7 @@ export const TRAIT_TEXT = Object.freeze({
 const LEGACY_LABELS = Object.freeze({愛将:'favorite',遅咲き:'late',球団の顔:'franchise',継続は力なり:'combo',ラバーアーム:'rubber','ロッカールームの癌':'cancer',ムードメーカー:'ambience',ゴールデングラブ常連:'goldcloth','ミスター・チーム':'mrteam',愛妻家:'confidante',努力の人:'grinder',全球団制覇:'rainbow',台湾通:'taiwan','Team Taiwan':'taiwan'});
 export function traitLabel(key,s={},nickname=name=>name) {
   const base=TRAIT_LABELS[key]||key;
-  if(key==='mrteam')return (nickname(s.mrTeamName||'')||'')+base;
+  if(key==='mrteam')return base+teamNicknameFor(s.mrTeamName);
   if(key==='legend')return (s.legendLeague||'')+base;
   if(key==='rainbow')return (s.rainbowLg||'')+base;
   if(['pitcherTC','hitterTC','nitenichi'].includes(key))return (s.tripleCrownHistory?.[key]||[]).map(r=>r.league).filter((v,i,a)=>a.indexOf(v)===i).join('・')+base;

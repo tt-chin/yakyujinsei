@@ -235,7 +235,10 @@ function drawShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playerT
   c.fillStyle=imageColor.dim; c.font='13px '+sans; c.fillText('野球人生シミュレーター・引退記念',PAD,30);
   c.fillStyle=imageColor.accent; c.font='bold 36px '+sans; c.fillText(S.name,PAD,52);
   c.fillStyle=imageColor.text; c.font='15px '+sans;
-  c.fillText(`${primaryPos()}｜${playerType()}｜${hist.length?hist[0].y:'?'}–${S.year}｜引退時${S.age}歳${S.pos==='P'&&S.tjCount?`｜TJ×${S.tjCount}`:''}`,PAD,98);
+  const careerSubtitle=`${primaryPos()}｜${playerType()}｜${hist.length?hist[0].y:'?'}–${S.year}｜引退時${S.age}歳${S.pos==='P'&&S.tjCount?`｜TJ×${S.tjCount}`:''}`;
+  const subtitleWidth=c.measureText(careerSubtitle).width;
+  if(subtitleWidth>W-PAD*2)c.font=(Math.floor(15*(W-PAD*2)/subtitleWidth*10)/10)+'px '+sans;
+  c.fillText(careerSubtitle,PAD,98);
   // 特性列(header 右方)。
   let y=126;
   function tagColor(o){

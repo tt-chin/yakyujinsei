@@ -28,3 +28,26 @@ console.log('PASS franchise: old unknown withheld, one proven league only; trait
 
 assert.equal(evaluateLeagueHof({pos:'P',statsByLevel:{NPB1:{W:NaN}},honors:[]},'NPB',th,'NPB').hasFirstTeam,false);
 console.log('PASS malformed first-team data is unknown, never inferred or rewritten');
+
+// NAME-01/04-06: compare the complete result against the pre-copy-change source.
+const {execFileSync}=await import('node:child_process');
+const sourceAt=file=>execFileSync('git',['show','38ed1bbd7a9752d8b12059ed31859620bcc0fdad:docs/src/engine/'+file]).toString();
+const dataURL=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
+const oldTierURL=dataURL(sourceAt('hall-of-fame-tier-policy.js'));
+const oldTier=await import(oldTierURL);
+const oldPolicy=await import(dataURL(sourceAt('hof-evaluation-policy.js').replace("'./hall-of-fame-tier-policy.js'",JSON.stringify(oldTierURL)).replace("'./award-consumer-policy.js'",JSON.stringify(new URL('../docs/src/engine/award-consumer-policy.js',import.meta.url).href))));
+const currentTier=await import('../docs/src/engine/hall-of-fame-tier-policy.js');
+const tierLabels=['殿堂','スター選手','レギュラー選手','一軍定着に届かず','実績を残せず'];
+let displayCases=0;
+for(const [lg,level] of Object.entries(levels))for(const pos of ['P','IF'])for(const points of [0,499.999,500,1999.999,2000,4999.999,5000,7999.999,8000])for(const award of ['', '年間MVP','首位打者']){
+ const st={...blank(),H:points,IP:pos==='P'?points/.35:0};
+ const state={pos,statsByLevel:{[level]:st},honors:award?['2035 '+names[lg]+award]:[],traits:{franchise:true},franchiseAchievement:{year:2035,league:lg,teamId:'verified-team'},rngState:123};const before=structuredClone(state);
+ const expected=oldPolicy.evaluateLeagueHof(state,lg,th,names[lg]);
+ expected.name=names[lg]+' '+tierLabels[expected.i];
+ for(const row of expected.details.other){assert.equal(row.text,'神カード');row.text='フランチャイズプレーヤー';}
+ assert.deepEqual(evaluateLeagueHof(state,lg,th,names[lg]),expected);
+ const args={baseScore:points,honor:{sc:0,mvp:award==='年間MVP'?1:0,king:award==='首位打者'?1:0},thresholds:th,leagueName:names[lg]};
+ const tier=oldTier.hallOfFameTier(args);tier.name=names[lg]+' '+tierLabels[tier.i];assert.deepEqual(currentTier.hallOfFameTier(args),tier);
+ assert.deepEqual(state,before);displayCases++;
+}
+console.log('PASS '+displayCases+' NAME HOF cases: only exact name/detail copy changes, all numerical results and input state strict');

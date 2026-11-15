@@ -111,3 +111,22 @@ assert.match(baseCss, /\.career-team\{[^}]*max-width:220px[^}]*white-space:norma
 assert.match(baseCss, /-webkit-line-clamp:2/);
 
 console.log('Career movement policy checks passed.');
+
+// NAME-01/07: the same actual acquisition prefix must change no career field or RNG.
+const {execFileSync}=await import('node:child_process');
+const {CareerMovement}=await import('../docs/src/engine/career-movement.js');
+const original=execFileSync('git',['show','38ed1bbd7a9752d8b12059ed31859620bcc0fdad:docs/src/engine/career-movement.js']).toString().replace(/from '([^']+)'/g,(_,spec)=>'from '+JSON.stringify(new URL(spec,new URL('../docs/src/engine/career-movement.js',import.meta.url)).href));
+const {CareerMovement:OldMovement}=await import('data:text/javascript;base64,'+Buffer.from(original).toString('base64'));
+for(const years of [5,6,7,13,14,15]){
+ const run=Movement=>{
+  const state={stage:'PRO',org:'NPB',lv:'NPB1',year:2035,orgTeamId:'NPB_CL_HAN',teamYears:years,npbYears:0,traits:{},champThisTeam:true,champTeam:'NPB_CL_HAN',lastD:0,honors:[],rngState:123};
+  const cards=[],boards=[],stop=Error('END_OF_ACQUISITION_PREFIX'),paths={get NPB(){throw stop;}};
+  const instance=new Movement({getState:()=>state,ovr:()=>60,LV:{NPB1:{top:true,statBucket:'NPB'}},PATHS:paths,teamNick:()=> 'AN',card:(...a)=>cards.push(a),board:v=>boards.push(v),rng:{R:()=>{throw Error('unexpected RNG');},ri:()=>{throw Error('unexpected RNG');},chance:()=>{throw Error('unexpected RNG');}}});
+  assert.throws(()=>instance.movement(),error=>error===stop);
+  return {state,cards,boards};
+ };
+ const old=run(OldMovement),now=run(CareerMovement);
+ for(const card of old.cards){if(card[1]==='隠し特性解放：神カード')card[1]='隠し特性解放：フランチャイズプレーヤー';if(card[1]==='隠しタイトル:ANミスター'){card[1]='隠しタイトル:ミスターストライプス';assert.equal(card[2].split('ミスターAN').length,2);card[2]=card[2].replace('ミスターAN','ミスターストライプス');}}
+ assert.deepEqual(now,old,'NAME acquisition: full S/cards/board order unchanged except exact approved titles');
+}
+console.log('PASS 6 NAME acquisition boundary cases, exact S and no RNG');

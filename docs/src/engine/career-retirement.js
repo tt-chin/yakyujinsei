@@ -9,7 +9,7 @@ import { incomeSummary } from '../ui/income-summary.js';
 import { replayURL, shareReplayURL } from '../ui/seed-share.js';
 import { hasHistoricalDefenseAward } from './award-consumer-policy.js';
 import { smallSchoolEligibility } from './school-policy.js';
-import { removedTraitLabel } from './trait-policy.js';
+import { removedTraitLabel, traitLabel } from './trait-policy.js';
 
 export class CareerRetirement {
   #rules;
@@ -32,7 +32,7 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
       if(es[0][1]>=tot/2)return roleName3(es[0][0]); /* 済み半数あり。 */
       /* 済み半数なし：スイングマン(主な2役を併記)。 */
       const list=es.map(e=>({SP:'先発',MR:'中継ぎ',CL:'抑え'}[e[0]]||'')).filter(Boolean);
-      return 'スインガー('+list.slice(0,2).join('、')+')';
+      return 'スイングマン('+list.slice(0,2).join('、')+')';
     }
     const dy=S.dposYears||{}; const total=Object.values(dy).reduce((a,b)=>a+b,0);
     if(!total)return S.dpos?DPN[S.dpos]:POSN[S.pos];
@@ -40,7 +40,7 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     if(entries[0][1]>=total/2)return DPN[entries[0][0]]||entries[0][0]; /* 済み半数あり。 */
     const noDH=entries.filter(e=>e[0]!=='DH'&&e[0]!=='—').map(e=>DPN[e[0]]||e[0]);
     if(!noDH.length)return DPN['DH'];
-    return 'ツールマン('+noDH.join('、')+')';
+    return 'ユーティリティープレーヤー('+noDH.join('、')+')';
   }
   function capTeam(bucket){ /* 当該リーグで最長在籍の球団、殿堂入り時の帽章にする。 */
     const S=getState();
@@ -314,7 +314,7 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     if(S.traits.disc)picks.push('自律しすぎて怖い。朝4時の球場がホームみたいな男');
     if(S.traits.cancer)picks.push('実力はガチ。でもあの態度はな……いなくなってロッカーが平和になったわ');
     if(S.traits.thief)picks.push('二軍落ち拒否して結果も出せず。給料泥棒呼ばわりも残当');
-    if(S.traits.mrteam)picks.push('15年間、一筋の球団にすべてをささげた。'+(teamNick(S.mrTeamName||'')||'')+'『ミスター』の称号にふさわしい');
+    if(S.traits.mrteam)picks.push('15年間、一筋の球団にすべてをささげた。'+'『'+traitLabel('mrteam',S,teamNick)+'』の称号にふさわしい');
     if(S.traits.confidante)picks.push('グラウンドでは無双、恋愛ではあと一歩。悲しいなあ');
     if(S.traits.smallschool)picks.push('あの弱小校からプロまで来たんか。映画化決定やろ');
     if(S.traits.grinder)picks.push('才能に恵まれなくてもここまで来た。こういう選手が一番尊敬できる');
