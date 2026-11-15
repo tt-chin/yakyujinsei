@@ -126,7 +126,7 @@ A 的改號限制（建議）：只在生涯進行中、所屬職業球團時可
 
 **允許的差異**：狀態只有 `S.jerseyHistory`；畫面只有選號步驟、選單的改號入口與其對話框、W2 a～d 的背號文字與選單按鈕的「メニュー」文字。其他任何狀態、RNG 次數或 RNG 順序的差異都視為回歸。
 
-## 5. 實作與驗證計畫（R3；決定已齊，實作待授權）
+## 5. 實作與驗證計畫（R3；`1494a24` 時點草案，當時實作待授權；2026-11-15 已授權，最新 T 表見 §9）
 
 - 分類：R3（永久狀態、存檔、主流程步驟）。版本：MINOR（新功能；實作時以當時 dev 的版本為基準），同步 `CHANGELOG.md`／`RELEASE_NOTES.md`／`CURRENT_SPEC.md`。
 - 新模組（例如 `docs/src/engine/jersey-policy.js`）放預設選號與紀錄規則，`game.js` 只做接線（`docs/src` 既有檔案凍結斷言見 `award-identity-policy.test`）。
@@ -200,9 +200,9 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 | J6 | 面板 `#N` 位置 | `#bd-name` 前的獨立元素 `#bd-number`（`patchBoard` 改寫 `#bd-name` 第一個子節點，不能放入） |
 | J7 | 年度別 | presenter 在所属字串後加「 #6」（凍結檔 `player-detail.js` 不改）；舊存檔第一筆紀錄前的職業年度為「（背番号不明）」 |
 
-## 7. 草稿驗證（scratchpad，未提交）
+## 7. 草稿驗證（驗證當時為 scratchpad、未提交；目前保存於遠端 `wip/ply-01-draft`）
 
-草稿只在本機分支 `draft/ply-01`，最終基準 dev `75ab10b`（1.16.13），macOS＋Brave 157 本機證據，非 CI。
+驗證當時草稿只在本機分支 `draft/ply-01`（未提交），最終基準 dev `75ab10b`（1.16.13），macOS＋Brave 157 本機證據，非 CI。目前草稿已保存至遠端分支 `wip/ply-01-draft`（`0d617a6`，不開 PR）；仍是草稿，不是已合併的正式功能。
 
 **設計摘要**
 - 新模組 `docs/src/engine/jersey-policy.js`（純函式：號碼表、預設、資格、待選判定、目前號碼、可否改號、提案號碼、舊存檔判定、只增紀錄、年度查詢、年度別標籤、退休卡期間）與 `docs/src/ui/jersey-dialog.js`（`<select>` 對話框，沿用 information/confirmation dialog 的版面與焦點處理）。
@@ -240,7 +240,7 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 | T5 | 顯示 W2 a～d（J6、J7、J3） | `career-presenter.js`、`game-view.js`、`professional-season.js`、`career-retirement.js`、`base.css` |
 | T6 | 選單鈕只留 ☰ | `index.html` |
 | T7 | 既有測試 P1～P6 與原文耦合 | §8 所列 |
-| T8 | 新 E2E `jersey-e2e`：入團選號只出現一次並記錄當年、取消不留紀錄、選單改號（同年多次全保留、不覆寫過去）、交易／轉隊沿用、IND／CORP 不出現、同隊再入團不出現（J3）、舊存檔（1.16.13 存檔 fixture）D4 補號一次且下一年度存檔後不再出現、面板／成績卡／年度別／退休卡顯示、0≠00 | `tests/jersey-e2e.mjs`、manifest |
+| T8 | 新 E2E `jersey-e2e`：入團選號只出現一次並記錄當年、取消不留紀錄、選單改號（同年多次全保留、不覆寫過去）、交易／轉隊沿用、IND／CORP 不出現、同隊再入團不出現（J3）、舊存檔（1.16.13 存檔 fixture）D4 補號一次且下一年度存檔後不再出現、J2 存檔／續玩（①年初完成選號後、下一次年初存檔前離開並續玩，回到該年度年初快照並再次詢問選號；②年中經選單改號後、下一年度存檔前續玩不保留該次改號，下一年度存檔成功後保留；不改保存時機、不新增即時存檔）、面板／成績卡／年度別／退休卡顯示、0≠00 | `tests/jersey-e2e.mjs`、manifest |
 | T9 | 版本與文件：1.17.0（MINOR）、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG PLY-01 | 文件 |
 
 ## 10. 負控制與未完成項目
