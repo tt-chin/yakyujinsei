@@ -32,6 +32,7 @@ const browserProfiles = {
   'display-preferences-e2e': {args:['--only-seed=yakyo-test-001,jp3-infielder-01'], comparison:'baseline', seconds:260},
   'event-system-e2e': {seconds:150},
   'event-fix-e2e': {seconds:15},
+  'event-category-badge-e2e': {quick:[],seconds:20,reason:'EVT-01: real-career event prompt and result-card category badges (draw-time effective category, saved result category), 1280/390 px, 4 themes.'},
   'global-contract-market-e2e': {args:['--quick'], seconds:30},
   'hof-first-ballot-e2e': {seconds:50},
   'game-view-dom-e2e': {seconds:300,reason:'OOP phase 2 GameView guard: P/IF fixed-seed careers at 1280/390, per-step #log/#act/#board DOM, S and RNG count identical to fixed baseline 2a11a64. No Quick profile.'},

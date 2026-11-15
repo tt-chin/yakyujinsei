@@ -1,7 +1,7 @@
 import {TEAM_NICKNAMES} from '../docs/src/data/team-nicknames.js';
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
 import {sourceText} from './support/source-text.mjs';
-import {projectHofLog} from './support/dom-snapshot.mjs';
+import {projectHofLog,removeEventBadges} from './support/dom-snapshot.mjs';
 import {openBoardAction} from './support/board-menu.mjs';
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
@@ -29,6 +29,8 @@ const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/a
 // Modern baselines keep all retirement markup strict and load no old oracle.
 const baselineHof=execFileSync('git',['show',`${baselineRef}:docs/src/engine/hall-of-fame-policy.js`],{cwd:root,maxBuffer:20*1024*1024}).toString();
 const legacyHofProjection=!baselineHof.includes("from './hof-evaluation-policy.js'");
+// EVT-01 (1.16.11): baselines without the badge module get the approved badge removal on the candidate side only.
+const eventBadge=!execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/event-category-badge.js'],{cwd:root,encoding:'utf8'}).trim();
 let hofOracleRequests=0;
 const server=createServer(async(req,res)=>{
   try{
@@ -162,13 +164,16 @@ try{
             await openBoardAction(p,'board-preferences');await setPreferences(p,THEME_IDS[step%THEME_IDS.length],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
             assertSameCareer(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
-          const result=await p.evaluate(({labels,texts,copySource})=>{
+          const result=await p.evaluate(({labels,texts,copySource,badgeSource})=>{
             const snapshot=window.__displayRegression();delete snapshot.state.version;if(snapshot.state.birthHighSchool)delete snapshot.state.birthHighSchool.createdVersion;
             for(const r of Object.values(snapshot.state.intlTraitResults||{}))delete r.personalStats;
             const action=document.querySelector('#act');
             // Compare all non-trait copy and full S/RNG. Only the approved trait
             // explanation lifetime/summary changes are normalized on a detached clone.
             const log=document.querySelector('#log').cloneNode(true);
+            const removeBadges=badgeSource?eval('('+badgeSource+')'):null;if(removeBadges)removeBadges(log);
+            // #act stays live (innerText needs layout): strip the one verified title badge from the text only.
+            let choices=action.innerText;if(removeBadges){const [label,...more]=removeBadges(action.cloneNode(true));if(more.length)throw Error('EVENT_BADGE_UNEXPECTED');if(label){if(!choices.startsWith(label+'イベント｜'))throw Error('EVENT_BADGE_TEXT');choices=choices.slice(label.length);}}
             if(window.__hofDisplay&&snapshot.state.done)window.__projectHofLog(log,window.__hofDisplay());
             // Only the approved per-event statistics block; old result copy remains compared.
             for(const block of log.querySelectorAll('.intl-personal-stats'))block.remove();
@@ -189,14 +194,14 @@ try{
                 }
               }
             }
-            const state={...snapshot,text:(copySource?eval('('+copySource+')')(log.textContent,window.__displayMrPair()):log.textContent).replace(/\s+/g,''),choices:action.innerText};
+            const state={...snapshot,text:(copySource?eval('('+copySource+')')(log.textContent,window.__displayMrPair()):log.textContent).replace(/\s+/g,''),choices};
             if(snapshot.state.done)return {state,done:true};
             const rows=[...action.querySelectorAll('.abrow')].filter(el=>el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('capped'));
             const buttons=[...action.querySelectorAll('button')].filter(el=>!el.disabled&&!/元に戻す|すべてリセット/.test(el.innerText));
             const button=buttons.find(el=>el.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(el=>/配分を確定|配分完了|次へ|完了/.test(el.innerText))||buttons.find(el=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(el.innerText))||buttons[0];
             if(!button)throw new Error('No actionable choice');
             button.click();return {state,done:false};
-          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT,copySource:variant==='candidate'&&projectNames?projectDisplayNameCopy.toString():null});
+          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT,copySource:variant==='candidate'&&projectNames?projectDisplayNameCopy.toString():null,badgeSource:variant==='candidate'&&eventBadge?removeEventBadges.toString():null});
           records.push(result.state);
           if(result.done)break;
           if(step===1999)throw new Error(`Career did not finish: ${seed}`);

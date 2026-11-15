@@ -38,7 +38,8 @@ assert.match(html,new RegExp(`<html [^>]*data-theme="${THEME_IDS[0]}"`),'index.h
 const BASE=['--bg','--panel','--panel2','--edge','--chalk','--dim','--amber','--clay','--good','--bad','--blue','--control-edge','--gold','--primary','--shadow-base','--focus-ring','--potential-marker'];
 const themes=themeColors(css),rules=Object.keys(themes.rules);
 assert.deepEqual([...themes.order].sort(),[...THEME_IDS].sort(),'theme blocks parsed');
-assert.equal(rules.length,48,'rule block defines the 48 component colors');
+// EVT-01 (1.16.11) added 9: --event-{training,encounter,endorsement}-{bg,edge,text} (contrast in event-category-badge.test).
+assert.equal(rules.length,57,'rule block defines the 57 component colors');
 assert.ok(rules.every(n=>!BASE.includes(n)),'rule block must not redefine a base color');
 // UI-DESIGN-TOKENS-06 (§14.3 D2): a theme block may also override a non-color token of the base.css / preferences.css
 // :root blocks (radius, shadow, font, spacing); any other extra token fails.
@@ -78,7 +79,10 @@ for(const theme of THEME_IDS){
 assert.equal(contrastPairs,THEME_IDS.length*37);
 // Approved golden (tasks/design-tokens-05/unify-v4.json): every rule string, and every resolved value within 1/255.
 const approved=JSON.parse(readFileSync(new URL('../tasks/design-tokens-05/unify-v4.json',import.meta.url),'utf8'));
-assert.deepEqual(Object.fromEntries(rules.map(n=>[n,themes.rules[n]])),Object.fromEntries(approved.tokens.map(t=>['--'+t.name,t.rule])),'rule strings equal the approved -05 rules');
+// EVT-01 (1.16.11): exactly these 9 tokens are outside the -05 golden; their rule strings are pinned in event-category-badge.test.
+const EVT01=['training','encounter','endorsement'].flatMap(k=>['bg','edge','text'].map(p=>`--event-${k}-${p}`));
+assert.deepEqual(rules.filter(n=>EVT01.includes(n)).sort(),[...EVT01].sort(),'all 9 EVT-01 tokens present');
+assert.deepEqual(Object.fromEntries(rules.filter(n=>!EVT01.includes(n)).map(n=>[n,themes.rules[n]])),Object.fromEntries(approved.tokens.map(t=>['--'+t.name,t.rule])),'rule strings equal the approved -05 rules');
 const hexBytes=h=>[1,3,5,7].map(i=>h.length>i?parseInt(h.slice(i,i+2),16):255);
 for(const theme of THEME_IDS)for(const t of approved.tokens){const got=hexBytes(themes.hex(theme,'--'+t.name)),want=hexBytes(t.unified[theme]);
   assert.ok(got.every((v,i)=>Math.abs(v-want[i])<=1),`${theme} --${t.name}: ${themes.hex(theme,'--'+t.name)} vs approved ${t.unified[theme]}`);}
@@ -86,4 +90,4 @@ for(const theme of THEME_IDS)for(const t of approved.tokens){const got=hexBytes(
 const base=readFileSync(new URL('../docs/styles/base.css',import.meta.url),'utf8');
 const loaded=[...html.matchAll(/fonts\.googleapis\.com\/css2\?([^"]+)"/g)].flatMap(m=>[...m[1].matchAll(/family=([^:&]+)/g)].map(f=>decodeURIComponent(f[1].replace(/\+/g,' '))));
 for(const name of ['sans','mono']){const first=base.match(new RegExp(`--${name}:'([^']+)'`))?.[1];assert.ok(loaded.includes(first),`--${name} first family ${first} is not loaded (${loaded.join(', ')})`);}
-console.log(`Display preferences: theme list, ${THEME_IDS.length*6} combinations, validation, storage failures, isolation, contrast (${contrastPairs} pairs), 17 base colors + 48 derived rules and font loading passed.`);
+console.log(`Display preferences: theme list, ${THEME_IDS.length*6} combinations, validation, storage failures, isolation, contrast (${contrastPairs} pairs), 17 base colors + 57 derived rules and font loading passed.`);
