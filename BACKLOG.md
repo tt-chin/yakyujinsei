@@ -1,6 +1,6 @@
 # BACKLOG — 野球人生（日文版）
 
-> 最新狀態核對：2026-11-15。dev 9fa1b60（1.16.10）的Quick Run 43666590311為91 PASS／1 FAIL，上輪4個顯示測試已通過；唯一KBO重播失敗已確認為空白姓名隨機化使狀態雜湊不同。本輪僅固定該測試的新舊／重播開局姓名，限定入口PASS，保留完整狀態與RNG斷言；新提交CI／Preview待確認，Full未執行，不宣稱正式發布。ARTIFACT_COVERAGE_BLOCKED維持。
+> 最新狀態核對：2026-11-15。dev 4b65a70（1.16.10）的Linux Full Run 43667459804為122入口、114 PASS／8 FAIL／0 SKIP／0 BLOCKED，8批Artifact及Aggregate紀錄已保存；KBO與隨機姓名入口PASS。八個失敗為舊比較姓名／已批准文案／版號差異，已做本機限定測試修復，未宣稱新來源CI或整套Full通過。版號及產品不變，Preview／實機與ARTIFACT_COVERAGE_BLOCKED仍維持原狀。
 > 以現有80個唯一ID的checkbox為準：已完成56項、未完成24項（UI-DESIGN-TOKENS-04／05／06／07／08與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
@@ -590,3 +590,26 @@ Quick [Run 43666590311](https://github.com/tt-chin/yakyujinsei/actions/runs/4366
 限定重測該入口--quick PASS（不是整套Quick）：404次操作、677次RNG、2050退休，同版完整重播相等；歷史失敗前390筆狀態／操作／RNG比較通過原核准championmaker差異檢查；2049降格續約及保證契約／排程斷言通過；1280／320／390px的到期、降格、續約、雙擊、原生薪資一次性支付與RNG檢查PASS，Console／JS-CSS404為0，約39.4秒。原測試的Windows已斷線profile收尾逾時警告仍保留，程序exit 0。語法與diff檢查PASS。證據test-results/quick-43666590311-failed.log、kbo-name-probe-43666590311.json／log、kbo-fixed-name-quick-r1.log；不納入Git。
 
 本機整套Quick／Full、Full專用額外正向路線及新來源Linux CI未執行，不稱為全套回歸PASS。僅提交本測試及BACKLOG，push後依既有workflow自動Quick，不額外啟動Full或持續監控；main及正式站不變，Preview待確認。80唯一ID、56完成／24未完成，原限制保持。
+
+
+### 2026-11-15追加：Linux Full 122入口的8項比較修復（1.16.10不升版）
+
+使用者授權依Run 43667459804調查結果修正，未授權本輪commit／push或CI重跑。原受驗4b65a70defec7a791a038de59bb732dd96c3743f的114 PASS／8 FAIL、Aggregate FAIL_OR_INCOMPLETE保持；8批Artifact均已上傳，不代表完整證據覆蓋缺口解除。KBO與player-random-name入口已在Linux PASS。
+
+修正限定測試與支援資料：contract-salary、npb-return、hof-first-ballot、bug-act-01-02、replay-share-theme在新舊版及重播輸入原角色相同固定姓名，S.name／完整狀態／RNG仍比較；game-view-dom與display-preferences只在比較來源仍使用舊名稱時，對顯示DOM／view文字套用明列的NAME-03／04／07／08／09對照，不投影S或RNG。退休文字已用CI實際基準ca3ee3287bbe2574fb27454ca647f9cf0d60949c定位：兩側543筆，首次差異為最後542筆text的字元5297，NPBページ上の乗客→NPB 実績を残せず；非狀態或RNG差異。game-view-dom保留其原固定4f39a73e23758b891bc24951225231792ab022b4基準。新support/display-name-comparison.mjs只做明列的純字串對照，由career-traits單元測試驗證原文／批准文案及未知名稱、數字、錯誤輸入等正負控制；manifest只新增import-only分類，原122入口、參數、通過條件不變。
+
+分享圖片先驗證新舊原生Mr稱號及能力類型，再統一兩個已批准字串；舊dc5ac871為內嵌shareImage、新版為模組物件，兩種精確注入方式各自核對。保留原本收入列上方完整PNG像素比較區域，不擴大排除、不遮罩；失敗訊息改為短SHA256，PNG另保存。design-tokens-09在兩邊各自核對原生顯示版號與其config來源一致，再使用從現行config讀取的同一版號文案比較幾何；固定同名及明列顯示名稱後保留全部82,272項元素比較與34個變更selector命中檢查，0差異。不固定期待某一歷史版號，不刪除#app-version或其幾何。
+
+限定結果：contract-salary只執行原失敗career-P／IF；bug-act只執行原失敗兩組同版重播（新增--replay-only選項，預設CI全部案例仍執行）；display-preferences只執行CI兩個seed的完整S／文字／RNG比較（--careers-only，不重跑已通過的設定組合）；npb-return、hof-first-ballot、game-view-dom、design-tokens-09執行相關原入口；分享使用CI原--ui-only。整套Quick／Full與新來源Linux CI未執行，不用限定結果取代Full。最終各入口的程序exit與數量於下段核對。
+
+原始及中途FAIL保留：run-43667459804-failed.log與aggregate／batch-5／batch-8下載證據；display診斷先用預設8dd244b而得到85對543及舊traits差異，改用CI實際ca3ee328後定位真正退休名稱差異，未更換正式基準；GameView第一次將franchise正式卡片又轉回神カード而FAIL，確認舊卡片已有正式名稱後移除該多餘映射；另一次誤將只支援舊公式的GameView接到ca3ee328而載入逾時，仍用CI原4f39a73重測，不擴大修正該非CI組合。分享第一次注入漏分舊內嵌結構而404；修正後誤漏--ui-only多跑六條舊生涯，雖UI部分PASS仍以Array buffer allocation failed結束，原FAIL不改寫；最後依CI --ui-only重測。測試清單起初拒絕未分類的新helper，補import-only分類後清單通過。Windows已斷線profile清理警告另記錄，不當作Linux結果。
+
+證據前綴test-results/full122-*：contract-career-r1與contract-career-final-r2、npb-r1、hof-r1、act-replays-r1/與同名log、share-r1／r2及share-ui-final-r3、tokens09-r1、game-dom-r1及game-dom-final-r2／r3、display-careers-r1、copy-policy-final-r2、test-list-r2；完整首差異另見display-actual-first-diff-43667459804.json。所有證據不納入Git，不改產品／規則／VERSION／golden／Runner／workflow。
+
+最終限定驗證核對：合約career P／IF各1組（CI compare=ca3ee328）共2 PASS／0 FAIL、ACT兩個seed的4次生涯及2組完整重播PASS、NPB回歸原入口PASS、首次殿堂原入口PASS、分享原--ui-only完整入口PASS、display-preferences的CI兩seed完整生涯PASS、GameView以原4f39a73執行4角色策略×1280／390共8組完整DOM／S／RNG比較PASS（既有8個HOF負控制同時PASS）、design-tokens-09最終動態版號來源共82,272比較／34 selector全命中且0差異。上述程序均exit 0。GameView原--negative-control刻意增加年度標題一個空白，在step 0的dom.log以exit 1被拒絕，判為負控制PASS，不混入功能FAIL。
+
+另加嚴兩個瀏覽器Mr稱號guard：先以明確TEAM_NICKNAMES核對原生新稱號，再產生舊顯示對照，禁止把錯誤的新稱號也投影掉。對兩個實際注入函式直接執行正確／未知／空ID、完整狀態不變及錯誤稱號拒絕測試，連同原career-traits及名稱映射共19組PASS；投影仍只用於DOM／views文字，不用於S、選擇或RNG。新增guard後以這些直接單元測試驗證，沒有再重跑8組完整生涯。
+
+最終日誌：full122-contract-career-final-r2、full122-act-replays-r1、full122-npb-r1、full122-hof-r1、full122-share-ui-final-r3、full122-display-careers-r1、full122-game-dom-final-r3、full122-game-dom-negative-r1、full122-tokens09-final-r2、full122-copy-policy-final-r4。test manifest的122個Full ID（含syntax）已與原CI plan逐項核對完全相同，只有新helper的import-only分類。語法、相對引用與diff檢查PASS。12個本機修改／新增檔，未暫存／提交／推送；19項單元與上述限定入口不取代新的Linux Full驗收，原114／8、歷史中途FAIL及ARTIFACT_COVERAGE_BLOCKED均保留。
+
+提交狀態補記：使用者於上述限定驗證完成後明確授權COMMIT／PUSH，本次12檔提交至dev；前文未提交為當時歷史狀態。推送後依既有workflow自動Quick，新來源CI與Preview待確認；未授權main反映／正式發布，亦未另外啟動Full。

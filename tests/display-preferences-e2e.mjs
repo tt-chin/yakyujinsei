@@ -1,3 +1,5 @@
+import {TEAM_NICKNAMES} from '../docs/src/data/team-nicknames.js';
+import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
 import {sourceText} from './support/source-text.mjs';
 import {projectHofLog} from './support/dom-snapshot.mjs';
 import {openBoardAction} from './support/board-menu.mjs';
@@ -22,6 +24,7 @@ const require=createRequire(import.meta.url),{chromium}=require(modulePath||'pla
 const preview=process.argv.find(v=>v.startsWith('--preview='))?.slice(10);
 const baselineRef=process.argv.find(v=>v.startsWith('--baseline='))?.slice(11)||'8dd244b';
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
+const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/ability-evaluation-policy.js`],{cwd:root}).toString().includes('発展途上型');
 // Only pre-1.16 HOF baselines need the historical display projection.
 // Modern baselines keep all retirement markup strict and load no old oracle.
 const baselineHof=execFileSync('git',['show',`${baselineRef}:docs/src/engine/hall-of-fame-policy.js`],{cwd:root,maxBuffer:20*1024*1024}).toString();
@@ -44,7 +47,7 @@ const server=createServer(async(req,res)=>{
     }
     if(relative==='src/engine/game.js'){
       let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls');
-      script+='\nwindow.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
+      script+='\nwindow.__approvedMrTeamNames='+JSON.stringify(TEAM_NICKNAMES)+';window.__displayMrPair=()=>{if(!S.traits.mrteam)return null;const expected=\'ミスター\'+(typeof S.mrTeamName===\'string\'&&Object.hasOwn(window.__approvedMrTeamNames,S.mrTeamName)?window.__approvedMrTeamNames[S.mrTeamName]:\'\');if(displayTrait(\'mrteam\')!==expected)throw Error(\'MR_COPY_CONTRACT\');return[expected,teamNick(S.mrTeamName||\'\')+\'ミスター\'];};window.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
       if(!baseline&&legacyHofProjection)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       content=script;
     }
@@ -159,7 +162,7 @@ try{
             await openBoardAction(p,'board-preferences');await setPreferences(p,THEME_IDS[step%THEME_IDS.length],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
             assertSameCareer(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
-          const result=await p.evaluate(({labels,texts})=>{
+          const result=await p.evaluate(({labels,texts,copySource})=>{
             const snapshot=window.__displayRegression();delete snapshot.state.version;if(snapshot.state.birthHighSchool)delete snapshot.state.birthHighSchool.createdVersion;
             for(const r of Object.values(snapshot.state.intlTraitResults||{}))delete r.personalStats;
             const action=document.querySelector('#act');
@@ -186,14 +189,14 @@ try{
                 }
               }
             }
-            const state={...snapshot,text:log.textContent.replace(/\s+/g,''),choices:action.innerText};
+            const state={...snapshot,text:(copySource?eval('('+copySource+')')(log.textContent,window.__displayMrPair()):log.textContent).replace(/\s+/g,''),choices:action.innerText};
             if(snapshot.state.done)return {state,done:true};
             const rows=[...action.querySelectorAll('.abrow')].filter(el=>el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('capped'));
             const buttons=[...action.querySelectorAll('button')].filter(el=>!el.disabled&&!/元に戻す|すべてリセット/.test(el.innerText));
             const button=buttons.find(el=>el.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(el=>/配分を確定|配分完了|次へ|完了/.test(el.innerText))||buttons.find(el=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(el.innerText))||buttons[0];
             if(!button)throw new Error('No actionable choice');
             button.click();return {state,done:false};
-          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT});
+          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT,copySource:variant==='candidate'&&projectNames?projectDisplayNameCopy.toString():null});
           records.push(result.state);
           if(result.done)break;
           if(step===1999)throw new Error(`Career did not finish: ${seed}`);
@@ -207,7 +210,7 @@ try{
   if(!preview){assert.ok(legacyHofProjection?hofOracleRequests>0:hofOracleRequests===0,'HOF oracle is used only for legacy baselines');console.log(`HOF comparison: ${legacyHofProjection?'legacy frozen oracle':'modern strict retirement DOM'}; oracle requests ${hofOracleRequests}`);}
   console.log(`Console/HTTP errors: ${errors.length}`);
   if(errors.length)console.log(JSON.stringify(errors));
-  assertSameCareer(errors,[],'Console or JS/CSS HTTP errors');console.log(`Display E2E passed (${channel}): ${combinations?`${combinations} combinations × 6 viewports, ${screenshots} screenshots`:'six-seed career comparison'}. ${artifacts}`);
+  assertSameCareer(errors,[],'Console or JS/CSS HTTP errors');console.log(`Display E2E passed (${channel}): ${combinations?`${combinations} combinations × 6 viewports, ${screenshots} screenshots`:'selected-seed career comparison'}. ${artifacts}`);
 }catch(error){failure=error;console.error(error);}
 finally{
   server.closeAllConnections();server.close();server.unref();

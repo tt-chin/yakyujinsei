@@ -1,3 +1,4 @@
+import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -94,4 +95,28 @@ test('Mr. Team uses the approved acquired-team ID map, never the old injected ta
   }
 });
 
+
+
+test('display-name projection has an exact allowlist and preserves unrelated values',()=>{
+ const pairs=[['発展途上型','期待の若手'],['スイングマン','スインガー'],['ユーティリティープレーヤー','ツールマン'],['タイトルに戻る','最初からやり直す']];
+ for(const [current,old] of pairs){assert.equal(projectDisplayNameCopy(current),old);assert.equal(projectDisplayNameCopy(old),old);}
+ for(const lg of ['NPB','MLB','KBO','CPBL'])for(const [a,b] of [['殿堂','殿堂'],['スター選手','スター選手'],['レギュラー選手','デイリープレイヤー'],['一軍定着に届かず','フリンジプレイヤー'],['実績を残せず','ページ上の乗客']])assert.equal(projectDisplayNameCopy(lg+' '+a),lg+b);
+ assert.equal(projectDisplayNameCopy('ミスターシーホークス',['ミスターシーホークス','UKミスター']),'UKミスター');
+ for(const value of ['UNKNOWN レギュラー選手','NPB  レギュラー選手','隠し特性解放：フランチャイズプレーヤー','別の特性','評価点420','評価点421','2026年','2027年'])assert.equal(projectDisplayNameCopy(value),value);
+ assert.notEqual(projectDisplayNameCopy('評価点420'),projectDisplayNameCopy('評価点421'));
+ assert.throws(()=>projectDisplayNameCopy({name:'発展途上型'}),/STRING_REQUIRED/);assert.throws(()=>projectDisplayNameCopy('x',['','']),/MR_COPY_PAIR/);
+});
+test('both browser guards verify native Mr. Team copy before projecting it',()=>{
+ for(const [file,key] of [['game-view-dom-e2e.mjs','__mrDisplayPair'],['display-preferences-e2e.mjs','__displayMrPair']]){
+  const source=fs.readFileSync(new URL('./'+file,import.meta.url),'utf8'),start=source.indexOf('window.'+key+'=()=>{'),end=source.indexOf('};',start)+1;assert.ok(start>=0&&end>start);
+  // Extract the complete arrow (its body contains equality tests too).
+  const arrow=source.slice(start+'window.'.length+key.length+1,end).replace(/\\'/g,"'");
+  const make=new Function('S','displayTrait','teamNick','window','return ('+arrow+');');
+  const table={NPB_PL_FUK:'シーホークス'};
+  for(const id of ['NPB_PL_FUK','UNKNOWN',null]){const S={traits:{mrteam:true},mrTeamName:id},before=structuredClone(S),expected=id==='NPB_PL_FUK'?'ミスターシーホークス':'ミスター';
+   const guard=make(S,()=>expected,()=> 'UK',{__approvedMrTeamNames:table});assert.deepEqual(guard(),[expected,'UKミスター']);assert.deepEqual(S,before);
+   assert.throws(()=>make(S,()=> 'ミスターBUG',()=> 'UK',{__approvedMrTeamNames:table})(),/MR_COPY_CONTRACT/);
+  }
+ }
+});
 console.log(pass+' career-traits checks PASS');

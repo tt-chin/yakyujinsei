@@ -50,6 +50,7 @@ const nonTests = {
   'support/baseline-initial-potential.mjs': ['support','Approved birth-potential adapter for positive historical UI comparisons; unadapted fixed-seed S/R proof stays separate. Not executable.'],
   'support/stage6-browser.mjs': ['support','Test-only native browser fixture and state/RNG/DOM trace; imported by Stage 6 probes.'],
   'support/first-difference.mjs': ['support','Read-only first-difference diagnostic, imported by historical E2E controls.'],
+  'support/display-name-comparison.mjs': ['support','Exact approved display-name pairs for DOM/layout comparisons; no state or RNG projection. Tested by career-traits.test.'],
   'support/dom-snapshot.mjs': ['support','Browser-side per-step #log/#act/#board DOM, S and RNG snapshot; imported by game-view-dom-e2e.'],
   'support/rng-instrument.mjs': ['support','E2E RNG call counter: careerRng.onDraw on current game.js, legacy R text replace on old baselines; throws on miss.'],
   'support/career-session-access.mjs': ['support','E2E hook accessor __cs for career flow state: careerSession.<name> on current game.js, bare bindings on old baselines; throws on miss.'],

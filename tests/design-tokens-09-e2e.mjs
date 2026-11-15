@@ -1,3 +1,4 @@
+import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
 // UI-DESIGN-TOKENS-09 (tasks/DESIGN_SYSTEM_PLAN.md §17.8 T2): px margin/padding/gap became the 12 --space-* steps (§17.3
 // W8: nearest step, ties go down; W12 = A: a declaration with calc()/var()/env(), auto or a negative value stays whole).
 // The fixed pre-change tree (f8afd8e) is served with every such px literal in its stylesheets rewritten to the mapped px
@@ -21,8 +22,9 @@ const root=fileURLToPath(new URL('../',import.meta.url)),arg=name=>process.argv.
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const baseline=arg('baseline')||'f8afd8e',allowWebFonts=process.argv.includes('--allow-web-fonts');
 
+const comparisonVersion=(await readFile(path.join(root,'docs/src/config.js'),'utf8')).match(/VERSION\s*=\s*['"]([^'"]+)/)[1];
 const stats=pos=>pos==='P'?{yr:6,G:150,IP:900,W:60,L:40,SV:3,HLD:10,SO:800,BB:250,H:820,ER:330,AS:3}:{yr:6,G:700,PA:2800,AB:2500,H:720,BB:260,HR:110,RBI:420,SB:40,DEF:5,'2B':130,'3B':10,AS:3};
-const hook=pos=>`\nwindow.__dt09={retire:()=>endGame('検証'),rich:()=>{S.honors=Array.from({length:5},(_,i)=>'2030年 日本シリーズ優勝 '+i);S.log=Array.from({length:8},(_,i)=>({y:2026+i,age:16+i,tm:'長い球団名の福岡シーホークス',line:'検証成績',inj:i===1||i===5,st:i<3?null:{G:120,IP:180,W:15,L:5,SV:0,HLD:0,SO:190,BB:40,H:100,ER:40,PA:500,AB:450,BB2:0,HR:20,RBI:70,SB:5,DEF:3,'2B':20,'3B':2,HBP:3,SF:2}}));S.stats={...S.stats,NPB:Object.assign({},S.stats.NPB||{},${JSON.stringify(stats(pos))})};S.intlCount=2;S.intlStat={G:5,IP:10,W:1,SV:0,SO:12,ER:3,AB:20,H:6,PA:22,HR:1,RBI:4};S.removed=['旧特性'];Object.assign(S.traits,{legend:true,genius:true,mrteam:true});S.mrTeamName='福岡シーホークス';}};`;
+const hook=pos=>`\nwindow.__dt09={retire:()=>endGame('検証'),rich:()=>{S.honors=Array.from({length:5},(_,i)=>'2030年 日本シリーズ優勝 '+i);S.log=Array.from({length:8},(_,i)=>({y:2026+i,age:16+i,tm:'長い球団名の福岡シーホークス',line:'検証成績',inj:i===1||i===5,st:i<3?null:{G:120,IP:180,W:15,L:5,SV:0,HLD:0,SO:190,BB:40,H:100,ER:40,PA:500,AB:450,BB2:0,HR:20,RBI:70,SB:5,DEF:3,'2B':20,'3B':2,HBP:3,SF:2}}));S.stats={...S.stats,NPB:Object.assign({},S.stats.NPB||{},${JSON.stringify(stats(pos))})};S.intlCount=2;S.intlStat={G:5,IP:10,W:1,SV:0,SO:12,ER:3,AB:20,H:6,PA:22,HR:1,RBI:4};S.removed=['旧特性'];Object.assign(S.traits,{legend:true,genius:true,mrteam:true});S.mrTeamName='NPB_PL_FUK';}};`;
 const MAP09={3:2,5:4,7:6,9:8,11:10,14:12,18:16,22:20,26:24,28:24,30:32,36:32};
 const SP=/^(margin|padding|gap|row-gap|column-gap)(-(top|right|bottom|left|inline|block)(-(start|end))?)?$/;
 // §17.3/§17.4: rewrite each px literal of a pure px/0 spacing declaration to its mapped value; whole declarations with
@@ -41,7 +43,7 @@ const server=createServer(async(req,res)=>{try{
   res.writeHead(200,{'content-type':type+'; charset=utf-8'});res.end(body);
 }catch{res.writeHead(404);res.end();}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-const local=`http://127.0.0.1:${server.address().port}`,browser=await chromium.launch({headless:true});
+const local=`http://127.0.0.1:${server.address().port}`,browser=await chromium.launch({headless:true,...(arg('browser')?{channel:arg('browser')}:{})});
 
 const PROPS=['font-size','font-family','font-weight','letter-spacing','line-height','color','background-color','border-top-color','border-top-width','border-top-style','border-right-width','border-bottom-width','border-left-width','border-left-color','border-top-left-radius','border-top-right-radius','border-bottom-left-radius','border-bottom-right-radius','margin-top','margin-right','margin-bottom','margin-left','padding-top','padding-right','padding-bottom','padding-left','row-gap','column-gap','display','flex-grow','flex-shrink','flex-basis','flex-wrap','text-align','white-space','vertical-align','text-decoration-line','box-shadow','opacity','width','height'];
 // The rules whose value changed (§17.4, 36 declarations); each must match a compared element on the new side.
@@ -60,12 +62,16 @@ async function open(variant,pos,width){
   page.on('console',m=>{if(m.type()==='error'&&!/^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(m.location()?.url||''))errors.push(`${variant} ${pos}/${width}: ${m.text()}`);});
   await page.addInitScript(()=>document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='*,*::before,*::after{transition:none!important;animation:none!important}';document.head.append(st);}));
   await page.goto(`${local}/${variant}-${pos}/?seed=design-tokens-06`);await page.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
+  const version=(await page.locator('#app-version').textContent()).trim();
+  const config=await page.evaluate(async()=>{const r=await fetch('./src/config.js');return r.text();});
+  assert.equal(version,'v'+config.match(/VERSION\s*=\s*['"]([^'"]+)/)[1],'native version matches its source');
+  await page.locator('#app-version').evaluate((e,v)=>e.textContent='v'+v,comparisonVersion);
   return page;
 }
 async function compare(pages,label,roots){
   for(const c of combos){
     const s={};
-    for(const v of ['old','new']){const p=pages[v];await p.mouse.move(0,0);await p.evaluate(c=>{document.activeElement?.blur?.();const r=document.documentElement;r.dataset.theme=c.theme;r.dataset.fontSize=c.fontSize;r.dataset.density=c.density;return document.fonts.ready.then(()=>new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(()=>res(0)))));},c);s[v]=await snap(p,roots);}
+    for(const v of ['old','new']){const p=pages[v];await p.mouse.move(0,0);await p.evaluate(c=>{document.activeElement?.blur?.();const r=document.documentElement;r.dataset.theme=c.theme;r.dataset.fontSize=c.fontSize;r.dataset.density=c.density;return document.fonts.ready.then(()=>new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(()=>res(0)))));},c);await p.evaluate(({source,roots})=>{const project=eval('('+source+')');for(const selector of roots){const root=document.querySelector(selector);const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(walk.nextNode())walk.currentNode.nodeValue=project(walk.currentNode.nodeValue,['ミスターシーホークス','UKミスター']);}},{source:projectDisplayNameCopy.toString(),roots});s[v]=await snap(p,roots);}
     assert.ok(s.old.length>5,label+' compared elements');assert.equal(s.new.length,s.old.length,label+' element count');
     for(let i=0;i<s.old.length;i++){const a=s.old[i],b=s.new[i],at=`${label} ${c.theme}/${c.fontSize}/${c.density} #${i} ${a.tag}${a.id?'#'+a.id:''}`;
       assert.equal(b.tag,a.tag,at+' tag');compared++;
@@ -86,7 +92,7 @@ try{
     if(width!==360)await compare(pages,`home ${pos}/${width}`,['#start']);
     const clicks={};
     for(const v of ['old','new']){const p=pages[v];
-      await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#btn-start').click();
+      await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#in-name').fill('画面回帰');await p.locator('#btn-start').click();
       clicks[v]=await p.evaluate(async()=>{for(let i=0;i<40;i++){if(document.querySelector('#dice .die')&&document.querySelector('#act .abrow .nm'))return i;const b=[...document.querySelectorAll('#act button:not([disabled])')].find(x=>x.offsetParent);if(!b)break;b.click();await new Promise(r=>setTimeout(r,60));}throw Error('dice allocation not reached');});
     }
     assert.equal(clicks.new,clicks.old,`early career ${pos}/${width} click count`);
