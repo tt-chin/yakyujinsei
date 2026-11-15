@@ -1,6 +1,6 @@
-# PLY-01 背號履歷：細部計畫（D1～D4、W1～W8 全部已決定；未授權實作）
+# PLY-01 背號履歷：細部計畫（D1～D4、W1～W8、J1～J7 全部已決定；草稿驗證完成；未授權實作）
 
-狀態：**已決定**——D1～D4（使用者 2026-11-15）、W1～W6（code owner，PR #95 06:30 留言）、W7＝②、W8＝甲（code owner，PR #95 06:53 留言）。**未授權實作**：code owner 留言明示不代表授權實作、測試、合併或部署。
+狀態：**已決定**——D1～D4（使用者 2026-11-15）、W1～W6（code owner，PR #95 06:30 留言）、W7＝②、W8＝甲（code owner，PR #95 06:53 留言）、J1～J7（使用者 2026-11-15，§6）。**未授權實作**：code owner 留言明示不代表授權實作、測試、合併或部署；2026-11-15 使用者授權的只有 scratchpad 草稿與 Quick／Full 驗證（§7），不含正式實作。§1～§5 為 `1494a24` 時點的盤點，最新耦合與 T 表以 §8、§9 為準。
 上位規格：[殿堂評價與背號履歷：已批准、待實作規格](HOF_JERSEY_APPROVED_SPEC.md) §4（PLY-01）、§5（PLY-02 永久欠番，不在本計畫範圍）。
 調查基準：`origin/dev` `1494a24`（1.16.10）。示意圖：`tasks/ply-01/`（以 seed `hof111-pilot-04`、內野手、固定名「山田太郎」的真實生涯為底，只在瀏覽器內插入 DOM，非實作畫面）。
 
@@ -186,3 +186,66 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 - 負控制：在選號中呼叫 RNG、覆寫過去年度、改號寫入能力或收入、IND 也出現選號，各自應在預期斷言 FAIL。
 - 驗證：固定 seed 投手／野手前後比較（狀態只差 `jerseyHistory`、RNG 次數與順序一致）、Quick、8 批 Full、W2 指定畫面與選單按鈕的 PC／手機截圖（4 主題）。
 
+## 6. 補充決定 J1～J7（使用者 2026-11-15）
+
+草稿盤點（基準 `563bf52`）發現 D1～D4／W1～W8 未涵蓋的行為，依建議決定：
+
+| # | 事項 | 決定 |
+|---|---|---|
+| J1 | 入團／交易後到下一年度選號前的空窗 | 只在「職業球團所屬、最後一筆紀錄的 teamId＝目前球團、未退休」時面板顯示 `#N`、選單「背番号変更」可用；其他時候不顯示、按鈕停用（避免空窗期改號寫出錯誤年度並跳過入團選號） |
+| J2 | 存檔時序 | 選號步驟在年初存檔（`capture(S)`）之後；選號前後離開時，續玩會再問一次；年中選單改號在下一年度年初才寫入存檔。「補號只發生一次」＝寫入存檔後不再出現 |
+| J3 | 同球團再入團（釋出後重簽同隊、職業→IND→同隊） | 不出現選號、沿用原號；改號用選單。退休卡背號期間依職業年度列切段，非職業年度不併入同一段 |
+| J4 | 「背番号を選ぶ」之後 | 開啟與選單相同的對話框（0、00、1～99 下拉，預設選中候選號）；取消回到兩鈕提示、不留紀錄；「背番号 X で入団する」為第一鈕且 `main` |
+| J5 | 文案 | 一般入團／轉隊／交易：「{球団}と契約しました。背番号はどうする？」「背番号 X で入団する」「背番号を選ぶ」；舊存檔補號（D4）：「{球団}での背番号が記録されていません。背番号はどうする？」「背番号 X にする」「背番号を選ぶ」 |
+| J6 | 面板 `#N` 位置 | `#bd-name` 前的獨立元素 `#bd-number`（`patchBoard` 改寫 `#bd-name` 第一個子節點，不能放入） |
+| J7 | 年度別 | presenter 在所属字串後加「 #6」（凍結檔 `player-detail.js` 不改）；舊存檔第一筆紀錄前的職業年度為「（背番号不明）」 |
+
+## 7. 草稿驗證（scratchpad，未提交）
+
+草稿只在本機分支 `draft/ply-01`，最終基準 dev `75ab10b`（1.16.13），macOS＋Brave 157 本機證據，非 CI。
+
+**設計摘要**
+- 新模組 `docs/src/engine/jersey-policy.js`（純函式：號碼表、預設、資格、待選判定、目前號碼、可否改號、提案號碼、舊存檔判定、只增紀錄、年度查詢、年度別標籤、退休卡期間）與 `docs/src/ui/jersey-dialog.js`（`<select>` 對話框，沿用 information/confirmation dialog 的版面與焦點處理）。
+- `game.js`：`yearSteps` 最前加 `jerseyStep`（具名函式，置於 `phaseIntlPre` 前；未待選時直接 `nextStep()`）；`promptJerseyEntry`；選單 `#board-number` 的改號處理；`ProfessionalSeason` 注入 `jerseyLabel`、`CareerRetirement` 注入 `jerseyPeriods`。
+- `S.jerseyHistory` 於第一次寫入時建立（`createInitialState` 不改）；存檔契約只登記 `types`（`array`），不列 `required`。
+- 顯示：`#bd-number`（J6）、季成績卡 `.tag` 後「 · #N」、退休卡「通算成績」上方背號表（J3 期間）、年度別所属「 #N／（背番号不明）」；選單鈕只留 ☰（`aria-label` 保留）；`#board-number` 選單項目位於クレジット與表示設定之間，由 board model 控制 `disabled`。
+
+**結果**
+- 第一次草稿（基準 `563bf52`，測試未改）：Quick 90 PASS／6 FAIL、Full 126 入口 111 PASS／15 FAIL，作為耦合清單（§8）。
+- 套用 P1～P6 後、疊於 `75ab10b`：Quick 98／98 PASS；4 組 Full 規劃 128、實際 128（缺 0 多 0 重複 0），127 PASS／1 FAIL；FAIL 為 `event-integration.test` SIGSEGV（log 空，`.ips` 堆疊 `ClearStaleLeftTrimmedPointerVisitor`／`StackGuardWithGap`／`BaselineOutOfLinePrologue` 與 TEST-EVENT-SIGSEGV-01 相同），單獨重跑 3／3 PASS，原 FAIL 保留。
+- `jersey-policy.test`（新）11／11 PASS。
+- 過程中發現 dev 既有的選單遮擋問題（390px、配分狀態下「共有／開発を応援／タイトルに戻る」被 `#act` 蓋住；PLY-01 多一項後「表示設定」也被蓋住），已獨立以 `UI-BOARD-MENU-STACK-01`（PR #102，1.16.13）修正後再疊草稿。
+
+## 8. 測試耦合與核准投影規則 P1～P6
+
+| 規則 | 內容 | 適用入口 |
+|---|---|---|
+| P1 | 對舊 SHA 逐步比較時，只在新版一側略過 `/^背番号 \S+ (で入団する\|にする)$/` 步驟、不記錄並計數；舊版一側須為 0，新版到達職業時須 >0 | `kbo-renewal-e2e`、`draft-income-e2e`、`trait-display-e2e`、`international-personal-stats-e2e`、`full-power-pitching-e2e`（3 變體）、`hof-first-ballot-e2e`、`hof-retirement-policy-e2e`、`contract-salary-e2e`、`game-view-dom-e2e`、`display-preferences-e2e` |
+| P2 | 新版一側比較前刪除 `jerseyHistory`；最終狀態先驗證為 `{teamId:string, year:number, number:string}` 陣列 | 同上 |
+| P3 | 比對 `proSeason` 原文的測試只登記一處核准修改（季成績卡 `${jerseyLabel?.()\|\|''}`）；vm harness 提供 `jerseyLabel:()=>''` | `professional-season.test`、`full-power-pitching.test`、`full-power-pitching-e2e` |
+| P4 | 寫死的選單 ID 清單在 `board-credits` 後加 `board-number` | `support/board-menu.mjs`、`board-menu-stacking-e2e`、`scripts/test-share-url-menu.mjs`（另含 ☰ 文字與外部連結索引 [2,7]；不在 manifest、未執行） |
+| P5 | fixture 流程進入新職業年度後先點選號 `main` 鈕再繼續 | `stage10-risk-e2e`（C-*、G-stay-*）、`contract-salary-e2e`（milb-demotion-*） |
+| P6 | DOM／版面比較只在新版一側投影（各附契約檢查）：移除 `#bd-number`、`#board-number`、退休卡背號表；季成績卡與年度別的號碼後綴；還原 ☰ 鈕的「メニュー」span | `support/dom-snapshot.mjs`（`game-view-dom-e2e`、`display-preferences-e2e`）、`design-tokens-09-e2e` |
+
+其他原文耦合（核准）：`verify-modularization`（`yearSteps` 與 `ProfessionalSeason` 建構式文字）、`career-presenter.test`（board model 新增 `numberText`、`numberChangeEnabled`）、`design-tokens-06.test`（字級使用處 66、間距 183）。
+
+## 9. T 表（定稿草案）
+
+| T | 內容 | 主要檔案 |
+|---|---|---|
+| T1 | 純函式與單元測試 | `jersey-policy.js`、`jersey-policy.test` |
+| T2 | 狀態與存檔：延遲建立、`types` 登記 | `browser-save-state-contract.js` |
+| T3 | 入團選號步驟（W8 甲、J2～J5） | `game.js` |
+| T4 | 選單改號與對話框（W7②、J1、J4） | `index.html`、`jersey-dialog.js`、`game.js`、`career-presenter.js`、`game-view.js` |
+| T5 | 顯示 W2 a～d（J6、J7、J3） | `career-presenter.js`、`game-view.js`、`professional-season.js`、`career-retirement.js`、`base.css` |
+| T6 | 選單鈕只留 ☰ | `index.html` |
+| T7 | 既有測試 P1～P6 與原文耦合 | §8 所列 |
+| T8 | 新 E2E `jersey-e2e`：入團選號只出現一次並記錄當年、取消不留紀錄、選單改號（同年多次全保留、不覆寫過去）、交易／轉隊沿用、IND／CORP 不出現、同隊再入團不出現（J3）、舊存檔（1.16.13 存檔 fixture）D4 補號一次且下一年度存檔後不再出現、面板／成績卡／年度別／退休卡顯示、0≠00 | `tests/jersey-e2e.mjs`、manifest |
+| T9 | 版本與文件：1.17.0（MINOR）、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG PLY-01 | 文件 |
+
+## 10. 負控制與未完成項目
+
+- 負控制（實作時執行）：選號步驟內呼叫 R()、覆寫過去紀錄、改號寫入能力或收入、IND 出現選號、`jerseyStep` 移到存檔前、dom-snapshot 各投影契約（多刪／少刪）、P1 略過條件放寬至任意按鈕。
+- 文案最終確認：J5 各句、J7「（背番号不明）」、對話框（標題「背番号を選ぶ」「背番号の変更」、確定鈕「この背番号にする」「変更する」、說明「{年}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。」）。
+- 草稿尚未經 reviewer 審查；`scripts/test-share-url-menu.mjs` 未執行；Linux CI、Preview、實機未驗證。
+- 實作仍須使用者另行授權（R3）。
