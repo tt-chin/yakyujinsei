@@ -493,3 +493,15 @@ FUTURE_D2_DEPENDENCY：沢村賞、新防御率獎、最多勝利與勝率賞是
 
 實作與驗收界線：純文案修正須核對完整句、各引用位置、操作識別耦合與受影響的測試期待，不做全域字串替換；PNG的批准文案／合計變更只限定驗證差異，不放寬整張圖片的比較；COPY-029的一軍合計調整獨立列出影響分類、資料來源與測試，不與純文案混稱。COPY-001～005不重做，92事件不全面重翻；COPY-01全量清查與動態驗收仍未完成，不據此結案。
 
+### 2026-11-15 補充核對：COPY-011／012／031（PR #96 留言 08:57）
+
+code owner於08:57留言提出核對結果與建議文字；本節照留言記為「建議」，非正式採用、亦非實作授權。各項依據已於dev `1494a24`對照程式碼確認，未修改遊戲文案或測試。上方各項原始條目與08:18決定表保留為歷史。
+
+| ID | 現行日文 | 建議日文 | 核對依據 |
+|---|---|---|---|
+| COPY-011 | 階級別通算成績 | カテゴリー別通算成績 | `docs/src/ui/career-presenter.js:18`的`record()`分組為NPB（一軍／二軍／育成）、KBO、台湾プロ野球、MLB、MiLB、独立リーグ、社会人野球，不含高中／大學；標題於`docs/src/ui/record-view.js:18`。只改標題，不改統計內容與分組 |
+| COPY-012 | プレー年数（數值「N年」） | 経過シーズン数（數值「Nシーズン」） | 數值為`model.seasons`＝`Array.isArray(S.log)?S.log.length:0`（`career-presenter.js:18`）；`S.log`含業餘年度與全休／傷休年度（`docs/src/engine/amateur-career.js:84`、`:113`，`docs/src/engine/season-phases.js:27`），不是實際出賽年數。顯示於`record-view.js:14`。計算不變 |
+| COPY-031 | 年齢・認可一軍年資により外国プロ例外を適用しました | 米国国際契約の制限対象外として扱いました | `docs/src/engine/cross-league-market-policy.js:24`–`25`：移籍目標為MLB／MiLB、來源非MLB／MiLB且未受限制時為`FOREIGN_PRO_EXEMPT`；不受限制的條件為既有美國經歷，或`age>=25&&serviceYears>=6`，兩條路徑都會產生此代碼。年資只計NPB1／KBO1／CPBL1且`seasonFactor>=.5`，以年度鍵記錄（`:3`、`:11`–`:13`）。建議句與既有`MLB_INTL_RESTRICTED`「米国国際契約の制限対象として扱いました」成對（`docs/src/engine/salary-explanation-policy.js:69`–`70`）。不改資格公式、年資、契約或年俸 |
+
+驗收提醒（摘自留言）：核對完整拼接字串與受影響測試期待；COPY-012加「シーズン」單位後檢查手機換行／截斷；COPY-031至少涵蓋「年齡年資達標」「僅既有美國經歷」「仍受限制」三種案例，確認說明與實際判定一致。現行字串的測試引用：`tests/record-condition-fix.test.mjs`、`tests/information-architecture.test.mjs`（實作前再逐一核對）。
+
