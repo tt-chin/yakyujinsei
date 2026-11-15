@@ -33,6 +33,7 @@ const browserProfiles = {
   'event-system-e2e': {seconds:150},
   'event-fix-e2e': {seconds:15},
   'event-category-badge-e2e': {quick:[],seconds:20,reason:'EVT-01: real-career event prompt and result-card category badges (draw-time effective category, saved result category), 1280/390 px, 4 themes.'},
+  'board-menu-stacking-e2e': {quick:[],seconds:15,reason:'UI-BOARD-MENU-STACK-01: at the dice-allocation step (tallest #act) every board menu item is the hit target at 390/320/1280 px and タイトルに戻る opens its confirmation; precondition: #act overlaps the panel on phones'},
   'event-history-e2e': {quick:[],seconds:40,reason:'EVT-01 E3: real-career キャリア → 年度別 event rows (every occurrence, saved category, 今季 row), collapsed/expanded inside the scroll box, 1280/390 px, 4 themes.'},
   'global-contract-market-e2e': {args:['--quick'], seconds:30},
   'hof-first-ballot-e2e': {seconds:50},

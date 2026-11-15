@@ -14,7 +14,7 @@ body{background:var(--bg);color:var(--chalk);font-family:var(--sans);font-size:v
   background-image:radial-gradient(ellipse 120% 60% at 50% -10%,var(--body-glow) 0%,transparent 60%);}
 #app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
 /* ---------- 記分板 ---------- */
-#board{position:sticky;top:0;z-index:20;background:linear-gradient(var(--board-bg-start),var(--board-bg-end));
+#board{position:sticky;top:0;z-index:21;background:linear-gradient(var(--board-bg-start),var(--board-bg-end));
   border-bottom:2px solid var(--edge);padding:calc(10px * var(--panel-scale)) 14px calc(8px * var(--panel-scale));box-shadow:var(--shadow-board)}
 #bd-top{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-xs)}
 #bd-name{font-weight:900;font-size:var(--fs-2xl);letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
