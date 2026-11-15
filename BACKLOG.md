@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
 > 最新狀態核對：2026-11-15。dev 4b65a70（1.16.10）的Linux Full Run 43667459804為122入口、114 PASS／8 FAIL／0 SKIP／0 BLOCKED，8批Artifact及Aggregate紀錄已保存；KBO與隨機姓名入口PASS。八個失敗為舊比較姓名／已批准文案／版號差異，已做本機限定測試修復，未宣稱新來源CI或整套Full通過。版號及產品不變，Preview／實機與ARTIFACT_COVERAGE_BLOCKED仍維持原狀。
-> 以現有81個唯一ID的checkbox為準：已完成59項、未完成22項（UI-DESIGN-TOKENS-04／05／06／07／08／09與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80；同日-09經PR #91併dev後結案；同日依使用者決定HIST-SPEC-CLAUSE-01改為按需追溯並結案；同日新增TEST-DT09-DEV-FAIL-01，總數80→81；同日EVT-01經PR #99併dev、使用者確認Preview後結案）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 以現有82個唯一ID的checkbox為準：已完成59項、未完成23項（UI-DESIGN-TOKENS-04／05／06／07／08／09與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80；同日-09經PR #91併dev後結案；同日依使用者決定HIST-SPEC-CLAUSE-01改為按需追溯並結案；同日新增TEST-DT09-DEV-FAIL-01，總數80→81；同日EVT-01經PR #99併dev、使用者確認Preview後結案；同日新增UI-BOARD-MENU-STACK-01，總數81→82）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -33,7 +33,7 @@
 | 指標 | 數量 | 說明 |
 |---|---:|---|
 | 已完成 | **59** | 現有checkbox實際數量；含使用者已確認的7項實機／UI／OFUSE範圍及年度存檔第一期，不重新推定其他項目完成 |
-| 未完成 | **22** | 與59項完成合計81個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
+| 未完成 | **23** | 與59項完成合計82個唯一ID；四項殿堂、兩項配色仍待最終確認，其他設計／研究／稽核／CI殘項保留 |
 | P0 未完成 | **0** | 既有P0已按核准的結案標準關閉 |
 | BLOCKED | **1** | D2-CI-ARTIFACT-01的ARTIFACT_COVERAGE_BLOCKED；已獲使用者接受的實機／分享項目不再重複計入 |
 | IMPLEMENTED_UNVERIFIED | **8** | AUD-02、REFACTOR-AUDIT-01、HOF-NATURAL-SAMPLE-01、COPY-01、UI-DESIGN-TOKENS-02／03、UI-MRTEAM-NICKNAME-01、UI-PLAYER-RANDOM-NAME-01；-02／03配色已合併，仍待Preview確認 |
@@ -167,7 +167,7 @@
 
 - [x] **CODE-DEAD-01** — `MERGED / CI_PASS`（2026-11-01；PR #44併dev（`7de1fd1`））。依[物件導向化計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md) §2cc：分支`refactor/code-dead-01`（`45cccd7`）已刪除`statBonus`、`checkTraitsMid`、`teamChampRate`、`teamListOf`、`CHEER_DEFAULT`、`ageGateUSA`、`nextContractId`、`settlePhaseEnd`的PRO不可達分支（三處共2,390 bytes，更正§3.18的3,548 bytes），以及掃描新發現的`CPBL_TEAMS`、`NPB_TEAMS`、`MLB_TEAMS`、`HS_CUPS`、`U_CUPS`、`currentAffiliation`、`faFlow`薄包裝、`selPos`。Quick 68／68、分組Full 93／93 PASS（macOS＋Brave本機證據），經PR #44併dev（`7de1fd1`，樹與`17b271b`相同），[Tests #111](https://github.com/tt-chin/yakyujinsei/actions/runs/41275581402) Linux Full（`17b271b`）8批全success，`expected 93`、`acceptedPass 93`、`issues []`（記於PR #44），結案條件已滿足。`game.js`未使用的import 86個（含本次新增5個）不動，第26期（§2ee，`refactor/run-draft`）再增5個（`acceptDraftSelection`、`declineDraftSelection`、`draftSigningTerms`、`NPB_BONUS_RANGES`、`createSigningBonusTerms`），併入後為91個，第28期（§2gg，`refactor/trait-result-card`）再增2個（`TRAIT_TEXT`、`EVENT_TRAIT_TEXT`），併入後為93個，第29期（§2hh，`refactor/initial-state`）再增3個（`highSchoolTier`、`installBirthHighSchool`、`ensureEventState`），併入後為96個，第30期（§2ii，`refactor/choice-prompt`）再增2個（`createChoiceActionToken`、`runChoiceAction`），併入後為98個：E2E注入的hook在模組內直接引用，刪除會造成`markSalaryPaid is not defined`；未使用的區域變數與`navigation.js`的`renderRecord` import不在本項範圍。
 
-## 3. 未完成工作（20 項；另2項UI-MRTEAM-NICKNAME-01、UI-PLAYER-RANDOM-NAME-01列於文末2026-11-15紀錄，合計22項；本節另保留已結案索引）
+## 3. 未完成工作（20 項；另3項UI-MRTEAM-NICKNAME-01、UI-PLAYER-RANDOM-NAME-01、UI-BOARD-MENU-STACK-01列於文末2026-11-15紀錄，合計23項；本節另保留已結案索引）
 
 ### 3.1 P1 — 規格、回歸驗證與待決（2項未完成；保留1項已完成索引）
 
@@ -634,6 +634,6 @@ Quick [Run 43666590311](https://github.com/tt-chin/yakyujinsei/actions/runs/4366
 
 ### 2026-11-15追加：UI-BOARD-MENU-STACK-01 選單被選項區遮住（1.16.13，本機驗證）
 
-**UI-BOARD-MENU-STACK-01** — `IMPLEMENTED_UNVERIFIED`（PR、Preview待完成）。dev 1.16.12在手機寬度、能力配分等`#act`很高的狀態下打開選單時，「共有／開発を応援／タイトルに戻る」被`#act`蓋住無法點選（Preview `a87f94e5`於390×720以elementFromPoint確認）。原因：`#board`與`#act`同為sticky、`z-index:20`，`#act`在DOM後方而繪於上層，`#board-menu-panel`的`z-index:30`只在`#board`的堆疊內。修正：`docs/styles/base.css`的`#board`改為`z-index:21`（`#act`最大高度已扣除頁首與導覽列高度再減48px，不會伸入頁首下方）。PATCH 1.16.12→1.16.13。ゲーム規則・S・RNG・存檔不變。
+- [ ] **UI-BOARD-MENU-STACK-01** — `IMPLEMENTED_UNVERIFIED`（PR #102、Preview待完成）。dev 1.16.12在手機寬度、能力配分等`#act`很高的狀態下打開選單時，「共有／開発を応援／タイトルに戻る」被`#act`蓋住無法點選（Preview `a87f94e5`於390×720以elementFromPoint確認）。原因：`#board`與`#act`同為sticky、`z-index:20`，`#act`在DOM後方而繪於上層，`#board-menu-panel`的`z-index:30`只在`#board`的堆疊內。修正：`docs/styles/base.css`的`#board`改為`z-index:21`（`#act`最大高度已扣除頁首與導覽列高度再減48px，不會伸入頁首下方）。PATCH 1.16.12→1.16.13。ゲーム規則・S・RNG・存檔不變。
 
-驗證（macOS＋Brave 157，本機）：新增`board-menu-stacking-e2e`（Quick＋Full；390×720／320×640／1280×720於配分狀態檢查8項皆為hit target，手機寬度前置條件為至少一項中心點位於`#act`範圍內，實際點擊「タイトルに戻る」開啟確認後取消）；負控制（`z-index`改回20）於390、320各自單獨執行皆在`board-share is the hit target (covered by act)`FAIL，還原後shasum一致。Quick 97／97 PASS；使用選單的`event-fix-e2e`、`information-dialog-e2e`、`display-preferences-e2e`、`design-tokens-09-e2e`個別PASS；4主題×1280／390配分狀態截圖8組全項可點、Console 0。Full依AGENTS 6.1純顯示例外未執行；Linux CI、Preview、實機未驗證。reviewer：low 2項（前置條件強化、本條登記）已處理。本項待PR #101併dev後再納入checkbox計數。PLY-01草稿的`display-preferences-e2e`／`design-tokens-09-e2e`點擊失敗即此問題，PLY-01將疊於本修正之上。
+驗證（macOS＋Brave 157，本機）：新增`board-menu-stacking-e2e`（Quick＋Full；390×720／320×640／1280×720於配分狀態檢查8項皆為hit target，手機寬度前置條件為至少一項中心點位於`#act`範圍內，實際點擊「タイトルに戻る」開啟確認後取消）；負控制（`z-index`改回20）於390、320各自單獨執行皆在`board-share is the hit target (covered by act)`FAIL，還原後shasum一致。Quick 97／97 PASS；使用選單的`event-fix-e2e`、`information-dialog-e2e`、`display-preferences-e2e`、`design-tokens-09-e2e`個別PASS；4主題×1280／390配分狀態截圖8組全項可點、Console 0。Full依AGENTS 6.1純顯示例外未執行；Linux CI、Preview、實機未驗證。reviewer：low 2項（前置條件強化、本條登記）已處理。PLY-01草稿的`display-preferences-e2e`／`design-tokens-09-e2e`點擊失敗即此問題，PLY-01將疊於本修正之上。
