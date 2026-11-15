@@ -1,3 +1,4 @@
+import {bindRandomPlayerName} from '../ui/random-player-name.js';
 import {generatePlayerName} from '../data/player-names.js';
 import {confirmAction} from '../ui/confirmation-dialog.js';
 import {BrowserSaveController} from './browser-save-controller.js';
@@ -361,6 +362,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});
   const navigation=initNavigation({onNavigate:archiveTraitResults,onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
   let startPromptPending=false;
+  bindRandomPlayerName({input:$('in-name'),button:$('btn-random-name')});
   $('btn-start').onclick=()=>{
     if(startPromptPending)return;
     if(browserSave?.state.phase==='unavailable'){

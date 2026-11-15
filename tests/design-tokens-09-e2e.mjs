@@ -32,13 +32,20 @@ const SP=/^(margin|padding|gap|row-gap|column-gap)(-(top|right|bottom|left|inlin
 function rewrite(css){return css.replace(/([{;]\s*)([a-z-]+)(\s*:\s*)([^;{}]+)/g,(all,pre,prop,colon,val)=>{
   if(!SP.test(prop)||/\(|(^|\s)-\d|\bauto\b/.test(val))return all;
   return pre+prop+colon+val.replace(/(^|\s)(\d+)px(?=\s|$|!)/g,(t,sp,px)=>sp+(MAP09[px]??px)+'px');});}
+// Approved 1.16.14 home-only delta: an independent fixed reference for the new name row.
+const oldNameField='<div class="field"><label>選手名</label><input id="in-name" maxlength="10" placeholder="例：山田太郎" value=""></div>';
+const nameField='<div class="field"><label for="in-name">選手名</label><div class="player-name-row"><input id="in-name" maxlength="10" placeholder="例：山田太郎" value=""><button type="button" class="btn random-name-button" id="btn-random-name" aria-label="名前をランダムに生成" title="名前をランダムに生成" disabled><span aria-hidden="true">🎲</span></button></div></div>';
+assert.ok((await readFile(path.join(root,'docs/index.html'),'utf8')).includes(nameField),'exact approved new name markup');
+const nameCss='.player-name-row{display:flex;align-items:stretch;gap:8px}.player-name-row input{flex:1;min-width:0}.random-name-button{flex:0 0 44px;min-width:44px;min-height:44px;margin-top:0;padding:0;text-align:center;font-size:var(--fs-5xl)}.random-name-button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}.random-name-button:disabled{opacity:.6;cursor:default}';
 const server=createServer(async(req,res)=>{try{
   const u=new URL(req.url,'http://localhost'),m=u.pathname.match(/^\/(old|new)-(P|IF)\//);if(!m)throw Error('route');
   const rel=decodeURIComponent(u.pathname.slice(m[0].length))||'index.html';if(rel.includes('..'))throw Error('path');
   if(rel==='favicon.ico'){res.writeHead(204);return res.end();}
   let body=m[1]==='old'?execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:30e6}):await readFile(path.join(root,'docs',rel));
-  if(rel==='src/engine/game.js')body=body.toString()+hook(m[2]);
+  if(m[1]==='old'&&rel==='index.html'){const text=body.toString();assert.equal(text.split(oldNameField).length,2);body=text.replace(oldNameField,nameField);}
+  if(rel==='src/engine/game.js')body=body.toString()+hook(m[2])+(m[1]==='old'?"document.getElementById('btn-random-name').disabled=false;":'');
   if(m[1]==='old'&&rel.startsWith('styles/')&&rel.endsWith('.css'))body=rewrite(body.toString());
+  if(m[1]==='old'&&rel==='styles/base.css')body=body.toString()+'\n'+nameCss;
   const type={js:'text/javascript',css:'text/css',html:'text/html',png:'image/png',webp:'image/webp',svg:'image/svg+xml',woff2:'font/woff2'}[rel.split('.').pop()]||'application/octet-stream';
   res.writeHead(200,{'content-type':type+'; charset=utf-8'});res.end(body);
 }catch{res.writeHead(404);res.end();}});

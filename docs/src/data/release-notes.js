@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.14｜2026/11/16",
+    "lines": [
+      "- 選手名の横に、ランダムな名前を入力できるサイコロボタンを追加。"
+    ]
+  },
+  {
     "title": "1.16.13｜2026/11/15",
     "lines": [
       "- 能力配分などの画面で、メニュー下側の項目が隠れて押せないことがある問題を修正。"

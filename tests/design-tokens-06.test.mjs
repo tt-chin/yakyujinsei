@@ -25,8 +25,11 @@ test('base.css defines the 13 --fs-* scale tokens as calc(<px>px * var(--font-sc
 });
 // 59 former calc() sites plus 5 moved inline 11/12px sizes (scaled before by the preferences.css [style*=] rules),
 // plus 1 for the EVT-01 .event-badge (1.16.11).
-test('every var(--fs-*) is defined and every token is used (65 sites)',()=>{
-  const used=[...outsideRoot.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
+test('the original 65 font sites stay exact and the new name button uses --fs-5xl',()=>{
+  const rule=base.match(/(?:^|\n)\.random-name-button\{([^}]+)\}/);assert.ok(rule,'approved name button rule');
+  assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
+  const original=outsideRoot.replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
+  const used=[...original.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
   assert.equal(used.length,65);
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
   assert.deepEqual(Object.keys(FS).filter(n=>!used.includes(n)),[],'unused --fs token');
@@ -72,8 +75,11 @@ test('px margin/padding/gap go through var(--space-*) outside the 7 untouched de
   assert.deepEqual(kept.sort(),[...KEEP_PX].sort());
 });
 // EVT-01 (1.16.11) added 2: .event-badge padding and margin-right. EVT-01 E3 (1.16.12) added 5: sticky event details left and width, .ui-yearly-events-body margin, its li margin, badge margin-right.
-test('every var(--space-*) is defined and every step is used (179 sites, -09 + EVT-01 + E3)',()=>{
-  const used=[...outsideRoot.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
+test('the original 179 spacing sites stay exact and the name row uses --space-xs',()=>{
+  const rule=base.match(/(?:^|\n)\.player-name-row\{([^}]+)\}/);assert.ok(rule,'approved name row rule');
+  assert.equal((rule[1].match(/gap:var\(--space-xs\)/g)||[]).length,1,'one explicit existing spacing token');
+  const original=outsideRoot.replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
+  const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
   assert.equal(used.length,179);
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');
   assert.deepEqual(Object.keys(SPACE).filter(n=>!used.includes(n)),[],'unused --space token');

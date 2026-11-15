@@ -129,6 +129,12 @@ table.fin.career-table .career-team span{display:-webkit-box;-webkit-box-orient:
 .field input{width:100%;background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius-lg);color:var(--chalk);
   font-family:var(--sans);font-size:var(--fs-2xl);padding:var(--space-sm) var(--space-md);outline:none}
 .field input:focus{border-color:var(--amber)}
+.player-name-row{display:flex;align-items:stretch;gap:var(--space-xs)}
+.player-name-row input{flex:1;min-width:0}
+.random-name-button{flex:0 0 44px;min-width:44px;min-height:44px;margin-top:0;padding:0;text-align:center;font-size:var(--fs-5xl)}
+.random-name-button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.random-name-button:disabled{opacity:.6;cursor:default}
+
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-xs)}
 .seg.two{grid-template-columns:repeat(2,1fr)}
 .seg button{background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius-lg);color:var(--dim);

@@ -1,7 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
-> 最新狀態核對：2026-11-15。dev 4b65a70（1.16.10）的Linux Full Run 43667459804為122入口、114 PASS／8 FAIL／0 SKIP／0 BLOCKED，8批Artifact及Aggregate紀錄已保存；KBO與隨機姓名入口PASS。八個失敗為舊比較姓名／已批准文案／版號差異，已做本機限定測試修復，未宣稱新來源CI或整套Full通過。版號及產品不變，Preview／實機與ARTIFACT_COVERAGE_BLOCKED仍維持原狀。
-> 以現有82個唯一ID的checkbox為準：已完成60項、未完成22項（UI-DESIGN-TOKENS-04／05／06／07／08／09與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80；同日-09經PR #91併dev後結案；同日依使用者決定HIST-SPEC-CLAUSE-01改為按需追溯並結案；同日新增TEST-DT09-DEV-FAIL-01，總數80→81；同日EVT-01經PR #99併dev、使用者確認Preview後結案；同日新增UI-BOARD-MENU-STACK-01，總數81→82，經PR #102併dev、使用者確認Preview後結案）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
+> 最新狀態核對：2026-11-16。dev基準21b4ff9（1.16.13），本機1.16.14新增首頁明示隨機姓名按鈕；29項姓名聚焦驗證與82,560項樣式比較PASS。Quick初跑96 PASS／1 FAIL（舊token數量斷言），明列新token且保留原計數後限定重測1 PASS；未重跑整套Quick，不宣稱97項同輪PASS。Full／CI／Preview／實機未執行，未提交或發布；原始FAIL及ARTIFACT_COVERAGE_BLOCKED保持。
+> 以現有83個唯一ID的checkbox為準：已完成60項、未完成23項（UI-DESIGN-TOKENS-04／05／06／07／08／09與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80；同日-09經PR #91併dev後結案；同日依使用者決定HIST-SPEC-CLAUSE-01改為按需追溯並結案；同日新增TEST-DT09-DEV-FAIL-01，總數80→81；同日EVT-01經PR #99併dev、使用者確認Preview後結案；同日新增UI-BOARD-MENU-STACK-01，總數81→82，經PR #102併dev、使用者確認Preview後結案）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。
 
 > 2026-11-05待辦範圍調整：依使用者決定取消KBO亞洲名額與二天一流，移除兩項未完成待辦；目前40完成＋28未完成＝68項。僅調整計畫，不刪除既有產品中的保留特性資料。以下舊統計為歷史。
@@ -639,3 +639,20 @@ Quick [Run 43666590311](https://github.com/tt-chin/yakyujinsei/actions/runs/4366
 驗證（macOS＋Brave 157，本機）：新增`board-menu-stacking-e2e`（Quick＋Full；390×720／320×640／1280×720於配分狀態檢查8項皆為hit target，手機寬度前置條件為至少一項中心點位於`#act`範圍內，實際點擊「タイトルに戻る」開啟確認後取消）；負控制（`z-index`改回20）於390、320各自單獨執行皆在`board-share is the hit target (covered by act)`FAIL，還原後shasum一致。Quick 97／97 PASS；使用選單的`event-fix-e2e`、`information-dialog-e2e`、`display-preferences-e2e`、`design-tokens-09-e2e`個別PASS；4主題×1280／390配分狀態截圖8組全項可點、Console 0。Full依AGENTS 6.1純顯示例外未執行；Linux CI、Preview、實機未驗證。reviewer：low 2項（前置條件強化、本條登記）已處理。PLY-01草稿的`display-preferences-e2e`／`design-tokens-09-e2e`點擊失敗即此問題，PLY-01將疊於本修正之上。
 
 併dev與Preview：經[PR #102](https://github.com/tt-chin/yakyujinsei/pull/102)併dev（`75ab10b`，1.16.13），dev push [Quick 43718869495](https://github.com/tt-chin/yakyujinsei/actions/runs/43718869495)成功；Cloudflare部署`32ded666`，固定Preview與該部署的`base.css`、`config.js`與`75ab10b`雜湊一致；Playwright MCP（Brave 157）於`32ded666` 390×720配分狀態實測v1.16.13：8項皆為hit target（`#act`頂端y=297，共有／開発を応援／タイトルに戻る中心點位於其範圍內）、「タイトルに戻る」開啟確認後取消。使用者於對話中回覆確認Preview（2026-11-15，無書面紀錄）後結案。實機／觸控、Linux Full未執行。
+
+
+### 2026-11-16：首頁明示隨機姓名操作（1.16.14，本機實作）
+
+- [ ] **UI-RANDOM-NAME-BUTTON-01** — `IMPLEMENTED_UNVERIFIED`。使用者授權首頁姓名欄右側新增44×44px以上原生🎲按鈕，type=button、aria-label／title「名前をランダムに生成」，同列輸入填滿剩餘寬度。共用既有player-names.js的46姓／50名與generatePlayerName，不拆完整姓名、不新增清單。只有主動點擊時產生；若與目前輸入完全相同，最多抽5次，仍同名則保留，避免無限迴圈。產生後發出bubbles input／change，可手動修改。onclick置換確保重複初始化不多次綁定。不開始遊戲、不改守位／seed／顯示設定／S／生涯RNG，未輸入姓名的原開局處理不變。
+
+局部UI互動R2，版本1.16.13→1.16.14（既有姓名功能的明示操作改善PATCH）；已同步CURRENT_SPEC／CHANGELOG／RELEASE_NOTES及生成資料，未提交／推送／部署。獨立瀏覽器context限定驗證：320／375／390／1280×4主題共16組，touch／桌面click、Tab／Enter／Space、focus-visible、同列44px、無水平溢出、精確input／change次數、手動編輯開始及遊戲顯示同名PASS；零次與四次抽名後相同最終手動姓名的完整S、選項、逐次RNG初始及3步重播相等PASS。原12組空白／半形全形空白／輸入／NFKC／長度及P／IF的讀檔、年度進行、PNG姓名檢查保留；合計29組PASS／0 FAIL，Console／404為0。單元保留原13組CareerEntry歷史對照與2300姓名組合，另驗證同名重抽上限、無自動覆寫、單次事件、disabled及重複綁定PASS。
+
+既有design-tokens-09首頁比較的f8afd8e缺少本次按鈕，僅在該舊來源明列固定HTML／44px與gap8px參考樣式並設為與完成初始化後相同的enabled狀態；新來源結構先逐字核對，不更換baseline、不遮罩元素、不降低其餘幾何斷言。其相關矩陣與最後Quick結果於完成後補記；本輪不執行整套Full、CI或實機驗收。
+
+原始測試調整紀錄保留：第一次測試插入點CRLF／LF辨識不符而未插入，當次實際執行原12組姓名回歸並PASS；新按鈕r2計入前次手動輸入失焦時的原生change，改為監聽前先blur，不修改產品事件；r3手機12組PASS但桌面context誤用tap而FAIL，桌面改click、手機維持tap後r4的17項PASS；最後字級沿用24px token並執行完整姓名入口r5的29項PASS。這些FAIL不改寫、不覆寫基準。證據test-results/name-button-unit-r1.log、name-button-browser-r1／r2／r3／r4及name-button-browser-final-r5/與同名log、name-button-layout-r1.log。未實機或Preview驗收，不提前勾選。
+
+最終驗證補記：相關design-tokens-09矩陣82,560次比較、34個原selector全命中且0差異，程序exit 0。Quick初跑97項為96 PASS／1 FAIL／0 SKIP／0 BLOCKED（test-results/name-button-quick-r1/），唯一design-tokens-06.test仍固定原65個font token使用點而遇66；同時新姓名列另加1個space token。限定修正該測試：只核對並扣出明確.random-name-button的--fs-5xl及.player-name-row的--space-xs使用點，原65／179個其餘計數、已定義／使用、px間距及inline樣式斷言原封保留；非只把常數65改66或179改180。第一次套用因CRLF插入點不符而未變更，再以正規化讀取後精確套用。該入口單獨單元及統一Runner重測1 PASS／0 FAIL（name-button-tokens-unit-r2.log、name-button-quick-targeted-r2/），未重跑整套Quick，不把原96／1改寫為全套PASS。
+
+14個修改／新增檔；原player-names.js資料／抽選演算法、CareerEntry與既有空白開局流程不變。語法／相對路徑／diff／履歷生成冪等性檢查PASS。BACKLOG83個唯一ID、60完成／23未完成，新增項維持待使用者審查。未修改Runner／CI／golden，未Full、CI、實機、commit／push／merge或部署。
+
+提交狀態補記（2026-11-16）：使用者於本機驗證完成後授權commit／push至dev。本次14檔為1.16.14姓名按鈕、必要測試及文件，不納入test-results。推送後依既有workflow自動Quick，新來源CI／Preview待確認；前文未提交為當時歷史狀態。原Quick96／1與限定修復1 PASS保留，不提前宣稱新CI通過。未授權main反映／正式部署或額外啟動Full。
