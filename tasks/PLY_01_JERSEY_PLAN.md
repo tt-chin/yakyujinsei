@@ -256,6 +256,7 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 - `9315543`：草稿 32 檔原樣帶入（與 `wip/ply-01-draft` `0d617a6` 的 docs/tests/scripts 內容一致，壓成一個 commit）。
 - `2c2874c`：入團對話框說明改為 §10 核准原文（補「過去の年度の背番号は変わりません。」）。
 - `4ff917d`：reviewer 審查修正 A1～A4、B1～B7（使用者 2026-11-15 依建議核准）。
+- `ea5c01a`：T8 `tests/jersey-e2e.mjs`、manifest 登錄（Full／Audit、`seconds:20`）、`scripts/TESTING.md` 說明段（2026-11-16）。
 - 驗證（macOS＋Brave 157，本機）：`4ff917d` 的 Quick 98／98 PASS（98 入口全數執行）；`jersey-policy.test` 17／17 PASS。Full、CI、Preview 未執行。
 
 **審查修正（明確缺陷）**
@@ -308,5 +309,21 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 | P1 略過條件放寬至任意按鈕 | 各 P1 測試的計數檢查 |
 | 移除 `jerseyRetired` 呼叫（A1）、移除 `board(0)`（A2）、B1 改回 `S.year`、移除 B6 驗證 | T8 對應案例 |
 
-**下一步**：T8 → 負控制 → T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ reviewer → 4 組 Full → push dev 前請使用者確認。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
+**T8 結果（2026-11-16，`ea5c01a`）**
+- 驗證（macOS＋Brave 157，本機）：`jersey-e2e` 20／20 PASS（直接執行與 runner `full --only=jersey-e2e` 皆 PASS，約 19 秒）；Quick 98／98 PASS（98 入口全數執行；於 deadpath 案例改名前的 T8 tree 執行，改名只動註解與案例 id，`jersey-e2e` 不在 Quick）；`local-full-batches.test` 14／14 PASS。Full、CI、Preview、負控制未執行。
+- 自然生涯 seed：`probe33-1`（P／C／IF／OF，預設 18／27／6／1 實測）、`probe33-6` P（B1 等待點在入團年度、2030 年自然轉 KBO）、`probe33-8` C（B1 等待點、2031 年前無轉隊，用於預設 vs 對話框＋選單的 RNG 比較）。
+- RNG：`probe33-1` P、`probe33-8` C 與 `/baseline/`（`75ab10b7d442db7aeccde0d649a852f224eed481`，1.16.13；`git diff 75ab10b 21b4ff9 -- docs/` 為空）到 2031 年初，全 R 值／`rngState` 與 S（排除 `version`、`createdVersion`、`jerseyHistory`）一致；另斷言年初存檔到選號提示之間 0 次抽取。
+- D4：目前以 1.16.13 存檔讀入同為 1.16.13 的程式；跨版讀取待 T9 改版後重跑。
+- B6：直接竄改 IndexedDB（`yakyujinsei-career`／`career`／`autosave`），六種竄改各回 `SAVE_JERSEY`（`store.read()` 先跑 `validateSaveEnvelope`，HMAC 驗證在後）。
+- 390 版面：隊名換兩行、名字截斷在 1.16.13 同 seed 即存在（P／C／OF 實測），非 PLY-01 退化。
+- 模式：實測約 19 秒，使用者 2026-11-16 決定維持 Full-only。
+
+**發現：`tradeFrom` 為 dead path（使用者 2026-11-16 選 B：保留並標示）**
+- `docs/src` 無任何程式把 `S.tradeFrom` 設為非 null（只讀於 `professional-season.js:67/70/83`，`:84` 設回 null）；`git log -G` 全歷史亦無。最初 commit 的註解寫明交易一律視為季後、刻意不設 `tradeFrom`。交易判定（`TRADE_CHECK`）在當季成績列寫入之後。
+- 因此「A→B」年度列、季中交易分段卡（B4 投影規則）、B7 的交易前綴去除在現行遊戲不會發生。實際交易由 `fixture-trade`（真實 `doTradeExec`）固定：交易年度列為 A、顯示 A 的號碼、退休卡該年歸 A、隔年在 B 提議 A 的號碼。
+- `deadpath-trade-label`、`deadpath-trade-unknown` 直接設定 `tradeFrom`／`orgTeamId`（不呼叫移籍函式），保留作為日後導入季中交易時的 D3／J1、B7 固定。
+
+**既有問題（未處理，與 PLY-01 無關）**：`scripts/ci-full-batches.test.mjs` 寫死 `assert.equal(ids.length,106)`，`fullIds()` 在 HEAD `ae2c738` 為 128（加入 `jersey-e2e` 後 129），乾淨 HEAD 上同樣 2 項 FAIL。只在 CI `linux-smoke` 模式執行，不在 Quick／Full。
+
+**下一步**：負控制（上表，`fixture-trade` 取代「季中交易」對應）→ T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ T9 後重跑 `jersey-e2e`（D4 跨版）→ reviewer → 4 組 Full → push dev 前請使用者確認。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
 
