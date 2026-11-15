@@ -342,7 +342,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
     const accept=picked=>{appendJerseyRecord(state,picked);nextStep();};
     choose(legacy?`${team}での背番号が記録されていません。背番号はどうする？`:`${team}と契約しました。背番号はどうする？`,[
       {t:legacy?`背番号 ${number} にする`:`背番号 ${number} で入団する`,main:true,f:()=>accept(number)},
-      {t:'背番号を選ぶ',f:()=>{chooseJerseyNumber({title:'背番号を選ぶ',summary:`${team}`,note:`${state.year}年シーズンから有効。能力・成績・年俸には影響しません。`,selected:number,confirmLabel:'この背番号にする'}).then(picked=>{if(S!==state||!jerseyEntryPending(state))return;if(picked===null)promptJerseyEntry();else accept(picked);});}}]);}
+      {t:'背番号を選ぶ',f:()=>{chooseJerseyNumber({title:'背番号を選ぶ',summary:`${team}`,note:`${state.year}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。`,selected:number,confirmLabel:'この背番号にする'}).then(picked=>{if(S!==state||!jerseyEntryPending(state))return;if(picked===null)promptJerseyEntry();else accept(picked);});}}]);}
   function jerseyLabelText(){const number=currentJerseyNumber(S);return number===null?'':` · #${number}`;}
   function phaseIntlPre(){return yearFlow.phaseIntlPre();}
   function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}
