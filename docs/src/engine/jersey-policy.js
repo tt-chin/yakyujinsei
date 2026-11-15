@@ -10,6 +10,8 @@ export const JERSEY_DEFAULT_ORDER=Object.freeze({
 });
 // D2: no banned numbers until PLY-02 provides a source.
 export const JERSEY_BANNED=Object.freeze([]);
+// The save codec caps arrays at 1024 rows; menu changes stop at this length (entries add at most one row per season).
+export const JERSEY_MENU_LIMIT=960;
 
 export function isJerseyNumber(value){return typeof value==='string'&&JERSEY_NUMBERS.includes(value);}
 export function defaultJerseyNumber(pos,banned=JERSEY_BANNED){
@@ -22,18 +24,20 @@ export function lastJerseyRecord(state){const list=history(state);return list.le
 export function isJerseyEligible(state){return state?.stage==='PRO'&&typeof state.orgTeamId==='string'&&state.orgTeamId!=='';}
 // W8: the year-start step asks when the current pro team has no record yet. J3: a return to the team of the last record does not ask.
 export function jerseyEntryPending(state){if(!isJerseyEligible(state))return false;const last=lastJerseyRecord(state);return !last||last.teamId!==state.orgTeamId;}
-// J1: a number is shown only once the current team's record exists.
-export function currentJerseyNumber(state){const last=lastJerseyRecord(state);return isJerseyEligible(state)&&last&&last.teamId===state.orgTeamId?last.number:null;}
-export function canChangeJersey(state){return !state?.done&&currentJerseyNumber(state)!==null;}
+// J1: a number is shown only once the current team's record exists, and not after retirement.
+export function currentJerseyNumber(state){const last=lastJerseyRecord(state);return !state?.done&&isJerseyEligible(state)&&last&&last.teamId===state.orgTeamId?last.number:null;}
+export function canChangeJersey(state){return currentJerseyNumber(state)!==null&&history(state).length<JERSEY_MENU_LIMIT;}
+// D3/B1: a menu change after this year's professional season row exists takes effect from the next season.
+export function jerseyChangeYear(state){return state.year+((state?.log||[]).some(row=>row?.y===state.year&&row.st)?1:0);}
 // D1/D2: a transfer keeps the last number; the first entry uses the position default.
 export function proposedJerseyNumber(state){const last=lastJerseyRecord(state);return last?last.number:defaultJerseyNumber(state?.pos);}
-// D4: a save from before PLY-01 already has professional seasons but no record.
-export function isLegacyJerseyEntry(state){return !lastJerseyRecord(state)&&(state?.log||[]).some(row=>row?.st);}
-// D3: append only; the effective year is the current year.
-export function appendJerseyRecord(state,number){
-  if(!isJerseyEligible(state)||!isJerseyNumber(number))throw new Error('JERSEY_RECORD_INVALID');
+// D4: a save from before PLY-01 has no record and its last season was professional; after IND/CORP the next pro team is an ordinary entry (J5).
+export function isLegacyJerseyEntry(state){const log=state?.log||[];return !lastJerseyRecord(state)&&!!log[log.length-1]?.st;}
+// D3: append only; the effective year defaults to the current year.
+export function appendJerseyRecord(state,number,year=state?.year){
+  if(!isJerseyEligible(state)||!isJerseyNumber(number)||!Number.isSafeInteger(year))throw new Error('JERSEY_RECORD_INVALID');
   if(!Array.isArray(state.jerseyHistory))state.jerseyHistory=[];
-  state.jerseyHistory.push({teamId:state.orgTeamId,year:state.year,number});
+  state.jerseyHistory.push({teamId:state.orgTeamId,year,number});
   return state.jerseyHistory[state.jerseyHistory.length-1];
 }
 // D3: the last record effective in or before the year (several in one year: the last one appended).
@@ -44,15 +48,20 @@ export function yearlyJerseyLabel(row,list){
   const record=jerseyRecordForYear(list,row.y);
   return record?` #${record.number}`:'（背番号不明）';
 }
+// Save codec check: every row is {teamId (known), year (integer, not after the saved year), number (valid string)}.
+export function isValidJerseyHistory(list,{year,teamExists}){
+  return Array.isArray(list)&&list.every(r=>r&&typeof r==='object'&&!Array.isArray(r)&&Object.keys(r).length===3&&typeof r.teamId==='string'&&teamExists(r.teamId)&&Number.isSafeInteger(r.year)&&r.year<=year&&isJerseyNumber(r.number));
+}
 // W2c/J3: consecutive professional log rows with the same record form one period; non-professional rows split periods.
-export function jerseyPeriods(log,list,teamName){
+// Rows before any record (D4) are keyed and named by unknownTeam(row.tm), the team name without level or trade prefix.
+export function jerseyPeriods(log,list,teamName,unknownTeam=tm=>tm){
   const periods=[];let previous=-2;
   (Array.isArray(log)?log:[]).forEach((row,index)=>{
     if(!row?.st)return;
-    const record=jerseyRecordForYear(list,row.y),key=record?`R:${list.indexOf(record)}`:`U:${row.tm}`;
+    const record=jerseyRecordForYear(list,row.y),unknown=record?null:unknownTeam(row.tm),key=record?`R:${list.indexOf(record)}`:`U:${unknown}`;
     const last=periods[periods.length-1];
     if(last&&last.key===key&&previous===index-1){last.to=row.y;}
-    else periods.push({key,team:record?teamName(record.teamId):row.tm,from:row.y,to:row.y,number:record?record.number:null});
+    else periods.push({key,team:record?teamName(record.teamId):unknown,from:row.y,to:row.y,number:record?record.number:null});
     previous=index;
   });
   return periods.map(({key,...period})=>Object.freeze(period));

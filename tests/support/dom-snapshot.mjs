@@ -228,14 +228,14 @@ export async function captureGameView(full){
   if(window.__expectJersey){
     // #board: #bd-number (shows the current team's number only), the 背番号変更 menu item, and the menu toggle's visible label.
     const last=jerseyHistory?.length?jerseyHistory[jerseyHistory.length-1]:null;
-    const wantNumber=rawState.stage==='PRO'&&typeof rawState.orgTeamId==='string'&&last&&last.teamId===rawState.orgTeamId?'#'+last.number:'';
+    const wantNumber=!rawState.done&&rawState.stage==='PRO'&&typeof rawState.orgTeamId==='string'&&last&&last.teamId===rawState.orgTeamId?'#'+last.number:'';
     const tpl=document.createElement('template');tpl.innerHTML=dom.board;
     const num=tpl.content.querySelectorAll('#bd-number'),change=tpl.content.querySelectorAll('#board-number'),toggle=tpl.content.querySelectorAll('#board-menu-toggle');
     if(num.length!==1||change.length!==1||toggle.length!==1)throw Error('JERSEY_BOARD_COUNT');
     const n=num[0],c=change[0],t=toggle[0];
     if(n.tagName!=='SPAN'||n.textContent!==wantNumber||n.children.length||n.hasAttribute('hidden')!==(wantNumber===''))throw Error('JERSEY_BOARD_NUMBER');
     if(n.attributes.length!==(wantNumber===''?2:1)||n.nextElementSibling?.id!=='bd-name'||n.parentElement?.id!=='bd-top'||n.previousSibling)throw Error('JERSEY_BOARD_NUMBER_PLACE');
-    if(c.tagName!=='BUTTON'||c.textContent!=='•背番号変更'||c.getAttribute('aria-haspopup')!=='dialog'||c.hasAttribute('disabled')===(!rawState.done&&wantNumber!==''))throw Error('JERSEY_MENU_ITEM');
+    if(c.tagName!=='BUTTON'||c.textContent!=='•背番号変更'||c.getAttribute('aria-haspopup')!=='dialog'||c.hasAttribute('disabled')===(wantNumber!==''&&(jerseyHistory?.length||0)<960))throw Error('JERSEY_MENU_ITEM'); /* 960 = JERSEY_MENU_LIMIT */
     const gap=c.previousSibling;
     /* After the older-baseline menu projections the credits button may already be gone, so only the following neighbour is fixed. */if(!c.previousElementSibling||(!window.__expect1141&&c.previousElementSibling.id!=='board-credits')||c.nextElementSibling?.id!=='board-preferences'||gap?.nodeType!==3||gap.nodeValue.trim()!=='')throw Error('JERSEY_MENU_PLACE');
     if(t.children.length!==1||t.children[0].textContent!=='☰'||t.getAttribute('aria-label')!=='メニュー'||t.textContent!=='☰')throw Error('JERSEY_TOGGLE_CONTRACT');
@@ -250,6 +250,7 @@ export async function captureGameView(full){
     for(const card of logTpl.content.querySelectorAll('.card')){
       if(card.querySelector('h4')?.textContent!=='シーズン成績')continue;
       const tag=card.querySelector('.tag'),text=tag?.lastChild;
+      if(!tag){if(card.textContent.includes('（今季はけがで全休）'))continue;throw Error('JERSEY_SEASON_TAG');} /* full-season injury cards carry no team tag */
       const m=text?.nodeType===3?text.nodeValue.match(/^(.*) · #(\S+)$/s):null;
       if(!m||!jerseyNumbers.has(m[2]))throw Error('JERSEY_SEASON_TAG');
       text.nodeValue=m[1];seasonCards++;
@@ -355,6 +356,7 @@ export function removeJerseyDisplay(root,state){
   }
   for(const card of root.querySelectorAll('.card')){
     if(card.querySelector('h4')?.textContent!=='シーズン成績')continue;
+    if(!card.querySelector('.tag')){if(card.textContent.includes('（今季はけがで全休）'))continue;throw Error('JERSEY_SEASON_TAG');} /* full-season injury cards carry no team tag */
     const text=card.querySelector('.tag')?.lastChild,m=text?.nodeType===3?text.nodeValue.match(/^(.*) · #(\S+)$/s):null;
     if(!m||!numbers.has(m[2]))throw Error('JERSEY_SEASON_TAG');
     text.nodeValue=m[1];counts.season++;

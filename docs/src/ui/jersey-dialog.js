@@ -4,9 +4,9 @@ import {JERSEY_NUMBERS} from '../engine/jersey-policy.js';
 // PLY-01 number picker: the same header/content/footer as the confirmation dialog, with one select.
 // Resolves the chosen number string, or null on cancel/Esc/backdrop. Writes no state and draws no RNG.
 let request;
-export function chooseJerseyNumber({title,summary,note,selected,confirmLabel,cancelLabel='キャンセル'}={}){
+export function chooseJerseyNumber({title,summary,fieldLabel='新しい背番号',note,selected,confirmLabel,cancelLabel='キャンセル'}={}){
   if(!request)request=createJerseyDialog();
-  return request({title,summary,note,selected,confirmLabel,cancelLabel});
+  return request({title,summary,fieldLabel,note,selected,confirmLabel,cancelLabel});
 }
 function createJerseyDialog(){
   const dialog=document.createElement('dialog');dialog.id='jersey-dialog';dialog.className='information-dialog confirmation-dialog jersey-dialog';
@@ -17,7 +17,7 @@ function createJerseyDialog(){
   const viewport=document.createElement('div');viewport.className='information-content';viewport.tabIndex=0;viewport.setAttribute('role','region');viewport.setAttribute('aria-labelledby',heading.id);
   const article=document.createElement('div');article.className='information-article';
   const summary=document.createElement('p');summary.id='jersey-summary';
-  const label=document.createElement('label');label.className='jersey-field';label.htmlFor='jersey-select';label.textContent='新しい背番号';
+  const label=document.createElement('label');label.className='jersey-field';label.htmlFor='jersey-select';
   const select=document.createElement('select');select.id='jersey-select';
   for(const number of JERSEY_NUMBERS){const option=document.createElement('option');option.value=number;option.textContent=number;select.append(option);}
   const field=document.createElement('p');field.className='jersey-field-row';field.append(label,select);
@@ -43,7 +43,7 @@ function createJerseyDialog(){
   dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)finish(null);});
   return options=>{
     if(pending||document.querySelector('dialog[open]'))return Promise.resolve(null);
-    heading.textContent=options.title;summary.textContent=options.summary;note.textContent=options.note;
+    heading.textContent=options.title;summary.textContent=options.summary;label.textContent=options.fieldLabel;note.textContent=options.note;
     cancel.textContent=options.cancelLabel;accept.textContent=options.confirmLabel;
     select.value=JERSEY_NUMBERS.includes(options.selected)?options.selected:JERSEY_NUMBERS[0];
     return new Promise(resolve=>{

@@ -21,7 +21,7 @@ export class CareerRetirement {
   endGame(reason){this.#rules.endGame(reason);}
 }
 
-function careerRetirementRules({getState,jerseyPeriods,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,rng:{R,ri}}){
+function careerRetirementRules({getState,jerseyPeriods,jerseyRetired,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,rng:{R,ri}}){
   function roleName3(r){ return {SP:'先発投手',MR:'リリーバー',CL:'抑え'}[r]||'投手'; }
   function primaryPos(){ /* 通算の半数超を守った位置を主守備とし、該当なしなら年数順でユーティリティーまたはスイングマンと判定。 */
     const S=getState();
@@ -156,7 +156,7 @@ function careerRetirementRules({getState,jerseyPeriods,getSeed,LV,DPN,POSN,TIER_
     return `<h4 class="jersey-heading">背番号</h4><table class="fin jersey-table">${rows}</table>`;}
   function endGame(reason){
     const S=getState();
-    S.done=true; actClear();
+    S.done=true; actClear(); jerseyRetired?.(); /* PLY-01 J1: no number or menu change after retirement. */
     divider('現役生活に幕');
     card('info','引退する',reason);
     /* リーグ別成績と評価。 */

@@ -1,7 +1,7 @@
 // PLY-01 jersey policy (tasks/PLY_01_JERSEY_PLAN.md D1-D4, W3-W6, J1-J7): pure rules, no RNG, append-only history.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {JERSEY_NUMBERS,JERSEY_DEFAULT_ORDER,isJerseyNumber,defaultJerseyNumber,lastJerseyRecord,isJerseyEligible,jerseyEntryPending,currentJerseyNumber,canChangeJersey,proposedJerseyNumber,isLegacyJerseyEntry,appendJerseyRecord,jerseyRecordForYear,yearlyJerseyLabel,jerseyPeriods} from '../docs/src/engine/jersey-policy.js';
+import {JERSEY_NUMBERS,JERSEY_DEFAULT_ORDER,isJerseyNumber,defaultJerseyNumber,lastJerseyRecord,isJerseyEligible,jerseyEntryPending,currentJerseyNumber,canChangeJersey,proposedJerseyNumber,isLegacyJerseyEntry,appendJerseyRecord,jerseyRecordForYear,yearlyJerseyLabel,jerseyPeriods,JERSEY_MENU_LIMIT,jerseyChangeYear,isValidJerseyHistory} from '../docs/src/engine/jersey-policy.js';
 
 const pro=(over={})=>({stage:'PRO',org:'NPB',lv:'NPB1',orgTeamId:'NPB-YB',year:2030,pos:'IF',log:[],...over});
 
@@ -81,4 +81,44 @@ test('W2c/J3 periods: change within a team, transfers, and a non-professional ga
   assert.deepEqual(jerseyPeriods([{y:2029,st:{},tm:'旧'},{y:2030,st:{},tm:'旧'},{y:2031,st:{},tm:'A'}],[{teamId:'A',year:2031,number:'6'}],id=>id),
     [{team:'旧',from:2029,to:2030,number:null},{team:'A',from:2031,to:2031,number:'6'}],'D4 unknown years');
   assert.deepEqual(jerseyPeriods([],h,id=>id),[]);
+});
+test('J1 after retirement: no current number and no change (A1)',()=>{
+  const h=[{teamId:'NPB-YB',year:2029,number:'6'}];
+  assert.equal(currentJerseyNumber(pro({jerseyHistory:h,done:true})),null);
+});
+test('B1 change year: current year before this season row, next year after it',()=>{
+  assert.equal(jerseyChangeYear(pro({log:[{y:2029,st:{}}]})),2030);
+  assert.equal(jerseyChangeYear(pro({log:[{y:2029,st:{}},{y:2030,st:{}}]})),2031);
+  assert.equal(jerseyChangeYear(pro({log:[{y:2030,tm:'独立'}]})),2030,'a non-professional row does not count');
+  const state=pro({jerseyHistory:[{teamId:'NPB-YB',year:2030,number:'6'}],log:[{y:2030,st:{}}]});
+  appendJerseyRecord(state,'7',jerseyChangeYear(state));
+  assert.deepEqual(state.jerseyHistory.at(-1),{teamId:'NPB-YB',year:2031,number:'7'});
+  assert.equal(jerseyRecordForYear(state.jerseyHistory,2030).number,'6','the finished season keeps its number');
+  assert.equal(currentJerseyNumber(state),'7');
+  for(const bad of [2030.5,'2031',null])assert.throws(()=>appendJerseyRecord(pro(),'7',bad),/JERSEY_RECORD_INVALID/);
+});
+test('B2 legacy only when the last row is professional',()=>{
+  assert.equal(isLegacyJerseyEntry(pro({log:[{y:2028,st:{}},{y:2029,tm:'独立'}]})),false,'pro, then IND at load, then a new pro team');
+  assert.equal(isLegacyJerseyEntry(pro({log:[{y:2028,tm:'独立'},{y:2029,st:{}}]})),true);
+  assert.equal(isLegacyJerseyEntry(pro({log:[]})),false);
+});
+test('B5 menu change stops at the limit',()=>{
+  const h=Array.from({length:JERSEY_MENU_LIMIT-1},()=>({teamId:'NPB-YB',year:2030,number:'6'}));
+  assert.equal(canChangeJersey(pro({jerseyHistory:h})),true);
+  assert.equal(canChangeJersey(pro({jerseyHistory:[...h,h[0]]})),false);
+  assert.equal(currentJerseyNumber(pro({jerseyHistory:[...h,h[0]]})),'6');
+  assert.ok(JERSEY_MENU_LIMIT<1024);
+});
+test('B6 save validation of history rows',()=>{
+  const ok={year:2030,teamExists:id=>id==='NPB-YB'};
+  assert.equal(isValidJerseyHistory([],ok),true);
+  assert.equal(isValidJerseyHistory([{teamId:'NPB-YB',year:2030,number:'00'}],ok),true);
+  for(const bad of [null,{},[null],[{teamId:'X',year:2030,number:'6'}],[{teamId:'NPB-YB',year:2031,number:'6'}],[{teamId:'NPB-YB',year:2030.5,number:'6'}],
+    [{teamId:'NPB-YB',year:2030,number:6}],[{teamId:'NPB-YB',year:2030,number:'<b>'}],[{teamId:'NPB-YB',year:2030,number:'6',x:1}],[['NPB-YB',2030,'6']]])
+    assert.equal(isValidJerseyHistory(bad,ok),false,JSON.stringify(bad));
+});
+test('B7 unknown periods use the resolved team name',()=>{
+  const log=[{y:2029,st:{},tm:'A NPB二軍'},{y:2030,st:{},tm:'A'},{y:2031,st:{},tm:'B→C'}];
+  const unknown=tm=>tm.split('→').pop().replace(/ NPB二軍$/,'');
+  assert.deepEqual(jerseyPeriods(log,[],id=>id,unknown),[{team:'A',from:2029,to:2030,number:null},{team:'C',from:2031,to:2031,number:null}]);
 });
