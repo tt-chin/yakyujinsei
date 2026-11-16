@@ -363,8 +363,16 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   const navigation=initNavigation({onNavigate:archiveTraitResults,onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
   let startPromptPending=false;
   bindRandomPlayerName({input:$('in-name'),button:$('btn-random-name')});
-  $('btn-start').onclick=()=>{
-    if(startPromptPending)return;
+  $('btn-start').onclick=async()=>{
+    if(startPromptPending||S)return;
+    if(browserSave?.state.phase==='ready'&&browserSave.state.slot){
+      const revision=browserSave.state.revision;startPromptPending=true;
+      try{
+        if(!await confirmAction({title:'新しく始める',message:'新しい人生を始めると、現在のセーブデータが上書きされます。',confirmLabel:'始める'}))return;
+        await browserSave.replaceCareer({confirmed:true,expectedRevision:revision,start:()=>{try{startJapanese();}catch(error){S=null;throw error;}}});
+      }finally{startPromptPending=false;}
+      return;
+    }
     if(browserSave?.state.phase==='unavailable'){
       const state=browserSave.state;startPromptPending=true;
       confirmAction({title:'セーブせずに始める',message:'セーブデータを確認できません。今回の進行状況は保存されません。セーブせずに始めますか？'})
@@ -381,16 +389,17 @@ export async function initializeBrowserSave(){
  if(browserSave)return;
  const home=async()=>{if(S&&!await confirmAction({title:'タイトルに戻る',message:'このタブの未保存の操作を破棄して、タイトルに戻りますか？セーブデータは残ります。'}))return;location.href=location.pathname+location.search;};
  let newPromptPending=false;
- const fresh=async()=>{
+ const fresh=()=>!newPromptPending&&!S&&browserSave.state.phase==='ready'&&!!browserSave.state.slot;
+ const deleteSave=async()=>{
   if(newPromptPending||S||browserSave.state.phase!=='ready'||!browserSave.state.slot)return false;
   const state=browserSave.state,revision=state.revision;newPromptPending=true;
   try{
-   if(!await confirmAction({title:'新しく始める',message:'現在の進行状況を破棄して、新しく始めますか？\nOKを選ぶと、現在のセーブデータを削除します。'}))return false;
+   if(!await confirmAction({title:'セーブデータを削除',message:'セーブデータを削除します。この操作は元に戻せません。',confirmLabel:'削除する'}))return false;
    if(browserSave.state!==state||state.phase!=='ready'||state.revision!==revision)return false;
    return await browserSave.remove({confirmed:true});
   }finally{newPromptPending=false;}
  };
- const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onRetry:()=>browserSave.state.phase==='delete-error'?browserSave.initialize():browserSave.restore(),onHome:home});
+ const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onDelete:deleteSave,onRetry:()=>['delete-error','replace-error'].includes(browserSave.state.phase)?browserSave.initialize():browserSave.restore(),onHome:home});
  browserSave=new BrowserSaveController({notify:show,lock:locked=>{$('app').inert=locked;if(locked){++careerSession.choiceGeneration;careerSession.activeChoiceToken=null;}},restore:(envelope,{authorization}={})=>{
   const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});
   careerEntry.resume(candidate);

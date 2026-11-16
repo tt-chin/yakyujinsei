@@ -188,7 +188,7 @@ assert.ok(game.includes('function newState(name,pos){return createInitialState(n
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
 assert.doesNotMatch(html, /id="ver-badge"/);
-assert.match(html, /<h1 id="logo-tap"><em>野球人生シミュレーター<\/em><span id="app-version"[^>]*><\/span><\/h1>/);
+assert.match(html, /<h1 id="logo-tap"><em><span>野球人生<\/span><span>シミュレーター<\/span><\/em><\/h1><p id="app-version"><\/p>/);
 assert.doesNotMatch(html, /v1\.0\.0/);
 assert.match(game, /appVersion\.textContent='v'\+VERSION/);
 

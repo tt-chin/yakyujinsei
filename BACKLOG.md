@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-16 UI改版第1批進度：在codex/ui-redesign實作首頁與新規開始流程，開發版1.16.15；第0批已分開提交。聚焦存檔／跨分頁／開始例外與P／IF完整S／RNG比較通過，升版前工作樹Quick97／97 PASS；最終Full待執行，未將本批或實機驗收結案。完整差異、歷史FAIL與證據見[tasks/UI_REDESIGN_PHASE1_ACCEPTANCE.md](tasks/UI_REDESIGN_PHASE1_ACCEPTANCE.md)。此補記不新增／刪除既有checkbox ID，也不改寫下方歷史版本與PASS紀錄。
+
 > 最新狀態核對：2026-11-16。dev基準21b4ff9（1.16.13），本機1.16.14新增首頁明示隨機姓名按鈕；29項姓名聚焦驗證與82,560項樣式比較PASS。Quick初跑96 PASS／1 FAIL（舊token數量斷言），明列新token且保留原計數後限定重測1 PASS；未重跑整套Quick，不宣稱97項同輪PASS。Full／CI／Preview／實機未執行，未提交或發布；原始FAIL及ARTIFACT_COVERAGE_BLOCKED保持。
 > 以現有83個唯一ID的checkbox為準：已完成60項、未完成23項（UI-DESIGN-TOKENS-04／05／06／07／08／09與UI-SEED-SHOW-COLOR-01依完成條件結案；2026-11-14依使用者決定由-06拆出UI-DESIGN-TOKENS-07，並新增-08（級距收斂）與UI-SEED-SHOW-COLOR-01，總數74→77；同日依使用者決定由-08拆出間距為UI-DESIGN-TOKENS-09，總數77→78；2026-11-15新增UI-MRTEAM-NICKNAME-01，總數78→79；同日新增UI-PLAYER-RANDOM-NAME-01，總數79→80；同日-09經PR #91併dev後結案；同日依使用者決定HIST-SPEC-CLAUSE-01改為按需追溯並結案；同日新增TEST-DT09-DEV-FAIL-01，總數80→81；同日EVT-01經PR #99併dev、使用者確認Preview後結案；同日新增UI-BOARD-MENU-STACK-01，總數81→82，經PR #102併dev、使用者確認Preview後結案）；不提前結案。早期統計保留為歷史，ARTIFACT_COVERAGE_BLOCKED等限制依各ID保留。
 > 詳細測試、歷史FAIL、發布紀錄及原頁首內容保留於移轉前的固定Git提交，見[歷史驗收與發布紀錄](https://github.com/tt-chin/yakyujinsei/blob/fd57fa02f96cf3bc02cf52f0d2f6a6cf4be5ff93/BACKLOG.md)；歷史快照不作為目前狀態。

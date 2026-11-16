@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "1.16.15｜2026/11/16",
+    "lines": [
+      "- 球場が見えるホームに整理し、ワールドシードを詳細設定にまとめました。",
+      "- 新しい選手を作成中も前のセーブを保持し、開始時に上書きを確認します。セーブの削除は詳細設定から選べます。"
+    ]
+  },
+  {
     "title": "1.16.14｜2026/11/16",
     "lines": [
       "- 選手名の横に、ランダムな名前を入力できるサイコロボタンを追加。"

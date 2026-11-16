@@ -33,8 +33,7 @@
 <div id="start">
   <div class="wrap">
     <header class="home-title">
-    <div class="stitch"></div>
-    <h1 id="logo-tap"><em>野球人生シミュレーター</em><span id="app-version"></span></h1>
+    <h1 id="logo-tap"><em><span>野球人生</span><span>シミュレーター</span></em></h1><p id="app-version"></p>
     <p class="sub">高校野球からNPBドラフト、海外挑戦、日本代表、引退まで。すべての選択が野球人生を変える。</p>
     </header>
     <section id="home-create" class="home-controls" aria-label="新しい選手の作成">
@@ -44,11 +43,15 @@
         <button data-v="P" class="on">投手</button><button data-v="C">捕手</button>
         <button data-v="IF">内野手</button><button data-v="OF">外野手</button>
       </div></div>
-    <button class="btn main" id="btn-start" disabled>野球人生を始める ▸ 高校1年春</button>
-    <p class="seedline">ワールドシード
+    <button class="btn main" type="button" id="btn-start" disabled>野球人生を始める</button>
+    <button class="btn" type="button" id="save-back" hidden>セーブ選択に戻る</button>
+    </section>
+    <details id="home-settings"><summary>詳細設定</summary>
+    <p class="seedline"><label for="seed-show">ワールドシード</label>
       <input id="seed-show" maxlength="24">
       · <a href="#" id="seed-re">新しいシード</a><br>同じシード＋同じ選択＝同じ野球人生</p>
-    </section>
+    <button class="btn warn" type="button" id="save-delete" hidden>セーブデータを削除</button>
+    </details>
   <nav class="start-information" aria-label="ゲーム案内"><button class="btn" type="button" data-open-preferences aria-haspopup="dialog">表示設定</button><button class="btn" type="button" data-information="help">遊び方</button><button class="btn" type="button" data-information="updates">更新履歴</button><button class="btn" type="button" data-information="credits">クレジット</button></nav>
     <footer class="home-credit">Produced by <a href="https://x.com/dog_cat_150" target="_blank" rel="noopener">犬猫（@dog_cat_150）</a></footer>
   </div>

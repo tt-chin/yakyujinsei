@@ -34,13 +34,14 @@ const baselineHasConfirmation=(()=>{try{execFileSync('git',['cat-file','-e',base
 const start=async(p,url,pos='P')=>{
  const styled=!new URL(url).pathname.startsWith('/baseline/')||baselineHasConfirmation;
  await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);
+ const deferredOverwrite=await p.locator('#save-back').count()>0;
  if(await p.locator('#save-new').isVisible()){
   await p.locator('#save-new').click();
-  if(styled){await p.locator('#confirmation-dialog').waitFor({state:'visible'});assert.match(await p.locator('#confirmation-message').innerText(),/セーブデータを削除/);await p.locator('#confirmation-ok').click();await p.locator('#home-create').waitFor({state:'visible'});}
+  if(styled&&!deferredOverwrite){await p.locator('#confirmation-dialog').waitFor({state:'visible'});assert.match(await p.locator('#confirmation-message').innerText(),/セーブデータを削除/);await p.locator('#confirmation-ok').click();await p.locator('#home-create').waitFor({state:'visible'});}
  }
  await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#in-name').fill('イベント検証');
  const overwrite=d=>{assert.equal(d.type(),'confirm');assert.match(d.message(),/新しい野球人生を始めると/);d.accept();};
- if(!styled)p.on('dialog',overwrite);try{await p.locator('#btn-start').click();}finally{if(!styled)p.off('dialog',overwrite);}
+ if(!styled)p.on('dialog',overwrite);try{await p.locator('#btn-start').click();if(deferredOverwrite&&await p.locator('#confirmation-dialog[open]').count()){assert.match(await p.locator('#confirmation-message').innerText(),/上書きされます/);await p.locator('#confirmation-ok').click();await p.waitForFunction(()=>document.querySelector('#start').style.display==='none');}}finally{if(!styled)p.off('dialog',overwrite);}
  assert.equal((await get(p)).state.pos,pos,'position listener must be ready');
 };
 const context=width=>browser.newContext({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500});
