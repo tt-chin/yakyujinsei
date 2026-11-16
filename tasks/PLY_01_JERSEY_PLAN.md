@@ -248,7 +248,7 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 - 負控制（實作時執行）：選號步驟內呼叫 R()、覆寫過去紀錄、改號寫入能力或收入、IND 出現選號、`jerseyStep` 移到存檔前、dom-snapshot 各投影契約（多刪／少刪）、P1 略過條件放寬至任意按鈕。
 - 文案已確認（使用者 2026-11-15）：J5 各句、J7「（背番号不明）」、對話框（標題「背番号を選ぶ」「背番号の変更」、確定鈕「この背番号にする」「変更する」、說明「{年}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。」）。
 - 草稿已經 reviewer 審查並修正（§11）；`scripts/test-share-url-menu.mjs` 未執行；Linux CI、Preview、實機未驗證。
-- 正式實作已授權（使用者 2026-11-15）；進度見 §11，尚需 T8 `jersey-e2e`、上列負控制、T9 版本與文件、最終 reviewer 與 Full。
+- 正式實作已授權（使用者 2026-11-15）；進度見 §11。T8 與負控制已完成（2026-11-17），尚需 T9 版本與文件、最終 reviewer 與 Full。
 
 ## 11. 正式實作進度與審查修正（2026-11-15）
 
@@ -325,28 +325,38 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 
 **既有問題（未處理，與 PLY-01 無關）**：`scripts/ci-full-batches.test.mjs` 寫死 `assert.equal(ids.length,106)`，`fullIds()` 在 HEAD `ae2c738` 為 128（加入 `jersey-e2e` 後 129），乾淨 HEAD 上同樣 2 項 FAIL。只在 CI `linux-smoke` 模式執行，不在 Quick／Full。
 
-**負控制執行計畫（2026-11-16 提出，待使用者核准；下一個 session 執行）**
-- 隔離：在 scratchpad 建 `HEAD`（`5e302f6` 或之後的 docs commit）的 git worktree，只在其中植入變異，不動工作樹。
-- 每項流程：替換字串先斷言恰好出現 1 次 → 植入後斷言已改 → 只跑對應測試 → `git checkout` 還原並以 shasum 確認。腳本用 bash 陣列（避開 zsh word-split）。
-- 判定：exit code 非 0，且失敗的是指定斷言（`ERR_ASSERTION` 加斷言訊息）；只出現「FAIL」字樣不算。
+**負控制結果（2026-11-17，使用者核准執行；`54a4c82` 的 scratchpad worktree，macOS＋Brave 157，本機）**
+- 隔離與流程：只在 worktree 植入；替換字串先斷言出現 1 次（N3、N12 依檔案指定次數），植入後確認已改，只跑對應測試，還原後以 sha256 確認。工作樹未動。driver 為 Node 腳本（不經 zsh 迴圈）。
+- 對照 N0（未變異）：`jersey-e2e` 8 案例（entry-P、entry-dialog、menu-change、resume-entry-unsaved、rng-identity、save-tamper、legacy-save、fixture-ind）PASS，`jersey-policy.test` 17／17 PASS；N2 補強後重跑仍 PASS。
+- 判定：exit 非 0，且失敗在指定斷言。N1～N12 全部攔下，無 `is not defined` 類假失敗。
 
-| # | 植入 | 預期失敗 |
+| # | 植入 | 結果（失敗的斷言） |
 |---|---|---|
-| N1 | `promptJerseyEntry` 內呼叫 `R()` | `entry-*`「年初存檔到提示之間 0 次抽取」、`rng-identity` |
-| N2 | `accept` 內呼叫 `R()`（預設與改號兩條路徑都會多抽一次，互相比較抓不到，靠 baseline 比較） | `rng-identity` 與 baseline 的全 R 值比較 |
-| N3 | `appendJerseyRecord` 改為覆寫最後一筆 | `menu-change`、`jersey-policy.test` |
-| N4 | 選單改號時 `S.careerEarnings+=1` | `rng-identity` variant 的 S 比較 |
-| N5 | `isJerseyEligible` 讓 IND 也有資格 | `fixture-ind` |
-| N6 | 年初存檔 capture 前先寫入紀錄（模擬 `jerseyStep` 移到存檔前） | `resume-entry-unsaved`（J2①） |
-| N7 | 移除 `jerseyRetired` 呼叫（A1） | `entry-*` 的 A1 斷言 |
-| N8 | 移除 `board(0)`（A2） | `resume-entry-unsaved`、`legacy-save` 的 A2 斷言 |
-| N9 | `jerseyChangeYear` 改回 `S.year`（B1） | `menu-change` 的 B1 斷言 |
-| N10 | 移除 codec 的 `SAVE_JERSEY` 檢查（B6） | `save-tamper` |
-| N11 | `tests/support/dom-snapshot.mjs` 投影多刪一項、少刪一項（各一次） | `game-view-dom-e2e` 投影契約 |
-| N12 | P1 略過條件放寬至任意按鈕 | 各 P1 測試的計數檢查 |
+| N1 | `promptJerseyEntry` 內 `R()` | `entry-P`「no RNG draw between the year-start save and the prompt」（48≠47）；`rng-identity` 狀態比較 |
+| N2 | `accept` 內 `R()` | 補強前：`rng-identity` 的全 R 值比較**未攔下**，由其後的狀態比較（`$.ab.sta`）攔下。補強後：新斷言「draw count at every year-start save equals the 1.16.13 baseline」攔下 |
+| N3 | `appendJerseyRecord` 覆寫最後一筆 | `jersey-policy.test` D3、B1；`menu-change` 紀錄比對 |
+| N4 | 選單改號時 `careerEarnings+=1` | `rng-identity` variant 狀態比較（`$.careerEarnings`） |
+| N5 | `isJerseyEligible` 含 IND | `fixture-ind` 提示數 1≠0 |
+| N6 | 年初存檔 capture 前寫入紀錄 | `resume-entry-unsaved` 續玩提示數 0≠1（J2①） |
+| N7 | 移除 `jerseyRetired` 呼叫 | `entry-P`「A1: no number after retirement」 |
+| N8 | 移除 `board(0)` | `resume-entry-unsaved`、`legacy-save`「A2 board year」 |
+| N9 | `jerseyChangeYear` 回傳 `state.year` | `menu-change`「B1 note names next year」 |
+| N10 | 移除 codec `SAVE_JERSEY` 檢查 | `save-tamper` 得 `SAVE_AUTH_FAILED`（預期 `SAVE_JERSEY`） |
+| N11a | 投影多刪：季成績卡 tag 文字清空 | `game-view-dom-e2e` 與固定 baseline `4f39a73` 比較，第 70 步 `$.dom.log` 不同 |
+| N11b | 投影少刪：保留 `#bd-number` | 投影契約 `JERSEY_BOARD_UNEXPECTED`（契約 throw，非 `ERR_ASSERTION`，即該契約的攔截方式） |
+| N12 | 各 E2E 自有的 P1 regex 放寬 | 見下 |
 
-- N12 範圍：先派 scout 唯讀盤點約 15 個 E2E 中的 P1 略過位置與是否有計數斷言，再提出具體變異點請使用者核准。
-- 預估：N1～N10 約 5 分鐘（`jersey-e2e --only=<案例>`、`jersey-policy.test`）；N11 約 10 分鐘（`game-view-dom-e2e` 約 300 秒 ×2）；N12 待盤點。
+- N2 發現：同 seed 的 R 值序列必為同一串流的前綴，「全 R 值／`rngState` 相同」實際只比到截止時的抽取次數；N2 下兩側皆 118 次。使用者 2026-11-17 選 A：`rng-identity` 的 `run()` 回傳 `captures`（各年初存檔的年度與抽取次數），新增「現行 vs baseline」「variant vs 預設」兩條 `captures` 比較（先斷言各 ≥3 筆）。
+- N12（使用者 2026-11-17 選乙：10 檔 12 入口全跑）：scout 盤點 10 檔各自內嵌 regex、無共用 helper。「任意按鈕」在多數檔會先撞生涯上限，故主變異改為 `|する$`（`contract-salary-e2e` 只改 P1 的 `jersey=`，不改 P5 的 `settleJersey`）。
 
-**下一步**：負控制（上表，`fixture-trade` 取代「季中交易」對應）→ T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ T9 後重跑 `jersey-e2e`（D4 跨版）→ reviewer → 4 組 Full → push dev 前請使用者確認。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
+| 入口 | 變異 | 攔截 |
+|---|---|---|
+| `kbo-renewal`、`draft-income`、`trait-display`、`international-personal-stats`、`full-power-pitching` ×3、`contract-salary` | `\|する$` | 「baseline has no number step」 |
+| `hof-first-ballot`、`hof-retirement-policy` | `\|する$` 存活（舊版側路徑無此類按鈕）→ 任意按鈕 `\|^` | 「baseline has no number step」（例：352≠0） |
+| `display-preferences` | `\|する$` 存活；`\|^` 先撞 `Career did not finish` → `\|^通常投球` | 「baseline has no number step」 |
+| `game-view-dom` | `\|する$` | 第 336 步 DOM 與 baseline 不同（`ERR_ASSERTION`），在計數斷言 `:129` 之前失敗；計數斷言未單獨驗證（需構造只略過策略本來會點的按鈕，未做） |
+
+- 未驗證：補強後的 `jersey-e2e` 只跑上列 8 案例，未跑全 20 案例（T9 後重跑時涵蓋）；Full、CI、Preview 未執行。
+
+**下一步**：T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ T9 後重跑 `jersey-e2e`（D4 跨版）→ reviewer → 4 組 Full → push dev 前請使用者確認。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
 
