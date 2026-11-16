@@ -1,0 +1,325 @@
+{
+  "phase": 3,
+  "date": "2026-11-17",
+  "risk": "R2",
+  "reason": "共通カード／選択UI、焦点、導線の変更。既存のChoicePrompt・ChoiceAction・配点・進行・保存形式・イベント解決・RNGを変更しない。",
+  "version": {
+    "before": "2.0.0",
+    "after": "2.0.0",
+    "reason": "利用者指定：第1～5批を同じ2.0.0へ集約。"
+  },
+  "branch": "codex/ui-redesign",
+  "baseHead": "9b3bcee5b7704d97ac8a1e44246745586a8f8073",
+  "userDecision": "A: 本批改善錯誤呈現與焦點，保留既有復原及防重複規則；通用安全重試另案。",
+  "scope": [
+    "イベント履歴のnative details・年度／段階・見出し・本文・選んだ行動・実際の効果",
+    "保存済みresult payloadの能力／繰越before→after・成績点・超過・故障加算・収入。計算を再実行しない。",
+    "UI専用WeakMapの選択ID、同一選択の折りたたみと新選択の展開、ARIA、原ノード／草稿とスクロール復元",
+    "選手／キャリアから選択へ戻る、結果／診断の焦点、通常選択の連続クリック抑止"
+  ],
+  "stateComparison": {
+    "baseline": "4ba12c54c5da3e2fd477d7616c57821132accfa3",
+    "positions": {
+      "P": "jp3-pitcher-02",
+      "IF": "jp3-infielder-01"
+    },
+    "scope": "同版の初回配点草稿・イベント前後とUI操作。完全S・全RNG drawを比較。",
+    "allowedDifferences": [],
+    "historicalDomBaseline": "4f39a73e23758b891bc24951225231792ab022b4",
+    "displayBaseline": "d6cef67ef6ac8e348f66f2f5ed32c4fa3d6b7cd1",
+    "historicalScope": "既存承認済みHOF／特性／表示名・版数等のoracleを保持し、今回追加した表示を検証して旧DOMへ戻す。S／RNGの追加除外なし。"
+  },
+  "sourceFiles": [
+    {
+      "file": "docs/index.html",
+      "sha256": "7ef3b0af0eede04c5dd9395fd5ecc2407abf5c8846a086f6a017fe24b7153347"
+    },
+    {
+      "file": "docs/src/config.js",
+      "sha256": "3411c264e589e9bc1bd2e10f287d84dab31017a48178153cbfe58b2cba6845e2"
+    },
+    {
+      "file": "docs/src/data/release-notes.js",
+      "sha256": "77abe47b270c0642a1ec8118bce105b7277270418a52085b42997a1c28fe348f"
+    },
+    {
+      "file": "docs/src/engine/game.js",
+      "sha256": "0a8009f31e8c66fa36cb0eb4161cdb79bc97b2082d4df8d2436a2724bd245d7f"
+    },
+    {
+      "file": "docs/src/engine/season-events.js",
+      "sha256": "d9262e2197e3819c50abe29d370b82e6566c126507f5258c038e40a76c9c5949"
+    },
+    {
+      "file": "docs/src/ui/game-view.js",
+      "sha256": "384bc8d51d87f1e0ea690946267e827b91b95b5c17ebf88fee00c37935461a90"
+    },
+    {
+      "file": "docs/src/ui/navigation.js",
+      "sha256": "c0e2a2be348e87171428ee665342f7a97a1c05b4866a232b0ba1676b231551d5"
+    },
+    {
+      "file": "docs/src/ui/decision-presentation.js",
+      "sha256": "10696d8bd0b9852b2d12288ee35a4ac66d609390d0d4fc796a411dfe54b2c848"
+    },
+    {
+      "file": "docs/src/ui/event-result-view.js",
+      "sha256": "bbb402900f86fe9e2c9629de54cb4b47c98877e8f55618fa61a108d5dddd2cca"
+    },
+    {
+      "file": "docs/styles/decision-presentation.css",
+      "sha256": "60c8f8e56942fbd0ee4c0074503316b371bb25f3d4e9711a689dff90006064ea"
+    },
+    {
+      "file": "scripts/test-manifest.mjs",
+      "sha256": "c94221867dd97738210c09aa6a58d0e42a821fefb8554ba53950d569fd7903dc"
+    },
+    {
+      "file": "tests/design-tokens-06.test.mjs",
+      "sha256": "4ee2590b9fb1d6a309047586a311957ab1ce2f67105d3b5432d716c56efbdbc9"
+    },
+    {
+      "file": "tests/display-preferences-e2e.mjs",
+      "sha256": "ddda0e797b86c56355f05b90a6848a1ed36b00b26966c40031556bdeb0905957"
+    },
+    {
+      "file": "tests/event-fix-e2e.mjs",
+      "sha256": "9e9d2e306bceba88ec67661ad3c5b6b15cb332d9488835978e0036d3b0ad96c4"
+    },
+    {
+      "file": "tests/game-view-dom-e2e.mjs",
+      "sha256": "beace03b20893d9a3017dd49e0b6d14845245662d3fdc873b03260df1235488a"
+    },
+    {
+      "file": "tests/support/dom-snapshot.mjs",
+      "sha256": "9f6e91e7705e8d108df4dc30b6fb131d3f0f74f479ca9b03eef07725c865587f"
+    },
+    {
+      "file": "tests/support/decision-dom-comparison.mjs",
+      "sha256": "d94f03e3e0e64f3b636d8f2f6c656034fc0c6cd19cfd4c8c461bb34b4fa6c204"
+    },
+    {
+      "file": "tests/ui-redesign-decision-e2e.mjs",
+      "sha256": "c2f842ec52f7cae665f1b2871fa158ce046348d40de406ea09686407710074ce"
+    }
+  ],
+  "hashScope": "実行時Windows作業ツリーの生byte SHA256。新規未追跡ファイルも明示保存。Gitの改行変換後blob hashとは区別。",
+  "relatedTests": [
+    {
+      "file": "test-results/ui-phase3-related-02/game-view-dom-e2e.log",
+      "status": "PASS",
+      "sha256": "0a8ecda786ded4e5d597d5f2db40ff21faf39073693c074df0d62849d4e201d7"
+    },
+    {
+      "file": "test-results/ui-phase3-related-02/display-preferences-e2e.log",
+      "status": "PASS",
+      "sha256": "76eec2882509766acc7e425f72143f1c5e515fb6508512c67e2bc77d5831e143"
+    },
+    {
+      "file": "test-results/ui-phase3-related-02/board-menu-stacking-e2e.log",
+      "status": "PASS",
+      "sha256": "21fa984b6573c4f11eaa141e09dc593005573ce6eeb9fa6943317e14ece8a9d8"
+    },
+    {
+      "file": "test-results/ui-phase3-related-04/event-fix-e2e.log",
+      "status": "PASS",
+      "sha256": "25ef016f7f6249bdd892d81a7c6deb49f5e6ef36faf345d9bb68d82077d9d8cf"
+    },
+    {
+      "file": "test-results/ui-phase3-related-04/event-system-e2e-quick.log",
+      "status": "PASS",
+      "sha256": "298c3813f0aa4ebeaa286b77f40d45b22087942b895cdd546fcb3dc61e5e3b05"
+    }
+  ],
+  "localQuick": {
+    "status": "PASS",
+    "counts": {
+      "PASS": 99,
+      "FAIL": 0,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "seconds": 359.287,
+    "output": "test-results/ui-phase3-quick-02",
+    "summarySha256": "354ce8d14412098c0a0fd91ffa9f974a11a213888e294575163a0bdabdcaf0d8",
+    "sourceFingerprint": "81e2e50a31e38dc8a6d24efaa2259876053a87839eee95f9f9116b45002bd02d",
+    "headAtExecution": "9b3bcee5b7704d97ac8a1e44246745586a8f8073",
+    "sourceUnchangedAfterRun": true,
+    "decisionEvidence": {
+      "file": "test-results/ui-phase3-quick-02/decision-evidence/summary.json",
+      "status": "PASS",
+      "cases": 128,
+      "sha256": "a78ec66df6bda6600849130c0245b10c6d96bd62c7f3b3c359f0d7ae4f862ef5",
+      "checks": [
+        {
+          "pos": "P",
+          "baselineAllocation": "PASS",
+          "baselineEvent": "PASS",
+          "pendingIdentity": "PASS",
+          "doubleClick": "PASS"
+        },
+        {
+          "pos": "IF",
+          "baselineAllocation": "PASS",
+          "baselineEvent": "PASS",
+          "pendingIdentity": "PASS",
+          "doubleClick": "PASS"
+        },
+        {
+          "resultFixtures": 6,
+          "errorFocus": "PASS",
+          "existingRecovery": "PASS"
+        }
+      ]
+    },
+    "visualInspection": "1280px desktop and 390px mobile final pending screenshots inspected; option subtext fits button. Desktop action pane remains independently scrollable."
+  },
+  "full": {
+    "status": "NOT_RUN",
+    "execution": "GitHub manual by user only; no local Full, no agent dispatch/rerun",
+    "reason": "共通カード・選択・ナビゲーションとFull専用DOM比較に影響するため、確定した新SHAでFullが必要。過去の第2批128 PASSは今回の結果ではない。",
+    "requiredResultLabel": "需要執行Full（GitHub手動／未執行）"
+  },
+  "priorFailures": [
+    {
+      "file": "test-results/ui-phase3-decision-01/summary.json",
+      "status": "FAIL",
+      "sha256": "8050e8290dc0b577ae517490ccd4a4a78ed49f40e9f7de3032aabcb30644a92c",
+      "reason": "エラー焦点がonclickより先のmicrotaskで走る問題、およびhomeScroll未定義。二段RAFとcurrent確認で修正。"
+    },
+    {
+      "file": "test-results/ui-phase3-decision-02/summary.json",
+      "status": "FAIL",
+      "sha256": "aefd824bd5ef30f3202acba966ff45aa174b64838f0b306af842e59339a10546",
+      "reason": "エラー焦点がonclickより先のmicrotaskで走る問題、およびhomeScroll未定義。二段RAFとcurrent確認で修正。"
+    },
+    {
+      "file": "test-results/ui-phase3-decision-03/summary.json",
+      "status": "FAIL",
+      "sha256": "4a0f196daf60eae1796cede1a3589753f91e184838443ea359a49309e20a9616",
+      "reason": "homeScroll未定義ガード不足。currentの存在確認で修正。"
+    },
+    {
+      "file": "test-results/ui-phase3-related-01/game-view-dom-e2e.log",
+      "status": "FAIL",
+      "sha256": "ecaf437a3e8db866a801033e48dd966941125ce436f4278ebff23328cf487399",
+      "reason": "後段のlive log再cloneが検証済み表示投影を上書き。投影済みDOMのcloneへ修正。"
+    },
+    {
+      "file": "test-results/ui-phase3-related-02/event-fix-e2e.log",
+      "status": "FAIL",
+      "sha256": "0261f303befd057f61e9c766899e72194676ea22e73cfbfae1e644e74c2d4778",
+      "reason": "原計算文が折りたたみ内へ移ったため旧innerText期待が不一致。原文をlegacy DOMで厳格検証し、別途可視outcomeと前後値を追加検証。"
+    },
+    {
+      "file": "test-results/ui-phase3-related-03/event-fix-e2e.log",
+      "status": "FAIL",
+      "sha256": "0261f303befd057f61e9c766899e72194676ea22e73cfbfae1e644e74c2d4778",
+      "reason": "編集用python.exeが起動不可で変更が適用されず同じFAIL。Nodeで編集後に04でPASS。"
+    },
+    {
+      "status": "FAIL",
+      "reason": "design-tokens-06の旧69 font sites期待。新規7 sitesを明記し76へ、spacing201→222へ更新。既存13 font／12 spacing tokenと制約を保持。後続単体PASS。"
+    }
+  ],
+  "limitations": [
+    "第4～5批は未実装。",
+    "Preview・実機iOS／Android・真の200%ブラウザズーム・safe area・実WebFontはNOT_RUN。ローカルChromium幅／大字の検証と区別。",
+    "ARTIFACT_COVERAGE_BLOCKEDを解除しない。summary/logとhash保存は全原始S/RNG artifactの封存ではない。",
+    "最終受入は新SHAのGitHub Fullと使用者Preview／実機確認待ち。"
+  ],
+  "previousQuick": {
+    "status": "PASS",
+    "counts": {
+      "PASS": 99,
+      "FAIL": 0,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "output": "test-results/ui-phase3-quick-01",
+    "sourceFiles": [
+      {
+        "file": "docs/index.html",
+        "sha256": "7ef3b0af0eede04c5dd9395fd5ecc2407abf5c8846a086f6a017fe24b7153347"
+      },
+      {
+        "file": "docs/src/config.js",
+        "sha256": "3411c264e589e9bc1bd2e10f287d84dab31017a48178153cbfe58b2cba6845e2"
+      },
+      {
+        "file": "docs/src/data/release-notes.js",
+        "sha256": "77abe47b270c0642a1ec8118bce105b7277270418a52085b42997a1c28fe348f"
+      },
+      {
+        "file": "docs/src/engine/game.js",
+        "sha256": "0a8009f31e8c66fa36cb0eb4161cdb79bc97b2082d4df8d2436a2724bd245d7f"
+      },
+      {
+        "file": "docs/src/engine/season-events.js",
+        "sha256": "d9262e2197e3819c50abe29d370b82e6566c126507f5258c038e40a76c9c5949"
+      },
+      {
+        "file": "docs/src/ui/game-view.js",
+        "sha256": "384bc8d51d87f1e0ea690946267e827b91b95b5c17ebf88fee00c37935461a90"
+      },
+      {
+        "file": "docs/src/ui/navigation.js",
+        "sha256": "c0e2a2be348e87171428ee665342f7a97a1c05b4866a232b0ba1676b231551d5"
+      },
+      {
+        "file": "docs/src/ui/decision-presentation.js",
+        "sha256": "10696d8bd0b9852b2d12288ee35a4ac66d609390d0d4fc796a411dfe54b2c848"
+      },
+      {
+        "file": "docs/src/ui/event-result-view.js",
+        "sha256": "bbb402900f86fe9e2c9629de54cb4b47c98877e8f55618fa61a108d5dddd2cca"
+      },
+      {
+        "file": "docs/styles/decision-presentation.css",
+        "sha256": "ce2b989b64800bb1f67215c6f35f21b8aaf9f712e4fe9d8c506bb94a17d6905a"
+      },
+      {
+        "file": "scripts/test-manifest.mjs",
+        "sha256": "c94221867dd97738210c09aa6a58d0e42a821fefb8554ba53950d569fd7903dc"
+      },
+      {
+        "file": "tests/design-tokens-06.test.mjs",
+        "sha256": "4ee2590b9fb1d6a309047586a311957ab1ce2f67105d3b5432d716c56efbdbc9"
+      },
+      {
+        "file": "tests/display-preferences-e2e.mjs",
+        "sha256": "ddda0e797b86c56355f05b90a6848a1ed36b00b26966c40031556bdeb0905957"
+      },
+      {
+        "file": "tests/event-fix-e2e.mjs",
+        "sha256": "9e9d2e306bceba88ec67661ad3c5b6b15cb332d9488835978e0036d3b0ad96c4"
+      },
+      {
+        "file": "tests/game-view-dom-e2e.mjs",
+        "sha256": "beace03b20893d9a3017dd49e0b6d14845245662d3fdc873b03260df1235488a"
+      },
+      {
+        "file": "tests/support/dom-snapshot.mjs",
+        "sha256": "9f6e91e7705e8d108df4dc30b6fb131d3f0f74f479ca9b03eef07725c865587f"
+      },
+      {
+        "file": "tests/support/decision-dom-comparison.mjs",
+        "sha256": "d94f03e3e0e64f3b636d8f2f6c656034fc0c6cd19cfd4c8c461bb34b4fa6c204"
+      },
+      {
+        "file": "tests/ui-redesign-decision-e2e.mjs",
+        "sha256": "04632e6c11fa07699d0b3f4cbf38137e4b1504d4db1716f71c47c327f218aef9"
+      }
+    ],
+    "limitation": "後続の視覚確認でデスクトップ大字のボタン副文が枠外へはみ出す問題を発見。このPASSを修正後の結果としない。スクリーンショットをdecision-evidenceへ保存し、Gridのmin-content列高とボタン内縦overflow検証を追加。"
+  },
+  "displayCorrection": {
+    "status": "PASS",
+    "file": "test-results/ui-phase3-decision-06/summary.json",
+    "cases": 128,
+    "reason": "CSS Grid min-content列高とheight:auto。全選択肢のscrollHeight/clientHeightで副文の縦overflowを検出。",
+    "sha256": "0c84585daf60aa656505cf0d3e38bed1ebbc364fa491bb8848d1d70eea60a483"
+  },
+  "relatedTestsNote": "個別E2Eは開発途中の診断結果。最終Quickは新規製品モジュールも索引へ追加した確定ソースで実行し、同版P/IFの全S/RNGと全128表示条件を再検証する。共通DOM比較の正式最終Gateは新SHAのGitHub Full待ち。",
+  "documentationAfterQuick": "以後はBACKLOG／設計進捗／本収據のみ更新。実行に影響せず、Quick再実行不要。新SHAのFullを過去PASSに置換しない。"
+}

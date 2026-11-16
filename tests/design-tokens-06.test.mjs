@@ -25,12 +25,12 @@ test('base.css defines the 13 --fs-* scale tokens as calc(<px>px * var(--font-sc
 });
 // 59 former calc() sites plus 5 moved inline 11/12px sizes (scaled before by the preferences.css [style*=] rules),
 // plus 1 for the EVT-01 .event-badge (1.16.11).
-test('69 font sites after UI 2.0 and the name button uses --fs-5xl',()=>{
+test('76 font sites after phase 3 and the name button uses --fs-5xl',()=>{
   const rule=base.match(/(?:^|\n)\.random-name-button\{([^}]+)\}/);assert.ok(rule,'approved name button rule');
   assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
   const original=outsideRoot.replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
   const used=[...original.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
-  assert.equal(used.length,69,'UI 2.0 summary and menu heading add four font-token sites');
+  assert.equal(used.length,76,'phase-3 decision/reader rules add seven shared font sites');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
   // The responsive home title now uses clamp(26px,4vw,40px); the shared scale is retained.
   assert.deepEqual(Object.keys(FS).filter(n=>!used.includes(n)),['--fs-6xl'],'only the former home-title token is unused');
@@ -82,7 +82,7 @@ test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   assert.equal((rule[1].match(/gap:var\(--space-xs\)/g)||[]).length,1,'one explicit existing spacing token');
   const original=outsideRoot.replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,201,'UI 2.0 shell adds shared spacing while retiring outside sidebars');
+  assert.equal(used.length,222,'phase-3 decision/reader spacing uses existing shared tokens');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');
   assert.deepEqual(Object.keys(SPACE).filter(n=>!used.includes(n)),[],'unused --space token');
 });

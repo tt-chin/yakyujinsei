@@ -171,7 +171,7 @@ var MAX_YEARS=8;         /* DOM 最大保持年度領域数。 */
 function logTarget(){ return _curYearBody || $('log'); }
 // DOM presentation lifetime only; no display markers in S or replay data.
 const traitPresentation=new WeakMap();
-const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key)});
+const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key),getDecision:()=>S?choiceViews.get(S):null,getYear:()=>S?.year});
 function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){return traitResultCard.decorate(node,title,html);}
 const traitResultCard=new TraitResultCard({getState:()=>S,traitPresentation,displayTrait});
@@ -252,8 +252,7 @@ const shareImageView=new ShareImage({getState:()=>S,getSeed:()=>SEED,LG_N,TEAM_C
 function shareImage(evals,out){return shareImageView.render(evals,out);}
 /* 開始設定。 */
 (function(){ const t=document.getElementById('act-toggle');
-  if(t)t.onclick=()=>{ document.getElementById('act').classList.toggle('collapsed');
-    t.textContent=document.getElementById('act').classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる'; };
+  if(t)t.onclick=()=>gameView.toggleActions();
 })();
 document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#seg-pos button').forEach(x=>x.classList.remove('on'));

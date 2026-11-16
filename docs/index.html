@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="./styles/stadium-background.css">
 <link rel="stylesheet" href="./styles/browser-save.css">
 <link rel="stylesheet" href="./styles/game-shell.css">
+<link rel="stylesheet" href="./styles/decision-presentation.css">
 </head>
   <body>
 <div id="start">
@@ -93,10 +94,12 @@
     <button type="button" data-main-view="player">選手</button>
     <button type="button" data-main-view="career">キャリア</button>
   </nav>
+  <button type="button" class="decision-return" id="decision-return" aria-controls="view-home" hidden>選択に戻る</button>
   <div id="view-host">
     <section id="view-home" class="main-view" data-main-panel="home">
       <main id="log"></main>
-      <button id="act-toggle" style="display:none">⌄ 選択肢を閉じる</button>
+      <section id="decision-summary" aria-label="現在の選択" hidden><p id="decision-period"></p><h2 id="decision-question" tabindex="-1"></h2><button type="button" id="decision-jump" aria-controls="act">選択肢へ</button></section>
+      <button id="act-toggle" aria-expanded="false" aria-controls="act" style="display:none">選択肢を閉じる</button>
       <footer id="act" style="display:none"></footer>
     </section>
     <section id="view-player" class="main-view" data-main-panel="player" hidden>

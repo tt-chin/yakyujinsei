@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'ui-redesign-decision-e2e': {quick:[],seconds:120,reason:'UI phase 3: stable decision identity/return/scroll/collapse, retained allocation nodes, double-click guard, committed result payload boundaries and unchanged error recovery; exact phase-2 S/RNG controls at P/IF allocation and events, 128 viewport/theme/font cases.'},
   'ui-redesign-shell-e2e': {quick:[],seconds:90,reason:'UI 2.0 phase 2: responsive shell, modal focus/inertness, keyboard tabs, allocation DOM identity and complete S/RNG across P/IF, breakpoint/short-window, theme/font matrix.'},
   'player-random-name-e2e': {seconds:120,reason:'Blank/typed names: isolated crypto draws, exact short P/IF state and RNG comparison, same-seed different names, real save/resume/year advance and PNG; no full career.'},
   'hof-retirement-policy-e2e': {seconds:180,reason:'Approved HOF-only deltas: full pre-retirement S/choice/RNG equality, P/IF deterministic replay and frozen-rule retirement oracle, no blanket ignore.'},
@@ -47,6 +48,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/decision-dom-comparison.mjs':['support','Validates approved phase-3 reader wrappers, committed event effects and decision metadata before reconstructing historical DOM; no S/RNG projection.'],
   'support/ui-shell-comparison.mjs':['support','Frozen approved UI 2.0 board markup projection; exact new summary/structure validation before historical board comparison. No S/RNG exclusions.'],
   'support/approved-hof-comparison.mjs':['support','Strict approved-retirement comparison used by dedicated unit and E2E tests; not a standalone suite.'],
   'support/source-text.mjs': ['support','Strict UTF-8 source reader; CRLF-to-LF normalization only for source comparisons. Never normalizes frozen hash/binary evidence.'],

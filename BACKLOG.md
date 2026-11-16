@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-17 UI改版第3批（R2）：事件卡閱讀層次、原生履歷展開、實際能力／繰越前後值與效果、當前選擇摘要／收合、查資料返回原選擇與捲動、結果／診斷焦點、普通選擇防連點已實作。使用者選A：保留既有復原／防重複與不要再次選擇提示，不新增通用重試。版號維持2.0.0；第4～5批未實作。修正桌面大字選項副文溢出後，確定碼Quick **99／99 PASS**，128組版面與P／IF同版完整S／RNG比較通過；相關事件552分支、24告別fixture及歷史DOM比較個別入口通過。前次Quick99 PASS未檢出該視覺問題，與早期焦點／未定義捲動、舊DOM／文案期待FAIL均保留，不冒充確定碼結果。**需要執行Full（GitHub手動／未執行）**：共用UI／導覽及Full專用DOM比較受影響，須由使用者對本次新提交手動執行；未啟動本機Full或自行觸發GitHub Full。Preview／實機、既有checkbox與ARTIFACT_COVERAGE_BLOCKED維持。來源、日誌雜湊與限制見[第3批驗證收據](tasks/UI_REDESIGN_PHASE3_EVIDENCE.json)。
+
 > 2026-11-17 最新確認與測試分工：第2批修正提交`4ba12c54c5da3e2fd477d7616c57821132accfa3`的[使用者手動Full Run43861732451](https://github.com/tt-chin/yakyujinsei/actions/runs/43861732451)為128 PASS／0 FAIL／0 SKIP／0 BLOCKED，8批與Aggregate成功；已下載原始摘要核對，先前124／4 FAIL保留。Preview／實機與ARTIFACT_COVERAGE_BLOCKED不因此解除。使用者將「本機不執行Full、需要時提示由使用者在GitHub手動執行」擴大為本專案後續所有作業的長期規則，見AGENTS第6.2章；風險分類、相關測試、必要Quick及正式Full Gate不變。
 
 > 2026-11-16 第2批CI跟進：使用者手動[Full Run43853737319](https://github.com/tt-chin/yakyujinsei/actions/runs/43853737319)（`bd82eb2`、attempt1）為124 PASS／4 FAIL，原始結果保留。已修正4個Full專用入口的UI契約：薪資履歷改驗證實際捲動容器、說明視窗記錄實際開啟位置並另驗證非零位置復歸、NPB返回介面對齊業餘年薪／導覽定位、DOM比較器使用最後成功渲染的輸入。四入口完整原模式逐一重測PASS（含8組歷史DOM／S／RNG生涯對照、4 seed各兩次現行重播），修正碼本機Quick98／98 PASS；錯誤薪資DOM反例仍拒絕。僅修改測試與進度記錄，產品與2.0.0不變。本機Full未執行、未自動觸發GitHub Full；仍須由使用者對新提交啟動新的Full，重跑舊run仍使用舊碼。來源／日誌雜湊與原FAIL見[第2批收據的ciFollowup](tasks/UI_REDESIGN_PHASE2_EVIDENCE.json)。既有checkbox及ARTIFACT_COVERAGE_BLOCKED不變。
