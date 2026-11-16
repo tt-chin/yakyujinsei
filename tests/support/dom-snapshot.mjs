@@ -27,7 +27,7 @@ export async function captureGameView(full){
     const year=status.textContent.match(/^(\d{4})年/);if(year&&Number(year[1])>rawState.year)throw Error('SAVE_STATUS_FUTURE_YEAR');
     live.remove();dom.board=board.outerHTML;
   }
-  if(window.__projectShell2000)dom.board=window.__projectShell2000(dom.board,rawState);
+  if(window.__projectShell2000)dom.board=window.__projectShell2000(dom.board,window.__shellRenderedBoard);
   if(window.__expectMenu1163)dom.board=window.__projectMenu1163(dom.board);
   if(window.__expect1141){
     // Approved 1.14.1 UI-only delta: the credits menu button. Validate its exact

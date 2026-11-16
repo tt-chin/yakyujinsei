@@ -225,5 +225,140 @@
     "mainMerged": false,
     "production": false
   },
-  "postQuickChanges": "Only documentation/evidence records; product and test source hashes verified unchanged. No further Quick required for R0 records."
+  "postQuickChanges": "Only documentation/evidence records; product and test source hashes verified unchanged. No further Quick required for R0 records.",
+  "verificationScope": "The original sourceFiles and verification above describe the initial phase-2 submission bd82eb2 before GitHub Full. The dated ciFollowup records the later failure and test-only repair without rewriting that original receipt.",
+  "ciFollowup": {
+    "date": "2026-11-16",
+    "risk": "R2 test-only expectation and DOM comparison repair",
+    "originalRun": {
+      "url": "https://github.com/tt-chin/yakyujinsei/actions/runs/43853737319",
+      "attempt": 1,
+      "head": "bd82eb287c108961d36304f07e88f33a05974edd",
+      "status": "FAIL",
+      "counts": {
+        "PASS": 124,
+        "FAIL": 4,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "report": "test-results/investigation-43853737319-attempt1/summary.json",
+      "sha256": "ba94a14bd4728653310935267fa080079cb1198ce3178d6090e234ea9a1772c4"
+    },
+    "productChanged": false,
+    "version": "2.0.0 (unchanged; test-only work per AGENTS 9.3)",
+    "changes": [
+      "Salary history verifies the active desktop reading container or mobile document scrolling, keeping item visibility and S/RNG assertions.",
+      "Information dialogs verify their actual opening scroll position plus an independent nonzero-offset restoration case, background lock, focus and cleanup.",
+      "NPB return UI expects the approved amateur salary label and navigation top=0; all movement/contract fixtures and four-seed replay checks retained.",
+      "The board comparison observes successful renderer inputs rather than mutable live S. Historical DOM/S/RNG equality remains strict; corrupt live salary DOM must still be rejected."
+    ],
+    "sources": [
+      {
+        "file": "tests/game-view-dom-e2e.mjs",
+        "sha256": "f01b3840f04482b31e0e797b09585d45879957059e8df133d88bcf7e6cd07f07"
+      },
+      {
+        "file": "tests/information-dialog-e2e.mjs",
+        "sha256": "2af5ce60160da77de1468c69b2a242a4055d56f1351230de254398cc85eb6872"
+      },
+      {
+        "file": "tests/npb-return-e2e.mjs",
+        "sha256": "a543a0df7bd6c16cd59671b400b051fc6d7406edab72698ceac0e01705cf7fc5"
+      },
+      {
+        "file": "tests/salary-history-e2e.mjs",
+        "sha256": "7e16f1eb72be5dad834167aef43bf40110b6272db1e06629d702396bc246eb0d"
+      },
+      {
+        "file": "tests/support/dom-snapshot.mjs",
+        "sha256": "a73fa5c440c61e5cc751431fdf7ab5ad04f4070c97c4fd8d816465acfd90275c"
+      },
+      {
+        "file": "tests/support/ui-shell-comparison.mjs",
+        "sha256": "3c758165dfb7b52bdd0eeda40a9f1f9c9eba5e92d7c951733b8720c7ce6f31da"
+      },
+      {
+        "file": "tests/ui-redesign-shell-e2e.mjs",
+        "sha256": "ac60fd3b52cfc0e3325e759fe835e99f830a4e801de9ebefde52625c6c535f13"
+      }
+    ],
+    "relatedTests": [
+      {
+        "id": "salary-history-e2e",
+        "status": "PASS",
+        "exitCode": 0,
+        "args": [
+          "--ui-only"
+        ],
+        "widths": [
+          1280,
+          320,
+          390
+        ],
+        "log": "test-results/ui-phase2-ci-fix-01/salary-history-e2e.log",
+        "logSha256": "13583b690b7af53a7b2b3f01083c51ee3a242298334b8bafd0acc47a707d3de5"
+      },
+      {
+        "id": "information-dialog-e2e",
+        "status": "PASS",
+        "exitCode": 0,
+        "cases": 11,
+        "log": "test-results/ui-phase2-ci-fix-01/information-dialog-e2e.log",
+        "report": "test-results/ui-phase2-ci-fix-01/information/summary.json",
+        "logSha256": "f59161b6351e77b0eb27332ca31d74927adcf4cf593230af15888911ceefa88f"
+      },
+      {
+        "id": "npb-return-e2e",
+        "status": "PASS",
+        "exitCode": 0,
+        "movementFixtures": 22,
+        "uiCombinations": 120,
+        "currentReplaySeeds": 4,
+        "repeats": 2,
+        "log": "test-results/ui-phase2-ci-fix-01/npb-return-e2e.log",
+        "logSha256": "98ca0473ea46cfafaaf34c923d129dbfd26134bbcd584435d6d55b98626be836"
+      },
+      {
+        "id": "game-view-dom-e2e",
+        "status": "PASS",
+        "exitCode": 0,
+        "baseline": "4f39a73e23758b891bc24951225231792ab022b4",
+        "careerPairs": 8,
+        "careerRuns": 16,
+        "scope": "Per-step historical DOM, complete S/RNG, approved existing projections and eight HOF negative controls retained.",
+        "log": "test-results/ui-phase2-ci-fix-01/game-view-dom-e2e.log",
+        "logSha256": "0a8ecda786ded4e5d597d5f2db40ff21faf39073693c074df0d62849d4e201d7"
+      }
+    ],
+    "quick": {
+      "status": "PASS",
+      "exitCode": 0,
+      "counts": {
+        "PASS": 98,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "seconds": 472.49,
+      "report": "test-results/ui-phase2-ci-fix-quick-01/summary.json",
+      "sha256": "27268d074f0f816a21166928af9221a9f8aed808fd8d4c75d79db2da2223f0e9",
+      "shell": {
+        "status": "PASS",
+        "cases": 112,
+        "salaryCorruptionNegativeControl": "PASS",
+        "report": "test-results/ui-phase2-ci-fix-quick-01/shell/summary.json",
+        "sha256": "0e69eb28f092ced3734676c601954d4afee2500f11472a272838342df8905dd2"
+      }
+    },
+    "localFull": {
+      "status": "NOT_RUN",
+      "reason": "User requests Quick plus related entries only, no local Full suite."
+    },
+    "githubFullAfterFix": {
+      "status": "NOT_RUN",
+      "reason": "User will manually start a new workflow against the new commit; rerunning the old run retains old SHA bd82eb2."
+    },
+    "artifactCoverage": "ARTIFACT_COVERAGE_BLOCKED unchanged",
+    "postQuick": "Only R0 progress/evidence updates; all seven modified test files verified unchanged after passing tests. Product/runner/workflow files unchanged; no further Quick required for these records."
+  }
 }

@@ -2,18 +2,26 @@
 // Validate all new static markup and summary values before rebuilding the old
 // board layout. Existing DOM comparisons still cover every old dynamic field,
 // log/action markup and complete game state/RNG. No state projection here.
-export function projectShell2000(markup,state){
+// Observe successful renderer inputs, not live DOM or mutable S. The board can
+// intentionally retain its previous salary while a season result updates S.
+export function observeShellBoard(view,target){
+  const render=view.renderBoard,patch=view.patchBoard;
+  view.renderBoard=function(model){const result=render.call(this,model);target.__shellRenderedBoard={isAmateur:model.isAmateur,salaryText:model.salaryText,injuryRiskText:model.injuryRiskText};return result;};
+  view.patchBoard=function(values){const result=patch.call(this,values);target.__shellRenderedBoard={...target.__shellRenderedBoard,salaryText:values.salaryText};return result;};
+}
+export function projectShell2000(markup,rendered){
   const parse=html=>{const t=document.createElement('template');t.innerHTML=html;return t.content.firstElementChild;};
   const actual=parse(markup),expected=parse(window.__shellBoard2000),old=parse(window.__shellBoard11615);
   const q=(node,id)=>node.querySelector('#'+id);
   const salary=document.getElementById('salary-detail-trigger').cloneNode(true);
-  const amateur=state.stage!=='PRO',salaryText=Math.round((state.currentSalary||0)/10000).toLocaleString();
+  if(typeof rendered?.isAmateur!=='boolean'||typeof rendered.salaryText!=='string'||typeof rendered.injuryRiskText!=='string')throw Error('UI_SHELL_2000_RENDER_INPUT_MISSING');
+  const amateur=rendered.isAmateur,salaryText=rendered.salaryText;
   const expectedSalary=q(expected,'salary-detail-trigger');
   q(expected,'bd-sal').textContent=amateur?'アマ':salaryText;
   q(expected,'bd-sal').nextElementSibling.textContent=amateur?'年俸対象外':'年俸（万）';
   expectedSalary.setAttribute('aria-label',amateur?'アマチュア。収入の内訳を見る':'年俸、単位は万円。年俸の内訳を見る');
   if(salary.outerHTML!==expectedSalary.outerHTML)throw Error('UI_SHELL_2000_SALARY_CONTRACT');
-  q(expected,'bd-risk').textContent=`${state.injNext||0}%`;
+  q(expected,'bd-risk').textContent=rendered.injuryRiskText;
   expected.dataset.amateur=String(amateur);
   for(const id of ['bd-name','bd-team','bd-age','bd-year','bd-ovr','bd-tj']){
     q(expected,id).innerHTML=q(actual,id).innerHTML;q(old,id).innerHTML=q(actual,id).innerHTML;

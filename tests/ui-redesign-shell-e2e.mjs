@@ -5,12 +5,12 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {projectShell2000,SHELL_BOARD_2000,SHELL_BOARD_11615} from './support/ui-shell-comparison.mjs';
+import {projectShell2000,observeShellBoard,SHELL_BOARD_2000,SHELL_BOARD_11615} from './support/ui-shell-comparison.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.slice(name.length+3);
 const out=path.resolve(arg('output')||'test-results/ui-redesign-shell');await mkdir(out,{recursive:true});
 const comparisonBase='ad8e77f53ede29de6a51c23708b2370eed7b414d';
-const hook=`\nwindow.__shellDraws=[];careerRng.onDraw=value=>window.__shellDraws.push({state:S.rngState,value});window.__shell={get:()=>({state:S&&JSON.parse(JSON.stringify(S)),rng:window.__shellDraws.slice()}),settle:()=>browserSave.settled(),fixture:fields=>{Object.assign(S,fields);board(1);}};`;
+const hook=`\n(${observeShellBoard.toString()})(gameView,window);window.__shellDraws=[];careerRng.onDraw=value=>window.__shellDraws.push({state:S.rngState,value});window.__shell={get:()=>({state:S&&JSON.parse(JSON.stringify(S)),rng:window.__shellDraws.slice()}),settle:()=>browserSave.settled(),fixture:fields=>{Object.assign(S,fields);board(1);}};`;
 const errors=[],cases=[];
 const server=createServer(async(req,res)=>{
   let rel=new URL(req.url,'http://local').pathname.slice(1)||'index.html';const baseline=rel.startsWith('baseline/');if(baseline)rel=rel.slice(9)||'index.html';
@@ -80,7 +80,7 @@ try{
    await p.locator('#board-menu-toggle').click();await p.mouse.click(2,2);assert.equal(await p.locator('#board-menu-panel').isVisible(),false);assert.equal(await p.evaluate(()=>document.activeElement.id),'board-menu-toggle');
    assert.equal(await p.evaluate(()=>window.__shellAct===document.querySelector('#act')&&window.__shellDraft===document.querySelector('#act').innerHTML&&window.__shellRows.every(n=>n.isConnected)&&window.__shellButtons.every(n=>n.isConnected)),true,'allocation DOM/draft retained');
    assert.deepEqual(await get(p),before,'navigation/resize/menu must preserve complete S and RNG');
-   await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(board.outerHTML,window.__shell.get().state);const risk=board.querySelector('#bd-risk');risk.textContent='999%';let rejected=false;try{window.__projectShell2000(board.outerHTML,window.__shell.get().state);}catch(e){rejected=e.message.startsWith('UI_SHELL_2000_STATIC_BOARD_CONTRACT');}if(!rejected)throw Error('board negative control was accepted');});
+   await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(board.outerHTML,window.__shellRenderedBoard);const risk=board.querySelector('#bd-risk');risk.textContent='999%';let rejected=false;try{window.__projectShell2000(board.outerHTML,window.__shellRenderedBoard);}catch(e){rejected=e.message.startsWith('UI_SHELL_2000_STATIC_BOARD_CONTRACT');}if(!rejected)throw Error('board negative control was accepted');});
    if([320,390,1100,1440,844].includes(width))await p.screenshot({path:path.join(out,`${pos}-${width}x${height}.png`),fullPage:true});
   }
   // Undo remains bound to the original allocation closure after all navigation/resizes.
@@ -89,7 +89,9 @@ try{
   await p.evaluate(()=>window.__shell.fixture({stage:'PRO',currentSalary:1234567890,injNext:17,rehab:1,skipMid:true,seasonFactor:0}));await p.setViewportSize({width:1440,height:900});await frames(p);
   assert.equal(await p.locator('#bd-sal').textContent(),'123,457');assert.equal(await p.locator('#bd-risk').textContent(),'17%');assert.match(await p.locator('#desktop-player').textContent(),/リハビリ中（今季全休・残り1年）/);
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth||document.querySelector('#desktop-player').scrollWidth>document.querySelector('#desktop-player').clientWidth),false,'long rehab and salary fit the sidebar');
-  await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(board.outerHTML,window.__shell.get().state);});
+  await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(board.outerHTML,window.__shellRenderedBoard);});
+  // Expected values come from renderer inputs, so corrupt live DOM must fail.
+  await p.evaluate(()=>{const salary=document.getElementById('bd-sal'),saved=salary.textContent;try{salary.textContent='999,999';const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();let rejected=false;try{window.__projectShell2000(board.outerHTML,window.__shellRenderedBoard);}catch(e){rejected=e.message==='UI_SHELL_2000_SALARY_CONTRACT';}if(!rejected)throw Error('corrupt salary DOM was accepted');}finally{salary.textContent=saved;}});
   await ctx.close();console.log('PASS '+pos+': responsive layout, modal, tabs, allocation identity, exact state/RNG');
  }
  assert.deepEqual(errors,[]);
