@@ -1,5 +1,11 @@
 # 統一測試入口
 
+## 本機與 GitHub Full 的分工
+
+依使用者2026-11-17的長期指示，後續所有作業本機均不啟動Full模式（含整套、batch及Full模式的`--only`），也不拆批變相跑完整Full；直接相關的單體／個別E2E及必要Quick仍按`AGENTS.md`第6章執行。需要Full時，在結果明列 **「需要執行Full（GitHub手動／未執行）」**，附原因、分支、完整提交SHA與本機結果，由使用者手動在GitHub執行。Agent不自行dispatch或重跑手動Full；既有自動CI觸發條件不變。下方Full命令是入口與既有CI用法說明，不代表允許Agent在本機啟動Full。
+
+Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
+
 ## 原始碼文字比較的換行契約
 
 跨Git歷史／Windows／Linux的來源比較，使用`tests/support/source-text.mjs`的`readSourceText(path)`（嚴格UTF-8讀取）或`sourceText(text)`，在切片、字串替換及比較**之前**將兩端CRLF統一成LF；其餘內容維持逐字相等。單獨CR、BOM、縮排、尾端空白、文字與程式變更不忽略。不可把此工具用於凍結快照、檔案SHA256、二進位證據或golden；原始資料不改寫。
