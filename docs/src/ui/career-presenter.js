@@ -44,7 +44,7 @@ export class CareerPresenter {
       teamHtml = dot + (isProColored ? `<span class="team-name team-badge${white}"${color}>${t}</span>` : `<span class="team-name">${t}</span>`); }
     const age=S.age, year=S.year;
     const ovrValue=ovr(), clearTj=S.pos==='P', salaryText=Math.round((S.currentSalary||0)/10000).toLocaleString();
-    return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase};
+    return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase,isAmateur:S.stage!=='PRO',injuryRiskText:`${S.injNext||0}%`};
   }
   statLine(st){const S=this.#getState(),{fmtIP,roleN}=this.#deps;
     if(S.pos==='P'){ const role=roleN(S.role); const relief=(S.role==='CL'&&st.SV)?`｜${st.SV}セーブ`:(S.role==='MR'&&st.HLD)?`｜${st.HLD}ホールド`:''; return `出場 ${st.G}｜投球回 ${fmtIP(st.IP)}｜${st.W}勝${st.L}敗${relief}｜奪三振 ${st.SO}｜四球 ${st.BB||0}｜ERA ${st.era.toFixed(2)}｜WHIP ${(st.WHIP||0).toFixed(2)}`; }

@@ -1,4 +1,10 @@
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
+// UI 2.0 intentionally replaces the board/sidebar layout. Keep this historical
+// spacing-migration oracle on its last accepted UI runtime, comparing today's
+// shared CSS against f8afd8e's independently rewritten values. The new shell
+// stylesheet is absent from that frozen HTML. Current runtime/layout is tested
+// separately by ui-redesign-shell-e2e; this suite is no longer that evidence.
+const spacingRuntime='ad8e77f53ede29de6a51c23708b2370eed7b414d';
 // UI-DESIGN-TOKENS-09 (tasks/DESIGN_SYSTEM_PLAN.md §17.8 T2): px margin/padding/gap became the 12 --space-* steps (§17.3
 // W8: nearest step, ties go down; W12 = A: a declaration with calc()/var()/env(), auto or a negative value stays whole).
 // The fixed pre-change tree (f8afd8e) is served with every such px literal in its stylesheets rewritten to the mapped px
@@ -42,6 +48,13 @@ const server=createServer(async(req,res)=>{try{
   const rel=decodeURIComponent(u.pathname.slice(m[0].length))||'index.html';if(rel.includes('..'))throw Error('path');
   if(rel==='favicon.ico'){res.writeHead(204);return res.end();}
   let body=m[1]==='old'?execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:30e6}):await readFile(path.join(root,'docs',rel));
+  if(m[1]==='new'&&(rel==='index.html'||rel.endsWith('.js')))body=execFileSync('git',['show',`${spacingRuntime}:docs/${rel}`],{cwd:root,maxBuffer:30e6});
+  if(m[1]==='new'&&rel==='styles/information.css'){
+    // Only the removed external-sidebars layout, as an explicit historical fixture.
+    const css=execFileSync('git',['show',`${spacingRuntime}:docs/${rel}`],{cwd:root,encoding:'utf8'});
+    const legacy=css.match(/@media\(min-width:1180px\)\{[\s\S]*?\n\}/);assert.ok(legacy);
+    body=body.toString()+'\n'+legacy[0];
+  }
   if(m[1]==='old'&&rel==='index.html'){const text=body.toString();assert.equal(text.split(oldNameField).length,2);body=text.replace(oldNameField,nameField);}
   if(rel==='src/engine/game.js')body=body.toString()+hook(m[2])+(m[1]==='old'?"document.getElementById('btn-random-name').disabled=false;":'');
   if(m[1]==='old'&&rel.startsWith('styles/')&&rel.endsWith('.css'))body=rewrite(body.toString());

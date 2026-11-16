@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-16 UI改版第2批：`codex/ui-redesign`，使用者指定第1～5批統一2.0.0。桌面雙欄／單一選手側欄、手機摘要、短視窗自然捲動、底部選單與焦點管理、子分頁鍵盤操作已實作。本機確定碼Quick **98／98 PASS**；P／IF固定基準配點狀態／RNG、112組版面、既有選單／分享及舊間距契約限定驗證通過。初次Quick94 PASS／4 FAIL與探針FAIL保留。依最新指示本機Full **NOT_RUN**，未自動觸發GitHub Full，由使用者手動執行；Preview／實機及整批Full受入仍待確認。第3～5批未實作，不改既有checkbox或ARTIFACT_COVERAGE_BLOCKED。來源雜湊與範圍見[第2批驗證收據](tasks/UI_REDESIGN_PHASE2_EVIDENCE.json)。
+
 > 2026-11-16 UI改版第1批：codex/ui-redesign、開發版1.16.15，產品受驗SHA `d507e310ebc7560bce592f6671cefe6d94af72b6`。首頁／存檔實作、自動驗證及P／IF完整S／RNG對照完成；升版前工作樹Quick97／97 PASS，確定碼[Linux Full Run43809957167](https://github.com/tt-chin/yakyujinsei/actions/runs/43809957167) 127／127 PASS並下載摘要核對。本機Full122 PASS／5 FAIL（逾時／Console連線／模組載入）原樣保留，不稱本機Full PASS。已推送功能分支；dev／main未合併，分支Preview未取得，使用者視覺與實機驗收仍待進行。完整差異及收據見[tasks/UI_REDESIGN_PHASE1_ACCEPTANCE.md](tasks/UI_REDESIGN_PHASE1_ACCEPTANCE.md)。不新增／刪除既有checkbox ID，不改寫下方歷史紀錄。
 
 > 最新狀態核對：2026-11-16。dev基準21b4ff9（1.16.13），本機1.16.14新增首頁明示隨機姓名按鈕；29項姓名聚焦驗證與82,560項樣式比較PASS。Quick初跑96 PASS／1 FAIL（舊token數量斷言），明列新token且保留原計數後限定重測1 PASS；未重跑整套Quick，不宣稱97項同輪PASS。Full／CI／Preview／實機未執行，未提交或發布；原始FAIL及ARTIFACT_COVERAGE_BLOCKED保持。

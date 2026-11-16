@@ -1,0 +1,229 @@
+{
+  "phase": 2,
+  "risk": "R2",
+  "reason": "共通UIの配置・ナビゲーション・モーダル操作。既存の進行・状態更新・RNG・保存処理は変更しない。",
+  "version": {
+    "before": "1.16.15",
+    "after": "2.0.0",
+    "classification": "MAJOR number explicitly requested by user for all five UI batches; gameplay/save formats unchanged"
+  },
+  "branch": "codex/ui-redesign",
+  "baseHead": "ad8e77f53ede29de6a51c23708b2370eed7b414d",
+  "stateComparison": {
+    "baseline": "ad8e77f53ede29de6a51c23708b2370eed7b414d",
+    "seeds": {
+      "P": "jp3-pitcher-02",
+      "IF": "jp3-infielder-01"
+    },
+    "scope": "Exact complete S and RNG at the same first allocation draft; then navigation, menu, viewport/theme/font presentation, and unchanged allocation DOM/closure. Not a full-career comparison.",
+    "allowedDifferences": [
+      "state.version",
+      "state.birthHighSchool.createdVersion"
+    ]
+  },
+  "sourceFiles": [
+    {
+      "file": "docs/index.html",
+      "sha256": "6bb04724d5b3e8cfe306cf3716361035880a23c708f44a5919ee1467f87d39c8"
+    },
+    {
+      "file": "docs/src/config.js",
+      "sha256": "3411c264e589e9bc1bd2e10f287d84dab31017a48178153cbfe58b2cba6845e2"
+    },
+    {
+      "file": "docs/src/data/release-notes.js",
+      "sha256": "223ce410f7fe314eccea7b3eb4912a1e24c74cd11b798eafc56641d37a27bda6"
+    },
+    {
+      "file": "docs/src/ui/board-menu.js",
+      "sha256": "c4811d05d221250eeb86b80f70a0539650e6339eba08c3717b09cd77d67bbd58"
+    },
+    {
+      "file": "docs/src/ui/career-presenter.js",
+      "sha256": "57aebd4d06dedf52b3ffdc333190f84fcff63b284fd5c9689abfffb8fc09409b"
+    },
+    {
+      "file": "docs/src/ui/desktop-overview.js",
+      "sha256": "7109c40b90e27d01106701e7893b0606a391ef654c588d714b75a8974de763ab"
+    },
+    {
+      "file": "docs/src/ui/game-view.js",
+      "sha256": "e5372e363d770db9035d18f9b9abd25d0e75fb1d78dcfd3a0cb554a6017c711f"
+    },
+    {
+      "file": "docs/src/ui/navigation.js",
+      "sha256": "2a5af3cef839b022bbe3449f93baaaf7a181dc9083d3212417df554c57440aeb"
+    },
+    {
+      "file": "docs/styles/game-shell.css",
+      "sha256": "438ae3898eb683e7fcf98463ad65b04445249017d6af4ba63816430d0541a9c0"
+    },
+    {
+      "file": "docs/styles/information.css",
+      "sha256": "6b242d5eee82b0716d40a50b71986d56a93eb3c969548ec5a652ef76878ff7fb"
+    },
+    {
+      "file": "scripts/test-manifest.mjs",
+      "sha256": "56cac786bc0b5ff50bc6ab1c298ea8f9958dc6cdb31a5f037ec24ec1519d7245"
+    },
+    {
+      "file": "tests/award-identity-policy.test.mjs",
+      "sha256": "a677b78ec7ef81ef4434e611dae5a8bc826a754967f4e12ce217e058a2e1d5d3"
+    },
+    {
+      "file": "tests/board-menu-stacking-e2e.mjs",
+      "sha256": "bb5bcf0347a81516cb0ec8e4037606108753a089c07c7a66d113d2183b80b26f"
+    },
+    {
+      "file": "tests/career-presenter.test.mjs",
+      "sha256": "cd58c5d9975358912636ce35e911f87ff74d5c7defd5f0ea390f6d69391f1d8b"
+    },
+    {
+      "file": "tests/design-tokens-06.test.mjs",
+      "sha256": "c67ff2fb93eec4e3aa500f32350478bca576461dca8034f0ebaf8e22b94cbf35"
+    },
+    {
+      "file": "tests/design-tokens-09-e2e.mjs",
+      "sha256": "a794af2f538cba4355a733fc66b7a08da920d56d374694525ccf97a23f06e544"
+    },
+    {
+      "file": "tests/game-view-dom-e2e.mjs",
+      "sha256": "d2815d2e6b5272eb99223bd1af553025f24ffe2a057602891ed6b9c24385df62"
+    },
+    {
+      "file": "tests/support/board-menu.mjs",
+      "sha256": "15509c993e43e4edb973a2c8cf11d5c7443da635cc75efcf2bc45001012596cf"
+    },
+    {
+      "file": "tests/support/dom-snapshot.mjs",
+      "sha256": "308d62a2c940ddc73323fe2775bb539d07139b2da8561685688bd49d5522e2ad"
+    },
+    {
+      "file": "tests/support/ui-shell-comparison.mjs",
+      "sha256": "d0e5c75b0fae362a354117f0cd22aa70b24a64190ce7e069b33311f87ea9027e"
+    },
+    {
+      "file": "tests/ui-redesign-shell-e2e.mjs",
+      "sha256": "441371e41f1429ceea49a7b3c11f7acb15f841782b335f434ab127c400255b5d"
+    }
+  ],
+  "verification": {
+    "quick": {
+      "status": "PASS",
+      "exitCode": 0,
+      "counts": {
+        "PASS": 98,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "seconds": 467.527,
+      "report": "test-results/ui-phase2-quick-02/summary.json",
+      "sha256": "3ac566e3b2526524520f6b002788575459f583dc05a3114bf9ec73d041e7a230"
+    },
+    "shell": {
+      "status": "PASS",
+      "report": "test-results/ui-phase2-quick-02/shell/summary.json",
+      "cases": 112,
+      "scope": "Final Quick entry: exact baseline P/IF state/RNG, 7 viewports × 4 themes × 2 fonts × 2 positions; allocation DOM/closure, modal inertness/focus/Escape/close/backdrop, keyboard tabs, amateur/pro salary, rehab/overflow, frozen-board projection and negative controls.",
+      "sha256": "d81deecea374839367ded0318ea0e35264c5a517e9cda35e5aa74d7e783a74da"
+    },
+    "eventFix": {
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "test-results/ui-phase2-related-01/event-fix-e2e.log",
+      "scope": "1280/320/390: preserved tools/link/seed-only sharing, focus, 24 native farewell fixtures and S/RNG; console/JS-CSS404 zero."
+    },
+    "menuStacking": {
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "test-results/ui-phase2-related-01/board-menu-stacking-e2e.log",
+      "sizes": [
+        "390x720",
+        "320x640",
+        "1280x720"
+      ]
+    },
+    "spacingOracle": {
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "test-results/ui-phase2-related-01/design-tokens-09-e2e.log",
+      "comparisons": 78624,
+      "selectors": 34,
+      "scope": "Historical spacing oracle only: current shared CSS on frozen ad8e77f UI runtime vs fixed f8afd8e independently rewritten spacing; game-shell.css absent. Does not prove current UI runtime."
+    },
+    "unit": {
+      "status": "PASS",
+      "cases": {
+        "careerPresenter": 60,
+        "designTokens": 11,
+        "awardIdentity": 135
+      },
+      "other": [
+        "ui-foundation",
+        "test-runner"
+      ]
+    },
+    "fullLocal": {
+      "status": "NOT_RUN",
+      "reason": "User explicitly requests Quick only locally for phase 2."
+    },
+    "fullGitHub": {
+      "status": "NOT_RUN",
+      "reason": "User will manually run GitHub Full; agent did not dispatch."
+    },
+    "gameViewDomFullEntry": {
+      "status": "NOT_RUN",
+      "reason": "Only its approved-layout projection helper was exercised by shell E2E; full historical careers await user GitHub Full."
+    }
+  },
+  "preservedFailures": [
+    {
+      "report": "test-results/ui-phase2-quick-01/summary.json",
+      "counts": {
+        "PASS": 94,
+        "FAIL": 4
+      },
+      "scope": "Iterative diagnostic run, sources were corrected during execution; not the final-code result.",
+      "causes": [
+        "award navigation historical source expectation",
+        "menu now includes visible close button",
+        "presenter now adds two read-only summary fields",
+        "new baseline page shared IndexedDB with current page; corrected by isolated context"
+      ]
+    },
+    {
+      "report": "test-results/ui-phase2-shell-02/summary.json",
+      "cause": "Test expected old display:block style; career entry actually restores empty display style."
+    },
+    {
+      "report": "test-results/ui-phase2-shell-03/summary.json",
+      "cause": "Same test-only style contract mismatch; corrected to existing empty display style."
+    }
+  ],
+  "notVerified": [
+    "Physical iPhone/Android/Safari and native share sheet",
+    "Real browser 200% zoom and physical safe-area/soft-keyboard behavior",
+    "Real downloaded web-font rendering (browser probes block font CDN)",
+    "Feature-branch Preview/user visual acceptance",
+    "Full suite / current-source GitHub CI"
+  ],
+  "artifactCoverage": "ARTIFACT_COVERAGE_BLOCKED (existing gap unchanged)",
+  "layoutMeasurements": {
+    "phoneBoardIncludingExistingSaveStatus": {
+      "medium": 168.77,
+      "large": 184.47,
+      "widths": [
+        320,
+        390
+      ],
+      "note": "Long name and 44px controls retained; existing save notice adds a row. Summary itself is normal flow, so this does not reserve persistent reading height."
+    }
+  },
+  "publication": {
+    "devMerged": false,
+    "mainMerged": false,
+    "production": false
+  },
+  "postQuickChanges": "Only documentation/evidence records; product and test source hashes verified unchanged. No further Quick required for R0 records."
+}

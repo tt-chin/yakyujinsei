@@ -25,12 +25,12 @@ test('base.css defines the 13 --fs-* scale tokens as calc(<px>px * var(--font-sc
 });
 // 59 former calc() sites plus 5 moved inline 11/12px sizes (scaled before by the preferences.css [style*=] rules),
 // plus 1 for the EVT-01 .event-badge (1.16.11).
-test('65 font sites after the home redesign and the name button uses --fs-5xl',()=>{
+test('69 font sites after UI 2.0 and the name button uses --fs-5xl',()=>{
   const rule=base.match(/(?:^|\n)\.random-name-button\{([^}]+)\}/);assert.ok(rule,'approved name button rule');
   assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
   const original=outsideRoot.replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
   const used=[...original.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
-  assert.equal(used.length,65);
+  assert.equal(used.length,69,'UI 2.0 summary and menu heading add four font-token sites');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
   // The responsive home title now uses clamp(26px,4vw,40px); the shared scale is retained.
   assert.deepEqual(Object.keys(FS).filter(n=>!used.includes(n)),['--fs-6xl'],'only the former home-title token is unused');
@@ -77,12 +77,12 @@ test('px spacing uses tokens outside the 6 remaining untouched declarations',()=
   assert.deepEqual(kept.sort(),[...KEEP_PX].sort());
 });
 // EVT-01 (1.16.11) added 2: .event-badge padding and margin-right. EVT-01 E3 (1.16.12) added 5: sticky event details left and width, .ui-yearly-events-body margin, its li margin, badge margin-right.
-test('185 spacing sites after the home redesign and the name row uses --space-xs',()=>{
+test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   const rule=base.match(/(?:^|\n)\.player-name-row\{([^}]+)\}/);assert.ok(rule,'approved name row rule');
   assert.equal((rule[1].match(/gap:var\(--space-xs\)/g)||[]).length,1,'one explicit existing spacing token');
   const original=outsideRoot.replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,185,'home title/cards/settings/footer replace the former mobile-only spacing (+6 sites)');
+  assert.equal(used.length,201,'UI 2.0 shell adds shared spacing while retiring outside sidebars');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');
   assert.deepEqual(Object.keys(SPACE).filter(n=>!used.includes(n)),[],'unused --space token');
 });

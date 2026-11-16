@@ -4,7 +4,7 @@ export class GameView {
     this.byId = byId; this.logTarget = logTarget; this.decorateCard = decorateCard; this.onTraitShown = onTraitShown;
   }
   scrollBottom(){ /* iOS Safari iframe内でスムーズスクロールでは白画面が起きやすいため、同期スクロールへ変更+rAF。 */
-    try{ requestAnimationFrame(function(){ window.scrollTo(0, document.body.scrollHeight); }); }
+    try{ requestAnimationFrame(()=>{const log=this.byId('log');if(log.scrollHeight>log.clientHeight&&getComputedStyle(log).overflowY==='auto')log.scrollTop=log.scrollHeight;else window.scrollTo(0, document.body.scrollHeight);}); }
     catch(e){ try{ window.scrollTo(0, document.body.scrollHeight); }catch(_){} }
   }
   archiveTraitResults(){
@@ -28,6 +28,8 @@ export class GameView {
     t.textContent=a.classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる';
   }
   renderBoard(m){ /* m は game.js の boardModel が S から作る書き込み値。 */
+    this.byId('board').dataset.amateur=String(m.isAmateur===true);
+    const risk=this.byId('bd-risk');if(risk)risk.textContent=m.injuryRiskText??'0%';
     this.byId('bd-name').innerHTML=m.nameHtml;
     this.byId('bd-team').innerHTML = m.teamHtml;
     this.byId('bd-age').textContent=m.age; this.byId('bd-year').textContent=m.year;
@@ -35,7 +37,10 @@ export class GameView {
     [0,1,2].forEach(i=>this.byId('lp'+i).classList.toggle('on',i===m.phase));
   }
   patchBoard(p){ /* game.js の board 上書き（renderBoard の後に実行）の追加書き込み。 */
-    this.byId('bd-name').firstChild.textContent=p.name;this.byId('bd-sal').textContent=p.salaryText;const lbl=this.byId('bd-sal')?.nextElementSibling;if(lbl)lbl.textContent='年俸（万）';
+    this.byId('bd-name').firstChild.textContent=p.name;
+    const amateur=this.byId('board').dataset.amateur==='true',salary=this.byId('bd-sal');salary.textContent=amateur?'アマ':p.salaryText;
+    const lbl=salary.nextElementSibling;if(lbl)lbl.textContent=amateur?'年俸対象外':'年俸（万）';
+    this.byId('salary-detail-trigger')?.setAttribute('aria-label',amateur?'アマチュア。収入の内訳を見る':'年俸、単位は万円。年俸の内訳を見る');
   }
   renderChoices(title,opts){ /* 選択肢ボタンを作って返す。onclick と choiceViews への登録は ChoicePrompt の choose が行う。 */
     const a=this.byId('act'); a.style.pointerEvents='';
