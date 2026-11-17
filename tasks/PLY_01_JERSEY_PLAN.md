@@ -248,7 +248,7 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 - 負控制（實作時執行）：選號步驟內呼叫 R()、覆寫過去紀錄、改號寫入能力或收入、IND 出現選號、`jerseyStep` 移到存檔前、dom-snapshot 各投影契約（多刪／少刪）、P1 略過條件放寬至任意按鈕。
 - 文案已確認（使用者 2026-11-15）：J5 各句、J7「（背番号不明）」、對話框（標題「背番号を選ぶ」「背番号の変更」、確定鈕「この背番号にする」「変更する」、說明「{年}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。」）。
 - 草稿已經 reviewer 審查並修正（§11）；`scripts/test-share-url-menu.mjs` 未執行；Linux CI、Preview、實機未驗證。
-- 正式實作已授權（使用者 2026-11-15）；進度見 §11。T8 與負控制已完成（2026-11-17），尚需 T9 版本與文件、最終 reviewer 與 Full。
+- 正式實作已授權（使用者 2026-11-15）；進度見 §11。T8 與負控制已完成（2026-11-17），尚需 T9 版本與文件、最終 reviewer 與 Full。**2026-11-17 起 `origin/dev` 已是 2.0.0，須先整合，見 §12。**
 
 ## 11. 正式實作進度與審查修正（2026-11-15）
 
@@ -358,5 +358,40 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 
 - 未驗證：補強後的 `jersey-e2e` 只跑上列 8 案例，未跑全 20 案例（T9 後重跑時涵蓋）；Full、CI、Preview 未執行。
 
-**下一步**：T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ T9 後重跑 `jersey-e2e`（D4 跨版）→ reviewer → 4 組 Full → push dev 前請使用者確認。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
+**下一步**：~~T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ T9 後重跑 `jersey-e2e`（D4 跨版）→ reviewer → 4 組 Full → push dev 前請使用者確認。~~ 已由 §12 取代（`origin/dev` 升到 2.0.0）。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
+
+## 12. 整合 `origin/dev` 2.0.0（2026-11-17 盤點，未實作）
+
+**現況**：分支起點 `21b4ff9` 之後，`origin/dev` 新增 code owner 的 `f08848b`（首頁隨機球員名，2026-11-16）與 `5910421`（`feat(ui): redesign game interface for 2.0.0`，82 檔 +6484 行，`VERSION` 為 `2.0.0`，2026-11-17）。`origin/main` 仍為 1.16.13（`d6cef67`）。`git merge-tree --write-tree d149aab 5910421`：14 檔、17 處文字衝突。以下為唯讀盤點，尚未合併、未執行測試。
+
+**決定（使用者 2026-11-17）**
+| # | 決定 |
+|---|---|
+| M1 | 以 merge 整合（不 rebase），保留 §11 記錄的 SHA |
+| M2 | RNG／狀態比較基準由 `75ab10b`（1.16.13）改為 `5910421`（2.0.0，PLY-01 合併前的 dev）。D4 舊存檔兩版都測：2.0.0（`5910421`）與 1.16.13（`75ab10b`，正式站 main 現行版） |
+| M3 | 先在 scratchpad 做合併草稿並跑 4 組 Full，找齊 Full 才會出現的耦合後，再提出新的 T 表（含 T9） |
+| M4 | 版本號等 code owner 決定 2.0.0 的發布安排；原定 1.17.0 不再適用（以 2.0.0 為基準，MINOR 為 2.1.0），T9 暫緩 |
+| A | 面板號碼：`#bd-number` 移進 `#bd-name` 那一行，排在名字前面；不動 `#bd-top` grid，只改 HTML 位置與 CSS；桌機側欄（`desktop-overview.js`）不顯示號碼 |
+| B | 退休時 2.0.0 收合所有卡片的 `details`，「通算成績」卡內的背番号表跟著收合：維持，不改 `career-review.js`，振り返り摘要不加號碼 |
+
+**文字衝突（14 檔、17 處）**
+| 類別 | 檔案 | 處理 |
+|---|---|---|
+| 照搬（兩邊改不同部分） | `draft-income-e2e`、`full-power-pitching-e2e`、`hof-first-ballot-e2e`、`hof-retirement-policy-e2e`、`international-personal-stats-e2e`、`kbo-renewal-e2e`、`trait-display-e2e` | 保留 PLY-01 的 P1 略過與 dev 的 `window.__allocationComparison.action(b)`（一般按鈕仍回傳 `textContent`，P1 regex 不受影響） |
+| 照搬 | `display-preferences-e2e`（2 處）、`career-presenter.js`、`career-presenter.test` | 兩邊新增欄位／import 都保留 |
+| 照搬 | `board-menu-stacking-e2e`、`tests/support/board-menu.mjs` | 選單 id 清單同時含 dev 的 `board-menu-close` 與 PLY-01 的 `board-number`（後者只算 `.board-menu-items` 內） |
+| 重新編排 | `docs/index.html` | 選單改為 `<dialog>`，`#board-number` 移進 `.board-menu-items`；`#bd-number` 依決定 A 放置 |
+| 重新編排 | `tests/support/dom-snapshot.mjs` | dev 的 `__projectDecisionPresentation` 會以重新解析的 `log` 取代 clone；背番号投影須接在其後 |
+| 重新編排 | `tests/design-tokens-06.test.mjs` | dev 改為排除法計數（字級 81、間距 236）；PLY-01 新增的字級 1 處、間距 4 處以明確名稱排除 |
+
+**自動合併不報、需處理的語意風險**
+1. `#bd-top` grid：dev 的 `game-shell.css` 為 `#bd-name`／`#bd-team`／`#board-menu` 指定欄位，未指定的 `#bd-number` 會被自動放入格子並擠開名字 → 決定 A。
+2. 退休卡：2.0.0 退休時收合 `details[data-reader-details]`，背番号表預設不可見；振り返り摘要無號碼 → 決定 B。
+3. 選單 dialog 焦點：dev 的 `close()` 預設把焦點還給 ☰，改號對話框在 close 之後開啟；焦點順序（A4 類）需重驗。
+4. 新開生涯覆寫確認：已有存檔時按「始める」先經 `replaceCareer` 確認；`jersey-e2e` 中已有存檔再開新生涯的案例須比照 dev 的 `draft-income-e2e`（`deferredOverwrite`）處理。
+5. 未盤點：dev 新增的 `ui-redesign-shell`／`-decision`／`-review`／`-allocation` E2E 會檢查選單、面板、決策區；入團選號是新增的決策步驟，可能撞到 → 以 M3 的草稿 Full 確認。
+
+**重驗範圍**：§11 的 Quick、`jersey-e2e` 20 案例、N1～N12 負控制皆在 1.16.13 基準上取得，整合後須依新 T 表重跑（範圍於 M3 後提出）。
+
+**下一步**：M3 合併草稿（scratchpad）→ 4 組 Full → 新 T 表（含衝突處理、A 的版面、風險 3～5、M2 基準切換、重驗與負控制範圍）請使用者核准 → 實作 → reviewer → Full → push dev 前請使用者確認。T9 待 code owner 決定版本。合併與部署未授權。
 
