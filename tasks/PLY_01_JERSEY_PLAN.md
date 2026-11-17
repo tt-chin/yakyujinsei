@@ -433,3 +433,22 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 **草稿位置（session 限定，可能消失）**：`/private/tmp/claude-501/-Users-amew-Documents-works-yakyujinsei/e375f92e-825e-4e04-aa6c-bad287da2e58/scratchpad/wtm`、`…/scratchpad/m3-draft-vs-ply01.patch`。實作以本節 T 表為準，不依賴草稿。
 
 **下一步**：在 `feat/ply-01-jersey` 依 T1～T8 實作（merge commit 起）→ 關聯測試 → reviewer → Quick／Full → push dev 前請使用者確認。合併與部署未授權。
+
+### 12.2 實作結果（2026-11-18，本機分支 `feat/ply-01-jersey`，未 push）
+
+**提交**：`6badffc` merge 5910421（T1～T3：15 個衝突檔照 §12.1 解法、決定 A、dt06）→ `32f5ce5` T4／T5 → `dd955f3` T6 → `82dfe79` T7 → `94b9cd7` T8 → `34e8164` reviewer 後續修正。
+
+**T8 補充**：`/baseline/` 改為 `5910421`、新增 `/legacy/` 供 `75ab10b`；`legacy-save`（2.0.0）與 `legacy-save-11613`（1.16.13）兩案；`menu-change` 加 OK／Escape 後焦點回 `#board-menu-toggle`；風險 4 確認：原 20 案例的 `start()` 都在新 context，從未走到「已有存檔再開新生涯」→ 新增 `new-career-over-save`（存檔含 `jerseyHistory` → `上書きされます` 確認 → 新生涯 `jerseyHistory===undefined`、號碼隱藏、選單停用）。`jersey-e2e` 22／22 PASS。
+
+**驗證（macOS＋Brave 157，本機，runner 基準 `origin/main` = `d6cef67`，HEAD `34e8164`）**
+- Quick 103／103 PASS；4 組 Full 134／134 PASS（30／33／35／36，missing 0）。`event-system-e2e` 本輪 PASS，但其不穩定（§12.1 F5）未消失。CI、Preview 未執行。
+- 決定 A 版面：320／390／1440 × 4 主題 × 業餘／職業共 24 組，號碼與名字同列且在前、無橫向溢出、Console 0；截圖目視確認。
+- 新負控制：N13 `.bd-name-row` 加屬性 → `JERSEY_BOARD_ROW_PLACE`；N14 改動 PLY-01 插入文字 → `PLY-01 insertion once`；N15 自然生涯不略過選號 → `natural P step`；N16 選單 `close(false)` **存活**（原生 `<dialog>` 關閉會把焦點還給 showModal 前的元素，等價突變）→ 改 N16b 讓改號對話框 opener 指向 `#act` 按鈕 → `focus returns to the menu toggle after 変更する`；N17 刪 `.bd-name-row` 規則 → dt06。全部攔下（N16 以 N16b 取代）。
+- N1～N12 在新基準重跑（scratch worktree，替換字串先斷言次數、CRLF 檔依檔案換行、還原後確認乾淨）：24 個變異全部攔下，失敗斷言與 §11 相同（N10 仍為 `SAVE_AUTH_FAILED`≠`SAVE_JERSEY`；N11a 第 70 步 `$.dom.log`；N11b 現由 `projectJerseyBoard` 的 `JERSEY_BOARD_UNEXPECTED` 攔下；N12 12 入口全攔）。
+- reviewer：無 medium 以上；low 6 項中修正 4 項（`jersey-e2e` 訊息 2 處、`ui-redesign-review-e2e` 要求每次確認選號恰增 1 筆紀錄、`scripts/TESTING.md` 同步）。
+
+**未處理（reviewer low，§11 既有、非本次新增，待使用者決定）**
+1. `dom-snapshot.mjs` 退休背番号表與季成績卡 ` · #N` 只檢查「號碼存在於 `jerseyHistory`」，未依年度／期間精確比對（年度別已精確比對）。
+2. `removeJerseyDisplay`（`ui-redesign-review-e2e`、`display-preferences-e2e` 用）的表格 markup 契約比 `captureGameView` 版寬（缺屬性數、td `tagName`／子元素檢查）。
+
+**下一步**：T9 待 code owner；push dev 前請使用者確認（先確認無進行中的 release PR）。合併與部署未授權。
