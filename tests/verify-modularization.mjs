@@ -170,8 +170,10 @@ for(const line of [
   const boardDecl=`
 function board(phase){ gameView.renderBoard(boardModel(phase));gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()}); }
 `;
+  // UI phase 5 adds only the read-only review after the original retirement completes.
+  // Keep the complete original call, text-node-only translation and single declaration strict.
   const endGameDecl=`
-function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
+function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();setTimeout(()=>{
   /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
   document.querySelectorAll('.card').forEach(c=>{
     const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
@@ -188,7 +190,7 @@ assert.ok(game.includes('function newState(name,pos){return createInitialState(n
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
 assert.doesNotMatch(html, /id="ver-badge"/);
-assert.match(html, /<h1 id="logo-tap"><em>野球人生シミュレーター<\/em><span id="app-version"[^>]*><\/span><\/h1>/);
+assert.match(html, /<h1 id="logo-tap"><em><span>野球人生<\/span><span>シミュレーター<\/span><\/em><\/h1><p id="app-version"><\/p>/);
 assert.doesNotMatch(html, /v1\.0\.0/);
 assert.match(game, /appVersion\.textContent='v'\+VERSION/);
 

@@ -69,16 +69,29 @@ try{
     await p.goto('http://127.0.0.1:'+server.address().port+'/?seed=dialog-layout');await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#btn-start').click();
     await p.evaluate(()=>{const filler=document.createElement('div');filler.style.height='2000px';document.getElementById('log').append(filler);window.scrollTo(0,180);});await settle(p);
     const state=await p.evaluate(()=>window.__dialogState()),initialWatchers=await watchers(p);
+    // Direct opening separately proves restoration of a nonzero page offset.
+    // A real click on the now non-sticky header first scrolls it into view.
+    const directScroll=await p.evaluate(()=>[scrollX,scrollY]),directKey=updatesOnly?'updates':'help';
+    if(width<1100&&height<700)assert.ok(directScroll[1]>0,'nonzero mobile scroll fixture');
+    await p.evaluate(key=>document.getElementById('board-'+key).click(),directKey);await settle(p);
+    await p.locator('#information-'+directKey+' button').click();await settle(p);
+    assert.deepEqual(await p.evaluate(()=>[scrollX,scrollY]),directScroll,'direct opening restores its actual nonzero origin');
+    assert.deepEqual(await watchers(p),initialWatchers);
     const open=async key=>{await p.locator('#board-menu-toggle').click();await p.locator('#board-'+key).click();await settle(p);assert.equal(await p.evaluate(()=>document.activeElement.id),'information-'+key+'-title');};
     for(const key of updatesOnly?['updates']:['help','updates']){
       const original=await p.locator('#information-'+key+' .information-article').textContent();
+      if(key==='help'){
+        for(const expected of ['元のセーブデータを残したまま選手作成を開きます','新しい人生の開始時に上書きを確認','キャンセルした場合は入力内容と元のセーブデータを保持','削除は詳細設定の「セーブデータを削除」'])assert.ok(original.includes(expected),'resume help: '+expected);
+        assert.ok(!original.includes('削除して選手作成へ進みます'),'help must not describe the superseded delete-first flow');
+      }
       if(updatesOnly){
         const expected=await p.evaluate(async()=>{const {releaseNotes}=await import('/src/data/release-notes.js');return releaseNotes.map(r=>[r.title,r.lines.join('\n')]);});
         const actual=await p.locator('#information-updates section').evaluateAll(nodes=>nodes.map(n=>[n.querySelector('h3').textContent,n.querySelector('p').textContent]));
         assert.deepEqual(actual,expected,'dialog reads every curated version without truncation');
       }
       for(const [name,ratio] of [['top',0],['middle',.5],['bottom',1]]){
-        const scroll=await p.evaluate(()=>[scrollX,scrollY]);await open(key);
+        await p.locator('#board-menu-toggle').scrollIntoViewIfNeeded();await settle(p);
+        const scroll=await p.evaluate(()=>({page:[scrollX,scrollY],log:document.getElementById('log').scrollTop,host:document.getElementById('view-host').scrollTop}));await open(key);
         const d=p.locator('#information-'+key),v=d.locator('.information-content');
         assert.equal(await v.evaluate(e=>e.scrollTop),0,'reopen begins at top');const start=await geometry(p,key);check(start);
         await v.evaluate((e,r)=>{e.scrollTop=(e.scrollHeight-e.clientHeight)*r;},ratio);await settle(p);const g=await geometry(p,key);check(g);
@@ -93,7 +106,7 @@ try{
         else{await p.mouse.move(g.header.x+20,g.header.y+10);await p.mouse.wheel(0,200);}
         await settle(p);assert.deepEqual(await p.locator('#log').boundingBox(),anchor);
         await d.locator('button').click();await settle(p);
-        assert.deepEqual(await p.evaluate(()=>[scrollX,scrollY]),scroll,'page scroll restored');assert.equal(await p.evaluate(()=>document.activeElement.id),'board-menu-toggle');
+        assert.deepEqual(await p.evaluate(()=>({page:[scrollX,scrollY],log:document.getElementById('log').scrollTop,host:document.getElementById('view-host').scrollTop})),scroll,'actual opening page/reading scroll restored');assert.equal(await p.evaluate(()=>document.activeElement.id),'board-menu-toggle');
         assert.deepEqual(await watchers(p),initialWatchers,'observers and transient listeners cleaned');
       }
       await open(key);const d=p.locator('#information-'+key),v=d.locator('.information-content');

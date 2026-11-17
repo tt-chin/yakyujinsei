@@ -4,6 +4,10 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'ui-redesign-review-e2e': {quick:['--fixtures-only'],seconds:240,reason:'UI phase 5: native P/IF season and retirement summaries, 128 layouts, missing/signed salary and original DOM/state/RNG; two frozen-phase-4 natural careers in the complete entry.'},
+  'ui-redesign-allocation-e2e': {quick:[],seconds:120,reason:'UI phase 4: dedicated allocation, 128 viewport/theme/font layouts, original nodes/draft/scroll, exact phase-3 S/RNG and original DOM for native dice/point/carry/cap/undo/reset/once-only confirmation; growth core unchanged.'},
+  'ui-redesign-decision-e2e': {quick:[],seconds:120,reason:'UI phase 3: stable decision identity/return/scroll/collapse, retained allocation nodes, double-click guard, committed result payload boundaries and unchanged error recovery; exact phase-2 S/RNG controls at P/IF allocation and events, 128 viewport/theme/font cases.'},
+  'ui-redesign-shell-e2e': {quick:[],seconds:90,reason:'UI 2.0 phase 2: responsive shell, modal focus/inertness, keyboard tabs, allocation DOM identity and complete S/RNG across P/IF, breakpoint/short-window, theme/font matrix.'},
   'player-random-name-e2e': {seconds:120,reason:'Blank/typed names: isolated crypto draws, exact short P/IF state and RNG comparison, same-seed different names, real save/resume/year advance and PNG; no full career.'},
   'hof-retirement-policy-e2e': {seconds:180,reason:'Approved HOF-only deltas: full pre-retirement S/choice/RNG equality, P/IF deterministic replay and frozen-rule retirement oracle, no blanket ignore.'},
   'browser-save-store-e2e': {quick:[],seconds:15,reason:'Real IndexedDB revision, quota and stale-write fault checks.'},
@@ -18,7 +22,7 @@ const browserProfiles = {
   'international-personal-stats-e2e': {seconds:600,reason:'Tournament snapshots and result cards, T01-T14 browser matrix, six exact baseline S/RNG careers. No Quick profile.'},
   'design-tokens-02-e2e': {quick:[],seconds:15,reason:'UI-DESIGN-TOKENS-02: computed styles of the class-based team badge and retirement trait tags vs the pre-change inline styles, 4 themes x PC/mobile.'},
   'design-tokens-03-e2e': {quick:[],seconds:40,reason:'UI-DESIGN-TOKENS-03: share PNG drawn from CSS theme tokens vs the pre-change tree (standard/classic byte-identical with the 1.16.4 colors and generic fonts written, night/scoreboard changed) and probe colors vs themes.css, 4 themes x PC/mobile.'},
-  'design-tokens-09-e2e': {seconds:130,reason:'UI-DESIGN-TOKENS-09: computed style + layout vs f8afd8e with its px margin/padding/gap rewritten to the approved spacing steps (whole calc/auto/negative declarations untouched): home, early career, player/career tabs, desktop overview, help dialog, display preferences, salary detail, retirement; 4 themes x 3 font sizes x 2 densities x 1280/390 (P/IF) + 360 (P), web fonts blocked; every changed rule must match. Replaces design-tokens-08-e2e. No Quick profile.'},
+  'design-tokens-09-e2e': {seconds:130,reason:'Historical spacing oracle: current shared CSS on frozen ad8e77f UI runtime vs f8afd8e with independently rewritten spacing; 4 themes x 3 fonts x 2 densities, P/IF at 1280/390 and P at 360. UI 2.0 game-shell.css is intentionally absent; current runtime/layout is covered by ui-redesign-shell-e2e. No Quick profile.'},
   'design-tokens-07-e2e': {seconds:15,reason:'UI-DESIGN-TOKENS-07: share image waits for its web fonts (fake @font-face, no network): held, refused, hung (3 s timeout, no second wait) and empty stylesheet; fillText fonts are the --sans/--mono families; only the newer of two renders writes the container. No Quick profile.'},
   'trait-display-e2e': {seconds:180,reason:'All trait labels, acquisition-only explanation lifetime, retirement/PNG and exact pre-change P/IF S/RNG careers.'},
   'stage10-risk-e2e': {seconds:240,reason:'Pre-refactor investigation: natural trait routes, overseas salary flow, explicit return faults and passive LEGACY traces. Desired-behaviour failures remain FAIL; no Quick profile.'},
@@ -47,6 +51,10 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/reader-disclosure.mjs': ['support','Native summary click and visible original body with complete state/RNG invariance; no forced DOM changes or archived-description bypass.'],
+  'support/allocation-comparison.mjs': ['support','Validates phase-4 allocation presentation before legacy action/choice/text comparisons. Original states, RNG and historical baselines remain strict.'],
+  'support/decision-dom-comparison.mjs':['support','Validates approved phase-3 reader wrappers, committed event effects and decision metadata before reconstructing historical DOM; no S/RNG projection.'],
+  'support/ui-shell-comparison.mjs':['support','Frozen approved UI 2.0 board markup projection; exact new summary/structure validation before historical board comparison. No S/RNG exclusions.'],
   'support/approved-hof-comparison.mjs':['support','Strict approved-retirement comparison used by dedicated unit and E2E tests; not a standalone suite.'],
   'support/source-text.mjs': ['support','Strict UTF-8 source reader; CRLF-to-LF normalization only for source comparisons. Never normalizes frozen hash/binary evidence.'],
   'support/board-menu.mjs': ['support','Native header menu interaction and E2E assertions; preserves historical visible-button controls.'],

@@ -31,12 +31,6 @@
  #desktop-career .ui-data-list dt{margin-top:0}
  #desktop-career .ui-data-list dd{text-align:right}
 }
-@media(min-width:1180px){
- .desktop-overview:not([hidden]){display:block;position:fixed;top:16px;bottom:16px;width:calc((100vw - 620px)/2 - 16px);container-type:inline-size;overflow-y:auto;overflow-wrap:anywhere;padding:0 var(--space-xs);overscroll-behavior:contain}
- #desktop-player{right:calc(50% + 300px)}
- #desktop-career{left:calc(50% + 300px)}
- .desktop-overview .ui-panel{margin-bottom:var(--space-md)}
-}
 
 .confirmation-dialog .information-footer{gap:var(--space-sm);flex-wrap:wrap}
 .confirmation-dialog .information-article{padding-block:var(--space-xs)}

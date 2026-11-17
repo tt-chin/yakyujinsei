@@ -11,7 +11,7 @@ async function verifyDesktopContract(page,screenshot){
       for(const theme of THEME_IDS)for(const font of ['small','medium','large']){
         const result=await page.evaluate(async({theme,font})=>{
           document.documentElement.dataset.theme=theme;document.documentElement.dataset.fontSize=font;
-          const target=document.querySelector('#desktop-career').lastElementChild;
+          const target=document.querySelector('#desktop-career').firstElementChild;
           const html=target.innerHTML;
           const {renderCareer}=await import('/src/ui/player-detail.js');
           renderCareer(target,{contract:{description:'2029～2035年 球団保有期間・複数年の保証契約',remainingYears:'7年',guaranteedTotal:'1,234,567,890万円',schedule:['2029年 123,456,789万円（支払済み）','2030年 123,456,789万円','2031年 123,456,789万円'],signingBonus:'123,456,789万円',developmentStipend:'1,234万円',yearOutsideIncome:'12,345万円',outsideIncome:'123,456万円',corpIncome:'1,234万円',careerEarnings:'1,234,567,890万円',history:[]}},'contract');
@@ -24,13 +24,13 @@ async function verifyDesktopContract(page,screenshot){
         try{
           assert.ok(!result.overflow);
           assert.ok(result.left>=0&&result.right<=width);
-          if(width>=1876)assert.ok(result.width>500,'wide viewport uses previously empty margins');
+          assert.ok(result.width>=270&&result.width<=320,'UI 2.0 keeps one bounded player sidebar');
           for(const label of result.labels)assert.ok(label.width>=80,'label must not collapse to one-character column: '+label.text);
           for(const value of result.values)assert.ok(value.scroll<=value.client+1,'contract value overflow');
           assert.match(result.texts,/1,234,567,890万円/);
           assert.match(result.texts,/2031年/);
           if(screenshot&&width===1876&&theme==='night'&&font==='large')await page.screenshot({path:screenshot.replace('menu-1280.png','contract-wide.png')});
-        }finally{await page.evaluate(html=>{document.querySelector('#desktop-career').lastElementChild.innerHTML=html;},result.html);}
+        }finally{await page.evaluate(html=>{document.querySelector('#desktop-career').firstElementChild.innerHTML=html;},result.html);}
       }
     }
   }finally{
@@ -72,24 +72,26 @@ export async function verifyBoardMenu(page,{width,screenshot}={}) {
   assert.equal(await panel.isVisible(),false);
   await toggle.focus();await page.keyboard.press('Enter');
   assert.equal(await toggle.getAttribute('aria-expanded'),'true');
-  const ids=await panel.locator('button,a').evaluateAll(nodes=>nodes.map(n=>n.id));
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'board-menu-close');
+  const ids=await panel.locator('.board-menu-items button,.board-menu-items a').evaluateAll(nodes=>nodes.map(n=>n.id));
   assert.deepEqual(ids,['board-help','board-updates','board-bug-report','board-credits','board-number','board-preferences','board-share','board-support','btn-restart']);
   await page.keyboard.press('ArrowDown');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'board-help');
   await page.keyboard.press('End');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'btn-restart');
   await page.keyboard.press('Home');
-  assert.equal(await page.evaluate(()=>document.activeElement.id),'board-help');
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'board-menu-close');
   await page.keyboard.press('Escape');
   assert.equal(await panel.isVisible(),false);
   assert.equal(await page.evaluate(()=>document.activeElement.id),'board-menu-toggle');
   await toggle.click();await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'board-help');
   await page.keyboard.press('Shift+Tab');
-  assert.equal(await page.evaluate(()=>document.activeElement.id),'board-menu-toggle');
-  await page.locator('#bd-name').click();
-  assert.equal(await panel.isVisible(),false);
-  await toggle.click();await toggle.click();
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'board-menu-close');
+  await page.keyboard.press('Shift+Tab');assert.equal(await page.evaluate(()=>document.activeElement.id),'btn-restart');
+  await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.id),'board-menu-close');
+  await page.evaluate(()=>document.querySelector('#main-nav button').focus());assert.equal(await page.evaluate(()=>document.activeElement.id),'board-menu-close','modal background is inert');
+  await page.locator('#board-menu-close').click();
   assert.equal(await panel.isVisible(),false);
   await toggle.click();
   const geometry=await panel.locator('button,a').evaluateAll(nodes=>nodes.map(n=>{

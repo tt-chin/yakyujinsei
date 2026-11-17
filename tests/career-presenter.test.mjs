@@ -96,6 +96,8 @@ for(const [name,over] of Object.entries(boardFixtures))for(const phase of [0,1,2
   // Approved UI-BOARD-SHADOW-01: only the two invalid rgba separators change.
   expected.teamHtml=expected.teamHtml.replaceAll('rgba(0、0、0、0.4)','rgba(0,0,0,0.4)').replaceAll('rgba(0、0、0、0.2)','rgba(0,0,0,0.2)');
   expected.teamHtml=approvedTeamBadgeClasses(expected.teamHtml);
+  // UI 2.0 adds read-only mobile summary fields; all existing board fields stay exact.
+  expected.isAmateur=state.stage!=='PRO';expected.injuryRiskText=`${state.injNext||0}%`;
   // PLY-01 (J1/J6): board() adds the number badge text and the menu availability; these fixtures have no jerseyHistory.
   Object.assign(expected,{numberText:'',numberChangeEnabled:false});
   assert.deepEqual(shape(presenter.board(phase)),shape(expected));

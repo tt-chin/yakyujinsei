@@ -29,5 +29,24 @@ await test('another tab update is never deleted by a stale confirmation',async()
 await test('pending older capture cannot recreate a deleted career',async()=>{
  const st=store();st.row={revision:1,save:createSaveEnvelope(initial(),{careerId:'old',revision:1,checkpointReady:true})};const c=new BrowserSaveController({store:st,restore:()=>{}});await c.initialize();await c.restore();let release;const original=st.save.bind(st);st.save=(...args)=>new Promise(resolve=>{release=()=>resolve(original(...args));});c.capture(initial());await Promise.resolve();assert.equal(typeof release,'function');assert.equal(await c.remove({confirmed:true}),true);release();await c.settled();assert.deepEqual(st.row,{revision:2,save:null});assert.equal(c.state.phase,'ready');assert.equal(c.state.writable,false);assert.equal(st.writes,0);
 });
+await test('replacement requires explicit current revision and preserves old slot until capture',async()=>{
+ const st=store();st.row={revision:1,save:createSaveEnvelope(initial(),{careerId:'old',revision:1,checkpointReady:true})};const old=structuredClone(st.row),c=new BrowserSaveController({store:st});await c.initialize();let started=0;
+ assert.equal(await c.replaceCareer({expectedRevision:1,start:()=>started++}),false);assert.equal(await c.replaceCareer({confirmed:true,expectedRevision:0,start:()=>started++}),false);
+ assert.equal(await c.replaceCareer({confirmed:true,expectedRevision:1,start:()=>{started++;assert.deepEqual(st.row,old);c.capture(initial());}}),true);await c.settled();assert.equal(started,1);assert.equal(st.removes,0);assert.equal(st.row.revision,2);assert.notEqual(st.row.save.careerId,'old');assert.equal(st.writes,1);
+});
+await test('stale replacement confirmation never starts or overwrites a newer slot',async()=>{
+ const st=store();st.row={revision:1,save:createSaveEnvelope(initial(),{careerId:'old',revision:1,checkpointReady:true})};const c=new BrowserSaveController({store:st});await c.initialize();st.row={revision:2,save:createSaveEnvelope(initial(),{careerId:'newer',revision:2,checkpointReady:true})};const newer=structuredClone(st.row);
+ assert.equal(await c.replaceCareer({confirmed:true,expectedRevision:1,start:()=>assert.fail('must not start')}),false);assert.deepEqual(st.row,newer);assert.equal(c.state.phase,'replace-error');assert.match(c.state.message,/別のタブ/);assert.equal(c.newCareer(),false);await c.initialize();assert.equal(c.state.slot.careerId,'newer');
+});
+await test('replacement start exception cancels queued captures and preserves original save',async()=>{
+ const st=store();st.row={revision:1,save:createSaveEnvelope(initial(),{careerId:'old',revision:1,checkpointReady:true})};const old=structuredClone(st.row),c=new BrowserSaveController({store:st});await c.initialize();
+ assert.equal(await c.replaceCareer({confirmed:true,expectedRevision:1,start:()=>{c.capture(initial());throw Error('START_FAULT');}}),false);await c.settled();assert.deepEqual(st.row,old);assert.equal(st.writes,0);assert.equal(st.removes,0);assert.equal(c.state.phase,'replace-error');await c.initialize();assert.equal(c.state.slot.careerId,'old');
+});
+await test('replacement write failure retains old career without deleting it',async()=>{
+ const st=store();st.row={revision:1,save:createSaveEnvelope(initial(),{careerId:'old',revision:1,checkpointReady:true})};const old=structuredClone(st.row),c=new BrowserSaveController({store:st});await c.initialize();st.failWrite='QuotaExceededError';assert.equal(await c.replaceCareer({confirmed:true,expectedRevision:1,start:()=>c.capture(initial())}),true);await c.settled();assert.deepEqual(st.row,old);assert.match(c.state.message,/以前の生涯/);assert.equal(st.removes,0);
+});
+await test('pending replacement inspection blocks duplicate start restore and delete',async()=>{
+ const st=store();st.row={revision:1,save:createSaveEnvelope(initial(),{careerId:'old',revision:1,checkpointReady:true})};const c=new BrowserSaveController({store:st});await c.initialize();let release;const original=st.read.bind(st);st.read=()=>new Promise(resolve=>{release=()=>resolve(original());});let started=0;const pending=c.replaceCareer({confirmed:true,expectedRevision:1,start:()=>started++});assert.equal(c.state.phase,'replacing');assert.equal(c.newCareer(),false);assert.equal(await c.remove({confirmed:true}),false);assert.equal(await c.replaceCareer({confirmed:true,expectedRevision:1,start:()=>started++}),false);await c.restore();release();assert.equal(await pending,true);assert.equal(started,1);
+});
 console.log('PASS '+passed+' controller cases');
 }finally{globalThis.confirm=oldConfirm;}

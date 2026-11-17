@@ -18,6 +18,7 @@ body{background:var(--bg);color:var(--chalk);font-family:var(--sans);font-size:v
   border-bottom:2px solid var(--edge);padding:calc(10px * var(--panel-scale)) 14px calc(8px * var(--panel-scale));box-shadow:var(--shadow-board)}
 #bd-top{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-xs)}
 #bd-name{font-weight:900;font-size:var(--fs-2xl);letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd-name-row{display:flex;align-items:baseline;gap:var(--space-xs);min-width:0}
 #bd-number{flex:0 0 auto;font-weight:900;font-size:var(--fs-sm);padding:var(--space-4xs) var(--space-xs);border:1px solid currentColor;border-radius:var(--radius-sm)}
 #bd-number[hidden]{display:none}
 #bd-name small{color:var(--dim);font-weight:500;font-size:var(--fs-sm);margin-left:var(--space-2xs)}
@@ -131,6 +132,12 @@ table.fin.career-table .career-team span{display:-webkit-box;-webkit-box-orient:
 .field input{width:100%;background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius-lg);color:var(--chalk);
   font-family:var(--sans);font-size:var(--fs-2xl);padding:var(--space-sm) var(--space-md);outline:none}
 .field input:focus{border-color:var(--amber)}
+.player-name-row{display:flex;align-items:stretch;gap:var(--space-xs)}
+.player-name-row input{flex:1;min-width:0}
+.random-name-button{flex:0 0 44px;min-width:44px;min-height:44px;margin-top:0;padding:0;text-align:center;font-size:var(--fs-5xl)}
+.random-name-button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.random-name-button:disabled{opacity:.6;cursor:default}
+
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-xs)}
 .seg.two{grid-template-columns:repeat(2,1fr)}
 .seg button{background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius-lg);color:var(--dim);

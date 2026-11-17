@@ -28,36 +28,45 @@
 <link rel="stylesheet" href="./styles/information.css">
 <link rel="stylesheet" href="./styles/stadium-background.css">
 <link rel="stylesheet" href="./styles/browser-save.css">
+<link rel="stylesheet" href="./styles/game-shell.css">
+<link rel="stylesheet" href="./styles/decision-presentation.css">
+<link rel="stylesheet" href="./styles/allocation-presentation.css">
+<link rel="stylesheet" href="./styles/career-review.css">
 </head>
   <body>
 <div id="start">
   <div class="wrap">
     <header class="home-title">
-    <div class="stitch"></div>
-    <h1 id="logo-tap"><em>野球人生シミュレーター</em><span id="app-version"></span></h1>
+    <h1 id="logo-tap"><em><span>野球人生</span><span>シミュレーター</span></em></h1><p id="app-version"></p>
     <p class="sub">高校野球からNPBドラフト、海外挑戦、日本代表、引退まで。すべての選択が野球人生を変える。</p>
     </header>
     <section id="home-create" class="home-controls" aria-label="新しい選手の作成">
-    <div class="field"><label>選手名</label><input id="in-name" maxlength="10" placeholder="例：山田太郎" value=""></div>
+    <div class="field"><label for="in-name">選手名</label><div class="player-name-row"><input id="in-name" maxlength="10" placeholder="例：山田太郎" value=""><button type="button" class="btn random-name-button" id="btn-random-name" aria-label="名前をランダムに生成" title="名前をランダムに生成" disabled><span aria-hidden="true">🎲</span></button></div></div>
     <div class="field"><label>ポジション</label>
       <div class="seg" id="seg-pos">
         <button data-v="P" class="on">投手</button><button data-v="C">捕手</button>
         <button data-v="IF">内野手</button><button data-v="OF">外野手</button>
       </div></div>
-    <button class="btn main" id="btn-start" disabled>野球人生を始める ▸ 高校1年春</button>
-    <p class="seedline">ワールドシード
+    <button class="btn main" type="button" id="btn-start" disabled>野球人生を始める</button>
+    <button class="btn" type="button" id="save-back" hidden>セーブ選択に戻る</button>
+    </section>
+    <details id="home-settings"><summary>詳細設定</summary>
+    <p class="seedline"><label for="seed-show">ワールドシード</label>
       <input id="seed-show" maxlength="24">
       · <a href="#" id="seed-re">新しいシード</a><br>同じシード＋同じ選択＝同じ野球人生</p>
-    </section>
+    <button class="btn warn" type="button" id="save-delete" hidden>セーブデータを削除</button>
+    </details>
   <nav class="start-information" aria-label="ゲーム案内"><button class="btn" type="button" data-open-preferences aria-haspopup="dialog">表示設定</button><button class="btn" type="button" data-information="help">遊び方</button><button class="btn" type="button" data-information="updates">更新履歴</button><button class="btn" type="button" data-information="credits">クレジット</button></nav>
     <footer class="home-credit">Produced by <a href="https://x.com/dog_cat_150" target="_blank" rel="noopener">犬猫（@dog_cat_150）</a></footer>
   </div>
 </div>
 <div id="app">
   <header id="board" style="display:none">
-    <div id="bd-top"><span id="bd-number" hidden></span><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj"></span><div id="board-menu">
-      <button type="button" id="board-menu-toggle" aria-label="メニュー" aria-expanded="false" aria-controls="board-menu-panel"><span aria-hidden="true">☰</span></button>
-      <div id="board-menu-panel" aria-label="ゲームメニュー" hidden>
+    <div id="bd-top"><div class="bd-name-row"><span id="bd-number" hidden></span><div id="bd-name"></div></div><div id="bd-team"></div><span id="bd-tj"></span><div id="board-menu">
+      <button type="button" id="board-menu-toggle" aria-label="メニュー" aria-haspopup="dialog" aria-expanded="false" aria-controls="board-menu-panel"><span aria-hidden="true">☰</span></button>
+      <dialog id="board-menu-panel" aria-labelledby="board-menu-title" hidden>
+        <div class="board-menu-heading"><h2 id="board-menu-title">メニュー</h2><button type="button" id="board-menu-close" aria-label="メニューを閉じる">閉じる</button></div>
+        <div class="board-menu-items">
         <button type="button" id="board-help" data-information="help" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>遊び方</button>
         <button type="button" id="board-updates" data-information="updates" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>更新履歴</button>
         <a id="board-bug-report" href="https://x.com/dog_cat_150/status/2108694851286122963?a=2e3RG90AIYfT3G0SNBs&amp;s=20" target="_blank" rel="noopener noreferrer"><span class="menu-bullet" aria-hidden="true">•</span>不具合報告<span class="menu-external">別タブ ↗</span></a>
@@ -67,35 +76,41 @@
         <button type="button" id="board-share" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>共有</button>
         <a id="board-support" href="https://ofuse.me/dcb7f92e" target="_blank" rel="noopener noreferrer"><span class="menu-bullet" aria-hidden="true">•</span>開発を応援<span class="menu-external">別タブ ↗</span></a>
         <button type="button" id="btn-restart" title="タイトルに戻る"><span class="menu-bullet" aria-hidden="true">•</span>タイトルに戻る</button>
-      </div>
+        </div>
+      </dialog>
     </div></div>
-    <div id="bd-grid">
-      <div class="bd-cell"><b id="bd-age">16</b><span>年齢</span></div>
-      <div class="bd-cell"><b id="bd-year">2026</b><span>年度</span></div>
-      <div class="bd-cell"><b id="bd-ovr">30</b><span>総合</span></div>
-      <div class="bd-cell" id="salary-detail-trigger" role="button" tabindex="0" aria-label="年俸、単位は万円。年俸の内訳を見る" aria-haspopup="dialog"><b id="bd-sal">0</b><span>年俸（万）</span><small>年俸の内訳を見る</small></div>
-    </div>
+    <div id="bd-period"><span><b id="bd-year">2026</b>年 · <b id="bd-age">16</b>歳</span>
     <div id="lamps">
       <span class="lamp" id="lp0"><i></i>シーズン前</span>
       <span class="lamp" id="lp1"><i></i>シーズン中</span>
       <span class="lamp" id="lp2"><i></i>シーズン終了</span>
+    </div></div>
+    <div id="bd-grid">
+      <div class="bd-cell"><b id="bd-ovr">30</b><span>総合</span></div>
+      <div class="bd-cell" id="salary-detail-trigger" role="button" tabindex="0" aria-label="年俸、単位は万円。年俸の内訳を見る" aria-haspopup="dialog"><b id="bd-sal">0</b><span>年俸（万）</span><small>年俸の内訳を見る</small></div>
+      <div class="bd-cell"><b id="bd-risk">0%</b><span>次回故障加算</span></div>
     </div>
   </header>
+  <div id="game-body"><div id="game-main">
   <nav id="main-nav" aria-label="メインメニュー" style="display:none">
     <button type="button" data-main-view="home" aria-current="page">ホーム</button>
     <button type="button" data-main-view="player">選手</button>
     <button type="button" data-main-view="career">キャリア</button>
   </nav>
+  <button type="button" class="decision-return" id="decision-return" aria-controls="view-home" hidden>選択に戻る</button>
   <div id="view-host">
     <section id="view-home" class="main-view" data-main-panel="home">
       <main id="log"></main>
-      <button id="act-toggle" style="display:none">⌄ 選択肢を閉じる</button>
+      <section id="decision-summary" aria-label="現在の選択" hidden><p id="decision-period"></p><h2 id="decision-question" tabindex="-1"></h2><button type="button" id="decision-jump" aria-controls="act">選択肢へ</button></section>
+      <button id="act-toggle" aria-expanded="false" aria-controls="act" style="display:none">選択肢を閉じる</button>
       <footer id="act" style="display:none"></footer>
     </section>
     <section id="view-player" class="main-view" data-main-panel="player" hidden>
       <div id="player-tabs" role="tablist" aria-label="選手">
         <button type="button" role="tab" data-player-tab="ability" aria-selected="true">能力・コンディション</button>
         <button type="button" role="tab" data-player-tab="traits" aria-selected="false">特性</button>
+        <button type="button" role="tab" data-player-tab="contract" aria-selected="false">契約・収入</button>
+        <button type="button" role="tab" data-player-tab="stats" aria-selected="false">通算成績</button>
       </div>
       <div id="player-content" role="tabpanel" tabindex="0"></div>
     </section>
@@ -109,6 +124,7 @@
       <div id="career-content" role="tabpanel" tabindex="0"></div>
     </section>
   </div>
+  </div></div>
 </div>
 <section id="salary-detail-panel" class="salary-detail-panel" role="dialog" aria-modal="true" aria-labelledby="salary-detail-title" hidden>
   <div class="salary-detail-dialog"><button id="salary-detail-close" class="salary-detail-close" aria-label="閉じる">×</button><h2 id="salary-detail-title" tabindex="-1">年俸の内訳</h2><div id="salary-detail-body"></div></div>

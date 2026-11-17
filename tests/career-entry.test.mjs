@@ -165,3 +165,15 @@ for(const length of [46,50]){
 }
 for(const length of [0,-1,1.5,NaN,0x100000001])assert.throws(()=>randomNameIndex(length),RangeError);
 console.log('PASS random names: 46/50 unique pools, all 2300 combinations, independent draws, existing length limit and unbiased boundary rejection');
+
+// Explicit home dice button shares the generator and changes only the input.
+const {bindRandomPlayerName}=await import('../docs/src/ui/random-player-name.js');
+{
+ let draws=0;const events=[],input={value:'王貞治',dispatchEvent:e=>events.push([e.type,e.bubbles])},button={disabled:true};
+ const generateName=()=>{draws++;return draws<3?'王貞治':'長嶋茂雄';};
+ bindRandomPlayerName({input,button,generateName});assert.equal(input.value,'王貞治');assert.equal(draws,0);
+ bindRandomPlayerName({input,button,generateName});button.onclick();assert.equal(draws,3);assert.equal(input.value,'長嶋茂雄');assert.deepEqual(events,[['input',true],['change',true]],'one activation after repeated binding');
+ input.value='手動編集';assert.equal(draws,3,'manual input does not generate');button.disabled=true;button.onclick();assert.equal(draws,3,'disabled button does nothing');
+ let attempts=0;events.length=0;bindRandomPlayerName({input,button,generateName:()=>{attempts++;return '手動編集';}});button.onclick();assert.equal(attempts,5);assert.equal(input.value,'手動編集');assert.deepEqual(events,[],'bounded same-name retry keeps current value');
+}
+console.log('PASS home name button: shared dependency, bounded retries, input/change, manual editing, disabled and idempotent binding');

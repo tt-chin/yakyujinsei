@@ -41,7 +41,7 @@ try{
     const label=width+'x'+height;
     // Precondition: on phones at least one item centre lies inside #act, so the old stacking would have covered it.
     if(width<500){const over=r.items.filter(i=>i.cy>r.actTop).map(i=>i.id);assert.ok(over.length>0,label+' precondition: an item centre lies below #act top '+Math.round(r.actTop));console.log(label+' items over #act: '+over.join(','));}
-    assert.deepEqual(r.items.map(i=>i.id),['board-help','board-updates','board-bug-report','board-credits','board-number','board-preferences','board-share','board-support','btn-restart'],label+' menu items');
+    assert.deepEqual(r.items.map(i=>i.id),['board-menu-close','board-help','board-updates','board-bug-report','board-credits','board-number','board-preferences','board-share','board-support','btn-restart'],label+' visible close and preserved menu items');
     for(const item of r.items){assert.ok(item.inViewport,label+' '+item.id+' inside the viewport');assert.ok(item.hit,label+' '+item.id+' is the hit target (covered by '+item.by+')');}
     await p.screenshot({path:path.join(artifacts,label+'-menu-over-allocation.png')});
     // A real click (actionability includes the hit-target check) on the lowest item opens its confirmation.

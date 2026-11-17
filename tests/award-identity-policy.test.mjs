@@ -191,11 +191,17 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
       assert.equal(current,expected,'main: exact approved UI wiring, no other edits');
       assert.throws(()=>assert.equal(current+'\n// unexpected',expected));
     }else if(file==='docs/src/ui/navigation.js'){
+      // The award integration predates the approved UI 2.0 navigation redesign.
+      // Pin the original wiring against its accepted source; current navigation is
+      // checked for unchanged callbacks and S/RNG by ui-foundation/shell E2E.
+      const uiBase=execFileSync('git',['show','ad8e77f53ede29de6a51c23708b2370eed7b414d:'+file],{encoding:'utf8'}).replaceAll('\r\n','\n');
       let expected=exactReplacement(acceptedA,"import { renderRecord } from './record-view.js';",
         "import { renderRecord } from './record-view.js';\nimport { initializeDesktopOverview } from './desktop-overview.js';");
       expected=exactReplacement(expected,"export function initNavigation({documentRef=document,onOpenPlayer,onOpenCareer,onNavigate=()=>{}}){",
         "export function initNavigation({documentRef=document,onOpenPlayer,onOpenCareer,onNavigate=()=>{}}){\n  initializeDesktopOverview({documentRef,onOpenPlayer,onOpenCareer});");
-      assert.equal(current,expected,'navigation: exact read-only overview wiring, no other edits');
+      assert.equal(uiBase,expected,'frozen pre-UI navigation retains exact approved award wiring');
+      assert.match(current,/const selectMain=view=>\{onNavigate\(\);/,'navigation still calls the original archive callback');
+      assert.doesNotMatch(current,/award|Journal|Receipt|\b(?:R|ri|pick|chance)\s*\(/,'UI navigation has no award/state/RNG integration');
     }else if(approvedIncomeEdits[file]){
       let expected=acceptedA;for(const [before,after] of approvedIncomeEdits[file])expected=exactReplacement(expected,before,after);
       assert.equal(current,expected,file+': exact approved income display, no other changes');

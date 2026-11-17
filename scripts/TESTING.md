@@ -1,5 +1,25 @@
 # 統一測試入口
 
+## 本機與 GitHub Full 的分工
+
+依使用者2026-11-17的長期指示，後續所有作業本機均不啟動Full模式（含整套、batch及Full模式的`--only`），也不拆批變相跑完整Full；直接相關的單體／個別E2E及必要Quick仍按`AGENTS.md`第6章執行。需要Full時，在結果明列 **「需要執行Full（GitHub手動／未執行）」**，附原因、分支、完整提交SHA與本機結果，由使用者手動在GitHub執行。Agent不自行dispatch或重跑手動Full；既有自動CI觸發條件不變。下方Full命令是入口與既有CI用法說明，不代表允許Agent在本機啟動Full。
+
+Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
+
+## UI 2.0 季末／退休呈現
+
+`career-review.test`驗證既有資料的唯讀摘要、棒球局數、確定／未定／零年薪與報價隔離、跨階段紀錄及缺少資料。`ui-redesign-review-e2e`的Quick僅跑原生fixture；個別完整入口另比較第4批固定SHA的P／IF兩條自然生涯，逐步全S與RNG嚴格相同。退休規則、年度付款、成長與存檔核心來源也須保持不變。128組viewport／主題／字級、無背景／無blur、空資料、原生details展開與分享控制項可達性另外驗證。720×450為200%等效重排尺寸，不能稱為桌面瀏覽器200%縮放或實機PASS。
+
+`decision-dom-comparison`只驗證並移除新增回顧區，以及還原明確批准的投手告別文字；原卡片全文、節點與完整S／RNG仍嚴格比較。新增摘要的數值與資料來源由單體／原生fixture直接驗證，不靠忽略欄位或更換歷史基準。收入舊斷言須先以原生summary展開「キャリアプロフィール」，再驗證既有可見收入文字；不以textContent替代可見性檢查。
+
+`tests/support/reader-disclosure.mjs`以原生summary點擊讀取退休卡片，先檢查唯一原卡片／details／控制項、展開後原body可見，再比較展開前後完整S／RNG。特性、稱號、評價與告別原innerText斷言保留；新取得說明仍須在導航後按原規則封存。不改DOM強制open、不全域改用textContent、不忽略原文。只有既有手動baseline路徑明示允許舊版沒有reader details；當前版本一律嚴格要求控制項。此helper由既有Quick季末／退休fixture實際使用，Quick102／Full132入口數不變。
+
+## UI 2.0 配點的歷史比較
+
+`tests/support/allocation-comparison.mjs`只注入E2E回應，不修改產品檔案或歷史基準。它在原生`allocUI`返回後讀取本次起點，先以既有DOM比較器驗證能力／繰越預覽、資源、原說明及無效確認按鈕，再提供原有操作標籤、選項結構與操作區文字。整區`innerText`使用短暫的離屏、inert／ARIA隱藏副本取得真實排版文字，完成即移除；不改動實際遊戲節點、S或RNG。
+
+跨版比較不得直接把整個`.abrow`的新預覽文字當作原操作名稱，也不得不加驗證就忽略新增控制項。姓名測試保留同版原始`choices`比較，只有跨版才使用已驗證的原選項結構；其他入口仍保留原有完整狀態、RNG、歷史特例與輸入／timeout。`ui-redesign-allocation-e2e`以凍結第3批驗證各種原生配點、原DOM／標籤／文字及S／RNG，並要求錯誤預覽、資源及被啟用的假確認一律失敗。這些相關驗證不代替新SHA的GitHub Full。
+
 ## 原始碼文字比較的換行契約
 
 跨Git歷史／Windows／Linux的來源比較，使用`tests/support/source-text.mjs`的`readSourceText(path)`（嚴格UTF-8讀取）或`sourceText(text)`，在切片、字串替換及比較**之前**將兩端CRLF統一成LF；其餘內容維持逐字相等。單獨CR、BOM、縮排、尾端空白、文字與程式變更不忽略。不可把此工具用於凍結快照、檔案SHA256、二進位證據或golden；原始資料不改寫。

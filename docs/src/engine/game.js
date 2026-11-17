@@ -1,3 +1,4 @@
+import {bindRandomPlayerName} from '../ui/random-player-name.js';
 import {generatePlayerName} from '../data/player-names.js';
 import {confirmAction} from '../ui/confirmation-dialog.js';
 import {BrowserSaveController} from './browser-save-controller.js';
@@ -172,7 +173,7 @@ var MAX_YEARS=8;         /* DOM 最大保持年度領域数。 */
 function logTarget(){ return _curYearBody || $('log'); }
 // DOM presentation lifetime only; no display markers in S or replay data.
 const traitPresentation=new WeakMap();
-const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key)});
+const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key),getDecision:()=>S?choiceViews.get(S):null,getYear:()=>S?.year,getState:()=>S,reviewLabels:{leagueName:key=>LG_N[key]||LV[key]?.n||key,teamName:key=>leagueCatalog.teamRec(key)?.name||key,teamLeague:name=>typeof name!=='string'?null:Object.values(leagueCatalog.teamMaster).find(team=>(name===team.name||name.startsWith(team.name+' ')))?.org,formatMoney:fmtMoney}});
 function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){return traitResultCard.decorate(node,title,html);}
 const traitResultCard=new TraitResultCard({getState:()=>S,traitPresentation,displayTrait});
@@ -241,7 +242,7 @@ function honorScore(bucket){
 }
 function tierOf(bucket){return evaluateLeagueHof(S,bucket,TIER_TH[bucket],LG_N[bucket]);}
 function retireScene(tiers){careerRetirement.retireScene(tiers);}
-function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
+function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();setTimeout(()=>{
   /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
   document.querySelectorAll('.card').forEach(c=>{
     const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
@@ -253,8 +254,7 @@ const shareImageView=new ShareImage({getState:()=>S,getSeed:()=>SEED,LG_N,TEAM_C
 function shareImage(evals,out){return shareImageView.render(evals,out);}
 /* 開始設定。 */
 (function(){ const t=document.getElementById('act-toggle');
-  if(t)t.onclick=()=>{ document.getElementById('act').classList.toggle('collapsed');
-    t.textContent=document.getElementById('act').classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる'; };
+  if(t)t.onclick=()=>gameView.toggleActions();
 })();
 document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#seg-pos button').forEach(x=>x.classList.remove('on'));
@@ -377,8 +377,17 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});
   const navigation=initNavigation({onNavigate:archiveTraitResults,onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
   let startPromptPending=false;
-  $('btn-start').onclick=()=>{
-    if(startPromptPending)return;
+  bindRandomPlayerName({input:$('in-name'),button:$('btn-random-name')});
+  $('btn-start').onclick=async()=>{
+    if(startPromptPending||S)return;
+    if(browserSave?.state.phase==='ready'&&browserSave.state.slot){
+      const revision=browserSave.state.revision;startPromptPending=true;
+      try{
+        if(!await confirmAction({title:'新しく始める',message:'新しい人生を始めると、現在のセーブデータが上書きされます。',confirmLabel:'始める'}))return;
+        await browserSave.replaceCareer({confirmed:true,expectedRevision:revision,start:()=>{try{startJapanese();}catch(error){S=null;throw error;}}});
+      }finally{startPromptPending=false;}
+      return;
+    }
     if(browserSave?.state.phase==='unavailable'){
       const state=browserSave.state;startPromptPending=true;
       confirmAction({title:'セーブせずに始める',message:'セーブデータを確認できません。今回の進行状況は保存されません。セーブせずに始めますか？'})
@@ -398,16 +407,17 @@ export async function initializeBrowserSave(){
  if(browserSave)return;
  const home=async()=>{if(S&&!await confirmAction({title:'タイトルに戻る',message:'このタブの未保存の操作を破棄して、タイトルに戻りますか？セーブデータは残ります。'}))return;location.href=location.pathname+location.search;};
  let newPromptPending=false;
- const fresh=async()=>{
+ const fresh=()=>!newPromptPending&&!S&&browserSave.state.phase==='ready'&&!!browserSave.state.slot;
+ const deleteSave=async()=>{
   if(newPromptPending||S||browserSave.state.phase!=='ready'||!browserSave.state.slot)return false;
   const state=browserSave.state,revision=state.revision;newPromptPending=true;
   try{
-   if(!await confirmAction({title:'新しく始める',message:'現在の進行状況を破棄して、新しく始めますか？\nOKを選ぶと、現在のセーブデータを削除します。'}))return false;
+   if(!await confirmAction({title:'セーブデータを削除',message:'セーブデータを削除します。この操作は元に戻せません。',confirmLabel:'削除する'}))return false;
    if(browserSave.state!==state||state.phase!=='ready'||state.revision!==revision)return false;
    return await browserSave.remove({confirmed:true});
   }finally{newPromptPending=false;}
  };
- const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onRetry:()=>browserSave.state.phase==='delete-error'?browserSave.initialize():browserSave.restore(),onHome:home});
+ const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onDelete:deleteSave,onRetry:()=>['delete-error','replace-error'].includes(browserSave.state.phase)?browserSave.initialize():browserSave.restore(),onHome:home});
  browserSave=new BrowserSaveController({notify:show,lock:locked=>{$('app').inert=locked;if(locked){++careerSession.choiceGeneration;careerSession.activeChoiceToken=null;}},restore:(envelope,{authorization}={})=>{
   const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});
   careerEntry.resume(candidate);

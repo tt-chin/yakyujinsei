@@ -1,3 +1,4 @@
+import {openReaderDetails} from './support/reader-disclosure.mjs';
 import assert from 'node:assert/strict';
 import {findFirstDifference} from './support/first-difference.mjs';
 import {createServer} from 'node:http';
@@ -79,6 +80,7 @@ try{
     assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.locator('#player-content li').last().scrollIntoViewIfNeeded();assert.ok(await p.locator('#player-content li').last().isVisible());await p.screenshot({path:path.join(shots,(arg('preview')?'preview-':'local-')+width+'.png')});
     if(!arg('preview')){
       await p.locator('[data-main-view="home"]').click();await p.evaluate(()=>window.__traitTest.retire());
+      await openReaderDetails(p.locator('#log .card').filter({has:p.locator('h4',{hasText:'キャリアプロフィール'})}),{snapshot:()=>p.evaluate(()=>window.__traitTest.get())});
       const retirement=await p.locator('#log').innerText();for(const label of Object.values(TRAIT_LABELS))assert.ok(retirement.includes(label),label+' missing at retirement');
       const before=await p.evaluate(()=>window.__traitTest.get()),{png,texts,bounds}=await p.evaluate(()=>window.__traitTest.share());assert.match(png,/^data:image\/png;base64,/);assert.deepEqual(await p.evaluate(()=>window.__traitTest.get()),before,'image generation RNG/state=0');
       for(const label of Object.values(TRAIT_LABELS))assert.ok(texts.join('\n').includes(label),label+' missing from image drawing');
