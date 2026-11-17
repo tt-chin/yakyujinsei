@@ -82,7 +82,7 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 ## 背番號（PLY-01）
 
-`jersey-policy.test`為Quick／Full／Audit的規則單元。`jersey-e2e`為Full／Audit（約20秒）：本機server同時提供目前`docs/`與`/baseline/`（`75ab10b7d442db7aeccde0d649a852f224eed481`，1.16.13，與PLY-01起點同內容）。自然生涯（`probe33-1`／`probe33-6`／`probe33-8`）驗證P／C／IF／OF預設號碼、入團只問一次、對話框取消／0與00／A3／A4、選單改號與B1、J2續玩、退休後A1、二重操作、1280／390截圖；同seed與baseline比較全R值／rngState與S（只排除version、createdVersion、jerseyHistory），預設與對話框＋選單改號版本亦同。舊存檔D4以baseline實際產生；B6直接竄改IndexedDB逐欄斷言`SAVE_JERSEY`。交易、MiLB→MLB、IND／CORP、留隊、B2以標示fixture的狀態加真實移籍函式驗證；目前程式不設定`tradeFrom`，「A→B」年度列只以fixture固定。
+`jersey-policy.test`為Quick／Full／Audit的規則單元。`jersey-e2e`為Full／Audit（約20秒）：本機server同時提供目前`docs/`、`/baseline/`（`59104210efa7704b4749f3da765544ea2e9b705b`，2.0.0，PLY-01合併前的dev）與`/legacy/`（`75ab10b7d442db7aeccde0d649a852f224eed481`，1.16.13，正式站main）。自然生涯（`probe33-1`／`probe33-6`／`probe33-8`）驗證P／C／IF／OF預設號碼、入團只問一次、對話框取消／0與00／A3／A4、選單改號與B1（OK／取消後焦點回☰）、J2續玩、退休後A1、二重操作、1280／390截圖；同seed與baseline比較全R值／rngState與S（只排除version、createdVersion、jerseyHistory），預設與對話框＋選單改號版本亦同。舊存檔D4以baseline（2.0.0）與legacy（1.16.13）各自實際產生；已有含jerseyHistory的存檔時開新生涯須經覆寫確認且不帶入號碼紀錄；B6直接竄改IndexedDB逐欄斷言`SAVE_JERSEY`。交易、MiLB→MLB、IND／CORP、留隊、B2以標示fixture的狀態加真實移籍函式驗證；目前程式不設定`tradeFrom`，「A→B」年度列只以fixture固定。
 
 ## 生涯RNG（`Rng`）
 

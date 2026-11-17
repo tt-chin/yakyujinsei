@@ -53,17 +53,17 @@ try{
   await p.close();await old.close();checks.push({pos,nativeSeasonAndRetirement:'PASS',originalDOM:'PASS',immutableUI:'PASS'});
  }
  if(!process.argv.includes('--fixtures-only'))for(const pos of ['P','IF']){
-  const p=await open(pos),old=await open(pos,true);let steps=0,jerseySkips=0,proSeen=false;
+  const p=await open(pos),old=await open(pos,true);let steps=0,jerseySkips=0,proSeen=false,jerseyLast;
   // PLY-01 P5: the candidate's year-start number prompt is the only approved new step; confirm it unrecorded, shape-check
   // jerseyHistory, then drop it so every other S/RNG field stays exact.
   const jerseyStep=()=>p.evaluate(()=>{const b=[...document.querySelectorAll('#act button')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.textContent.trim()));if(b)b.click();return !!b;});
-  const withoutJersey=v=>{const j=v.state.jerseyHistory;assert.ok(j===undefined||Array.isArray(j)&&j.every(x=>typeof x.teamId==='string'&&Number.isInteger(x.year)&&typeof x.number==='string'),'jerseyHistory shape');const c=structuredClone(v);delete c.state.jerseyHistory;return c;};
+  const withoutJersey=v=>{const j=v.state.jerseyHistory;assert.ok(j===undefined||Array.isArray(j)&&j.every(x=>typeof x.teamId==='string'&&Number.isInteger(x.year)&&typeof x.number==='string'),'jerseyHistory shape');jerseyLast=j;const c=structuredClone(v);delete c.state.jerseyHistory;return c;};
   for(;steps<2000;steps++){
    while(await jerseyStep())jerseySkips++;
    const current=withoutJersey(await snapshot(p));if(current.state.stage==='PRO')proSeen=true;assert.deepEqual(current,await snapshot(old),'natural '+pos+' step '+steps);if(current.state.done)break;
    for(const q of [p,old])await q.evaluate(()=>{const a=document.getElementById('act'),rows=[...a.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...a.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.textContent));const b=buttons.find(e=>e.textContent.startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.textContent))||buttons[0];if(!b)throw Error('no action');b.click();});
   }
-  assert(steps<2000);assert.equal(jerseySkips>0,proSeen,pos+' number step appears exactly when the career reaches a professional team');checks.push({pos,naturalExactCareer:'PASS',steps,jerseySkips});await p.close();await old.close();
+  assert(steps<2000);assert.equal(jerseySkips>0,proSeen,pos+' number step appears exactly when the career reaches a professional team');assert.equal(jerseyLast?.length||0,jerseySkips,pos+' every confirmed number step appends one record');checks.push({pos,naturalExactCareer:'PASS',steps,jerseySkips});await p.close();await old.close();
  }
  assert.deepEqual(errors,[]);console.log('PASS review: '+cases.length+' layouts, P/IF native season/retirement and original DOM/state/RNG'+(process.argv.includes('--fixtures-only')?'':' plus two natural careers'));
 }catch(e){failure=e;console.error(e.stack);}finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));await writeFile(path.join(out,'summary.json'),JSON.stringify({status:failure?'FAIL':'PASS',baseline,cases,checks,errors,failure:failure?.stack},null,2));}

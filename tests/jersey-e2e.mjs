@@ -152,7 +152,7 @@ await test('resume-entry-unsaved',async e=>{
 await test('new-career-over-save',async e=>{
   const {page,close}=await open(e);await start(page,{seed:'probe33-1',pos:'P'});const at=await play(page,{prompt:true}),year=at.state.year;
   await page.locator('#act button').first().click();await play(page,{year:year+1});await saved(page,year+1);
-  assert.deepEqual((await get(page)).state.jerseyHistory.map(r=>r.number),['18'],'the save holds the number history');
+  assert.deepEqual((await get(page)).state.jerseyHistory.map(r=>r.number),['18'],'live S after the next year-start save holds the number history');
   await page.goto(base+'/?seed=probe33-1');await ready(page);
   if(await page.locator('#save-new').isVisible())await page.locator('#save-new').click();
   await page.locator('#seg-pos [data-v="P"]').click();await page.locator('#in-name').fill('背番号検証');await page.locator('#btn-start').click();
@@ -172,7 +172,7 @@ await test('rng-identity',async e=>{
   const sameCaptures=(x,y,message)=>{assert.ok(x.captures.length>=3&&y.captures.length>=3,message+' (captures recorded)');assert.deepEqual(x.captures,y.captures,message);};
   for(const [seed,pos]of [['probe33-1','P'],['probe33-8','C']]){const old=await run(seed,pos,'/baseline/'),now=await run(seed,pos,'/');
     assert.equal(old.state.year,2031);assert.equal(now.state.jerseyHistory.length,1);assert.ok(old.rng.length>100);
-    assert.deepEqual(now.rng,old.rng,seed+': current R values/rngState equal the 2.0.0 baseline');sameCaptures(now,old,seed+': draw count at every year-start save equals the 1.16.13 baseline');assertSameCareer(normalized(now.state),normalized(old.state),seed+': state equal to baseline except version/jerseyHistory');assert.deepEqual(now.texts,old.texts);}
+    assert.deepEqual(now.rng,old.rng,seed+': current R values/rngState equal the 2.0.0 baseline');sameCaptures(now,old,seed+': draw count at every year-start save equals the 2.0.0 baseline');assertSameCareer(normalized(now.state),normalized(old.state),seed+': state equal to baseline except version/jerseyHistory');assert.deepEqual(now.texts,old.texts);}
   const now=await run('probe33-8','C','/'),variant=await run('probe33-8','C','/',true);assert.equal(variant.state.jerseyHistory.length,3);assert.equal(variant.state.jerseyHistory.at(-1).year,2030,'B1 change is for next year');
   const firstDiff=(x,y)=>{for(let i=0;i<Math.max(x.length,y.length);i++)if(JSON.stringify(x[i])!==JSON.stringify(y[i]))return i;return -1;};e.compare={now:now.rng.length,variant:variant.rng.length,variantFirstDiff:firstDiff(variant.rng,now.rng),variantYear:variant.state.year,nowYear:now.state.year,variantTexts:variant.texts,nowTexts:now.texts,variantJersey:variant.state.jerseyHistory,variantLog:variant.state.log.map(r=>[r.y,r.tm]),nowLog:now.state.log.map(r=>[r.y,r.tm])};assert.deepEqual(variant.rng,now.rng,'dialog and menu changes draw no RNG');sameCaptures(variant,now,'dialog and menu changes: same draw count at every year-start save');assertSameCareer(normalized(variant.state),normalized(now.state),'jersey changes touch no other state');
   e.draws=now.rng.length;
