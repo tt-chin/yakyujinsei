@@ -24,10 +24,11 @@ body::before{--stadium-shade:linear-gradient(to bottom,rgba(0,0,0,.5) 0%,rgba(0,
 body:has(#start:not([style*="display: none"])) #app{display:none}
 #app{background:var(--bg);background:color-mix(in srgb,var(--bg) 90%,transparent)}
 .information-dialog a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
-@media(max-width:699px){body::before{background-image:var(--stadium-shade),url('../assets/escon-background/escon-mobile.webp');background-position:center center}}
+
 
 /* Mobile focal point follows the infield; keep one photo layer behind the controls. */
 @media(max-width:699px){
+ body::before{background-image:var(--stadium-shade),url('../assets/escon-background/escon-mobile.webp');background-position:center center}
  #start::before{--home-field-position:center 75%;background-image:linear-gradient(to bottom,#080d1433,#080d1466 35%,#080d14bb),url('../assets/escon-background/escon-mobile.webp');background-position:var(--home-field-position)}
  #start .home-title{min-height:160px}#start .wrap{width:calc(100% - 24px)}
  #start .home-controls,#start .browser-save-panel,#start #home-settings{padding:var(--space-md)}

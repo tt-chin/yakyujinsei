@@ -1,5 +1,11 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-17 UI改版第5批（R2）：季末成績／受獎／資料支持的轉折、已確定的當年／翌年年薪，退休身分／既有原因及評價、通算成果與跨階段片段已實作。原敘事／成績／收入保留原生收合，退休閱讀欄自然接續分享與新生涯；投手告別採投球文案。共用成績formatter、合併相鄰手機背景CSS；規則、S／RNG、保存時點與格式不變，不新增收藏DB。2.0.0→2.0.0（使用者指定五批統一版號），正式更新說明已整理並重新生成。128組版面、原生P／IF季末／退休及兩條固定seed生涯、8條歷史DOM／S／RNG生涯、30組收入fixture通過；確定碼最終Quick **102／102 PASS**（0 FAIL／SKIP／BLOCKED），102份日誌及16份程式／配信來源雜湊核對一致。前輪Quick的設計token期待FAIL、停止紀錄及101 PASS／1 FAIL的接線契約FAIL均保留，相關入口先重測後再執行本輪。**需要執行Full（GitHub手動／未執行）**：共用閱讀UI與Full專用歷史比較受影響，須對新SHA手動執行。Preview／實機、實際200%瀏覽器縮放及ARTIFACT_COVERAGE_BLOCKED仍待確認。相關初輪FAIL保留，詳見[第5批驗證收據](tasks/UI_REDESIGN_PHASE5_EVIDENCE.json)。
+
+> 後續候選（未批准）：退休紀錄收藏／重訪入口。目前沒有既有收藏庫；需使用者先決定保存位置、容量、覆寫／刪除及舊資料範圍，再另行設計與驗證。本批不新增保存格式或資料庫。
+
+> 2026-11-17 第4批Full後續確認：使用者手動[Run44025979978](https://github.com/tt-chin/yakyujinsei/actions/runs/44025979978)（`ce5f73257fd4b0be6d3770fa943bb633baaad8c5`）130／130 PASS，8批及Aggregate成功、issues為空，130份log SHA256核對一致。此為第4批修正碼的Linux Full，不冒充第5批或後續SHA結果；原Run43992500462的120 PASS／10 FAIL及中途FAIL均保留。
+
 > 2026-11-17 第4批CI追修（R2・僅測試基盤）：GitHub Full [Run43992500462](https://github.com/tt-chin/yakyujinsei/actions/runs/43992500462)（`00907ba29e8bb4f8bb71cd51a707a5e94efa6002`）為120 PASS／10 FAIL，10件均非timeout，而是新UI與舊操作文字／選項比較不一致。接入共用測試比較器，先驗證新增UI，再還原原標籤、選項與實際排版文字；完整S／RNG、基準、輸入與timeout保持。10個失敗入口的相關路徑個別驗證PASS（draft-income的17 fixture與6 seed生涯分開執行）。最終Quick **100／100 PASS**（0 FAIL／SKIP／BLOCKED），確定碼雜湊核對一致。產品檔案與版號2.0.0不變；原CI與中途draft-income FAIL保存。**需要執行Full（GitHub手動／未執行）**：共用測試支援也影響Full專用比較，須由使用者在修正後新SHA啟動新Full；重跑舊Run仍使用舊SHA。Preview／實機、正式Gate、ARTIFACT_COVERAGE_BLOCKED及既有checkbox維持。詳見[追修證據](tasks/UI_REDESIGN_PHASE4_EVIDENCE.json)的`ciFollowup`。
 
 > 2026-11-17 UI改版第4批（R2）：配點專用畫面、短標題與原說明、能力／繰越前後值、既有資源／進度、配分方法、無效確認提示、跨資料頁草稿／捲動／焦點保留已實作。手機單欄、寬畫面雙欄與桌面側欄保留；短視窗確認列回自然流，專用區層級不再擋住導覽。原配點模組、成長／潛力規則、復原／重設／一次確認、S／RNG與存檔時點不變，不新增通用重試或全S回滾。版號維持2.0.0，第5批未實作。確定碼Quick **100／100 PASS**；128組正式主題／尺寸／字級、P／IF原生12配點fixture與完整S／RNG、8組歷史DOM／S／RNG生涯比較通過。首輪Quick98 PASS／2 FAIL（新增預覽／無效按鈕造成的舊選項標籤期待）及早期遮擋／捲動／測試輸入FAIL原樣保留，修正後失敗入口先重測PASS。第3批基準`eddc464`已確認使用者手動Full Run43979397276為129 PASS；不冒充第4批Full。**需要執行Full（GitHub手動／未執行）**：共用配點UI／導覽及Full專用DOM比較有改動，須對本次新提交手動執行。未執行本機Full或自行觸發GitHub Full。Preview／實機與ARTIFACT_COVERAGE_BLOCKED維持；不改既有checkbox。詳見[第4批驗證收據](tasks/UI_REDESIGN_PHASE4_EVIDENCE.json)。

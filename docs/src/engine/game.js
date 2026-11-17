@@ -171,7 +171,7 @@ var MAX_YEARS=8;         /* DOM 最大保持年度領域数。 */
 function logTarget(){ return _curYearBody || $('log'); }
 // DOM presentation lifetime only; no display markers in S or replay data.
 const traitPresentation=new WeakMap();
-const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key),getDecision:()=>S?choiceViews.get(S):null,getYear:()=>S?.year});
+const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key),getDecision:()=>S?choiceViews.get(S):null,getYear:()=>S?.year,getState:()=>S,reviewLabels:{leagueName:key=>LG_N[key]||LV[key]?.n||key,teamName:key=>leagueCatalog.teamRec(key)?.name||key,teamLeague:name=>typeof name!=='string'?null:Object.values(leagueCatalog.teamMaster).find(team=>(name===team.name||name.startsWith(team.name+' ')))?.org,formatMoney:fmtMoney}});
 function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){return traitResultCard.decorate(node,title,html);}
 const traitResultCard=new TraitResultCard({getState:()=>S,traitPresentation,displayTrait});
@@ -240,7 +240,7 @@ function honorScore(bucket){
 }
 function tierOf(bucket){return evaluateLeagueHof(S,bucket,TIER_TH[bucket],LG_N[bucket]);}
 function retireScene(tiers){careerRetirement.retireScene(tiers);}
-function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
+function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();setTimeout(()=>{
   /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
   document.querySelectorAll('.card').forEach(c=>{
     const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);

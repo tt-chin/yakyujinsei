@@ -1,0 +1,59 @@
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
+const root=fileURLToPath(new URL('../',import.meta.url)),arg=n=>process.argv.find(v=>v.startsWith('--'+n+'='))?.slice(n.length+3);
+const baseline='ce5f73257fd4b0be6d3770fa943bb633baaad8c5',out=path.resolve(arg('output')||'test-results/ui-redesign-review');await mkdir(out,{recursive:true});
+const hook=`\nwindow.__reviewDraws=[];careerRng.onDraw=value=>window.__reviewDraws.push({state:S.rngState,value});window.__phase3Pending=()=>choiceViews.get(S);window.__reviewTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:window.__reviewDraws.slice()}),set:v=>Object.assign(S,v),season:()=>{board(2);},refresh:()=>gameView.careerReview?.render(S.done),retire:()=>endGame('規定の年齢に達し、現役生活を終えた。'),postResult:()=>card('info','季末後の結果','結果を読めます。'),farewell:()=>card('gold','引退の日','本拠地最終戦。最後の打席を前に観客は3分間の総立ち拍手。打席後に交代すると、全員がダッグアウトから出た。'),settle:()=>browserSave.settled()};window.__projectReview=${projectDecisionPresentation.toString()};`;
+const cache=new Map();const server=createServer(async(req,res)=>{try{let rel=new URL(req.url,'http://local').pathname.slice(1)||'index.html',old=rel.startsWith('baseline/');if(old)rel=rel.slice(9)||'index.html';if(rel==='favicon.ico'){res.statusCode=204;return res.end();}if(rel.split('/').includes('..'))throw Error('path');let body;if(old){if(!cache.has(rel))cache.set(rel,execFileSync('git',['show',baseline+':docs/'+rel],{cwd:root,maxBuffer:30e6}));body=cache.get(rel);}else body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=body.toString()+hook;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css; charset=utf-8':rel.endsWith('.webp')?'image/webp':rel.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
+const {chromium}=createRequire(import.meta.url)(arg('playwright')||process.env.PLAYWRIGHT_MODULE||'playwright'),browser=await chromium.launch({headless:true,channel:arg('browser')||'chromium'}),errors=[],checks=[],cases=[];
+const snapshot=p=>p.evaluate(()=>window.__reviewTest.get()),frames=p=>p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+async function open(pos,old=false){const p=await browser.newPage({viewport:{width:1440,height:900}});await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.fulfill({body:'',contentType:'text/css'}));p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400)errors.push(r.status()+' '+r.url());});await p.goto(base+(old?'/baseline/':'/')+'?seed='+(pos==='P'?'jp3-pitcher-02':'jp3-infielder-01'));await p.waitForFunction(()=>!document.getElementById('btn-start').disabled);await p.locator('#in-name').fill('年度検証');await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#btn-start').click();await p.evaluate(()=>window.__reviewTest.settle());return p;}
+const stat={yr:1,G:30,IP:123+2/3,W:12,L:5,SO:150,H:100,BB:30,ER:40,SV:0,HLD:0,PA:500,AB:400,HR:20,RBI:70,SB:10,DEF:0,AS:0,avg:.25,era:2.91};
+let failure;
+try{
+ for(const file of ['src/engine/career-retirement.js','src/engine/season-settlement.js','src/engine/professional-season.js','src/engine/season-payment-policy.js','src/engine/player-ability.js'])assert.equal((await readFile(path.join(root,'docs',file),'utf8')).replace(/\r\n/g,'\n'),execFileSync('git',['show',baseline+':docs/'+file],{maxBuffer:30e6}).toString().replace(/\r\n/g,'\n'),file+' core unchanged');
+ for(const pos of ['P','IF']){
+  const p=await open(pos),old=await open(pos,true);
+  const fixture={name:'長い選手名'.repeat(4),year:2050,age:40,stage:'PRO',lv:'NPB1',team:'長い球団名'.repeat(8),log:[{y:2026,age:16,tm:'高校',line:'地区予選'},{y:2029,age:19,tm:'東京',st:stat,line:'プロ初年度'},{y:2031,age:21,tm:'海外',st:{...stat,form:1}},{y:2049,age:39,tm:'東京',inj:true,line:'全休'},{y:2050,age:40,tm:'東京',st:stat}],stats:{NPB:{...stat,yr:15}},honors:['2029 新人王','2031 MVP','2050 最多勝'],teamTally:{NPB:{tokyo:15}},ct:{annualSchedule:[{year:2050,amount:100000000,paid:true}]},salaryDecisionHistory:[]};
+  for(const q of [p,old])await q.evaluate(f=>{window.__reviewTest.set(f);window.__reviewTest.season();},fixture);
+  assert.deepEqual(await snapshot(p),await snapshot(old),'season fixture complete S/RNG');
+  const season=p.locator('[data-career-review="season"]');assert.deepEqual(await season.locator('dd').allTextContents(),['1億円','未定']);assert.match(await season.textContent(),pos==='P'?/123\.2/:/本塁打 20/);assert.match(await season.textContent(),/2050 最多勝/);assert.doesNotMatch(await season.textContent(),/2031 MVP/);
+  const before=await snapshot(p);await p.evaluate(()=>window.__reviewTest.refresh());assert.deepEqual(await snapshot(p),before);assert.equal(await season.count(),1,'redraw never duplicates summary');
+  for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.postResult());assert.equal(await p.locator('.card').filter({has:p.locator('h4',{hasText:'季末後の結果'})}).locator('details').evaluate(e=>e.open),true,'later event results keep phase-3 reading/focus behavior');assert.deepEqual(await snapshot(p),before,'later result display preserves complete state/RNG');
+  for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.retire());await frames(p);await frames(old);
+  assert.deepEqual(await snapshot(p),await snapshot(old),'native retirement complete S/RNG including HOF and fan draws');
+  const original=q=>q.evaluate(()=>window.__projectReview(document.getElementById('log').outerHTML,'log',window.__reviewTest.get().state));assert.equal(await original(p),await original(old),'every original retirement node/text preserved');
+  const review=p.locator('[data-career-review="retirement"]');assert.equal(await review.count(),1);assert.match(await review.textContent(),/2026年｜野球人生の始まり/);assert.match(await review.textContent(),/2029年｜プロでの最初の記録/);assert.match(await review.textContent(),/2031年｜キャリアハイ/);assert.match(await review.textContent(),/2050年/);
+  assert.equal(await p.locator('.yr-block').last().locator('.card > details[open]').count(),0,'original tables/narratives start collapsed');
+  const unchanged=await snapshot(p);const sizes=[[320,568],[375,667],[390,844],[844,390],[1024,600],[768,1024],[1280,720],[1440,900]];
+  for(const [width,height] of sizes)for(const theme of ['standard','classic','night','scoreboard'])for(const font of ['medium','large']){
+   await p.setViewportSize({width,height});await p.evaluate(({theme,font})=>{document.documentElement.dataset.theme=theme;document.documentElement.dataset.fontSize=font;},{theme,font});await frames(p);
+   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'page overflow '+JSON.stringify({pos,width,height,theme,font}));assert.equal(await review.evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'summary overflow');cases.push({pos,width,height,theme,font});
+  }
+  await p.locator('.yr-block').last().locator('.card').filter({has:p.locator('h4',{hasText:'通算成績'})}).locator('summary').click();assert.equal(await p.locator('.yr-block').last().locator('.card').filter({has:p.locator('h4',{hasText:'通算成績'})}).locator('details').getAttribute('open'),'');
+  await p.locator('[data-main-view="career"]').click();await p.locator('[data-main-view="home"]').click();assert.deepEqual(await snapshot(p),unchanged,'view/theme/font/collapse controls preserve S/RNG');
+  await p.setViewportSize({width:390,height:844});await review.scrollIntoViewIfNeeded();await p.screenshot({path:path.join(out,'retired-'+pos+'-mobile.png'),fullPage:true});await p.setViewportSize({width:1440,height:900});await review.scrollIntoViewIfNeeded();await p.screenshot({path:path.join(out,'retired-'+pos+'-desktop.png'),fullPage:true});
+  const fallback=await p.addStyleTag({content:'body::before,#start::before{background-image:none!important}*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}'});await frames(p);assert.equal(await p.evaluate(()=>getComputedStyle(document.body,'::before').backgroundImage),'none');assert.equal(await review.evaluate(e=>getComputedStyle(e).backgroundColor==='rgba(0, 0, 0, 0)'),false,'opaque readable surface without photo/blur');await fallback.evaluate(e=>e.remove());
+  await p.setViewportSize({width:720,height:450});await frames(p);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'200% equivalent reflow viewport, not physical browser zoom');assert.equal(await p.locator('#act-toggle').evaluate(e=>getComputedStyle(e).position),'static','retired actions stay after records');
+  const profile=p.locator('.yr-block').last().locator('.card').filter({has:p.locator('h4',{hasText:'キャリアプロフィール'})});await profile.locator('summary').click();assert.match(await profile.innerText(),/(^|\n)スポンサー収入\n/);assert.deepEqual(await snapshot(p),unchanged,'expanding income preserves S/RNG');
+  assert.equal(await p.locator('#sh-img').isEnabled(),true);assert.equal(await p.locator('#sh-url').isEnabled(),true);
+  await p.evaluate(()=>window.__reviewTest.farewell());const text=await p.locator('.yr-block').last().locator('.card').filter({has:p.locator('h4',{hasText:'引退の日'})}).last().textContent();assert.match(text,pos==='P'?/最後の登板/:/最後の打席/);assert.deepEqual(await snapshot(p),unchanged,'pitcher-only farewell copy preserves state/RNG');
+  await p.evaluate(()=>{window.__reviewTest.set({log:[],stats:{},honors:[],teamTally:null,ct:null,salaryDecisionHistory:null});});const emptyBefore=await snapshot(p);await p.evaluate(()=>window.__reviewTest.refresh());assert.match(await review.textContent(),/通算成績の記録なし/);assert.doesNotMatch(await review.textContent(),/undefined|NaN/);assert.deepEqual(await snapshot(p),emptyBefore,'empty/legacy rendering immutable');
+  await p.close();await old.close();checks.push({pos,nativeSeasonAndRetirement:'PASS',originalDOM:'PASS',immutableUI:'PASS'});
+ }
+ if(!process.argv.includes('--fixtures-only'))for(const pos of ['P','IF']){
+  const p=await open(pos),old=await open(pos,true);let steps=0;
+  for(;steps<2000;steps++){
+   const current=await snapshot(p);assert.deepEqual(current,await snapshot(old),'natural '+pos+' step '+steps);if(current.state.done)break;
+   for(const q of [p,old])await q.evaluate(()=>{const a=document.getElementById('act'),rows=[...a.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...a.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.textContent));const b=buttons.find(e=>e.textContent.startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.textContent))||buttons[0];if(!b)throw Error('no action');b.click();});
+  }
+  assert(steps<2000);checks.push({pos,naturalExactCareer:'PASS',steps});await p.close();await old.close();
+ }
+ assert.deepEqual(errors,[]);console.log('PASS review: '+cases.length+' layouts, P/IF native season/retirement and original DOM/state/RNG'+(process.argv.includes('--fixtures-only')?'':' plus two natural careers'));
+}catch(e){failure=e;console.error(e.stack);}finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));await writeFile(path.join(out,'summary.json'),JSON.stringify({status:failure?'FAIL':'PASS',baseline,cases,checks,errors,failure:failure?.stack},null,2));}
+if(failure)throw failure;

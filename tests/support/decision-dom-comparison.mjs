@@ -4,6 +4,20 @@ export function projectDecisionPresentation(markup,area,state){
   const fail=code=>{throw Error('PHASE3_'+code);};
   const t=document.createElement('template');t.innerHTML=markup;const root=t.content.firstElementChild;
   const only=(node,names)=>{if([...node.attributes].some(a=>!names.includes(a.name)))fail('ATTRIBUTES');};
+  // Phase 5 adds read-only summaries alongside the unchanged original cards.
+  // Numeric/source correctness is covered by career-review unit/native fixtures;
+  // historical traces still compare every original card and full state/RNG.
+  for(const review of root.querySelectorAll('[data-career-review]')){
+    const retired=review.dataset.careerReview==='retirement',year=Number(review.dataset.reviewYear);
+    if(!['retirement','season'].includes(review.dataset.careerReview)||!Number.isInteger(year)||year>state.year||review.tagName!=='SECTION'||review.className!=='career-review'||review.children[0]?.textContent!==`${year}年｜${retired?'引退':'シーズン終了'}`||review.children[1]?.tagName!=='H2'||review.children[1].textContent!==(retired?(state.name||'選手')+'の野球人生':'今季の振り返り')||review.querySelector('button,input,a,table'))fail('CAREER_REVIEW');
+    only(review,['class','data-career-review','data-review-year','aria-label']);review.remove();
+  }
+  for(const card of root.querySelectorAll('[data-pitcher-farewell]')){
+    if(state.pos!=='P'||card.querySelector('h4')?.textContent!=='引退の日')fail('FAREWELL');
+    const walker=document.createTreeWalker(card,NodeFilter.SHOW_TEXT);let changed=false;
+    for(let node=walker.nextNode();node;node=walker.nextNode()){const old=node.nodeValue;node.nodeValue=old.replace('9回裏、最後の登板を終えると','9回裏、最後の打席を終えると').replace('最後の登板を前に観客は3分間の総立ち拍手。','最後の打席を前に観客は3分間の総立ち拍手。').replace('マウンドを降りると、全員が','打席後に交代すると、全員が');if(old!==node.nodeValue)changed=true;}
+    if(!changed)fail('FAREWELL_COPY');card.removeAttribute('data-pitcher-farewell');
+  }
   if(area==='act'&&root.hasAttribute('data-allocation-session')){
     const view=window.__phase3Pending();if(view?.kind!=='ALLOCATION'||root.dataset.allocationSession!==root.dataset.decisionId)fail('ALLOCATION_SESSION');
     window.__phase4Starts??=new WeakMap();let start=window.__phase4Starts.get(view);

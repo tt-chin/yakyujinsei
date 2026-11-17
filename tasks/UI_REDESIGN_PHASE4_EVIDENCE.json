@@ -759,6 +759,27 @@
         "sha256": "b72a9f759ff5335d3599bacd3d17b1a68db239171e1ecd2f710101936a702454"
       }
     ],
-    "productTree": "9c274c1a4ef9deb57a55e42551ec4d524509c29b"
+    "productTree": "9c274c1a4ef9deb57a55e42551ec4d524509c29b",
+    "confirmedFull": {
+      "runId": 44025979978,
+      "url": "https://github.com/tt-chin/yakyujinsei/actions/runs/44025979978",
+      "attempt": 1,
+      "head": "ce5f73257fd4b0be6d3770fa943bb633baaad8c5",
+      "status": "PASS",
+      "counts": {
+        "PASS": 130,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "batches": 8,
+      "issues": [],
+      "acceptedPass": 130,
+      "unverified": 0,
+      "logHashesVerified": 130,
+      "summary": "test-results/confirmation-44025979978-attempt1/summary.json",
+      "summarySha256": "e1e596a93ee336baea5ef8165ad57068c5c2cc575d8c65965be6bb5f82253cb6",
+      "note": "Original followup NOT_RUN and original FAIL records remain historical; this later confirmation applies only to ce5f732."
+    }
   }
 }

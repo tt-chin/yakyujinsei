@@ -25,10 +25,11 @@ test('base.css defines the 13 --fs-* scale tokens as calc(<px>px * var(--font-sc
 });
 // 59 former calc() sites plus 5 moved inline 11/12px sizes (scaled before by the preferences.css [style*=] rules),
 // plus 1 for the EVT-01 .event-badge (1.16.11).
-test('81 font sites after phase 4 and the name button uses --fs-5xl',()=>{
+test('81 phase-4 font sites plus two phase-5 review headings; name button uses --fs-5xl',()=>{
   const rule=base.match(/(?:^|\n)\.random-name-button\{([^}]+)\}/);assert.ok(rule,'approved name button rule');
   assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
-  const original=outsideRoot.replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
+  const review=styles['career-review.css'];assert.deepEqual([...review.matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-xl','--fs-md'],'only the two approved summary heading sizes');
+  const original=outsideRoot.replace(review,'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
   const used=[...original.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
   assert.equal(used.length,81,'phase-4 allocation adds five shared font sites');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
@@ -80,7 +81,8 @@ test('px spacing uses tokens outside the 6 remaining untouched declarations',()=
 test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   const rule=base.match(/(?:^|\n)\.player-name-row\{([^}]+)\}/);assert.ok(rule,'approved name row rule');
   assert.equal((rule[1].match(/gap:var\(--space-xs\)/g)||[]).length,1,'one explicit existing spacing token');
-  const original=outsideRoot.replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
+  const review=styles['career-review.css'];const added=[...review.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);assert.equal(added.length,11,'phase-5 summary uses eleven approved spacing-token sites');assert.deepEqual(added.filter(n=>!(n in rootTokens)),[],'undefined phase-5 spacing token');
+  const original=outsideRoot.replace(review,'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
   assert.equal(used.length,236,'phase-4 allocation uses existing shared spacing tokens');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');

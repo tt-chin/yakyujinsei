@@ -170,8 +170,10 @@ for(const line of [
   const boardDecl=`
 function board(phase){ gameView.renderBoard(boardModel(phase));gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()}); }
 `;
+  // UI phase 5 adds only the read-only review after the original retirement completes.
+  // Keep the complete original call, text-node-only translation and single declaration strict.
   const endGameDecl=`
-function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
+function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();setTimeout(()=>{
   /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
   document.querySelectorAll('.card').forEach(c=>{
     const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
