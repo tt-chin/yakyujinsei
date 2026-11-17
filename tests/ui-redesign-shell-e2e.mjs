@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {projectShell2000,observeShellBoard,SHELL_BOARD_2000,SHELL_BOARD_11615} from './support/ui-shell-comparison.mjs';
+import {projectJerseyBoard} from './support/dom-snapshot.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.slice(name.length+3);
 const out=path.resolve(arg('output')||'test-results/ui-redesign-shell');await mkdir(out,{recursive:true});
@@ -42,7 +43,8 @@ try{
   await old.locator('#in-name').fill('長い名前の検証選手');await old.locator(`#seg-pos [data-v="${pos}"]`).click();await old.locator('#btn-start').click();await old.locator('#act button').filter({hasText:'トレーニング成果を割り振る'}).click();await old.locator('#act .abrow').first().click();await old.evaluate(()=>window.__shell.settle());
   const reference=await get(old),project=(value,version)=>{const copy=structuredClone(value);assert.equal(copy.state.version,version);delete copy.state.version;assert.equal(copy.state.birthHighSchool.createdVersion,version);delete copy.state.birthHighSchool.createdVersion;return copy;};
   assert.deepEqual(project(before,'2.0.0'),project(reference,'1.16.15'),pos+' exact pre-change allocation state and RNG, only verified version metadata differs');await baselineContext.close();
-  await p.evaluate(({fn,current,previous})=>{window.__projectShell2000=eval('('+fn+')');window.__shellBoard2000=current;window.__shellBoard11615=previous;},{fn:projectShell2000.toString(),current:SHELL_BOARD_2000,previous:SHELL_BOARD_11615});
+  // PLY-01: the candidate board carries the approved number badge/menu item; project them back (with contract checks) before the frozen 2.0.0 compare.
+  await p.evaluate(({fn,jersey,current,previous})=>{window.__projectJerseyBoard=eval('('+jersey+')');window.__projectShell2000=eval('('+fn+')');window.__shellBoard2000=current;window.__shellBoard11615=previous;},{fn:projectShell2000.toString(),jersey:projectJerseyBoard.toString(),current:SHELL_BOARD_2000,previous:SHELL_BOARD_11615});
   await p.evaluate(()=>{window.__shellAct=document.querySelector('#act');window.__shellRows=[...document.querySelectorAll('#act .abrow')];window.__shellButtons=[...document.querySelectorAll('#act button')];window.__shellDraft=document.querySelector('#act').innerHTML;});
   for(const [width,height] of [[320,640],[390,844],[1099,900],[1100,700],[1440,900],[1440,699],[844,390]]){
    await p.setViewportSize({width,height});
@@ -80,7 +82,7 @@ try{
    await p.locator('#board-menu-toggle').click();await p.mouse.click(2,2);assert.equal(await p.locator('#board-menu-panel').isVisible(),false);assert.equal(await p.evaluate(()=>document.activeElement.id),'board-menu-toggle');
    assert.equal(await p.evaluate(()=>window.__shellAct===document.querySelector('#act')&&window.__shellDraft===document.querySelector('#act').innerHTML&&window.__shellRows.every(n=>n.isConnected)&&window.__shellButtons.every(n=>n.isConnected)),true,'allocation DOM/draft retained');
    assert.deepEqual(await get(p),before,'navigation/resize/menu must preserve complete S and RNG');
-   await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(board.outerHTML,window.__shellRenderedBoard);const risk=board.querySelector('#bd-risk');risk.textContent='999%';let rejected=false;try{window.__projectShell2000(board.outerHTML,window.__shellRenderedBoard);}catch(e){rejected=e.message.startsWith('UI_SHELL_2000_STATIC_BOARD_CONTRACT');}if(!rejected)throw Error('board negative control was accepted');});
+   await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(window.__projectJerseyBoard(board.outerHTML,window.__shell.get().state),window.__shellRenderedBoard);const risk=board.querySelector('#bd-risk');risk.textContent='999%';let rejected=false;try{window.__projectShell2000(window.__projectJerseyBoard(board.outerHTML,window.__shell.get().state),window.__shellRenderedBoard);}catch(e){rejected=e.message.startsWith('UI_SHELL_2000_STATIC_BOARD_CONTRACT');}if(!rejected)throw Error('board negative control was accepted');});
    if([320,390,1100,1440,844].includes(width))await p.screenshot({path:path.join(out,`${pos}-${width}x${height}.png`),fullPage:true});
   }
   // Undo remains bound to the original allocation closure after all navigation/resizes.
@@ -89,9 +91,9 @@ try{
   await p.evaluate(()=>window.__shell.fixture({stage:'PRO',currentSalary:1234567890,injNext:17,rehab:1,skipMid:true,seasonFactor:0}));await p.setViewportSize({width:1440,height:900});await frames(p);
   assert.equal(await p.locator('#bd-sal').textContent(),'123,457');assert.equal(await p.locator('#bd-risk').textContent(),'17%');assert.match(await p.locator('#desktop-player').textContent(),/リハビリ中（今季全休・残り1年）/);
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth||document.querySelector('#desktop-player').scrollWidth>document.querySelector('#desktop-player').clientWidth),false,'long rehab and salary fit the sidebar');
-  await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(board.outerHTML,window.__shellRenderedBoard);});
+  await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(window.__projectJerseyBoard(board.outerHTML,window.__shell.get().state),window.__shellRenderedBoard);});
   // Expected values come from renderer inputs, so corrupt live DOM must fail.
-  await p.evaluate(()=>{const salary=document.getElementById('bd-sal'),saved=salary.textContent;try{salary.textContent='999,999';const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();let rejected=false;try{window.__projectShell2000(board.outerHTML,window.__shellRenderedBoard);}catch(e){rejected=e.message==='UI_SHELL_2000_SALARY_CONTRACT';}if(!rejected)throw Error('corrupt salary DOM was accepted');}finally{salary.textContent=saved;}});
+  await p.evaluate(()=>{const salary=document.getElementById('bd-sal'),saved=salary.textContent;try{salary.textContent='999,999';const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();let rejected=false;try{window.__projectShell2000(window.__projectJerseyBoard(board.outerHTML,window.__shell.get().state),window.__shellRenderedBoard);}catch(e){rejected=e.message==='UI_SHELL_2000_SALARY_CONTRACT';}if(!rejected)throw Error('corrupt salary DOM was accepted');}finally{salary.textContent=saved;}});
   await ctx.close();console.log('PASS '+pos+': responsive layout, modal, tabs, allocation identity, exact state/RNG');
  }
  assert.deepEqual(errors,[]);

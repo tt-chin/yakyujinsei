@@ -28,6 +28,7 @@ export async function captureGameView(full){
     const year=status.textContent.match(/^(\d{4})年/);if(year&&Number(year[1])>rawState.year)throw Error('SAVE_STATUS_FUTURE_YEAR');
     live.remove();dom.board=board.outerHTML;
   }
+  if(window.__expectJersey){dom.board=window.__projectJerseyBoard(dom.board,rawState);(window.__jerseyCounts=window.__jerseyCounts||{board:0,season:0,table:0,yearly:0,pro:0}).board++;}
   if(window.__projectShell2000)dom.board=window.__projectShell2000(dom.board,window.__shellRenderedBoard);
   if(window.__expectMenu1163)dom.board=window.__projectMenu1163(dom.board);
   if(window.__expect1141){
@@ -229,24 +230,6 @@ export async function captureGameView(full){
   // Last, after every projection that re-clones #log from the page (EVT-01 badge strip must see the final markup).
   if(window.__expectEventBadge){dom.log=window.__projectEventBadges(dom.log);dom.act=window.__projectEventBadges(dom.act);}
   if(window.__expectJersey){
-    // #board: #bd-number (shows the current team's number only), the 背番号変更 menu item, and the menu toggle's visible label.
-    const last=jerseyHistory?.length?jerseyHistory[jerseyHistory.length-1]:null;
-    const wantNumber=!rawState.done&&rawState.stage==='PRO'&&typeof rawState.orgTeamId==='string'&&last&&last.teamId===rawState.orgTeamId?'#'+last.number:'';
-    const tpl=document.createElement('template');tpl.innerHTML=dom.board;
-    const num=tpl.content.querySelectorAll('#bd-number'),change=tpl.content.querySelectorAll('#board-number'),toggle=tpl.content.querySelectorAll('#board-menu-toggle');
-    if(num.length!==1||change.length!==1||toggle.length!==1)throw Error('JERSEY_BOARD_COUNT');
-    const n=num[0],c=change[0],t=toggle[0];
-    if(n.tagName!=='SPAN'||n.textContent!==wantNumber||n.children.length||n.hasAttribute('hidden')!==(wantNumber===''))throw Error('JERSEY_BOARD_NUMBER');
-    if(n.attributes.length!==(wantNumber===''?2:1)||n.nextElementSibling?.id!=='bd-name'||n.parentElement?.id!=='bd-top'||n.previousSibling)throw Error('JERSEY_BOARD_NUMBER_PLACE');
-    if(c.tagName!=='BUTTON'||c.textContent!=='•背番号変更'||c.getAttribute('aria-haspopup')!=='dialog'||c.hasAttribute('disabled')===(wantNumber!==''&&(jerseyHistory?.length||0)<960))throw Error('JERSEY_MENU_ITEM'); /* 960 = JERSEY_MENU_LIMIT */
-    const gap=c.previousSibling;
-    /* After the older-baseline menu projections the credits button may already be gone, so only the following neighbour is fixed. */if(!c.previousElementSibling||(!window.__expect1141&&c.previousElementSibling.id!=='board-credits')||c.nextElementSibling?.id!=='board-preferences'||gap?.nodeType!==3||gap.nodeValue.trim()!=='')throw Error('JERSEY_MENU_PLACE');
-    if(t.children.length!==1||t.children[0].textContent!=='☰'||t.getAttribute('aria-label')!=='メニュー'||t.textContent!=='☰')throw Error('JERSEY_TOGGLE_CONTRACT');
-    // The visible メニュー label of the old toggle is restored (the aria-label is unchanged).
-    const label=document.createElement('span');label.textContent='メニュー';t.append(label);
-    n.remove();gap.remove();c.remove();
-    if(tpl.content.querySelector('#bd-number,#board-number'))throw Error('JERSEY_BOARD_UNEXPECTED');
-    dom.board=tpl.innerHTML;jerseyCounts.board++;
     // Season card tag: ' · #N' appended after the team (and position) label of every シーズン成績 card.
     const logTpl=document.createElement('template');logTpl.innerHTML=dom.log;
     let seasonCards=0;
@@ -366,4 +349,28 @@ export function removeJerseyDisplay(root,state){
   }
   if(root.querySelector('.jersey-heading,.jersey-table')||/ · #\S/.test(root.textContent))throw Error('JERSEY_DISPLAY_UNEXPECTED');
   return counts;
+}
+// PLY-01 candidate-only #board projection, run before the UI 2.0 shell projection: validate #bd-number (current team's number only)
+// in the .bd-name-row wrapper, the 背番号変更 menu item and the ☰-only toggle, then rebuild the 2.0.0 markup (unwrap #bd-name,
+// drop both, restore the visible メニュー label; the aria-label is unchanged).
+export function projectJerseyBoard(markup,rawState){
+    const dom={board:markup};
+    const jerseyHistory=rawState.jerseyHistory,last=jerseyHistory?.length?jerseyHistory[jerseyHistory.length-1]:null;
+    const wantNumber=!rawState.done&&rawState.stage==='PRO'&&typeof rawState.orgTeamId==='string'&&last&&last.teamId===rawState.orgTeamId?'#'+last.number:'';
+    const tpl=document.createElement('template');tpl.innerHTML=dom.board;
+    const num=tpl.content.querySelectorAll('#bd-number'),change=tpl.content.querySelectorAll('#board-number'),toggle=tpl.content.querySelectorAll('#board-menu-toggle');
+    if(num.length!==1||change.length!==1||toggle.length!==1)throw Error('JERSEY_BOARD_COUNT');
+    const n=num[0],c=change[0],t=toggle[0];
+    if(n.tagName!=='SPAN'||n.textContent!==wantNumber||n.children.length||n.hasAttribute('hidden')!==(wantNumber===''))throw Error('JERSEY_BOARD_NUMBER');
+    if(n.attributes.length!==(wantNumber===''?2:1)||n.nextElementSibling?.id!=='bd-name'||n.previousSibling)throw Error('JERSEY_BOARD_NUMBER_PLACE');
+    const row=n.parentElement;if(row?.className!=='bd-name-row'||row.attributes.length!==1||row.childNodes.length!==2||row.parentElement?.id!=='bd-top'||row.previousSibling)throw Error('JERSEY_BOARD_ROW_PLACE');
+    if(c.tagName!=='BUTTON'||c.textContent!=='•背番号変更'||c.getAttribute('aria-haspopup')!=='dialog'||c.hasAttribute('disabled')===(wantNumber!==''&&(jerseyHistory?.length||0)<960))throw Error('JERSEY_MENU_ITEM'); /* 960 = JERSEY_MENU_LIMIT */
+    const gap=c.previousSibling;
+    if(c.previousElementSibling?.id!=='board-credits'||c.nextElementSibling?.id!=='board-preferences'||gap?.nodeType!==3||gap.nodeValue.trim()!=='')throw Error('JERSEY_MENU_PLACE');
+    if(t.children.length!==1||t.children[0].textContent!=='☰'||t.getAttribute('aria-label')!=='メニュー'||t.textContent!=='☰')throw Error('JERSEY_TOGGLE_CONTRACT');
+    // The visible メニュー label of the old toggle is restored (the aria-label is unchanged).
+    const label=document.createElement('span');label.textContent='メニュー';t.append(label);
+    row.replaceWith(n.nextElementSibling);gap.remove();c.remove();
+    if(tpl.content.querySelector('#bd-number,#board-number'))throw Error('JERSEY_BOARD_UNEXPECTED');
+    return tpl.innerHTML;
 }
