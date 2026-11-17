@@ -18,6 +18,7 @@ export async function captureGameView(full){
   const state=window.__expect1140?window.__projectChampionmaker(projected,window.__champTeams):projected;
   delete state.version;if(state.birthHighSchool)delete state.birthHighSchool.createdVersion;
   const dom=Object.fromEntries(['log','act','board'].map(id=>[id,document.getElementById(id)?.outerHTML??null]));
+  if(window.__projectDecisionPresentation)for(const id of ['log','act'])dom[id]=window.__projectDecisionPresentation(dom[id],id,rawState);
   if(window.__expectBrowserSave){
     const board=document.getElementById('board').cloneNode(true),live=board.querySelector('#save-live');
     if(!live||board.querySelectorAll('#save-live').length!==1||live.children.length!==3)throw Error('SAVE_STATUS_STRUCTURE');
@@ -27,6 +28,7 @@ export async function captureGameView(full){
     const year=status.textContent.match(/^(\d{4})年/);if(year&&Number(year[1])>rawState.year)throw Error('SAVE_STATUS_FUTURE_YEAR');
     live.remove();dom.board=board.outerHTML;
   }
+  if(window.__projectShell2000)dom.board=window.__projectShell2000(dom.board,window.__shellRenderedBoard);
   if(window.__expectMenu1163)dom.board=window.__projectMenu1163(dom.board);
   if(window.__expect1141){
     // Approved 1.14.1 UI-only delta: the credits menu button. Validate its exact
@@ -119,7 +121,8 @@ export async function captureGameView(full){
     }
     delete views.career.events;
   }
-  const log=document.getElementById('log')?.cloneNode(true);
+  let log=document.getElementById('log')?.cloneNode(true);
+  if(window.__projectDecisionPresentation){const template=document.createElement('template');template.innerHTML=dom.log;log=template.content.firstElementChild;}
   const profile=[...log?.querySelectorAll('.card')||[]].find(e=>e.querySelector('h4')?.textContent==='キャリアプロフィール');
   if(window.__expectDesignTokens02&&log){
     // Approved UI-DESIGN-TOKENS-02 (DESIGN_SYSTEM_PLAN §8 D2/D5): retirement trait tags carry a category

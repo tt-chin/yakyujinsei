@@ -69,7 +69,7 @@ try{
       const before=await p.evaluate(()=>window.__eventTest.get());
       await p.locator('#sh-img').click();await p.locator('#sh-out img').waitFor();
       assert.deepEqual(await p.evaluate(()=>window.__eventTest.get()),before,'retirement/share changes state or RNG');
-      assert.match(await p.locator('#log').innerText(),/(^|\n)スポンサー収入\n/);
+      const incomeDisclosure=p.locator('#log .card').filter({has:p.locator('h4',{hasText:'キャリアプロフィール'})}).locator('details[data-reader-details]');if(await incomeDisclosure.count()&&!(await incomeDisclosure.evaluate(e=>e.open)))await incomeDisclosure.locator(':scope > summary').click();assert.match(await p.locator('#log').innerText(),/(^|\n)スポンサー収入\n/);
       histories.push(records);await ctx.close();
     }
     assert.deepEqual(histories[0],histories[1],seed+' replay differs');const last=histories[0].at(-1);assert.ok(last.state.done);console.log(`${seed}/${pos}: ${histories[0].length} actions, RNG ${last.calls}, retirement ${last.state.year}, exact replay`);

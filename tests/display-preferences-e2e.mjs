@@ -1,7 +1,9 @@
+import {allocationComparisonHook} from './support/allocation-comparison.mjs';
 import {TEAM_NICKNAMES} from '../docs/src/data/team-nicknames.js';
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
 import {sourceText} from './support/source-text.mjs';
 import {projectHofLog,removeEventBadges} from './support/dom-snapshot.mjs';
+import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
 import {openBoardAction} from './support/board-menu.mjs';
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
@@ -48,7 +50,8 @@ const server=createServer(async(req,res)=>{
       content=original.replace(dependency,"'/src/engine/award-consumer-policy.js'");
     }
     if(relative==='src/engine/game.js'){
-      let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls');
+      let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls')+allocationComparisonHook;
+      if(!baseline)script+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
       script+='\nwindow.__approvedMrTeamNames='+JSON.stringify(TEAM_NICKNAMES)+';window.__displayMrPair=()=>{if(!S.traits.mrteam)return null;const expected=\'ミスター\'+(typeof S.mrTeamName===\'string\'&&Object.hasOwn(window.__approvedMrTeamNames,S.mrTeamName)?window.__approvedMrTeamNames[S.mrTeamName]:\'\');if(displayTrait(\'mrteam\')!==expected)throw Error(\'MR_COPY_CONTRACT\');return[expected,teamNick(S.mrTeamName||\'\')+\'ミスター\'];};window.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
       if(!baseline&&legacyHofProjection)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       content=script;
@@ -170,10 +173,11 @@ try{
             const action=document.querySelector('#act');
             // Compare all non-trait copy and full S/RNG. Only the approved trait
             // explanation lifetime/summary changes are normalized on a detached clone.
-            const log=document.querySelector('#log').cloneNode(true);
+            let log=document.querySelector('#log').cloneNode(true);
+            if(window.__projectDecisionPresentation){const template=document.createElement('template');template.innerHTML=window.__projectDecisionPresentation(log.outerHTML,'log',snapshot.state);log=template.content.firstElementChild;}
             const removeBadges=badgeSource?eval('('+badgeSource+')'):null;if(removeBadges)removeBadges(log);
             // #act stays live (innerText needs layout): strip the one verified title badge from the text only.
-            let choices=action.innerText;if(removeBadges){const [label,...more]=removeBadges(action.cloneNode(true));if(more.length)throw Error('EVENT_BADGE_UNEXPECTED');if(label){if(!choices.startsWith(label+'イベント｜'))throw Error('EVENT_BADGE_TEXT');choices=choices.slice(label.length);}}
+            let choices=window.__allocationComparison.areaText();if(removeBadges){const [label,...more]=removeBadges(action.cloneNode(true));if(more.length)throw Error('EVENT_BADGE_UNEXPECTED');if(label){if(!choices.startsWith(label+'イベント｜'))throw Error('EVENT_BADGE_TEXT');choices=choices.slice(label.length);}}
             if(window.__hofDisplay&&snapshot.state.done)window.__projectHofLog(log,window.__hofDisplay());
             // Only the approved per-event statistics block; old result copy remains compared.
             for(const block of log.querySelectorAll('.intl-personal-stats'))block.remove();
