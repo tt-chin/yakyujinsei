@@ -395,3 +395,41 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 
 **下一步**：M3 合併草稿（scratchpad）→ 4 組 Full → 新 T 表（含衝突處理、A 的版面、風險 3～5、M2 基準切換、重驗與負控制範圍）請使用者核准 → 實作 → reviewer → Full → push dev 前請使用者確認。T9 待 code owner 決定版本。合併與部署未授權。
 
+
+### 12.1 M3 合併草稿結果（2026-11-17）
+
+**草稿**：`7c3018d` 上 `git merge --no-commit 5910421`（scratchpad worktree，未提交、未推送）。衝突實為 **15 檔**（上表列的就是 15 檔，「14 檔」為誤記）。照搬類用 token 層級三方合併（每處只套用兩邊各自的修改），`career-presenter.js`／`.test` 兩邊欄位並存。
+
+**第一輪 Full（runner `--baseline=5910421`）**：Quick 101/103、Full 129/134。FAIL：`ui-redesign-shell-e2e`、`game-view-dom-e2e`（`UI_SHELL_2000_STATIC_BOARD_CONTRACT`）、`ui-redesign-review-e2e`（`career-retirement.js core unchanged`）、`design-tokens-09-e2e`（`JERSEY_LAYOUT_COUNT`）、`display-preferences-e2e`（決策區文字差異）。乾淨 `5910421` 同條件：前 4 個 PASS、`display-preferences-e2e` 同樣 FAIL。
+
+**最終草稿（套用下列 T 後，runner 預設基準 `origin/main` = `d6cef67`）**：Quick 103/103 PASS；Full 134/134 執行（groups 30/33/35/36，missing 0、extra 0），133 PASS，1 FAIL `event-system-e2e`（見 F5）。中途 `draft-income`／`display-preferences`／`contract-salary` 兩輪同時 `page.goto` 30 s 逾時、無斷言失敗；`contract-salary` 單獨重跑 381/381 PASS，最終 Full 三者 PASS → 環境，首輪 FAIL 保留紀錄。
+
+**發現**
+| # | 內容 | 處理 |
+|---|---|---|
+| F1 | runner `--baseline=5910421` 使 `display-preferences-e2e` 在乾淨 dev 也 FAIL：dev 在候選側無條件安裝 `__projectDecisionPresentation`（2.0.0 → 舊版 DOM），基準必須是 2.0.0 之前 | **M2 修正**：runner 基準維持 `origin/main`；`5910421` 只用於 `jersey-e2e` 自身常數（草稿 20/20 PASS，含 RNG/state 比較與 2.0.0 舊存檔）。`draft-income`、`contract-salary` 兩種基準皆 PASS |
+| F2 | 決定 A：`#bd-number` 不能放進 `#bd-name`（`game-view.js:53` 以 `innerHTML` 覆寫、`:62` 與 `desktop-overview.js:25` 讀 `firstChild`） | **A 修正（使用者 2026-11-17 核准）**：`<div class="bd-name-row"><span id="bd-number" hidden></span><div id="bd-name"></div></div>`，`.bd-name-row{display:flex;align-items:baseline;gap:var(--space-xs);min-width:0}`；`#bd-top` grid 不動。版面截圖未確認 |
+| F3 | `design-tokens-09-e2e`：2.0.0 把 `new` 變體的 `index.html` 與全部 `.js` 固定為 `ad8e77f`（line 51），PLY-01 的 toggle／log 投影已無對象 | 測試檔還原為 `5910421` 版 |
+| F4 | 風險 5 實測：`ui-shell-comparison.mjs` 凍結 `SHELL_BOARD_2000` 整個 `#board`；`ui-redesign-review-e2e` 凍結 5 個核心檔（對 `ce5f732`）、比對退休 log、做 P/IF 自然生涯逐步 S/RNG 比較 | T4～T6 |
+| F5 | `event-system-e2e`（同一候選、同 seed 跑兩次的重播比較）在 **乾淨 `5910421` 10 次 FAIL 4 次**、草稿 6 次 FAIL 3 次；差異都是某張卡多／少「選んだ行動：能力点を分配（2点）」。原因：`decision-presentation.js:69-87` 的 `selection` 等下一個 rAF 才清除，期間產生的卡被標記 | 2.0.0 既有問題，非 PLY-01；回報 code owner。PLY-01 的 Full 判定：此入口 FAIL 時比對差異是否為同一類，記錄並重跑 |
+| F6 | 風險 3：`jersey-e2e` 改號對話框段落無焦點斷言；dev `board-menu.js` 的 `close()` 先把焦點還給 ☰，`jersey-dialog.js:50` 以開啟時的 `activeElement` 為 opener | T8 新增斷言 |
+| F7 | 風險 4：Full 未出錯，但未確認 `jersey-e2e` 是否走到「已有存檔再開新生涯」 | T8 確認，未確認前不算覆蓋 |
+
+**新 T 表（使用者 2026-11-17 核准）**
+| # | 檔案 | 內容 |
+|---|---|---|
+| T1 | merge commit（M1） | 7 個照搬 E2E：保留 P1 跳過與 `window.__allocationComparison.action(b…)`；`display-preferences-e2e` 兩處、`board-menu-stacking-e2e`、`support/board-menu.mjs`（`board-number` 位於 `board-credits` 與 `board-preferences` 之間，只算 `.board-menu-items`）；`career-presenter.js` 回傳 `isAmateur`、`injuryRiskText`、`numberText`、`numberChangeEnabled`，`.test` 期待值兩邊都加 |
+| T2 | `docs/index.html`、`docs/styles/base.css` | 選單用 dev 的 `<dialog>`，`#board-number` 在 `.board-menu-items`；☰ 鈕保留 `aria-haspopup="dialog"`、不含「メニュー」span；F2 的 `.bd-name-row` |
+| T3 | `tests/design-tokens-06.test.mjs` | dev 的排除法計數（字級 81、間距 236）＋以名稱排除 PLY-01 的 4 條規則（`.bd-name-row`、`#bd-number`、`.card h4.jersey-heading`、`.jersey-field-row`；各須恰好 1 條；字級 1 處、間距 5 處） |
+| T4 | `tests/support/dom-snapshot.mjs`、`tests/game-view-dom-e2e.mjs` | `let log` ＋ dev 的 `__projectDecisionPresentation` 重新解析在前，背番号 log 投影接在後；面板投影抽成匯出的 `projectJerseyBoard(markup,rawState)`，在 `__projectShell2000` **之前**執行（契約：`#bd-number` 在 `.bd-name-row` 內、row 為 `#bd-top` 首子且僅 1 屬性 2 子節點；選單項前為 `board-credits`；拆掉 row、移除兩者、補回「メニュー」span）；`game-view-dom-e2e` 注入它 |
+| T5 | `tests/ui-redesign-shell-e2e.mjs` | 4 處 `__projectShell2000(board.outerHTML,…)` 改為先 `projectJerseyBoard(…, window.__shell.get().state)` |
+| T6 | `tests/ui-redesign-review-e2e.mjs` | `PLY01_CORE`：`career-retirement.js` 4 處、`professional-season.js` 2 處插入以完整文字各移除一次（count=1 斷言）後再嚴格比較；退休 log 在 `__projectReview` 之後以 `removeJerseyDisplay` 移除（`table===1`）；自然生涯迴圈：候選側選號鈕按下不計步、`jerseyHistory` 形狀檢查後刪除、斷言 `jerseySkips>0 === 到過 PRO`（草稿 P 2 次、IF 0 次） |
+| T7 | `tests/design-tokens-09-e2e.mjs` | 還原為 `5910421` 版（F3） |
+| T8 | `tests/jersey-e2e.mjs` | 基準常數改 `5910421`，註解與訊息的「1.16.13」同步；D4 另加 `75ab10b`（1.16.13）舊存檔案例；改號對話框關閉後焦點斷言（F6）；確認並補上風險 4（F7） |
+| T9 | 版本 | 暫緩（M4） |
+
+**驗證範圍**：關聯 E2E → Quick → 本機 4 組 Full → CI；決定 A 的 320／390／1440 截圖（4 主題）；新負控制：row 外放號碼 → `JERSEY_BOARD_ROW_PLACE`、核心檔多一處插入 → FAIL、拿掉自然生涯選號跳過 → FAIL、焦點斷言反向；N1～N12 在新基準重跑；reviewer。
+
+**草稿位置（session 限定，可能消失）**：`/private/tmp/claude-501/-Users-amew-Documents-works-yakyujinsei/e375f92e-825e-4e04-aa6c-bad287da2e58/scratchpad/wtm`、`…/scratchpad/m3-draft-vs-ply01.patch`。實作以本節 T 表為準，不依賴草稿。
+
+**下一步**：在 `feat/ply-01-jersey` 依 T1～T8 實作（merge commit 起）→ 關聯測試 → reviewer → Quick／Full → push dev 前請使用者確認。合併與部署未授權。
