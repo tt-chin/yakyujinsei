@@ -1,10 +1,11 @@
 // PLY-01 T8 (tasks/PLY_01_JERSEY_PLAN.md §11): jersey numbers in the real browser.
 // Natural careers use fixed seeds; cases marked "fixture" set state through the injected hook and then call the real
-// movement functions (contract-salary-e2e pattern). /baseline/ serves 75ab10b (1.16.13, docs identical to the PLY-01 base 21b4ff9).
+// movement functions (contract-salary-e2e pattern). /baseline/ serves 5910421 (2.0.0, dev before PLY-01; plan §12 M2) and /legacy/ serves 75ab10b (1.16.13, production main)
+// for the second D4 legacy save.
 import assert from 'node:assert/strict';import {execFileSync} from 'node:child_process';import {createServer} from 'node:http';import {readFile,mkdir,writeFile} from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import {createRequire} from 'node:module';
 import {assertSameCareer} from './support/first-difference.mjs';import {withCareerSessionAccess} from './support/career-session-access.mjs';import {injectOverlayHook} from './support/overlay-hook.mjs';import {openBoardAction} from './support/board-menu.mjs';
 const root=process.cwd(),arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
-const baseline='75ab10b7d442db7aeccde0d649a852f224eed481';
+const baseline='59104210efa7704b4749f3da765544ea2e9b705b',legacyBaseline='75ab10b7d442db7aeccde0d649a852f224eed481';
 const out=arg('output')||path.join(os.tmpdir(),'yakyujinsei-jersey-e2e-'+Date.now());await mkdir(out,{recursive:true});
 const only=arg('only')?.split(',');
 const JERSEY=/^背番号 \S+ (で入団する|にする)$/;
@@ -39,7 +40,7 @@ window.__jerseyPlay=${jerseyPlay.toString()};
 `;
 const instrument=source=>injectOverlayHook(withCareerSessionAccess(source),hook);
 const cache=new Map();
-const server=createServer(async(req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://local').pathname),old=pathname.startsWith('/baseline/'),rel=pathname.replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');let body;if(old){if(!cache.has(rel))cache.set(rel,execFileSync('git',['show',baseline+':docs/'+rel],{cwd:root,maxBuffer:30e6}));body=cache.get(rel);}else body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':rel.endsWith('.json')?'application/json':'text/html');res.end(body);}catch{res.statusCode=404;res.end();}});
+const server=createServer(async(req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://local').pathname),prefix=pathname.match(/^\/(baseline|legacy)\//)?.[1],ref=prefix==='legacy'?legacyBaseline:prefix?baseline:null,rel=pathname.replace(/^\/(?:baseline\/|legacy\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');let body;if(ref){const key=ref+':'+rel;if(!cache.has(key))cache.set(key,execFileSync('git',['show',key.replace(':',':docs/')],{cwd:root,maxBuffer:30e6}));body=cache.get(key);}else body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':rel.endsWith('.json')?'application/json':'text/html');res.end(body);}catch{res.statusCode=404;res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
 const browserName=arg('browser')||process.env.TEST_BROWSER||'chrome';
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||process.env.PLAYWRIGHT_MODULE||'playwright');
@@ -117,6 +118,9 @@ await test('menu-change',async e=>{
   await page.locator('#act button').first().click();const draws=(await get(page)).draws;
   let d=await menuDialog(page),t=await dialogText(page);assert.equal(t.title,'背番号の変更');assert.equal(t.label,'新しい背番号');assert.ok(t.summary.endsWith('現在の背番号 #18'));assert.ok(t.note.startsWith(year+'年シーズンから有効。'));assert.equal(t.ok,'変更する');
   await page.screenshot({path:path.join(out,'menu-dialog-1280.png')});await pick(page,'7');
+  // 2.0.0 menu dialog: the item click closes the menu first (focus to ☰), so the number dialog returns focus to ☰ on OK and on cancel.
+  const focusId=()=>page.evaluate(()=>document.activeElement?.id);assert.equal(await focusId(),'board-menu-toggle','focus returns to the menu toggle after 変更する');
+  await menuDialog(page);await page.keyboard.press('Escape');await page.locator('#jersey-dialog').waitFor({state:'hidden'});assert.equal(await focusId(),'board-menu-toggle','focus returns to the menu toggle after cancel');
   await menuDialog(page);await pick(page,'9');
   // Duplicate activation of #jersey-ok adds one row only.
   await menuDialog(page);await page.locator('#jersey-select').selectOption('0');await page.locator('#jersey-ok').evaluate(b=>{b.click();b.click();});await page.locator('#jersey-dialog').waitFor({state:'hidden'});
@@ -143,6 +147,21 @@ await test('resume-entry-unsaved',async e=>{
   await close();
 });
 
+// Risk 4 (2.0.0 replaceCareer): starting a new career over a save that holds jerseyHistory confirms the overwrite, and the new
+// career carries no number history (board number hidden, menu item disabled).
+await test('new-career-over-save',async e=>{
+  const {page,close}=await open(e);await start(page,{seed:'probe33-1',pos:'P'});const at=await play(page,{prompt:true}),year=at.state.year;
+  await page.locator('#act button').first().click();await play(page,{year:year+1});await saved(page,year+1);
+  assert.deepEqual((await get(page)).state.jerseyHistory.map(r=>r.number),['18'],'the save holds the number history');
+  await page.goto(base+'/?seed=probe33-1');await ready(page);
+  if(await page.locator('#save-new').isVisible())await page.locator('#save-new').click();
+  await page.locator('#seg-pos [data-v="P"]').click();await page.locator('#in-name').fill('背番号検証');await page.locator('#btn-start').click();
+  await page.locator('#confirmation-dialog').waitFor({state:'visible'});assert.match(await page.locator('#confirmation-message').innerText(),/上書きされます/);await page.locator('#confirmation-ok').click();
+  await page.waitForFunction(()=>{const st=window.__jersey?.get().state;return !!st&&!st.done&&st.year===2026&&!!document.querySelector('#act button,#act .abrow');}); /* S is null while the career is replaced */
+  const fresh=await get(page),b=await board(page);assert.equal(fresh.state.jerseyHistory,undefined,'no number history in the new career');assert.equal(b.number,null);assert.equal(b.menuDisabled,true);
+  await close();
+});
+
 // 5. No RNG: current vs /baseline/ (same seed, full draw list + state), and default vs dialog/menu variant.
 await test('rng-identity',async e=>{
   const run=async(seed,pos,prefix,variant)=>{const {page,close}=await open(e);await start(page,{seed,pos,prefix});let b1=null;
@@ -153,7 +172,7 @@ await test('rng-identity',async e=>{
   const sameCaptures=(x,y,message)=>{assert.ok(x.captures.length>=3&&y.captures.length>=3,message+' (captures recorded)');assert.deepEqual(x.captures,y.captures,message);};
   for(const [seed,pos]of [['probe33-1','P'],['probe33-8','C']]){const old=await run(seed,pos,'/baseline/'),now=await run(seed,pos,'/');
     assert.equal(old.state.year,2031);assert.equal(now.state.jerseyHistory.length,1);assert.ok(old.rng.length>100);
-    assert.deepEqual(now.rng,old.rng,seed+': current R values/rngState equal the 1.16.13 baseline');sameCaptures(now,old,seed+': draw count at every year-start save equals the 1.16.13 baseline');assertSameCareer(normalized(now.state),normalized(old.state),seed+': state equal to baseline except version/jerseyHistory');assert.deepEqual(now.texts,old.texts);}
+    assert.deepEqual(now.rng,old.rng,seed+': current R values/rngState equal the 2.0.0 baseline');sameCaptures(now,old,seed+': draw count at every year-start save equals the 1.16.13 baseline');assertSameCareer(normalized(now.state),normalized(old.state),seed+': state equal to baseline except version/jerseyHistory');assert.deepEqual(now.texts,old.texts);}
   const now=await run('probe33-8','C','/'),variant=await run('probe33-8','C','/',true);assert.equal(variant.state.jerseyHistory.length,3);assert.equal(variant.state.jerseyHistory.at(-1).year,2030,'B1 change is for next year');
   const firstDiff=(x,y)=>{for(let i=0;i<Math.max(x.length,y.length);i++)if(JSON.stringify(x[i])!==JSON.stringify(y[i]))return i;return -1;};e.compare={now:now.rng.length,variant:variant.rng.length,variantFirstDiff:firstDiff(variant.rng,now.rng),variantYear:variant.state.year,nowYear:now.state.year,variantTexts:variant.texts,nowTexts:now.texts,variantJersey:variant.state.jerseyHistory,variantLog:variant.state.log.map(r=>[r.y,r.tm]),nowLog:now.state.log.map(r=>[r.y,r.tm])};assert.deepEqual(variant.rng,now.rng,'dialog and menu changes draw no RNG');sameCaptures(variant,now,'dialog and menu changes: same draw count at every year-start save');assertSameCareer(normalized(variant.state),normalized(now.state),'jersey changes touch no other state');
   e.draws=now.rng.length;
@@ -183,20 +202,20 @@ await test('save-tamper',async e=>{
   e.results=results;await close();
 });
 
-// 8. D4: a 1.16.13 save with one finished pro season asks once with the legacy copy (A2 board), the next save keeps it; B7 unknown period names.
-await test('legacy-save',async e=>{
+// 8. D4: a 2.0.0 and a 1.16.13 save with one finished pro season asks once with the legacy copy (A2 board), the next save keeps it; B7 unknown period names.
+for(const [id,prefix,label] of [['legacy-save','/baseline/','2.0.0'],['legacy-save-11613','/legacy/','1.16.13']])await test(id,async e=>{
   const ctx=await browser.newContext({viewport:{width:1280,height:720}});
-  const old=await open(e,{context:ctx});await start(old.page,{seed:'probe33-1',pos:'P',prefix:'/baseline/'});const first=await play(old.page,{year:2030});await saved(old.page,2030);
-  assert.ok(first.state.log.some(r=>r.st&&/ NPB/.test(r.tm)),'baseline log has a level-suffixed pro row');assert.equal(first.state.jerseyHistory,undefined);await old.close();
+  const old=await open(e,{context:ctx});await start(old.page,{seed:'probe33-1',pos:'P',prefix});const first=await play(old.page,{year:2030});await saved(old.page,2030);
+  assert.ok(first.state.log.some(r=>r.st&&/ NPB/.test(r.tm)),label+' baseline log has a level-suffixed pro row');assert.equal(first.state.jerseyHistory,undefined);await old.close();
   const {page,close}=await open(e,{context:ctx});await page.goto(base+'/');await ready(page);await page.locator('#save-continue').click();await page.waitForFunction(()=>document.querySelector('#save-live').textContent.includes('2030年の最初から再開しました'));
   const at=await play(page,{prompt:true}),team=at.state.orgTeamId;assert.equal(at.state.year,2030);assert.deepEqual(at.texts,['背番号 18 にする','背番号を選ぶ']);assert.match(at.prompts[0].heading,/での背番号が記録されていません。背番号はどうする？$/);
-  const b=await board(page);assert.equal(b.year,'2030','A2 board year');assert.ok(b.name.trim()&&b.team.trim());assert.equal(b.number,null);await page.screenshot({path:path.join(out,'legacy-prompt-1280.png')});
+  const b=await board(page);assert.equal(b.year,'2030','A2 board year');assert.ok(b.name.trim()&&b.team.trim());assert.equal(b.number,null);await page.screenshot({path:path.join(out,id+'-prompt-1280.png')});
   await page.locator('#act button').first().click();const rest=await play(page,{year:2031});assert.equal(rest.prompts.length,0);await saved(page,2031);await resume(page,2031);
   const kept=await play(page,{year:2031});assert.equal(kept.prompts.length,0,'no second legacy prompt after the next save');assert.deepEqual(kept.state.jerseyHistory,[{teamId:team,year:2030,number:'18'}]);
   const ylog=await yearly(page);assert.ok(ylog.split('\n').some(l=>l.includes('2029')&&l.includes('（背番号不明）')));
   const done=await play(page,{});const rows=await retirementRows(page);assert.ok(done.state.done);
   assert.deepEqual(rows[0].slice(1),['2029','不明']);assert.ok(!/NPB|→/.test(rows[0][0]),'B7: unknown period named without level suffix');assert.equal(rows[1][2],'#18');assert.ok(rows[1][1].startsWith('2030'));
-  e.retirement=rows;await page.locator('.jersey-table').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,'legacy-retired-1280.png')});await close();await ctx.close();
+  e.retirement=rows;await page.locator('.jersey-table').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,id+'-retired-1280.png')});await close();await ctx.close();
 });
 
 // 9. Fixture: the real trade (doTradeExec) runs after this year's season row, so that row is team A with A's number and the year
