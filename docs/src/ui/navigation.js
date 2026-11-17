@@ -9,8 +9,8 @@ let controller=null;
 export function initNavigation({documentRef=document,onOpenPlayer,onOpenCareer,onNavigate=()=>{}}){
   initializeDesktopOverview({documentRef,onOpenPlayer,onOpenCareer});
   const nav=documentRef.getElementById('main-nav'), board=documentRef.getElementById('board'), panels=[...documentRef.querySelectorAll('[data-main-panel]')], mainButtons=[...nav.querySelectorAll('[data-main-view]')], playerTabs=[...documentRef.querySelectorAll('[data-player-tab]')], careerTabs=[...documentRef.querySelectorAll('[data-career-tab]')];
-  const syncBoardHeight=()=>nav.style.setProperty('--board-height',`${board.getBoundingClientRect().height}px`);
-  if(typeof ResizeObserver!=='undefined')new ResizeObserver(syncBoardHeight).observe(board,{box:'border-box'});
+  const syncBoardHeight=()=>{const height=board.getBoundingClientRect().height;nav.style.setProperty('--board-height',height+'px');documentRef.documentElement.style.setProperty('--game-header-height',(height+nav.getBoundingClientRect().height)+'px');};
+  if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(syncBoardHeight);observer.observe(board,{box:'border-box'});observer.observe(nav,{box:'border-box'});}
   const syncTabs=(buttons,tab,panelId,key)=>{
     buttons.forEach(button=>{const active=button.dataset[key]===tab;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});
     documentRef.getElementById(panelId).setAttribute('aria-labelledby',buttons.find(button=>button.dataset[key]===tab).id);

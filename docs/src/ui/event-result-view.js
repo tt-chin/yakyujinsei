@@ -2,6 +2,9 @@
 export function decorateEventResult(node,event,result,{abilityLabels,fmtMoney}){
   if(!node?.ownerDocument)return;
   const doc=node.ownerDocument,body=node.querySelector('[data-reader-body]');if(!body)return;
+  // Preserve the category badge and event name; omit the repeated card label.
+  const heading=node.querySelector('h4'),label=heading?.lastChild;
+  if(label?.nodeType===3&&label.nodeValue==='イベントカード｜'+event.n)label.nodeValue=event.n;
   const legacy=doc.createElement('div');legacy.dataset.eventLegacy='';
   body.querySelector('[data-reader-selection]')?.remove();
   while(body.firstChild)legacy.appendChild(body.firstChild);

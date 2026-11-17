@@ -1,5 +1,13 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-17 Preview手機修正（R2・共用UI）：初版已依使用者指定以單一commit `59104210efa7704b4749f3da765544ea2e9b705b`合併dev；本修正從此另開`codex/ui-2.0-mobile-fixes`。手機固定完整選手／保存資訊及三分頁，桌面導覽維持top:0；投入標示縮至育成點說明字級並置同列，原能力卡44px操作範圍保留；無標題單一步驟省略通用選擇摘要／開關，保留原進行按鈕與返回入口；事件結果僅去除「イベントカード｜」前綴；配完只捲至原生確定區，保留原復原焦點，復原再配仍定位，Enter不誤確定。引擎、配點closure、保存、資料及RNG不變。未公開UI受入版2.0.0→2.0.0，CURRENT_SPEC、設計書、CHANGELOG及RELEASE_NOTES／生成JS同步。
+>
+> 確定碼本機Quick **102／102 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`test-results/mobile-fixes-quick-final-03/summary.json`，460.807秒；102份log SHA256及13份修改來源雜湊一致，完整來源fingerprint `f9dc5321418ba4473feeba05aa8b3ec2fdfc792f9c4fb680fc62b41fc9e6823d`。128組配點、128組決策與112組外框矩陣、P／IF完整配點／事件S／RNG、16組完成定位／復原再配、完成後Enter、手機單一步驟與錯誤焦點、精確事件名稱與履歷皆通過。個別配點重測`mobile-fixes-allocation-focus-final`及桌面／履歷重測`mobile-fixes-desktop-recheck`通過。前段直接E2E的8條歷史DOM生涯及11組說明視窗（`mobile-fixes-history-dialog-01`）通過；之後僅收斂額外移焦點與桌面導覽位移，最終來源以本輪Quick驗證，不稱前段入口為最終SHA Full。語法、來源連結、Diff檢查及390px配點前後／橫向／單一步驟截圖確認通過。實機Safari、真正200%縮放及原生分享仍待驗收。
+>
+> 原FAIL與停止紀錄保留：spacing計數236／實際235，依批准的小標示padding少一處token使用改為235，另加精確CSS斷言；`mobile-fixes-related-01`為1 PASS／2 FAIL（固定抬頭後最後列定位與測試工具捲動導覽的舊假設），保留可見性及捲動還原斷言，改用實際閱讀／點擊；`mobile-fixes-related-02`為1 PASS／1 FAIL（反例破壞第一個非事件標題），限定實際事件標題後4種錯值皆拒絕。`mobile-fixes-quick-final-01`在焦點收斂前停止，未作整套PASS；`mobile-fixes-quick-final-02`保留event-history桌面遮擋FAIL，僅停止自有程序樹（decision入口exit4294967295為停止中斷，不作完成PASS），修正desktop top:0後先重測失敗入口及外框2 PASS，再全新執行最終Quick，未沿用部分結果。原日誌與stopped.json保持。
+>
+> **Full実行が必要（GitHub手動・未実行）**／需要執行Full：共用固定導覽、捲動／焦點及Full專用歷史DOM比較受影響，需由使用者對本次新提交手動執行。本機未Full、未自行dispatch／重跑。本修正分支尚未併回dev／main；既有ARTIFACT_COVERAGE_BLOCKED及正式受入／公開條件保留，不以舊SHA的132 PASS代替本次新SHA Full。
+
 > 2026-11-17 最新確認：第0～5批主要實作與自動驗證完成。使用者手動[Full Run44067661326](https://github.com/tt-chin/yakyujinsei/actions/runs/44067661326)（attempt 1，完整SHA `1a9d159bc6b2a1d21a5c5eb9fdf1f8831e42bb7f`）132 PASS／0 FAIL／0 SKIP／0 BLOCKED；8批及Aggregate成功、acceptedPass 132、unverified 0、issues空，132份log SHA256已核對。此PASS僅適用該SHA，不冒充後續說明文字修正的Full。以下各批未實作／Full待確認是當時歷史狀態，原127 PASS／5 FAIL及中途失敗紀錄保留。Preview／實機、實際200%瀏覽器縮放、字型網路／原生分享與ARTIFACT_COVERAGE_BLOCKED仍待確認；dev／main未合併、未正式公開。
 
 > 2026-11-17 說明補正（R2純顯示／R0文件）：補齊存檔說明與現行規格的舊敘述，明示作成中保留舊存檔、開始時確認覆寫、取消保留輸入、詳細設定獨立刪除。版號依統一UI版本維持2.0.0；CHANGELOG／RELEASE_NOTES與配信資料同步。存檔控制器19項、說明／更新視窗11組（5尺寸、S／RNG不變、Console 0）、規格來源連結及Diff檢查PASS，320／390px截圖人工確認。依純顯示例外不追加Quick／Full；既有132 PASS屬上列SHA，不稱本次新SHA Full PASS，main合併Gate仍有效。來源與結果見第5批收據helpCopyCloseout。

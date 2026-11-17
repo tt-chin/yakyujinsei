@@ -14,7 +14,7 @@ const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').sl
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const THEMES=['standard','night','classic','scoreboard'];
 const LABELS={training:'トレーニング',encounter:'日常・交流',endorsement:'広報・スポンサー'};
-const hook=`\nwindow.__evtBadge={pending:()=>{const p=S.pendingEvent;if(!p)return null;const ev=EVENTS.find(e=>e.id===p.cardID);return {cardID:p.cardID,stage:S.stage,raw:ev.category,expected:effectiveCategory(ev,S.stage)};},saved:id=>S.processedEventIDs[id]?.category??null};`;
+const hook=`\nwindow.__evtBadge={pending:()=>{const p=S.pendingEvent;if(!p)return null;const ev=EVENTS.find(e=>e.id===p.cardID);return {cardID:p.cardID,name:ev.n,stage:S.stage,raw:ev.category,expected:effectiveCategory(ev,S.stage)};},saved:id=>S.processedEventIDs[id]?.category??null};`;
 const server=createServer(async(req,res)=>{
   try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\//,'')||'index.html';if(rel.includes('..'))throw Error('path');
     let content=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')content=content.toString()+hook;
@@ -33,7 +33,7 @@ const toEvent=async p=>{for(let i=0;i<300;i++){
     const rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));
     const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|完了/.test(e.innerText))||buttons[0];if(!b)throw Error('No action');b.click();return 'next';});
   if(status==='event')return;await p.waitForTimeout(20);}throw Error('No event prompt within 300 actions');};
-const badgeOf=(p,sel)=>p.evaluate(sel=>{const b=[...document.querySelectorAll(sel)];return b.map(e=>({cls:e.className,text:e.textContent,next:e.nextSibling?.textContent?.slice(0,8)??'',
+const badgeOf=(p,sel)=>p.evaluate(sel=>{const b=[...document.querySelectorAll(sel)];return b.map(e=>({cls:e.className,text:e.textContent,next:e.nextSibling?.textContent??'',
   ls:getComputedStyle(e).letterSpacing,bg:getComputedStyle(e).backgroundColor,color:getComputedStyle(e).color,lines:Math.round(e.getBoundingClientRect().height/parseFloat(getComputedStyle(e).lineHeight))}));},sel);
 let failure;
 try{
@@ -48,7 +48,7 @@ try{
     const card=p.locator('#log [data-event-occurrence-id]').last();await card.waitFor();
     const occ=await card.getAttribute('data-event-occurrence-id'),saved=await p.evaluate(id=>window.__evtBadge.saved(id),occ);assert.ok(saved,'saved category');
     const result=await badgeOf(p,`#log [data-event-occurrence-id="${occ}"] h4 .event-badge`);
-    assert.equal(result.length,1,'one result badge');assert.equal(result[0].cls,'event-badge event-badge-'+saved);assert.equal(result[0].text,LABELS[saved]);assert.ok(result[0].next.startsWith('イベントカード｜'),result[0].next);assert.ok(['normal','0px'].includes(result[0].ls),'h4 letter-spacing reset: '+result[0].ls);assert.equal(result[0].lines,1,'result badge on one line');
+    assert.equal(result.length,1,'one result badge');assert.equal(result[0].cls,'event-badge event-badge-'+saved);assert.equal(result[0].text,LABELS[saved]);assert.equal(result[0].next,pending.name,'approved result heading contains the exact event name without the repeated label');assert.ok(['normal','0px'].includes(result[0].ls),'h4 letter-spacing reset: '+result[0].ls);assert.equal(result[0].lines,1,'result badge on one line');
     assert.equal(saved,pending.expected,'saved category equals the draw-time effective category');
     console.log(`${width}px ${pos}: stage ${pending.stage}, card ${pending.cardID} (${pending.raw}) → ${pending.expected}; prompt + result badge OK`);
     for(const theme of THEMES){

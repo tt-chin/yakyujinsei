@@ -1,6 +1,7 @@
 /* UI 2.0: a single reading column on phones and short windows. */
 #app{max-width:1440px}
-#board{position:relative}
+html{scroll-padding-top:var(--game-header-height,0px)}
+#board{position:sticky;top:0}
 #bd-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 var(--space-xs);align-items:center}
 #bd-name{grid-column:1;white-space:normal;overflow-wrap:anywhere;letter-spacing:0}
 #bd-name small{display:none}
@@ -14,7 +15,7 @@
 .bd-cell{padding:var(--space-4xs)}
 .bd-cell b{font-size:var(--fs-lg)}
 #salary-detail-trigger small{display:none}
-#main-nav{top:0}
+
 #game-body,#game-main{min-width:0;min-height:0}
 #game-main{display:flex;flex-direction:column;flex:1}
 #game-body{display:flex;flex:1;flex-direction:column}
@@ -56,7 +57,7 @@ html:has(#board-menu-panel[open]){overflow:hidden}
  #desktop-player:not([hidden]){display:block;position:static;width:auto;overflow-y:auto;min-height:0;container-type:inline-size;overscroll-behavior:contain;padding:0 var(--space-3xs) 0 0}
  #desktop-player .ui-panel{margin-bottom:var(--space-md)}
  #game-main{overflow:hidden;border:1px solid var(--edge);border-radius:var(--radius-lg);background:var(--bg)}
- #main-nav{position:relative;flex:none}
+ #main-nav{position:relative;top:0;flex:none}
  #view-host{overflow-y:auto;overscroll-behavior:contain}
  #view-home{height:100%;min-height:0;overflow:hidden;flex:none}
  #view-home #log{overflow-y:auto;min-height:100px;overscroll-behavior:contain}

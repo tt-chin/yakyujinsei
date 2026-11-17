@@ -84,7 +84,8 @@ test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   const review=styles['career-review.css'];const added=[...review.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);assert.equal(added.length,11,'phase-5 summary uses eleven approved spacing-token sites');assert.deepEqual(added.filter(n=>!(n in rootTokens)),[],'undefined phase-5 spacing token');
   const original=outsideRoot.replace(review,'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,236,'phase-4 allocation uses existing shared spacing tokens');
+  assert.equal(used.length,235,'compact allocation label removes one padding-token site');
+  assert.match(styles['allocation-presentation.css'],/padding:0 var\(--space-2xs\);line-height:1\.6;white-space:nowrap/,'approved compact label retains tokenized inline padding');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');
   assert.deepEqual(Object.keys(SPACE).filter(n=>!used.includes(n)),[],'unused --space token');
 });

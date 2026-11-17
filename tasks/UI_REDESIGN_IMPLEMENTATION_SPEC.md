@@ -8,6 +8,8 @@
 
 2026-11-17 最新確認：第0～5批主要實作與自動驗證完成。使用者手動[Full Run44067661326](https://github.com/tt-chin/yakyujinsei/actions/runs/44067661326)（attempt 1，完整SHA `1a9d159bc6b2a1d21a5c5eb9fdf1f8831e42bb7f`）132 PASS／0 FAIL／0 SKIP／0 BLOCKED；8批及Aggregate成功、acceptedPass 132、unverified 0、issues空，132份log SHA256已核對。此PASS僅適用該SHA，不冒充後續說明文字修正的Full。以下各批未實作／Full待確認是當時歷史狀態，原127 PASS／5 FAIL及中途失敗紀錄保留。Preview／實機、實際200%瀏覽器縮放、字型網路／原生分享與ARTIFACT_COVERAGE_BLOCKED仍待確認；dev／main未合併、未正式公開。
 
+2026-11-17 Preview後追加修正（使用者截圖確認，R2）：從dev `59104210efa7704b4749f3da765544ea2e9b705b`另開`codex/ui-2.0-mobile-fixes`。手機固定整個選手／保存資訊與下方三分頁；配點投入標示縮至育成點說明字級並置同列右側；資源用完出現原生確定按鈕時自動定位，保留取消／重配；無標題單一下一步省略通用選擇摘要與開關；事件結果僅去除「イベントカード｜」固定前綴。既有遊戲規則、配點closure、保存與S／RNG不變。此追加指示取代下方第2批「摘要自然流」及通用單一選擇開關的原設計；各批既有測試與未受入紀錄保持歷史。未公開UI 2.0.0受入修正不另升版。驗證／Full待確認狀態以BACKLOG最新記錄為準。
+
 ## 1. 目標與適用範圍
 
 參考 My Baseball Days 的資訊分層、卡片與決策區配置，改造日文版首頁及遊戲介面。保留日文版的紅色主題、ES CON FIELD 背景、文字事件與既有遊戲規則。

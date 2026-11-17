@@ -55,6 +55,10 @@ export function projectDecisionPresentation(markup,area,state){
       if(effects){
         const result=state.processedEventIDs?.[card.dataset.eventOccurrenceId],event=window.__phase3Events.find(e=>e.id===result?.cardID);
         if(!result||!event)fail('EVENT_RESULT_MISSING');
+        // Approved mobile fix removes only this repeated label, keeping name/badge.
+        const label=card.querySelector('h4')?.lastChild;
+        if(label?.nodeType!==3||![event.n,'イベントカード｜'+event.n].includes(label.nodeValue))fail('EVENT_TITLE');
+        label.nodeValue='イベントカード｜'+event.n;
         const [description,selection,outcome,list,calculation]=body.children;
         if(body.children.length!==5||description.tagName!=='P'||!description.hasAttribute('data-event-description')||description.textContent!==event.choices[result.mode][result.success?'good':'bad'])fail('DESCRIPTION');
         if(selection.tagName!=='P'||!selection.hasAttribute('data-event-selection')||selection.textContent!=='選んだ行動：'+event.choices[result.mode].label)fail('SELECTION');

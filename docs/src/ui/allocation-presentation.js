@@ -53,6 +53,13 @@ export class AllocationPresentation {
     if(!confirm){const disabled=this.doc.createElement('button');disabled.type='button';disabled.className='btn main';disabled.dataset.allocationConfirmPlaceholder='';disabled.disabled=true;disabled.textContent='確定 ▸';disabled.setAttribute('aria-describedby','allocation-status');footer.append(disabled);}
     // The old cap label says dice even in point mode. Correct only this display copy.
     if(confirm&&!dice&&allCap&&remaining>0)confirm.textContent='能力が上限に達しました。残ったポイントを捨てます ▸';
+    // Only the transition to a usable native confirm button requests scrolling.
+    // Wait for the original renderer's focus step; never confirm or mutate a draft.
+    const ready=Boolean(confirm),becameReady=session.ready===false&&ready;session.ready=ready;
+    if(becameReady)this.doc.defaultView.requestAnimationFrame(()=>{
+      if(this.getDecision()!==view||this.home.hidden||!confirm.isConnected||!footer.contains(confirm)||this.doc.querySelector('dialog[open]'))return;
+      footer.scrollIntoView({block:'end',behavior:'instant'});
+    });
     if(this.observedFooter!==footer){
       this.observer?.disconnect();this.observedFooter=footer;
       const measure=()=>{if(!this.home.hidden&&footer.isConnected&&this.act.hasAttribute('data-allocation-session'))this.doc.documentElement.style.setProperty('--allocation-footer-height',`${this.doc.defaultView.getComputedStyle(footer).position==='sticky'?footer.getBoundingClientRect().height:0}px`);};
