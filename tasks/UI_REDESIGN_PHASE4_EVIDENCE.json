@@ -405,5 +405,360 @@
     "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
     "note": "KBO test keeps its pre-existing CRLF (HEAD and worktree both end that line with CR). Command-local recognition of CRLF; no global/repository Git config or source newline rewrite. Default check flagged that preserved CR on the changed line."
   },
-  "documentationAfterQuick": "Only BACKLOG/spec wording/evidence updates after final Quick; executable source unchanged, no rerun needed. CI Full on the new commit remains required."
+  "documentationAfterQuick": "Only BACKLOG/spec wording/evidence updates after final Quick; executable source unchanged, no rerun needed. CI Full on the new commit remains required.",
+  "ciFollowup": {
+    "risk": "R2 test infrastructure only",
+    "productVersion": "2.0.0 unchanged",
+    "originalFailure": {
+      "runId": "43992500462",
+      "attempt": "1",
+      "url": "https://github.com/tt-chin/yakyujinsei/actions/runs/43992500462",
+      "head": "00907ba29e8bb4f8bb71cd51a707a5e94efa6002",
+      "status": "FAIL_OR_INCOMPLETE",
+      "expected": 130,
+      "counts": {
+        "PASS": 120,
+        "FAIL": 10,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "unverified": 0,
+      "summary": "test-results/investigation-43992500462-attempt1/summary.json",
+      "summarySha256": "0b8be6c7aeb2f1126f44e7b2679434692e3a54ef51f940ca67974428d0f4fc6d",
+      "failures": [
+        {
+          "id": "international-personal-stats-e2e",
+          "batch": 2,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-2/international-personal-stats-e2e.log",
+          "logSha256": "7f2be4625ac0f8af10de99d7a9707baaa4fa824b1d7545fe4c979d81212db0de"
+        },
+        {
+          "id": "trait-display-e2e",
+          "batch": 4,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-4/trait-display-e2e.log",
+          "logSha256": "4ab5296334cb134cdd68bd66e14e01573b2587281f57ef44b3827778fe8b4c6d"
+        },
+        {
+          "id": "full-power-pitching-yakyo-test-001-e2e",
+          "batch": 5,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-5/full-power-pitching-yakyo-test-001-e2e.log",
+          "logSha256": "dc5df7ac2e660da508a1cd58c0db0f5d2b07e47024822c6486d3656f3e6adbf9"
+        },
+        {
+          "id": "hof-first-ballot-e2e",
+          "batch": 5,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-5/hof-first-ballot-e2e.log",
+          "logSha256": "1c0c4e26f114c64341f11eb5bc93fe21312a48c1f8a24b45d6cca5c42bb00be6"
+        },
+        {
+          "id": "hof-retirement-policy-e2e",
+          "batch": 5,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-5/hof-retirement-policy-e2e.log",
+          "logSha256": "bbb980340766e150ed2bd7e60448666d81e7a61004da2bd72986e65e76cf9940"
+        },
+        {
+          "id": "draft-income-e2e",
+          "batch": 6,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-6/draft-income-e2e.log",
+          "logSha256": "40bccbd533205f559c30d461678951ee0dcd3293f2f225c275f780d2ae09bc30"
+        },
+        {
+          "id": "full-power-pitching-e2e",
+          "batch": 7,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-7/full-power-pitching-e2e.log",
+          "logSha256": "d4b716080b458f7ce824f92874120029b7128122e0d10c00a2d2c1bc6b6ce4c8"
+        },
+        {
+          "id": "full-power-pitching-jp3-pitcher-02-e2e",
+          "batch": 7,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-7/full-power-pitching-jp3-pitcher-02-e2e.log",
+          "logSha256": "83c13c1516a669201a346103060a050175b373a3baa727dfd7f2a67d03820023"
+        },
+        {
+          "id": "display-preferences-e2e",
+          "batch": 8,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-8/display-preferences-e2e.log",
+          "logSha256": "b5d75c594cbaab6f480208304e8e1e754828d571a13ffba3cf25d9c59c203661"
+        },
+        {
+          "id": "player-random-name-e2e",
+          "batch": 8,
+          "status": "FAIL",
+          "timedOut": false,
+          "log": "test-results/investigation-43992500462-attempt1/batch-8/player-random-name-e2e.log",
+          "logSha256": "99182662f82917fbabf7bac128ce7e6268ec26320fda920bfb13dd4d966d1330"
+        }
+      ]
+    },
+    "fix": "Shared test-only allocation adapter validates all added UI before original action/choice/rendered-text comparisons. Independent start captured on original allocation entry; same-version raw name-choice snapshots retained. No S/RNG exclusions, baselines, inputs, timeouts or product changes.",
+    "adapterVerification": {
+      "file": "test-results/ui-phase4-ci-allocation-01/summary.json",
+      "status": "PASS",
+      "scope": "P/IF, 128 layouts and 12 native fixtures, original DOM/labels/choices/rendered text vs frozen phase-3 baseline; corruption/disabled-placeholder negative controls and exact S/RNG.",
+      "summarySha256": "696388371d05301bdab221c1dcd329b2d868fbf35b8ccec0183f66e7b3797851"
+    },
+    "related": {
+      "status": "PASS",
+      "output": "test-results/ui-phase4-ci-related-01",
+      "scope": "Nine complete failed entry commands PASS. Draft income: 17 fixtures passed in related-01 before preserved career failure; corrected full-career branch --careers-only PASS in related-02, and final Quick reruns fixtures. Related testing only, not Full.",
+      "outputs": [
+        "test-results/ui-phase4-ci-related-01",
+        "test-results/ui-phase4-ci-related-02"
+      ],
+      "results": [
+        {
+          "exitCode": 0,
+          "command": [
+            "tests/player-random-name-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-01/player-random-name-e2e"
+          ],
+          "seconds": 46.203,
+          "status": "PASS",
+          "id": "player-random-name-e2e",
+          "log": "test-results/ui-phase4-ci-related-01/player-random-name-e2e.log",
+          "logSha256": "71838bf45caf5246f6d84c2387f5d648f86b3b3a3eee3abe71d3502222db720b"
+        },
+        {
+          "exitCode": 0,
+          "command": [
+            "tests/display-preferences-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-01/display-preferences-e2e",
+            "--only-seed=yakyo-test-001,jp3-infielder-01",
+            "--baseline=d6cef67ef6ac8e348f66f2f5ed32c4fa3d6b7cd1"
+          ],
+          "seconds": 167.034,
+          "status": "PASS",
+          "id": "display-preferences-e2e",
+          "log": "test-results/ui-phase4-ci-related-01/display-preferences-e2e.log",
+          "logSha256": "76eec2882509766acc7e425f72143f1c5e515fb6508512c67e2bc77d5831e143"
+        },
+        {
+          "exitCode": 0,
+          "command": [
+            "tests/hof-retirement-policy-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-01/hof-retirement-policy-e2e"
+          ],
+          "seconds": 28.438,
+          "status": "PASS",
+          "id": "hof-retirement-policy-e2e",
+          "log": "test-results/ui-phase4-ci-related-01/hof-retirement-policy-e2e.log",
+          "logSha256": "6d73e408986555a00d2f7d51eeb2bd64e798dccde34929915e0fb0b5649861a9"
+        },
+        {
+          "exitCode": 0,
+          "command": [
+            "tests/hof-first-ballot-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-01/hof-first-ballot-e2e"
+          ],
+          "seconds": 34.235,
+          "status": "PASS",
+          "id": "hof-first-ballot-e2e",
+          "log": "test-results/ui-phase4-ci-related-01/hof-first-ballot-e2e.log",
+          "logSha256": "8896da97afc96cf574249a483a4c673fdbe30b82229249f4626db9de7b85ce16"
+        },
+        {
+          "status": "PASS",
+          "id": "draft-income-e2e",
+          "command": [
+            "tests/draft-income-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-02/draft-income-e2e",
+            "--careers-only",
+            "--baseline=d6cef67ef6ac8e348f66f2f5ed32c4fa3d6b7cd1"
+          ],
+          "seconds": 289.967,
+          "exitCode": 0,
+          "log": "test-results/ui-phase4-ci-related-02/draft-income-e2e.log",
+          "logSha256": "19f128982adf7ca22eac3fde1a4f2c6829b9dd42e4c8c86bb3346cf7eac89c0f"
+        },
+        {
+          "status": "PASS",
+          "id": "trait-display-e2e",
+          "command": [
+            "tests/trait-display-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-02/trait-display-e2e"
+          ],
+          "seconds": 229.308,
+          "exitCode": 0,
+          "log": "test-results/ui-phase4-ci-related-02/trait-display-e2e.log",
+          "logSha256": "e209d56a9e5744b78db320a82c73f72da41ba50761a7f0ff37d3616aa8768f02"
+        },
+        {
+          "status": "PASS",
+          "id": "international-personal-stats-e2e",
+          "command": [
+            "tests/international-personal-stats-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-02/international-personal-stats-e2e"
+          ],
+          "seconds": 551.692,
+          "exitCode": 0,
+          "log": "test-results/ui-phase4-ci-related-02/international-personal-stats-e2e.log",
+          "logSha256": "a13260612b94da92e4ced747ad56677fc090d53334b0b573585adeac75e5a949"
+        },
+        {
+          "status": "PASS",
+          "id": "full-power-pitching-e2e",
+          "command": [
+            "tests/full-power-pitching-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-02/full-power-pitching-e2e",
+            "--part=fixtures"
+          ],
+          "seconds": 164.814,
+          "exitCode": 0,
+          "log": "test-results/ui-phase4-ci-related-02/full-power-pitching-e2e.log",
+          "logSha256": "498ceef783ede47f7e46c1ad4a4cddaf920153f36652fcebfd12c98fdd5293fb"
+        },
+        {
+          "status": "PASS",
+          "id": "full-power-pitching-yakyo-test-001-e2e",
+          "command": [
+            "tests/full-power-pitching-yakyo-test-001-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-02/full-power-pitching-yakyo-test-001-e2e",
+            "--part=yakyo-test-001"
+          ],
+          "seconds": 426.189,
+          "exitCode": 0,
+          "log": "test-results/ui-phase4-ci-related-02/full-power-pitching-yakyo-test-001-e2e.log",
+          "logSha256": "dfc89b13ff2d0893dc52ebe39d3bcf19d0209f4eebc4fee9b9c65b69c947b9c0"
+        },
+        {
+          "status": "PASS",
+          "id": "full-power-pitching-jp3-pitcher-02-e2e",
+          "command": [
+            "tests/full-power-pitching-jp3-pitcher-02-e2e.mjs",
+            "--playwright=C:\\src\\yakyujinsei\\test-results\\pw-chromium-adapter",
+            "--browser=chromium",
+            "--output=test-results/ui-phase4-ci-related-02/full-power-pitching-jp3-pitcher-02-e2e",
+            "--part=jp3-pitcher-02"
+          ],
+          "seconds": 393.601,
+          "exitCode": 0,
+          "log": "test-results/ui-phase4-ci-related-02/full-power-pitching-jp3-pitcher-02-e2e.log",
+          "logSha256": "ae14bd97c508b3a8a382fcc66ed66176f118b62e6f762496678ef5af2d586ce3"
+        }
+      ],
+      "uniqueEntryCount": 10
+    },
+    "quick": {
+      "status": "PASS",
+      "file": "test-results/ui-phase4-ci-quick-01/summary.json",
+      "summarySha256": "8cda003b9432165ba598938fac21f5935ef830fc5177917789097eff7c5d0114",
+      "head": "00907ba29e8bb4f8bb71cd51a707a5e94efa6002",
+      "branch": "codex/ui-redesign",
+      "baseline": "d6cef67ef6ac8e348f66f2f5ed32c4fa3d6b7cd1",
+      "sourceFingerprint": "87c4fa3df008bdcff08ae534a3db6b862906eed17a9c874d7200e03f6455b3b2",
+      "counts": {
+        "PASS": 100,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "seconds": 568.919,
+      "browser": {
+        "channel": "chromium",
+        "version": "151.0.7922.34",
+        "playwrightVersion": "1.62.1"
+      },
+      "allocationSummary": {
+        "file": "test-results/ui-phase4-ci-quick-01/allocation-summary.json",
+        "sha256": "696388371d05301bdab221c1dcd329b2d868fbf35b8ccec0183f66e7b3797851"
+      }
+    },
+    "full": {
+      "status": "NOT_RUN",
+      "execution": "New GitHub Full must be started manually by user on the new SHA; no local Full or agent dispatch/rerun.",
+      "reason": "Shared test infrastructure is connected to Full-only historical comparisons. Related individual E2Es and Quick do not replace a new GitHub Full on the final commit."
+    },
+    "preservedLocalFailure": {
+      "file": "test-results/ui-phase4-ci-related-01/draft-income-e2e.log",
+      "reason": "A second independent full-career action recorder still used whole row innerText; corrected to the same validated adapter. Earlier 17 fixtures passed.",
+      "logSha256": "42f52e5acbd1222041fc8b3513c08fb6babbb557e5e6d81eed68290a684f80a5"
+    },
+    "sourceFiles": [
+      {
+        "file": "scripts/test-manifest.mjs",
+        "sha256": "acb979d5722243eb5bcd4f35ec4854c9e67027a7cbe62a57a8e16318aa3be7a1"
+      },
+      {
+        "file": "tests/display-preferences-e2e.mjs",
+        "sha256": "e4a88809d4c7662cd22dc0c7b2445c2d304a5a13c50cc4b06f7f3150746fac25"
+      },
+      {
+        "file": "tests/draft-income-e2e.mjs",
+        "sha256": "cb2d6cfb529fe95bac61bd1cc16b1387ac3c275bfe4215d1e0259e8dfbc4ea12"
+      },
+      {
+        "file": "tests/full-power-pitching-e2e.mjs",
+        "sha256": "b1ae1286721d44a04f349d9db8e1596cda2b33872780bbc814c76b9184fd0eb4"
+      },
+      {
+        "file": "tests/hof-first-ballot-e2e.mjs",
+        "sha256": "6f2d7d09edebf148542f048d5a56867dcc128c164f07ed8fc08407fb5d88b1d3"
+      },
+      {
+        "file": "tests/hof-retirement-policy-e2e.mjs",
+        "sha256": "7f3d5c1d0512c7f6c800643971681783aaf79e9671f8dd425ae4e3534c82dee9"
+      },
+      {
+        "file": "tests/international-personal-stats-e2e.mjs",
+        "sha256": "0c6fb18a8ced5f2dbc37fef28b2cfc95782603782e60aba3c233157a980d6971"
+      },
+      {
+        "file": "tests/player-random-name-e2e.mjs",
+        "sha256": "730c5858f94958e05d2888220fc49c8c2b3c04e3485593a7ef48c7da7a33fb00"
+      },
+      {
+        "file": "tests/support/allocation-comparison.mjs",
+        "sha256": "59f050f939be210ea58511b3cc95541b52e45a1833326af0f7a561efdea8cb93"
+      },
+      {
+        "file": "tests/support/stage6-browser.mjs",
+        "sha256": "eb469ff6d6b42410be94a33994626b892b9c1191b9e5ce21f6825b617448702f"
+      },
+      {
+        "file": "tests/trait-display-e2e.mjs",
+        "sha256": "6220385ffd6f6ef90017a1ab03805d98020cbcf1211a4840cdb81eb2e686b143"
+      },
+      {
+        "file": "tests/ui-redesign-allocation-e2e.mjs",
+        "sha256": "b72a9f759ff5335d3599bacd3d17b1a68db239171e1ecd2f710101936a702454"
+      }
+    ],
+    "productTree": "9c274c1a4ef9deb57a55e42551ec4d524509c29b"
+  }
 }

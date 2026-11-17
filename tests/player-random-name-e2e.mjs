@@ -1,3 +1,4 @@
+import {allocationComparisonHook} from './support/allocation-comparison.mjs';
 // Focused new-career names: real runtime/save/PNG, no complete career or Full run.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -14,15 +15,15 @@ const oldFiles=new Map(),errors=[],results=[];
 const hook=`
 const nameTrace=[];careerRng.onDraw=value=>nameTrace.push({before:(S.rngState-0x6D2B79F5)>>>0,after:S.rngState,value});
 window.__nameTest={
- get:()=>({state:JSON.parse(JSON.stringify(S)),rng:JSON.parse(JSON.stringify(nameTrace)),choices:[...$('act').querySelectorAll('.abrow,button')].map(b=>({text:b.textContent,disabled:b.disabled??b.getAttribute('aria-disabled')}))}),
- step:()=>{const row=$('act').querySelector('.abrow[aria-disabled="false"]:not(.capped)'),buttons=[...$('act').querySelectorAll('button')].filter(b=>!b.disabled&&!/元に戻す|すべてリセット/.test(b.textContent));const choice=buttons.find(b=>/配分を確定|配分完了|次へ|完了/.test(b.textContent))||row||buttons[0];if(!choice)throw Error('NO_ACTION');const text=choice.textContent;choice.click();return text;},
+ get:()=>({state:JSON.parse(JSON.stringify(S)),rng:JSON.parse(JSON.stringify(nameTrace)),choices:[...$('act').querySelectorAll('.abrow,button')].map(b=>({text:b.textContent,disabled:b.disabled??b.getAttribute('aria-disabled')})),comparisonChoices:window.__allocationComparison.choices()}),
+ step:()=>{const row=$('act').querySelector('.abrow[aria-disabled="false"]:not(.capped)'),buttons=[...$('act').querySelectorAll('button')].filter(b=>!b.disabled&&!/元に戻す|すべてリセット/.test(b.textContent));const choice=buttons.find(b=>/配分を確定|配分完了|次へ|完了/.test(b.textContent))||row||buttons[0];if(!choice)throw Error('NO_ACTION');const text=window.__allocationComparison.action(choice);choice.click();return text;},
  image:async()=>{const out=document.createElement('div'),texts=[],native=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(String(text));return native.call(this,text,...args);};try{await shareImage([],out);return {texts,png:out.querySelector('img').src};}finally{CanvasRenderingContext2D.prototype.fillText=native;}}
 };`;
 const server=createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://local');if(url.pathname==='/favicon.ico'){res.statusCode=204;return res.end();}
  const old=url.pathname.startsWith('/baseline/'),relative=url.pathname.replace(/^\/(?:baseline\/)?/,'')||'index.html';if(relative.includes('..'))throw Error('path');
  let data;if(old){if(!oldFiles.has(relative))oldFiles.set(relative,execFileSync('git',['show',baseline+':docs/'+relative],{cwd:root,maxBuffer:20e6}));data=oldFiles.get(relative);}else data=await readFile(path.join(root,'docs',relative));
- if(relative==='src/engine/game.js')data=data.toString()+hook;
+ if(relative==='src/engine/game.js')data=data.toString()+allocationComparisonHook+hook;
  res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css':relative.endsWith('.webp')?'image/webp':'text/html; charset=utf-8');res.end(data);
 }catch(e){res.statusCode=404;res.end(String(e));}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright'),browser=await chromium.launch({channel:arg('browser')||'chrome',headless:true});
@@ -30,7 +31,7 @@ const currentVersion=(await readFile(path.join(root,'docs/src/config.js'),'utf8'
 const oldVersion=execFileSync('git',['show',baseline+':docs/src/config.js'],{cwd:root}).toString().match(/VERSION = '([^']+)'/)[1];
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&r.url().startsWith(base))errors.push(r.status()+' '+r.url());});};
 const snapshot=p=>p.evaluate(()=>window.__nameTest.get());
-const projection=(v,version,name)=>{const copy=structuredClone(v);assert.equal(copy.state.name,name);assert.equal(copy.state.version,version);delete copy.state.name;delete copy.state.version;if(copy.state.birthHighSchool){assert.equal(copy.state.birthHighSchool.createdVersion,version);delete copy.state.birthHighSchool.createdVersion;}return copy;};
+const projection=(v,version,name)=>{const copy=structuredClone(v);copy.choices=copy.comparisonChoices;delete copy.comparisonChoices;assert.equal(copy.state.name,name);assert.equal(copy.state.version,version);delete copy.state.name;delete copy.state.version;if(copy.state.birthHighSchool){assert.equal(copy.state.birthHighSchool.createdVersion,version);delete copy.state.birthHighSchool.createdVersion;}return copy;};
 const cases=[{id:'empty',raw:'',indices:[0,0],expected:'王貞治'},{id:'spaces',raw:'   ',indices:[1,17],expected:'長嶋秀喜'},{id:'fullwidth',raw:'　　',indices:[PLAYER_FAMILY_NAMES.indexOf('ダルビッシュ'),PLAYER_GIVEN_NAMES.indexOf('慎之助')],expected:'ダルビッシュ慎之助'},{id:'typed',raw:' 山田太郎 ',expected:'山田太郎'},{id:'normalization',raw:'ＡＢＣ太郎',expected:'ABC太郎'},{id:'length',raw:'abcdefghijklmnop',expected:'abcdefghij'}];
 let failure;
 try{

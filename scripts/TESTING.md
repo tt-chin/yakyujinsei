@@ -6,6 +6,12 @@
 
 Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
 
+## UI 2.0 配點的歷史比較
+
+`tests/support/allocation-comparison.mjs`只注入E2E回應，不修改產品檔案或歷史基準。它在原生`allocUI`返回後讀取本次起點，先以既有DOM比較器驗證能力／繰越預覽、資源、原說明及無效確認按鈕，再提供原有操作標籤、選項結構與操作區文字。整區`innerText`使用短暫的離屏、inert／ARIA隱藏副本取得真實排版文字，完成即移除；不改動實際遊戲節點、S或RNG。
+
+跨版比較不得直接把整個`.abrow`的新預覽文字當作原操作名稱，也不得不加驗證就忽略新增控制項。姓名測試保留同版原始`choices`比較，只有跨版才使用已驗證的原選項結構；其他入口仍保留原有完整狀態、RNG、歷史特例與輸入／timeout。`ui-redesign-allocation-e2e`以凍結第3批驗證各種原生配點、原DOM／標籤／文字及S／RNG，並要求錯誤預覽、資源及被啟用的假確認一律失敗。這些相關驗證不代替新SHA的GitHub Full。
+
 ## 原始碼文字比較的換行契約
 
 跨Git歷史／Windows／Linux的來源比較，使用`tests/support/source-text.mjs`的`readSourceText(path)`（嚴格UTF-8讀取）或`sourceText(text)`，在切片、字串替換及比較**之前**將兩端CRLF統一成LF；其餘內容維持逐字相等。單獨CR、BOM、縮排、尾端空白、文字與程式變更不忽略。不可把此工具用於凍結快照、檔案SHA256、二進位證據或golden；原始資料不改寫。

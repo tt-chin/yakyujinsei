@@ -49,6 +49,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/allocation-comparison.mjs': ['support','Validates phase-4 allocation presentation before legacy action/choice/text comparisons. Original states, RNG and historical baselines remain strict.'],
   'support/decision-dom-comparison.mjs':['support','Validates approved phase-3 reader wrappers, committed event effects and decision metadata before reconstructing historical DOM; no S/RNG projection.'],
   'support/ui-shell-comparison.mjs':['support','Frozen approved UI 2.0 board markup projection; exact new summary/structure validation before historical board comparison. No S/RNG exclusions.'],
   'support/approved-hof-comparison.mjs':['support','Strict approved-retirement comparison used by dedicated unit and E2E tests; not a standalone suite.'],
