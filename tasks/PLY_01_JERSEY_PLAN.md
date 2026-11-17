@@ -451,4 +451,9 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 1. `dom-snapshot.mjs` 退休背番号表與季成績卡 ` · #N` 只檢查「號碼存在於 `jerseyHistory`」，未依年度／期間精確比對（年度別已精確比對）。
 2. `removeJerseyDisplay`（`ui-redesign-review-e2e`、`display-preferences-e2e` 用）的表格 markup 契約比 `captureGameView` 版寬（缺屬性數、td `tagName`／子元素檢查）。
 
-**下一步**：T9 待 code owner；push dev 前請使用者確認（先確認無進行中的 release PR）。合併與部署未授權。
+**下一步：推送與 PR（使用者 2026-11-18 同意方向，執行留到新 session；執行前再確認一次）**
+1. 前置：`git fetch`；確認 `origin/dev` 仍為 `5910421`、`origin/main` 仍為 `d6cef67`，且無開啟中的 PR（2026-11-18 確認 0 件）。若 dev 有新提交，先盤點再決定是否再 merge。
+2. 推送（顯式 refspec、不設 upstream；feature push 不觸發 CI）：`git push origin feat/ply-01-jersey:refs/heads/feat/ply-01-jersey`，推送後確認遠端 ref 等於本機 HEAD。
+3. 以 Brave compare 頁建立 PR `feat/ply-01-jersey` → `dev`；標題「PLY-01 背番号：整合 dev 2.0.0（5910421）」；內文繁體中文、不加 Claude trailer。內文要點：功能範圍（入團選號、選單改號、面板／季成績／退休卡／年度別號碼）；整合方式（merge、決定 A／B、M2 修正）；T1～T8 與測試耦合處理；本機驗證（Quick 103／103、Full 134／134、版面 24 組、N1～N17、reviewer）；未完成（T9 版本待 code owner、CI 與 Preview 未執行、`event-system-e2e` 於 2.0.0 不穩定）；reviewer 未處理 2 項。
+4. 注意：遊戲本體變更依 AGENTS §9.4 應更新版本與 CHANGELOG，但依 M4 本 PR 不改版本，須在內文註明。PR 合併到 dev 後 dev push 只跑 Quick，Full 在 main 向 PR；本 PR 只有本機 Full。PR 由使用者或 code owner 合併，不自行合併。合併後開 Preview 前先告知使用者。
+5. 本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
