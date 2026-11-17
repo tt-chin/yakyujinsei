@@ -576,7 +576,7 @@
       "scope": "Same unchanged allocation entry,128 layouts and P/IF fixtures, completed and exited0 after matching browser installation. No product/test/timeout changes."
     },
     "productUnchanged": true,
-    "status": "FIXED_LOCAL_VERIFIED_FULL_PENDING",
+    "status": "FIXED_FULL_CONFIRMED",
     "changedFiles": [
       "BACKLOG.md",
       "scripts/TESTING.md",
@@ -590,6 +590,92 @@
       "tests/trait-display-e2e.mjs",
       "tests/trait-system-e2e.mjs",
       "tests/ui-redesign-review-e2e.mjs"
+    ],
+    "confirmedFull": {
+      "runUrl": "https://github.com/tt-chin/yakyujinsei/actions/runs/44067661326",
+      "runAttempt": 1,
+      "head": "1a9d159bc6b2a1d21a5c5eb9fdf1f8831e42bb7f",
+      "status": "PASS",
+      "counts": {
+        "PASS": 132,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "acceptedPass": 132,
+      "unverified": 0,
+      "batchCount": 8,
+      "issues": [],
+      "artifactCoverage": "ARTIFACT_COVERAGE_BLOCKED",
+      "verifiedLogSha256Count": 132,
+      "summary": "test-results/confirmation-44067661326-attempt1/summary.json",
+      "summarySha256": "e0698289d3c114adfce7d5699c9d6862505c15aa7b1a9fed36b7282835855a70",
+      "scope": "User-triggered GitHub Full on this exact SHA; historical FAIL and NOT_RUN records retained. Does not cover subsequent help-copy correction or manual acceptance."
+    }
+  },
+  "helpCopyCloseout": {
+    "date": "2026-11-17",
+    "baseline": "1a9d159bc6b2a1d21a5c5eb9fdf1f8831e42bb7f",
+    "risk": "R2 pure display copy; R0 progress/spec consistency",
+    "version": "2.0.0 -> 2.0.0 per user unified UI release",
+    "scope": "Correct resume help to preserve old save during creation, confirm overwrite at actual start, retain input/save on cancel and use separate settings deletion. Synchronize four stale current-spec clauses; no handlers, save/state/RNG or test-runner changes.",
+    "validation": {
+      "syntax": "PASS",
+      "browserSaveController": {
+        "status": "PASS",
+        "cases": 19
+      },
+      "informationDialog": {
+        "status": "PASS",
+        "cases": 11,
+        "viewports": [
+          "320x568",
+          "390x844",
+          "844x390",
+          "390x240",
+          "1280x900"
+        ],
+        "summary": "test-results/ui-help-closeout-dialog-01/summary.json",
+        "summarySha256": "25f7bc9f2989f0fe7f13fe2cbe2375f184b187f7af05a86657fee983205d6c50",
+        "screenshots": 12,
+        "visualInspection": [
+          "help-bottom-320.png",
+          "help-bottom.png"
+        ],
+        "stateAndRng": "unchanged",
+        "consoleErrors": 0
+      },
+      "specSourceLinks": "PASS: 40 local links and 5 Git-verified historical sources",
+      "releaseNotesGenerator": "PASS; generated from RELEASE_NOTES.md",
+      "diffCheck": "PASS"
+    },
+    "quick": {
+      "status": "NOT_RUN",
+      "reason": "AGENTS 6.1 pure-display exception; bounded related unit/E2E validation instead."
+    },
+    "full": {
+      "status": "NOT_RUN",
+      "reason": "Pure-copy correction does not alter state, rules, events, RNG or shared controls. Existing 132 PASS belongs to baseline SHA only; main merge Full Gate remains."
+    },
+    "sourceHashes": [
+      {
+        "file": "docs/src/ui/information-dialog.js",
+        "sha256": "c8d8661f697c00f3dbd3ca83dea76d37c2b0c4376c42f74d27ce6cfab3d063b9"
+      },
+      {
+        "file": "tests/information-dialog-e2e.mjs",
+        "sha256": "2b123b744ebdc797e0d16479b3285146e74c3d30881ecc885ec14d03e54e7ca7"
+      },
+      {
+        "file": "docs/src/data/release-notes.js",
+        "sha256": "3f63348cc7699d77ff089964ba6ce3ea5a658893a998b8463a4a94c4b2d9fd61"
+      }
+    ],
+    "remaining": [
+      "Feature Preview and user acceptance",
+      "Physical devices, real browser 200% zoom, webfont network and native sharing",
+      "ARTIFACT_COVERAGE_BLOCKED",
+      "dev/main merge and production approval"
     ]
   }
 }

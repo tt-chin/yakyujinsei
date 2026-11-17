@@ -1,10 +1,12 @@
 # 野球人生シミュレーター：介面改版詳細設計書
 
-版本：設計 v1.3｜日期：2026-11-17（日本時間）｜狀態：供 Codex 分批實作
+版本：設計 v1.3｜日期：2026-11-17（日本時間）｜狀態：第0～5批主要實作與自動驗證完成；人工受入／公開待確認
 
 使用者追加決定（2026-11-16）：第1～5批 UI 修改統一使用產品版號 **2.0.0**。第1批實測時的1.16.15與原始CI／FAIL紀錄保留；後續批次不各自升版。
 
 使用者測試規則（2026-11-17，適用本專案後續所有作業）：原第2批的分工擴大為長期規則，本機不執行Full整套，Agent不自行dispatch／重跑手動GitHub Full。依風險執行相關測試及必要Quick；需要Full時在結果明示「需要執行Full（GitHub手動／未執行）」、原因、分支與完整SHA，由使用者手動執行。正式Gate與main合併前Full需求不因此免除；實際成功確認前保持待驗證。
+
+2026-11-17 最新確認：第0～5批主要實作與自動驗證完成。使用者手動[Full Run44067661326](https://github.com/tt-chin/yakyujinsei/actions/runs/44067661326)（attempt 1，完整SHA `1a9d159bc6b2a1d21a5c5eb9fdf1f8831e42bb7f`）132 PASS／0 FAIL／0 SKIP／0 BLOCKED；8批及Aggregate成功、acceptedPass 132、unverified 0、issues空，132份log SHA256已核對。此PASS僅適用該SHA，不冒充後續說明文字修正的Full。以下各批未實作／Full待確認是當時歷史狀態，原127 PASS／5 FAIL及中途失敗紀錄保留。Preview／實機、實際200%瀏覽器縮放、字型網路／原生分享與ARTIFACT_COVERAGE_BLOCKED仍待確認；dev／main未合併、未正式公開。
 
 ## 1. 目標與適用範圍
 

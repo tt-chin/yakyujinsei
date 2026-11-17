@@ -80,6 +80,10 @@ try{
     const open=async key=>{await p.locator('#board-menu-toggle').click();await p.locator('#board-'+key).click();await settle(p);assert.equal(await p.evaluate(()=>document.activeElement.id),'information-'+key+'-title');};
     for(const key of updatesOnly?['updates']:['help','updates']){
       const original=await p.locator('#information-'+key+' .information-article').textContent();
+      if(key==='help'){
+        for(const expected of ['元のセーブデータを残したまま選手作成を開きます','新しい人生の開始時に上書きを確認','キャンセルした場合は入力内容と元のセーブデータを保持','削除は詳細設定の「セーブデータを削除」'])assert.ok(original.includes(expected),'resume help: '+expected);
+        assert.ok(!original.includes('削除して選手作成へ進みます'),'help must not describe the superseded delete-first flow');
+      }
       if(updatesOnly){
         const expected=await p.evaluate(async()=>{const {releaseNotes}=await import('/src/data/release-notes.js');return releaseNotes.map(r=>[r.title,r.lines.join('\n')]);});
         const actual=await p.locator('#information-updates section').evaluateAll(nodes=>nodes.map(n=>[n.querySelector('h3').textContent,n.querySelector('p').textContent]));
