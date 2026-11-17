@@ -1,3 +1,4 @@
+import {openReaderDetails} from './support/reader-disclosure.mjs';
 import {openBoardAction,verifyBoardMenu} from './support/board-menu.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -74,6 +75,7 @@ try{
         assert.deepEqual(after.snapshot,{...before.snapshot,state:{...before.snapshot.state,_daiba:true}},'farewell only changes once flag; RNG and all other S exact');
         assert.equal(after.cards,before.cards+1);assert.equal(after.done,before.done+2);
       }
+      await openReaderDetails(p.locator('#log .card').filter({has:p.locator('h4',{hasText:'日本球界への別れ'})}).last(),{snapshot:()=>p.evaluate(()=>window.__fix.get())});
       assert.match(await p.locator('#log').innerText(),/日本プロ野球.*日本のファン/);
       assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'farewell has no horizontal overflow');
       await p.locator('#log .card').filter({has:p.locator('h4',{hasText:'日本球界への別れ'})}).last().screenshot({style:'#board{visibility:hidden!important}',path:path.join(shots,'npb-farewell-'+width+'.png')});

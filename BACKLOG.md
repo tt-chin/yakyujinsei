@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-17 第5批CI追修（R2・僅測試基盤）：[Full Run44037832570](https://github.com/tt-chin/yakyujinsei/actions/runs/44037832570)（`9e764ad88cb6201c46df26be1c0bf8011556730e`）127 PASS／5 FAIL，5件均非timeout；原收合內容仍在，但Full專用入口以innerText讀取時未先展開。修正5入口，透過原生summary確認唯一原卡片、原body可見及展開前後完整S／RNG不變，保留稱號、特性、殿堂、告別、PNG與封存斷言。共用helper接入既有Quick fixture，入口數Quick102／Full132不變。5個失敗入口已完整個別重測PASS（本地Chrome）；確定碼Quick **102／102 PASS**（0 FAIL／SKIP／BLOCKED），102份日誌與8份測試來源雜湊一致。首輪Chrome在未修改的配點入口斷言完成後收尾阻塞，已保留未完成紀錄；以相符headless Chromium重測該入口正常退出後，全新執行本輪Quick，不重用部分結果。產品檔案／版號2.0.0不變，不改遊戲規則、基準、輸入或timeout。原CI FAIL原樣保存，見[第5批收據](tasks/UI_REDESIGN_PHASE5_EVIDENCE.json)的ciFollowup。**需要執行Full（GitHub手動／未執行）**：共用測試支援影響Full專用路徑，須由使用者對新SHA啟動新Full。Preview／實機與ARTIFACT_COVERAGE_BLOCKED維持。
+
 > 2026-11-17 UI改版第5批（R2）：季末成績／受獎／資料支持的轉折、已確定的當年／翌年年薪，退休身分／既有原因及評價、通算成果與跨階段片段已實作。原敘事／成績／收入保留原生收合，退休閱讀欄自然接續分享與新生涯；投手告別採投球文案。共用成績formatter、合併相鄰手機背景CSS；規則、S／RNG、保存時點與格式不變，不新增收藏DB。2.0.0→2.0.0（使用者指定五批統一版號），正式更新說明已整理並重新生成。128組版面、原生P／IF季末／退休及兩條固定seed生涯、8條歷史DOM／S／RNG生涯、30組收入fixture通過；確定碼最終Quick **102／102 PASS**（0 FAIL／SKIP／BLOCKED），102份日誌及16份程式／配信來源雜湊核對一致。前輪Quick的設計token期待FAIL、停止紀錄及101 PASS／1 FAIL的接線契約FAIL均保留，相關入口先重測後再執行本輪。**需要執行Full（GitHub手動／未執行）**：共用閱讀UI與Full專用歷史比較受影響，須對新SHA手動執行。Preview／實機、實際200%瀏覽器縮放及ARTIFACT_COVERAGE_BLOCKED仍待確認。相關初輪FAIL保留，詳見[第5批驗證收據](tasks/UI_REDESIGN_PHASE5_EVIDENCE.json)。
 
 > 後續候選（未批准）：退休紀錄收藏／重訪入口。目前沒有既有收藏庫；需使用者先決定保存位置、容量、覆寫／刪除及舊資料範圍，再另行設計與驗證。本批不新增保存格式或資料庫。

@@ -334,5 +334,262 @@
     "tests/support/decision-dom-comparison.mjs",
     "tests/ui-redesign-review-e2e.mjs",
     "tests/verify-modularization.mjs"
-  ]
+  ],
+  "ciFollowup": {
+    "risk": "R2 test infrastructure only",
+    "productVersion": "2.0.0 unchanged",
+    "originalFailure": {
+      "runId": 44037832570,
+      "url": "https://github.com/tt-chin/yakyujinsei/actions/runs/44037832570",
+      "attempt": 1,
+      "head": "9e764ad88cb6201c46df26be1c0bf8011556730e",
+      "status": "FAIL_OR_INCOMPLETE",
+      "counts": {
+        "PASS": 127,
+        "FAIL": 5,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "expected": 132,
+      "acceptedPass": 127,
+      "unverified": 0,
+      "summary": "test-results/investigation-44037832570-attempt1/summary.json",
+      "summarySha256": "ea1781ce594513d31e061b4ff4422b6ca7a86d97278af70c2db6bfd54cfcec27",
+      "logHashesVerified": 132,
+      "failures": [
+        {
+          "id": "trait-system-e2e",
+          "batch": 1,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-1/trait-system-e2e.log",
+          "logSha256": "63d27d554aa75faac1ec5e5654fb596d9fd0778bce2066757cbccadde82459b1"
+        },
+        {
+          "id": "event-fix-e2e",
+          "batch": 3,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-3/event-fix-e2e.log",
+          "logSha256": "046ba61b45942dee1d50166ebb7e9426ba7482839291270ac2440f5ba4c440d1"
+        },
+        {
+          "id": "smallschool-c-e2e",
+          "batch": 3,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-3/smallschool-c-e2e.log",
+          "logSha256": "f30242c225c9b8e05e7c78b7f4de8c8335e17704f3273883a0391a7bf33678ae"
+        },
+        {
+          "id": "hof-retirement-policy-e2e",
+          "batch": 4,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-4/hof-retirement-policy-e2e.log",
+          "logSha256": "0ce43be6aca5d347553edb4e225a4344ea596da9ccba6d4c78f2aff2e27761fb"
+        },
+        {
+          "id": "trait-display-e2e",
+          "batch": 5,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-5/trait-display-e2e.log",
+          "logSha256": "764057125d8b17f609f0a766710a0e854a59f925e753e7c019805c6059125a1c"
+        }
+      ]
+    },
+    "diagnosis": {
+      "file": "test-results/investigation-44037832570-attempt1/findings.json",
+      "nativeProbe": "test-results/investigation-44037832570-attempt1/disclosure-probe.json",
+      "scope": "Original retirement text is present, hidden by approved native disclosure. Installed Chrome native expansion restores visible text with exact S/RNG invariance."
+    },
+    "fix": "Native reader-disclosure helper validates unique original card/control, clicks the existing summary if closed, verifies visible original body, and compares complete snapshot before/after. Original innerText/content/archival assertions, baselines, inputs and timeouts retained; no product edits.",
+    "related": {
+      "status": "PASS",
+      "output": "test-results/ui-phase5-ci-related-01",
+      "scope": "Five original failed entry commands, sequential direct E2Es, Chrome. This is related testing, not Full.",
+      "results": [
+        {
+          "exitCode": 0,
+          "id": "trait-system-e2e",
+          "status": "PASS",
+          "seconds": 15.5843104,
+          "command": [
+            "tests/trait-system-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/trait-system-e2e",
+            "--ui-only"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/trait-system-e2e.log",
+          "logSha256": "3eaa6cf93dd479baa5099e40635d52a610eb515665d4a66ebbcd4aeb966a04cd"
+        },
+        {
+          "exitCode": 0,
+          "id": "event-fix-e2e",
+          "status": "PASS",
+          "seconds": 22.9218602,
+          "command": [
+            "tests/event-fix-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/event-fix-e2e"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/event-fix-e2e.log",
+          "logSha256": "25ef016f7f6249bdd892d81a7c6deb49f5e6ef36faf345d9bb68d82077d9d8cf"
+        },
+        {
+          "exitCode": 0,
+          "id": "hof-retirement-policy-e2e",
+          "status": "PASS",
+          "seconds": 25.3970989,
+          "command": [
+            "tests/hof-retirement-policy-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/hof-retirement-policy-e2e"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/hof-retirement-policy-e2e.log",
+          "logSha256": "e7ec72340140b889b130d3a517537091532f9ed0484654db187975fb7bd16c19"
+        },
+        {
+          "exitCode": 0,
+          "id": "smallschool-c-e2e",
+          "status": "PASS",
+          "seconds": 244.289436,
+          "command": [
+            "tests/smallschool-c-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/smallschool-c-e2e"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/smallschool-c-e2e.log",
+          "logSha256": "dab30c298704736d8d9bf6690f461df0e3d5623a37a3f19be2fe70f9cb9a259c"
+        },
+        {
+          "exitCode": 0,
+          "id": "trait-display-e2e",
+          "status": "PASS",
+          "seconds": 198.1768181,
+          "command": [
+            "tests/trait-display-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/trait-display-e2e"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/trait-display-e2e.log",
+          "logSha256": "d144413fa40bebd1ae51f9217288ce6325cbab44e61f2f78d64b3d614da5b6c9"
+        }
+      ]
+    },
+    "quick": {
+      "status": "PASS",
+      "file": "test-results/ui-phase5-ci-quick-02/summary.json",
+      "summarySha256": "f094e6d2fa32ad9dddaf14a7b2a6975d6dd66d2d4065af0f5bb45555b71b0ac8",
+      "counts": {
+        "PASS": 102,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "seconds": 452.956,
+      "head": "9e764ad88cb6201c46df26be1c0bf8011556730e",
+      "branch": "codex/ui-redesign",
+      "baseline": "d6cef67ef6ac8e348f66f2f5ed32c4fa3d6b7cd1",
+      "sourceFingerprint": "08508d97f732734bbb30462d27461b0ebe1249e8d655384bfd57e55473aa8e0e",
+      "browser": {
+        "channel": "chromium",
+        "version": "151.0.7922.34",
+        "playwrightVersion": "1.62.1"
+      },
+      "version": "2.0.0",
+      "logHashesVerified": 102,
+      "sourceHashesVerified": 8,
+      "nativeHelperCoverage": {
+        "file": "test-results/ui-phase5-ci-quick-02/review-summary.json",
+        "sha256": "f2fe195f0cea2fbf6c2ad4e350a1c0dc224b5b95af37601c344791549e87a642"
+      },
+      "reusedResults": false
+    },
+    "full": {
+      "status": "NOT_RUN",
+      "execution": "User starts a new GitHub Full on final new SHA. No local Full or agent dispatch/rerun.",
+      "reason": "Shared test-only disclosure helper is used by Full-only retirement/trait assertions. New GitHub Full required on final new SHA; original127/5 FAIL remains historical."
+    },
+    "productTree": "29294ed47f21d794997868a10e279693e38e3e39",
+    "sourceFiles": [
+      {
+        "file": "scripts/test-manifest.mjs",
+        "sha256": "137597995fd35fef84885e60ecb80fff50d8478e73be6e9f4332619ad05c0c25"
+      },
+      {
+        "file": "tests/event-fix-e2e.mjs",
+        "sha256": "114f69f69cfaf5714d1466ca27246008bd82dc6ffcf3f95c0acbedf7f6f98aba"
+      },
+      {
+        "file": "tests/hof-retirement-policy-e2e.mjs",
+        "sha256": "032be1db3ba02a6c0ebcca9145803c7246c1bfe4a6069679921314cbae2e1992"
+      },
+      {
+        "file": "tests/smallschool-c-e2e.mjs",
+        "sha256": "962e2076f7c019fd8086642ac60d9e129013c24832dacbd3e5fa42a4b2d36875"
+      },
+      {
+        "file": "tests/support/reader-disclosure.mjs",
+        "sha256": "1f8ef794cad54880a288a2ec81a93f381caf5a89bb6f752e653af38d291e88ba"
+      },
+      {
+        "file": "tests/trait-display-e2e.mjs",
+        "sha256": "4cfdc71782845a3fdbab52171105ab94f65004f17d96f5a37d591d695b76ac55"
+      },
+      {
+        "file": "tests/trait-system-e2e.mjs",
+        "sha256": "447383a3350008e55a7fadb45039c5ffd4dd9f17fc313995677ed99cf8888b47"
+      },
+      {
+        "file": "tests/ui-redesign-review-e2e.mjs",
+        "sha256": "81bd780196f1c5b98862177dec53964a22c8c5abe825a56b210cd2e87b27dd17"
+      }
+    ],
+    "interruptedLocalQuick": {
+      "status": "BLOCKED",
+      "complete": false,
+      "output": "test-results/ui-phase5-ci-quick-01",
+      "browser": "Installed Chrome",
+      "entry": "ui-redesign-allocation-e2e",
+      "log": "test-results/ui-phase5-ci-quick-01/ui-redesign-allocation-e2e.log",
+      "logSha256": "28e56efa0060efb422406a1d160f62ee1e2330d29f4477690de26155ade9db79",
+      "reason": "P/IF assertions and all 128 allocation layouts printed PASS, but process remained at browser/server shutdown with no completion summary. Only the identified owned Quick process was stopped. No partial result is accepted as Quick PASS.",
+      "recovery": "Matching Playwright headless Chromium151.0.7922.34 installed into ignored test-results/pw-browsers; no npm dependency/product/timeout changes. Rerun affected entry, then fresh Quick without reuse."
+    },
+    "environmentRecovery": {
+      "status": "PASS",
+      "file": "test-results/ui-phase5-ci-allocation-recheck-01/summary.json",
+      "sha256": "696388371d05301bdab221c1dcd329b2d868fbf35b8ccec0183f66e7b3797851",
+      "browser": "Matching headless Chromium151.0.7922.34",
+      "scope": "Same unchanged allocation entry,128 layouts and P/IF fixtures, completed and exited0 after matching browser installation. No product/test/timeout changes."
+    },
+    "productUnchanged": true,
+    "status": "FIXED_LOCAL_VERIFIED_FULL_PENDING",
+    "changedFiles": [
+      "BACKLOG.md",
+      "scripts/TESTING.md",
+      "scripts/test-manifest.mjs",
+      "tasks/UI_REDESIGN_IMPLEMENTATION_SPEC.md",
+      "tasks/UI_REDESIGN_PHASE5_EVIDENCE.json",
+      "tests/event-fix-e2e.mjs",
+      "tests/hof-retirement-policy-e2e.mjs",
+      "tests/smallschool-c-e2e.mjs",
+      "tests/support/reader-disclosure.mjs",
+      "tests/trait-display-e2e.mjs",
+      "tests/trait-system-e2e.mjs",
+      "tests/ui-redesign-review-e2e.mjs"
+    ]
+  }
 }

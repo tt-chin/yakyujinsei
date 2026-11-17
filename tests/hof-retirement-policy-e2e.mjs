@@ -1,3 +1,4 @@
+import {openReaderDetails} from './support/reader-disclosure.mjs';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {harness,instrument} from './support/stage6-browser.mjs';
@@ -43,6 +44,8 @@ try{for(const pos of ['P','IF'])for(const controlled of [true,false]){
   await page.evaluate(t=>window.__hofTest.finish(t),tiers);const after=await page.evaluate(()=>window.__hofTest.get());
   runs.push({mode,choices,pending,after});
   if(mode==='new'&&controlled){
+   const breakdowns=page.locator('#log .card').filter({has:page.locator('h4',{hasText:/評価の内訳$/})});assert.ok(await breakdowns.count()>0,'original evaluation detail cards exist');
+   for(const card of await breakdowns.all())await openReaderDetails(card,{snapshot:()=>page.evaluate(()=>window.__hofTest.get())});
    assert.ok(await page.locator('#log').innerText().then(t=>t.includes('国際大会・代表の栄誉：殿堂評価への加点なし')));
    for(const width of [1280,320,390]){await page.setViewportSize({width,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'retirement layout '+width);await page.screenshot({path:h.output+'/retirement-'+pos+'-'+width+'.png',fullPage:true});}
    await page.locator('#sh-img').click();await page.locator('#sh-out img').waitFor();assertSameCareer(await page.evaluate(()=>window.__hofTest.get()),after,'viewports and share image keep complete S/RNG unchanged');

@@ -372,6 +372,8 @@
 
 第5批實作（2026-11-17，R2）：以唯讀CareerReview接入既有GameView，使用既有S.log／honors／teamTally／stats、已簽契約排程與salaryDecisionHistory。共用主要成績formatter與既有fmtIP；當年／翌年年薪分列、未知不推定。退休摘要保留已知原因及評價，跨階段片段按年代排列，同年同隊合併標籤。原卡片／事件與處理順序保留，季末僅成績／付款卡預設收合，後續事件維持第3批閱讀／焦點；退休完整敘事與表格以原生details收合，共享與新生涯回自然閱讀流。投手告別文案只改唯讀呈現；退休收藏無既有功能，另案，不新增保存格式。本地相關測試及確定碼Quick **102／102 PASS**，來源雜湊核對一致；Full由使用者在新SHA手動執行，見[第5批驗證收據](UI_REDESIGN_PHASE5_EVIDENCE.json)。
 
+第5批CI追修（2026-11-17，R2／測試基盤）：Run44037832570在9e764ad為127 PASS／5 FAIL，均為退休收合內文的可見性斷言，不是timeout。5入口改為原生展開後保留原innerText、封存、PNG與完整S／RNG檢查，共用helper亦由既有Quick fixture驗證。5個失敗入口個別完整重測PASS，確定碼Quick **102／102 PASS**（0 FAIL／SKIP／BLOCKED），來源雜湊一致；產品與2.0.0版號不變。原失敗保存在既有收據ciFollowup。新SHA的Full由使用者手動執行，未啟動本地Full或自行dispatch。
+
 ## 10. 建議的 DOM 與 CSS 實作方向
 
 以下是責任分層示意，名稱供參考，實作應優先沿用既有元件與 ID，不把整份頁面重寫成另一套框架。

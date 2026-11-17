@@ -1,3 +1,4 @@
+import {openReaderDetails} from './support/reader-disclosure.mjs';
 import {assertSameCareer} from './support/first-difference.mjs';
 import assert from 'node:assert/strict';
 import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
@@ -109,6 +110,7 @@ try{
    const history=await p.locator('#log').innerText();for(const desc of Object.values(descriptions))assert.ok(!history.includes(desc));
    await p.locator('[data-main-view="home"]').click();
    await p.evaluate(()=>window.__traitDisplay.retire());
+   await openReaderDetails(p.locator('#log .card').filter({has:p.locator('h4',{hasText:'キャリアプロフィール'})}),{snapshot:()=>h.get(p),allowLegacy:arg('source')==='baseline'});
    const profile=await p.locator('#log .card').filter({hasText:'キャリアプロフィール'}).innerText();for(const desc of Object.values(descriptions))assert.ok(!profile.includes(desc));for(const label of Object.values(TRAIT_LABELS))assert.ok(profile.includes(label),label+' retirement profile missing');
    const snapshot=await h.get(p),image=await p.evaluate(()=>window.__traitDisplay.share());assertSameCareer(await h.get(p),snapshot);assert.match(image.png,/^data:image\/png;base64,/);
    for(const key of labels)assert.ok(image.texts.join('\n').includes(TRAIT_LABELS[key]),key+' PNG label missing');
@@ -131,7 +133,7 @@ try{
   });
   await h.test('retirement-new-grinder-'+width,{width,fixture:true},async()=>{
    const p=await page(width);await p.evaluate(()=>{window.__stage6.fixture({pos:'IF'});window.__traitDisplay.clear();window.__traitDisplay.grinder();});
-   assert.match(await p.locator('[data-trait-result="grinder"]').innerText(),/記念称号/);const profile=await p.locator('#log .card').filter({hasText:'キャリアプロフィール'}).innerText();assert.doesNotMatch(profile,/記念称号/);await p.locator('[data-main-view="career"]').click();assert.equal(await p.locator('[data-trait-result]').count(),0);await p.close();
+   await openReaderDetails(p.locator('[data-trait-result="grinder"]'),{snapshot:()=>h.get(p)});assert.match(await p.locator('[data-trait-result="grinder"]').innerText(),/記念称号/);await openReaderDetails(p.locator('#log .card').filter({has:p.locator('h4',{hasText:'キャリアプロフィール'})}),{snapshot:()=>h.get(p)});const profile=await p.locator('#log .card').filter({hasText:'キャリアプロフィール'}).innerText();assert.doesNotMatch(profile,/記念称号/);await p.locator('[data-main-view="career"]').click();assert.equal(await p.locator('[data-trait-result]').count(),0);await p.close();
   });
   await h.test('old-owned-legend-'+width,{width,fixture:true},async()=>{const p=await page(width);await p.evaluate(()=>{window.__stage6.fixture({pos:'IF'});window.__traitDisplay.clear();window.__traitDisplay.oldLegend();});assert.equal(await p.locator('[data-trait-result="legend"]').count(),0,'already owned legend must not be presented as newly acquired');assert.equal((await h.get(p)).state.legendLeague,'NPB');await p.close();});
  }

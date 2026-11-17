@@ -12,6 +12,8 @@ Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SH
 
 `decision-dom-comparison`只驗證並移除新增回顧區，以及還原明確批准的投手告別文字；原卡片全文、節點與完整S／RNG仍嚴格比較。新增摘要的數值與資料來源由單體／原生fixture直接驗證，不靠忽略欄位或更換歷史基準。收入舊斷言須先以原生summary展開「キャリアプロフィール」，再驗證既有可見收入文字；不以textContent替代可見性檢查。
 
+`tests/support/reader-disclosure.mjs`以原生summary點擊讀取退休卡片，先檢查唯一原卡片／details／控制項、展開後原body可見，再比較展開前後完整S／RNG。特性、稱號、評價與告別原innerText斷言保留；新取得說明仍須在導航後按原規則封存。不改DOM強制open、不全域改用textContent、不忽略原文。只有既有手動baseline路徑明示允許舊版沒有reader details；當前版本一律嚴格要求控制項。此helper由既有Quick季末／退休fixture實際使用，Quick102／Full132入口數不變。
+
 ## UI 2.0 配點的歷史比較
 
 `tests/support/allocation-comparison.mjs`只注入E2E回應，不修改產品檔案或歷史基準。它在原生`allocUI`返回後讀取本次起點，先以既有DOM比較器驗證能力／繰越預覽、資源、原說明及無效確認按鈕，再提供原有操作標籤、選項結構與操作區文字。整區`innerText`使用短暫的離屏、inert／ARIA隱藏副本取得真實排版文字，完成即移除；不改動實際遊戲節點、S或RNG。
