@@ -5,6 +5,7 @@ import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
+import {removeJerseyDisplay} from './support/dom-snapshot.mjs';
 import path from 'node:path';
 import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=n=>process.argv.find(v=>v.startsWith('--'+n+'='))?.slice(n.length+3);
@@ -15,9 +16,12 @@ const {chromium}=createRequire(import.meta.url)(arg('playwright')||process.env.P
 const snapshot=p=>p.evaluate(()=>window.__reviewTest.get()),frames=p=>p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
 async function open(pos,old=false){const p=await browser.newPage({viewport:{width:1440,height:900}});await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.fulfill({body:'',contentType:'text/css'}));p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400)errors.push(r.status()+' '+r.url());});await p.goto(base+(old?'/baseline/':'/')+'?seed='+(pos==='P'?'jp3-pitcher-02':'jp3-infielder-01'));await p.waitForFunction(()=>!document.getElementById('btn-start').disabled);await p.locator('#in-name').fill('年度検証');await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#btn-start').click();await p.evaluate(()=>window.__reviewTest.settle());return p;}
 const stat={yr:1,G:30,IP:123+2/3,W:12,L:5,SO:150,H:100,BB:30,ER:40,SV:0,HLD:0,PA:500,AB:400,HR:20,RBI:70,SB:10,DEF:0,AS:0,avg:.25,era:2.91};
+// PLY-01 (jersey numbers) approved insertions in two frozen core files; each is removed by exact text, once, before the strict compare.
+const PLY01_CORE={"src/engine/career-retirement.js":["jerseyPeriods,jerseyRetired,","  /* PLY-01 W2c: number history above the league tables; J3 periods come from professional log rows. */\n  function jerseyTable(periods){if(!periods.length)return '';\n    const rows=periods.map(p=>`<tr><td class=\"cell-left\">${p.team}</td><td class=\"cell-nowrap\">${p.from===p.to?p.from:p.from+'–'+p.to}</td><td class=\"cell-nowrap\">${p.number===null?'不明':'#'+p.number}</td></tr>`).join('');\n    return `<h4 class=\"jersey-heading\">背番号</h4><table class=\"fin jersey-table\">${rows}</table>`;}\n"," jerseyRetired?.(); /* PLY-01 J1: no number or menu change after retirement. */","jerseyTable(jerseyPeriods?.()||[])+"],"src/engine/professional-season.js":["jerseyLabel,","${jerseyLabel?.()||''}"]};
+const withoutPly01=(file,text)=>(PLY01_CORE[file]||[]).reduce((t,x)=>{assert.equal(t.split(x).length,2,file+' PLY-01 insertion once');return t.replace(x,'');},text);
 let failure;
 try{
- for(const file of ['src/engine/career-retirement.js','src/engine/season-settlement.js','src/engine/professional-season.js','src/engine/season-payment-policy.js','src/engine/player-ability.js'])assert.equal((await readFile(path.join(root,'docs',file),'utf8')).replace(/\r\n/g,'\n'),execFileSync('git',['show',baseline+':docs/'+file],{maxBuffer:30e6}).toString().replace(/\r\n/g,'\n'),file+' core unchanged');
+ for(const file of ['src/engine/career-retirement.js','src/engine/season-settlement.js','src/engine/professional-season.js','src/engine/season-payment-policy.js','src/engine/player-ability.js'])assert.equal(withoutPly01(file,(await readFile(path.join(root,'docs',file),'utf8')).replace(/\r\n/g,'\n')),execFileSync('git',['show',baseline+':docs/'+file],{maxBuffer:30e6}).toString().replace(/\r\n/g,'\n'),file+' core unchanged');
  for(const pos of ['P','IF']){
   const p=await open(pos),old=await open(pos,true);
   const fixture={name:'長い選手名'.repeat(4),year:2050,age:40,stage:'PRO',lv:'NPB1',team:'長い球団名'.repeat(8),log:[{y:2026,age:16,tm:'高校',line:'地区予選'},{y:2029,age:19,tm:'東京',st:stat,line:'プロ初年度'},{y:2031,age:21,tm:'海外',st:{...stat,form:1}},{y:2049,age:39,tm:'東京',inj:true,line:'全休'},{y:2050,age:40,tm:'東京',st:stat}],stats:{NPB:{...stat,yr:15}},honors:['2029 新人王','2031 MVP','2050 最多勝'],teamTally:{NPB:{tokyo:15}},ct:{annualSchedule:[{year:2050,amount:100000000,paid:true}]},salaryDecisionHistory:[]};
@@ -28,7 +32,8 @@ try{
   for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.postResult());assert.equal(await p.locator('.card').filter({has:p.locator('h4',{hasText:'季末後の結果'})}).locator('details').evaluate(e=>e.open),true,'later event results keep phase-3 reading/focus behavior');assert.deepEqual(await snapshot(p),before,'later result display preserves complete state/RNG');
   for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.retire());await frames(p);await frames(old);
   assert.deepEqual(await snapshot(p),await snapshot(old),'native retirement complete S/RNG including HOF and fan draws');
-  const original=q=>q.evaluate(()=>window.__projectReview(document.getElementById('log').outerHTML,'log',window.__reviewTest.get().state));assert.equal(await original(p),await original(old),'every original retirement node/text preserved');
+  // PLY-01: the candidate retirement card carries the approved 背番号 table; after the phase-5 projection, remove it with its contract check (exactly one table).
+  const original=(q,jersey)=>q.evaluate(source=>{const state=window.__reviewTest.get().state,markup=window.__projectReview(document.getElementById('log').outerHTML,'log',state);if(!source)return markup;const t=document.createElement('template');t.innerHTML=markup;const log=t.content.firstElementChild;if(eval('('+source+')')(log,state).table!==1)throw Error('JERSEY_REVIEW_TABLE');return log.outerHTML;},jersey?removeJerseyDisplay.toString():null);assert.equal(await original(p,true),await original(old,false),'every original retirement node/text preserved');
   const review=p.locator('[data-career-review="retirement"]');assert.equal(await review.count(),1);assert.match(await review.textContent(),/2026年｜野球人生の始まり/);assert.match(await review.textContent(),/2029年｜プロでの最初の記録/);assert.match(await review.textContent(),/2031年｜キャリアハイ/);assert.match(await review.textContent(),/2050年/);
   assert.equal(await p.locator('.yr-block').last().locator('.card > details[open]').count(),0,'original tables/narratives start collapsed');
   const unchanged=await snapshot(p);const sizes=[[320,568],[375,667],[390,844],[844,390],[1024,600],[768,1024],[1280,720],[1440,900]];
@@ -48,12 +53,17 @@ try{
   await p.close();await old.close();checks.push({pos,nativeSeasonAndRetirement:'PASS',originalDOM:'PASS',immutableUI:'PASS'});
  }
  if(!process.argv.includes('--fixtures-only'))for(const pos of ['P','IF']){
-  const p=await open(pos),old=await open(pos,true);let steps=0;
+  const p=await open(pos),old=await open(pos,true);let steps=0,jerseySkips=0,proSeen=false;
+  // PLY-01 P5: the candidate's year-start number prompt is the only approved new step; confirm it unrecorded, shape-check
+  // jerseyHistory, then drop it so every other S/RNG field stays exact.
+  const jerseyStep=()=>p.evaluate(()=>{const b=[...document.querySelectorAll('#act button')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.textContent.trim()));if(b)b.click();return !!b;});
+  const withoutJersey=v=>{const j=v.state.jerseyHistory;assert.ok(j===undefined||Array.isArray(j)&&j.every(x=>typeof x.teamId==='string'&&Number.isInteger(x.year)&&typeof x.number==='string'),'jerseyHistory shape');const c=structuredClone(v);delete c.state.jerseyHistory;return c;};
   for(;steps<2000;steps++){
-   const current=await snapshot(p);assert.deepEqual(current,await snapshot(old),'natural '+pos+' step '+steps);if(current.state.done)break;
+   while(await jerseyStep())jerseySkips++;
+   const current=withoutJersey(await snapshot(p));if(current.state.stage==='PRO')proSeen=true;assert.deepEqual(current,await snapshot(old),'natural '+pos+' step '+steps);if(current.state.done)break;
    for(const q of [p,old])await q.evaluate(()=>{const a=document.getElementById('act'),rows=[...a.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...a.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.textContent));const b=buttons.find(e=>e.textContent.startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.textContent))||buttons[0];if(!b)throw Error('no action');b.click();});
   }
-  assert(steps<2000);checks.push({pos,naturalExactCareer:'PASS',steps});await p.close();await old.close();
+  assert(steps<2000);assert.equal(jerseySkips>0,proSeen,pos+' number step appears exactly when the career reaches a professional team');checks.push({pos,naturalExactCareer:'PASS',steps,jerseySkips});await p.close();await old.close();
  }
  assert.deepEqual(errors,[]);console.log('PASS review: '+cases.length+' layouts, P/IF native season/retirement and original DOM/state/RNG'+(process.argv.includes('--fixtures-only')?'':' plus two natural careers'));
 }catch(e){failure=e;console.error(e.stack);}finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));await writeFile(path.join(out,'summary.json'),JSON.stringify({status:failure?'FAIL':'PASS',baseline,cases,checks,errors,failure:failure?.stack},null,2));}
