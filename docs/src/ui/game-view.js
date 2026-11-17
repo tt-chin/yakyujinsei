@@ -1,10 +1,12 @@
 import {DecisionPresentation} from './decision-presentation.js';
+import {AllocationPresentation} from './allocation-presentation.js';
 // game.js の純DOM基本操作（物件導向化 第2期）。S と RNG に触れず、S に依存する処理は game.js から注入する。
 export class GameView {
   constructor({ byId, logTarget, decorateCard, onTraitShown, getDecision=()=>null, getYear=()=>null }) {
     this.byId = byId; this.logTarget = logTarget; this.decorateCard = decorateCard; this.onTraitShown = onTraitShown;
     const documentRef=byId('act')?.ownerDocument;
-    if(documentRef)this.decisionUI=new DecisionPresentation({documentRef,getDecision,getYear,getPhase:()=>this.boardContext?.phase});
+    if(documentRef)this.decisionUI=new DecisionPresentation({documentRef,getDecision,getYear,getPhase:()=>this.boardContext?.phase,getReturnTarget:()=>this.allocationUI?.returnTarget()});
+    if(documentRef)this.allocationUI=new AllocationPresentation({documentRef,getDecision});
   }
   scrollBottom(){ /* iOS Safari iframe内でスムーズスクロールでは白画面が起きやすいため、同期スクロールへ変更+rAF。 */
     try{ requestAnimationFrame(()=>{const log=this.byId('log');if(log.scrollHeight>log.clientHeight&&getComputedStyle(log).overflowY==='auto')log.scrollTop=log.scrollHeight;else window.scrollTo(0, document.body.scrollHeight);}); }
@@ -25,6 +27,7 @@ export class GameView {
   divider(t,maxYears){ /* dividerごとに新しい年度の折りたたみ領域を開始し、その本文容器を返す。 */ const log=this.byId('log'); const blocks=log.querySelectorAll('.yr-block'); /* 終了した直前年へ展開アイコンを付けるが、collapsedは付けず開いたままにする。 */ const prev = blocks[blocks.length - 1]; if(prev){ const h = prev.querySelector('.yr-head'); if(h && prev.querySelector('.yr-body').children.length) h.classList.add('has-body'); } /* 二つ前の年度領域を見つけて折りたたむ。 */ const prevPrev = blocks[blocks.length - 2]; if(prevPrev){ prevPrev.classList.add('collapsed'); } /* 建新領域。 */ const block=document.createElement('div'); block.className='yr-block'; const head=document.createElement('div'); head.className='yr-head'; head.textContent=t; const body=document.createElement('div'); body.className='yr-body'; head.onclick=()=>block.classList.toggle('collapsed'); block.appendChild(head); block.appendChild(body); log.appendChild(block); /* 上限超える時は最古の年度領域を削除してDOMを解放。 */ const newBlocks=log.querySelectorAll('.yr-block'); if(newBlocks.length>maxYears){ for(let i=0;i<newBlocks.length-maxYears;i++)newBlocks[i].remove(); } return body; }
   actClear(){ const a=this.byId('act'); a.innerHTML=''; a.classList.remove('collapsed'); a.style.pointerEvents='';
     this.decisionUI?.clear();
+    this.allocationUI?.clear();
     const t=this.byId('act-toggle'); if(t)t.style.display='none'; }
   toggleActions(){this.decisionUI?.toggle();}
   actToggleSync(){
@@ -33,6 +36,7 @@ export class GameView {
     t.style.display=has?'block':'none';
     t.textContent=a.classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる';
     this.decisionUI?.sync();
+    this.allocationUI?.sync();
   }
   renderBoard(m){ /* m は game.js の boardModel が S から作る書き込み値。 */
     this.boardContext={year:m.year,phase:m.phase};

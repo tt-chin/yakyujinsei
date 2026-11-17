@@ -54,7 +54,7 @@ try{
     });
     const desktop=width>=1100&&height>=700;
     assert.equal(geo.overflow,false,JSON.stringify({pos,width,height,theme,font,geo}));assert.equal(geo.sidebar.visible,desktop);
-    assert.equal(geo.salaryText,'アマ');assert.ok(geo.log.height>=100);
+    assert.equal(geo.salaryText,'アマ');assert.equal(geo.log.height,0,'phase-4 dedicated allocation hides the retained event reader');
     if(desktop){assert.ok(geo.sidebar.width>=280&&geo.sidebar.width<=320);assert.ok(geo.main.x>=geo.sidebar.right);assert.ok(geo.app.bottom<=height+1);assert.equal(geo.log.overflow,'auto');}
     else{assert.equal(geo.board.position,'relative');assert.equal(geo.nav.position,'sticky');assert.equal(geo.act.overflow,'visible');}
     cases.push({pos,width,height,theme,font,geo});

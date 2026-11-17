@@ -26,7 +26,7 @@ const get=p=>p.evaluate(()=>window.__decisionProbe.get());
 async function open(pos,old=false){const c=await browser.newContext({viewport:{width:1440,height:900}});await c.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.fulfill({contentType:'text/css',body:''}));const p=await c.newPage();
   p.on('pageerror',e=>{if(!e.message.includes('PHASE3_UI_TEST'))errors.push(e.message);});p.on('console',m=>{if(m.type()==='error'&&!m.text().includes('PHASE3_UI_TEST'))errors.push(m.text());});p.on('response',r=>{if(r.status()>=400)errors.push(r.status()+' '+r.url());});
   await p.goto(base+(old?'/baseline/':'/')+'?seed='+(pos==='P'?'jp3-pitcher-02':'jp3-infielder-01'));await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#in-name').fill('決策検証');await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#btn-start').click();return{c,p};}
-const step=()=>{const a=document.getElementById('act'),rows=[...a.querySelectorAll('.abrow[aria-disabled="false"]')],bs=[...a.querySelectorAll('button:not(:disabled)')].filter(b=>!/元に戻す|すべてリセット/.test(b.textContent));const b=rows[0]||bs.find(b=>/通常投球/.test(b.textContent))||bs[0];if(!b)throw Error('no action');const label=b.textContent;b.click();return label;};
+const step=()=>{const a=document.getElementById('act'),rows=[...a.querySelectorAll('.abrow[aria-disabled="false"]')],bs=[...a.querySelectorAll('button:not(:disabled)')].filter(b=>!/元に戻す|すべてリセット/.test(b.textContent));const b=rows[0]||bs.find(b=>/通常投球/.test(b.textContent))||bs[0];if(!b)throw Error('no action');const label=b.matches('.abrow')?b.querySelector('.abrow-info').textContent:b.textContent;b.click();return label;};
 let failure;
 try{
  for(const pos of ['P','IF']){
@@ -34,9 +34,9 @@ try{
   for(const page of [p,reference.p]){await page.locator('#act button').filter({hasText:'トレーニング成果を割り振る'}).click();await page.locator('#act .abrow').first().click();await page.evaluate(()=>window.__decisionProbe.settle());}
   assert.deepEqual(await get(p),await get(reference.p),'same-version complete allocation S/RNG equals accepted phase 2');
   const draft=await get(p);await p.evaluate(()=>{window.__draftNodes=[...document.querySelectorAll('#act .abrow,#act button')];window.__draftHTML=document.getElementById('act').innerHTML;});
-  await p.locator('#act-toggle').click();const id=await p.locator('#act').getAttribute('data-decision-id');assert.equal(await p.locator('#act-toggle').getAttribute('aria-expanded'),'false');
-  await p.locator('[data-main-view="player"]').click();await p.locator('#decision-return').click();assert.equal(await p.locator('#act').getAttribute('data-decision-id'),id);assert.equal(await p.locator('#act-toggle').getAttribute('aria-expanded'),'false');assert.equal(await p.evaluate(()=>document.activeElement.id),'decision-question');
-  await p.locator('#act-toggle').click();assert.equal(await p.evaluate(()=>window.__draftNodes.every(n=>n.isConnected)&&document.getElementById('act').innerHTML===window.__draftHTML),true);assert.deepEqual(await get(p),draft);
+  const id=await p.locator('#act').getAttribute('data-decision-id');assert.equal(await p.locator('#act-toggle').isVisible(),false,'phase-4 allocation is a dedicated view');
+  await p.locator('[data-main-view="player"]').click();await p.locator('#decision-return').click();assert.equal(await p.locator('#act').getAttribute('data-decision-id'),id);assert.equal(await p.locator('#act .abrow').first().evaluate(e=>e===document.activeElement),true);
+  assert.equal(await p.evaluate(()=>window.__draftNodes.every(n=>n.isConnected)&&document.getElementById('act').innerHTML===window.__draftHTML),true);assert.deepEqual(await get(p),draft);
   for(let n=0;n<120;n++){const a=await p.evaluate(()=>Boolean(window.__decisionProbe.get().state.pendingEvent)),b=await reference.p.evaluate(()=>Boolean(window.__decisionProbe.get().state.pendingEvent));assert.equal(a,b);if(a)break;const actual=await p.evaluate(step),expected=await reference.p.evaluate(step);assert.equal(actual,expected);await frames(p);if(n===119)throw Error('event not reached');}
   assert.deepEqual(await get(p),await get(reference.p),'same-version complete pre-event S/RNG');
   const pending=await get(p),view=await p.evaluate(()=>window.__decisionProbe.choice()),pendingId=await p.locator('#act').getAttribute('data-decision-id');

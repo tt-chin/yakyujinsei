@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'ui-redesign-allocation-e2e': {quick:[],seconds:120,reason:'UI phase 4: dedicated allocation, 128 viewport/theme/font layouts, original nodes/draft/scroll, exact phase-3 S/RNG and original DOM for native dice/point/carry/cap/undo/reset/once-only confirmation; growth core unchanged.'},
   'ui-redesign-decision-e2e': {quick:[],seconds:120,reason:'UI phase 3: stable decision identity/return/scroll/collapse, retained allocation nodes, double-click guard, committed result payload boundaries and unchanged error recovery; exact phase-2 S/RNG controls at P/IF allocation and events, 128 viewport/theme/font cases.'},
   'ui-redesign-shell-e2e': {quick:[],seconds:90,reason:'UI 2.0 phase 2: responsive shell, modal focus/inertness, keyboard tabs, allocation DOM identity and complete S/RNG across P/IF, breakpoint/short-window, theme/font matrix.'},
   'player-random-name-e2e': {seconds:120,reason:'Blank/typed names: isolated crypto draws, exact short P/IF state and RNG comparison, same-seed different names, real save/resume/year advance and PNG; no full career.'},

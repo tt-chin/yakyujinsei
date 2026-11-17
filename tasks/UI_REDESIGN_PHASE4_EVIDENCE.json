@@ -1,0 +1,409 @@
+{
+  "phase": 4,
+  "date": "2026-11-17",
+  "risk": "R2",
+  "reason": "Read-only allocation presentation, navigation/focus/scroll and responsive layout. Original allocation/growth/undo/reset/confirmation handlers, engine source, S schema and RNG unchanged.",
+  "branch": "codex/ui-redesign",
+  "baseHead": "eddc464d27087263d57665ade818930db8f58f25",
+  "version": {
+    "before": "2.0.0",
+    "after": "2.0.0",
+    "reason": "User explicitly requires one shared 2.0.0 version for all five UI batches."
+  },
+  "acceptedBaselineCI": {
+    "runId": "43979397276",
+    "url": "https://github.com/tt-chin/yakyujinsei/actions/runs/43979397276",
+    "head": "eddc464d27087263d57665ade818930db8f58f25",
+    "status": "PASS",
+    "counts": {
+      "PASS": 129,
+      "FAIL": 0,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "scope": "Phase 3 only; not phase-4 Full evidence."
+  },
+  "scope": [
+    "Dedicated home allocation view; event DOM retained, desktop sidebar unchanged, phone one column/wide two columns",
+    "UI-only baseline copy shows actual current ability/carry changes; uses original cost/progress and rendered resources, no growth-rule recalculation",
+    "Original allocation rows and undo/reset/confirm listeners; disabled presentation-only confirmation while resources remain",
+    "Native details retains original instruction and guide state; retained draft/nodes/scroll and visible focus after data navigation",
+    "Sticky confirmation with measured scroll padding; <=699px height uses normal flow; allocation remains below sticky navigation",
+    "Point-mode cap/discard copy correctly says points; original discard rule unchanged"
+  ],
+  "stateComparison": {
+    "baseline": "eddc464d27087263d57665ade818930db8f58f25",
+    "seeds": {
+      "P": "jp3-pitcher-02",
+      "IF": "jp3-infielder-01"
+    },
+    "allowedDifferences": [],
+    "scope": "Complete raw S and every RNG draw at natural first allocation and after each controlled native operation, undo/reset and once-only confirmation; original allocation DOM reconstructed only after validating new presentation.",
+    "nativeFixturesPerPosition": [
+      "dice-cost-potential",
+      "point-cost-potential",
+      "carry-cap-discard",
+      "all-cap-dice",
+      "empty-dice-missing-carry",
+      "empty-points"
+    ],
+    "historicalDomBaseline": "4f39a73e23758b891bc24951225231792ab022b4",
+    "historicalScope": "Eight complete historical DOM/S/RNG career comparisons retain the original pre-existing approved oracles; no new state or RNG exclusions."
+  },
+  "coreUnchanged": {
+    "engineGitDiff": "empty",
+    "playerAbility": "newline-normalized full-source equality to phase-3 baseline asserted by new E2E; no product engine file edits",
+    "confirmation": "Existing completed/generation/state/year guards and original handler. No new persistent transaction ID or all-S atomic rollback."
+  },
+  "sourceFiles": [
+    {
+      "file": "docs/index.html",
+      "sha256": "74c8f61216d21eb62141348e63dfac39393982c82257e19a4aa472c2c7f6c73b"
+    },
+    {
+      "file": "docs/src/config.js",
+      "sha256": "3411c264e589e9bc1bd2e10f287d84dab31017a48178153cbfe58b2cba6845e2"
+    },
+    {
+      "file": "docs/src/data/release-notes.js",
+      "sha256": "1ca33cc9cb67d3e13d0124a0fbb2737e9173a45c86005f5df380076de270e221"
+    },
+    {
+      "file": "docs/src/engine/player-ability.js",
+      "sha256": "0e56c16af395c3e20ea93fe6aaaef0eb8c63bc0c7e0d30a2ecb022b01fe115eb"
+    },
+    {
+      "file": "docs/src/ui/game-view.js",
+      "sha256": "a59e4497e76a3431d781f9549ea6d3228a90f7d222a4be6942870d75e9117fe6"
+    },
+    {
+      "file": "docs/src/ui/decision-presentation.js",
+      "sha256": "ff0f16b6278c9f2d1b30426875eeba5bc842995b622928ac38d74e49bc464eb1"
+    },
+    {
+      "file": "docs/src/ui/allocation-presentation.js",
+      "sha256": "2ccdfd5e27c7dd39dda6e5fe2c270b38a798277671456a2864d9e4560ad060a2"
+    },
+    {
+      "file": "docs/styles/allocation-presentation.css",
+      "sha256": "8dc0568c928bf1b74bc78d5947cc977a9b57b2019e595cd9a982564f112e4e47"
+    },
+    {
+      "file": "scripts/test-manifest.mjs",
+      "sha256": "ea3ebbd441c3c7d3b24e055cee941792651e1425b4c2d669bcca82d1af7971c8"
+    },
+    {
+      "file": "tests/ui-redesign-allocation-e2e.mjs",
+      "sha256": "3001dd37dd239e29d056c91ae368737bba11da5726372165125377af02d705c8"
+    },
+    {
+      "file": "tests/ui-redesign-decision-e2e.mjs",
+      "sha256": "b8be2d8123d12b359de5043d424a47fdb83f5147e49d76e5025fc67379ad2639"
+    },
+    {
+      "file": "tests/ui-redesign-shell-e2e.mjs",
+      "sha256": "7beec23a2c7fb0f4041b562f683eb18d8d2543987d90f833dba99e670a76dc1b"
+    },
+    {
+      "file": "tests/support/decision-dom-comparison.mjs",
+      "sha256": "731fcaa572a9cb419171c903de6050a899401a848e16d3a6fce1f73c25be134d"
+    },
+    {
+      "file": "tests/design-tokens-06.test.mjs",
+      "sha256": "1e3ce72edd53ac1f380406b9e3fc0a640f0b409acec8a957cf3313434330d1e5"
+    },
+    {
+      "file": "scripts/test-browser-save-runtime.mjs",
+      "sha256": "1d7f2d777373f50b75f868ca526452d42117f0a216199571b340bd0c0bc744ed"
+    },
+    {
+      "file": "tests/kbo-renewal-e2e.mjs",
+      "sha256": "2acc72098ce692bd0590829de567eb1e4aa9b37864e80fb61b0b9d46fd4c673e"
+    }
+  ],
+  "hashScope": "Raw Windows working-tree bytes, including newly staged product modules. Distinct from Git newline-normalized blob hashes.",
+  "relatedTests": [
+    {
+      "file": "test-results/ui-phase4-related-01/game-view-dom-e2e.log",
+      "status": "PASS",
+      "sha256": "0a8ecda786ded4e5d597d5f2db40ff21faf39073693c074df0d62849d4e201d7"
+    },
+    {
+      "file": "test-results/ui-phase4-related-02/ui-redesign-decision-e2e.log",
+      "status": "PASS",
+      "sha256": "cd4c32a0d5c1bca0ecc2505f0622e5322b259d869676493fe27ab475270d92ab"
+    },
+    {
+      "file": "test-results/ui-phase4-related-02/ui-redesign-shell-e2e.log",
+      "status": "PASS",
+      "sha256": "48bc4b9cb5e67b2b6dc546a1199e345f3cef31a5788a6ebfd11b3e7591e3f5d6"
+    },
+    {
+      "file": "test-results/ui-phase4-related-03/browser-save-runtime-e2e.log",
+      "status": "PASS",
+      "sha256": "fc78220155021bcc7ed0f14f927c720eef1aef11e19516ba7545bca0ef44bdb3"
+    },
+    {
+      "file": "test-results/ui-phase4-related-03/kbo-renewal-e2e.log",
+      "status": "PASS",
+      "sha256": "38639e4a3c0852e64902db21e24c9fb42c892eb34b6e7feaa51b3f37be78357c"
+    },
+    {
+      "file": "test-results/ui-phase4-related-03/ui-redesign-allocation-14.log",
+      "status": "PASS",
+      "sha256": "9785d948139e609d09664ac20e33a1d0bab2c9eaa3c8eaed4c06325727d6316b"
+    }
+  ],
+  "preservedAttempts": [
+    {
+      "file": "test-results/ui-phase4-allocation-10/summary.json",
+      "status": "FAIL",
+      "cases": 0,
+      "errors": [],
+      "reason": "FAIL: real visible-coordinate click exposed allocation z-index blocking navigation. Fixed allocation stacking below navigation.",
+      "sha256": "9a5133f1a63d7b56530c821c9fc01b32ffd1944c874a619ab39c140523d0e22d"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-11/summary.json",
+      "status": "FAIL",
+      "cases": 2,
+      "errors": [],
+      "reason": "FAIL: native focus outline changed page scroll extent by 2px; oracle now strictly clamps to current scroll bounds, no arbitrary tolerance.",
+      "sha256": "66c650c79944cc1ffbe98148d238120b5c28865663c66b5dc00c5b6aa5dfdc98"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-12/summary.json",
+      "status": "PASS",
+      "cases": 128,
+      "errors": [],
+      "reason": "PASS: 128 real catalog-theme/layout cases, 12 native fixtures across P/IF; strict S/RNG/DOM, undo/reset/once-only confirmation and real-pointer return.",
+      "sha256": "696388371d05301bdab221c1dcd329b2d868fbf35b8ccec0183f66e7b3797851"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-01/summary.json",
+      "status": "PASS",
+      "cases": 128,
+      "errors": [],
+      "reason": "Preliminary PASS; one noncatalog theme fell back to standard and scroll/hit assertions were incomplete. Not final coverage.",
+      "sha256": "b36f07edd26c07710b57620fe43d24495005a5ed1f3e35f2aef29491bcc4dbd1"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-02/summary.json",
+      "status": "FAIL",
+      "cases": 33,
+      "errors": [],
+      "reason": "FAIL: last ability obstructed at 1024x600 large font. Added short-window normal-flow footer and measured scroll reserve.",
+      "sha256": "f80a73f090be05ebe632befd7a7359f9a2c64a502ad13c541b1eb511d149720d"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-03/summary.json",
+      "status": "PASS",
+      "cases": 128,
+      "errors": [],
+      "reason": "Preliminary PASS; explicit return scroll equality and real-pointer navigation not yet covered.",
+      "sha256": "696388371d05301bdab221c1dcd329b2d868fbf35b8ccec0183f66e7b3797851"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-04/summary.json",
+      "status": "FAIL",
+      "cases": 0,
+      "errors": [],
+      "reason": "FAIL: expected pre-click page position differs after locator navigation automatically scrolls before click.",
+      "sha256": "915665e3984f423c9c0c100eef3a36d0b679b7e4cb6ae2e563860846753e0119"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-05/summary.json",
+      "status": "FAIL",
+      "cases": 0,
+      "errors": [],
+      "reason": "FAIL: same pre-click mismatch; deferred restoration alone could not correct the capture point.",
+      "sha256": "915665e3984f423c9c0c100eef3a36d0b679b7e4cb6ae2e563860846753e0119"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-06/summary.json",
+      "status": "FAIL",
+      "cases": 0,
+      "errors": [],
+      "reason": "FAIL: diagnostic trace shows changed page position before navigation event.",
+      "sha256": "f59a7ab4869dca280834d4d35cf8bf6044906106c891068385dfa2371928fec3"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-07/summary.json",
+      "status": "FAIL",
+      "cases": 0,
+      "errors": [],
+      "reason": "FAIL: same mismatch; changing natural-flow flex containers did not fix it and was reverted.",
+      "sha256": "91182c7784e4dcf3e0080609988b54dd57bebd8e7a3d5ce98f05803b8123e0f7"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-08/summary.json",
+      "status": "FAIL",
+      "cases": 0,
+      "errors": [],
+      "reason": "FAIL: geometry proves sticky navigation is visible before locator auto-scroll.",
+      "sha256": "5455da365c2c281215d62418c66a57e2acff2eae8f553074b57ec9d2bc47cc90"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-09/summary.json",
+      "status": "FAIL",
+      "cases": 0,
+      "errors": [],
+      "reason": "FAIL: pointer capture cannot precede Playwright's own pre-pointer auto-scroll.",
+      "sha256": "2c436960d8caa909554d29759425e302f3145f5b5df8af42852e6a6b2e29d341"
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-13/summary.json",
+      "status": "FAIL",
+      "cases": 64,
+      "sha256": "393828745870128fffeb9b5b041d4727bd535019a084c7cb35e590342db55b48",
+      "reason": "FAIL: keyboard input did not reach the historical background page; require bringing each target to foreground, asserting focused ability and exactly one consumed die. No state/RNG allowance added."
+    },
+    {
+      "file": "test-results/ui-phase4-allocation-14/summary.json",
+      "status": "PASS",
+      "cases": 128,
+      "sha256": "696388371d05301bdab221c1dcd329b2d868fbf35b8ccec0183f66e7b3797851",
+      "reason": "PASS: final native keyboard focus/one-die preconditions plus 128 layouts and 12 fixtures; product pointer-capture experiment removed after stacking diagnosis."
+    }
+  ],
+  "otherFailures": [
+    {
+      "file": "test-results/ui-phase4-related-01/ui-redesign-decision-e2e.log",
+      "status": "FAIL",
+      "sha256": "c3aca3381891102dfa6ae9dd1a7c9565753dc270e893e5953b3d7e89fb4dcf25",
+      "reason": "Old step label compared whole ability-row text; added preview text is approved. Compare original .abrow-info text and retain complete S/RNG equality."
+    },
+    {
+      "status": "FAIL",
+      "reason": "Old design-token count 76 expected vs 81 actual. Explicitly accept five new shared font sites and 14 new spacing sites (222→236); original 13 font/12 spacing tokens and constraints remain strict."
+    }
+  ],
+  "localQuick": {
+    "status": "PASS",
+    "counts": {
+      "PASS": 100,
+      "FAIL": 0,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "seconds": 403.387,
+    "output": "test-results/ui-phase4-quick-02",
+    "summarySha256": "402ea7260c2dea27b959bb0e7d22d277378a2b502e94425e79108da34e4a75b4",
+    "sourceFingerprint": "3879b50ebe954c84a3e0f96e6d76f97c686565616890bb3488335a4b9828454b",
+    "headAtExecution": "eddc464d27087263d57665ade818930db8f58f25",
+    "sourceUnchangedAfterRun": true,
+    "allocationEvidence": {
+      "file": "test-results/ui-phase4-quick-02/allocation-evidence/summary.json",
+      "status": "PASS",
+      "cases": 128,
+      "fixtures": 12,
+      "sha256": "696388371d05301bdab221c1dcd329b2d868fbf35b8ccec0183f66e7b3797851"
+    }
+  },
+  "full": {
+    "status": "NOT_RUN",
+    "requiredResultLabel": "需要執行Full（GitHub手動／未執行）",
+    "execution": "User manually starts GitHub Full on the new commit; no local Full, no agent dispatch/rerun.",
+    "reason": "Common allocation view/navigation and Full-specific historical DOM comparison changed. Previous phase-3 Full PASS does not cover this code."
+  },
+  "limitations": [
+    "Phase 5 not implemented.",
+    "Preview, physical iOS/Android, real browser 200% zoom, actual soft keyboard/safe area/browser toolbar and real WebFont not verified; Chromium viewport and app large-font cases are separate evidence.",
+    "No new average allocation, generic safe retry, all-S transaction rollback, save schema or midyear autosave.",
+    "Original snapshot/hist temporarily mutate current S during allocation; this established draft meaning is retained.",
+    "ARTIFACT_COVERAGE_BLOCKED remains; summary/log hashes do not represent full raw trace artifact preservation."
+  ],
+  "previousQuick": {
+    "status": "FAIL",
+    "counts": {
+      "PASS": 98,
+      "FAIL": 2,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "output": "test-results/ui-phase4-quick-01",
+    "summarySha256": "f7e396a3eff19e555b2cb206b042d0a0382d64312b5b6bd1ea4857fc3a2e2055",
+    "sourceFingerprint": "8baa2f96e0e350f5218511132afb1a6492890bf708922f2544f37e91c803f2ed",
+    "sourceFiles": [
+      {
+        "file": "docs/index.html",
+        "sha256": "74c8f61216d21eb62141348e63dfac39393982c82257e19a4aa472c2c7f6c73b"
+      },
+      {
+        "file": "docs/src/config.js",
+        "sha256": "3411c264e589e9bc1bd2e10f287d84dab31017a48178153cbfe58b2cba6845e2"
+      },
+      {
+        "file": "docs/src/data/release-notes.js",
+        "sha256": "1ca33cc9cb67d3e13d0124a0fbb2737e9173a45c86005f5df380076de270e221"
+      },
+      {
+        "file": "docs/src/engine/player-ability.js",
+        "sha256": "0e56c16af395c3e20ea93fe6aaaef0eb8c63bc0c7e0d30a2ecb022b01fe115eb"
+      },
+      {
+        "file": "docs/src/ui/game-view.js",
+        "sha256": "a59e4497e76a3431d781f9549ea6d3228a90f7d222a4be6942870d75e9117fe6"
+      },
+      {
+        "file": "docs/src/ui/decision-presentation.js",
+        "sha256": "613da6ef771f9e26d9f5a95bc2e501f60cd221e7263c05a5f92aabb2fe5faa92"
+      },
+      {
+        "file": "docs/src/ui/allocation-presentation.js",
+        "sha256": "2ccdfd5e27c7dd39dda6e5fe2c270b38a798277671456a2864d9e4560ad060a2"
+      },
+      {
+        "file": "docs/styles/allocation-presentation.css",
+        "sha256": "8dc0568c928bf1b74bc78d5947cc977a9b57b2019e595cd9a982564f112e4e47"
+      },
+      {
+        "file": "scripts/test-manifest.mjs",
+        "sha256": "ea3ebbd441c3c7d3b24e055cee941792651e1425b4c2d669bcca82d1af7971c8"
+      },
+      {
+        "file": "tests/ui-redesign-allocation-e2e.mjs",
+        "sha256": "cae5700c798867c00170aad1c2f7f7da9187de2a621353ae691c1b98aab28d27"
+      },
+      {
+        "file": "tests/ui-redesign-decision-e2e.mjs",
+        "sha256": "b8be2d8123d12b359de5043d424a47fdb83f5147e49d76e5025fc67379ad2639"
+      },
+      {
+        "file": "tests/ui-redesign-shell-e2e.mjs",
+        "sha256": "7beec23a2c7fb0f4041b562f683eb18d8d2543987d90f833dba99e670a76dc1b"
+      },
+      {
+        "file": "tests/support/decision-dom-comparison.mjs",
+        "sha256": "731fcaa572a9cb419171c903de6050a899401a848e16d3a6fce1f73c25be134d"
+      },
+      {
+        "file": "tests/design-tokens-06.test.mjs",
+        "sha256": "1e3ce72edd53ac1f380406b9e3fc0a640f0b409acec8a957cf3313434330d1e5"
+      },
+      {
+        "file": "scripts/test-browser-save-runtime.mjs"
+      },
+      {
+        "file": "tests/kbo-renewal-e2e.mjs"
+      }
+    ],
+    "failures": [
+      {
+        "id": "browser-save-runtime-e2e",
+        "reason": "New disabled confirmation and allocation preview are presentation-only; old all-button choice text comparison not yet adapted."
+      },
+      {
+        "id": "kbo-renewal-e2e",
+        "reason": "Added allocation preview entered recorded row action label; original ability info and all state/RNG assertions stay strict."
+      }
+    ]
+  },
+  "testAdaptation": "Save runtime: keep same-version raw choices, validate all added allocation DOM before comparing original choices across versions; S/RNG and version oracle unchanged. KBO: record original .abrow-info text for ability rows, keep historical failure source and all pre-failure state/digest/RNG assertions.",
+  "diffCheck": {
+    "status": "PASS",
+    "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+    "note": "KBO test keeps its pre-existing CRLF (HEAD and worktree both end that line with CR). Command-local recognition of CRLF; no global/repository Git config or source newline rewrite. Default check flagged that preserved CR on the changed line."
+  },
+  "documentationAfterQuick": "Only BACKLOG/spec wording/evidence updates after final Quick; executable source unchanged, no rerun needed. CI Full on the new commit remains required."
+}

@@ -321,5 +321,25 @@
     "sha256": "0c84585daf60aa656505cf0d3e38bed1ebbc364fa491bb8848d1d70eea60a483"
   },
   "relatedTestsNote": "個別E2Eは開発途中の診断結果。最終Quickは新規製品モジュールも索引へ追加した確定ソースで実行し、同版P/IFの全S/RNGと全128表示条件を再検証する。共通DOM比較の正式最終Gateは新SHAのGitHub Full待ち。",
-  "documentationAfterQuick": "以後はBACKLOG／設計進捗／本収據のみ更新。実行に影響せず、Quick再実行不要。新SHAのFullを過去PASSに置換しない。"
+  "documentationAfterQuick": "以後はBACKLOG／設計進捗／本収據のみ更新。実行に影響せず、Quick再実行不要。新SHAのFullを過去PASSに置換しない。",
+  "ciFollowup": {
+    "verifiedOn": "2026-11-17",
+    "runId": "43979397276",
+    "attempt": "1",
+    "url": "https://github.com/tt-chin/yakyujinsei/actions/runs/43979397276",
+    "head": "eddc464d27087263d57665ade818930db8f58f25",
+    "status": "PASS",
+    "counts": {
+      "PASS": 129,
+      "FAIL": 0,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "acceptedPass": 129,
+    "unverified": 0,
+    "issues": [],
+    "summary": "test-results/verification-43979397276-attempt1/summary.json",
+    "summarySha256": "dda04e90940184edb9077a3a774a78181634952ec98ef759d135b415363c53c0",
+    "scope": "第3批的Full Gate已通過。保留原始本機NOT_RUN記錄；不宣稱第4批或Preview／實機通過。"
+  }
 }

@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-17 UI改版第4批（R2）：配點專用畫面、短標題與原說明、能力／繰越前後值、既有資源／進度、配分方法、無效確認提示、跨資料頁草稿／捲動／焦點保留已實作。手機單欄、寬畫面雙欄與桌面側欄保留；短視窗確認列回自然流，專用區層級不再擋住導覽。原配點模組、成長／潛力規則、復原／重設／一次確認、S／RNG與存檔時點不變，不新增通用重試或全S回滾。版號維持2.0.0，第5批未實作。確定碼Quick **100／100 PASS**；128組正式主題／尺寸／字級、P／IF原生12配點fixture與完整S／RNG、8組歷史DOM／S／RNG生涯比較通過。首輪Quick98 PASS／2 FAIL（新增預覽／無效按鈕造成的舊選項標籤期待）及早期遮擋／捲動／測試輸入FAIL原樣保留，修正後失敗入口先重測PASS。第3批基準`eddc464`已確認使用者手動Full Run43979397276為129 PASS；不冒充第4批Full。**需要執行Full（GitHub手動／未執行）**：共用配點UI／導覽及Full專用DOM比較有改動，須對本次新提交手動執行。未執行本機Full或自行觸發GitHub Full。Preview／實機與ARTIFACT_COVERAGE_BLOCKED維持；不改既有checkbox。詳見[第4批驗證收據](tasks/UI_REDESIGN_PHASE4_EVIDENCE.json)。
+
 > 2026-11-17 UI改版第3批（R2）：事件卡閱讀層次、原生履歷展開、實際能力／繰越前後值與效果、當前選擇摘要／收合、查資料返回原選擇與捲動、結果／診斷焦點、普通選擇防連點已實作。使用者選A：保留既有復原／防重複與不要再次選擇提示，不新增通用重試。版號維持2.0.0；第4～5批未實作。修正桌面大字選項副文溢出後，確定碼Quick **99／99 PASS**，128組版面與P／IF同版完整S／RNG比較通過；相關事件552分支、24告別fixture及歷史DOM比較個別入口通過。前次Quick99 PASS未檢出該視覺問題，與早期焦點／未定義捲動、舊DOM／文案期待FAIL均保留，不冒充確定碼結果。**需要執行Full（GitHub手動／未執行）**：共用UI／導覽及Full專用DOM比較受影響，須由使用者對本次新提交手動執行；未啟動本機Full或自行觸發GitHub Full。Preview／實機、既有checkbox與ARTIFACT_COVERAGE_BLOCKED維持。來源、日誌雜湊與限制見[第3批驗證收據](tasks/UI_REDESIGN_PHASE3_EVIDENCE.json)。
 
 > 2026-11-17 最新確認與測試分工：第2批修正提交`4ba12c54c5da3e2fd477d7616c57821132accfa3`的[使用者手動Full Run43861732451](https://github.com/tt-chin/yakyujinsei/actions/runs/43861732451)為128 PASS／0 FAIL／0 SKIP／0 BLOCKED，8批與Aggregate成功；已下載原始摘要核對，先前124／4 FAIL保留。Preview／實機與ARTIFACT_COVERAGE_BLOCKED不因此解除。使用者將「本機不執行Full、需要時提示由使用者在GitHub手動執行」擴大為本專案後續所有作業的長期規則，見AGENTS第6.2章；風險分類、相關測試、必要Quick及正式Full Gate不變。

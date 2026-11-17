@@ -4,6 +4,30 @@ export function projectDecisionPresentation(markup,area,state){
   const fail=code=>{throw Error('PHASE3_'+code);};
   const t=document.createElement('template');t.innerHTML=markup;const root=t.content.firstElementChild;
   const only=(node,names)=>{if([...node.attributes].some(a=>!names.includes(a.name)))fail('ATTRIBUTES');};
+  if(area==='act'&&root.hasAttribute('data-allocation-session')){
+    const view=window.__phase3Pending();if(view?.kind!=='ALLOCATION'||root.dataset.allocationSession!==root.dataset.decisionId)fail('ALLOCATION_SESSION');
+    window.__phase4Starts??=new WeakMap();let start=window.__phase4Starts.get(view);
+    if(!start){start={ab:{...state.ab},carry:{...state.carry}};window.__phase4Starts.set(view,start);}
+    const period=root.querySelector('[data-allocation-period]');if(period?.tagName!=='P'||period.textContent!==`${view.year}年`)fail('ALLOCATION_PERIOD');only(period,['data-allocation-period']);period.remove();
+    const guide=root.querySelector('[data-allocation-guide]');
+    const guideText=['配分方法','サイコロは表示順に1個ずつ、ポイントは1点ずつ能力へ投入します。','現在値・潜在能力と育成点の進捗を確認してください。潜在能力を超えると必要な育成点が増えます。','「元に戻す」「すべてリセット」で今回の配分を戻せます。資料を見て戻っても同じ訓練を続けられます。'];
+    if(guide?.tagName!=='DETAILS'||guide.children.length!==5||[guide.children[0],...Array.from(guide.children).slice(2)].some((n,i)=>n.tagName!==(i?'P':'SUMMARY')||n.textContent!==guideText[i]||n.attributes.length))fail('ALLOCATION_GUIDE');only(guide,['data-allocation-guide','open']);
+    const original=guide.children[1],title=root.querySelector(':scope > .title');if(original.tagName!=='DIV'||!original.hasAttribute('data-allocation-original'))fail('ALLOCATION_ORIGINAL');only(original,['data-allocation-original']);if(title.textContent!==(root.querySelector('#dice')?'トレーニング':original.textContent))fail('ALLOCATION_TITLE');title.replaceChildren(...original.childNodes);guide.remove();
+    const dice=root.querySelector('#dice'),remaining=dice?dice.querySelectorAll('.die:not(.used)').length:Number(root.querySelector('#al-top .pool')?.textContent.match(/：\s*(\d+)/)?.[1]);if(!Number.isFinite(remaining))fail('ALLOCATION_RESOURCE');
+    for(const row of root.querySelectorAll('#al-rows .abrow')){
+      const key=row.dataset.abilityKey,now=state.ab[key],gain=now-start.ab[key],preview=row.querySelector('[data-allocation-preview]'),action=row.querySelector('[data-allocation-action]');
+      const expected=`今回 ${start.ab[key]} → ${now}（${gain>=0?'+':''}${gain}）｜育成点 ${row.querySelector('.progress').textContent}｜繰越 ${start.carry[key]||0} → ${state.carry?.[key]||0}`;
+      if(preview?.tagName!=='SPAN'||preview.textContent!==expected||preview.id!=='allocation-preview-'+key||row.getAttribute('aria-describedby')!==preview.id)fail('ALLOCATION_PREVIEW');only(preview,['data-allocation-preview','id']);preview.remove();row.removeAttribute('aria-describedby');
+      if(action?.tagName!=='SPAN'||action.getAttribute('aria-hidden')!=='true'||action.textContent!==(now>=80?'上限':remaining===0?'配分済み':dice?'サイコロを投入':'+1ポイント'))fail('ALLOCATION_ACTION');only(action,['data-allocation-action','aria-hidden']);action.remove();
+    }
+    const footer=root.querySelector('#al-btm'),status=footer.querySelector('[data-allocation-status]'),placeholder=footer.querySelector('[data-allocation-confirm-placeholder]'),allCap=[...root.querySelectorAll('.abrow')].every(r=>r.classList.contains('capped')),unit=dice?'サイコロ':'ポイント';
+    const expected=`残り${unit}：${remaining}${dice?'個':'点'}｜`+(remaining>0&&!allCap?(dice?'残りのサイコロを割り当ててください':'残りのポイントを配分してください'):remaining>0?`上限のため、残りの${unit}は確定時に破棄されます。`:'配分内容を確認して確定してください');
+    if(status?.tagName!=='P'||status.id!=='allocation-status'||status.textContent!==expected)fail('ALLOCATION_STATUS');only(status,dice?['data-allocation-status','id','role','aria-live']:['data-allocation-status','id']);if(dice&&(status.getAttribute('role')!=='status'||status.getAttribute('aria-live')!=='polite'))fail('ALLOCATION_LIVE');status.remove();
+    if(remaining>0&&!allCap){if(placeholder?.tagName!=='BUTTON'||placeholder.type!=='button'||!placeholder.disabled||placeholder.textContent!=='確定 ▸'||placeholder.className!=='btn main'||placeholder.getAttribute('aria-describedby')!=='allocation-status')fail('ALLOCATION_DISABLED');only(placeholder,['type','class','data-allocation-confirm-placeholder','disabled','aria-describedby']);placeholder.remove();}else if(placeholder)fail('ALLOCATION_CONFIRM');
+    if(!dice&&allCap&&remaining>0){const c=footer.querySelector('.main');if(c?.textContent!=='能力が上限に達しました。残ったポイントを捨てます ▸')fail('ALLOCATION_CAP_COPY');c.textContent='能力が上限に達しました。残ったサイコロを捨てます ▸';}
+    root.removeAttribute('data-allocation-session');
+    if(root.querySelector('[data-allocation-preview],[data-allocation-status],[data-allocation-action],[data-allocation-period],[data-allocation-guide],[data-allocation-confirm-placeholder]'))fail('ALLOCATION_UNPROJECTED');
+  }
   for(const card of root.querySelectorAll('[data-reader-card]')){
     if(!card.classList.contains('card')||!/^\d+$/.test(card.dataset.readerCard))fail('CARD');
     for(const meta of card.querySelectorAll(':scope > [data-reader-period]')){only(meta,['data-reader-period']);if(meta.tagName!=='P'||!/^\d{4}年・(?:シーズン前|シーズン中|シーズン終了|進行中)$/.test(meta.textContent))fail('PERIOD');meta.remove();}

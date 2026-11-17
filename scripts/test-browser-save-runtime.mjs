@@ -1,10 +1,11 @@
 import {execFileSync} from 'node:child_process';
 import os from 'node:os';
+import {projectDecisionPresentation} from '../tests/support/decision-dom-comparison.mjs';
 import assert from 'node:assert/strict';import {createServer} from 'node:http';import {readFile,mkdir,writeFile} from 'node:fs/promises';import path from 'node:path';import {createRequire} from 'node:module';import {assertSameCareer} from '../tests/support/first-difference.mjs';
 const root=process.cwd(),out=process.argv.find(a=>a.startsWith('--output='))?.slice(9)||path.join(os.tmpdir(),'yakyujinsei-browser-save-runtime-'+Date.now());await mkdir(out,{recursive:true});
 const probe=`\nwindow.__saveTrace=[];const saveObservedR=R;R=function(){const value=saveObservedR();window.__saveTrace.push({value,state:S.rngState});return value;};const saveObservedYear=yearFlow.startReadyYear.bind(yearFlow);yearFlow.startReadyYear=function(capture){return saveObservedYear(state=>{window.__saveTraceStart=window.__saveTrace.length;capture(state);});};window.__saveAcceptance={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:window.__saveTrace.slice(window.__saveTraceStart)}),failNextYear:()=>{const old=yearFlow.startReadyYear.bind(yearFlow);yearFlow.startReadyYear=function(capture){yearFlow.startReadyYear=old;old(capture);S.ab[Object.keys(S.ab)[0]]-=1;throw Error('SAVE_INJECTED_FIRST_STEP');};}};`;
 const startBaseline='86969a52df481d13d1dcdf5893bfeafa4488dd91';
-const server=createServer(async(req,res)=>{try{const pathname=new URL(req.url,'http://local').pathname,old=pathname.startsWith('/baseline/'),rel=pathname.replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');let b=old?execFileSync('git',['show',startBaseline+':docs/'+rel],{cwd:root,maxBuffer:20e6}):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')b=b.toString()+probe;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':'text/html');res.end(b);}catch{res.statusCode=404;res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const mod=process.argv.find(a=>a.startsWith('--playwright='))?.slice(13)||process.env.PLAYWRIGHT_MODULE||'playwright';const {chromium}=createRequire(import.meta.url)(mod),browser=await chromium.launch({channel:(process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||process.env.TEST_BROWSER||'chrome')==='chromium'?undefined:(process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||process.env.TEST_BROWSER||'chrome'),headless:true});const results=[];
+const server=createServer(async(req,res)=>{try{const pathname=new URL(req.url,'http://local').pathname,old=pathname.startsWith('/baseline/'),rel=pathname.replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');let b=old?execFileSync('git',['show',startBaseline+':docs/'+rel],{cwd:root,maxBuffer:20e6}):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js'){b=b.toString()+probe;if(!old)b+='\nwindow.__phase3Pending=()=>choiceViews.get(S);window.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';';}res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':'text/html');res.end(b);}catch{res.statusCode=404;res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const mod=process.argv.find(a=>a.startsWith('--playwright='))?.slice(13)||process.env.PLAYWRIGHT_MODULE||'playwright';const {chromium}=createRequire(import.meta.url)(mod),browser=await chromium.launch({channel:(process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||process.env.TEST_BROWSER||'chrome')==='chromium'?undefined:(process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||process.env.TEST_BROWSER||'chrome'),headless:true});const results=[];
 async function homeChecks(){
  for(const [width,height] of [[1440,900],[390,844],[375,667],[320,568],[320,300]]){
   const context=await browser.newContext({viewport:{width,height}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{errors.push('unexpected native '+d.type());await d.dismiss();});await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
@@ -35,7 +36,9 @@ async function startComparison(){
    await p.waitForFunction(()=>document.querySelector('#save-live').textContent.includes('開始時点をセーブしました'));
    const snapshots=[];
    for(let step=0;step<2;step++){
-    const value=await p.evaluate(()=>({state:window.__saveAcceptance.get().state,rng:window.__saveTrace,choices:[...document.querySelectorAll('#act button,#act .abrow')].map(b=>b.textContent)}));
+    const value=await p.evaluate(()=>{const state=window.__saveAcceptance.get().state,act=document.getElementById('act');let original=act;
+      if(window.__projectDecisionPresentation){const t=document.createElement('template');t.innerHTML=window.__projectDecisionPresentation(act.outerHTML,'act',state);original=t.content.firstElementChild;}
+      return{state,rng:window.__saveTrace,choices:[...act.querySelectorAll('button,.abrow')].map(b=>b.textContent),comparisonChoices:[...original.querySelectorAll('button,.abrow')].map(b=>b.textContent)};});
     assert.equal(value.state.version,version);if(value.state.birthHighSchool)assert.equal(value.state.birthHighSchool.createdVersion,version);
     snapshots.push(value);
     if(step===0){const choice=p.locator('#act .abrow:not(.capped),#act button:not(:disabled)').first();await choice.click();}
@@ -43,10 +46,10 @@ async function startComparison(){
    runs.push(snapshots);await context.close();
   }
   assertSameCareer(runs[2],runs[1],'same-version complete S/choices/RNG initial and first action replay');
-  const normalized=runs.slice(0,2).map(run=>run.map(row=>{const copy=structuredClone(row);delete copy.state.version;if(copy.state.birthHighSchool)delete copy.state.birthHighSchool.createdVersion;return copy;}));
-  assertSameCareer(normalized[1],normalized[0],'only exact validated version metadata differs; every other initial/first-action S/choice/RNG stays identical');
+  const normalized=runs.slice(0,2).map(run=>run.map(row=>{const copy=structuredClone(row);copy.choices=copy.comparisonChoices;delete copy.comparisonChoices;delete copy.state.version;if(copy.state.birthHighSchool)delete copy.state.birthHighSchool.createdVersion;return copy;}));
+  assertSameCareer(normalized[1],normalized[0],'only exact validated version metadata and verified allocation presentation differ; original choices and every other initial/first-action S/RNG stay identical');
   await writeFile(path.join(out,'start-comparison-'+pos+'.json'),JSON.stringify({baseline:startBaseline,versions,pos,runs},null,2));
-  results.push({pos,status:'PASS',checks:'before/after new-career full S/choices/all RNG initial and first action; exact version metadata only; same-version complete replay'});
+  results.push({pos,status:'PASS',checks:'before/after new-career full S/original choices/all RNG; validated UI presentation and exact version metadata only; same-version raw choices and complete replay'});
  }
 }
 async function discardChecks(){

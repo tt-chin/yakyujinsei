@@ -1,8 +1,9 @@
 // Presentation lifetime only. Choice objects are read; no S, persistence or RNG writes.
 const PHASES=['シーズン前','シーズン中','シーズン終了'];
 export class DecisionPresentation {
-  constructor({documentRef,getDecision,getYear,getPhase}){
+  constructor({documentRef,getDecision,getYear,getPhase,getReturnTarget=()=>null}){
     this.doc=documentRef;this.win=documentRef.defaultView;this.getDecision=getDecision;this.getYear=getYear;this.getPhase=getPhase;
+    this.getReturnTarget=getReturnTarget;
     this.act=documentRef.getElementById('act');this.log=documentRef.getElementById('log');
     this.summary=documentRef.getElementById('decision-summary');this.heading=documentRef.getElementById('decision-question');
     this.returnButton=documentRef.getElementById('decision-return');this.jump=documentRef.getElementById('decision-jump');
@@ -46,7 +47,7 @@ export class DecisionPresentation {
     this.toggleButton.setAttribute('aria-expanded','false');
   }
   toggle(){if(!this.current)return;const opening=this.current.collapsed;if(!opening)this.current.actionScroll=this.act.scrollTop;this.current.collapsed=!this.current.collapsed;this.sync();if(opening)this.act.scrollTop=this.current.actionScroll||0;}
-  scrollState(){return {id:this.current?.id,page:[this.win.scrollX,this.win.scrollY],log:this.log.scrollTop,act:this.act.scrollTop,host:this.doc.getElementById('view-host').scrollTop};}
+  scrollState(){return {id:this.current?.id,page:[this.win.scrollX,this.win.scrollY],log:this.log.scrollTop,act:this.act.scrollTop,home:this.doc.getElementById('view-home').scrollTop,host:this.doc.getElementById('view-host').scrollTop};}
   navigate({stage,view,previous}){
     if(stage==='before'&&previous==='home'&&view!=='home')this.homeScroll=this.scrollState();
     if(stage!=='after')return;
@@ -54,6 +55,7 @@ export class DecisionPresentation {
     if(view==='home'&&this.current&&this.homeScroll?.id===this.current.id){
       const saved=this.homeScroll;
       this.log.scrollTop=saved.log;this.act.scrollTop=saved.act;this.doc.getElementById('view-host').scrollTop=saved.host;
+      this.doc.getElementById('view-home').scrollTop=saved.home;
       this.win.scrollTo(...saved.page);
     }
   }
@@ -61,8 +63,8 @@ export class DecisionPresentation {
     if(!this.current)return;
     if(this.view!=='home')this.doc.querySelector('[data-main-view="home"]').click();
     if(expand){this.current.collapsed=false;this.sync();}
-    const target=this.current.collapsed?this.heading:this.targetHeading;
-    target.scrollIntoView({block:'nearest'});target.focus({preventScroll:true});
+    const allocationTarget=this.getReturnTarget(),target=allocationTarget||(this.current.collapsed?this.heading:this.targetHeading);
+    if(!allocationTarget)target.scrollIntoView({block:'nearest'});target.focus({preventScroll:true});
   }
   captureSelection(event){
     const button=event.target.closest('button');if(!button||button.disabled||!this.act.contains(button))return;
