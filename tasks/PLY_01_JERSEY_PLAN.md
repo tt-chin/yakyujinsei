@@ -434,7 +434,7 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 
 **下一步**：在 `feat/ply-01-jersey` 依 T1～T8 實作（merge commit 起）→ 關聯測試 → reviewer → Quick／Full → push dev 前請使用者確認。合併與部署未授權。
 
-### 12.2 實作結果（2026-11-18，本機分支 `feat/ply-01-jersey`，未 push）
+### 12.2 實作結果（2026-11-18，分支 `feat/ply-01-jersey`，已 push、PR #105）
 
 **提交**：`6badffc` merge 5910421（T1～T3：15 個衝突檔照 §12.1 解法、決定 A、dt06）→ `32f5ce5` T4／T5 → `dd955f3` T6 → `82dfe79` T7 → `94b9cd7` T8 → `34e8164` reviewer 後續修正。
 
@@ -451,9 +451,13 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 1. `dom-snapshot.mjs` 退休背番号表與季成績卡 ` · #N` 只檢查「號碼存在於 `jerseyHistory`」，未依年度／期間精確比對（年度別已精確比對）。
 2. `removeJerseyDisplay`（`ui-redesign-review-e2e`、`display-preferences-e2e` 用）的表格 markup 契約比 `captureGameView` 版寬（缺屬性數、td `tagName`／子元素檢查）。
 
-**下一步：推送與 PR（使用者 2026-11-18 同意方向，執行留到新 session；執行前再確認一次）**
-1. 前置：`git fetch`；確認 `origin/dev` 仍為 `5910421`、`origin/main` 仍為 `d6cef67`，且無開啟中的 PR（2026-11-18 確認 0 件）。若 dev 有新提交，先盤點再決定是否再 merge。
-2. 推送（顯式 refspec、不設 upstream；feature push 不觸發 CI）：`git push origin feat/ply-01-jersey:refs/heads/feat/ply-01-jersey`，推送後確認遠端 ref 等於本機 HEAD。
-3. 以 Brave compare 頁建立 PR `feat/ply-01-jersey` → `dev`；標題「PLY-01 背番号：整合 dev 2.0.0（5910421）」；內文繁體中文、不加 Claude trailer。內文要點：功能範圍（入團選號、選單改號、面板／季成績／退休卡／年度別號碼）；整合方式（merge、決定 A／B、M2 修正）；T1～T8 與測試耦合處理；本機驗證（Quick 103／103、Full 134／134、版面 24 組、N1～N17、reviewer）；未完成（T9 版本待 code owner、CI 與 Preview 未執行、`event-system-e2e` 於 2.0.0 不穩定）；reviewer 未處理 2 項。
-4. 注意：遊戲本體變更依 AGENTS §9.4 應更新版本與 CHANGELOG，但依 M4 本 PR 不改版本，須在內文註明。PR 合併到 dev 後 dev push 只跑 Quick，Full 在 main 向 PR；本 PR 只有本機 Full。PR 由使用者或 code owner 合併，不自行合併。合併後開 Preview 前先告知使用者。
-5. 本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
+**推送與 PR（2026-11-18 完成，使用者確認後執行）**
+- 前置確認：`origin/dev` 仍為 `5910421`、`origin/main` 仍為 `d6cef67`，開啟中的 PR 0 件，未再 merge。
+- 推送：`1f8e1f7` → 遠端 `feat/ply-01-jersey`（顯式 refspec、不設 upstream），遠端 ref 與本機 HEAD 一致。
+- PR [#105](https://github.com/tt-chin/yakyujinsei/pull/105) `feat/ply-01-jersey` → `dev`，標題「PLY-01 背番号：整合 dev 2.0.0（5910421）」；內文繁體中文、無 Claude trailer，以 API 讀回與草稿逐字一致。內文已註明：依 M4 不改版本（T9 待 code owner）、CI 與 Preview 未執行、本 PR 只有本機 Full、`event-system-e2e` 於 2.0.0 不穩定、reviewer 未處理 2 項。PR → `dev` 不觸發 CI。
+
+**下一步（等待中）**
+1. PR #105 由使用者或 code owner 合併，不自行合併。之後推送到本分支的提交會進入同一 PR。
+2. 合併到 dev 後：dev push 只跑 Quick，確認其結果；Full 要到 `main` 向 PR 才執行。開 Preview（`https://dev.yakyujinsei.pages.dev`）確認前先告知使用者。
+3. T9（版本、CHANGELOG、RELEASE_NOTES）待 code owner 決定 2.0.0 發布安排。
+4. 本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
