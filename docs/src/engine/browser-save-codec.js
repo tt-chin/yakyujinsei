@@ -1,12 +1,16 @@
 import {captureCompletedAwardProofs} from './award-transaction-policy.js';
 import {VERSION} from '../config.js';
 import {SAVE_STATE_CONTRACT} from './browser-save-state-contract.js';
+import {isValidJerseyHistory} from './jersey-policy.js';
+import {JP_DATA} from '../data/jp-data.js';
 // Annual-start data contract. Captured proof ownership is checked before sealing.
 export const SAVE_LIMITS=Object.freeze({bytes:2*1024*1024,depth:32,arrayLength:1024,nodes:131072});
 export const SAVE_COMPATIBILITY='year-start-v2-auth';
 const captures=new WeakMap();
 const blocked=new Set(['__proto__','prototype','constructor']);
 const fail=code=>{throw Object.assign(new Error(code),{code});};
+// PLY-01: jersey records name professional teams only (W6).
+const JERSEY_TEAM_IDS=new Set(JP_DATA.teams.filter(t=>!['CORP','IND'].includes(t.org)).map(t=>t.teamId));
 // Preserve shared references, but reject cycles and executable/host objects.
 export function copySaveData(value,{stateRoot=false}={}){
  const copies=new WeakMap(),active=new WeakSet();let estimated=0,nodes=0;
@@ -59,6 +63,7 @@ export function validateSaveEnvelope(input){
  for(const k of SAVE_STATE_CONTRACT.required)if(!Object.hasOwn(s,k))fail('SAVE_MISSING_FIELD');
  for(const [k,allowed]of Object.entries(SAVE_STATE_CONTRACT.types)){if(!Object.hasOwn(s,k))continue;const v=s[k],type=v===null?'null':Array.isArray(v)?'array':typeof v;if(!allowed.includes(type))fail('SAVE_FIELD_TYPE');}
  for(const k of ['year','age','stageYr'])if(!Number.isSafeInteger(s[k])||s[k]<0||c[k]!==s[k])fail('SAVE_YEAR');
+ if(Object.hasOwn(s,'jerseyHistory')&&!isValidJerseyHistory(s.jerseyHistory,{year:s.year,teamExists:id=>JERSEY_TEAM_IDS.has(id)}))fail('SAVE_JERSEY');
  if(s.championmakerAcquiredYear!==null&&(!Number.isSafeInteger(s.championmakerAcquiredYear)||s.championmakerAcquiredYear<1||s.championmakerAcquiredYear>s.year))fail('SAVE_CHAMPION_YEAR');
  if(s.year<1||s.year>9999||s.done!==false)fail('SAVE_STATE');
  if(!Number.isInteger(s.rngState)||s.rngState<0||s.rngState>0xffffffff)fail('SAVE_RNG');

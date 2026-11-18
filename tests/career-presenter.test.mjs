@@ -98,6 +98,8 @@ for(const [name,over] of Object.entries(boardFixtures))for(const phase of [0,1,2
   expected.teamHtml=approvedTeamBadgeClasses(expected.teamHtml);
   // UI 2.0 adds read-only mobile summary fields; all existing board fields stay exact.
   expected.isAmateur=state.stage!=='PRO';expected.injuryRiskText=`${state.injNext||0}%`;
+  // PLY-01 (J1/J6): board() adds the number badge text and the menu availability; these fixtures have no jerseyHistory.
+  Object.assign(expected,{numberText:'',numberChangeEnabled:false});
   assert.deepEqual(shape(presenter.board(phase)),shape(expected));
 });
 assert.equal(Object.keys(boardFixtures).length,18);

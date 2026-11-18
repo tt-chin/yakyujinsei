@@ -52,6 +52,8 @@ async function page(width=1280,seed='stage10-fixture',trace=true,pos='IF',prior=
   return p;
 }
 const get=p=>p.evaluate(()=>window.__stage10.get());
+// PLY-01 P5: entering a new professional year now shows the number prompt before phasePre; confirm it with the main button, then continue unchanged.
+const settleJersey=async p=>{const b=p.locator('#act button').filter({hasText:/^背番号 \S+ (で入団する|にする)$/});if(await b.count())await b.first().click();};
 const comparable=s=>{const state=JSON.parse(JSON.stringify(s));delete state.version;delete state.potSum0;if(state.done)delete state.traits.grinder;return state;};
 async function career(p,comparison=false){const digest=s=>hash(comparison?JSON.stringify(comparable(JSON.parse(s))):s);const actions=[];for(let i=0;i<1600;i++){const step=await p.evaluate(()=>window.__stage10.step());if(step.terminal)return{actions,...await get(p)};actions.push({action:step.action,before:digest(step.before),after:digest(step.after),rng:step.rng});}throw Error('CAREER_OPERATION_LIMIT');}
 const money=s=>({earnings:s.careerEarnings,bonus:s.careerSigningBonus,base:s.careerBaseSalary,stipend:s.careerDevelopmentStipend,payments:s.signingPayments});
@@ -85,9 +87,9 @@ try{
     let returnControl;
     for(const fault of ['none','before-sign','after-create','after-payment'])await h.test('C-'+width+'-'+fault,{width,source:'CPBL1',faultInjection:fault!=='none',fault},async e=>{
       await p.evaluate(()=>window.__stage10.fixture({org:'CPBL',level:'CPBL1',ability:54,salary:12000000}));await p.evaluate(()=>window.__stage10.returnOffer());await p.evaluate(()=>window.__stage10.remember());const before=await get(p);assert.match(before.choices,/NPB/);
-      if(fault!=='none')await p.evaluate(v=>window.__stage10.fault(v),fault);await p.locator('#act button').first().click();const first=await get(p);
+      if(fault!=='none')await p.evaluate(v=>window.__stage10.fault(v),fault);await p.locator('#act button').first().click();await settleJersey(p);const first=await get(p);
       if(fault!=='none'){assert.equal(first.state.year,before.state.year);await p.locator('#act button').first().click();}else await p.evaluate(()=>window.__stage10.oldClick());
-      const retry=await get(p);e.snapshots.push({before,first,retry});e.classification=fault==='none'?'Normal native return':'Fault injection: effective return completion latch risk';
+      await settleJersey(p);const retry=await get(p);e.snapshots.push({before,first,retry});e.classification=fault==='none'?'Normal native return':'Fault injection: effective return completion latch risk';
       if(fault==='none'){assert.deepEqual(retry.state,first.state);assert.deepEqual(retry.rng,first.rng);}
       if(fault==='after-payment'){assert.equal(retry.state.ct.contractId,first.state.ct.contractId);assert.deepEqual(money(retry.state),money(first.state));}
       assert.equal(retry.state.year,before.state.year+1,'Return must advance once after successful retry');assert.ok(retry.choices.trim(),'Next operation must remain available');assert.equal(retry.state.ct.org,'NPB');
@@ -109,7 +111,7 @@ try{
       await p.locator('#act button').first().click();const result=await get(p);assert.equal(result.state.year,2039);assert.equal(result.state.contractSequence,2);assert.equal(result.state.ct.contractId,attempts[0].state.ct.contractId);assert.deepEqual(money(result.state),money(attempts[0].state));e.snapshots.push({attempts,result});
     });
     await h.test('G-stay-'+width,{width,fixture:true},async e=>{
-      await p.evaluate(()=>window.__stage10.fixture({org:'CPBL',level:'CPBL1',ability:54,salary:12000000}));await p.evaluate(()=>window.__stage10.returnOffer());await p.locator('#act button').filter({hasText:'現在の球団に残留'}).click();const result=await get(p);assert.equal(result.state.year,2039);assert.equal(result.state.org,'CPBL');assert.ok(result.choices.trim());assert.equal(result.rng.length,6,'No contract-year draw on stay');e.snapshots.push(result);
+      await p.evaluate(()=>window.__stage10.fixture({org:'CPBL',level:'CPBL1',ability:54,salary:12000000}));await p.evaluate(()=>window.__stage10.returnOffer());await p.locator('#act button').filter({hasText:'現在の球団に残留'}).click();await settleJersey(p);const result=await get(p);assert.equal(result.state.year,2039);assert.equal(result.state.org,'CPBL');assert.ok(result.choices.trim());assert.equal(result.rng.length,6,'No contract-year draw on stay');e.snapshots.push(result);
     });await p.close();
   }
 }catch(error){

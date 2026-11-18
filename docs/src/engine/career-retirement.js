@@ -21,7 +21,7 @@ export class CareerRetirement {
   endGame(reason){this.#rules.endGame(reason);}
 }
 
-function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,rng:{R,ri}}){
+function careerRetirementRules({getState,jerseyPeriods,jerseyRetired,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,rng:{R,ri}}){
   function roleName3(r){ return {SP:'先発投手',MR:'リリーバー',CL:'抑え'}[r]||'投手'; }
   function primaryPos(){ /* 通算の半数超を守った位置を主守備とし、該当なしなら年数順でユーティリティーまたはスイングマンと判定。 */
     const S=getState();
@@ -150,9 +150,13 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
     if(S.traits.legend){ card('gold',(alreadyLegend?'':'隠し特性解放：')+(S.legendLeague||'')+'歴史に残る名選手',
       alreadyLegend?'':`初回投票で殿堂入り――ただ名を連ねただけではない。あなたは<b class="hl">一つの時代を築いた</b>。その名は${S.legendLeague||'野球界'}の歴史に刻まれる。`); }
   }
+  /* PLY-01 W2c: number history above the league tables; J3 periods come from professional log rows. */
+  function jerseyTable(periods){if(!periods.length)return '';
+    const rows=periods.map(p=>`<tr><td class="cell-left">${p.team}</td><td class="cell-nowrap">${p.from===p.to?p.from:p.from+'–'+p.to}</td><td class="cell-nowrap">${p.number===null?'不明':'#'+p.number}</td></tr>`).join('');
+    return `<h4 class="jersey-heading">背番号</h4><table class="fin jersey-table">${rows}</table>`;}
   function endGame(reason){
     const S=getState();
-    S.done=true; actClear();
+    S.done=true; actClear(); jerseyRetired?.(); /* PLY-01 J1: no number or menu change after retirement. */
     divider('現役生活に幕');
     card('info','引退する',reason);
     /* リーグ別成績と評価。 */
@@ -231,7 +235,7 @@ function careerRetirementRules({getState,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_C
         intlTable=`<h4 class="intl-heading">国際大会通算（日本代表・${S.intlCount}大会）</h4><table class="st"><tr><th>出場</th><th>打席</th><th>打率</th><th>安打</th><th>本塁打</th><th>打点</th></tr><tr><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td></tr></table>`;
       }
     }
-    card('','通算成績',(tables||'<p>（プロレベルの試合実績なし）</p>')+intlTable);
+    card('','通算成績',jerseyTable(jerseyPeriods?.()||[])+(tables||'<p>（プロレベルの試合実績なし）</p>')+intlTable);
     if(evals.length)card('gold','通算評価',evals.join('<br>'));
     /* タイトルと主要大会成績（グループ化）。 */
     /* タイトルと主要大会成績（グループ化）。 */

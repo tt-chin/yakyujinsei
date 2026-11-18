@@ -62,8 +62,8 @@
 </div>
 <div id="app">
   <header id="board" style="display:none">
-    <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj"></span><div id="board-menu">
-      <button type="button" id="board-menu-toggle" aria-label="メニュー" aria-haspopup="dialog" aria-expanded="false" aria-controls="board-menu-panel"><span aria-hidden="true">☰</span><span>メニュー</span></button>
+    <div id="bd-top"><div class="bd-name-row"><span id="bd-number" hidden></span><div id="bd-name"></div></div><div id="bd-team"></div><span id="bd-tj"></span><div id="board-menu">
+      <button type="button" id="board-menu-toggle" aria-label="メニュー" aria-haspopup="dialog" aria-expanded="false" aria-controls="board-menu-panel"><span aria-hidden="true">☰</span></button>
       <dialog id="board-menu-panel" aria-labelledby="board-menu-title" hidden>
         <div class="board-menu-heading"><h2 id="board-menu-title">メニュー</h2><button type="button" id="board-menu-close" aria-label="メニューを閉じる">閉じる</button></div>
         <div class="board-menu-items">
@@ -71,6 +71,7 @@
         <button type="button" id="board-updates" data-information="updates" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>更新履歴</button>
         <a id="board-bug-report" href="https://x.com/dog_cat_150/status/2108694851286122963?a=2e3RG90AIYfT3G0SNBs&amp;s=20" target="_blank" rel="noopener noreferrer"><span class="menu-bullet" aria-hidden="true">•</span>不具合報告<span class="menu-external">別タブ ↗</span></a>
         <button type="button" id="board-credits" data-information="credits" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>クレジット</button>
+        <button type="button" id="board-number" aria-haspopup="dialog" disabled><span class="menu-bullet" aria-hidden="true">•</span>背番号変更</button>
         <button type="button" id="board-preferences" data-open-preferences aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>表示設定</button>
         <button type="button" id="board-share" aria-haspopup="dialog"><span class="menu-bullet" aria-hidden="true">•</span>共有</button>
         <a id="board-support" href="https://ofuse.me/dcb7f92e" target="_blank" rel="noopener noreferrer"><span class="menu-bullet" aria-hidden="true">•</span>開発を応援<span class="menu-external">別タブ ↗</span></a>

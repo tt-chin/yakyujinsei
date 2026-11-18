@@ -52,10 +52,12 @@ export class GameView {
     const risk=this.byId('bd-risk');if(risk)risk.textContent=m.injuryRiskText??'0%';
     this.byId('bd-name').innerHTML=m.nameHtml;
     this.byId('bd-team').innerHTML = m.teamHtml;
+    this.setBoardNumber(m.numberText);{const change=this.byId('board-number');if(change)change.disabled=!m.numberChangeEnabled;}
     this.byId('bd-age').textContent=m.age; this.byId('bd-year').textContent=m.year;
     this.byId('bd-ovr').textContent=m.ovr; if(m.clearTj){const el=this.byId('bd-tj'); if(el)el.textContent='';} this.byId('bd-sal').textContent=m.salaryText;
     [0,1,2].forEach(i=>this.byId('lp'+i).classList.toggle('on',i===m.phase));
   }
+  setBoardNumber(text){const el=this.byId('bd-number');if(!el)return;el.textContent=text||'';el.hidden=!text;}
   patchBoard(p){ /* game.js の board 上書き（renderBoard の後に実行）の追加書き込み。 */
     this.byId('bd-name').firstChild.textContent=p.name;
     const amateur=this.byId('board').dataset.amateur==='true',salary=this.byId('bd-sal');salary.textContent=amateur?'アマ':p.salaryText;

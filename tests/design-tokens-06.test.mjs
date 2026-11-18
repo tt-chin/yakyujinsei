@@ -24,12 +24,17 @@ test('base.css defines the 13 --fs-* scale tokens as calc(<px>px * var(--font-sc
   assert.doesNotMatch(allCss,/--fs-\d+(?:-5)?(?![a-z\d])/,'old --fs-<px> name left');
 });
 // 59 former calc() sites plus 5 moved inline 11/12px sizes (scaled before by the preferences.css [style*=] rules),
+// PLY-01 adds four base.css rules, excluded by name: the board name row (1 spacing site), #bd-number (1 font, 2 spacing),
+// the 背番号 heading (1 spacing) and the number dialog row (1 spacing).
+const ply01Rules=['.bd-name-row','#bd-number','.card h4.jersey-heading','.jersey-field-row'].map(sel=>{const found=[...base.matchAll(new RegExp('(?:^|\\n)'+sel.replace(/[.#]/g,'\\$&')+'\\{[^}]+\\}','g'))];assert.equal(found.length,1,sel);return found[0][0];});
+const withoutPly01=css=>ply01Rules.reduce((t,r)=>t.replace(r,''),css);
 // plus 1 for the EVT-01 .event-badge (1.16.11).
 test('81 phase-4 font sites plus two phase-5 review headings; name button uses --fs-5xl',()=>{
   const rule=base.match(/(?:^|\n)\.random-name-button\{([^}]+)\}/);assert.ok(rule,'approved name button rule');
   assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
   const review=styles['career-review.css'];assert.deepEqual([...review.matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-xl','--fs-md'],'only the two approved summary heading sizes');
-  const original=outsideRoot.replace(review,'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
+  assert.equal((ply01Rules.join('\n').match(/var\(--fs-[\w-]+\)/g)||[]).length,1,'PLY-01 #bd-number font site');
+  const original=withoutPly01(outsideRoot).replace(review,'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
   const used=[...original.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
   assert.equal(used.length,81,'phase-4 allocation adds five shared font sites');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
@@ -82,7 +87,8 @@ test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   const rule=base.match(/(?:^|\n)\.player-name-row\{([^}]+)\}/);assert.ok(rule,'approved name row rule');
   assert.equal((rule[1].match(/gap:var\(--space-xs\)/g)||[]).length,1,'one explicit existing spacing token');
   const review=styles['career-review.css'];const added=[...review.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);assert.equal(added.length,11,'phase-5 summary uses eleven approved spacing-token sites');assert.deepEqual(added.filter(n=>!(n in rootTokens)),[],'undefined phase-5 spacing token');
-  const original=outsideRoot.replace(review,'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
+  assert.equal([...ply01Rules.join('\n').matchAll(/var\((--space-[\w-]+)\)/g)].map(x=>x[1]).filter(isSpace).length,5,'PLY-01 spacing sites');
+  const original=withoutPly01(outsideRoot).replace(review,'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
   assert.equal(used.length,236,'phase-4 allocation uses existing shared spacing tokens');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');

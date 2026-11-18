@@ -247,5 +247,226 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 
 - 負控制（實作時執行）：選號步驟內呼叫 R()、覆寫過去紀錄、改號寫入能力或收入、IND 出現選號、`jerseyStep` 移到存檔前、dom-snapshot 各投影契約（多刪／少刪）、P1 略過條件放寬至任意按鈕。
 - 文案已確認（使用者 2026-11-15）：J5 各句、J7「（背番号不明）」、對話框（標題「背番号を選ぶ」「背番号の変更」、確定鈕「この背番号にする」「変更する」、說明「{年}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。」）。
-- 草稿尚未經 reviewer 審查；`scripts/test-share-url-menu.mjs` 未執行；Linux CI、Preview、實機未驗證。
-- 正式實作已授權（使用者 2026-11-15）；從 `wip/ply-01-draft` 開始，尚需 T8 `jersey-e2e`、上列負控制、reviewer、T9 版本與文件。
+- 草稿已經 reviewer 審查並修正（§11）；`scripts/test-share-url-menu.mjs` 未執行；Linux CI、Preview、實機未驗證。
+- 正式實作已授權（使用者 2026-11-15）；進度見 §11。T8 與負控制已完成（2026-11-17），尚需 T9 版本與文件、最終 reviewer 與 Full。**2026-11-17 起 `origin/dev` 已是 2.0.0，須先整合，見 §12。**
+
+## 11. 正式實作進度與審查修正（2026-11-15）
+
+**分支**：`feat/ply-01-jersey`（自 `origin/dev` `21b4ff9`，`--no-track`，**本機、未 push、未開 PR**）。
+- `9315543`：草稿 32 檔原樣帶入（與 `wip/ply-01-draft` `0d617a6` 的 docs/tests/scripts 內容一致，壓成一個 commit）。
+- `2c2874c`：入團對話框說明改為 §10 核准原文（補「過去の年度の背番号は変わりません。」）。
+- `4ff917d`：reviewer 審查修正 A1～A4、B1～B7（使用者 2026-11-15 依建議核准）。
+- `ea5c01a`：T8 `tests/jersey-e2e.mjs`、manifest 登錄（Full／Audit、`seconds:20`）、`scripts/TESTING.md` 說明段（2026-11-16）。
+- 驗證（macOS＋Brave 157，本機）：`4ff917d` 的 Quick 98／98 PASS（98 入口全數執行）；`jersey-policy.test` 17／17 PASS。Full、CI、Preview 未執行。
+
+**審查修正（明確缺陷）**
+| # | 內容 | 實作 |
+|---|---|---|
+| A1 | 退休後面板 `#N` 仍顯示、「背番号変更」仍可按（違反 J1） | `currentJerseyNumber` 於 `done` 時回 `null`；`CareerRetirement.endGame` 設 `done` 後呼叫注入的 `jerseyRetired`（隱藏 `#bd-number`、停用 `#board-number`）。`game.js` 的 `endGame` 宣告文字由 `verify-modularization` 固定，不可改 |
+| A2 | 續玩時若待選號，面板為 `index.html` 預設值 | `promptJerseyEntry` 顯示選項前 `board(0)`（不消耗 RNG） |
+| A3 | 對話框選號後的接續動作無錯誤保護 | 對話框回傳號碼後，以該號碼重新顯示兩鈕提示，再程式點擊主按鈕；沿用 `runChoiceAction` 的連點防護、錯誤卡與恢復 |
+| A4 | 取消入團對話框後焦點遺失 | 重新顯示提示後焦點移到第一個按鈕 |
+
+**審查修正（新規格決定，使用者 2026-11-15）**
+| # | 決定 | 實作 |
+|---|---|---|
+| B1 | 當年職業球季列已存在後（休賽期）的選單改號，生效年度＝下一年；對話框說明顯示該年 | `jerseyChangeYear(state)`；`appendJerseyRecord(state,number,year)` |
+| B2 | D4 補號文案只在「無任何紀錄且最後一個年度列為職業球季」時使用；IND／CORP 之後簽職業球團為一般入團（J5） | `isLegacyJerseyEntry` |
+| B3 | 入團對話框欄位標籤「背番号」；選單對話框維持「新しい背番号」「現在の背番号 #N」 | `chooseJerseyNumber({fieldLabel})` |
+| B4 | 季中交易分段卡、全年受傷卡不帶號碼（產品不變）；`dom-snapshot` 僅對有 `.tag` 的「シーズン成績」卡要求號碼，無 `.tag` 者須為「（今季はけがで全休）」 | `tests/support/dom-snapshot.mjs` |
+| B5 | 紀錄達 960 筆後停用選單改號（存檔陣列上限 1024；入團每季至多 1 筆） | `JERSEY_MENU_LIMIT` |
+| B6 | 讀檔驗證每筆紀錄：`teamId` 為職業球團（非 IND／CORP）、`year` 為整數且不大於存檔年度、號碼合法、僅三個欄位；不符以 `SAVE_JERSEY` 拒絕 | `isValidJerseyHistory`、`browser-save-codec.js` |
+| B7 | D4「不明」期間以不含交易前綴（A→）與級別後綴的球團名稱分段與顯示 | `jerseyPeriods(...,unknownTeam)`；`game.js` 以 `leagueCatalog.teamMaster` 解析（`verify-modularization` 禁止 `game.js` 出現 `DATA.teams.map(`） |
+| — | 季中交易年度列「A→B」顯示 A 的號碼、退休卡該年歸 A 期間（D3／J1 一致，維持） | 不改；T8 固定此行為 |
+
+**T8 `tests/jersey-e2e.mjs` 設計（使用者 2026-11-15 核准）**
+- 架構：沿用 `scripts/test-browser-save-runtime.mjs`：本機 server 提供目前 `docs/` 與 `/baseline/`（`75ab10b`，1.16.13，同源、存檔可互通），並注入 probe 讀取 `S` 與每次 R 抽取。
+- 案例：
+
+| 案例 | 進入方式 |
+|---|---|
+| 首次入團選號只出現一次、記當年、第一鈕 `main`、P／C／IF／OF 預設照 W3 | 自然生涯 |
+| 「背番号を選ぶ」後取消回兩鈕提示、無紀錄；0 與 00 分開；A3 經主按鈕確認；A4 焦點 | 自然生涯 |
+| 選單改號：同年多次全保留、不覆寫過去；空窗期停用（J1）；B1 休賽期改號記下一年；A1 退休後停用 | 自然生涯 |
+| 轉隊／交易沿用、MiLB↔MLB 不再問、IND／CORP 不出現、回同隊不出現（J3）、B2 文案 | fixture 設狀態後呼叫真實移籍函式（標註「fixture」；參考 `stage10-risk-e2e` C-*／G-stay-*、`contract-salary-e2e` milb-demotion-*） |
+| D4：`/baseline/` 玩到職業並存檔，以目前版本續玩，補號一次；下一年度存檔後不再出現；A2 面板；B7 不明期間 | 實際產生的舊存檔（T9 改版後再跑一次） |
+| J2①：年初選號後、下一次存檔前重新載入，續玩再問一次 | 自然生涯 |
+| J2②：年中改號後、下一次存檔前續玩不保留；下一年度存檔後保留 | 自然生涯 |
+| 無 RNG：同 seed 兩次（預設 vs 對話框選號＋選單改號），R 值序列與 `rngState` 完全相同，刪除 `jerseyHistory` 後狀態完全相同 | 自然生涯 |
+| 二重操作：入團主按鈕、`#jersey-ok` 各連點兩次，只 1 筆紀錄、流程只前進 1 步 | 自然生涯 |
+| B6：竄改存檔（未知 teamId、非法號碼、未來年度、多餘欄位）讀檔被拒 | 存檔注入 |
+| 顯示：面板、成績卡、年度別、退休卡；1280／390 截圖；Console 0 | 自然生涯 |
+
+**負控制對應（實作時執行，須在指定斷言 FAIL）**
+| 負控制 | 攔截 |
+|---|---|
+| 選號步驟內呼叫 `R()` | T8 無 RNG 比較 |
+| 覆寫過去紀錄 | T8 選單改號、`jersey-policy.test` |
+| 改號寫入能力或收入 | T8 刪除 `jerseyHistory` 後的狀態比較 |
+| IND 出現選號 | T8 IND／CORP 案例 |
+| `jerseyStep` 移到存檔前 | T8 J2① |
+| `dom-snapshot` 投影多刪／少刪 | `game-view-dom-e2e` 投影契約 |
+| P1 略過條件放寬至任意按鈕 | 各 P1 測試的計數檢查 |
+| 移除 `jerseyRetired` 呼叫（A1）、移除 `board(0)`（A2）、B1 改回 `S.year`、移除 B6 驗證 | T8 對應案例 |
+
+**T8 結果（2026-11-16，`ea5c01a`）**
+- 驗證（macOS＋Brave 157，本機）：`jersey-e2e` 20／20 PASS（直接執行與 runner `full --only=jersey-e2e` 皆 PASS，約 19 秒）；Quick 98／98 PASS（98 入口全數執行；於 deadpath 案例改名前的 T8 tree 執行，改名只動註解與案例 id，`jersey-e2e` 不在 Quick）；`local-full-batches.test` 14／14 PASS。Full、CI、Preview、負控制未執行。
+- 自然生涯 seed：`probe33-1`（P／C／IF／OF，預設 18／27／6／1 實測）、`probe33-6` P（B1 等待點在入團年度、2030 年自然轉 KBO）、`probe33-8` C（B1 等待點、2031 年前無轉隊，用於預設 vs 對話框＋選單的 RNG 比較）。
+- RNG：`probe33-1` P、`probe33-8` C 與 `/baseline/`（`75ab10b7d442db7aeccde0d649a852f224eed481`，1.16.13；`git diff 75ab10b 21b4ff9 -- docs/` 為空）到 2031 年初，全 R 值／`rngState` 與 S（排除 `version`、`createdVersion`、`jerseyHistory`）一致；另斷言年初存檔到選號提示之間 0 次抽取。
+- D4：目前以 1.16.13 存檔讀入同為 1.16.13 的程式；跨版讀取待 T9 改版後重跑。
+- B6：直接竄改 IndexedDB（`yakyujinsei-career`／`career`／`autosave`），六種竄改各回 `SAVE_JERSEY`（`store.read()` 先跑 `validateSaveEnvelope`，HMAC 驗證在後）。
+- 390 版面：隊名換兩行、名字截斷在 1.16.13 同 seed 即存在（P／C／OF 實測），非 PLY-01 退化。
+- 模式：實測約 19 秒，使用者 2026-11-16 決定維持 Full-only。
+
+**發現：`tradeFrom` 為 dead path（使用者 2026-11-16 選 B：保留並標示）**
+- `docs/src` 無任何程式把 `S.tradeFrom` 設為非 null（只讀於 `professional-season.js:67/70/83`，`:84` 設回 null）；`git log -G` 全歷史亦無。最初 commit 的註解寫明交易一律視為季後、刻意不設 `tradeFrom`。交易判定（`TRADE_CHECK`）在當季成績列寫入之後。
+- 因此「A→B」年度列、季中交易分段卡（B4 投影規則）、B7 的交易前綴去除在現行遊戲不會發生。實際交易由 `fixture-trade`（真實 `doTradeExec`）固定：交易年度列為 A、顯示 A 的號碼、退休卡該年歸 A、隔年在 B 提議 A 的號碼。
+- `deadpath-trade-label`、`deadpath-trade-unknown` 直接設定 `tradeFrom`／`orgTeamId`（不呼叫移籍函式），保留作為日後導入季中交易時的 D3／J1、B7 固定。
+
+**既有問題（未處理，與 PLY-01 無關）**：`scripts/ci-full-batches.test.mjs` 寫死 `assert.equal(ids.length,106)`，`fullIds()` 在 HEAD `ae2c738` 為 128（加入 `jersey-e2e` 後 129），乾淨 HEAD 上同樣 2 項 FAIL。只在 CI `linux-smoke` 模式執行，不在 Quick／Full。
+
+**負控制結果（2026-11-17，使用者核准執行；`54a4c82` 的 scratchpad worktree，macOS＋Brave 157，本機）**
+- 隔離與流程：只在 worktree 植入；替換字串先斷言出現 1 次（N3、N12 依檔案指定次數），植入後確認已改，只跑對應測試，還原後以 sha256 確認。工作樹未動。driver 為 Node 腳本（不經 zsh 迴圈）。
+- 對照 N0（未變異）：`jersey-e2e` 8 案例（entry-P、entry-dialog、menu-change、resume-entry-unsaved、rng-identity、save-tamper、legacy-save、fixture-ind）PASS，`jersey-policy.test` 17／17 PASS；N2 補強後重跑仍 PASS。
+- 判定：exit 非 0，且失敗在指定斷言。N1～N12 全部攔下，無 `is not defined` 類假失敗。
+
+| # | 植入 | 結果（失敗的斷言） |
+|---|---|---|
+| N1 | `promptJerseyEntry` 內 `R()` | `entry-P`「no RNG draw between the year-start save and the prompt」（48≠47）；`rng-identity` 狀態比較 |
+| N2 | `accept` 內 `R()` | 補強前：`rng-identity` 的全 R 值比較**未攔下**，由其後的狀態比較（`$.ab.sta`）攔下。補強後：新斷言「draw count at every year-start save equals the 1.16.13 baseline」攔下 |
+| N3 | `appendJerseyRecord` 覆寫最後一筆 | `jersey-policy.test` D3、B1；`menu-change` 紀錄比對 |
+| N4 | 選單改號時 `careerEarnings+=1` | `rng-identity` variant 狀態比較（`$.careerEarnings`） |
+| N5 | `isJerseyEligible` 含 IND | `fixture-ind` 提示數 1≠0 |
+| N6 | 年初存檔 capture 前寫入紀錄 | `resume-entry-unsaved` 續玩提示數 0≠1（J2①） |
+| N7 | 移除 `jerseyRetired` 呼叫 | `entry-P`「A1: no number after retirement」 |
+| N8 | 移除 `board(0)` | `resume-entry-unsaved`、`legacy-save`「A2 board year」 |
+| N9 | `jerseyChangeYear` 回傳 `state.year` | `menu-change`「B1 note names next year」 |
+| N10 | 移除 codec `SAVE_JERSEY` 檢查 | `save-tamper` 得 `SAVE_AUTH_FAILED`（預期 `SAVE_JERSEY`） |
+| N11a | 投影多刪：季成績卡 tag 文字清空 | `game-view-dom-e2e` 與固定 baseline `4f39a73` 比較，第 70 步 `$.dom.log` 不同 |
+| N11b | 投影少刪：保留 `#bd-number` | 投影契約 `JERSEY_BOARD_UNEXPECTED`（契約 throw，非 `ERR_ASSERTION`，即該契約的攔截方式） |
+| N12 | 各 E2E 自有的 P1 regex 放寬 | 見下 |
+
+- N2 發現：同 seed 的 R 值序列必為同一串流的前綴，「全 R 值／`rngState` 相同」實際只比到截止時的抽取次數；N2 下兩側皆 118 次。使用者 2026-11-17 選 A：`rng-identity` 的 `run()` 回傳 `captures`（各年初存檔的年度與抽取次數），新增「現行 vs baseline」「variant vs 預設」兩條 `captures` 比較（先斷言各 ≥3 筆）。
+- N12（使用者 2026-11-17 選乙：10 檔 12 入口全跑）：scout 盤點 10 檔各自內嵌 regex、無共用 helper。「任意按鈕」在多數檔會先撞生涯上限，故主變異改為 `|する$`（`contract-salary-e2e` 只改 P1 的 `jersey=`，不改 P5 的 `settleJersey`）。
+
+| 入口 | 變異 | 攔截 |
+|---|---|---|
+| `kbo-renewal`、`draft-income`、`trait-display`、`international-personal-stats`、`full-power-pitching` ×3、`contract-salary` | `\|する$` | 「baseline has no number step」 |
+| `hof-first-ballot`、`hof-retirement-policy` | `\|する$` 存活（舊版側路徑無此類按鈕）→ 任意按鈕 `\|^` | 「baseline has no number step」（例：352≠0） |
+| `display-preferences` | `\|する$` 存活；`\|^` 先撞 `Career did not finish` → `\|^通常投球` | 「baseline has no number step」 |
+| `game-view-dom` | `\|する$` | 第 336 步 DOM 與 baseline 不同（`ERR_ASSERTION`），在計數斷言 `:129` 之前失敗；計數斷言未單獨驗證（需構造只略過策略本來會點的按鈕，未做） |
+
+- 未驗證：補強後的 `jersey-e2e` 只跑上列 8 案例，未跑全 20 案例（T9 後重跑時涵蓋）；Full、CI、Preview 未執行。
+
+**下一步**：~~T9（1.17.0、CHANGELOG／RELEASE_NOTES／CURRENT_SPEC、BACKLOG）→ T9 後重跑 `jersey-e2e`（D4 跨版）→ reviewer → 4 組 Full → push dev 前請使用者確認。~~ 已由 §12 取代（`origin/dev` 升到 2.0.0）。本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。
+
+## 12. 整合 `origin/dev` 2.0.0（2026-11-17 盤點，未實作）
+
+**現況**：分支起點 `21b4ff9` 之後，`origin/dev` 新增 code owner 的 `f08848b`（首頁隨機球員名，2026-11-16）與 `5910421`（`feat(ui): redesign game interface for 2.0.0`，82 檔 +6484 行，`VERSION` 為 `2.0.0`，2026-11-17）。`origin/main` 仍為 1.16.13（`d6cef67`）。`git merge-tree --write-tree d149aab 5910421`：14 檔、17 處文字衝突。以下為唯讀盤點，尚未合併、未執行測試。
+
+**決定（使用者 2026-11-17）**
+| # | 決定 |
+|---|---|
+| M1 | 以 merge 整合（不 rebase），保留 §11 記錄的 SHA |
+| M2 | RNG／狀態比較基準由 `75ab10b`（1.16.13）改為 `5910421`（2.0.0，PLY-01 合併前的 dev）。D4 舊存檔兩版都測：2.0.0（`5910421`）與 1.16.13（`75ab10b`，正式站 main 現行版） |
+| M3 | 先在 scratchpad 做合併草稿並跑 4 組 Full，找齊 Full 才會出現的耦合後，再提出新的 T 表（含 T9） |
+| M4 | 版本號等 code owner 決定 2.0.0 的發布安排；原定 1.17.0 不再適用（以 2.0.0 為基準，MINOR 為 2.1.0），T9 暫緩 |
+| A | 面板號碼：`#bd-number` 移進 `#bd-name` 那一行，排在名字前面；不動 `#bd-top` grid，只改 HTML 位置與 CSS；桌機側欄（`desktop-overview.js`）不顯示號碼 |
+| B | 退休時 2.0.0 收合所有卡片的 `details`，「通算成績」卡內的背番号表跟著收合：維持，不改 `career-review.js`，振り返り摘要不加號碼 |
+
+**文字衝突（14 檔、17 處）**
+| 類別 | 檔案 | 處理 |
+|---|---|---|
+| 照搬（兩邊改不同部分） | `draft-income-e2e`、`full-power-pitching-e2e`、`hof-first-ballot-e2e`、`hof-retirement-policy-e2e`、`international-personal-stats-e2e`、`kbo-renewal-e2e`、`trait-display-e2e` | 保留 PLY-01 的 P1 略過與 dev 的 `window.__allocationComparison.action(b)`（一般按鈕仍回傳 `textContent`，P1 regex 不受影響） |
+| 照搬 | `display-preferences-e2e`（2 處）、`career-presenter.js`、`career-presenter.test` | 兩邊新增欄位／import 都保留 |
+| 照搬 | `board-menu-stacking-e2e`、`tests/support/board-menu.mjs` | 選單 id 清單同時含 dev 的 `board-menu-close` 與 PLY-01 的 `board-number`（後者只算 `.board-menu-items` 內） |
+| 重新編排 | `docs/index.html` | 選單改為 `<dialog>`，`#board-number` 移進 `.board-menu-items`；`#bd-number` 依決定 A 放置 |
+| 重新編排 | `tests/support/dom-snapshot.mjs` | dev 的 `__projectDecisionPresentation` 會以重新解析的 `log` 取代 clone；背番号投影須接在其後 |
+| 重新編排 | `tests/design-tokens-06.test.mjs` | dev 改為排除法計數（字級 81、間距 236）；PLY-01 新增的字級 1 處、間距 4 處以明確名稱排除 |
+
+**自動合併不報、需處理的語意風險**
+1. `#bd-top` grid：dev 的 `game-shell.css` 為 `#bd-name`／`#bd-team`／`#board-menu` 指定欄位，未指定的 `#bd-number` 會被自動放入格子並擠開名字 → 決定 A。
+2. 退休卡：2.0.0 退休時收合 `details[data-reader-details]`，背番号表預設不可見；振り返り摘要無號碼 → 決定 B。
+3. 選單 dialog 焦點：dev 的 `close()` 預設把焦點還給 ☰，改號對話框在 close 之後開啟；焦點順序（A4 類）需重驗。
+4. 新開生涯覆寫確認：已有存檔時按「始める」先經 `replaceCareer` 確認；`jersey-e2e` 中已有存檔再開新生涯的案例須比照 dev 的 `draft-income-e2e`（`deferredOverwrite`）處理。
+5. 未盤點：dev 新增的 `ui-redesign-shell`／`-decision`／`-review`／`-allocation` E2E 會檢查選單、面板、決策區；入團選號是新增的決策步驟，可能撞到 → 以 M3 的草稿 Full 確認。
+
+**重驗範圍**：§11 的 Quick、`jersey-e2e` 20 案例、N1～N12 負控制皆在 1.16.13 基準上取得，整合後須依新 T 表重跑（範圍於 M3 後提出）。
+
+**下一步**：M3 合併草稿（scratchpad）→ 4 組 Full → 新 T 表（含衝突處理、A 的版面、風險 3～5、M2 基準切換、重驗與負控制範圍）請使用者核准 → 實作 → reviewer → Full → push dev 前請使用者確認。T9 待 code owner 決定版本。合併與部署未授權。
+
+
+### 12.1 M3 合併草稿結果（2026-11-17）
+
+**草稿**：`7c3018d` 上 `git merge --no-commit 5910421`（scratchpad worktree，未提交、未推送）。衝突實為 **15 檔**（上表列的就是 15 檔，「14 檔」為誤記）。照搬類用 token 層級三方合併（每處只套用兩邊各自的修改），`career-presenter.js`／`.test` 兩邊欄位並存。
+
+**第一輪 Full（runner `--baseline=5910421`）**：Quick 101/103、Full 129/134。FAIL：`ui-redesign-shell-e2e`、`game-view-dom-e2e`（`UI_SHELL_2000_STATIC_BOARD_CONTRACT`）、`ui-redesign-review-e2e`（`career-retirement.js core unchanged`）、`design-tokens-09-e2e`（`JERSEY_LAYOUT_COUNT`）、`display-preferences-e2e`（決策區文字差異）。乾淨 `5910421` 同條件：前 4 個 PASS、`display-preferences-e2e` 同樣 FAIL。
+
+**最終草稿（套用下列 T 後，runner 預設基準 `origin/main` = `d6cef67`）**：Quick 103/103 PASS；Full 134/134 執行（groups 30/33/35/36，missing 0、extra 0），133 PASS，1 FAIL `event-system-e2e`（見 F5）。中途 `draft-income`／`display-preferences`／`contract-salary` 兩輪同時 `page.goto` 30 s 逾時、無斷言失敗；`contract-salary` 單獨重跑 381/381 PASS，最終 Full 三者 PASS → 環境，首輪 FAIL 保留紀錄。
+
+**發現**
+| # | 內容 | 處理 |
+|---|---|---|
+| F1 | runner `--baseline=5910421` 使 `display-preferences-e2e` 在乾淨 dev 也 FAIL：dev 在候選側無條件安裝 `__projectDecisionPresentation`（2.0.0 → 舊版 DOM），基準必須是 2.0.0 之前 | **M2 修正**：runner 基準維持 `origin/main`；`5910421` 只用於 `jersey-e2e` 自身常數（草稿 20/20 PASS，含 RNG/state 比較與 2.0.0 舊存檔）。`draft-income`、`contract-salary` 兩種基準皆 PASS |
+| F2 | 決定 A：`#bd-number` 不能放進 `#bd-name`（`game-view.js:53` 以 `innerHTML` 覆寫、`:62` 與 `desktop-overview.js:25` 讀 `firstChild`） | **A 修正（使用者 2026-11-17 核准）**：`<div class="bd-name-row"><span id="bd-number" hidden></span><div id="bd-name"></div></div>`，`.bd-name-row{display:flex;align-items:baseline;gap:var(--space-xs);min-width:0}`；`#bd-top` grid 不動。版面截圖未確認 |
+| F3 | `design-tokens-09-e2e`：2.0.0 把 `new` 變體的 `index.html` 與全部 `.js` 固定為 `ad8e77f`（line 51），PLY-01 的 toggle／log 投影已無對象 | 測試檔還原為 `5910421` 版 |
+| F4 | 風險 5 實測：`ui-shell-comparison.mjs` 凍結 `SHELL_BOARD_2000` 整個 `#board`；`ui-redesign-review-e2e` 凍結 5 個核心檔（對 `ce5f732`）、比對退休 log、做 P/IF 自然生涯逐步 S/RNG 比較 | T4～T6 |
+| F5 | `event-system-e2e`（同一候選、同 seed 跑兩次的重播比較）在 **乾淨 `5910421` 10 次 FAIL 4 次**、草稿 6 次 FAIL 3 次；差異都是某張卡多／少「選んだ行動：能力点を分配（2点）」。原因：`decision-presentation.js:69-87` 的 `selection` 等下一個 rAF 才清除，期間產生的卡被標記 | 2.0.0 既有問題，非 PLY-01；回報 code owner。PLY-01 的 Full 判定：此入口 FAIL 時比對差異是否為同一類，記錄並重跑 |
+| F6 | 風險 3：`jersey-e2e` 改號對話框段落無焦點斷言；dev `board-menu.js` 的 `close()` 先把焦點還給 ☰，`jersey-dialog.js:50` 以開啟時的 `activeElement` 為 opener | T8 新增斷言 |
+| F7 | 風險 4：Full 未出錯，但未確認 `jersey-e2e` 是否走到「已有存檔再開新生涯」 | T8 確認，未確認前不算覆蓋 |
+
+**新 T 表（使用者 2026-11-17 核准）**
+| # | 檔案 | 內容 |
+|---|---|---|
+| T1 | merge commit（M1） | 7 個照搬 E2E：保留 P1 跳過與 `window.__allocationComparison.action(b…)`；`display-preferences-e2e` 兩處、`board-menu-stacking-e2e`、`support/board-menu.mjs`（`board-number` 位於 `board-credits` 與 `board-preferences` 之間，只算 `.board-menu-items`）；`career-presenter.js` 回傳 `isAmateur`、`injuryRiskText`、`numberText`、`numberChangeEnabled`，`.test` 期待值兩邊都加 |
+| T2 | `docs/index.html`、`docs/styles/base.css` | 選單用 dev 的 `<dialog>`，`#board-number` 在 `.board-menu-items`；☰ 鈕保留 `aria-haspopup="dialog"`、不含「メニュー」span；F2 的 `.bd-name-row` |
+| T3 | `tests/design-tokens-06.test.mjs` | dev 的排除法計數（字級 81、間距 236）＋以名稱排除 PLY-01 的 4 條規則（`.bd-name-row`、`#bd-number`、`.card h4.jersey-heading`、`.jersey-field-row`；各須恰好 1 條；字級 1 處、間距 5 處） |
+| T4 | `tests/support/dom-snapshot.mjs`、`tests/game-view-dom-e2e.mjs` | `let log` ＋ dev 的 `__projectDecisionPresentation` 重新解析在前，背番号 log 投影接在後；面板投影抽成匯出的 `projectJerseyBoard(markup,rawState)`，在 `__projectShell2000` **之前**執行（契約：`#bd-number` 在 `.bd-name-row` 內、row 為 `#bd-top` 首子且僅 1 屬性 2 子節點；選單項前為 `board-credits`；拆掉 row、移除兩者、補回「メニュー」span）；`game-view-dom-e2e` 注入它 |
+| T5 | `tests/ui-redesign-shell-e2e.mjs` | 4 處 `__projectShell2000(board.outerHTML,…)` 改為先 `projectJerseyBoard(…, window.__shell.get().state)` |
+| T6 | `tests/ui-redesign-review-e2e.mjs` | `PLY01_CORE`：`career-retirement.js` 4 處、`professional-season.js` 2 處插入以完整文字各移除一次（count=1 斷言）後再嚴格比較；退休 log 在 `__projectReview` 之後以 `removeJerseyDisplay` 移除（`table===1`）；自然生涯迴圈：候選側選號鈕按下不計步、`jerseyHistory` 形狀檢查後刪除、斷言 `jerseySkips>0 === 到過 PRO`（草稿 P 2 次、IF 0 次） |
+| T7 | `tests/design-tokens-09-e2e.mjs` | 還原為 `5910421` 版（F3） |
+| T8 | `tests/jersey-e2e.mjs` | 基準常數改 `5910421`，註解與訊息的「1.16.13」同步；D4 另加 `75ab10b`（1.16.13）舊存檔案例；改號對話框關閉後焦點斷言（F6）；確認並補上風險 4（F7） |
+| T9 | 版本 | 暫緩（M4） |
+
+**驗證範圍**：關聯 E2E → Quick → 本機 4 組 Full → CI；決定 A 的 320／390／1440 截圖（4 主題）；新負控制：row 外放號碼 → `JERSEY_BOARD_ROW_PLACE`、核心檔多一處插入 → FAIL、拿掉自然生涯選號跳過 → FAIL、焦點斷言反向；N1～N12 在新基準重跑；reviewer。
+
+**草稿位置（session 限定，可能消失）**：`/private/tmp/claude-501/-Users-amew-Documents-works-yakyujinsei/e375f92e-825e-4e04-aa6c-bad287da2e58/scratchpad/wtm`、`…/scratchpad/m3-draft-vs-ply01.patch`。實作以本節 T 表為準，不依賴草稿。
+
+**下一步**：在 `feat/ply-01-jersey` 依 T1～T8 實作（merge commit 起）→ 關聯測試 → reviewer → Quick／Full → push dev 前請使用者確認。合併與部署未授權。
+
+### 12.2 實作結果（2026-11-18，分支 `feat/ply-01-jersey`，已 push、PR #105）
+
+**提交**：`6badffc` merge 5910421（T1～T3：15 個衝突檔照 §12.1 解法、決定 A、dt06）→ `32f5ce5` T4／T5 → `dd955f3` T6 → `82dfe79` T7 → `94b9cd7` T8 → `34e8164` reviewer 後續修正。
+
+**T8 補充**：`/baseline/` 改為 `5910421`、新增 `/legacy/` 供 `75ab10b`；`legacy-save`（2.0.0）與 `legacy-save-11613`（1.16.13）兩案；`menu-change` 加 OK／Escape 後焦點回 `#board-menu-toggle`；風險 4 確認：原 20 案例的 `start()` 都在新 context，從未走到「已有存檔再開新生涯」→ 新增 `new-career-over-save`（存檔含 `jerseyHistory` → `上書きされます` 確認 → 新生涯 `jerseyHistory===undefined`、號碼隱藏、選單停用）。`jersey-e2e` 22／22 PASS。
+
+**驗證（macOS＋Brave 157，本機，runner 基準 `origin/main` = `d6cef67`，HEAD `34e8164`）**
+- Quick 103／103 PASS；4 組 Full 134／134 PASS（30／33／35／36，missing 0）。`event-system-e2e` 本輪 PASS，但其不穩定（§12.1 F5）未消失。CI、Preview 未執行。
+- 決定 A 版面：320／390／1440 × 4 主題 × 業餘／職業共 24 組，號碼與名字同列且在前、無橫向溢出、Console 0；截圖目視確認。
+- 新負控制：N13 `.bd-name-row` 加屬性 → `JERSEY_BOARD_ROW_PLACE`；N14 改動 PLY-01 插入文字 → `PLY-01 insertion once`；N15 自然生涯不略過選號 → `natural P step`；N16 選單 `close(false)` **存活**（原生 `<dialog>` 關閉會把焦點還給 showModal 前的元素，等價突變）→ 改 N16b 讓改號對話框 opener 指向 `#act` 按鈕 → `focus returns to the menu toggle after 変更する`；N17 刪 `.bd-name-row` 規則 → dt06。全部攔下（N16 以 N16b 取代）。
+- N1～N12 在新基準重跑（scratch worktree，替換字串先斷言次數、CRLF 檔依檔案換行、還原後確認乾淨）：24 個變異全部攔下，失敗斷言與 §11 相同（N10 仍為 `SAVE_AUTH_FAILED`≠`SAVE_JERSEY`；N11a 第 70 步 `$.dom.log`；N11b 現由 `projectJerseyBoard` 的 `JERSEY_BOARD_UNEXPECTED` 攔下；N12 12 入口全攔）。
+- reviewer：無 medium 以上；low 6 項中修正 4 項（`jersey-e2e` 訊息 2 處、`ui-redesign-review-e2e` 要求每次確認選號恰增 1 筆紀錄、`scripts/TESTING.md` 同步）。
+
+**reviewer low 2 項（§11 既有）：2026-11-18 使用者核准 U1～U4 後處理**
+1. 原狀：`dom-snapshot.mjs` 退休背番号表與季成績卡 ` · #N` 只檢查「號碼存在於 `jerseyHistory`」。盤點：快照類 E2E 都是自然生涯，號碼只有一個，號碼精確化在其中等價；實際缺口是退休表年度／期間（只驗格式）與季成績卡依年度的號碼（無人檢查）。
+2. 原狀：`removeJerseyDisplay` 的表格 markup 契約比 `captureGameView` 版寬。
+
+**處理（只改測試）**
+- U1 `captureGameView`／`removeJerseyDisplay`（兩份同邏輯、註明需同步）：退休表逐列對照職業年度列（每列取年度 ≤ y 的最後一筆紀錄），檢查起訖年、號碼／「不明」、連續性、已知紀錄不得拆列、全部覆蓋；球團名只檢查非空。reviewer 指出同年度重複列會誤判（現行產品不會產生），已加併入同列的 1 行。
+- U2 同兩處：季成績卡以所在 `.yr-head` 的年度取紀錄，號碼須一致。
+- U3 `removeJerseyDisplay`：補 h4／table 屬性數、`td` `tagName`、無子元素檢查。
+- U4 `jersey-e2e` `menu-change`：B1 等待點斷言進團當年季成績卡為 ` · #0`。
+- 驗證（本機 Brave）：`jersey-e2e` 22／22、`ui-redesign-review-e2e`、`display-preferences-e2e`（`--baseline=origin/main`）、`game-view-dom-e2e` PASS；Quick 103／103 PASS。Full 未跑（未改 Full 執行路徑）。
+- 負控制（scratch worktree，舊測試＝`8219a43`、新測試＝U1～U4）：A 年度欄只顯示起始年、B 期間拆成逐年列 → 舊 `display-preferences-e2e`／`game-view-dom-e2e` PASS、新兩者 `JERSEY_TABLE_SPLIT`；C 季成績卡取第一筆紀錄 → 舊 `jersey-e2e` 22／22、新 21／22（U4 斷言）；D 退休表加屬性 → 舊 `display-preferences-e2e` PASS、新 `JERSEY_TABLE_CONTRACT`（`game-view-dom-e2e` 舊版即攔下）。`ui-redesign-review-e2e` 的 `PLY01_CORE` 文字比對會先攔下 A／B／D（`PLY-01 insertion once`），不作為這些變異的判定入口。
+- 仍不檢查：不明期間的邊界（同隊拆列、不同隊合併）；屬核准範圍。
+
+**推送與 PR（2026-11-18 完成，使用者確認後執行）**
+- 前置確認：`origin/dev` 仍為 `5910421`、`origin/main` 仍為 `d6cef67`，開啟中的 PR 0 件，未再 merge。
+- 推送：`1f8e1f7` → 遠端 `feat/ply-01-jersey`（顯式 refspec、不設 upstream），遠端 ref 與本機 HEAD 一致。
+- PR [#105](https://github.com/tt-chin/yakyujinsei/pull/105) `feat/ply-01-jersey` → `dev`，標題「PLY-01 背番号：整合 dev 2.0.0（5910421）」；內文繁體中文、無 Claude trailer，以 API 讀回與草稿逐字一致。內文已註明：依 M4 不改版本（T9 待 code owner）、CI 與 Preview 未執行、本 PR 只有本機 Full、`event-system-e2e` 於 2.0.0 不穩定、reviewer 未處理 2 項。PR → `dev` 不觸發 CI。
+
+**下一步（等待中）**
+1. PR #105 由使用者或 code owner 合併，不自行合併。之後推送到本分支的提交會進入同一 PR。
+2. 合併到 dev 後：dev push 只跑 Quick，確認其結果；Full 要到 `main` 向 PR 才執行。開 Preview（`https://dev.yakyujinsei.pages.dev`）確認前先告知使用者。
+3. T9（版本、CHANGELOG、RELEASE_NOTES）待 code owner 決定 2.0.0 發布安排。
+4. 本機 E2E 需先重建 Brave shim（見 session memory）。合併與部署未授權。

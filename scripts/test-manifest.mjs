@@ -41,6 +41,7 @@ const browserProfiles = {
   'event-history-e2e': {quick:[],seconds:40,reason:'EVT-01 E3: real-career キャリア → 年度別 event rows (every occurrence, saved category, 今季 row), collapsed/expanded inside the scroll box, 1280/390 px, 4 themes.'},
   'global-contract-market-e2e': {args:['--quick'], seconds:30},
   'hof-first-ballot-e2e': {seconds:50},
+  'jersey-e2e': {seconds:20,reason:'PLY-01 jersey numbers: natural P/C/IF/OF entries, dialog/menu/B1, J2 resume, new career over a save, D4 legacy saves from 5910421 and 75ab10b, B6 tamper, fixture transfers; full R/rngState vs baseline. No Quick profile.'},
   'game-view-dom-e2e': {seconds:300,reason:'OOP phase 2 GameView guard: P/IF fixed-seed careers at 1280/390, per-step #log/#act/#board DOM, S and RNG count identical to fixed baseline 2a11a64. No Quick profile.'},
   'npb-return-e2e': {seconds:90},
   'npb-return-rng-e2e': {args:['--rng-only'], seconds:10},
