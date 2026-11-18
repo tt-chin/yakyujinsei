@@ -411,7 +411,7 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 | F2 | 決定 A：`#bd-number` 不能放進 `#bd-name`（`game-view.js:53` 以 `innerHTML` 覆寫、`:62` 與 `desktop-overview.js:25` 讀 `firstChild`） | **A 修正（使用者 2026-11-17 核准）**：`<div class="bd-name-row"><span id="bd-number" hidden></span><div id="bd-name"></div></div>`，`.bd-name-row{display:flex;align-items:baseline;gap:var(--space-xs);min-width:0}`；`#bd-top` grid 不動。版面截圖未確認 |
 | F3 | `design-tokens-09-e2e`：2.0.0 把 `new` 變體的 `index.html` 與全部 `.js` 固定為 `ad8e77f`（line 51），PLY-01 的 toggle／log 投影已無對象 | 測試檔還原為 `5910421` 版 |
 | F4 | 風險 5 實測：`ui-shell-comparison.mjs` 凍結 `SHELL_BOARD_2000` 整個 `#board`；`ui-redesign-review-e2e` 凍結 5 個核心檔（對 `ce5f732`）、比對退休 log、做 P/IF 自然生涯逐步 S/RNG 比較 | T4～T6 |
-| F5 | `event-system-e2e`（同一候選、同 seed 跑兩次的重播比較）在 **乾淨 `5910421` 10 次 FAIL 4 次**、草稿 6 次 FAIL 3 次；差異都是某張卡多／少「選んだ行動：能力点を分配（2点）」。原因：`decision-presentation.js:69-87` 的 `selection` 等下一個 rAF 才清除，期間產生的卡被標記 | 2.0.0 既有問題，非 PLY-01；回報 code owner。PLY-01 的 Full 判定：此入口 FAIL 時比對差異是否為同一類，記錄並重跑 |
+| F5 | `event-system-e2e`（同一候選、同 seed 跑兩次的重播比較）在 **乾淨 `5910421` 10 次 FAIL 4 次**、草稿 6 次 FAIL 3 次；差異都是某張卡多／少「選んだ行動：能力点を分配（2点）」。原因：`decision-presentation.js:69-87` 的 `selection` 等下一個 rAF 才清除，期間產生的卡被標記 | 2.0.0 既有問題，非 PLY-01。2026-11-18 另開 [PR #106](https://github.com/tt-chin/yakyujinsei/pull/106)（`fix/decision-selection-race` → `dev`，`cf55455`）：配分確定等非選項按鈕清除 `selection`；本機 `event-system-e2e` 修正版 10／10 PASS、同機乾淨 `dev` 8／10；待合併。PLY-01 的 Full 判定（PR #106 合併前）：此入口 FAIL 時比對差異是否為同一類，記錄並重跑 |
 | F6 | 風險 3：`jersey-e2e` 改號對話框段落無焦點斷言；dev `board-menu.js` 的 `close()` 先把焦點還給 ☰，`jersey-dialog.js:50` 以開啟時的 `activeElement` 為 opener | T8 新增斷言 |
 | F7 | 風險 4：Full 未出錯，但未確認 `jersey-e2e` 是否走到「已有存檔再開新生涯」 | T8 確認，未確認前不算覆蓋 |
 
