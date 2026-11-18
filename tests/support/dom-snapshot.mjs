@@ -141,12 +141,24 @@ export async function captureGameView(full){
         if(!card||card.querySelector('h4')?.textContent!=='通算成績'||h.textContent!=='背番号'||h.attributes.length!==1||h.nextElementSibling!==table||h.previousElementSibling!==card.querySelector('h4')||table.className!=='fin jersey-table'||table.attributes.length!==1)throw Error('JERSEY_TABLE_CONTRACT');
         const rows=[...table.rows];
         if(!rows.length)throw Error('JERSEY_TABLE_ROWS');
+        // Keep in step with removeJerseyDisplay: rows walk the professional log rows (with st) in order. Each row covers
+        // consecutive rows that share the record in effect (last record with year <= y; none = 不明), records are never
+        // split across rows, and every professional row is covered once. Team cells are only checked to be non-empty.
+        const recordAt=y=>{let found=-1;(jerseyHistory||[]).forEach((r,i)=>{if(r.year<=y)found=i;});return found;};
+        const pro=[];(rawState.log||[]).forEach((r,i)=>{if(r&&r.st)pro.push({i,y:r.y,k:recordAt(r.y)});});
+        let at=0;
         for(const tr of rows){
           const cells=[...tr.children];
-          if(cells.length!==3||cells.some(c=>c.tagName!=='TD'||c.children.length)||cells[0].className!=='cell-left'||cells[1].className!=='cell-nowrap'||cells[2].className!=='cell-nowrap'||!/^\d{4}(–\d{4})?$/.test(cells[1].textContent))throw Error('JERSEY_TABLE_ROW');
-          const m=cells[2].textContent.match(/^#(\S+)$/);
-          if(!(m?jerseyNumbers.has(m[1]):cells[2].textContent==='不明'))throw Error('JERSEY_TABLE_NUMBER');
+          if(cells.length!==3||cells.some(c=>c.tagName!=='TD'||c.children.length)||cells[0].className!=='cell-left'||cells[1].className!=='cell-nowrap'||cells[2].className!=='cell-nowrap'||!cells[0].textContent||!/^\d{4}(–\d{4})?$/.test(cells[1].textContent))throw Error('JERSEY_TABLE_ROW');
+          const [from,to=from]=cells[1].textContent.split('–').map(Number),first=pro[at];
+          if(!first||first.y!==from||(from===to)!==!cells[1].textContent.includes('–'))throw Error('JERSEY_TABLE_PERIOD');
+          let j=at;while(pro[j].y!==to){j++;if(j>=pro.length||pro[j].i!==pro[j-1].i+1||pro[j].k!==first.k)throw Error('JERSEY_TABLE_PERIOD');}
+          while(pro[j+1]&&pro[j+1].i===pro[j].i+1&&pro[j+1].y===to&&pro[j+1].k===first.k)j++; /* same-year rows of one record merge into this row */
+          if(first.k>=0&&pro[j+1]&&pro[j+1].i===pro[j].i+1&&pro[j+1].k===first.k)throw Error('JERSEY_TABLE_SPLIT');
+          if(cells[2].textContent!==(first.k>=0?'#'+jerseyHistory[first.k].number:'不明'))throw Error('JERSEY_TABLE_NUMBER');
+          at=j+1;
         }
+        if(at!==pro.length)throw Error('JERSEY_TABLE_COVER');
         h.remove();table.remove();jerseyCounts.table++;
       }
       if(log.querySelector('.jersey-heading,.jersey-table'))throw Error('JERSEY_TABLE_UNEXPECTED');
@@ -239,6 +251,10 @@ export async function captureGameView(full){
       if(!tag){if(card.textContent.includes('（今季はけがで全休）'))continue;throw Error('JERSEY_SEASON_TAG');} /* full-season injury cards carry no team tag */
       const m=text?.nodeType===3?text.nodeValue.match(/^(.*) · #(\S+)$/s):null;
       if(!m||!jerseyNumbers.has(m[2]))throw Error('JERSEY_SEASON_TAG');
+      // The number is the record in effect for the card's year (its .yr-head 'YYYY年・…'); keep in step with removeJerseyDisplay.
+      const year=Number(card.closest('.yr-block')?.querySelector('.yr-head')?.textContent.match(/^(\d{4})年・/)?.[1]);
+      let record=null;for(const r of jerseyHistory||[])if(r.year<=year)record=r;
+      if(!record||record.number!==m[2])throw Error('JERSEY_SEASON_YEAR');
       text.nodeValue=m[1];seasonCards++;
     }
     if(seasonCards)dom.log=logTpl.innerHTML;
@@ -332,12 +348,24 @@ export function removeJerseyDisplay(root,state){
   if(tables.length!==wantTable||headings.length!==wantTable)throw Error('JERSEY_TABLE_COUNT');
   for(const table of tables){
     const card=table.closest('.card'),h=headings[0];
-    if(!card||card.querySelector('h4')?.textContent!=='通算成績'||h.textContent!=='背番号'||h.nextElementSibling!==table||h.previousElementSibling!==card.querySelector('h4')||table.className!=='fin jersey-table')throw Error('JERSEY_TABLE_CONTRACT');
+    if(!card||card.querySelector('h4')?.textContent!=='通算成績'||h.textContent!=='背番号'||h.attributes.length!==1||h.nextElementSibling!==table||h.previousElementSibling!==card.querySelector('h4')||table.className!=='fin jersey-table'||table.attributes.length!==1)throw Error('JERSEY_TABLE_CONTRACT');
     if(!table.rows.length)throw Error('JERSEY_TABLE_ROWS');
+    // Same period walk as captureGameView (keep both in step): consecutive professional log rows per record in effect, none split, all covered once.
+    const recordAt=y=>{let found=-1;(history||[]).forEach((r,i)=>{if(r.year<=y)found=i;});return found;};
+    const pro=[];(state.log||[]).forEach((r,i)=>{if(r&&r.st)pro.push({i,y:r.y,k:recordAt(r.y)});});
+    let at=0;
     for(const tr of table.rows){
-      const cells=[...tr.children],m=cells[2]?.textContent.match(/^#(\S+)$/);
-      if(cells.length!==3||cells[0].className!=='cell-left'||cells[1].className!=='cell-nowrap'||cells[2].className!=='cell-nowrap'||!/^\d{4}(–\d{4})?$/.test(cells[1].textContent)||!(m?numbers.has(m[1]):cells[2].textContent==='不明'))throw Error('JERSEY_TABLE_ROW');
+      const cells=[...tr.children];
+      if(cells.length!==3||cells.some(c=>c.tagName!=='TD'||c.children.length)||cells[0].className!=='cell-left'||cells[1].className!=='cell-nowrap'||cells[2].className!=='cell-nowrap'||!cells[0].textContent||!/^\d{4}(–\d{4})?$/.test(cells[1].textContent))throw Error('JERSEY_TABLE_ROW');
+      const [from,to=from]=cells[1].textContent.split('–').map(Number),first=pro[at];
+      if(!first||first.y!==from||(from===to)!==!cells[1].textContent.includes('–'))throw Error('JERSEY_TABLE_PERIOD');
+      let j=at;while(pro[j].y!==to){j++;if(j>=pro.length||pro[j].i!==pro[j-1].i+1||pro[j].k!==first.k)throw Error('JERSEY_TABLE_PERIOD');}
+      while(pro[j+1]&&pro[j+1].i===pro[j].i+1&&pro[j+1].y===to&&pro[j+1].k===first.k)j++; /* same-year rows of one record merge into this row */
+      if(first.k>=0&&pro[j+1]&&pro[j+1].i===pro[j].i+1&&pro[j+1].k===first.k)throw Error('JERSEY_TABLE_SPLIT');
+      if(cells[2].textContent!==(first.k>=0?'#'+history[first.k].number:'不明'))throw Error('JERSEY_TABLE_NUMBER');
+      at=j+1;
     }
+    if(at!==pro.length)throw Error('JERSEY_TABLE_COVER');
     h.remove();table.remove();counts.table++;
   }
   for(const card of root.querySelectorAll('.card')){
@@ -345,6 +373,9 @@ export function removeJerseyDisplay(root,state){
     if(!card.querySelector('.tag')){if(card.textContent.includes('（今季はけがで全休）'))continue;throw Error('JERSEY_SEASON_TAG');} /* full-season injury cards carry no team tag */
     const text=card.querySelector('.tag')?.lastChild,m=text?.nodeType===3?text.nodeValue.match(/^(.*) · #(\S+)$/s):null;
     if(!m||!numbers.has(m[2]))throw Error('JERSEY_SEASON_TAG');
+    const year=Number(card.closest('.yr-block')?.querySelector('.yr-head')?.textContent.match(/^(\d{4})年・/)?.[1]);
+    let record=null;for(const r of history||[])if(r.year<=year)record=r;
+    if(!record||record.number!==m[2])throw Error('JERSEY_SEASON_YEAR');
     text.nodeValue=m[1];counts.season++;
   }
   if(root.querySelector('.jersey-heading,.jersey-table')||/ · #\S/.test(root.textContent))throw Error('JERSEY_DISPLAY_UNEXPECTED');

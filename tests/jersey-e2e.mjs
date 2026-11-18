@@ -127,6 +127,8 @@ await test('menu-change',async e=>{
   let s=(await get(page));assert.deepEqual(s.state.jerseyHistory.map(r=>[r.teamId,r.year,r.number]),[[team,year,'18'],[team,year,'7'],[team,year,'9'],[team,year,'0']]);assert.equal(s.draws,draws,'menu changes draw no RNG');
   assert.equal((await board(page)).number,'#0');
   const b1=await play(page,{b1:true});assert.equal(b1.state.year,year,'B1 wait point is in the entry year');
+  const seasonTags=await page.evaluate(y=>[...document.querySelectorAll('#log .yr-block')].filter(b=>b.querySelector('.yr-head')?.textContent.startsWith(y+'年・')).flatMap(b=>[...b.querySelectorAll('.card')].filter(c=>c.querySelector('h4')?.textContent==='シーズン成績').map(c=>c.querySelector('.tag')?.textContent)),year);
+  assert.deepEqual(seasonTags.map(t=>t?.match(/ · #(\S+)$/)?.[1]),['0'],'the entry year season card shows the last same-year number');
   await menuDialog(page);t=await dialogText(page);assert.ok(t.note.startsWith((year+1)+'年シーズンから有効。'),'B1 note names next year');await pick(page,'11');
   s=await get(page);assert.deepEqual(s.state.jerseyHistory.at(-1),{teamId:team,year:year+1,number:'11'});
   const ylog=await yearly(page);assert.ok(ylog.split('\n').some(l=>l.includes(String(year))&&l.includes('#0')),'the entry year keeps its last same-year number');

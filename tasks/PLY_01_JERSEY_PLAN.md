@@ -447,9 +447,18 @@ W8＝甲時，`signTo` 本身不變，上述 RNG 0 斷言與直接呼叫的 fixt
 - N1～N12 在新基準重跑（scratch worktree，替換字串先斷言次數、CRLF 檔依檔案換行、還原後確認乾淨）：24 個變異全部攔下，失敗斷言與 §11 相同（N10 仍為 `SAVE_AUTH_FAILED`≠`SAVE_JERSEY`；N11a 第 70 步 `$.dom.log`；N11b 現由 `projectJerseyBoard` 的 `JERSEY_BOARD_UNEXPECTED` 攔下；N12 12 入口全攔）。
 - reviewer：無 medium 以上；low 6 項中修正 4 項（`jersey-e2e` 訊息 2 處、`ui-redesign-review-e2e` 要求每次確認選號恰增 1 筆紀錄、`scripts/TESTING.md` 同步）。
 
-**未處理（reviewer low，§11 既有、非本次新增，待使用者決定）**
-1. `dom-snapshot.mjs` 退休背番号表與季成績卡 ` · #N` 只檢查「號碼存在於 `jerseyHistory`」，未依年度／期間精確比對（年度別已精確比對）。
-2. `removeJerseyDisplay`（`ui-redesign-review-e2e`、`display-preferences-e2e` 用）的表格 markup 契約比 `captureGameView` 版寬（缺屬性數、td `tagName`／子元素檢查）。
+**reviewer low 2 項（§11 既有）：2026-11-18 使用者核准 U1～U4 後處理**
+1. 原狀：`dom-snapshot.mjs` 退休背番号表與季成績卡 ` · #N` 只檢查「號碼存在於 `jerseyHistory`」。盤點：快照類 E2E 都是自然生涯，號碼只有一個，號碼精確化在其中等價；實際缺口是退休表年度／期間（只驗格式）與季成績卡依年度的號碼（無人檢查）。
+2. 原狀：`removeJerseyDisplay` 的表格 markup 契約比 `captureGameView` 版寬。
+
+**處理（只改測試）**
+- U1 `captureGameView`／`removeJerseyDisplay`（兩份同邏輯、註明需同步）：退休表逐列對照職業年度列（每列取年度 ≤ y 的最後一筆紀錄），檢查起訖年、號碼／「不明」、連續性、已知紀錄不得拆列、全部覆蓋；球團名只檢查非空。reviewer 指出同年度重複列會誤判（現行產品不會產生），已加併入同列的 1 行。
+- U2 同兩處：季成績卡以所在 `.yr-head` 的年度取紀錄，號碼須一致。
+- U3 `removeJerseyDisplay`：補 h4／table 屬性數、`td` `tagName`、無子元素檢查。
+- U4 `jersey-e2e` `menu-change`：B1 等待點斷言進團當年季成績卡為 ` · #0`。
+- 驗證（本機 Brave）：`jersey-e2e` 22／22、`ui-redesign-review-e2e`、`display-preferences-e2e`（`--baseline=origin/main`）、`game-view-dom-e2e` PASS；Quick 103／103 PASS。Full 未跑（未改 Full 執行路徑）。
+- 負控制（scratch worktree，舊測試＝`8219a43`、新測試＝U1～U4）：A 年度欄只顯示起始年、B 期間拆成逐年列 → 舊 `display-preferences-e2e`／`game-view-dom-e2e` PASS、新兩者 `JERSEY_TABLE_SPLIT`；C 季成績卡取第一筆紀錄 → 舊 `jersey-e2e` 22／22、新 21／22（U4 斷言）；D 退休表加屬性 → 舊 `display-preferences-e2e` PASS、新 `JERSEY_TABLE_CONTRACT`（`game-view-dom-e2e` 舊版即攔下）。`ui-redesign-review-e2e` 的 `PLY01_CORE` 文字比對會先攔下 A／B／D（`PLY-01 insertion once`），不作為這些變異的判定入口。
+- 仍不檢查：不明期間的邊界（同隊拆列、不同隊合併）；屬核准範圍。
 
 **推送與 PR（2026-11-18 完成，使用者確認後執行）**
 - 前置確認：`origin/dev` 仍為 `5910421`、`origin/main` 仍為 `d6cef67`，開啟中的 PR 0 件，未再 merge。
