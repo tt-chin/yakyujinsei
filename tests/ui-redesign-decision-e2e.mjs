@@ -85,6 +85,18 @@ try{
   await result.screenshot({path:path.join(out,`${pos}-result.png`),animations:'disabled'});
   await reference.c.close();await c.close();console.log('PASS '+pos+': pending identity, allocation draft, exact baseline S/RNG, double click and result');
  }
+ // A choice that opens allocation must not mark the card that its confirm creates, whether or not a frame runs in
+ // between: any non-option #act button ends the selection (event-system-e2e replay flake on 5910421).
+ {const {c,p}=await open('P'),hasOpener=()=>[...document.querySelectorAll('#act button:not(:disabled)')].some(b=>/^能力点を分配（\d+点）$/.test(b.textContent.trim()));let found=false;
+  for(let n=0;n<600&&!found;n++){found=await p.evaluate(hasOpener);if(!found){await p.evaluate(step);await frames(p);}}
+  assert.ok(found,'reached an allocation-opening choice');
+  const r=await p.evaluate(()=>{const a=document.getElementById('act'),button=[...a.querySelectorAll('button:not(:disabled)')].find(b=>/^能力点を分配（\d+点）$/.test(b.textContent.trim())),label=button.textContent.trim();window.__staleBefore=new Set(document.querySelectorAll('#log .card'));
+   button.click();let spent=0;for(let row;spent<50&&(row=a.querySelector('.abrow[aria-disabled="false"]:not(.capped)'));spent++)row.click();a.querySelector('button.main:not(:disabled)').click();return {label,spent};});
+  await frames(p);
+  const marks=await p.evaluate(()=>{const cards=[...document.querySelectorAll('#log .card')].filter(e=>!window.__staleBefore.has(e));return {cards:cards.length,stale:cards.flatMap(e=>[...e.querySelectorAll('[data-reader-selection]')].map(n=>n.textContent))};});
+  assert.ok(r.spent>0&&marks.cards>0,'allocation spent and its confirm created a card: '+JSON.stringify({r,marks}));
+  assert.deepEqual(marks.stale,[],'the allocation result card carries no stale 選んだ行動 after '+r.label);
+  checks.push({staleSelectionMark:'PASS',opener:r.label,cards:marks.cards});await c.close();console.log('PASS stale selection: '+r.label+' → '+marks.cards+' new card(s), no mark');}
  const {c,p}=await open('IF'),before=await get(p);
  const variants=[{ability:{before:79,after:80,abilityDelta:1,carryBefore:0,carryAfter:0},abilityDelta:1,overflowStat:7},{ability:{before:70,after:70,abilityDelta:0,carryBefore:1,carryAfter:3},abilityDelta:0},{success:false,ability:{before:2,after:1,abilityDelta:-1,carryBefore:0,carryAfter:0},abilityDelta:-1,injuryAdded:2},{ability:null,abilityDelta:0},{ability:null,abilityDelta:0,incomeYen:1230000,category:'endorsement'},{ability:{abilityDelta:0},abilityDelta:0}];
  for(let i=0;i<variants.length;i++){

@@ -71,7 +71,9 @@ export class DecisionPresentation {
     const view=this.getDecision();
     if(view?.kind==='CHOICE'&&event.detail>1){event.preventDefault();event.stopImmediatePropagation();return;}
     const option=view?.kind==='CHOICE'?view.opts[view.buttons.indexOf(button)]:null;
-    if(!option)return; // Allocation retains its original inputs, closure and controls.
+    // Allocation retains its original inputs, closure and controls. Any other #act button ends the
+    // previous choice's selection, so its mark never depends on whether a frame ran in between.
+    if(!option){this.selection=null;return;}
     const selected={id:this.current?.id,label:this.plain(option.t),before:new Set(this.log.querySelectorAll('.card')),marked:false};
     this.selection=selected;this.latestSelection=selected;
     this.log.querySelectorAll('details[data-reader-details]').forEach(details=>{details.open=false;});
