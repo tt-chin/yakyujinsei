@@ -4892,7 +4892,8 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 負控制（scratch，替換斷言 1 次、還原後 sha 相同）13／13 攔下：`pitcherRole` 閾值、`allStars` 少一聯盟 → `player profile equivalence`；`ovr`→`type()`、`abCost` 丟引數 → 包裝委派斷言；`promptEntry`／`openChange` 拿掉即時 state 比較 → J4 斷言；拿掉最長名稱排序 → `Seoul Bears 2軍`；`jerseyTeamName`→`unknownTeam` → 包裝委派；`step` 不提示 → `pending entry`；`ability-allocation` 兩條新文字斷言各 1；`isStarter` 反轉 → `award-journal-native`、`pitcher-award-integration` 失敗（證明兩 harness 經 `PlayerProfile`）。
 - 正式 commit（macOS＋Brave 157，runner 基準 `origin/main` `d6cef67`）：`20d61e3` Quick 104／104 PASS；`349ccb6` Quick 105／105 PASS、8 批 Full 136／136 PASS（`sourceChanged` false、8 批執行、missing 0）。結果文件 commit 只改 `.md`（不在 Full 來源指紋內、無測試讀取），未重跑。
 - reviewer（`d2ed92f..349ccb6`）：無發現。提及取消後重新提示與 `openChange` 防呆分支無單元測試，由 `jersey-e2e:98–123` 涵蓋。
-- 未做：push、PR、Linux CI Full（GitHub 手動）、Preview、實機。
+- 交付（2026-11-20）：分支 `refactor/jersey-flow-player-profile`（`e25cf18`）已 push，[PR #108](https://github.com/tt-chin/yakyujinsei/pull/108)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
+- 未做：Linux CI Full（GitHub 手動）、Preview、實機、合併。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
