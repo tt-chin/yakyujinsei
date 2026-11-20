@@ -21,6 +21,7 @@ import { ensureEventState, beginEvent, eventDrawPool, applyEvent, beginEventSeas
 import { createInitialState } from './initial-state.js';
 import { jerseyEntryPending, proposedJerseyNumber, isLegacyJerseyEntry, appendJerseyRecord, currentJerseyNumber, canChangeJersey, jerseyChangeYear, jerseyPeriods } from './jersey-policy.js';
 import { chooseJerseyNumber } from '../ui/jersey-dialog.js';
+import { JerseyFlow } from './jersey-flow.js';
 import { createSeedShareController, replayURL, shareReplayURL } from '../ui/seed-share.js';
 import { ShareImage } from '../ui/share-image.js';
 import { DefensePositionReview } from './defense-position-review.js';
@@ -335,20 +336,11 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function processIntlPhase(phase,done){internationalTournament.process(phase,done);}
   const internationalTournament=new InternationalTournament({getState:()=>S,normalizeInternationalState,validateInternationalEntry,prepareInternationalResult,commitInternationalResult,INTLACE_UNLOCK_TEXT,internationalPersonalStats,renderInternationalPersonalStats,intlEvents:year=>intlEvents(year),intlPhase:e=>intlPhase(e),intlThreshold:e=>intlThreshold(e),intlSelection:e=>intlSelection(e),addIntlStats:()=>addIntlStats(),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),displayTrait:key=>displayTrait(key),fmtIP:ip=>fmtIP(ip),pick:a=>pick(a)});
   function maybeIntl(done){processIntlPhase('POST',done);}
-  // PLY-01 W8: one year-start step before phasePre; it runs after the year-start save and draws no RNG.
-  function jerseyStep(){if(!jerseyEntryPending(S))return nextStep();promptJerseyEntry();}
-  function jerseyTeamName(teamId){return teamRec(teamId)?.name||String(teamId);}
-  // D4 periods before any record: the log team label without the trade prefix (A→B) or level suffix (teamDisplay).
-  function jerseyUnknownTeam(tm){const label=String(tm).split('→').pop();return Object.values(leagueCatalog.teamMaster).map(t=>t.name).filter(name=>label===name||label.startsWith(name+' ')).sort((a,b)=>b.length-a.length)[0]||label;}
-  // selected: the number picked in the dialog; accept re-renders the prompt with it and confirms through the guarded main button.
-  function promptJerseyEntry(selected=null,{accept:acceptNow=false,focus=false}={}){const state=S,team=jerseyTeamName(state.orgTeamId),number=selected??proposedJerseyNumber(state),legacy=isLegacyJerseyEntry(state);
-    board(0);
-    const accept=picked=>{appendJerseyRecord(state,picked);nextStep();};
-    choose(legacy?`${team}での背番号が記録されていません。背番号はどうする？`:`${team}と契約しました。背番号はどうする？`,[
-      {t:legacy?`背番号 ${number} にする`:`背番号 ${number} で入団する`,main:true,f:()=>accept(number)},
-      {t:'背番号を選ぶ',f:()=>{chooseJerseyNumber({title:'背番号を選ぶ',summary:`${team}`,fieldLabel:'背番号',note:`${state.year}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。`,selected:number,confirmLabel:'この背番号にする'}).then(picked=>{if(S!==state||!jerseyEntryPending(state))return;if(picked===null)promptJerseyEntry(null,{focus:true});else promptJerseyEntry(picked,{accept:true});});}}]);
-    const first=$('act').querySelector('button');if(acceptNow)first?.click();else if(focus)first?.focus({preventScroll:true});}
-  function jerseyLabelText(){const number=currentJerseyNumber(S);return number===null?'':` · #${number}`;}
+  function jerseyStep(){return jerseyFlow.step();}
+  function jerseyTeamName(teamId){return jerseyFlow.teamName(teamId);}
+  function jerseyUnknownTeam(tm){return jerseyFlow.unknownTeam(tm);}
+  function jerseyLabelText(){return jerseyFlow.label();}
+  const jerseyFlow=new JerseyFlow({getState:()=>S,nextStep:()=>nextStep(),board:p=>board(p),choose:(title,opts)=>choose(title,opts),chooseNumber:options=>chooseJerseyNumber(options),byId:id=>$(id),setBoardNumber:text=>gameView.setBoardNumber(text),teamRec:id=>teamRec(id),teamMaster:()=>leagueCatalog.teamMaster});
   function phaseIntlPre(){return yearFlow.phaseIntlPre();}
   function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}
   const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[jerseyStep,phasePre,phaseIntlPre,phaseMid,phaseEnd]});
@@ -397,9 +389,7 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   };
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();
-  $('board-number').onclick=()=>{const state=S;if(!canChangeJersey(state))return;const current=currentJerseyNumber(state),year=jerseyChangeYear(state);
-    chooseJerseyNumber({title:'背番号の変更',summary:`${jerseyTeamName(state.orgTeamId)}　現在の背番号 #${current}`,note:`${year}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。`,selected:current,confirmLabel:'変更する'})
-      .then(picked=>{if(picked===null||S!==state||!canChangeJersey(state)||jerseyChangeYear(state)!==year||picked===currentJerseyNumber(state))return;appendJerseyRecord(state,picked,year);gameView.setBoardNumber(`#${picked}`);$('board-number').disabled=!canChangeJersey(state);});};
+  $('board-number').onclick=()=>jerseyFlow.openChange();
   $('btn-restart').onclick=()=>{confirmAction({title:'タイトルに戻る',message:'タイトルに戻りますか？セーブデータは残ります。未保存の操作は、もう一度プレイする必要があります。'}).then(ok=>{if(ok)location.href=location.pathname;});};
 
 // Bootstrap completes storage inspection before enabling new-career controls.
