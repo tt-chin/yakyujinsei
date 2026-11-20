@@ -160,4 +160,5 @@ export function appendInternationalHistory(container, rows) // 実績分頁 DOM�
 - reviewer（`b7fea0a..8477d35`）：無 medium 以上；low 6 項。採納 1～4：列內 `personalStats` 改為深層凍結的複本；結果只在 `eventKey` 等於字典 key 時列出（同 `normalizeInternationalState`，`dom-snapshot` 同規則）；T7 無國際結果的引退先斷言「通算成績」卡恰 1 張；引退投影每列 summary 與 `career().international` 全字比對。5（`__expectIntlHistory` 寫死）不改，與 `__expectBrowserSave`／`__expectIncomeDisplay` 同模式且 manifest 不轉送 `--baseline`。6 記於 `scripts/TESTING.md`（`display-preferences-e2e` 以 `--only-seed` 的兩個種子引退時無國際結果，改種子前須加投影）。
 - `00bbd33`：負控制 NC11（回傳存檔物件）、NC12（拿掉 key 規則）→ T1；NC13（引退列文字與 view 不一致）→ `game-view-dom-e2e` `INTL_HISTORY_BLOCK_ROWS`，3／3 攔下（合計 13／13）；乾淨 worktree Quick 107／107 PASS、`game-view-dom-e2e` PASS（8 段生涯）。
 - 交付（2026-11-21）：分支 `feat/int-01-intl-history`（`e954058`）已 push，[PR #109](https://github.com/tt-chin/yakyujinsei/pull/109)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
-- 未做：版本 commit（D6，code owner）、合併、Preview、實機。Full 依 R2 純顯示例外不一律追加；如需要，由使用者於 GitHub 手動執行。
+- 合併（2026-11-21）：PR #109 併入 dev（merge `8a4f765`）；dev push Quick [Run44826320163](https://github.com/tt-chin/yakyujinsei/actions/runs/44826320163) success（`tests` job 成功、Full 三個 job skipped；個別入口數未從 log 核對）。
+- 未做：版本 commit（D6，code owner）、Preview、實機。Full 依 R2 純顯示例外不一律追加；如需要，由使用者於 GitHub 手動執行。
