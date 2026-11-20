@@ -70,6 +70,7 @@ import { honorScoreFor } from './hall-of-fame-policy.js';
 import {evaluateLeagueHof} from './hof-evaluation-policy.js';
 import { careerScoreFor, defenseShareFor, hallOfFameTier } from './hall-of-fame-tier-policy.js';
 import { toolGapFor, overallRatingFor, playerTypeFor, abilityStepCostFor } from './ability-evaluation-policy.js';
+import { PlayerProfile } from './player-profile.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
 import { fmtIP, slgOf } from '../ui/stat-format.js';
@@ -127,27 +128,20 @@ function blankStat(){return seasonStats.blankStat();}
 function bucketOf(lv){return resolveStatBucket(LV,lv);}
 function traitCard(key,name,desc,tone){careerTraits.unlock(key,name,desc,tone);}
 function removeTrait(key,label){careerTraits.remove(key,label);}
-/* 一芸特化：評価対象は三つの役割軸のみ——打撃(長打力/Contact)、走塁(速度)、守備(総合)。 */
-function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
-function toolGap(){return toolGapFor(S.ab,S.pos);}
+function careerAllStars(){return playerProfile.allStars();}
+function toolGap(){return playerProfile.toolGap();}
 function tjAccrue(){return playerInjury.accrueTj();}
 function tjCap(){return playerInjury.tjGaugeLimit();}
 function afterGamble(kind,cont){playerInjury.afterGamble(kind,cont);}
 function tjGamble(cont){playerInjury.tjGamble(cont);}
 const playerInjury=new PlayerInjury({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,v)=>addAb(k,v),board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),removeTrait:(key,label)=>removeTrait(key,label),tjCap:()=>tjCap(),rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}});
-function pitcherRole(){ /* スタミナ >=52 先発;それ以外はブルペン、ブルペン内では成績ならクローザーへ昇格。 */
-  if(S.ab.sta>=52)return 'SP';
-  /* ブルペン：前季のdはprevDから参照する。lastDはphasePreで初期化済み;トップ級なら クローザー。 */
-  const pd=(S.prevD!==undefined?S.prevD:(S.lastD||0));
-  const d=(S.role&&S.role!=='SP')?pd:-99;
-  if(S.role==='CL')return d>=1?'CL':'MR';   /* クローザー成績急落時のみセットアッパー。 */
-  return d>=3?'CL':'MR';                     /* セットアッパーがトップ階級の成績ならクローザーへ昇格。 */
-}
+function pitcherRole(){return playerProfile.pitcherRole();}
 function roleN(r){ return {SP:'先発',MR:'中継ぎ',CL:'抑え'}[r]||'—'; }
-function isSP(){ return S.role==='SP'; } /* 先発引擎判定。 */
-function ovr(){return overallRatingFor({ability:S.ab,position:S.pos,defensePosition:S.dpos,traits:S.traits});}
-function playerType(){return playerTypeFor({ability:S.ab,position:S.pos,traits:S.traits,toolRole:S.toolRole});}
-function abCost(k){return abilityStepCostFor({ability:S.ab,potential:S.pot,key:k,position:S.pos});}
+function isSP(){return playerProfile.isStarter();}
+const playerProfile=new PlayerProfile({getState:()=>S});
+function ovr(){return playerProfile.overall();}
+function playerType(){return playerProfile.type();}
+function abCost(k){return playerProfile.stepCost(k);}
 function addAb(k,v){return playerAbility.addAb(k,v);}
 /* 成績シミュレーション。 */
 function simSeason(lv){return seasonStats.simSeason(lv);}
