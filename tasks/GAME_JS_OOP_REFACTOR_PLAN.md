@@ -4893,7 +4893,8 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 正式 commit（macOS＋Brave 157，runner 基準 `origin/main` `d6cef67`）：`20d61e3` Quick 104／104 PASS；`349ccb6` Quick 105／105 PASS、8 批 Full 136／136 PASS（`sourceChanged` false、8 批執行、missing 0）。結果文件 commit 只改 `.md`（不在 Full 來源指紋內、無測試讀取），未重跑。
 - reviewer（`d2ed92f..349ccb6`）：無發現。提及取消後重新提示與 `openChange` 防呆分支無單元測試，由 `jersey-e2e:98–123` 涵蓋。
 - 交付（2026-11-20）：分支 `refactor/jersey-flow-player-profile`（`e25cf18`）已 push，[PR #108](https://github.com/tt-chin/yakyujinsei/pull/108)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
-- 未做：Linux CI Full（GitHub 手動）、Preview、實機、合併。
+- 合併（2026-11-21）：PR #108 併 dev（merge `b7fea0a`）；dev push Quick [Run 44771919244](https://github.com/tt-chin/yakyujinsei/actions/runs/44771919244)（Tests #236）成功（`tests` job success，Full 各 job skipped）。
+- 未做：Linux CI Full（GitHub 手動）、Preview、實機。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
