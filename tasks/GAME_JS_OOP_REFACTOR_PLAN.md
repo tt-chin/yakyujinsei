@@ -4865,14 +4865,34 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 | B2 | `game.js` 保留上述 7 個名稱為一行函式宣告包裝，所有建構行不變；2.0.0 凍結的 5 個模組不動；`playerType` 維持可重新指派 |
 | B3 | `roleN` 留在 `game.js`（顯示標籤，比照 §2tt D2 的 `DPN`）；`career-retirement.js:34` 的相同對照表因凍結不合併 |
 | B4 | 預期測試修改：`ability-allocation.test` `abBlock`、`award-journal-native.test` `isSP`；`trait-policy` 切片維持順序即不受影響；確定清單於草稿實測後列入 T 表 |
-| B5 | `const playerProfile=new PlayerProfile(…)` 置於 `careerAllStars` 之前，避開 `toolGap`→`tjAccrue`、`ovr`→`addAb` 切片；以草稿確認 |
+| B5 | ~~`const playerProfile=new PlayerProfile(…)` 置於 `careerAllStars` 之前~~ 更正（草稿實測，2026-11-20 批准）：該位置在 `removeTrait` 之後，`productionFunction('removeTrait')` 切到下一個 `function` 行而帶入無 import 的 vm（`award-journal-native`、`award-history-b-comparison`、`pitcher-award-integration` 的 `PlayerProfile is not defined`）。改置於 `isSP` 包裝之後，由 `productionFunction('isSP')` 帶入 vm（同 `awards` 帶 `seasonAwards` 建構行），harness context 補 `PlayerProfile` |
 | B6 | 能力・契約判定的輸入，R3，允許差分無 |
-| C1 | 分支 `refactor/jersey-flow-player-profile`（自 `origin/dev` `159dbf2`，`--no-track`）；commit 依序為計畫文件、J、B |
+| C1 | 分支 `refactor/jersey-flow-player-profile`（自 `origin/dev` `159dbf2`，`--no-track`）；commit 依序為計畫文件、J、B，另加結果文件 1 個（2026-11-20 批准） |
 | C2 | 草稿於 scratch worktree，先跑 Quick＋本機 4 組 Full；各名稱以帶標記 probe 比對新舊 hit 序列，並做繞過建置證明 hook 會被呼叫；之後提 T 表。CI Full 由使用者於 GitHub 手動執行 |
 | C3 | 內部重構，依 AGENTS §9.3 不改版本 |
 | C4 | `dc9bf83` 若在草稿 Full 前併入 dev，merge 進草稿並重跑 Quick 再繼續 |
 
 - J 搬移的是尚未發布 main 的 PLY-01 程式；dev → main 的 PR 會同時包含 PLY-01 與本期。
+
+### 2uu.3 T 表與驗證（T1–T7 批准 2026-11-20）
+
+| # | 內容 | commit |
+|---|---|---|
+| T1 | 新增 `jersey-flow.js`（27 行）；`game.js` 4 個一行包裝＋`JerseyFlow` 建構行，`board-number` 改為 `jerseyFlow.openChange()` | J `20d61e3` |
+| T2 | 新增 `tests/jersey-flow.test.mjs`：`159dbf2` 舊本體對照 `teamName`／`unknownTeam`／`label`（24 格；fixture 的 `Seoul` 在 `Seoul Bears` 前，使最長名稱排序可觀測）、spy 確認包裝委派、`step` 兩分支、J4（state 替換後不再提示或寫入） | J |
+| T3 | 新增 `player-profile.js`（24 行）；`game.js` 7 個一行包裝，建構行在 `isSP` 之後（B5 更正） | B `349ccb6` |
+| T4 | `ability-allocation.test`：current 側 vm 建構 `PlayerProfile`；文字斷言改為包裝 `return playerProfile.overall();`＋模組 `return overallRatingFor(`；新舊逐格比對不變 | B |
+| T5 | `tools/development-b/award-runtime-support.mjs`、`award-journal-native.test` 的 vm context 加 `PlayerProfile` | B |
+| T6 | 新增 `tests/player-profile.test.mjs`：`159dbf2` 舊本體對照 `allStars`／`pitcherRole`／`isSP`（4,480 格，`pitcherRole` 三結果皆到達）、spy 確認 7 個包裝委派 | B |
+| T7 | `scripts/TESTING.md` 新測試說明、本節、BACKLOG 現況 | 文件 |
+
+- 結果：`game.js` 426 行／45,023 bytes → 410 行／41,960 bytes。J、B 以草稿同一 assembler（逐行替換、保留各行換行、每處替換斷言 1 次）套用；B 後 8 檔與草稿逐位元組相同（`cmp`）。
+- 草稿（scratch worktree，基準 `d2ed92f`）：Quick 第 1 次 99／103（3 檔 `PlayerProfile is not defined`＝B5 位置、`ability-allocation` 文字斷言＝預期），更正後 103／103；8 批 Full 第 1 次因執行中新增測試檔觸發 `sourceChanged` 而中止（不採用），第 2 次 136／136 PASS。
+- 抵達 probe（32 段生涯：`probe33-1`～`-8` × P／C／IF／OF；舊 `d2ed92f`／新草稿／bypass＝J 的 `nextStep`／`board`／`choose` 以值注入）：舊與新的 hit 序列、計數、`S`、`#log`、`#board` 32／32 相同；重新指派 `choose`／`nextStep`／`board` 的計數舊＝新 32／32；bypass 的差額 32／32 等於背番号流程的 prompt 數／`jStep` 數（重新繫結經延遲 lambda 到達）；Console 錯誤 0。每段生涯在第一次入團提示先取消再改選一次號碼、第一次可改號時經 `#board-number` 改號一次。`allStars`、`jUnknownTeam` 在自然生涯 0 hit，由 T6、T2 的舊本體對照涵蓋；`jUnknownTeam` 的舊存檔路徑另由 `jersey-e2e` 的 `legacy-save`／`legacy-save-11613` 涵蓋。
+- 負控制（scratch，替換斷言 1 次、還原後 sha 相同）13／13 攔下：`pitcherRole` 閾值、`allStars` 少一聯盟 → `player profile equivalence`；`ovr`→`type()`、`abCost` 丟引數 → 包裝委派斷言；`promptEntry`／`openChange` 拿掉即時 state 比較 → J4 斷言；拿掉最長名稱排序 → `Seoul Bears 2軍`；`jerseyTeamName`→`unknownTeam` → 包裝委派；`step` 不提示 → `pending entry`；`ability-allocation` 兩條新文字斷言各 1；`isStarter` 反轉 → `award-journal-native`、`pitcher-award-integration` 失敗（證明兩 harness 經 `PlayerProfile`）。
+- 正式 commit（macOS＋Brave 157，runner 基準 `origin/main` `d6cef67`）：`20d61e3` Quick 104／104 PASS；`349ccb6` Quick 105／105 PASS、8 批 Full 136／136 PASS（`sourceChanged` false、8 批執行、missing 0）。結果文件 commit 只改 `.md`（不在 Full 來源指紋內、無測試讀取），未重跑。
+- reviewer（`d2ed92f..349ccb6`）：無發現。提及取消後重新提示與 `openChange` 防呆分支無單元測試，由 `jersey-e2e:98–123` 涵蓋。
+- 未做：push、PR、Linux CI Full（GitHub 手動）、Preview、實機。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 

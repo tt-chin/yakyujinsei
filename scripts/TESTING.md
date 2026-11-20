@@ -84,6 +84,8 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 `jersey-policy.test`為Quick／Full／Audit的規則單元。`jersey-e2e`為Full／Audit（約20秒）：本機server同時提供目前`docs/`、`/baseline/`（`59104210efa7704b4749f3da765544ea2e9b705b`，2.0.0，PLY-01合併前的dev）與`/legacy/`（`75ab10b7d442db7aeccde0d649a852f224eed481`，1.16.13，正式站main）。自然生涯（`probe33-1`／`probe33-6`／`probe33-8`）驗證P／C／IF／OF預設號碼、入團只問一次、對話框取消／0與00／A3／A4、選單改號與B1（OK／取消後焦點回☰）、J2續玩、退休後A1、二重操作、1280／390截圖；同seed與baseline比較全R值／rngState與S（只排除version、createdVersion、jerseyHistory），預設與對話框＋選單改號版本亦同。舊存檔D4以baseline（2.0.0）與legacy（1.16.13）各自實際產生；已有含jerseyHistory的存檔時開新生涯須經覆寫確認且不帶入號碼紀錄；B6直接竄改IndexedDB逐欄斷言`SAVE_JERSEY`。交易、MiLB→MLB、IND／CORP、留隊、B2以標示fixture的狀態加真實移籍函式驗證；目前程式不設定`tradeFrom`，「A→B」年度列只以fixture固定。
 
+`jersey-flow.test`與`player-profile.test`為Quick／Full／Audit（重構第43期，`tasks/GAME_JS_OOP_REFACTOR_PLAN.md` §2uu）：以`159dbf2b293c6087df6a8f3713a19e6e61ad4a74`的舊`game.js`本體對照`JerseyFlow`（`teamName`／`unknownTeam`／`label`）與`PlayerProfile`（`allStars`／`pitcherRole`／`isStarter`），並以spy確認`game.js`的一行包裝委派到對應方法；`jersey-flow.test`另驗證對話框延遲回呼在state被替換後不再提示或寫入。`ovr`／`playerType`／`toolGap`／`abCost`的等價仍由`ability-allocation.test`負責。
+
 ## 生涯RNG（`Rng`）
 
 `rng.test`為Quick／Full／Audit：以`650e4dd21718b4abec3876fc9ef6148714c21d4f`舊`seedInit`／`R`產生的golden值，驗證`docs/src/engine/rng.js`的種子、步進、hash為0時的退回值、每次重讀`S`，以及`game.js`的`seedInit`／`R`委派與`_s`同步。不是完整生涯比較；E2E的RNG計數經`tests/support/rng-instrument.mjs`：現行原始碼以`careerRng.onDraw`計數，沒有`careerRng`的舊基準原始碼仍以`R`定義文字替換，兩者皆不符時丟`RNG_INSTRUMENT_MISS`；`rng-instrument.test`（Quick／Full／Audit）驗證這三種情況。vm harness仍抽取`seedInit`／`R`單行（見`tasks/GAME_JS_OOP_REFACTOR_PLAN.md` §2.2、§2b）。
