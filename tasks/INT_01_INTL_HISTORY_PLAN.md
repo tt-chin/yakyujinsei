@@ -152,3 +152,11 @@ export function appendInternationalHistory(container, rows) // 実績分頁 DOM�
 - **`b7fea0a` 上的結果**：Quick 107／107 PASS（含 T1、T7）；相關 E2E 11／11 PASS（`game-view-dom-e2e` 於引退投影補回後重跑 PASS）。
 - **負控制 10／10**（scratch，每次替換 1 處、跑後還原並比對 sha256）：排序反轉、缺 `personalStats` 補零、未知名稱 fallback → T1；R2 插入兩次 → T2 `insertion once`；P2 改字 → T3；0 屆仍輸出 section／panel → T7；`career().international` 少一列 → T5 `INTL_HISTORY_VIEW_ROWS`；引退列預設展開 → T5 `INTL_HISTORY_BLOCK_ROWS`；區塊放在國際通算表之前 → T7。
 - 截圖（OS temp `yakyujinsei-international-history-e2e/`）：1280／390 px、4 主題，引退卡與実績分頁版面正常，無水平溢出。
+
+## 9. 正式實作（2026-11-21）
+
+- 分支 `feat/int-01-intl-history`（自 dev `b7fea0a`）：`a3f1f89`（第 43 期合併紀錄，使用者指定併入本分支）、`face9ff`（本計畫）、`8477d35`（實作＋測試，與草稿逐 byte 相同）、`00bbd33`（reviewer 後續）、文件 commit（CURRENT_SPEC §15.1／§15.4、BACKLOG、P2 計畫狀態）。
+- `8477d35`：乾淨 worktree Quick 107／107 PASS、`game-view-dom-e2e` PASS。
+- reviewer（`b7fea0a..8477d35`）：無 medium 以上；low 6 項。採納 1～4：列內 `personalStats` 改為深層凍結的複本；結果只在 `eventKey` 等於字典 key 時列出（同 `normalizeInternationalState`，`dom-snapshot` 同規則）；T7 無國際結果的引退先斷言「通算成績」卡恰 1 張；引退投影每列 summary 與 `career().international` 全字比對。5（`__expectIntlHistory` 寫死）不改，與 `__expectBrowserSave`／`__expectIncomeDisplay` 同模式且 manifest 不轉送 `--baseline`。6 記於 `scripts/TESTING.md`（`display-preferences-e2e` 以 `--only-seed` 的兩個種子引退時無國際結果，改種子前須加投影）。
+- `00bbd33`：負控制 NC11（回傳存檔物件）、NC12（拿掉 key 規則）→ T1；NC13（引退列文字與 view 不一致）→ `game-view-dom-e2e` `INTL_HISTORY_BLOCK_ROWS`，3／3 攔下（合計 13／13）；乾淨 worktree Quick 107／107 PASS、`game-view-dom-e2e` PASS（8 段生涯）。
+- 未做：版本 commit（D6，code owner）、push、PR、Preview、實機。Full 依 R2 純顯示例外不一律追加；如需要，由使用者於 GitHub 手動執行。
