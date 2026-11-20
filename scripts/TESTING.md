@@ -86,6 +86,12 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 `jersey-flow.test`與`player-profile.test`為Quick／Full／Audit（重構第43期，`tasks/GAME_JS_OOP_REFACTOR_PLAN.md` §2uu）：以`159dbf2b293c6087df6a8f3713a19e6e61ad4a74`的舊`game.js`本體對照`JerseyFlow`（`teamName`／`unknownTeam`／`label`）與`PlayerProfile`（`allStars`／`pitcherRole`／`isStarter`），並以spy確認`game.js`的一行包裝委派到對應方法；`jersey-flow.test`另驗證對話框延遲回呼在state被替換後不再提示或寫入。`ovr`／`playerType`／`toolGap`／`abCost`的等價仍由`ability-allocation.test`負責。
 
+## 国際大会出場履歴（INT-01）
+
+`international-history.test`與`international-history-e2e`為Quick／Full／Audit（`tasks/INT_01_INTL_HISTORY_PLAN.md`）。單元測試以fixture驗證只列`S.intlTraitResults`的實際出場、依年度與實際日程排序（同年WBC先於プレミア12，自然生涯不會發生，只能在此驗證）、未知大會名「国際大会」、舊結果無個人成績顯示「記録なし」、跳脫、列凍結與狀態不變。E2E（約4秒）以hook注入結果，檢查「キャリア → 実績」與引退「通算成績」卡（緊接国際大会通算表之後）的收合列、展開內容、0屆時不加任何節點、查看與展開前後S（含`rngState`）不變，1280／390 px與4主題。
+
+既有測試的核准差異：`ui-redesign-review-e2e`的`INT01_CORE`（`career-retirement.js`兩段插入）、`award-identity-policy.test`的`player-detail.js`兩組逐字修改、`career-presenter.test`的`career().international`空列表、`dom-snapshot`在`window.__expectIntlHistory`（只注入受測版）下檢查並刪除`career().international`與引退`#log`的`[data-intl-history]`區塊（`game-view-dom-e2e`的jp3-pitcher-02會到達）。
+
 ## 生涯RNG（`Rng`）
 
 `rng.test`為Quick／Full／Audit：以`650e4dd21718b4abec3876fc9ef6148714c21d4f`舊`seedInit`／`R`產生的golden值，驗證`docs/src/engine/rng.js`的種子、步進、hash為0時的退回值、每次重讀`S`，以及`game.js`的`seedInit`／`R`委派與`_s`同步。不是完整生涯比較；E2E的RNG計數經`tests/support/rng-instrument.mjs`：現行原始碼以`careerRng.onDraw`計數，沒有`careerRng`的舊基準原始碼仍以`R`定義文字替換，兩者皆不符時丟`RNG_INSTRUMENT_MISS`；`rng-instrument.test`（Quick／Full／Audit）驗證這三種情況。vm harness仍抽取`seedInit`／`R`單行（見`tasks/GAME_JS_OOP_REFACTOR_PLAN.md` §2.2、§2b）。
