@@ -76,6 +76,7 @@ try{
   // 4) retirement without tournaments: no block.
   {const ctx=await browser.newContext({viewport:{width:390,height:844}}),p=await ctx.newPage();await wire(ctx,p);await start(p,'intl-hist-none','IF');
     await p.evaluate(()=>window.__intlHist.retire());await frame(p);
+    assert.equal(await p.evaluate(()=>[...document.querySelectorAll('#log .card')].filter(c=>c.querySelector('h4')?.textContent==='通算成績').length),1,'the retirement 通算成績 card is rendered');
     assert.equal(await p.locator('#log [data-intl-history]').count(),0,'no retirement history without results');await ctx.close();}
   assert.deepEqual(errors,[]);console.log('International history E2E passed; console / JS-CSS 404: 0. Screenshots: '+artifacts);
 }catch(e){failure=e;console.error(e);}finally{server.closeAllConnections();server.close();server.unref();await Promise.race([browser.close(),new Promise(r=>setTimeout(r,5000))]);process.exit(failure?1:0);}

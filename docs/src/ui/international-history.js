@@ -6,12 +6,16 @@ import { fmtIP } from './stat-format.js';
 // INT-01: tournaments actually played (S.intlTraitResults only), read-only; no reasons for missed tournaments.
 const TITLE='国際大会出場履歴', UNKNOWN_NAME='国際大会';
 const isRecord=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+// Rows never hand out the saved objects: personal stats are copied and frozen all the way down.
+const deepFreeze=v=>{if(v&&typeof v==='object'){Object.values(v).forEach(deepFreeze);Object.freeze(v);}return v;};
+const frozenCopy=v=>v==null?null:deepFreeze(structuredClone(v));
 
 export function buildInternationalHistory(state, officialEvents=JP_DATA.intlEvents){
   const results=isRecord(state?.intlTraitResults)?state.intlTraitResults:{};
-  const rows=Object.values(results).filter(r=>isRecord(r)&&typeof r.eventKey==='string'&&Number.isInteger(r.year)).map(r=>{
+  // Same key rule as normalizeInternationalState: a result counts only under its own eventKey.
+  const rows=Object.entries(results).filter(([key,r])=>isRecord(r)&&r.eventKey===key&&Number.isInteger(r.year)).map(([,r])=>{
     const event=internationalEvents(r.year,officialEvents).find(e=>e.eventKey===r.eventKey);
-    return {row:Object.freeze({eventKey:r.eventKey,year:r.year,name:event?.name||UNKNOWN_NAME,rank:String(r.rank??''),personalStats:r.personalStats??null}),
+    return {row:Object.freeze({eventKey:r.eventKey,year:r.year,name:event?.name||UNKNOWN_NAME,rank:String(r.rank??''),personalStats:frozenCopy(r.personalStats)}),
       startDate:event?.startDate||'￿',priority:event?.priority??Infinity};
   });
   // Same-year tournaments follow the real schedule (WBC in March before Premier12 in November).

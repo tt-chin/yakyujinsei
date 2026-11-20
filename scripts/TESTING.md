@@ -90,7 +90,7 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 `international-history.test`與`international-history-e2e`為Quick／Full／Audit（`tasks/INT_01_INTL_HISTORY_PLAN.md`）。單元測試以fixture驗證只列`S.intlTraitResults`的實際出場、依年度與實際日程排序（同年WBC先於プレミア12，自然生涯不會發生，只能在此驗證）、未知大會名「国際大会」、舊結果無個人成績顯示「記録なし」、跳脫、列凍結與狀態不變。E2E（約4秒）以hook注入結果，檢查「キャリア → 実績」與引退「通算成績」卡（緊接国際大会通算表之後）的收合列、展開內容、0屆時不加任何節點、查看與展開前後S（含`rngState`）不變，1280／390 px與4主題。
 
-既有測試的核准差異：`ui-redesign-review-e2e`的`INT01_CORE`（`career-retirement.js`兩段插入）、`award-identity-policy.test`的`player-detail.js`兩組逐字修改、`career-presenter.test`的`career().international`空列表、`dom-snapshot`在`window.__expectIntlHistory`（只注入受測版）下檢查並刪除`career().international`與引退`#log`的`[data-intl-history]`區塊（`game-view-dom-e2e`的jp3-pitcher-02會到達）。
+既有測試的核准差異：`ui-redesign-review-e2e`的`INT01_CORE`（`career-retirement.js`兩段插入）、`award-identity-policy.test`的`player-detail.js`兩組逐字修改、`career-presenter.test`的`career().international`空列表、`dom-snapshot`在`window.__expectIntlHistory`（只注入受測版）下檢查並刪除`career().international`與引退`#log`的`[data-intl-history]`區塊（`game-view-dom-e2e`的jp3-pitcher-02會到達）。`display-preferences-e2e`未處理此區塊：manifest以`--only-seed=yakyo-test-001,jp3-infielder-01`執行，兩者引退時沒有國際結果；改用其他種子（含不加`--only-seed`）前，須先比照`dom-snapshot`加上受測版的檢查與移除。
 
 ## 生涯RNG（`Rng`）
 

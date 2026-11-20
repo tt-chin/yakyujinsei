@@ -125,7 +125,7 @@ export async function captureGameView(full){
   // Approved INT-01 delta: career().international lists the played tournaments (S.intlTraitResults) in schedule order.
   // Check it against the saved results (every played eventKey once, saved rank and personal stats, years ascending), then drop it.
   const intlRecord=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
-  const intlPlayed=Object.values(intlRecord(rawState.intlTraitResults)?rawState.intlTraitResults:{}).filter(r=>intlRecord(r)&&typeof r.eventKey==='string'&&Number.isInteger(r.year));
+  const intlPlayed=Object.entries(intlRecord(rawState.intlTraitResults)?rawState.intlTraitResults:{}).filter(([key,r])=>intlRecord(r)&&r.eventKey===key&&Number.isInteger(r.year)).map(([,r])=>r);
   const intlRows=views.career.international;
   if(window.__expectIntlHistory&&intlRows===undefined)throw Error('INTL_HISTORY_VIEW_MISSING');
   if(intlRows!==undefined){
@@ -294,8 +294,9 @@ export async function captureGameView(full){
     for(const block of blocks){
       const card=block.closest('.card'),prev=block.previousElementSibling,rows=[...block.querySelectorAll(':scope>details.intl-history-item')];
       if(card?.querySelector('h4')?.textContent!=='通算成績'||prev?.tagName!=='TABLE'||prev.className!=='st'||!/^国際大会通算/.test(prev.previousElementSibling?.textContent||'')||block.querySelector(':scope>h4')?.textContent!=='国際大会出場履歴'||block.children.length!==rows.length+1)throw Error('INTL_HISTORY_BLOCK_CONTRACT');
-      const years=intlPlayed.map(r=>r.year).sort((a,b)=>a-b);
-      if(rows.length!==years.length||rows.some((d,i)=>d.open||!d.querySelector('summary')?.textContent.startsWith(years[i]+' ')))throw Error('INTL_HISTORY_BLOCK_ROWS');
+      // Each row reads exactly 'year name　rank' of the (already checked) career().international row at the same position.
+      const want=(intlRows||[]).map(x=>`${x.year} ${x.name}　${x.rank}`);
+      if(!intlRows||rows.length!==want.length||rows.some((d,i)=>d.open||d.querySelector('summary')?.textContent!==want[i]))throw Error('INTL_HISTORY_BLOCK_ROWS');
       block.remove();
     }
     if(root)dom.log=root.outerHTML;

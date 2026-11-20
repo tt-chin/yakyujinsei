@@ -45,6 +45,20 @@ check('unknown eventKey: safe name, after known tournaments of the same year; ma
   assert.equal(rows[1].name, '国際大会');
 });
 
+check('a result counts only under its own eventKey (normalizeInternationalState rule); no duplicate rows', () => {
+  const state = { intlTraitResults: { 'WBC:2030': result('WBC:2030', 2030, '優勝'), copy: result('WBC:2030', 2030, '優勝'), 'P12:2031': result('WBC:2026', 2026, '優勝') } };
+  assert.deepEqual(keys(buildInternationalHistory(state)), ['WBC:2030']);
+});
+
+check('rows hand out frozen copies of the saved personal stats, never the saved objects', () => {
+  const state = { intlTraitResults: { 'WBC:2026': result('WBC:2026', 2026, '優勝', structuredClone(pitcher)) } };
+  const [row] = buildInternationalHistory(state), saved = state.intlTraitResults['WBC:2026'].personalStats;
+  assert.notEqual(row.personalStats, saved); assert.notEqual(row.personalStats.stats, saved.stats);
+  assert.deepEqual(row.personalStats, saved);
+  assert.ok(Object.isFrozen(row.personalStats) && Object.isFrozen(row.personalStats.stats));
+  assert.ok(!Object.isFrozen(saved) && !Object.isFrozen(saved.stats), 'saved state is not frozen by the view');
+});
+
 check('markup: collapsed rows, saved personal stats or 記録なし (never zero-filled), escaped text', () => {
   const state = { intlTraitResults: { 'WBC:2026': result('WBC:2026', 2026, '優勝', pitcher), 'P12:2027': result('P12:2027', 2027, '<b>準優勝</b>') } };
   const html = internationalHistoryHTML(buildInternationalHistory(state));
