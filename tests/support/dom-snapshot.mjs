@@ -122,6 +122,19 @@ export async function captureGameView(full){
     }
     delete views.career.events;
   }
+  // Approved INT-01 delta: career().international lists the played tournaments (S.intlTraitResults) in schedule order.
+  // Check it against the saved results (every played eventKey once, saved rank and personal stats, years ascending), then drop it.
+  const intlRecord=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+  const intlPlayed=Object.entries(intlRecord(rawState.intlTraitResults)?rawState.intlTraitResults:{}).filter(([key,r])=>intlRecord(r)&&r.eventKey===key&&Number.isInteger(r.year)).map(([,r])=>r);
+  const intlRows=views.career.international;
+  if(window.__expectIntlHistory&&intlRows===undefined)throw Error('INTL_HISTORY_VIEW_MISSING');
+  if(intlRows!==undefined){
+    const byKey=new Map(intlPlayed.map(r=>[r.eventKey,r]));
+    if(!Array.isArray(intlRows)||intlRows.length!==intlPlayed.length||new Set(intlRows.map(x=>x.eventKey)).size!==intlRows.length)throw Error('INTL_HISTORY_VIEW_ROWS');
+    intlRows.forEach((x,i)=>{const r=byKey.get(x.eventKey);
+      if(!r||x.year!==r.year||x.rank!==String(r.rank??'')||typeof x.name!=='string'||!x.name||JSON.stringify(x.personalStats)!==JSON.stringify(r.personalStats??null)||(i&&x.year<intlRows[i-1].year))throw Error('INTL_HISTORY_VIEW_CONTRACT');});
+    delete views.career.international;
+  }
   let log=document.getElementById('log')?.cloneNode(true);
   if(window.__projectDecisionPresentation){const template=document.createElement('template');template.innerHTML=dom.log;log=template.content.firstElementChild;}
   const jerseyHistory=rawState.jerseyHistory,jerseyNumbers=new Set(),jerseyCounts=window.__jerseyCounts=window.__jerseyCounts||{board:0,season:0,table:0,yearly:0,pro:0};
@@ -270,6 +283,23 @@ export async function captureGameView(full){
       row.team=src.tm;
     });
     delete state.jerseyHistory;
+  }
+  if(window.__expectIntlHistory){
+    // Approved INT-01 delta: the retirement 通算成績 card carries <section data-intl-history> right after the 国際大会通算
+    // table (one collapsed row per played tournament, in view-model order). Validate, then remove it; nothing else changes.
+    const tpl=document.createElement('template');tpl.innerHTML=dom.log;const root=tpl.content.firstElementChild;
+    const blocks=root?[...root.querySelectorAll('[data-intl-history]')]:[];
+    const want=rawState.done&&intlPlayed.length?1:0;
+    if(blocks.length!==want)throw Error('INTL_HISTORY_BLOCK_COUNT');
+    for(const block of blocks){
+      const card=block.closest('.card'),prev=block.previousElementSibling,rows=[...block.querySelectorAll(':scope>details.intl-history-item')];
+      if(card?.querySelector('h4')?.textContent!=='通算成績'||prev?.tagName!=='TABLE'||prev.className!=='st'||!/^国際大会通算/.test(prev.previousElementSibling?.textContent||'')||block.querySelector(':scope>h4')?.textContent!=='国際大会出場履歴'||block.children.length!==rows.length+1)throw Error('INTL_HISTORY_BLOCK_CONTRACT');
+      // Each row reads exactly 'year name　rank' of the (already checked) career().international row at the same position.
+      const want=(intlRows||[]).map(x=>`${x.year} ${x.name}　${x.rank}`);
+      if(!intlRows||rows.length!==want.length||rows.some((d,i)=>d.open||d.querySelector('summary')?.textContent!==want[i]))throw Error('INTL_HISTORY_BLOCK_ROWS');
+      block.remove();
+    }
+    if(root)dom.log=root.outerHTML;
   }
   const snapshot={dom,state,calls,views};
   if(full)return snapshot;

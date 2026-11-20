@@ -50,6 +50,8 @@ for(const [name,state] of Object.entries(fixtures))test(name+': presenter equals
   // EVT-01 E3 (1.16.12): career() adds events; these fixtures have no processedEventIDs, so it is the missing-record model
   // (content is covered by career-event-history.test). Every other career field stays exact.
   expected.career=Object.freeze({...expected.career,events:Object.freeze({status:'missing',afterRow:Object.freeze({}),current:Object.freeze([])})});
+  // INT-01: career() adds international (played tournaments); these fixtures have no intlTraitResults (content in international-history.test).
+  expected.career=Object.freeze({...expected.career,international:Object.freeze([])});
   for(const method of ['player','career','ability','traits','record'])assert.deepEqual(shape(presenter[method]()),shape(expected[method]),method);
 });
 // EVT-01 E3 (1.16.12): career().events uses the injected ABL labels and fmtMoney (wiring check; content in career-event-history.test).

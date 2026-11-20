@@ -74,6 +74,7 @@ import { PlayerProfile } from './player-profile.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
 import { fmtIP, slgOf } from '../ui/stat-format.js';
+import { buildInternationalHistory, internationalHistoryHTML } from '../ui/international-history.js';
 import {TraitResultCard} from '../ui/trait-result-card.js';
 import { CareerTraits } from './career-traits.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
@@ -231,7 +232,7 @@ function primaryPos(){return careerRetirement.primaryPos();}
 function capTeam(bucket){return careerRetirement.capTeam(bucket);}
 function defShare(bucket){return defenseShareFor(S.stats[bucket],S.pos);}
 function posLegendPhrase(bucket){return careerRetirement.posLegendPhrase(bucket);}
-const careerRetirement=new CareerRetirement({getState:()=>S,jerseyPeriods:()=>jerseyPeriods(S.log,S.jerseyHistory,id=>jerseyTeamName(id),tm=>jerseyUnknownTeam(tm)),jerseyRetired:()=>{gameView.setBoardNumber('');$('board-number').disabled=true;},getSeed:()=>SEED,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$:id=>$(id),fmtMoney:yen=>fmtMoney(yen),fmtIP:ip=>fmtIP(ip),slgOf:st=>slgOf(st),card:(cls,title,html)=>card(cls,title,html),divider:t=>divider(t),choose:(title,opts)=>choose(title,opts),actClear:()=>actClear(),defShare:bucket=>defShare(bucket),tierOf:bucket=>tierOf(bucket),traitNames:()=>traitNames(),teamNick:team=>teamNick(team),archiveTraitResults:()=>archiveTraitResults(),shareImage:(evals,out)=>shareImage(evals,out),rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}});
+const careerRetirement=new CareerRetirement({getState:()=>S,jerseyPeriods:()=>jerseyPeriods(S.log,S.jerseyHistory,id=>jerseyTeamName(id),tm=>jerseyUnknownTeam(tm)),jerseyRetired:()=>{gameView.setBoardNumber('');$('board-number').disabled=true;},intlHistory:()=>internationalHistoryHTML(buildInternationalHistory(S)),getSeed:()=>SEED,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$:id=>$(id),fmtMoney:yen=>fmtMoney(yen),fmtIP:ip=>fmtIP(ip),slgOf:st=>slgOf(st),card:(cls,title,html)=>card(cls,title,html),divider:t=>divider(t),choose:(title,opts)=>choose(title,opts),actClear:()=>actClear(),defShare:bucket=>defShare(bucket),tierOf:bucket=>tierOf(bucket),traitNames:()=>traitNames(),teamNick:team=>teamNick(team),archiveTraitResults:()=>archiveTraitResults(),shareImage:(evals,out)=>shareImage(evals,out),rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}});
 function honorScore(bucket){
   return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S});
 }

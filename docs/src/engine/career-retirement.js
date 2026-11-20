@@ -21,7 +21,7 @@ export class CareerRetirement {
   endGame(reason){this.#rules.endGame(reason);}
 }
 
-function careerRetirementRules({getState,jerseyPeriods,jerseyRetired,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,rng:{R,ri}}){
+function careerRetirementRules({getState,jerseyPeriods,jerseyRetired,intlHistory,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,rng:{R,ri}}){
   function roleName3(r){ return {SP:'先発投手',MR:'リリーバー',CL:'抑え'}[r]||'投手'; }
   function primaryPos(){ /* 通算の半数超を守った位置を主守備とし、該当なしなら年数順でユーティリティーまたはスイングマンと判定。 */
     const S=getState();
@@ -235,7 +235,7 @@ function careerRetirementRules({getState,jerseyPeriods,jerseyRetired,getSeed,LV,
         intlTable=`<h4 class="intl-heading">国際大会通算（日本代表・${S.intlCount}大会）</h4><table class="st"><tr><th>出場</th><th>打席</th><th>打率</th><th>安打</th><th>本塁打</th><th>打点</th></tr><tr><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td></tr></table>`;
       }
     }
-    card('','通算成績',jerseyTable(jerseyPeriods?.()||[])+(tables||'<p>（プロレベルの試合実績なし）</p>')+intlTable);
+    card('','通算成績',jerseyTable(jerseyPeriods?.()||[])+(tables||'<p>（プロレベルの試合実績なし）</p>')+intlTable+(intlHistory?.()||''));
     if(evals.length)card('gold','通算評価',evals.join('<br>'));
     /* タイトルと主要大会成績（グループ化）。 */
     /* タイトルと主要大会成績（グループ化）。 */

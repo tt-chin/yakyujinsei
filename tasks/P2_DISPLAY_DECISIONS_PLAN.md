@@ -1,6 +1,6 @@
 # INT-01／EVT-01／INJ-UI-01：顯示功能細部計畫（全部已決定；EVT-01 已實作結案；INT-01／INJ-UI-01 未授權實作）
 
-狀態：**已決定**——E1・E2・E3（要做）・I2（使用者 2026-11-15）；N1＝B、N2＝A、E3＝a、I1＝公開總值＋細目（code owner，PR #95 06:44 建議、06:53 確認為已決定，見 §5）。**未授權實作**：INT-01、INJ-UI-01。EVT-01 的 E1＋E2 經 PR #97（1.16.11）、E3 經 PR #99（1.16.12）併 dev，2026-11-15 結案（見 `BACKLOG.md` EVT-01）。
+狀態：**已決定**——E1・E2・E3（要做）・I2（使用者 2026-11-15）；N1＝B、N2＝A、E3＝a、I1＝公開總值＋細目（code owner，PR #95 06:44 建議、06:53 確認為已決定，見 §5）。**未授權實作**：INJ-UI-01（2026-11-20使用者授權實作，排在INT-01之後）。INT-01 2026-11-20授權並實作，見 `tasks/INT_01_INTL_HISTORY_PLAN.md`。EVT-01 的 E1＋E2 經 PR #97（1.16.11）、E3 經 PR #99（1.16.12）併 dev，2026-11-15 結案（見 `BACKLOG.md` EVT-01）。
 上位項目：`BACKLOG.md` §3.5 的 INT-01、EVT-01、INJ-UI-01。
 調查基準：`origin/dev` `1494a24`（1.16.10）。
 
@@ -115,3 +115,14 @@
 - 判定與顯示共用同一純函式（§4 的 `injuryRiskBreakdown`）；查看、展開、切頁、重繪都不改遊戲狀態、不消耗 RNG。
 - 驗收：所有特性組合（無／理論派／鐵人／玻璃／鐵人＋玻璃）、年齡邊界（24／25、31／32、34／35）、`tmpInj` 為負（求婚 −5）、3%／95% 夾限、診斷前後的顯示、重繪前後 RNG 次數不變，以及固定 seed 投手／野手前後比較（R3）。
 
+
+## 6. INJ-UI-01 再盤點（2026-11-21，scout 唯讀調查＋抽查；基準 `origin/dev` `159dbf2`，行號已於 `feat/int-01-intl-history` `600b8b8` 重新確認）
+
+實作授權：2026-11-20（使用者；排在 INT-01 之後，另一個 PR）。§4 的「`injuryProb()` 改回傳 `injuryRiskBreakdown` 的總值」須依下列約束調整，細部計畫於實作前另立。
+
+- **計算**：`injuryProb` 是 `player-injury.js:80-91`（`injuryRules` 內）的私有函式，唯一呼叫端為 `rollInjury`（`:94`），本身不抽 RNG；讀 `S.injNext`（無 `||0`）、`S.tmpInj||0`、`S.age`、`S.traits.academy／iron／glass`（顯示名：理論派／鉄人／スペランカー，`trait-policy.js:5`）。`rollInjury` 第一個抽選為 `chance(p)`；未受傷時 `:95` 出「故障率 X%」卡。
+- **時序**：`injNext` 只有國際大會＋10（`international-trait-policy.js:40`，凍結檔）與 `rollInjury` 兩分支歸 0；`skipMid` 時不經健康診斷、不歸 0。`tmpInj` 只在 `phasePre` 歸 0（`season-phases.js:17`），事件卡加算、求婚 −5（可為負），`rollInjury` 不動它。**健康診斷後 `injNext`＝0、`tmpInj` 保留到下季**，此時重算值不是剛才判定使用的機率（§5.3 須提出診斷後的顯示方式）。
+- **顯示**：「コンディション」的模型在 `career-presenter.js:25` `ability()`（未凍結），DOM 由 `ability-view.js:22-25` 產生，**`ability-view.js` 受 `award-identity-policy.test` 凍結（與 `efd4710` 相同，無 overlay）**：要做 §5.3 的「細目展開」須新增核准 overlay；否則細目只能以既有 `{label,value}` 列呈現。重繪：`navigation.js` 的 `selectPlayer`（選手分頁）與 `desktop-overview.js` 的 `MutationObserver`（桌面側欄）；`desktop-overview.js:30` 以 `ability.querySelector('details')` 讀「潜在能力について」的展開狀態，若新 `<details>` 位於其前會被誤讀。看板 `#bd-risk`（`career-presenter.js:51` `injuryRiskText`）只顯示 `injNext`，由 `ui-redesign-shell-e2e`／`ui-shell-comparison` 固定。
+- **注入約束**：`full-power-pitching.test` 以 `data:` URL 載入 `player-injury.js`，檔內不能有相對 import；`verify-modularization` 逐字固定 `return {tjGamble,afterGamble,rollInjury,accrueTj,tjGaugeLimit};`、`game.js` 的 `rollInjury`／`tjCap` 包裝與 `,tjCap:()=>tjCap()` 次數；`salary-flow.test:137` 固定 `player-injury.js` 的 RNG 呼叫點 `[0,7,6,2]`；`trait-policy.test` 的 vm 切片會執行 `game.js:138` 的 `new PlayerInjury({...})`，新依賴須為延遲綁定 lambda。可行接法：新模組（不受 `287dd1a` 凍結）由 `game.js` 以 lambda 注入 `PlayerInjury`，`career-presenter.js` 直接 import。
+- **測試耦合**：`career-presenter.test` 以 `097e212` 舊 builder 逐欄比較 `ability()`／`player()`（須加核准差異）；`record-condition-fix.test`、`information-architecture.test`、`ui-foundation.test`（`ability-view.js` 不得有 RNG／`onclick`／`<button`）、`japanese-copy-contract-ui.test`；新 CSS 會動 `design-tokens-06` 計數，新顏色 token 會動 `display-preferences.test`。現有測試**沒有**直接驗證機率數值（只有整段生涯 S／RNG 比較間接涵蓋），§5.3 的特性組合、年齡邊界、`tmpInj` 為負、3／95% 夾限須新增單元測試。
+- **待決**：(1) `ability-view.js` 新增 overlay 做展開，或以平列呈現細目；(2) 健康診斷後的顯示；(3) 日文標示文字；(4) 版本（R3）。

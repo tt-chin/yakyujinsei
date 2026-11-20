@@ -1,5 +1,6 @@
 import { renderRecord } from './record-view.js';
 import { appendYearEvents } from './career-event-history.js';
+import { appendInternationalHistory } from './international-history.js';
 
 const emptyText = (text='記録なし') => { const p=document.createElement('p'); p.className='ui-empty'; p.textContent=text; return p; };
 const panel = title => { const section=document.createElement('section'); section.className='ui-panel'; const h=document.createElement('h2'); h.textContent=title; section.appendChild(h); return section; };
@@ -9,7 +10,7 @@ export function renderCareer(container, model, tab) {
   container.replaceChildren();
   if(tab==='stats'){ renderRecord(container,model.stats); return; }
   if(tab==='achievements'){
-    const section=panel('実績'); section.appendChild(list(model.achievements)); container.appendChild(section); return;
+    const section=panel('実績'); section.appendChild(list(model.achievements)); container.appendChild(section); appendInternationalHistory(container,model.international); return;
   }
   if(tab==='contract'){
     const section=panel('契約・収入'); const dl=document.createElement('dl'); dl.className='ui-data-list income-summary';
