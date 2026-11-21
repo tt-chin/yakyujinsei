@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {harness,instrument,arg} from '../../tests/support/stage6-browser.mjs';
 import {validateAwardHistory} from './historical-comparison.mjs';
+import {injectOverlayHook} from '../../tests/support/overlay-hook.mjs';
 const source=fs.readFileSync('docs/src/engine/game.js','utf8');
 const extra=String.raw`
 let bLeague,bStat,bBeforeContract;
@@ -35,12 +36,12 @@ window.__devB={
  history:async()=>{const {renderCareer}=await import('../ui/player-detail.js');let node=document.getElementById('b-history');
    if(!node){node=document.createElement('div');node.id='b-history';document.body.appendChild(node);}renderCareer(node,buildCareerViewModel(),'achievements');},
 };`;
-const observed=instrument(source),at=observed.lastIndexOf('})();');
-const body="import * as __bTx from './award-transaction-policy.js';\nimport * as __bId from './award-identity-policy.js';\n"+observed.slice(0,at)+extra+observed.slice(at);
+// The overlay is no longer an IIFE: append the hook at module top level like the other E2E hooks.
+const body="import * as __bTx from './award-transaction-policy.js';\nimport * as __bId from './award-identity-policy.js';\n"+injectOverlayHook(instrument(source),extra);
 const h=await harness('development-b-runtime');
 for(const width of [1280,320,390]){
- const p=await h.page(width,'P','development-b-runtime-'+width);
- await p.route('**/src/engine/game.js',r=>r.fulfill({status:200,contentType:'text/javascript',body}));await p.reload();await p.waitForFunction(()=>!!window.__devB);await p.locator('#btn-start').click();
+ // Route before the first load: the harness page starts the career itself, so no reload or second start click.
+ const p=await h.page(width,'P','development-b-runtime-'+width,{beforeLoad:async p=>p.route('**/src/engine/game.js',r=>r.fulfill({status:200,contentType:'text/javascript',body}))});await p.waitForFunction(()=>!!window.__devB);
  for(const league of ['NPB','KBO','CPBL','MLB'])for(const role of (arg('retirement-only')?['SP']:['SP','MR','CL']))await h.test('B-'+(arg('retirement-only')?'retirement':'runtime')+'-'+width+'-'+league+'-'+role,{width,league,role,evidence:'SYNTHETIC_SCENARIO / NATIVE_BROWSER_RUNTIME'},async e=>{
   if(arg('retirement-only')){
    await p.evaluate(({league,role})=>{window.__devB.setup(league,role,true);window.__devB.run();},{league,role});
