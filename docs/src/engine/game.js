@@ -220,13 +220,7 @@ function primaryPos(){return careerRetirement.primaryPos();}
 function defShare(bucket){return defenseShareFor(S.stats[bucket],S.pos);}
 const careerRetirement=new CareerRetirement({getState:()=>S,jerseyPeriods:()=>jerseyPeriods(S.log,S.jerseyHistory,id=>jerseyTeamName(id),tm=>jerseyUnknownTeam(tm)),jerseyRetired:()=>{gameView.setBoardNumber('');$('board-number').disabled=true;},intlHistory:()=>internationalHistoryHTML(buildInternationalHistory(S)),getSeed:()=>SEED,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$:id=>$(id),fmtMoney:yen=>fmtMoney(yen),fmtIP:ip=>fmtIP(ip),slgOf:st=>slgOf(st),card:(cls,title,html)=>card(cls,title,html),divider:t=>divider(t),choose:(title,opts)=>choose(title,opts),actClear:()=>actClear(),defShare:bucket=>defShare(bucket),tierOf:bucket=>tierOf(bucket),traitNames:()=>traitNames(),teamNick:team=>teamNick(team),archiveTraitResults:()=>archiveTraitResults(),shareImage:(evals,out)=>shareImage(evals,out),rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}});
 function tierOf(bucket){return evaluateLeagueHof(S,bucket,TIER_TH[bucket],LG_N[bucket]);}
-function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();setTimeout(()=>{
-  /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
-  document.querySelectorAll('.card').forEach(c=>{
-    const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
-    for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeValue=n.nodeValue.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');
-  });
-},0);}
+function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();}
 /* 結算圖（Canvas 產生 PNG、可長按儲存または自動下載）。 */
 const shareImageView=new ShareImage({getState:()=>S,getSeed:()=>SEED,LG_N,TEAM_COLOR,teamNick,roleN,playerType,primaryPos,traitNames,fmtIP,slgOf,fmtMoney});
 function shareImage(evals,out){return shareImageView.render(evals,out);}

@@ -5703,5 +5703,5 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 不做或暫緩，且不因本結案改變：第 1c 期 `Rng` 方法化（暫緩，§2c）；第 41 期 `seedInit`／`R`（不成期，§3.26）；§3.27／§3.28 的 D 國際賽包裝、E `careerContract` 一行包裝、F 殿堂評分包裝、G seed 工具；`fmtMoney` 留在 `game.js`。
 - 重構期間記下、不屬於重構範圍的發現（另立 BACKLOG）：
   - `endGame` 的文字替換會改寫玩家姓名（§3.30）→ `ENDGAME-LOCALE-REWRITE-01`。
-  - 開局畫面的 `startPromptPending`／`newPromptPending` 互不鎖定（§3.29），是否為 bug 未確認 → `START-PROMPT-PENDING-01`。
+  - 開局畫面的 `startPromptPending`／`newPromptPending` 互不鎖定（§3.29）→ `START-PROMPT-PENDING-01`；2026-11-21 讀碼與實機探測確認不可達（`confirmAction` 單一 modal＋第二個要求回傳 `false`），不是 bug，結案。
 - 本結案不構成 REFACTOR-AUDIT-01 的結案：該項的完成條件（動態 scope／callback 可達性證明）未因本計畫滿足。
