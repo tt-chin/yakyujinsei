@@ -30,7 +30,7 @@ Windows系統Git的`core.autocrlf=true`可使Git內LF在工作樹成為CRLF，�
 
 ## 歷史分享配色模組依賴
 
-1.16.2移除產品的`getSharePalette`後，仍載入舊`game.js`的投球、國際賽、弱小校及特性顯示比較，必須在舊版頁面呼叫`routeHistoricalShareTheme(page, baseline)`。基準必須為該入口原先的完整40位SHA；helper只將該頁面的`src/ui/share-theme.js`回應設為同SHA的完整Git原件。基準缺失／不可解析即失敗，不回退現行模組、不補空函式、不更換舊game或golden。現行頁面不接此route；既有同版重播、狀態／RNG、比較斷言與timeout保持。
+1.16.2移除產品的`getSharePalette`後，仍載入舊`game.js`的投球、國際賽及弱小校比較，必須在舊版頁面呼叫`routeHistoricalShareTheme(page, baseline)`。特性顯示比較（`trait-display-e2e`）自TEST-BASELINE-REBASE-01起改以模組化後的基準`ee0ae9e`整棵docs供檔，不再使用此route；其`a0b880bb`仍作為helper／啟動檢查的基準。基準必須為該入口原先的完整40位SHA；helper只將該頁面的`src/ui/share-theme.js`回應設為同SHA的完整Git原件。基準缺失／不可解析即失敗，不回退現行模組、不補空函式、不更換舊game或golden。現行頁面不接此route；既有同版重播、狀態／RNG、比較斷言與timeout保持。
 
 `node scripts/test-historical-share-theme.mjs --playwright=<外部Playwright模組> --browser=chrome --output=test-results/historical-share-theme-check`為獨立限定驗證：四組原始模組逐字一致、無效基準拒絕、四個歷史引擎實際啟動、現行模組隔離，並以移除route後的同型import重現原缺失export錯誤作負控制。不是完整生涯或Full PASS；不新增／刪除原117個自動Full入口。修正後仍須在新SHA取得GitHub Quick及必要Full結果，歷史111 PASS／6 FAIL不改寫。
 

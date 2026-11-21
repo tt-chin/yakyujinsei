@@ -4948,7 +4948,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - **Full 實行が必要（GitHub 手動・未実行）**：R3（存檔覆寫・刪除、`S` 重置路徑）。版本不變。
 - 交付（2026-11-21）：分支 `refactor/browser-save-guards`（`34d943c`）已 push，[PR #111](https://github.com/tt-chin/yakyujinsei/pull/111)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
 - 未做：合併、Linux CI Full（GitHub 手動）、Preview、實機。
-## 2ww. 第 45 期：測試改為直接呼叫模組，刪除 `game.js` 只供測試使用的 24 個包裝（細部計畫草案，2026-11-21；D1–D4、D10 決定 2026-11-21；T1–T6 批准 2026-11-21，實作完成）
+## 2ww. 第 45 期：測試改為直接呼叫模組，刪除 `game.js` 只供測試使用的 24 個包裝（細部計畫草案，2026-11-21；D1–D4、D10 決定 2026-11-21；T1–T6 批准 2026-11-21，實作完成，PR #113 併 dev `ee0ae9e`）
 
 §3.30 盤點結果（使用者決定 2026-11-21）：「改為由測試直接呼叫模組方法」。這 24 個一行包裝在正式執行時沒有呼叫端，只是測試用來找到模組的入口；改由測試直接依賴模組後，從 `game.js` 刪除。另刪除無引用的 `deriveSeedInt`。
 
@@ -5015,7 +5015,51 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - `tools/development-b/runtime.mjs`：既存故障（乾淨基準 `c48d675` 相同）——harness 的 `page()` 已按下 `#btn-start`，工具再掛 route、`reload()` 並二次點擊，reload 後按鈕不可見而逾時；hook 插在最後一個 `})();` 之前，現行該處是 `act-toggle` 的小 IIFE 而非覆寫層結尾。使用者同意後修正（`3d6ae1f`）：route 改由 `beforeLoad` 在首次載入前掛上，拿掉 reload 與二次點擊，`extra` 以 `injectOverlayHook` 接在模組最上層。一般模式與 `--retirement-only` 各 36／36 PASS；`seasonStats.blankStat`、`honorScoreFor` 以 `__unreached` probe 確認被呼叫。不在 manifest，Quick 不受影響。
 - reviewer（`c48d675..` 全 diff）：high 1 項（上表 `2e5a6ce`），其餘檢查項無發現。
 - 結果：`game.js` 409 行／41,813 bytes → 382 行／39,870 bytes。
-- 未做：Linux CI Full（GitHub 手動）、push／PR、Preview、實機。內部變更，依 AGENTS §9.3 不改版本。
+- 交付（2026-11-21）：經 PR #113 併 dev（`ee0ae9e`，head `b6e673e`）；dev Quick [Tests #240](https://github.com/tt-chin/yakyujinsei/actions/runs/44893215503) success（Full job 依 workflow skipped）。PR head 沒有手動 Full（workflow_dispatch 最後一次為 11-17 `codex/ui-redesign`）。
+- 未做：Linux CI Full（GitHub 手動，對象 dev `ee0ae9e`）、Preview、實機。內部變更，依 AGENTS §9.3 不改版本。
+
+## 2xx. TEST-BASELINE-REBASE-01：雙邊比較 E2E 改用模組化後的基準（2026-11-21；逐測試決定與 D1–D5 使用者批准 2026-11-21，本機實作完成）
+
+### 2xx.1 逐測試決定（基準＝引入該常數之 commit 的父 commit，各 commit 本文皆空；類型依斷言判斷）
+
+| 測試 | 舊基準 | 類型（斷言） | 決定 |
+|---|---|---|---|
+| `npb-return-e2e`（只 `--rng-only` 載入） | `73d5a58` | 修正前基準：4 份延續中的海外合約抽籤 1→0、回國選項 1→0 | 不換 |
+| `smallschool-c-e2e` | `0fd13c7` | 1.12.0 功能前：「第一個分歧必須是選校」 | 不換（換成功能後就沒有分歧可斷言） |
+| `global-contract-market-e2e` | `053e7b4` | 1.9.0 功能前：RNG／候補數不變 | 不換（換掉即成另一個測試） |
+| `hof-first-ballot-e2e` | `925987d` | 1.11.2 修正的父 commit，等價比較 | 換 `ee0ae9e` |
+| `trait-display-e2e` | `a0b880b` | 1.11.7 顯示修正的父 commit，等價比較 | 換 `ee0ae9e` |
+| `contract-salary-e2e` | 預設 `37121fb` | 修正的父 commit，等價比較；runner 實際傳 `--compare=<origin/main>` | 直接執行的預設換 `ee0ae9e` |
+
+- D1：新基準 `ee0ae9e`（第 45 期併 dev）。只有第 45 期以後的 `game.js` 沒有包裝，兩側才走同一 hook；`d6cef67` 等仍有包裝。舊基準 ≡ `ee0ae9e` 的證明為本機舊基準直接執行 PASS（下表），正式證明待 `ee0ae9e` 的 GitHub Full。換後測試證明的是「與 `ee0ae9e` 一致」，與 1.11.x 的一致性由 git 歷史與該 Full 紀錄串接。
+- `hookForSource` 仍需保留：`npb-return-e2e`、`smallschool-c-e2e`、`global-contract-market-e2e`、`stage10-risk-e2e --compare`，以及 `contract-salary-e2e` 經 runner 的 `d6cef67`（含發布 main 前）。
+
+### 2xx.2 實作（`fd27084`）
+
+- `hof-first-ballot-e2e`（D2）：hook 直接呼叫 `seasonStats.blankStat()`；移除 `hookForSource`、舊側 `withApprovedBirthSnapshot`、現行側 `legacyChampionmakerState`；PLY-01 斷言兩側皆做，`jerseyHistory` 與背番號步數留在 raw 比較中。
+- `trait-display-e2e`（D3）：基準側整棵 docs 由 `page.route` 以 `git show` 供檔（原為基準 `game.js`＋`1a74e71` 的 `main.js`＋現行模組）；`player-ability.js` 與 harness 相同 instrument；基準 `game.js` 仍宣告 `blankStat`／`buildTraitsViewModel` 時丟 `TRAIT_DISPLAY_BASELINE_PRE_MODULE`；移除 `withApprovedSchoolChanges`、`historicalCareer`、`routeHistoricalShareTheme`、`allowLegacy`；`--preview` 時 route 也比對 preview origin。
+- `contract-salary-e2e`（D4）：預設 `ee0ae9e`；基準有無背番號步驟以 `git grep jerseyHistory <ref> -- docs/src` 判定（`9315543` 起）；milb-demotion 的基準側點擊也經 `settleJersey`（改預設後 `_majorInjuryThisSeason`／`prevD` 缺漏而 FAIL，原因為基準側停在背番號提示、未進 `phasePre`）。
+- `scripts/test-historical-share-theme.mjs`：接線檢查改為 3 入口，並斷言 `trait-display-e2e` 不再使用 historical route 與 `a0b880bb`（`a0b880bb` 仍為 helper／啟動檢查基準）；`test-manifest` reason、`scripts/TESTING.md` 同步。
+
+### 2xx.3 驗證（R2；macOS＋Brave 157 本機，非 CI）
+
+| 項目 | 結果 |
+|---|---|
+| 改前：3 測試以舊基準於 `ee0ae9e` 樹直接執行 | hof／trait／contract-salary（`37121fb`）皆 exit 0 |
+| 改後：hof | exit 0；RNG calls 652／549（與舊紀錄相同） |
+| 改後：trait-display 預設／`--source=baseline` | 25 PASS／11 PASS |
+| 改後：contract-salary `ee0ae9e`／`d6cef67`／`37121fb` | 各 381 PASS；`20d61e3^`（`d2ed92f`，有背番號、無 `jersey-flow.js`）`--only=career` 2 PASS |
+| 防呆：trait-display `--baseline=a0b880bb` | exit 1，`TRAIT_DISPLAY_BASELINE_PRE_MODULE` |
+| 負控制 NC1：現行 `newState` 多抽 `R()` | 3 測試皆 FAIL 於比較斷言（`rngState`／`actions.length`／`records.length`） |
+| 負控制 NC2：現行 `initial-state.js` 加欄位 | 3 測試皆 FAIL 於比較斷言（`__nc`／step hash／digest）；證明基準側模組來自 `ee0ae9e` |
+| `test-historical-share-theme` | PASS（3 入口接線＋trait off-route、4 route 契約、啟動檢查） |
+| Quick | 109／109 PASS（reviewer 修正前後各一次） |
+
+- reviewer（`ee0ae9e..` 測試 diff）：medium 1（`test-historical-share-theme` 仍釘舊接線）、low 4（背番號判定用 `jersey-flow.js` 太晚、`allowLegacy` 殘留、`--preview` 時 route 不符、manifest／文件舊述），皆已修正；`UI_REDESIGN_PLAN.md:78` 為當時紀錄，不改。
+- 交付：push `test/baseline-rebase`、[PR #114](https://github.com/tt-chin/yakyujinsei/pull/114) → dev。GitHub Full（本次經使用者明示由 agent dispatch）：[Tests #241](https://github.com/tt-chin/yakyujinsei/actions/runs/44898360716)（dev `ee0ae9e`）與 [Tests #242](https://github.com/tt-chin/yakyujinsei/actions/runs/44898386669)（`0e43735`）皆 140 入口 139 PASS／1 FAIL，FAIL 同為 `hof-retirement-policy-e2e`（`$.rngState: 735174988 -> 1998846328`）；本期 3 入口 CI PASS。
+- `hof-retirement-policy-e2e` 的 FAIL 為既存測試 bug（與第 45 期、本項無關）：`old` mode 以 `25b815e` 的 `game.js` 搭配現行模組，INJ-UI-01（`564621c`，PR #110）起 `player-injury.js` 需 `injuryRisk`／`recordInjuryCheck`、`season-phases.js` 需 `markSeasonStart`，舊 `game.js` 不傳。本機二分：`8a4f765` PASS、`dbfbac3` 起 FAIL（CI 同值）。使用者批准後修正：`old` mode 的這兩個模組也由基準供檔（同第 40 期 `movement-gate.js`），本機 4／4 PASS。
+- 修正後 GitHub Full（使用者明示由 agent dispatch）：[Tests #243](https://github.com/tt-chin/yakyujinsei/actions/runs/44904696513)（`a4d8974`）8 批全 success，`expected 140`、`acceptedPass 140`、`issues []`。此後只改 `.md`（不影響測試），不重跑 Full。
+- 未做：PR #114 併 dev（code owner）。測試變更，依 AGENTS §9.3 不改版本。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
