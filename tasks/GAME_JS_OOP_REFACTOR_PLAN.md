@@ -21,8 +21,9 @@
 | 7 | 國際大會群的領域拆分 | 7-A：`addIntlStats` 移入 `SeasonStats`（逐字搬移，保留一行委派）；7-B：賽程＋代表選拔改為純函式政策 `international-selection-policy.js`；參賽流程留在 `game.js` | L3 / R3 | 7-A 完成；PR #16 併入 `dev`（`67dcab9`），見 §2i.9。7-B 完成；PR #17 併入 `dev`（`52e4cdb`），見 §2i.16 |
 | 8 | 殿堂評分 policy | `careerScore`／`defShare`／`tierOf` 本體移入 `hall-of-fame-tier-policy.js` 純函式；`game.js` 保留一行委派 | L3 / R3 | 完成；PR #19 併入 `dev`（`7940e97`），見 §2j.8 |
 | 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 完成；PR #20 併入 `dev`（`f4a2894`），見 §2k.8 |
-| 10 | 能力評價 policy | `ovr`／`playerType`／`toolGap`／`abCost` 本體移入 `ability-evaluation-policy.js` 純函式；`game.js` 保留一行委派；`addAb` 不動 | L3 / R3 | 本機完成（實作 commit `e75159e`），見 §2l.7；PR 待 PR #21 與 `ci/pitching-split` 合併 |
-| 11 | 流程狀態機 | 11-A：賽季後處理的回呼鏈改為 `game.js` 內的步驟分派；11-B：各領域直接呼叫 `advance`／`endGame` 改為回報具名結果，依領域分批 | L3 / R3 | 計畫中，見 §2m；實作未批准 |
+| 10 | 能力評價 policy | `ovr`／`playerType`／`toolGap`／`abCost` 本體移入 `ability-evaluation-policy.js` 純函式；`game.js` 保留一行委派；`addAb` 不動 | L3 / R3 | 完成；PR #23 併入 `dev`（`2e69096`），見 §2l.8 |
+| 11 | 流程狀態機 | 11-A：賽季後處理的回呼鏈改為 `game.js` 內的步驟分派；11-B：各領域直接呼叫 `advance`／`endGame` 改為回報具名結果，依領域分批 | L3 / R3 | 完成；第 1、2 批 PR #28（`c2d8bb3`）、第 3、4 批 PR #29（`b886555`）併入 `dev`，見 §2m |
+| 12–45 | 各期 | 見 §2n～§2ww 各期標題（第 41 期不成期，見 §3.26）；另有 CODE-DEAD-01（§2cc）、TEST-BASELINE-REBASE-01（§2xx） | — | 皆已併入 `dev`（TEST-BASELINE-REBASE-01 為 PR #114，待併）；重構結案見 §5 |
 
 共通原則：
 
@@ -5692,3 +5693,15 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 1. 前置 1：D2-G9-RELEASE 殘項未結案，仍可開始第 1 期的本機實作與驗證；重構 PR 併入 `dev` 的時機另行決定。
 2. 第 1 期：批准依本文實作。commit／push／PR 仍依 §2.6 另批。
 3. 第 1b 期：列入，接在第 1 期之後；開始前另立細部計畫並取得批准。
+
+## 5. 結案（2026-11-21）
+
+- 使用者決定（2026-11-21）：物件導向化重構至第 45 期結束。§3.30 已無可成為一期的候補；之後若要再重構，須另立盤點並經使用者決定。
+- 規模：`docs/src/engine/game.js` 由第 1 期前（`046915c`）3,334 行／302,492 bytes 降至 `origin/dev` `ee0ae9e` 382 行／39,870 bytes；`docs/src` 檔案數 48 → 114。
+- 發布狀態：第 42 期以前已隨 PR #104 併 main（`d6cef67`，2026-11-15）；第 43 期（PR #108）、第 44 期（PR #111）、第 45 期（PR #113）只在 `dev`，尚未發布 main。
+- `game.js` 現在的內容：import、組件建構與 lambda 注入、仍有測試依名稱引用的一行包裝、RNG 核心與 seed 工具、`fmtMoney`、`board`、`honorScore`、`endGame`、`initializeBrowserSave`（組成見 §3.30）。
+- 不做或暫緩，且不因本結案改變：第 1c 期 `Rng` 方法化（暫緩，§2c）；第 41 期 `seedInit`／`R`（不成期，§3.26）；§3.27／§3.28 的 D 國際賽包裝、E `careerContract` 一行包裝、F 殿堂評分包裝、G seed 工具；`fmtMoney` 留在 `game.js`。
+- 重構期間記下、不屬於重構範圍的發現（另立 BACKLOG）：
+  - `endGame` 的文字替換會改寫玩家姓名（§3.30）→ `ENDGAME-LOCALE-REWRITE-01`。
+  - 開局畫面的 `startPromptPending`／`newPromptPending` 互不鎖定（§3.29），是否為 bug 未確認 → `START-PROMPT-PENDING-01`。
+- 本結案不構成 REFACTOR-AUDIT-01 的結案：該項的完成條件（動態 scope／callback 可達性證明）未因本計畫滿足。
