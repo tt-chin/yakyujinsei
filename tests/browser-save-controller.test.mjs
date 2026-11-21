@@ -48,5 +48,42 @@ await test('replacement write failure retains old career without deleting it',as
 await test('pending replacement inspection blocks duplicate start restore and delete',async()=>{
  const st=store();st.row={revision:1,save:createSaveEnvelope(initial(),{careerId:'old',revision:1,checkpointReady:true})};const c=new BrowserSaveController({store:st});await c.initialize();let release;const original=st.read.bind(st);st.read=()=>new Promise(resolve=>{release=()=>resolve(original());});let started=0;const pending=c.replaceCareer({confirmed:true,expectedRevision:1,start:()=>started++});assert.equal(c.state.phase,'replacing');assert.equal(c.newCareer(),false);assert.equal(await c.remove({confirmed:true}),false);assert.equal(await c.replaceCareer({confirmed:true,expectedRevision:1,start:()=>started++}),false);await c.restore();release();assert.equal(await pending,true);assert.equal(started,1);
 });
+// OOP plan §2vv (phase 44): the checks game.js made around its confirmation dialogs now belong to the controller.
+const slotRow=()=>({revision:1,save:createSaveEnvelope(initial(),{careerId:'old',revision:1,checkpointReady:true})});
+const ready=async(row=slotRow())=>{const st=store();st.row=row;const c=new BrowserSaveController({store:st});await c.initialize();return {st,c};};
+await test('G2/G10 hasReadySlot and isUnavailable follow phase and slot',async()=>{
+ const loading=new BrowserSaveController({store:store()});assert.deepEqual([loading.hasReadySlot(),loading.isUnavailable()],[false,false]);
+ const empty=await ready({revision:0,save:null});assert.deepEqual([empty.c.hasReadySlot(),empty.c.isUnavailable()],[false,false]);
+ const full=await ready();assert.deepEqual([full.c.hasReadySlot(),full.c.isUnavailable()],[true,false]);
+ const st=store();st.failRead=true;const down=new BrowserSaveController({store:st});await down.initialize();assert.deepEqual([down.hasReadySlot(),down.isUnavailable()],[false,true]);
+ for(const phase of ['replacing','deleting','restoring','replace-error','delete-error','restore-error']){full.c.state.phase=phase;assert.deepEqual([full.c.hasReadySlot(),full.c.isUnavailable()],[false,false],phase);}
+});
+await test('G3 replaceAfterConfirm: declined, accepted, stale revision, rejected dialog',async()=>{
+ {const {st,c}=await ready(),old=structuredClone(st.row);let asked=0,started=0;assert.equal(await c.replaceAfterConfirm(async()=>{asked++;return false;},()=>started++),false);assert.deepEqual([asked,started,c.state.phase],[1,0,'ready']);assert.deepEqual(st.row,old);}
+ {const {c}=await ready();let started=0;assert.equal(await c.replaceAfterConfirm(async()=>true,()=>started++),true);assert.equal(started,1);assert.notEqual(c.state.careerId,'old');}
+ // The revision is taken before the dialog opens: a change while it is open must not start a career.
+ {const {c}=await ready();let started=0;assert.equal(await c.replaceAfterConfirm(async()=>{c.state.revision=2;return true;},()=>started++),false,'stale revision');assert.equal(started,0);assert.equal(c.state.phase,'ready','refused before the store is read');}
+ {const {c}=await ready();await assert.rejects(c.replaceAfterConfirm(async()=>{throw Error('DIALOG');},()=>assert.fail('start')),/DIALOG/);assert.equal(c.state.phase,'ready');}
+});
+await test('G4 removeAfterConfirm: no slot, declined, accepted, replaced state, changed revision',async()=>{
+ {const {st,c}=await ready({revision:0,save:null});let asked=0;assert.equal(await c.removeAfterConfirm(async()=>{asked++;return true;}),false);assert.deepEqual([asked,st.removes],[0,0]);}
+ {const {st,c}=await ready();assert.equal(await c.removeAfterConfirm(async()=>false),false);assert.deepEqual([st.removes,c.state.phase,!!c.state.slot],[0,'ready',true]);}
+ {const {st,c}=await ready();assert.equal(await c.removeAfterConfirm(async()=>true),true);assert.deepEqual([st.removes,c.state.phase,c.state.slot],[1,'ready',null]);}
+ // State object replaced while the dialog is open (same phase, slot and revision): still refused.
+ {const {st,c}=await ready();assert.equal(await c.removeAfterConfirm(async()=>{c.state={...c.state};return true;}),false,'replaced state');assert.deepEqual([st.removes,c.state.phase],[0,'ready']);}
+ {const {st,c}=await ready();assert.equal(await c.removeAfterConfirm(async()=>{c.state.revision=2;return true;}),false,'changed revision');assert.deepEqual([st.removes,c.state.phase],[0,'ready'],'changed revision: refused before the store is called');}
+});
+await test('G5 startUnsavedAfterConfirm: sync dialog, declined, accepted, replaced state, changed phase',async()=>{
+ const down=async()=>{const st=store();st.failRead=true;const c=new BrowserSaveController({store:st});await c.initialize();return c;};
+ {const c=await down();let asked=0;const p=c.startUnsavedAfterConfirm(async()=>{asked++;return false;});assert.equal(asked,1,'dialog opens synchronously');assert.equal(await p,false);assert.equal(c.state.careerId,null);}
+ {const c=await down();assert.equal(await c.startUnsavedAfterConfirm(async()=>true),true);assert.ok(c.state.careerId);assert.equal(c.state.writable,false);}
+ {const c=await down();assert.equal(await c.startUnsavedAfterConfirm(async()=>{c.state={...c.state};return true;}),false,'replaced state');assert.equal(c.state.careerId,null);}
+ {const c=await down();assert.equal(await c.startUnsavedAfterConfirm(async()=>{c.state.phase='ready';return true;}),false,'phase left unavailable');assert.equal(c.state.careerId,null);}
+});
+await test('G6 retry rereads after delete/replace errors and restores otherwise',async()=>{
+ const {c}=await ready(),calls=[];c.initialize=async()=>{calls.push('initialize');return 'i';};c.restore=async()=>{calls.push('restore');return 'r';};
+ for(const phase of ['delete-error','replace-error','restore-error','ready']){c.state.phase=phase;assert.equal(await c.retry(),phase.endsWith('-error')&&phase!=='restore-error'?'i':'r',phase);}
+ assert.deepEqual(calls,['initialize','initialize','restore','restore']);
+});
 console.log('PASS '+passed+' controller cases');
 }finally{globalThis.confirm=oldConfirm;}

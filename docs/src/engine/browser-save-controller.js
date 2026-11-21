@@ -55,5 +55,25 @@ export class BrowserSaveController {
   if(!current())return false;
   this.state.slot=null;this.state.phase='ready';this.state.revision=row.revision;this.state.careerId=null;this.#show('セーブデータを削除しました。');return true;
  }
+ hasReadySlot(){return this.state.phase==='ready'&&!!this.state.slot;}
+ isUnavailable(){return this.state.phase==='unavailable';}
+ // Confirmation flows: the caller supplies the dialog; the controller owns the checks made before and after it.
+ async replaceAfterConfirm(confirm,start){
+  const expectedRevision=this.state.revision;
+  if(!await confirm())return false;
+  return this.replaceCareer({confirmed:true,expectedRevision,start});
+ }
+ async removeAfterConfirm(confirm){
+  if(!this.hasReadySlot())return false;
+  const state=this.state,revision=state.revision;
+  if(!await confirm())return false;
+  if(this.state!==state||state.phase!=='ready'||state.revision!==revision)return false;
+  return this.remove({confirmed:true});
+ }
+ startUnsavedAfterConfirm(confirm){
+  const state=this.state;
+  return confirm().then(ok=>!!ok&&this.state===state&&state.phase==='unavailable'&&this.newCareer({allowUnsaved:true}));
+ }
+ retry(){return ['delete-error','replace-error'].includes(this.state.phase)?this.initialize():this.restore();}
  async settled(){await this.#queue;}
 }
