@@ -23,7 +23,7 @@
 | 9 | 守備位置 policy | `dpScore`／`dpBar`／`dpQual`／`dpList`／`dpMult` 本體移入 `defense-position-policy.js` 純函式；`DP_*` 常數與 `dposReview` 留在 `game.js` | L3 / R3 | 完成；PR #20 併入 `dev`（`f4a2894`），見 §2k.8 |
 | 10 | 能力評價 policy | `ovr`／`playerType`／`toolGap`／`abCost` 本體移入 `ability-evaluation-policy.js` 純函式；`game.js` 保留一行委派；`addAb` 不動 | L3 / R3 | 完成；PR #23 併入 `dev`（`2e69096`），見 §2l.8 |
 | 11 | 流程狀態機 | 11-A：賽季後處理的回呼鏈改為 `game.js` 內的步驟分派；11-B：各領域直接呼叫 `advance`／`endGame` 改為回報具名結果，依領域分批 | L3 / R3 | 完成；第 1、2 批 PR #28（`c2d8bb3`）、第 3、4 批 PR #29（`b886555`）併入 `dev`，見 §2m |
-| 12–45 | 各期 | 見 §2n～§2ww 各期標題（第 41 期不成期，見 §3.26）；另有 CODE-DEAD-01（§2cc）、TEST-BASELINE-REBASE-01（§2xx） | — | 皆已併入 `dev`（TEST-BASELINE-REBASE-01 為 PR #114，待併）；重構結案見 §5 |
+| 12–45 | 各期 | 見 §2n～§2ww 各期標題（第 41 期不成期，見 §3.26）；另有 CODE-DEAD-01（§2cc）、TEST-BASELINE-REBASE-01（§2xx） | — | 皆已併入 `dev`（TEST-BASELINE-REBASE-01 為 PR #114，`1e1ea31`）；重構結案見 §5 |
 
 共通原則：
 
@@ -5019,7 +5019,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 交付（2026-11-21）：經 PR #113 併 dev（`ee0ae9e`，head `b6e673e`）；dev Quick [Tests #240](https://github.com/tt-chin/yakyujinsei/actions/runs/44893215503) success（Full job 依 workflow skipped）。PR head 沒有手動 Full（workflow_dispatch 最後一次為 11-17 `codex/ui-redesign`）。
 - 未做：Linux CI Full（GitHub 手動，對象 dev `ee0ae9e`）、Preview、實機。內部變更，依 AGENTS §9.3 不改版本。
 
-## 2xx. TEST-BASELINE-REBASE-01：雙邊比較 E2E 改用模組化後的基準（2026-11-21；逐測試決定與 D1–D5 使用者批准 2026-11-21，本機實作完成）
+## 2xx. TEST-BASELINE-REBASE-01：雙邊比較 E2E 改用模組化後的基準（2026-11-21；逐測試決定與 D1–D5 使用者批准 2026-11-21，PR #114 併 dev `1e1ea31`）
 
 ### 2xx.1 逐測試決定（基準＝引入該常數之 commit 的父 commit，各 commit 本文皆空；類型依斷言判斷）
 
@@ -5060,7 +5060,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 交付：push `test/baseline-rebase`、[PR #114](https://github.com/tt-chin/yakyujinsei/pull/114) → dev。GitHub Full（本次經使用者明示由 agent dispatch）：[Tests #241](https://github.com/tt-chin/yakyujinsei/actions/runs/44898360716)（dev `ee0ae9e`）與 [Tests #242](https://github.com/tt-chin/yakyujinsei/actions/runs/44898386669)（`0e43735`）皆 140 入口 139 PASS／1 FAIL，FAIL 同為 `hof-retirement-policy-e2e`（`$.rngState: 735174988 -> 1998846328`）；本期 3 入口 CI PASS。
 - `hof-retirement-policy-e2e` 的 FAIL 為既存測試 bug（與第 45 期、本項無關）：`old` mode 以 `25b815e` 的 `game.js` 搭配現行模組，INJ-UI-01（`564621c`，PR #110）起 `player-injury.js` 需 `injuryRisk`／`recordInjuryCheck`、`season-phases.js` 需 `markSeasonStart`，舊 `game.js` 不傳。本機二分：`8a4f765` PASS、`dbfbac3` 起 FAIL（CI 同值）。使用者批准後修正：`old` mode 的這兩個模組也由基準供檔（同第 40 期 `movement-gate.js`），本機 4／4 PASS。
 - 修正後 GitHub Full（使用者明示由 agent dispatch）：[Tests #243](https://github.com/tt-chin/yakyujinsei/actions/runs/44904696513)（`a4d8974`）8 批全 success，`expected 140`、`acceptedPass 140`、`issues []`。此後只改 `.md`（不影響測試），不重跑 Full。
-- 未做：PR #114 併 dev（code owner）。測試變更，依 AGENTS §9.3 不改版本。
+- PR #114 由 code owner 以 `1e1ea31` 併 dev（tree 與 `5d7c809` 相同），合併後dev push Quick [Tests #244](https://github.com/tt-chin/yakyujinsei/actions/runs/44913194442)（`1e1ea31`）success。測試變更，依 AGENTS §9.3 不改版本。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
