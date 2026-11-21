@@ -3,7 +3,7 @@
 // game.js must be served with instrumentRng(...,'__rngCalls') and GAME_VIEW_HOOK appended.
 export const GAME_VIEW_HOOK='\nwindow.__gameViewState=()=>({state:JSON.parse(JSON.stringify(S)),calls:window.__rngCalls||0,views:JSON.parse(JSON.stringify({player:buildPlayerViewModel(),career:buildCareerViewModel()}))});';
 
-// Browser-side; passed by source. Waits for scrollBottom's rAF and the endGame override's setTimeout(0)
+// Browser-side; passed by source. Waits for scrollBottom's rAF and a following setTimeout(0)
 // before reading. Returns only a digest unless full is set, so long careers stay small in memory.
 export async function captureGameView(full){
   await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
