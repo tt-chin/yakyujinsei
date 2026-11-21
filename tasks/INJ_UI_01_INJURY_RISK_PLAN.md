@@ -43,7 +43,7 @@
 | 總值列 value（診斷前） | `X%`（現時点） |
 | 總值列 value（診斷後，D2a） | 判定済み（X%） |
 | 範圍註記（細目末尾） | シーズン中盤の健康診断1回の判定確率です。シーズン全体の故障やトミー・ジョン手術の確率ではありません。今後のイベントで変わることがあります。 |
-| 細目 | 基礎 15%／前季からの持ち越し +X%／年齢 +6%（32歳以上）・+12%（35歳以上）／理論派 −5%（25歳未満）／特性適用前 Y%／鉄人：上限10%・スペランカー：下限40%・鉄人＋スペランカー：25%固定／今季の一時加算 ±X%／上下限 3～95% |
+| 細目 | 基礎 15%／国際大会出場による加算 +X%（草稿時修正：`injNext` 也可能來自同季診斷前的 `phaseIntlPre`，「前季からの持ち越し」不正確）／年齢 +6%（32歳以上）・+12%（35歳以上）／理論派 −5%（25歳未満）／特性適用前 Y%／鉄人：上限10%・スペランカー：下限40%・鉄人＋スペランカー：25%固定／今季の一時加算 ±X%／上下限 3～95% |
 | 復健季（`skipMid`） | 今季は健康診断なし（リハビリ中） |
 
 - 細目只列適用的段（例如沒有理論派就不列），基礎、特性適用前、今季の一時加算、結果則一律顯示。依 §5.3，不寫成可直接加總的形式，也不寫「鉄人なら最終10%以下」。
@@ -59,3 +59,27 @@
 - 負控制：計算順序對調（`tmpInj` 先於特性規則）、拿掉夾限、D2 記錄改為診斷後才寫入、`desktop-overview` 展開狀態誤讀。
 - Quick 本機；Full 依 6.1 R3 為必要 →「Full 實行が必要（GitHub 手動・未実行）」。
 - **T 表（受影響測試與核准差異）**：D1～D2 決定後在 scratch 草稿上實測，並跑 4 群 Full 後再提出。已知候補：`award-identity-policy.test`（D1A）、`career-presenter.test`（`097e212` 舊 builder 逐欄比較 `ability()`）、`record-condition-fix.test`、`information-architecture.test`、`ui-foundation.test`、`japanese-copy-contract-ui.test`、`verify-modularization`、`salary-flow.test`、`trait-policy.test`、`full-power-pitching.test`、`design-tokens-06`（新 CSS）、`display-preferences.test`（新顏色 token）、DOM snapshot 系 E2E（`#bd-*` 不變，但 ability 面板會變）。
+
+## 5. 草稿實測（2026-11-21，scratch worktree 自 `638e52e`；macOS＋Brave 本機證據）
+
+草稿：新增 `docs/src/engine/injury-risk-policy.js`、`docs/src/ui/injury-risk-view-model.js`；修改 `player-injury.js`（`injuryProb` 改用注入的 `injuryRisk`，`rollInjury` 在 `chance` 前 `recordInjuryCheck(S)`）、`season-phases.js`（`phasePre` 歸零行後 `markSeasonStart(S)`）、`game.js`（import＋兩處 lambda，CRLF 保留）、`career-presenter.js`（condition 第 1 列）、`ability-view.js`（`<details class="ui-condition-breakdown">`，重繪保留展開狀態）、`ui-navigation.css`（一條無 token 的 `summary` 規則）。草稿修正：`seasonStarts` 以 `has()` 判斷（無 `year` 時 `undefined===undefined` 誤判）。
+
+- 未改測試的 Quick：101 PASS／6 FAIL（下表 T2～T7）。
+- 套用 T 表後：Quick **107／107 PASS**；`game-view-dom-e2e` 單獨執行 8 段生涯 vs `4f39a73` PASS（S／RNG 嚴格一致，D2a 無 S 差異）；使用者授權（2026-11-21，選項 2）單獨執行的 Full 專用入口 7 個：`stage10-risk-e2e`、`trait-system-e2e`、`npb-return-e2e`、`contract-salary-e2e`、`championship-intl-e2e`、`design-tokens-09-e2e` 首輪 PASS，`full-power-pitching-e2e` 首輪 FAIL（T9）→ 修正後 PASS。
+- 新單元測試（草稿）7 項 PASS：舊 `injuryProb`（`8a4f765`）vs `total` 6,384 格逐值一致、步驟順序／凍結、年齡邊界、特性規則在 `tmpInj` 前、3／95 夾限、D2a／D2' 狀態、復健季。
+- 未執行：其他用到 `dom-snapshot`／`stage6-browser` 的 Full 專用入口（`display-preferences-e2e`、`hof-retirement-policy-e2e`、`international-personal-stats-e2e`、`smallschool-c-e2e`、`stage6-ability-e2e`、`stage6-state-transaction-e2e`、`stage7-safety-e2e`、`trait-display-e2e`）；GitHub Full 時確認。`dom-snapshot` 投影的到達（拿掉後 FAIL）尚未證明，列入負控制。
+
+| T | 測試 | 原因 | 修改 |
+|---|---|---|---|
+| T1 | `award-identity-policy.test` | `ability-view.js` 凍結 | `approvedInjuryRiskEdits` 逐字 overlay 2 處 |
+| T2 | `career-presenter.test` | condition 多一列；fixture 缺 `traits`／`age`／`injNext` | 只補缺欄；第 1 列核准差異（各 fixture 預期值獨立列舉） |
+| T3 | `design-tokens-06.test` | 新 CSS 的 fs／space token 計數 | 不改測試：CSS 只留無 token 規則 |
+| T4 | `season-phases.test` | `phasePre` 逐字＋新舊 harness | 核准插入 1 筆、`DEPS`；新側 `markSeasonStart` stub（不入比較 log） |
+| T5 | `verify-modularization` | `SeasonPhases` 建構行逐字 | 該行加 lambda |
+| T6 | `full-power-pitching.test` | vm 執行 `phasePre` | context no-op stub |
+| T7 | `npb-return-ui.test` | vm 執行＋舊本體重組 | 3 個 context stub；標記行比照 state reads 剝除 |
+| T8 | `tests/support/dom-snapshot.mjs` | view model condition 多一列 | 新側驗證（位置、值形式、細目結果、復健季）後移除 |
+| T9 | `full-power-pitching-e2e` | `phasePre` 逐字還原 | 標記行加入剝除清單（count 1） |
+| T10 | 新 `injury-risk-policy.test` | — | 註冊 manifest（Quick） |
+
+實作時另加：負控制（計算順序對調、拿掉夾限、記錄改在 `chance` 後、`dom-snapshot` 投影移除、`markSeasonStart` 拿掉）、PC／モバイル截圖、四種顯示（診斷前／後、復健季、年初）的 E2E 確認。
