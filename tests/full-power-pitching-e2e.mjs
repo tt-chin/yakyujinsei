@@ -23,7 +23,7 @@ const canonical=s=>s.replaceAll('\r\n','\n');
 // Phase 34 (§2mm) moved phasePre into the SeasonPhases factory: restore the game.js text by removing each inserted state read
 // by exact string and count, then dedent, in place of the game.js wrapper line (the text after it stays). The prior side is unchanged.
 const seasonPhases=canonical(await readFile(new URL('../docs/src/engine/season-phases.js',import.meta.url),'utf8'));
-const restoredPhasePre=()=>{let text=productionFunction('phasePre',seasonPhases).split('\n  return {')[0];for(const [read,count] of [['\n    const S=getState();',1],['const S=getState();',7]]){assert.equal(text.split(read).length,count+1,'phasePre state reads: '+JSON.stringify(read));text=text.replaceAll(read,'');}return text.replace(/^  /gm,'');};
+const restoredPhasePre=()=>{let text=productionFunction('phasePre',seasonPhases).split('\n  return {')[0];for(const [read,count] of [['\n    const S=getState();',1],['const S=getState();',7],['\n    markSeasonStart(S); /* INJ-UI-01：tmpInj リセット済みの印（本セッションのみ、S 不変）。 */',1]]){assert.equal(text.split(read).length,count+1,'phasePre state reads: '+JSON.stringify(read));text=text.replaceAll(read,'');}return text.replace(/^  /gm,'');};
 const phasePreWrapper='function phasePre(){return seasonPhases.phasePre();}';
 // Phase 39 (§2rr) moved tjAccrue/tjCap into PlayerInjury as accrueTj/tjGaugeLimit: restore the game.js text the same way (remove the
 // inserted state read by exact string and count, rename, dedent) in place of the game.js wrapper. The prior side is unchanged.

@@ -92,6 +92,11 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 既有測試的核准差異：`ui-redesign-review-e2e`的`INT01_CORE`（`career-retirement.js`兩段插入）、`award-identity-policy.test`的`player-detail.js`兩組逐字修改、`career-presenter.test`的`career().international`空列表、`dom-snapshot`在`window.__expectIntlHistory`（只注入受測版）下檢查並刪除`career().international`與引退`#log`的`[data-intl-history]`區塊（`game-view-dom-e2e`的jp3-pitcher-02會到達）。`display-preferences-e2e`未處理此區塊：manifest以`--only-seed=yakyo-test-001,jp3-infielder-01`執行，兩者引退時沒有國際結果；改用其他種子（含不加`--only-seed`）前，須先比照`dom-snapshot`加上受測版的檢查與移除。
 
+## 健康診断時の故障リスク（INJ-UI-01）
+
+`injury-risk-policy.test`與`injury-risk-e2e`為Quick／Full／Audit（`tasks/INJ_UI_01_INJURY_RISK_PLAN.md`）。以`8a4f765`的`player-injury.js` `injuryProb`本體在vm中與`injuryRiskBreakdown().total`逐格比較（特性7組合×年齡15～48×`injNext`×`tmpInj`），並驗證步驟順序與凍結、年齡邊界、特性規則先於`tmpInj`、3／95%夾限、診斷後（本session記錄）、`phasePre`前（`tmpInj`視為重置）與復健季的顯示，以及`rollInjury`以`total`抽選並在抽選前記錄。E2E（約20秒）以真實賽季打到健康診斷，比對診斷前顯示值與結果卡「故障率」、診斷後「判定済み」，再以hook檢查年初（`phasePre`前）、`phasePre`後、復健季與年初待復健；桌面側欄重繪時細目與「潜在能力について」各自保留展開狀態；查看與展開前後S（含`rngState`）不變，1280／390 px與4主題。
+既有測試的核准差異：`award-identity-policy.test`的`ability-view.js`兩組逐字修改、`career-presenter.test`的condition第1列（fixture只補缺欄）、`phasePre`的`markSeasonStart(S)`一行（`season-phases.test`插入清單、`verify-modularization`建構行、`full-power-pitching.test`／`npb-return-ui.test`的stub、`full-power-pitching-e2e`剝除清單）、`dom-snapshot`驗證並刪除condition的風險列（`game-view-dom-e2e`以`window.__expectInjuryRisk`要求受測版必須有該列）。
+
 ## 生涯RNG（`Rng`）
 
 `rng.test`為Quick／Full／Audit：以`650e4dd21718b4abec3876fc9ef6148714c21d4f`舊`seedInit`／`R`產生的golden值，驗證`docs/src/engine/rng.js`的種子、步進、hash為0時的退回值、每次重讀`S`，以及`game.js`的`seedInit`／`R`委派與`_s`同步。不是完整生涯比較；E2E的RNG計數經`tests/support/rng-instrument.mjs`：現行原始碼以`careerRng.onDraw`計數，沒有`careerRng`的舊基準原始碼仍以`R`定義文字替換，兩者皆不符時丟`RNG_INSTRUMENT_MISS`；`rng-instrument.test`（Quick／Full／Audit）驗證這三種情況。vm harness仍抽取`seedInit`／`R`單行（見`tasks/GAME_JS_OOP_REFACTOR_PLAN.md` §2.2、§2b）。

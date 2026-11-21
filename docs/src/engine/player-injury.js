@@ -15,7 +15,7 @@ export class PlayerInjury {
   tjGaugeLimit(){return this.#rules.tjGaugeLimit();}
 }
 
-function injuryRules({getState,clamp,POS_AB,ABL,addAb,board,card,choose,removeTrait,tjCap,rng:{ri,chance,pick}}){
+function injuryRules({getState,clamp,POS_AB,ABL,addAb,board,card,choose,removeTrait,tjCap,injuryRisk,recordInjuryCheck,rng:{ri,chance,pick}}){
   function tjGamble(cont){ /* TJゲージ上限到達時は先に能力を5下げ、その後に手術結果を判定。 */
     const S=getState();
     if(S.pos!=='P'||S.tj<tjCap()){ cont(); return; }
@@ -77,21 +77,11 @@ function injuryRules({getState,clamp,POS_AB,ABL,addAb,board,card,choose,removeTr
     else { S.tjSuccess=0; } /* 重傷失敗時に連続記録をリセット。 */
     cont();
   }
-  function injuryProb(){ /* 基礎リスク24から15へ下げ、済み剰な故障発生を抑える。 */
-    const S=getState();
-    let p=15+S.injNext;
-    if(S.age>=35)p+=12; else if(S.age>=32)p+=6;
-    if(S.traits.academy&&S.age<25)p-=5; /* 理論派：25歳まで科学的に自己管理。 */
-    if(S.traits.iron&&S.traits.glass)p=25;
-    else if(S.traits.iron)p=Math.min(p,10); /* 鐵人：基礎リスク上限 10%。 */
-    else if(S.traits.glass)p=Math.max(p,40);
-    /* イベントカード等自検索的額外リスク(tmpInj)疊加在基礎之上、不受鐵人上限保護。 */
-    p+=(S.tmpInj||0);
-    return clamp(p,3,95);
-  }
+  function injuryProb(){ return injuryRisk(getState()).total; } /* INJ-UI-01：計算本体は injury-risk-policy.js の injuryRiskBreakdown。 */
   function rollInjury(){
     const S=getState();
     const p=injuryProb();
+    recordInjuryCheck(S); /* 判定前の内訳を本セッションだけ記録（S 不変・RNG なし）。 */
     if(!chance(p)){ card('info','健康の回復',`今季は無事に出場できた。（故障率 ${p}%）`); S.injNext=0; return; }
     S.injNext=0;
     if(chance(64)){ // 64% 的確率是小傷。

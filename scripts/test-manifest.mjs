@@ -39,6 +39,7 @@ const browserProfiles = {
   'event-category-badge-e2e': {quick:[],seconds:20,reason:'EVT-01: real-career event prompt and result-card category badges (draw-time effective category, saved result category), 1280/390 px, 4 themes.'},
   'board-menu-stacking-e2e': {quick:[],seconds:15,reason:'UI-BOARD-MENU-STACK-01: at the dice-allocation step (tallest #act) every board menu item is the hit target at 390/320/1280 px and タイトルに戻る opens its confirmation; precondition: #act overlaps the panel on phones'},
   'international-history-e2e': {quick:[],seconds:10,reason:'INT-01: キャリア → 実績 and the retirement 通算成績 card list played tournaments (collapsed, saved personal stats or 記録なし); none → no node; S unchanged; 1280/390 px, 4 themes.'},
+  'injury-risk-e2e': {quick:[],seconds:20,reason:'INJ-UI-01: 選手 → 能力 and the desktop sidebar show 健康診断時の故障リスク (forecast, 判定済み, year start before phasePre, rehab) with a collapsed breakdown; a real season checks the shown value equals the judged 故障率; S unchanged; 1280/390 px, 4 themes.'},
   'event-history-e2e': {quick:[],seconds:40,reason:'EVT-01 E3: real-career キャリア → 年度別 event rows (every occurrence, saved category, 今季 row), collapsed/expanded inside the scroll box, 1280/390 px, 4 themes.'},
   'global-contract-market-e2e': {args:['--quick'], seconds:30},
   'hof-first-ballot-e2e': {seconds:50},
