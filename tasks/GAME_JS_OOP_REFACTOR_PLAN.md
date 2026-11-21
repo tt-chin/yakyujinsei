@@ -4931,6 +4931,23 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 負控制（scratch，替換斷言 1 次、還原後 sha 相同）：分別拿掉 G4 的身分比對、G4 的 revision 檢查、G5 的身分比對、G5 的 `'unavailable'` 檢查、G3 的 revision 記錄（改為確認後才讀）、G6 分支對調，各須被指定斷言攔下。
 - 預期不受影響（草稿確認）：`verify-modularization:66,162`、`display-preferences.test:30`、`ui-redesign-*` hook。
 
+### 2vv.4 T 表與結果（T1–T4 批准 2026-11-21；macOS＋Brave 157 本機證據）
+
+| # | 內容 | commit |
+|---|---|---|
+| T1 | `browser-save-controller.js` 新增 `hasReadySlot`／`isUnavailable`／`replaceAfterConfirm`／`removeAfterConfirm`／`startUnsavedAfterConfirm`／`retry`（+20 行），現有方法不動 | `b7237d4` |
+| T2 | `game.js`：`btn-start` 兩分支、`fresh`、`deleteSave`、`onRetry`（+12／−15）；只改 LF 行，CRLF 行數 357 不變；`browserSave.state` 只剩 `:407` `show(browserSave.state)`（UI 描繪） | `b7237d4` |
+| T3 | `browser-save-controller.test` 追加 5 案例（G2/G10、G3、G4、G5、G6；+37 行），現有斷言未改 | `b7237d4` |
+| T4 | 本節、BACKLOG 現況；`scripts/TESTING.md` 未提及相關測試，不改 | 文件 |
+
+- 草稿（scratch worktree，基準 `bdf1135`，scratchpad assembler 每處替換斷言 1 次）：測試未改時 Quick **107／107 PASS**（執行數＝manifest Quick 入口數）——無測試依賴被改文字，也表示現有測試未釘住這些檢查。加入 T3 後 `browser-save-controller.test` 24／24。
+- 負控制（scratch，突變斷言套用 1 次、還原後 sha 相同）**9／9** 由指定斷言攔下：N1 G4 身分比對、N2 G4 revision、N3 G5 身分比對、N4 G5 `'unavailable'`、N5 G3 revision 改為確認後讀取、N6 G6 分支對調、N7 G2 少 slot 檢查、N8 G10 誤判 `loading`、N9 G5 對話框延後開啟。N2 第 1 輪由同案例無訊息的 phase 斷言攔下（無 controller 檢查時 store 層也因衝突回傳 `false`，只差 phase 變 `delete-error`），加訊息後重跑；G3 同理一開始即補 phase 斷言。G4 的 phase 檢查為等價突變（`remove()` 自身亦檢查），未列負控制。
+- 抵達 probe（scratch：probe 用 Playwright shim 於每個 context 收集帶標記 console，controller 新方法開頭暫加 log 並以 stack 判定呼叫者；跑完還原 `cmp` 一致）：`browser-save-runtime-e2e` 13 組 PASS，6 個新方法皆由 `game.js` 呼叫（`hasReadySlot` 69、`replaceAfterConfirm` 18、`isUnavailable` 16、`removeAfterConfirm` 11、`retry` 6、`startUnsavedAfterConfirm` 1）。
+- 正式 commit `b7237d4`（3 檔與草稿 `cmp` 相同）：Quick **107／107 PASS**（summary SHA `b7237d441c49db0c9695b8321d6537a326fc3c70`）；`jersey-e2e`（Full 限定，使用者授權單獨執行）22／22 PASS（含 `new-career-over-save`）；`verify-modularization` PASS。
+- reviewer（`bdf1135..b7237d4`）：無發現。確認三條路徑等價（含 `confirmAction` 同步拋出時旗標與 rejection 的行為）；指出留在 `game.js` 的檢查（pending 旗標、`S`、刪除預檢與設旗標順序）未改且只由 E2E 涵蓋。
+- **Full 實行が必要（GitHub 手動・未実行）**：R3（存檔覆寫・刪除、`S` 重置路徑）。版本不變。
+- 未做：push、PR、Linux CI Full、Preview、實機。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
