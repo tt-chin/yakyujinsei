@@ -118,6 +118,7 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
 {
   const baseSource = execFileSync('git', ['show', '026c5cd89e3b189cf2a93e9425f344f57fafc208:docs/src/engine/game.js'], { encoding: 'utf8', maxBuffer: 20e6 });
   const amateurNames = ['enterDraftPath', 'draftFallback', 'pathChoiceHS', 'pathChoiceU4'];
+  const amateurConstruction = source => { const ctor = source.match(/^  const amateurCareer=new AmateurCareer\(\{[^\r\n]+/gm); assert.equal(ctor?.length, 1, 'amateurCareer construction once'); return ctor[0]; };
   function amateurRun(source, { state, overall, draft }, picks) {
     const log = [], choices = [], reported = [];
     const movementLayer = { movement: () => log.push(['legacyMovement']) };
@@ -139,7 +140,9 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
       choose: (title, opts) => { log.push(['choose', title, opts.map(o => o.t)]); choices.push(opts); },
     });
     const reporter = source.includes('yearFlow.reportFlowOutcome(') ? [yearFlowReporter(yearFlowSource)] : source.includes('function reportFlowOutcome(') ? [productionFunction('reportFlowOutcome', source)] : [];
-    vm.runInContext("'use strict';\nlet movement;\n" + [...reporter, ...amateurNames.map(name => productionFunction(name, source))].join('\n') + '\n' + movementEntry(source), context);
+    // OOP plan §2ww: the current game.js keeps no amateur delegates; its AmateurCareer construction line is used directly.
+    const amateur = source.includes("from './amateur-career.js'") ? [amateurConstruction(source)] : amateurNames.map(name => productionFunction(name, source));
+    vm.runInContext("'use strict';\nlet movement;\n" + [...reporter, ...amateur].join('\n') + '\n' + movementEntry(source), context);
     if (reporter.length) vm.runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};", context);
     vm.runInContext('movement()', context);
     for (let k = 0; k < picks.length; k++) choices[k][picks[k]].f();

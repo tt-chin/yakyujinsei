@@ -35,7 +35,9 @@ window.__contractAudit={
  pay:()=>{const saved=movement;movement=()=>{window.__payMoves=(window.__payMoves||0)+1;};try{S.pool=0;phaseEnd();}finally{movement=saved;}},
  missing:()=>{S.ct=null;phaseEnd();}
 };`;
-function instrument(source){source=instrumentRng(source,'__rngCalls');source=withCareerSessionAccess(source);return injectOverlayHook(source,hook);}
+// OOP plan §2ww: a baseline keeps the hook verbatim; the current source calls CareerMovement directly.
+const MODULE_CALLS={handleDemotion:{to:'careerMovement.handleDemotion',count:1},outOfOrg:{to:'careerMovement.outOfOrg',count:1}};
+function instrument(source){source=instrumentRng(source,'__rngCalls');source=withCareerSessionAccess(source);return injectOverlayHook(source,hookForSource(source,hook,MODULE_CALLS));}
 const oldCache=new Map();
 const server=createServer(async(req,res)=>{try{let rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1)||'index.html';const old=rel.startsWith('baseline/');if(old)rel=rel.slice(9)||'index.html';if(rel.includes('..'))throw Error('path');const ref=old?comparison:baseline,key=ref+':'+rel;if(ref&&!oldCache.has(key))oldCache.set(key,execFileSync('git',['show',ref+':docs/'+rel],{cwd:root,maxBuffer:20e6}));let body=ref?oldCache.get(key):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(old?withApprovedBirthSnapshot(body.toString()):body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -104,3 +106,4 @@ import {withApprovedBirthSnapshot} from './support/baseline-initial-potential.mj
 import {instrumentRng} from './support/rng-instrument.mjs';
 import {withCareerSessionAccess} from './support/career-session-access.mjs';
 import {injectOverlayHook} from './support/overlay-hook.mjs';
+import {hookForSource} from './support/module-calls.mjs';

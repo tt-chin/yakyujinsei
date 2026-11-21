@@ -9,6 +9,7 @@ import {TRAIT_LABELS,TRAIT_TEXT} from '../docs/src/engine/trait-policy.js';
 import {EVENT_TRAIT_TEXT} from '../docs/src/engine/event-policy.js';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
 import {injectOverlayHook} from './support/overlay-hook.mjs';
+import {hookForSource} from './support/module-calls.mjs';
 
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'a0b880bb7e7fe74e743daa0cb8144455c9fdded2')+'^{commit}'],{encoding:'utf8'}).trim();
 const source=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
@@ -34,9 +35,10 @@ const hook=`window.__traitDisplay={
  share:async(evals=[])=>{const out=document.createElement('div'),texts=[],boxes=[],original=CanvasRenderingContext2D.prototype.fillText;document.body.appendChild(out);CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(text);boxes.push({text:String(text),x:args[0],y:args[1],width:this.measureText(String(text)).width});return original.call(this,text,...args);};try{await shareImage(evals,out);const png=out.querySelector('img').src;out.remove();return {texts,png,boxes};}finally{CanvasRenderingContext2D.prototype.fillText=original;}},
  step:()=>{if(S.done)return{done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));const jb=buttons.find(n=>/^背番号 \\S+ (で入団する|にする)$/.test(n.textContent.trim()));if(jb){jb.click();return{skip:true};}let b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows.sort((a,b)=>S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey])[0]||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S));delete before.version;delete before.jerseyHistory;const action=window.__allocationComparison.action(b);b.click();const jb2=[...$('act').querySelectorAll('button')].find(n=>/^背番号 \\S+ (で入団する|にする)$/.test(n.textContent.trim()));if(jb2)jb2.click();const after=JSON.parse(JSON.stringify(S));delete after.version;delete after.jerseyHistory;return{before,after,action,jersey:!!jb2};}
 };`;
+// OOP plan §2ww: a baseline keeps the hook verbatim; the current source calls the modules directly.
 async function page(width,pos='IF',seed='trait-display',old=false){
  const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{if(old)await routeHistoricalShareTheme(p,baseline);
- await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(source):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook)});});}});await p.waitForFunction(()=>window.__traitDisplay&&!document.querySelector('#btn-start').disabled);return p;
+ await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(source):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hookForSource(body,hook,{blankStat:{to:'seasonStats.blankStat',count:2},buildTraitsViewModel:{to:'careerPresenter.traits',count:1}}))});});}});await p.waitForFunction(()=>window.__traitDisplay&&!document.querySelector('#btn-start').disabled);return p;
 }
 const descriptions={...TRAIT_TEXT,...EVENT_TRAIT_TEXT};
 try{

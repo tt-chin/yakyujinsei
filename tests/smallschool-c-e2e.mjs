@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {routeHistoricalShareTheme,harness,instrument,arg} from './support/stage6-browser.mjs';
 import {injectOverlayHook} from './support/overlay-hook.mjs';
+import {hookForSource} from './support/module-calls.mjs';
 const baseline='0fd13c7532fd03da136c72ef64e9890858cfb81e';
 const oldSource=execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
 const h=await harness('smallschool-c');
@@ -22,11 +23,12 @@ const hook=`window.__small={
  unknown:()=>{const snapshot=s6clone(S);delete snapshot.birthHighSchool;S=snapshot;S.hsTier=3;S.schoolTier='C';return s6clone(S);},
  step:()=>{if(S.done)return{done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));const b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows.sort((a,b)=>S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey])[0]||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=s6clone(S),rBefore=s6rng.length,label=b.textContent;b.click();return{before,after:s6clone(S),rBefore,rAfter:s6rng.length,label};}
 };`;
+// OOP plan §2ww: a baseline keeps the hook verbatim; the current source calls SeasonStats directly.
 async function page(width=1280,pos='IF',seed='s10-trait-38',old=false){const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{if(old)await routeHistoricalShareTheme(p,baseline);await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(oldSource):await response.text();
  // route.fetch bypasses the shared Preview route; its raw response needs the base hook.
  // Loopback already instruments the response, so never install the RNG wrapper twice.
  if(!body.includes('let s6rng=[]'))body=instrument(body);
- await route.fulfill({response,body:injectOverlayHook(body,hook)});});}});await p.waitForFunction(()=>window.__small&&!document.querySelector('#btn-start').disabled);return p;}
+ await route.fulfill({response,body:injectOverlayHook(body,hookForSource(body,hook,{blankStat:{to:'seasonStats.blankStat',count:5}}))});});}});await p.waitForFunction(()=>window.__small&&!document.querySelector('#btn-start').disabled);return p;}
 const clean=s=>{const x=structuredClone(s);delete x.birthHighSchool;return x;};
 try{
  for(const width of [1280,320,390])await h.test('birth-school-ui-'+width,{width,fixture:true},async()=>{const p=await page(width);assert.match(await p.locator('#log').innerText(),/C級・弱小校/);await p.screenshot({path:h.output+'/natural-C-'+width+'.png',fullPage:true});for(let i=0;i<10;i++){const birth=await p.evaluate(i=>window.__small.fixture('C',i),i);assert.equal(birth.schoolId,'HS_'+String(51+i).padStart(3,'0'));assert.equal(birth.tier,'C');await p.evaluate(()=>window.__small.show());assert.match(await p.locator('#log').innerText(),/高校（C級）/);}const birth=(await h.get(p)).state.birthHighSchool;await p.evaluate(()=>window.__small.school());assertSameCareer((await h.get(p)).state.birthHighSchool,birth);for(const stage of ['CORP','IND','PRO']){await p.evaluate(s=>window.__small.stage(s),stage);await p.evaluate(()=>window.__small.advance());assertSameCareer((await h.get(p)).state.birthHighSchool,birth);}await p.screenshot({path:h.output+'/schools-'+width+'.png',fullPage:true});await p.close();});

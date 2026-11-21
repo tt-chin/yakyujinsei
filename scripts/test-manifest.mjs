@@ -59,6 +59,7 @@ const nonTests = {
   'support/ui-shell-comparison.mjs':['support','Frozen approved UI 2.0 board markup projection; exact new summary/structure validation before historical board comparison. No S/RNG exclusions.'],
   'support/approved-hof-comparison.mjs':['support','Strict approved-retirement comparison used by dedicated unit and E2E tests; not a standalone suite.'],
   'support/source-text.mjs': ['support','Strict UTF-8 source reader; CRLF-to-LF normalization only for source comparisons. Never normalizes frozen hash/binary evidence.'],
+  'support/module-calls.mjs': ['support','OOP plan §2ww: a historical baseline that still declares the game.js names gets the hook verbatim; the current source gets the module calls, each name rewritten an exact number of times.'],
   'support/board-menu.mjs': ['support','Native header menu interaction and E2E assertions; preserves historical visible-button controls.'],
   'support/approved-school-oracle.mjs': ['support','Explicit approved C-school/COPY positive-control overlay; never an old-bug negative oracle. Raw old/new traces remain separate.'],
   'support/baseline-initial-potential.mjs': ['support','Approved birth-potential adapter for positive historical UI comparisons; unadapted fixed-seed S/R proof stays separate. Not executable.'],

@@ -53,14 +53,20 @@ let now=game.replace(/\r\n/g,'\n');
 // Phase 23: restore the moved bodies over their game.js wrappers, removing each inserted state read by exact string, so the text compares below stay verbatim.
 for(const [name,wrapper,reads,indent] of [
  ['buyoutRemaining','function buyoutRemaining(rate){return careerMovement.buyoutRemaining(rate);}',['\n    const S=getState();'],true],
- ['handleDemotion','function handleDemotion(o,path,idx){return careerMovement.handleDemotion(o,path,idx);}',['\n    const S=getState();',...Array(5).fill('const S=getState();')],true],
- ['retireBelowActiveMinimum','function retireBelowActiveMinimum(){return careerMovement.retireBelowActiveMinimum();}',['\n    const S=getState();'],true],
+ ['handleDemotion',null,['\n    const S=getState();',...Array(5).fill('const S=getState();')],true],
+ ['retireBelowActiveMinimum',null,['\n    const S=getState();'],true],
  ['daibaFarewell','function daibaFarewell(cont){return careerMovement.daibaFarewell(cont);}',['const S=getState();'],false],
  ['phasePre','function phasePre(){return seasonPhases.phasePre();}',['\n    const S=getState();',...Array(7).fill('const S=getState();'),'\n    markSeasonStart(S); /* INJ-UI-01：tmpInj リセット済みの印（本セッションのみ、S 不変）。 */'],true] // INJ-UI-01 mark stripped like the state reads
 ]){
   let moved=(name==='phasePre'?phasesFunction:movementFunction)(name);
   for(const read of new Set(reads)){const count=reads.filter(x=>x===read).length;assert.equal(moved.split(read).length,count+1,name+' state reads');moved=moved.replaceAll(read,'');}
-  assert.equal(now.split(wrapper).length,2,wrapper);now=now.replace(wrapper,()=>indent?moved.replace(/^  /gm,''):moved);
+  const body=indent?moved.replace(/^  /gm,''):moved;
+  if(wrapper){assert.equal(now.split(wrapper).length,2,wrapper);now=now.replace(wrapper,()=>body);continue;}
+  // OOP plan §2ww: handleDemotion/retireBelowActiveMinimum have no game.js delegate; their bodies go where the
+  // delegates stood (after buyoutRemaining, before the contract-choice comment), in the original order.
+  const movementTail='/* 長期契約/短期契約 選択処理。 */';
+  assert.equal(now.split('function '+name+'(').length,1,'no game.js '+name);assert.equal(now.split(movementTail).length,2,movementTail);
+  now=now.replace(movementTail,()=>body+'\n'+movementTail);
 }
 const demotionSource=movementFunction('handleDemotion')+'\n'+yearFlowReporter(yearFlowSource);
 for(const sourceLevel of ['A3','A2'])for(const [overall,targetLevel,title]of [[54,'NPB1','NPB一軍への移籍'],[50,'NPB2','日本の二軍（支配下）へ移籍']])for(const transfer of [false,true]){

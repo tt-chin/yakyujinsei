@@ -16,7 +16,7 @@ const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').sl
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const hook=`window.__traitTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0}),set:v=>Object.assign(S,v),gold:()=>checkGoldclothSeason(),award:v=>{S={...S,...v};delete S.awardDecisions;awards(v.bucket||'NPB',v.st);},retire:()=>endGame('特性表示の検証'),share:async()=>{const out=document.createElement('div');document.body.appendChild(out);const texts=[],bounds=[],original=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(text);bounds.push({text,x:args[0],y:args[1],width:this.measureText(text).width,height:this.canvas.height/2});return original.call(this,text,...args);};try{await shareImage([],out);return {png:out.querySelector('img').src,texts,bounds};}finally{CanvasRenderingContext2D.prototype.fillText=original;}},pre:()=>{allocUI=()=>{};phasePre();},amateur:()=>{nextStep=()=>{};maybeIntl=next=>next();amateurSeason();}};`;
 const oldHook=`window.__traitTest={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0})};`;
-const reviewHook=`window.__traitTest.rubber=()=>afterGamble('inject',()=>{});`;
+const reviewHook=`window.__traitTest.rubber=()=>playerInjury.afterGamble('inject',()=>{});`;
 const cache=new Map(),errors=[];
 const server=createServer(async(req,res)=>{try{
   const url=new URL(req.url,'http://localhost'),old=url.pathname.startsWith('/baseline/'),rel=decodeURIComponent(url.pathname).replace(/^\/(?:baseline\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('Invalid path');

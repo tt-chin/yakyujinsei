@@ -4,6 +4,9 @@ import {execFileSync} from 'node:child_process';
 import {harness,arg,instrument as stage6Instrument} from './support/stage6-browser.mjs';
 import {withCareerSessionAccess} from './support/career-session-access.mjs';
 import {injectOverlayHook} from './support/overlay-hook.mjs';
+import {hookForSource} from './support/module-calls.mjs';
+// OOP plan §2ww: a --compare baseline keeps the hook verbatim; the current source calls the modules directly.
+const MODULE_CALLS={blankStat:{to:'seasonStats.blankStat',count:1},overseasOffer:{to:'careerMovement.overseasOffer',count:1}};
 
 // Read-only HTTP-response instrumentation. Source files and production assets are unchanged.
 const oldNames=['board','movement','endGame','phasePre','phaseMid','proSeason','advance'];
@@ -36,7 +39,7 @@ function instrument(source,trace){
       step:()=>{if(S.done)return{terminal:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true').sort((a,b)=>(S.ab[a.dataset.abilityKey]||0)-(S.ab[b.dataset.abilityKey]||0));const buttons=[...$('act').querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));const preferred=buttons.find(e=>/確定|NPBドラフト|指名を受けて入団/.test(e.innerText));const el=rows[0]||preferred||buttons.find(e=>e.classList.contains('main'))||buttons[0];if(!el)throw Error('NO_ACTIVE_CHOICE');const before=JSON.stringify(S),rng=s6rng.length,action=el.dataset.abilityKey?'ability:'+el.dataset.abilityKey:el.innerText;el.click();return{action,before,after:JSON.stringify(S),rng:s6rng.length-rng};}
     };`;
   source=withCareerSessionAccess(source);
-  return injectOverlayHook(source,hook);
+  return injectOverlayHook(source,hookForSource(source,hook,MODULE_CALLS));
 }
 const h=await harness('yakyujinsei-stage10'),start=Date.now();
 const compare=arg('compare')&&execFileSync('git',['rev-parse',arg('compare')+'^{commit}'],{encoding:'utf8'}).trim();
