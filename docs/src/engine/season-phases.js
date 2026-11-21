@@ -11,10 +11,11 @@ export class SeasonPhases {
   phaseMid(){return this.#rules.phaseMid();}
 }
 
-function seasonPhaseRules({getState,POS_AB,ABL,LV,clamp,board,card,choose,buyoutRemaining,reportFlowOutcome,declineForSeason,checkGoldclothSeason,stageLabel,addAb,dposReview,allocUI,nextStep,tjCap,ovr,signTo,daibaFarewell,loveEvent,drawEvents,rollInjury,proSeason,amateurSeason,rng:{R,ri,chance}}){
+function seasonPhaseRules({getState,POS_AB,ABL,LV,clamp,board,card,choose,buyoutRemaining,reportFlowOutcome,declineForSeason,checkGoldclothSeason,stageLabel,addAb,dposReview,allocUI,nextStep,tjCap,ovr,signTo,daibaFarewell,loveEvent,drawEvents,rollInjury,markSeasonStart,proSeason,amateurSeason,rng:{R,ri,chance}}){
   function phasePre(){
     const S=getState();
     board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S._majorInjuryThisSeason=false; S.prevD=S.lastD||0; S.lastD=0; /* 先保持上季 d 供投手定位判定。 */
+    markSeasonStart(S); /* INJ-UI-01：tmpInj リセット済みの印（本セッションのみ、S 不変）。 */
     if(S.age>=48){ buyoutRemaining(1); reportFlowOutcome({kind:'PRESEASON_AGE_LIMIT_RETIRED',reason:'体はもう限界。'+S.year+' 年の春季キャンプ後に引退を発表した。'}); return; }
     const declAge=S.age-(S.traits.disc?2:0); /* 自律狂：衰えの開始を2年遅らせる。 */
     if(declAge>=32){ const dec=declineForSeason(S,declAge>=35?5+(declAge-35):2);

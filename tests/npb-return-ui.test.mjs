@@ -56,7 +56,7 @@ for(const [name,wrapper,reads,indent] of [
  ['handleDemotion','function handleDemotion(o,path,idx){return careerMovement.handleDemotion(o,path,idx);}',['\n    const S=getState();',...Array(5).fill('const S=getState();')],true],
  ['retireBelowActiveMinimum','function retireBelowActiveMinimum(){return careerMovement.retireBelowActiveMinimum();}',['\n    const S=getState();'],true],
  ['daibaFarewell','function daibaFarewell(cont){return careerMovement.daibaFarewell(cont);}',['const S=getState();'],false],
- ['phasePre','function phasePre(){return seasonPhases.phasePre();}',['\n    const S=getState();',...Array(7).fill('const S=getState();')],true]
+ ['phasePre','function phasePre(){return seasonPhases.phasePre();}',['\n    const S=getState();',...Array(7).fill('const S=getState();'),'\n    markSeasonStart(S); /* INJ-UI-01：tmpInj リセット済みの印（本セッションのみ、S 不変）。 */'],true] // INJ-UI-01 mark stripped like the state reads
 ]){
   let moved=(name==='phasePre'?phasesFunction:movementFunction)(name);
   for(const read of new Set(reads)){const count=reads.filter(x=>x===read).length;assert.equal(moved.split(read).length,count+1,name+' state reads');moved=moved.replaceAll(read,'');}
@@ -112,7 +112,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
   function demotionRun(source,{state,overall,target,hit,entry},picks){
     const log=[],choices=[],reported=[];
     const S={year:2040,age:25,org:'MiLB',lv:'A3',lastD:0,seasonFactor:1,traits:{},ct:{remainingYears:1},...structuredClone(state)};
-    const context=createContext({S,getState:()=>S,LV:levels,reported,
+    const context=createContext({S,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,reported,
       findDemotionTarget:()=>target,demotionChoiceText:lv=>'降格:'+lv,ageGateJP:()=>1,fmtMoney:String,
       chance:p=>{log.push(['chance',p]);return hit;},
       salaryCandidate:v=>{log.push(['salaryCandidate',v]);return {annualSalary:41_370_000,targetLevel:v.targetLevel};},
@@ -176,7 +176,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
     const log=[],choices=[],reported=[];
     const S={year:2040,age:25,stage:'PRO',org:'NPB',lv:'NPB1',orgTeamId:'T0',lastD:0,currentSalary:50_000_000,marketInjury:null,salaryEvaluationHistory:[],npbYears:0,traits:{},ct:{expired:false},...structuredClone(state)};
     const careerSession={npbReturnOfferContext:null,pendingOffseasonSalary:'pending'};
-    const context=createContext({S,getState:()=>S,LV:levels,careerSession,reported,
+    const context=createContext({S,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,careerSession,reported,
       fmtMoney:String,escapeHTML:String,dpMult:()=>1,isRecentStar:()=>false,kboPreviousPackage:()=>null,currentMarketRating:()=>55,serviceYearsFor:()=>4,
       roundToTenThousandYen:v=>Math.round(v/1e4)*1e4,injurySalaryMultiplier:()=>0.95,salaryFor:(lv,rating)=>10_000_000+rating*100_000,
       contractNeedsRenewal:ct=>!!ct?.expired,crossOfferType:(from,to)=>from+'>'+to,crossOfferTitle:type=>'title:'+type,
@@ -246,7 +246,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
     const log=[],choices=[],reported=[];let draws=0;
     const S={year:2040,age:36,pos:'IF',stage:'PRO',org:'NPB',lv:'NPB1',lastD:2,rehab:0,six:0,tj:0,traits:{},ab:{con:50,pow:50,spd:50,vel:50,ctl:50,sta:50},pot:{},log:[],ct:{remainingYears:1},...structuredClone(state)};
     S.teamName=()=>'球団:'+S.org+':'+S.lv;
-    const context=createContext({S,getState:()=>S,LV:levels,reported,
+    const context=createContext({S,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,reported,
       POS_AB:{IF:['con','pow','spd'],P:['vel','ctl','sta']},ABL:{con:'ミート',pow:'パワー',spd:'走力',vel:'球速',ctl:'制球',sta:'スタミナ'},
       clamp:(v,a,b)=>Math.min(b,Math.max(a,v)),declineForSeason:(_s,base)=>{log.push(['declineForSeason',base]);return base;},
       stageLabel:()=>'stage',tjCap:()=>100,ovr:()=>{log.push(['ovr']);return overall;},
