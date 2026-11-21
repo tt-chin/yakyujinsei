@@ -4948,7 +4948,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - **Full 實行が必要（GitHub 手動・未実行）**：R3（存檔覆寫・刪除、`S` 重置路徑）。版本不變。
 - 交付（2026-11-21）：分支 `refactor/browser-save-guards`（`34d943c`）已 push，[PR #111](https://github.com/tt-chin/yakyujinsei/pull/111)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
 - 未做：合併、Linux CI Full（GitHub 手動）、Preview、實機。
-## 2ww. 第 45 期：測試改為直接呼叫模組，刪除 `game.js` 只供測試使用的 24 個包裝（細部計畫草案，2026-11-21；D1–D4、D10 決定 2026-11-21，草稿完成，T 表**未批准**）
+## 2ww. 第 45 期：測試改為直接呼叫模組，刪除 `game.js` 只供測試使用的 24 個包裝（細部計畫草案，2026-11-21；D1–D4、D10 決定 2026-11-21；T1–T6 批准 2026-11-21，實作完成）
 
 §3.30 盤點結果（使用者決定 2026-11-21）：「改為由測試直接呼叫模組方法」。這 24 個一行包裝在正式執行時沒有呼叫端，只是測試用來找到模組的入口；改由測試直接依賴模組後，從 `game.js` 刪除。另刪除無引用的 `deriveSeedInt`。
 
@@ -4968,7 +4968,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 |---|---|
 | D1 | 雙邊 hook 拆為舊側／新側兩份：**舊側字串逐字不變**，新側改呼叫模組實例（例：`seasonStats.blankStat()`、`careerMovement.outOfOrg(o)`）。harness 同理：舊 SHA 側照舊切片，現行側直接建構模組或使用 `game.js` 作用域的實例（決定 2026-11-21：A）。草稿實測後的實作方式：依原始碼內容判定新舊（§2ww.3 T1） |
 | D2 | `tools/development-b/` 3 檔一起改為呼叫模組（決定 2026-11-21：B）。`legacy-effect-boundaries.mjs:42` 的既存故障見 D4 |
-| D3 | `npb-return-ui.test`（33 處，`:56–57` 以包裝字串整行替換還原舊本體，`:107` 的切片錨點依賴替換結果）單獨 1 個 commit（決定 2026-11-21：是）。草稿實測：只有重建段依賴包裝，須與刪除同一 commit（§2ww.3 T5），**待確認** |
+| D3 | `npb-return-ui.test`（33 處，`:56–57` 以包裝字串整行替換還原舊本體，`:107` 的切片錨點依賴替換結果）單獨 1 個 commit（決定 2026-11-21：是）。草稿實測：只有重建段依賴包裝，須與刪除同一 commit（§2ww.3 T5），批准 2026-11-21 |
 | D4 | `legacy-effect-boundaries.mjs:42` 的既存故障本期一併修正，使其可在現行碼執行並以實際執行驗證（決定 2026-11-21：a） |
 | D5 | 不改的檔案（只引用模組方法、舊 SHA 或字串）：`event-integration.test`、`career-movement-policy`、`career-presenter.test`（只讀 `097e212`）、`event-category-badge.test`、`event-copy.test`、`full-power-pitching.test`、`kbo-renewal-floor.test`、`season-phases.test`、`salary-flow.test`、`ui-redesign-decision-e2e`、`verify-modularization:157` |
 | D6 | 包裝文字斷言的處置：斷言目的為「包裝委派正確」者（`season-stats.test:13` 的 `return seasonStats.NAME(`、`npb-return-ui:56–57`），改為斷言 `game.js` 已無該宣告＋模組方法存在；斷言目的為「函式存在」者（`information-architecture.test:21` `function addStatTotal(t,st)`）改指 `season-stats.js` 的 `addStatTotal(t,st)`。新舊行為比對的斷言內容不變。草稿實測：`season-stats.test` 只保留其餘 3 名稱的委派斷言並斷言 `SeasonStats` 具備 4 個方法，「`game.js` 已無宣告」的斷言只在 `npb-return-ui.test`（2 名稱）；其餘名稱的缺席由 `hookForSource` 的混合檢查與刪除後各測試間接保證 |
@@ -4977,7 +4977,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 | D9 | 分支 `refactor/test-module-api`（自 `origin/dev` `8a4f765`，`--no-track`）。PR #111（第 44 期）的 `game.js` 變更在 `:366–408`，與本期刪除行不重疊；本計畫文件與 PR #111 同在 §2／§3 末尾新增章節，合併時處理文件衝突。實作前以 `git merge-tree` 確認 |
 | D10 | 另立 BACKLOG（決定 2026-11-21：是）：TEST-BASELINE-REBASE-01（將雙邊比較的舊基準換成模組化後、已證明等價的 SHA，使 hook 可合併為一份；逐測試確認選該 SHA 的理由，修正前基準不換，AGENTS §6.2／§6.3）。本期不做 |
 
-### 2ww.3 T 表（草稿實測後修訂，2026-11-21；**未批准**）
+### 2ww.3 T 表（草稿實測後修訂，2026-11-21；批准 2026-11-21）
 
 草稿：scratch worktree，基準 `c48d675`（`refactor/test-module-api` 併 dev `fcef9fe`：PR #110／#111／#112）。修正 1：D1 的新舊判定改為**依原始碼內容**（下表 T1），`--compare`／`--baseline` 指定任何 SHA 皆成立；舊側 hook 字串仍逐字不變（各檔被刪除的行只有套用處，`const hook=` 未改）。修正 2：D3 的 `npb-return-ui` 只有 `:56–57` 的重建段依賴包裝，必須在刪除後才會通過，故與刪除同一 commit。
 
@@ -5000,6 +5000,22 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 未做：E2E 各 hook fixture 的抵達 probe（刪除後裸名稱若被呼叫會 `ReferenceError`，PASS 間接表示改寫後的呼叫可執行，但未逐 fixture 證明被呼叫）——正式實作時以帶標記 probe 逐檔確認；reviewer；CI Full（GitHub 手動）。
 
 正式實作：依 A→B→C→文件 commit；每個 commit 跑 Quick；C 後重跑上列 15 次 E2E 與 E2E 抵達 probe；reviewer（全 diff）。**Full 實行が必要（GitHub 手動・未実行）**。
+
+### 2ww.4 實作結果（2026-11-21；T1–T6 與 D6 集中斷言批准 2026-11-21）
+
+| commit | 內容 | 本機驗證（macOS＋Brave 157，非 CI） |
+|---|---|---|
+| A `309f676` | T1＋T2：`tests/support/module-calls.mjs`、manifest 登記、14 個 E2E 的 hook | Quick 109／109 PASS |
+| B `b5546b1` | T3＋T4：vm／harness 6 檔、`tools/development-b` 3 檔 | 相關 6 測試＋2 工具 PASS；Quick 109／109 PASS |
+| C `1deac7c` | T5：`game.js` 刪除 25 宣告（27 行，CR 358→331，其餘換行不變）、`npb-return-ui` 重建段、`verify-modularization` 集中斷言 25 名稱無宣告（D6） | Quick 109／109 PASS；Full 限定 E2E 15 次直接執行 PASS（`display-preferences-e2e` 以 runner 轉交的 `--baseline=d6cef67`；`contract-salary-e2e` 以 `--compare=d6cef67` 與預設 `37121fb`） |
+| `2e5a6ce` | reviewer high：`npb-return-e2e --rng-only` 的基準 `73d5a58` 以 `let appendContractExtension=` 後再指派，舊判定只認 `function` 宣告而丟 `MODULE_CALL_MIXED_SOURCE`（Full 不帶 `--rng-only`，故未在 Full 出現）。`hookForSource` 改為也認 `let`／`var`／`const` 綁定與 `name=function` 指派 | `--rng-only`：乾淨基準 `c48d675` PASS、修正前 FAIL（baseline game.js 404→逾時）、修正後 PASS；各雙邊 E2E 的基準與現行判定逐一模擬（全部基準逐字、現行改寫）；Quick 109／109 PASS；`hookForSource` 使用的 8 個 E2E（9 次）PASS |
+
+- 負控制（scratch，替換 1 次、還原後 sha 相同）：§2ww.3 的 11 項；集中斷言（加回 `afterGamble` 包裝 → `no game.js declaration: afterGamble`）；`--rng-only`（上表）。
+- E2E 抵達 probe（scratch，將改寫後的呼叫改為不存在的方法 `…__unreached`）：19 處在 E2E 中確認被呼叫（`… is not a function`／`is not defined`），多名稱 hook 以一次一名稱逐一確認。未到達 2 處（既存、與本期無關）：`display-preferences-e2e:58` 只在比較基準為舊殿堂程式時注入（Full 的 `d6cef67` 不注入；預設 `8dd244b` 在 `git show …ability-evaluation-policy.js` 即失敗）；`global-contract-market-e2e --quick` 不呼叫 `demote` fixture（`handleDemotion`）。
+- `tools/development-b/runtime.mjs`：hook 插在 `game.js` 最後一個 `})();` 之前，現行該處是 `act-toggle` 的小 IIFE 而非覆寫層結尾，`#btn-start` 點擊逾時；乾淨基準 `c48d675` 相同（既存）。本期只改寫其中的名稱，未修正插入點。
+- reviewer（`c48d675..` 全 diff）：high 1 項（上表 `2e5a6ce`），其餘檢查項無發現。
+- 結果：`game.js` 409 行／41,813 bytes → 382 行／39,870 bytes。
+- 未做：Linux CI Full（GitHub 手動）、push／PR、Preview、實機。內部變更，依 AGENTS §9.3 不改版本。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
