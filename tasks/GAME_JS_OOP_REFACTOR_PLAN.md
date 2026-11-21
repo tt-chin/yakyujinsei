@@ -4948,7 +4948,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - **Full 實行が必要（GitHub 手動・未実行）**：R3（存檔覆寫・刪除、`S` 重置路徑）。版本不變。
 - 交付（2026-11-21）：分支 `refactor/browser-save-guards`（`34d943c`）已 push，[PR #111](https://github.com/tt-chin/yakyujinsei/pull/111)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
 - 未做：合併、Linux CI Full（GitHub 手動）、Preview、實機。
-## 2ww. 第 45 期：測試改為直接呼叫模組，刪除 `game.js` 只供測試使用的 24 個包裝（細部計畫草案，2026-11-21；D1–D4、D10 決定 2026-11-21；T1–T6 批准 2026-11-21，實作完成）
+## 2ww. 第 45 期：測試改為直接呼叫模組，刪除 `game.js` 只供測試使用的 24 個包裝（細部計畫草案，2026-11-21；D1–D4、D10 決定 2026-11-21；T1–T6 批准 2026-11-21，實作完成，PR #113 併 dev `ee0ae9e`）
 
 §3.30 盤點結果（使用者決定 2026-11-21）：「改為由測試直接呼叫模組方法」。這 24 個一行包裝在正式執行時沒有呼叫端，只是測試用來找到模組的入口；改由測試直接依賴模組後，從 `game.js` 刪除。另刪除無引用的 `deriveSeedInt`。
 
@@ -5015,7 +5015,8 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - `tools/development-b/runtime.mjs`：既存故障（乾淨基準 `c48d675` 相同）——harness 的 `page()` 已按下 `#btn-start`，工具再掛 route、`reload()` 並二次點擊，reload 後按鈕不可見而逾時；hook 插在最後一個 `})();` 之前，現行該處是 `act-toggle` 的小 IIFE 而非覆寫層結尾。使用者同意後修正（`3d6ae1f`）：route 改由 `beforeLoad` 在首次載入前掛上，拿掉 reload 與二次點擊，`extra` 以 `injectOverlayHook` 接在模組最上層。一般模式與 `--retirement-only` 各 36／36 PASS；`seasonStats.blankStat`、`honorScoreFor` 以 `__unreached` probe 確認被呼叫。不在 manifest，Quick 不受影響。
 - reviewer（`c48d675..` 全 diff）：high 1 項（上表 `2e5a6ce`），其餘檢查項無發現。
 - 結果：`game.js` 409 行／41,813 bytes → 382 行／39,870 bytes。
-- 未做：Linux CI Full（GitHub 手動）、push／PR、Preview、實機。內部變更，依 AGENTS §9.3 不改版本。
+- 交付（2026-11-21）：經 PR #113 併 dev（`ee0ae9e`，head `b6e673e`）；dev Quick [Tests #240](https://github.com/tt-chin/yakyujinsei/actions/runs/44893215503) success（Full job 依 workflow skipped）。PR head 沒有手動 Full（workflow_dispatch 最後一次為 11-17 `codex/ui-redesign`）。
+- 未做：Linux CI Full（GitHub 手動，對象 dev `ee0ae9e`）、Preview、實機。內部變更，依 AGENTS §9.3 不改版本。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
