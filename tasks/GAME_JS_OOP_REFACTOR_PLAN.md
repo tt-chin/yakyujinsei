@@ -5056,7 +5056,9 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 | Quick | 109／109 PASS（reviewer 修正前後各一次） |
 
 - reviewer（`ee0ae9e..` 測試 diff）：medium 1（`test-historical-share-theme` 仍釘舊接線）、low 4（背番號判定用 `jersey-flow.js` 太晚、`allowLegacy` 殘留、`--preview` 時 route 不符、manifest／文件舊述），皆已修正；`UI_REDESIGN_PLAN.md:78` 為當時紀錄，不改。
-- 未做：GitHub Full（3 入口皆 Full 專屬）、push／PR。測試變更，依 AGENTS §9.3 不改版本。
+- 交付：push `test/baseline-rebase`、[PR #114](https://github.com/tt-chin/yakyujinsei/pull/114) → dev。GitHub Full（本次經使用者明示由 agent dispatch）：[Tests #241](https://github.com/tt-chin/yakyujinsei/actions/runs/44898360716)（dev `ee0ae9e`）與 [Tests #242](https://github.com/tt-chin/yakyujinsei/actions/runs/44898386669)（`0e43735`）皆 140 入口 139 PASS／1 FAIL，FAIL 同為 `hof-retirement-policy-e2e`（`$.rngState: 735174988 -> 1998846328`）；本期 3 入口 CI PASS。
+- `hof-retirement-policy-e2e` 的 FAIL 為既存測試 bug（與第 45 期、本項無關）：`old` mode 以 `25b815e` 的 `game.js` 搭配現行模組，INJ-UI-01（`564621c`，PR #110）起 `player-injury.js` 需 `injuryRisk`／`recordInjuryCheck`、`season-phases.js` 需 `markSeasonStart`，舊 `game.js` 不傳。本機二分：`8a4f765` PASS、`dbfbac3` 起 FAIL（CI 同值）。使用者批准後修正：`old` mode 的這兩個模組也由基準供檔（同第 40 期 `movement-gate.js`），本機 4／4 PASS。
+- 未做：修正後的 GitHub Full。測試變更，依 AGENTS §9.3 不改版本。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
