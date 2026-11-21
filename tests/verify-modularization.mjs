@@ -163,24 +163,18 @@ for(const line of [
   for(const gone of ["getElementById('btn-restart')",'(0).toString(36)',"$('seed-show').value=SEED;",'人生のこの部分を放棄して'])assert.ok(!text.includes(gone),'dead binding removed: '+gone);
 }
 {// Phase 40 (L): the LEGACY overlay is gone. board, movement and endGame are single module-level function declarations
-  // above the overlay marker (stage10-risk-e2e rebinds them there); board patches the name and salary itself and endGame
-  // keeps the text-node replacement after the retirement scene.
+  // above the overlay marker (stage10-risk-e2e rebinds them there); board patches the name and salary itself.
   const text=sourceText(game),marker=text.indexOf('\n/* ================= 日本版仕様オーバーレイ 1.0.4 ================= */\n');
   assert.ok(marker>0,'overlay marker');
   const boardDecl=`
 function board(phase){ gameView.renderBoard(boardModel(phase));gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()}); }
 `;
   // UI phase 5 adds only the read-only review after the original retirement completes.
-  // Keep the complete original call, text-node-only translation and single declaration strict.
+  // ENDGAME-LOCALE-REWRITE-01: the Taiwan-build text replacement (台幣/中華隊/臺灣) is gone, so player names survive the end screen.
   const endGameDecl=`
-function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();setTimeout(()=>{
-  /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
-  document.querySelectorAll('.card').forEach(c=>{
-    const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
-    for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeValue=n.nodeValue.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');
-  });
-},0);}
+function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();}
 `;
+  for(const gone of ['createTreeWalker','臺灣','中華隊','台幣'])assert.ok(!text.includes(gone),'endGame text replacement removed: '+gone);
   for(const decl of [boardDecl,endGameDecl]){assert.equal(text.split(decl).length,2,'merged declaration once: '+decl.slice(1,30));assert.ok(text.indexOf(decl)<marker,'above the overlay marker: '+decl.slice(1,30));}
   for(const name of ['\nfunction board(','\nfunction movement(','\nfunction endGame('])assert.equal(text.split(name).length,2,'one declaration: '+name.trim());
   assert.ok(text.indexOf('\nfunction movement(')<marker,'movement above the overlay marker');
