@@ -10,7 +10,7 @@ import {CareerRetirement} from '../docs/src/engine/career-retirement.js';
 import {leagueTables} from '../docs/src/engine/league-catalog.js';
 globalThis.window??={TEAM_MASTER:{}}; // CareerRetirement.capTeam reads window here, outside the vm context.
 export const GAME_SOURCE=readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
-const SeasonStats=GAME_SOURCE.includes('seasonStats.blankStat(')?(await import('../docs/src/engine/season-stats.js')).SeasonStats:null;
+const SeasonStats=GAME_SOURCE.includes('const seasonStats=new SeasonStats(')?(await import('../docs/src/engine/season-stats.js')).SeasonStats:null;
 export const leagues=['CPBL','KBO','NPB','MLB'];
 export const firstLevels={CPBL:'CPBL1',KBO:'KBO1',NPB:'NPB1',MLB:'MLB'};
 export const labels={CPBL:'台湾プロ野球',KBO:'KBO',NPB:'NPB',MLB:'メジャーリーグ'};
@@ -23,7 +23,17 @@ function literal(name){return GAME_SOURCE.match(new RegExp('const '+name+'=(\\{[
 export function createProductionHarness(state,seed='hof-fixed',retirementSource=GAME_SOURCE){
  const cards=[],context=vm.createContext({S:structuredClone(state),TextEncoder,Rng,CareerRetirement,TEAM_COLOR:{},POSN:{},evaluateLeagueHof,honorScoreFor,careerScoreFor,defenseShareFor,hallOfFameTier,hasHistoricalDefenseAward,window:{TEAM_MASTER:{}},card:(...args)=>cards.push(args)});
  const tables=leagueTables(),declarations='const TIER_TH='+JSON.stringify(tables.tierThresholds)+';\nconst LG_N='+JSON.stringify(tables.leagueNames)+';\n'+literal('DPN')+'\nconst LV='+JSON.stringify(tables.levels)+';';
- const functions=['careerScore','capTeam','defShare','posLegendPhrase','honorScore','tierOf','retireScene','blankStat','addStatTotal','accStat','fnv1a32'].map(name=>productionFunction(name,name==='retireScene'?retirementSource:GAME_SOURCE)).join('\n');
+ // OOP plan §2ww: careerScore/capTeam/posLegendPhrase/honorScore/retireScene/blankStat/addStatTotal have no game.js caller.
+ // The current side calls the modules directly through test-local names; a baseline retirementSource keeps its own retireScene.
+ const retirement=GAME_SOURCE.match(/^const careerRetirement=new CareerRetirement\(.*$/m)[0];
+ let functions=['defShare','tierOf','accStat','fnv1a32'].map(name=>productionFunction(name)).join('\n');
+ if(!functions.includes(retirement))functions+='\n'+retirement;
+ functions+='\nfunction careerScore(st){return careerScoreFor(st,S.pos);}'
+  +'\nfunction capTeam(bucket){return careerRetirement.capTeam(bucket);}'
+  +'\nfunction posLegendPhrase(bucket){return careerRetirement.posLegendPhrase(bucket);}'
+  +'\nfunction honorScore(bucket){return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S});}'
+  +'\n'+(retirementSource===GAME_SOURCE?'function retireScene(tiers){careerRetirement.retireScene(tiers);}':productionFunction('retireScene',retirementSource))
+  +'\nfunction blankStat(){return seasonStats.blankStat();}\nfunction addStatTotal(t,st){return seasonStats.addStatTotal(t,st);}';
  const rng=`let _s=0,seedInit,R;const careerRng=new Rng(()=>S,fnv1a32);${GAME_SOURCE.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}\n${GAME_SOURCE.match(/R = function\(\)\{[^\n]+/)[0]}\nlet calls=0;const nativeR=R;R=()=>{calls++;return nativeR();};const ri=(a,b)=>a+Math.floor(R()*(b-a+1));`;
  const seasonStats=SeasonStats?'\nconst seasonStats=new SeasonStats({getState:()=>S,levels:LV,rng:{R:()=>R(),N0:sd=>N0(sd),chance:p=>chance(p),ri:(a,b)=>ri(a,b)},clamp:(v,a,b)=>clamp(v,a,b),isSP:()=>isSP(),pitcherRole:()=>pitcherRole(),checkGoldclothSeason:()=>checkGoldclothSeason()});':'';if(SeasonStats)context.SeasonStats=SeasonStats;
  vm.runInContext(declarations+'\n'+functions+'\n'+rng+seasonStats,context);context.seed=seed;vm.runInContext('seedInit(seed)',context);

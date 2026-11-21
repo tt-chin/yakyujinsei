@@ -9,6 +9,13 @@ import {isBelowActiveMinimum,findDemotionTarget,demotionChoiceText} from '../../
 import {createContract,contractNeedsRenewal} from '../../docs/src/engine/contract-policy.js';
 import {Rng} from '../../docs/src/engine/rng.js';
 import {leagueTables} from '../../docs/src/engine/league-catalog.js';
+import {readFileSync} from 'node:fs';
+import {CareerTraits} from '../../docs/src/engine/career-traits.js';
+import {MovementGate} from '../../docs/src/engine/movement-gate.js';
+// OOP plan §2ww: the current game.js has no movement/handleDemotion bodies (or LEGACY overlay line); the current side
+// runs the career-movement.js rule bodies as free functions through the real MovementGate, with the same stubs.
+const movementSource=readFileSync(new URL('../../docs/src/engine/career-movement.js',import.meta.url),'utf8');
+const moduleFunction=name=>productionFunction(name,movementSource).split('\n  return {')[0];
 let pass=0;
 for(const title of ['最優秀投手賞','首位打者','本塁打王','ゴールデングラブ賞','年間MVP','年度MVP','新人王','守備王','出塁王','最多勝',
  '年度最佳投手','救援王','中繼王','三振王','盜壘王','打點王','ホールド王','盗み王','賽揚獎']){
@@ -30,16 +37,21 @@ function movement(src,honor,good){
   traitPresentation:new WeakMap(),displayTrait:k=>k,card:(...a)=>cards.push(a),board:()=>{},choose:(title,opts)=>choices.push({title,options:opts.map(x=>({t:x.t,s:x.s}))}),
   ovr:()=>52,migrateSalaryV130State:()=>{},accrueForeignFirstTeamSeason:()=>{},contractStageFor:()=> 'CONTROL',crossOffers:()=>{},
   markClubInitiatedRenewal:()=>{},applyPromotionSalary:()=>{},retireBelowActiveMinimum:()=>assert.fail('invalid below-active fixture'),
-  advance:()=>{},outOfOrg:()=>assert.fail('unexpected release'),teamNick:x=>x,observe:x=>observed.push(x),recordR:x=>rng.push(x)});
+  advance:()=>{},outOfOrg:()=>assert.fail('unexpected release'),teamNick:x=>x,observe:x=>observed.push(x),recordR:x=>rng.push(x),
+  getState:()=>s,reportFlowOutcome:()=>{},restorePendingChoice:()=>false,CareerTraits,MovementGate});
  const overlay=src.includes('Object.assign(LV,'),levels=overlay?src.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]:JSON.stringify(leagueTables().levels),paths=overlay?src.match(/Object.assign\(PATHS,(\{[^\n]+\})\);/)[1]:JSON.stringify(leagueTables().paths);
+ const current=src===source,observeAt=current?'    if(wonAward||goodReal)':'  if(wonAward||goodReal)';
  const functions=['movement','handleDemotion','traitCard','removeTrait','fnv1a32'].map(n=>{
-  const f=productionFunction(n,src);return n==='movement'?f.replace('  if(wonAward||goodReal)',"  observe({wonAward,goodReal});\n  if(wonAward||goodReal)"):f;
+  const f=current&&(n==='movement'||n==='handleDemotion')?moduleFunction(n):productionFunction(n,src);
+  if(n!=='movement')return f;assert.equal(f.split(observeAt).length,2,'movement observe point once');return f.replace(observeAt,"  observe({wonAward,goodReal});\n"+observeAt);
  }).join('\n');
+ const entry=current?src.match(/^const careerTraits=new CareerTraits\(.*$/m)[0]+'\nconst movementGate=new MovementGate({getState:()=>S,careerMovement:{movement:()=>movement()},amateurCareer:{seasonEndMovement:()=>false},migrateSalaryV130State:()=>migrateSalaryV130State(),accrueForeignFirstTeamSeason:state=>accrueForeignFirstTeamSeason(state),contractStageFor:org=>contractStageFor(org),restorePendingChoice:()=>restorePendingChoice()});seedInit(S.seed);movementGate.movement();'
+  :'const LEGACY={movement};'+src.match(/^  movement = function\(\)\{[^\n]+/m)[0]+';seedInit(S.seed);movement();';
  vm.runInContext(`const LV=${levels},PATHS=${paths};const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));let _s=0,seedInit,R;const careerRng=new Rng(()=>S,fnv1a32);
  ${src.match(/seedInit = function\(seed\)\{[^\n]+/)[0]}
  ${src.match(/R = function\(\)\{[^\n]+/)[0]}
  const nativeR=R;R=()=>{const v=nativeR();recordR(v);return v;};const chance=p=>R()*100<p;
- ${functions};const LEGACY={movement};${src.match(/^  movement = function\(\)\{[^\n]+/m)[0]};seedInit(S.seed);movement();`,c);
+ ${functions};${entry}`,c);
  return JSON.parse(JSON.stringify({state:s,cards,choices,observed,rng}));
 }
 for(const prefix of ['','NPB','KBO','台湾プロ野球','メジャーリーグ','CPBL','MLB','中職','日職','韓職','美職'])for(const title of ['年間MVP','年度MVP','新人王','最優秀投手賞','首位打者','本塁打王','ゴールデングラブ賞','オールスターゲーム','守備王','出塁王','最多勝','沢村賞','最多奪三振','年間最優秀守備選手',

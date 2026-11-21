@@ -15,10 +15,10 @@ window.__devB={
   const level=league==='MLB'?'MLB':league+'1';
   // Valid existing first-team professional fixture. Starting from CORP instead
   // would correctly route an American newcomer to MiLB, not MLB.
-  S.stage='PRO';S.org=league;S.lv=level;S.stats[league]??=blankStat();
+  S.stage='PRO';S.org=league;S.lv=level;S.stats[league]??=seasonStats.blankStat();
   signTo(league,level,listByOrg(league)[0].teamId,2,1,'NEW_CONTRACT',{startYear:S.year,annualSalary:10000000,signingBonus:0,
     signingTerms:{signingBonus:0,developmentStipend:0},incentive:createIncentiveTerms({org:league,annualSalary:10000000})});
-  S.stats[league]??=blankStat();S.stats[league].yr=2;S.pool=7;S.traits.glass=true;S.traits.phoenix=false;S.traits.yips=true;
+  S.stats[league]??=seasonStats.blankStat();S.stats[league].yr=2;S.pool=7;S.traits.glass=true;S.traits.phoenix=false;S.traits.yips=true;
   if(legacy)S.honors=['2031 NPB最優秀投手賞','2031 未確認の歴史賞'];
   bStat={d:15,G:60,W:20,L:0,IP:200,SO:300,era:1,SV:40,HLD:35,ER:22,H:100,BB:20};
   S.lastD=bStat.d;S.lastSt={...bStat};S.log.push({y:S.year,age:S.age,tm:S.team,st:{...bStat}});bBeforeContract=JSON.parse(JSON.stringify(S.ct));
@@ -28,7 +28,7 @@ window.__devB={
  get:()=>({state:JSON.parse(JSON.stringify(S)),rng:JSON.parse(JSON.stringify(s6rng)),beforeContract:bBeforeContract,
    transaction:__bTx.inspectAwardTransaction(annualAwardTransaction(S,{league:bLeague,level:S.lv,role:S.role,metrics:bStat})),
    identities:(S.awardDecisions||[]).map(d=>__bId.identifyAwardDecision(d,S)),
-   fallback:salaryAwardBonus(S.honors,S.year,S),hof:honorScore(bLeague),protection:hasCurrentAwardEffect(S,'demotion',bLeague)}),
+   fallback:salaryAwardBonus(S.honors,S.year,S),hof:honorScoreFor({bucket:bLeague,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),protection:hasCurrentAwardEffect(S,'demotion',bLeague)}),
  evaluate:()=>recordSalaryEvaluation(bStat),
  retire:()=>endGame('開発B・表示検証用の引退（受控fixture）'),
  pay:()=>{captureSeasonChampionship(S);const original=movement;movement=()=>{};try{phaseEnd();}finally{movement=original;}},

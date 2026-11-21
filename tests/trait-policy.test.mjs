@@ -99,10 +99,11 @@ beginEvent(s,card);applyEvent(s,card,'safe',options);assert.equal(odds[1],65);
 // Run the actual awards binding against the pre-change source: original chance calls must remain in place.
 const current=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const rubberCards=[],rubberState={tjSuccess:1,traits:{},ab:{}};
-// Phase 16: the afterGamble->pitcherRole slice now carries the afterGamble/tjGamble wrappers and the PlayerInjury construction line.
+// Phase 16 moved the gamble into PlayerInjury; OOP plan §2ww: game.js has no afterGamble delegate, so run the construction line and call the module.
 const rubberContext=vm.createContext({S:rubberState,card:(...args)=>rubberCards.push(args),board:()=>{},removeTrait:()=>{},checkConfidante:()=>{},PlayerInjury,clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),POS_AB:{},ABL:{}});
-vm.runInContext(current.slice(current.indexOf('function afterGamble('),current.indexOf('function pitcherRole(')),rubberContext);
-vm.runInContext("afterGamble('inject',()=>{})",rubberContext);
+const injuryConstruction=current.match(/^const playerInjury=new PlayerInjury\(.*$/gm);assert.equal(injuryConstruction?.length,1,'playerInjury construction once');
+vm.runInContext(injuryConstruction[0],rubberContext);
+vm.runInContext("playerInjury.afterGamble('inject',()=>{})",rubberContext);
 assert.equal(rubberState.traits.rubber,true);assert.match(rubberCards[0][2],/上限が50から100に、注射成功率が55%から85%に上昇/);assert.doesNotMatch(rubberCards[0][2],/2倍/);
 const injurySource=fs.readFileSync(new URL('../docs/src/engine/player-injury.js',import.meta.url),'utf8');assert.match(injurySource,/const succP=S\.traits\.rubber\?85:55/);
 // Phase 39 (§2rr): the TJ cap body moved from game.js tjCap into PlayerInjury.tjGaugeLimit.

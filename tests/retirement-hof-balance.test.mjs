@@ -33,8 +33,12 @@ assert.match(LEAGUE_CATALOG_SOURCE,/NPB2:[^\n]+statBucket:'NPB'/);assert.match(L
 // OOP §2j phase 8: 52e4cdb careerScore/defShare/tierOf vs current wrappers + hall-of-fame-tier-policy, with final TIER_TH/LG_N and a stub honorScore.
 const tierBaseline=execFileSync('git',['show','52e4cdb36d6b770a2c73ca89e947c94bcc616562:docs/src/engine/game.js'],{encoding:'utf8'});
 const tables=createProductionHarness({pos:'IF',traits:{},honors:[],stats:{}}),finalTH=tables.snapshot().thresholds,finalLG=JSON.parse(tables.run('JSON.stringify(LG_N)'));
+// OOP plan §2ww: the current side has no game.js careerScore delegate; it uses careerScoreFor(st,S.pos) directly.
+const baselineTier=['careerScore','defShare','tierOf'].map(name=>productionFunction(name,tierBaseline)).join('\n');
+// defShare by its own line: after §2ww the productionFunction slice would run on into the CareerRetirement construction.
+const currentTier='function careerScore(st){return careerScoreFor(st,S.pos);}\n'+GAME_SOURCE.match(/^function defShare\(bucket\)\{[^\r\n]*/m)[0]+'\n'+productionFunction('tierOf',tierBaseline);
 const tierCell=(source,state,bucket,honor)=>{const c=vm.createContext({S:structuredClone(state),TIER_TH:finalTH,LG_N:finalLG,careerScoreFor,defenseShareFor,hallOfFameTier,bucket,log:[],honorScore:b=>{c.log.push('honor:'+b);return honor;}});
- vm.runInContext(['careerScore','defShare','tierOf'].map(name=>productionFunction(name,source)).join('\n')+'\nconst scoreOf=careerScore;careerScore=st=>{log.push("career");return scoreOf(st);};',c);
+ vm.runInContext(source+'\nconst scoreOf=careerScore;careerScore=st=>{log.push("career");return scoreOf(st);};',c);
  return vm.runInContext('const before=JSON.stringify(S),tier=tierOf(bucket),calls=log.slice(),share=defShare(bucket);JSON.stringify({tier,calls,share,base:S.stats[bucket]?scoreOf(S.stats[bucket]):null,unchanged:before===JSON.stringify(S)})',c);};
 let tierCells=0;const tiersSeen=new Set();
 for(const bucket of Object.keys(finalTH))for(const pos of ['P','IF']){const th=finalTH[bucket],cells=[];
@@ -42,7 +46,7 @@ for(const bucket of Object.keys(finalTH))for(const pos of ['P','IF']){const th=f
  for(const flags of [{},{mvp:1},{aceN:1},{king:1},{mvp:1,king:1},{king:2}])for(const H of [0,th[0]])cells.push([{...blank(),H,W:Math.floor(H/13)},{sc:0,mvp:0,aceN:0,king:0,...flags}]);
  for(const DEF of [-5,undefined,0,7])cells.push([{...blank(),H:120,HR:10,SB:5,RBI:40,BB:20,W:9,SV:3,SO:80,IP:150.1,DEF},{sc:30}]);
  cells.push([undefined,{sc:0}]);
- for(const [st,honor] of cells){const state={pos,stats:st?{[bucket]:st}:{}},A=tierCell(tierBaseline,state,bucket,honor),B=tierCell(GAME_SOURCE.replace(/function tierOf\(bucket\)\{[^\n]+/,productionFunction('tierOf',tierBaseline)),state,bucket,honor),a=JSON.parse(A);
+ for(const [st,honor] of cells){const state={pos,stats:st?{[bucket]:st}:{}},A=tierCell(baselineTier,state,bucket,honor),B=tierCell(currentTier,state,bucket,honor),a=JSON.parse(A);
   assert.equal(B,A,`hall-of-fame tier equivalence ${bucket} ${pos} ${JSON.stringify(st)} ${JSON.stringify(honor)}`);assert.ok(a.unchanged);assert.deepEqual(a.calls,st?['honor:'+bucket,'career']:[]);if(a.tier)tiersSeen.add(a.tier.i);tierCells++;}
 }
 assert.ok(Object.keys(finalTH).length>=4);assert.equal(tierCells,Object.keys(finalTH).length*2*37,'tier equivalence cell count');assert.deepEqual([...tiersSeen].sort(),[0,1,2,3,4]);assertions+=tierCells;
