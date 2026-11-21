@@ -37,7 +37,9 @@ async function run(input){
  const begin=Date.now(),p=await browser.newPage(),errors=[],resources=[];p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))resources.push(r.status()+' '+r.url());});
  let failure=null,steps=0;
  try{
-  await p.goto(base+'/?seed='+input.seed);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+input.pos+'"]').click();await p.locator('#btn-start').click();
+  await p.goto(base+'/?seed='+input.seed);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator('#seg-pos [data-v="'+input.pos+'"]').click();
+  // Identical explicit input preserves full-state/RNG replay; blank product names intentionally vary.
+  await p.locator('#in-name').fill({P:'投山翔太',C:'強肩剛',IF:'守田巧',OF:'走川隼人'}[input.pos]);await p.locator('#btn-start').click();
   let waiting=0;
   for(;steps<2500;steps++){
    const status=await p.evaluate(strategy=>{let value;for(let i=0;i<8;i++){value=window.__hofAudit.action(strategy);if(value!=='action')break;}return value;},input.strategy);
