@@ -93,4 +93,5 @@
 - 負控制 10／10 擋下：N1 鉄人上限套到含 `tmpInj` 的值、N2 拿掉夾限、N3 記錄改到抽選後（單元）；N4 診斷後顯示即時值、N5 重繪不保留展開、N6 年初不重置 `tmpInj`（E2E）；N7 `phasePre` 未標記（以關閉逐字比對的變體證明行為斷言）；N8 拿掉 `dom-snapshot` 投影（`game-view-dom-e2e` 第 0 步 `condition.length: 8 -> 7`，到達證明）；N9 年初 `rehab` 判斷、N10 同年記錄刪除（單元）。
 - 最終（含 reviewer 修正）：Quick **109／109 PASS**；`game-view-dom-e2e` 8 段生涯 vs `4f39a73` PASS（S／RNG 一致）；修正前另跑 `design-tokens-09-e2e` PASS；草稿階段使用者授權單獨執行的 Full 專用入口 7 個 PASS（其後只改 CSS／`ability-view` 註記位置／測試，`design-tokens-09-e2e` 已重跑）。
 - **Full 實行が必要（GitHub 手動・未実行）**：R3（故障判定路徑經新函式）。未在本機執行的 Full 專用入口見 §5。
-- 未做：版本（D4，與 INT-01 D6 一起決定）、commit／push／PR、Preview、實機。
+- 交付（2026-11-21）：`564621c`（實作＋測試）、`f5e818e`（文件）已 push，[PR #110](https://github.com/tt-chin/yakyujinsei/pull/110)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
+- 未做：版本（D4，與 INT-01 D6 一起決定）、合併、Full（GitHub 手動）、Preview、實機。
