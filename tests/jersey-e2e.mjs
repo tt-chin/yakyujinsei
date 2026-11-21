@@ -3,7 +3,7 @@
 // movement functions (contract-salary-e2e pattern). /baseline/ serves 5910421 (2.0.0, dev before PLY-01; plan §12 M2) and /legacy/ serves 75ab10b (1.16.13, production main)
 // for the second D4 legacy save.
 import assert from 'node:assert/strict';import {execFileSync} from 'node:child_process';import {createServer} from 'node:http';import {readFile,mkdir,writeFile} from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import {createRequire} from 'node:module';
-import {assertSameCareer} from './support/first-difference.mjs';import {withCareerSessionAccess} from './support/career-session-access.mjs';import {injectOverlayHook} from './support/overlay-hook.mjs';import {openBoardAction} from './support/board-menu.mjs';
+import {assertSameCareer} from './support/first-difference.mjs';import {withCareerSessionAccess} from './support/career-session-access.mjs';import {injectOverlayHook} from './support/overlay-hook.mjs';import {hookForSource} from './support/module-calls.mjs';import {openBoardAction} from './support/board-menu.mjs';
 const root=process.cwd(),arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
 const baseline='59104210efa7704b4749f3da765544ea2e9b705b',legacyBaseline='75ab10b7d442db7aeccde0d649a852f224eed481';
 const out=arg('output')||path.join(os.tmpdir(),'yakyujinsei-jersey-e2e-'+Date.now());await mkdir(out,{recursive:true});
@@ -38,7 +38,8 @@ window.__jersey={
 };
 window.__jerseyPlay=${jerseyPlay.toString()};
 `;
-const instrument=source=>injectOverlayHook(withCareerSessionAccess(source),hook);
+// OOP plan §2ww: the baselines keep the hook verbatim; the current source calls CareerMovement directly.
+const instrument=source=>injectOverlayHook(withCareerSessionAccess(source),hookForSource(source,hook,{handleDemotion:{to:'careerMovement.handleDemotion',count:1},outOfOrg:{to:'careerMovement.outOfOrg',count:1}}));
 const cache=new Map();
 const server=createServer(async(req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://local').pathname),prefix=pathname.match(/^\/(baseline|legacy)\//)?.[1],ref=prefix==='legacy'?legacyBaseline:prefix?baseline:null,rel=pathname.replace(/^\/(?:baseline\/|legacy\/)?/,'')||'index.html';if(rel.includes('..'))throw Error('path');let body;if(ref){const key=ref+':'+rel;if(!cache.has(key))cache.set(key,execFileSync('git',['show',key.replace(':',':docs/')],{cwd:root,maxBuffer:30e6}));body=cache.get(key);}else body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=instrument(body.toString());res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':rel.endsWith('.json')?'application/json':'text/html');res.end(body);}catch{res.statusCode=404;res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
