@@ -4896,6 +4896,41 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 合併（2026-11-21）：PR #108 併 dev（merge `b7fea0a`）；dev push Quick [Run 44771919244](https://github.com/tt-chin/yakyujinsei/actions/runs/44771919244)（Tests #236）成功（`tests` job success，Full 各 job skipped）。
 - 未做：Linux CI Full（GitHub 手動）、Preview、實機。
 
+## 2vv. 第 44 期：開局／存檔畫面的狀態檢查移入 `BrowserSaveController`（細部計畫，2026-11-21；G1–G10 批准 2026-11-21）
+
+§3.29 的 S（使用者決定 2026-11-21：D 不做）。物件導向的收益：存檔狀態機的不變條件（有可用存檔、確認期間狀態未被替換、revision 未變）只由 `BrowserSaveController` 負責；`game.js` 不再讀 `browserSave.state` 做判斷，只把對話框與按鈕接到 controller。不新增 class 或模組。
+
+### 2vv.1 現況（基準 `origin/dev` `8a4f765`）
+
+- `browser-save-controller.js`（59 行）只在兩處把 `this.state` 換成新物件：`initialize` 成功（`:8`）、`replaceCareer` 失敗（`:29`）；其餘轉移（`initialize` 失敗→`unavailable`、`#beginCareer`、`capture`、`restore`、`remove`）皆原地修改。故 `game.js` 的身分比對（`browserSave.state!==state`）與 revision／phase 檢查抓的是不同變化，兩者都須保留；把身分比對原樣移入 controller 即語意不變，無須以 revision＋phase＋slot 取代。
+- `game.js` 對 `browserSave.state` 的判斷：`:370`（覆寫分支）、`:371`（記 revision）、`:378–381`（不存檔分支、身分＋`'unavailable'` 比對）、`:395`（`fresh`）、`:397–401`（刪除前後檢查）、`:405`（`onRetry` 依 phase 選 `initialize`／`restore`）。`:410` `show(browserSave.state)` 為 UI 描繪，非判斷。
+- 現有單元測試呼叫 `remove({confirmed:true})` 8 次、`replaceCareer` 4 次、`newCareer({allowUnsaved:true})` 1 次；本期不改這些 API。
+
+### 2vv.2 設計（G1–G10 批准 2026-11-21）
+
+| # | 決定 |
+|---|---|
+| G1 | `BrowserSaveController` 只新增方法，現有 API（`newCareer`／`replaceCareer`／`remove`／`restore`／`initialize`／`capture`／`settled`）不變 |
+| G2 | `hasReadySlot()`：`return this.state.phase==='ready'&&!!this.state.slot;` 取代 `:370`、`:395`、`:397` |
+| G3 | `async replaceAfterConfirm(confirm,start)`：同步記下 `this.state.revision`，`await confirm()` 為假則回傳 `false`，否則 `return this.replaceCareer({confirmed:true,expectedRevision,start})`；取代 `:371–374` |
+| G4 | `async removeAfterConfirm(confirm)`：`hasReadySlot()` 為假回傳 `false`；同步記下 `state`＝`this.state` 與其 revision；`await confirm()` 為假回傳 `false`；`this.state!==state||state.phase!=='ready'||state.revision!==revision` 回傳 `false`；否則 `return this.remove({confirmed:true})`；取代 `:398–402` |
+| G5 | `startUnsavedAfterConfirm(confirm)`：同步記下 `state`，同步呼叫 `confirm()`，以 `.then` 回傳 `!!ok&&this.state===state&&state.phase==='unavailable'&&this.newCareer({allowUnsaved:true})`；`game.js` 在結果為真時呼叫 `startJapanese()`；取代 `:379–381` |
+| G6 | `retry()`：phase 為 `delete-error`／`replace-error` 時 `return this.initialize()`，否則 `return this.restore()`；取代 `:405` 的 `onRetry` 判斷 |
+| G7 | `confirm` 以 callback 傳入；對話框文字與 `confirmAction` 留在 `game.js`，controller 不碰 UI |
+| G8 | 留在 `game.js`：`S` 檢查、`startJapanese` 失敗時 `S=null`、`lock` 的 `careerSession` 寫入、`startPromptPending`／`newPromptPending`（各自包住新方法；為保持旗標設定時機，`deleteSave` 先同步檢查 `hasReadySlot()` 再設旗標）、`let browserSave`、`export initializeBrowserSave`、其他按鈕綁定 |
+| G9 | 分支 `refactor/browser-save-guards`（自 `origin/dev` `8a4f765`，`--no-track`） |
+| G10 | `isUnavailable()`：`return this.state.phase==='unavailable';` 取代 `:378` 的分支判斷 `browserSave?.state.phase==='unavailable'`（選項 (a) 維持該行、(b) 新增查詢；使用者選 (b)） |
+
+- 時序風險：多一層 `await`／`.then` 使 pending 旗標的釋放與 G5 的 `startJapanese()` 晚 1～2 個 microtask；RNG 與 `S` 理論上不受影響，以 E2E 與完整 S／RNG 比較確認。
+- 分類 R3（存檔覆寫・刪除、`S` 重置路徑），允許差分無；版本不變（AGENTS §9.3，行為不變的內部重構）；**Full 實行が必要（GitHub 手動）**。
+
+### 2vv.3 驗證計畫（T 表於草稿實測後提出）
+
+- 單元（`browser-save-controller.test` 追加）：G2 四種 phase／slot 組合、G10 各 phase；G3～G5 確認拒絕、確認期間 `this.state` 被替換、revision 改變、phase 改變、`confirm` 拋出；G6 兩分支；`game.js` 接線以 spy 確認各方法被呼叫。
+- E2E：`browser-save-runtime-e2e`（Quick）、Quick 全套；`jersey-e2e`（Full 限定，單獨執行須使用者授權）。
+- 負控制（scratch，替換斷言 1 次、還原後 sha 相同）：分別拿掉 G4 的身分比對、G4 的 revision 檢查、G5 的身分比對、G5 的 `'unavailable'` 檢查、G3 的 revision 記錄（改為確認後才讀）、G6 分支對調，各須被指定斷言攔下。
+- 預期不受影響（草稿確認）：`verify-modularization:66,162`、`display-preferences.test:30`、`ui-redesign-*` hook。
+
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
 ### 3.1 第 1b 期：RNG 觀測 hook
@@ -5502,6 +5537,17 @@ L1 草稿實測（2026-11-01，scratchpad worktree，基準 `fbb2129`；本機 m
 - 2.0.0 的 `ui-redesign-*` E2E 以 `/baseline/` 從固定 SHA 提供整個 `docs/` 樹（不混用新模組），比較的是行為；`jersey-e2e` 的 `/baseline/`（`5910421`）、`/legacy/`（`75ab10b`）同為整樹。改注入名稱時仍須逐一檢查各基準的 import（同第 40 期 `hof-retirement-policy-e2e`）。
 - 建議：第 43 期做 J（PLY-01 發布 main 後），B 待凍結檔案的處理決定後再議，D 併入相鄰期，S 列為後續候補。
 - 使用者決定（2026-11-20）：第 43 期做 J＋B，不等 PLY-01 發布 main；B 以保留 `game.js` 包裝與建構行的方式避開凍結檔案。計畫文件與重構同一分支提交。細部設計見 §2uu。
+
+### 3.29 第 44 期候補再盤點：S 開局／存檔 UI、D 國際賽包裝（2026-11-21，基準 `origin/dev` `8a4f765`（含第 43 期 `b7fea0a`、INT-01 PR #109），`game.js` 411 行／42,134 bytes；grep 與讀碼，未做 AST、未做草稿）
+
+- S：`:366` `startPromptPending`、`:368–384` `btn-start` onclick（有存檔時覆寫、無法存檔時不存檔開始）、`:391–411` `initializeBrowserSave` 本體（`home`／`fresh`／`deleteSave`、`createBrowserSaveUI`、`new BrowserSaveController`）；約 3.0 KB，無直接 RNG。寫入：`S=null`（`startJapanese` 失敗時）、模組層 `let browserSave`（`:124`）、`lock` 的 `careerSession.choiceGeneration`／`activeChoiceToken`。
+  - 須留在 `game.js`：`let browserSave`（`ui-redesign-allocation-e2e` 附加於 `game.js` 尾端的 hook 呼叫 `browserSave.settled()`；`:340` `startYear` 使用，`verify-modularization:66` 逐字比對該行）；`export async function initializeBrowserSave`（`main.js` 在 `287dd1a` 凍結名單內，`display-preferences.test:30` 斷言其呼叫文字）；`btn-restart`／`seed-re` 綁定（`verify-modularization:162` 斷言各一次）。
+  - 測試耦合：`startPromptPending`／`newPromptPending`／`deleteSave` 與對話框文字在測試中對 `game.js` 無文字比對；`career-entry.test` 只讀固定舊 SHA `950795e`。行為覆蓋：`browser-save-runtime-e2e`（Quick：覆寫、不存檔開始、刪除）、`browser-save-controller.test`（單元）、`jersey-e2e`（Full 限定：有存檔時開新生涯）。
+  - 物件導向觀察：S 反覆讀 `browserSave.state` 自行判斷（`phase==='ready'&&slot` 3 處：`:370`、`:395`、`:397`），並在 `await` 確認後自行比對狀態是否改變——這是 `BrowserSaveController` 狀態機的知識。controller 內已有一半：`replaceCareer` 自行核對 `expectedRevision`（`browser-save-controller.js:17`），`remove` 不接受 revision（`:49–50`），由 `game.js:398–401` 自行比對；不存檔開始由 `game.js:381` 比對 `browserSave.state===state`。逐字搬入新 class 時，主狀態 `browserSave` 仍在 `game.js`、注入約 12 個 lambda，詢問式寫法不變，收益低。
+  - 兩個 pending 旗標 `startPromptPending`／`newPromptPending` 概念相同（開局畫面有對話框開著）但互不鎖定；`confirmAction` 若為 modal 可能實際不可達，未確認是否為 bug。合併會改變行為，不在重構範圍，只記為發現。
+- D：`:326–333`，1,145 bytes。`intlEvents`／`intlPhase`／`intlThreshold`／`intlSelection` 只供 `InternationalTournament` 建構行使用，技術上可直接注入；`addIntlStats` 不可（`international-personal-stats.test:73` 斷言一行 delegate 恰好一次）；`processIntlPhase` 不可（`yearFlow` 與 3 個 E2E hook 依名稱呼叫）；`maybeIntl` 不可（9 檔，部分重新指派）；建構行含 `pick` lambda（`salary-flow.test` 計數）。`championship-intl.test:51,65` 以 `'  function intlEvents('`～`maybeIntl`／`addIntlStats` 切片於 vm 執行，`intlRules` 找不到 `'  function intlSelection(e)'` 時退回舊版 regex 而 FAIL；搬 D 須改寫 7-B 新舊比對，收益（4 行）不相稱。
+- 凍結：`browser-save-controller.js`、`international-tournament.js` 不在 `287dd1a`，亦不在 2.0.0 凍結名單。INJ-UI-01（PR #110，未併 dev）只在 `game.js` 加 1 個 import 及改兩個建構行，與 S／D 行不重疊（行號位移 1）。
+- 使用者決定（2026-11-21）：D 不做。S 不新增 class 或模組，改為把 `browserSave.state` 的檢查交給 `BrowserSaveController`（Tell, don't ask），`game.js` 只留接線。細部設計見 §2vv。
 
 ## 4. 使用者決定（2026-10-18）
 
