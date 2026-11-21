@@ -1,6 +1,6 @@
 # HOF 自然樣本與投手平衡：研究路線計畫（草案）
 
-狀態：**第二版（2026-11-15 依 code owner 建議改寫）。H1～H4 已批准（code owner 於 PR #95 06:53 留言確認為已決定）。未授權實作或批量研究。**
+狀態：**第二版（2026-11-15 依 code owner 建議改寫）。H1～H4 已批准（code owner 於 PR #95 06:53 留言確認為已決定）。2026-11-21 使用者授權並實作 S1 與 H4（見 §7）；S2 以後未授權實作或批量研究。**
 對應：BACKLOG `HOF-NATURAL-SAMPLE-01`（補足自然生涯樣本，**不修改殿堂規則**）、`HOF-PITCHER-BALANCE-01`（RESEARCH_ONLY，只調查 SP／MR／CL，不調係數）。上位規格：[HOF_JERSEY_APPROVED_SPEC.md](HOF_JERSEY_APPROVED_SPEC.md) §3。
 調查基準：`origin/dev` `1494a24`（1.16.10）。
 
@@ -29,8 +29,8 @@
 
 | 入口 | 結果 |
 |---|---|
-| `retirement-hof-pilot`（audit） | **FAIL**（已實際執行，見 §2） |
-| `championship-intl-e2e`、`trait-system-e2e` 的跨執行重放區塊 | Quick／Full 都帶 `--ui-only`，該區塊**不會執行**；只在手動不帶 `--ui-only` 時，兩次新生涯的完整 S 比對會因姓名不同而失敗（**讀程式碼判斷，未實際執行**） |
+| `retirement-hof-pilot`（audit） | **FAIL**（已實際執行，見 §2）；S1 修正後 PASS（§7） |
+| `championship-intl-e2e`、`trait-system-e2e` 的跨執行重放區塊 | 兩入口只在 Full／audit 模式（manifest 皆帶 `--ui-only`，不在 Quick；2026-11-21 以 `node scripts/test.mjs list` 更正，原文誤記為「Quick／Full」），該區塊**不會執行**；只在手動不帶 `--ui-only` 時，兩次新生涯的完整 S 比對會因姓名不同而失敗（2026-11-15 為讀程式碼判斷；2026-11-21 已實際重現，H4 修正後見 §7） |
 | 其他使用 `stage6-browser.mjs`、已填固定名、只比對單次執行或白名單欄位的入口 | 讀程式碼判斷為不受影響 |
 
 ## 4. 研究路線（第二版；只改研究工具，屬 `audit`，不進 Quick／Full，不改遊戲）
@@ -66,10 +66,24 @@ Code owner 決定（建議見 2026-11-15 PR #95 06:38 留言；06:53 留言確�
 | H3 | S3 的規模 | 150 條只是第一輪預算；投手／野手分組；先少量煙霧測試；保留未到達樣本；配對樣本不當獨立 | S3、S5 |
 | H4 | 兩個手動重放入口 | 另開小提案修正，不等下次 FAIL | §4 第 6 項 |
 
-**已決定，但未授權實作。** 授權後、實作前另須確認：S2 各育成方式的能力優先表與操作規則、S3b 的 seed／守備位置／組合清單。
+**已決定。** S1 與 H4 於 2026-11-21 經使用者授權實作（§7）；S2 以後仍未授權。授權後、實作前另須確認：S2 各育成方式的能力優先表與操作規則、S3b 的 seed／守備位置／組合清單。
 
 ## 6. 驗證與分類
 
 - S1、S2 只改 `tests/retirement-hof-pilot.mjs`（`audit` 入口），不影響製品與 Quick／Full 的執行路徑。驗證方式：該入口自身的小批量執行、重放 PASS、負控制（兩個不同名字 → FAIL）、`node scripts/test.mjs list` 的模式不變。
-- 另案（原 H4）會改 `championship-intl-e2e`、`trait-system-e2e`，這兩個入口屬 Quick／Full，依 AGENTS 6.1 另行分類（測試限定變更，原則 R2）。
+- 另案（原 H4）會改 `championship-intl-e2e`、`trait-system-e2e`，這兩個入口屬 Full／audit（不在 Quick），依 AGENTS 6.1 另行分類（測試限定變更，原則 R2）。
 - 不改遊戲、殿堂規則、RNG 與既有測試的期待值；不升版本。
+
+## 7. S1／H4 實作結果（2026-11-21，`test/hof-replay-fixed-names` `014049e`，自 `origin/dev` `5831c37`）
+
+- **改動**（只改測試，R2，不升版本）：
+  - `retirement-hof-pilot`：開始前依守備位置填 §3 的固定名字，重放斷言（完整狀態 digest、操作 digest、RNG 次數）不變。
+  - `championship-intl-e2e`、`trait-system-e2e`：`start()` 加可選參數 `name`；只有不帶 `--ui-only` 的重放區塊（舊基準＋兩次新版，三邊都填）傳入。UI-only 呼叫點不傳，Full 的執行路徑不變。
+- **驗證**（本機 macOS＋Brave 158，非 CI）：
+  - 修正前重現：兩入口手動模式都在第一個 seed `yakyo-test-001` 的重放斷言以 `ERR_ASSERTION` FAIL，差異 1088 行全是 `name:`，與 §3 的讀碼判斷一致。
+  - S1：`--seeds=hof111-pilot-01,hof111-pilot-04` 4 條跑完、重放 PASS、exit 0。
+  - H4：scratch 探測副本（重放斷言通過後即換下一個 seed，不提交）兩入口 6 seed 全部 `REPLAY_OK`，console 錯誤 0。
+  - 負控制（scratch 副本只讓重放那一次填不同名字，不提交）：3 入口皆 exit 1，分別在 `full game replay state`、`new replay mismatch`、`new annual draw rule is not reproducible` 以 `ERR_ASSERTION` FAIL，差異只在姓名。
+  - 兩入口 `--ui-only`（Full 的路徑）exit 0，console 錯誤 0；Quick 109／109 PASS（不含這兩入口）。
+  - reviewer：無發現。讀碼確認兩個舊基準空白姓名時的預設名即同一組對照表，基準側填名後狀態不變；姓名在 `seedInit` 之前決定，不影響 RNG。
+- **新發現（未修正，另立 BACKLOG `TEST-MANUAL-HISTORICAL-COMPARE-01`）**：姓名修正後，兩入口手動模式接著在「舊基準 vs 新版」比較 FAIL（championship `unapproved first difference`、trait `first difference must be an event draw`）。原因是新版 state 從 step 0 就多了 `championmakerWins: []`（`2a7d8f4`，1.14.0，2026-11-07 新增），兩基準 `004cd26`（2026-10-10）、`2375d46`（2026-10-09）都早於此欄位。失效起點未確認：目前看到的第一差異來自 1.14.0，但 2026-10-31（早於 1.14.0）的本機紀錄已記載這兩入口不帶 manifest args 執行時，歷史比較在乾淨 HEAD 上也 FAIL（當時原因未記錄）。1.16.10 起姓名差異先在重放斷言 FAIL，遮蔽了這一層。此欄位之後是否還有其他差異未確認。依 AGENTS 6.3 未改比較條件。
