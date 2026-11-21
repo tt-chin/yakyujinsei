@@ -248,4 +248,10 @@ assert.deepEqual(actual, [
 ]);
 assert.equal(rngState, 2095430971);
 
+{// OOP plan §2ww (phase 45): game.js keeps no test-only delegates; tests and E2E hooks call the modules directly.
+  const text=sourceText(game);
+  for(const name of ['blankStat','afterGamble','applySeasonForm','defRuns','addStatTotal','buildRecordViewModel','buildAbilityViewModel','buildTraitsViewModel','eventChoiceSummary','renderEventResult','handleDemotion','retireBelowActiveMinimum','careerScore','capTeam','posLegendPhrase','honorScore','retireScene','appendContractExtension','enterDraftPath','draftFallback','pathChoiceHS','pathChoiceU4','overseasOffer','outOfOrg','deriveSeedInt'])
+    assert.equal(new RegExp('(?:^|\\n)[ \\t]*function '+name+'\\(').test(text),false,'no game.js declaration: '+name);
+}
+
 console.log('Version 1.13.0 modularization static and RNG checks passed.');
