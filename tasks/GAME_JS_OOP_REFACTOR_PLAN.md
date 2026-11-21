@@ -5012,7 +5012,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 
 - 負控制（scratch，替換 1 次、還原後 sha 相同）：§2ww.3 的 11 項；集中斷言（加回 `afterGamble` 包裝 → `no game.js declaration: afterGamble`）；`--rng-only`（上表）。
 - E2E 抵達 probe（scratch，將改寫後的呼叫改為不存在的方法 `…__unreached`）：19 處在 E2E 中確認被呼叫（`… is not a function`／`is not defined`），多名稱 hook 以一次一名稱逐一確認。未到達 2 處（既存、與本期無關）：`display-preferences-e2e:58` 只在比較基準為舊殿堂程式時注入（Full 的 `d6cef67` 不注入；預設 `8dd244b` 在 `git show …ability-evaluation-policy.js` 即失敗）；`global-contract-market-e2e --quick` 不呼叫 `demote` fixture（`handleDemotion`）。
-- `tools/development-b/runtime.mjs`：hook 插在 `game.js` 最後一個 `})();` 之前，現行該處是 `act-toggle` 的小 IIFE 而非覆寫層結尾，`#btn-start` 點擊逾時；乾淨基準 `c48d675` 相同（既存）。本期只改寫其中的名稱，未修正插入點。
+- `tools/development-b/runtime.mjs`：既存故障（乾淨基準 `c48d675` 相同）——harness 的 `page()` 已按下 `#btn-start`，工具再掛 route、`reload()` 並二次點擊，reload 後按鈕不可見而逾時；hook 插在最後一個 `})();` 之前，現行該處是 `act-toggle` 的小 IIFE 而非覆寫層結尾。使用者同意後修正（`3d6ae1f`）：route 改由 `beforeLoad` 在首次載入前掛上，拿掉 reload 與二次點擊，`extra` 以 `injectOverlayHook` 接在模組最上層。一般模式與 `--retirement-only` 各 36／36 PASS；`seasonStats.blankStat`、`honorScoreFor` 以 `__unreached` probe 確認被呼叫。不在 manifest，Quick 不受影響。
 - reviewer（`c48d675..` 全 diff）：high 1 項（上表 `2e5a6ce`），其餘檢查項無發現。
 - 結果：`game.js` 409 行／41,813 bytes → 382 行／39,870 bytes。
 - 未做：Linux CI Full（GitHub 手動）、push／PR、Preview、實機。內部變更，依 AGENTS §9.3 不改版本。
