@@ -301,6 +301,17 @@ export async function captureGameView(full){
     }
     if(root)dom.log=root.outerHTML;
   }
+  // Approved INJ-UI-01 delta: ability().condition carries the health check risk row right after シーズン稼働率.
+  // Validate its label, value form and breakdown result, then drop it (content in injury-risk-policy.test); nothing else changes.
+  const riskRows=views.player.ability.condition.filter(r=>r.label==='健康診断時の故障リスク');
+  if(window.__expectInjuryRisk&&!riskRows.length)throw Error('INJURY_RISK_ROW_MISSING');
+  if(riskRows.length){
+    const row=riskRows[0],m=/^(?:判定済み（)?(\d+)%）?$/.exec(row.value);
+    if(riskRows.length!==1||views.player.ability.condition[1]!==row)throw Error('INJURY_RISK_ROW_POSITION');
+    if(row.value==='今季は健康診断なし（リハビリ中）'){if(row.breakdown!==undefined||!(rawState.skipMid||rawState.rehab>0))throw Error('INJURY_RISK_NO_CHECK');}
+    else if(!m||row.breakdown?.rows?.at(-1)?.label!=='結果'||row.breakdown.rows.at(-1).value!==m[1]+'%'||+m[1]<3||+m[1]>95)throw Error('INJURY_RISK_ROW_VALUE');
+    views.player.ability.condition.splice(1,1);
+  }
   const snapshot={dom,state,calls,views};
   if(full)return snapshot;
   const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(snapshot))));

@@ -28,6 +28,7 @@ import { DefensePositionReview } from './defense-position-review.js';
 import { DefensePosition, DP_RANK, DP_MULT } from './defense-position.js';
 import { InternationalTournament } from './international-tournament.js';
 import { PlayerInjury } from './player-injury.js';
+import { injuryRiskBreakdown, recordInjuryCheck, markInjurySeasonStart } from './injury-risk-policy.js';
 import { PlayerAbility } from './player-ability.js';
 import { SeasonEvents } from './season-events.js';
 import { PlayerRomance } from './player-romance.js';
@@ -135,7 +136,7 @@ function tjAccrue(){return playerInjury.accrueTj();}
 function tjCap(){return playerInjury.tjGaugeLimit();}
 function afterGamble(kind,cont){playerInjury.afterGamble(kind,cont);}
 function tjGamble(cont){playerInjury.tjGamble(cont);}
-const playerInjury=new PlayerInjury({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,v)=>addAb(k,v),board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),removeTrait:(key,label)=>removeTrait(key,label),tjCap:()=>tjCap(),rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}});
+const playerInjury=new PlayerInjury({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,v)=>addAb(k,v),board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),removeTrait:(key,label)=>removeTrait(key,label),tjCap:()=>tjCap(),injuryRisk:state=>injuryRiskBreakdown(state),recordInjuryCheck:state=>recordInjuryCheck(state),rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}});
 function pitcherRole(){return playerProfile.pitcherRole();}
 function roleN(r){ return {SP:'先発',MR:'中継ぎ',CL:'抑え'}[r]||'—'; }
 function isSP(){return playerProfile.isStarter();}
@@ -196,7 +197,7 @@ function nextStep(){return yearFlow.nextStep();}
 function phasePre(){return seasonPhases.phasePre();}
 /* シーズン中。 */
 function phaseMid(){return seasonPhases.phaseMid();}
-const seasonPhases=new SeasonPhases({getState:()=>S,POS_AB,ABL,LV,clamp,board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),buyoutRemaining:rate=>buyoutRemaining(rate),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),declineForSeason:(state,amount)=>declineForSeason(state,amount),checkGoldclothSeason:()=>checkGoldclothSeason(),stageLabel:()=>stageLabel(),addAb:(k,v)=>addAb(k,v),dposReview:cont=>dposReview(cont),allocUI:(mode,label,done)=>allocUI(mode,label,done),nextStep:()=>nextStep(),tjCap:()=>tjCap(),ovr:()=>ovr(),signTo:(...args)=>signTo(...args),daibaFarewell:cont=>daibaFarewell(cont),loveEvent:next=>loveEvent(next),drawEvents:(n,done)=>drawEvents(n,done),rollInjury:()=>rollInjury(),proSeason:()=>proSeason(),amateurSeason:()=>amateurSeason(),rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});
+const seasonPhases=new SeasonPhases({getState:()=>S,POS_AB,ABL,LV,clamp,board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),buyoutRemaining:rate=>buyoutRemaining(rate),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),declineForSeason:(state,amount)=>declineForSeason(state,amount),checkGoldclothSeason:()=>checkGoldclothSeason(),stageLabel:()=>stageLabel(),addAb:(k,v)=>addAb(k,v),dposReview:cont=>dposReview(cont),allocUI:(mode,label,done)=>allocUI(mode,label,done),nextStep:()=>nextStep(),tjCap:()=>tjCap(),ovr:()=>ovr(),signTo:(...args)=>signTo(...args),daibaFarewell:cont=>daibaFarewell(cont),loveEvent:next=>loveEvent(next),drawEvents:(n,done)=>drawEvents(n,done),rollInjury:()=>rollInjury(),markSeasonStart:state=>markInjurySeasonStart(state),proSeason:()=>proSeason(),amateurSeason:()=>amateurSeason(),rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});
 function eventChoiceSummary(ev,mode){return seasonEvents.eventChoiceSummary(ev,mode);}
 function drawEvents(n,done){seasonEvents.drawEvents(n,done);}
 function loveEvent(next){playerRomance.loveEvent(next);}
@@ -367,18 +368,17 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   bindRandomPlayerName({input:$('in-name'),button:$('btn-random-name')});
   $('btn-start').onclick=async()=>{
     if(startPromptPending||S)return;
-    if(browserSave?.state.phase==='ready'&&browserSave.state.slot){
-      const revision=browserSave.state.revision;startPromptPending=true;
+    if(browserSave?.hasReadySlot()){
+      startPromptPending=true;
       try{
-        if(!await confirmAction({title:'新しく始める',message:'新しい人生を始めると、現在のセーブデータが上書きされます。',confirmLabel:'始める'}))return;
-        await browserSave.replaceCareer({confirmed:true,expectedRevision:revision,start:()=>{try{startJapanese();}catch(error){S=null;throw error;}}});
+        await browserSave.replaceAfterConfirm(()=>confirmAction({title:'新しく始める',message:'新しい人生を始めると、現在のセーブデータが上書きされます。',confirmLabel:'始める'}),()=>{try{startJapanese();}catch(error){S=null;throw error;}});
       }finally{startPromptPending=false;}
       return;
     }
-    if(browserSave?.state.phase==='unavailable'){
-      const state=browserSave.state;startPromptPending=true;
-      confirmAction({title:'セーブせずに始める',message:'セーブデータを確認できません。今回の進行状況は保存されません。セーブせずに始めますか？'})
-        .then(ok=>{if(ok&&browserSave.state===state&&state.phase==='unavailable'&&browserSave.newCareer({allowUnsaved:true}))startJapanese();})
+    if(browserSave?.isUnavailable()){
+      startPromptPending=true;
+      browserSave.startUnsavedAfterConfirm(()=>confirmAction({title:'セーブせずに始める',message:'セーブデータを確認できません。今回の進行状況は保存されません。セーブせずに始めますか？'}))
+        .then(ok=>{if(ok)startJapanese();})
         .finally(()=>{startPromptPending=false;});
     }else if(!browserSave||browserSave.newCareer())startJapanese();
   };
@@ -392,17 +392,15 @@ export async function initializeBrowserSave(){
  if(browserSave)return;
  const home=async()=>{if(S&&!await confirmAction({title:'タイトルに戻る',message:'このタブの未保存の操作を破棄して、タイトルに戻りますか？セーブデータは残ります。'}))return;location.href=location.pathname+location.search;};
  let newPromptPending=false;
- const fresh=()=>!newPromptPending&&!S&&browserSave.state.phase==='ready'&&!!browserSave.state.slot;
+ const fresh=()=>!newPromptPending&&!S&&browserSave.hasReadySlot();
  const deleteSave=async()=>{
-  if(newPromptPending||S||browserSave.state.phase!=='ready'||!browserSave.state.slot)return false;
-  const state=browserSave.state,revision=state.revision;newPromptPending=true;
+  if(newPromptPending||S||!browserSave.hasReadySlot())return false;
+  newPromptPending=true;
   try{
-   if(!await confirmAction({title:'セーブデータを削除',message:'セーブデータを削除します。この操作は元に戻せません。',confirmLabel:'削除する'}))return false;
-   if(browserSave.state!==state||state.phase!=='ready'||state.revision!==revision)return false;
-   return await browserSave.remove({confirmed:true});
+   return await browserSave.removeAfterConfirm(()=>confirmAction({title:'セーブデータを削除',message:'セーブデータを削除します。この操作は元に戻せません。',confirmLabel:'削除する'}));
   }finally{newPromptPending=false;}
  };
- const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onDelete:deleteSave,onRetry:()=>['delete-error','replace-error'].includes(browserSave.state.phase)?browserSave.initialize():browserSave.restore(),onHome:home});
+ const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onDelete:deleteSave,onRetry:()=>browserSave.retry(),onHome:home});
  browserSave=new BrowserSaveController({notify:show,lock:locked=>{$('app').inert=locked;if(locked){++careerSession.choiceGeneration;careerSession.activeChoiceToken=null;}},restore:(envelope,{authorization}={})=>{
   const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});
   careerEntry.resume(candidate);

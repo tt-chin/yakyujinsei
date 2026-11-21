@@ -34,9 +34,11 @@ pre=once(pre,'      afterAsk=()=>{\n','      afterAsk=()=>{'+G+'\n','pitching pl
 for(const effort of ['全力投球','通常投球','省エネ投球'])pre=once(pre,`f:()=>{S.effort='${effort}';preAsk();}`,`f:()=>{${G}S.effort='${effort}';preAsk();}`,effort);
 pre=once(pre,"f:()=>{\n          const returnLv=","f:()=>{"+G+"\n          const returnLv=",'return to NPB');
 pre=once(pre,"s:'現役を引退する',f:()=>{buyoutRemaining();","s:'現役を引退する',f:()=>{"+G+"buyoutRemaining();",'retirement');
+// INJ-UI-01: the session-only season-start mark right after the tmpInj reset (no S write, no RNG).
+pre=once(pre,"S.prevD=S.lastD||0; S.lastD=0; /* 先保持上季 d 供投手定位判定。 */\n","S.prevD=S.lastD||0; S.lastD=0; /* 先保持上季 d 供投手定位判定。 */\n    markSeasonStart(S); /* INJ-UI-01：tmpInj リセット済みの印（本セッションのみ、S 不変）。 */\n",'INJ-UI-01 season start mark');
 mid=once(mid,'  function phaseMid(){\n','  function phaseMid(){\n    '+G+'\n','method start');
 mid=once(mid,"main:true,f:()=>{\n          if(S.stage==='PRO')proSeason();","main:true,f:()=>{"+G+"\n          if(S.stage==='PRO')proSeason();",'season result');
-const DEPS='getState,POS_AB,ABL,LV,clamp,board,card,choose,buyoutRemaining,reportFlowOutcome,declineForSeason,checkGoldclothSeason,stageLabel,addAb,dposReview,allocUI,nextStep,tjCap,ovr,signTo,daibaFarewell,loveEvent,drawEvents,rollInjury,proSeason,amateurSeason,rng:{R,ri,chance}';
+const DEPS='getState,POS_AB,ABL,LV,clamp,board,card,choose,buyoutRemaining,reportFlowOutcome,declineForSeason,checkGoldclothSeason,stageLabel,addAb,dposReview,allocUI,nextStep,tjCap,ovr,signTo,daibaFarewell,loveEvent,drawEvents,rollInjury,markSeasonStart,proSeason,amateurSeason,rng:{R,ri,chance}';
 const expected=HEADER+`export class SeasonPhases {
   #rules;
   constructor(deps){this.#rules=seasonPhaseRules(deps);}
@@ -93,7 +95,9 @@ function oldHarness(){
 }
 function newHarness(source=SeasonPhases){
   const run={log:[],cfg:{},S:null,choices:[],used:{}},{R,ri,chance,...stubs}=makeStubs(run);
-  const phases=new source({getState:()=>run.S,POS_AB,ABL,LV,clamp,...stubs,rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});
+  // INJ-UI-01: the season-start mark is new-side only and kept out of the compared log (no S write, no RNG).
+  run.marks=[];const markSeasonStart=state=>run.marks.push(state===run.S);
+  const phases=new source({getState:()=>run.S,POS_AB,ABL,LV,clamp,...stubs,markSeasonStart,rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});
   return {run,pre:()=>phases.phasePre(),mid:()=>phases.phaseMid()};
 }
 const base=(patch={})=>({name:'検証',pos:'IF',stage:'CORP',org:'CORP',lv:'CORP',team:'社会人チーム',year:2032,age:24,rehab:0,six:0,tj:0,effort:'通常投球',
@@ -167,6 +171,9 @@ for(const [name,steps] of scenarios){
   assert.equal(JSON.stringify(b),JSON.stringify(a),name);compared++;
 }
 assert.equal(compared,scenarios.length);
+// INJ-UI-01: every phasePre call marks the season start once, for the current state (also before the age-limit exit).
+let marked=0;for(const [name,steps] of scenarios){const h=newHarness();play(h,steps);const pre=steps.filter(x=>x.call==='pre').length;assert.deepEqual(h.run.marks,Array(pre).fill(true),name+': season-start mark');marked+=pre;}
+assert.ok(marked>0,'phasePre scenarios reached the mark');
 // The branches the natural careers never reach (§2mm.4) and the other rare branches must be exercised here.
 const all=scenarios.flatMap(([,steps])=>play(newHarness(),steps)),calls=all.flatMap(x=>x.log),states=all.map(x=>JSON.parse(x.state));
 assert.ok(all.every(x=>x.error===null),'no scenario step throws, so equal errors cannot mask a shared crash');

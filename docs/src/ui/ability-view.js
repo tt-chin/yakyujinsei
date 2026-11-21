@@ -10,7 +10,16 @@ function addConditionRow(list,item){
   list.append(dt,dd);
 }
 
+function conditionBreakdown(item,open){
+  const details=document.createElement('details');details.className='ui-condition-breakdown';details.open=open;
+  const summary=document.createElement('summary');summary.textContent=item.breakdown.summary;
+  const list=document.createElement('dl');list.className='ui-data-list';item.breakdown.rows.forEach(row=>addConditionRow(list,row));
+  const note=document.createElement('p');note.className='ui-ability-guide';note.textContent=item.breakdown.note;
+  details.append(summary,note,list);return details;
+}
+
 export function renderAbility(container,model){
+  const breakdownOpen=container.querySelector('details.ui-condition-breakdown')?.open===true;
   container.replaceChildren();
   const abilities=document.createElement('section');abilities.className='ui-panel';
   const abilityHeading=document.createElement('h2');abilityHeading.textContent=`${model.positionLabel}能力`;
@@ -22,7 +31,8 @@ export function renderAbility(container,model){
   const condition=document.createElement('section');condition.className='ui-panel';
   const conditionHeading=document.createElement('h2');conditionHeading.textContent='コンディション';
   const conditionList=document.createElement('dl');conditionList.className='ui-data-list';
-  model.condition.forEach(item=>addConditionRow(conditionList,item));condition.append(conditionHeading,conditionList);container.appendChild(condition);
+  model.condition.forEach(item=>addConditionRow(conditionList,item));condition.append(conditionHeading,conditionList);
+  model.condition.filter(item=>item.breakdown).forEach(item=>condition.append(conditionBreakdown(item,breakdownOpen)));container.appendChild(condition);
 }
 
 const traitList=values=>{const ul=document.createElement('ul');ul.className='ui-list';values.forEach(value=>{const li=document.createElement('li');li.textContent=value;ul.appendChild(li);});return ul;};
