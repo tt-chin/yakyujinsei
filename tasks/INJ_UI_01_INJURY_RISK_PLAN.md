@@ -83,3 +83,14 @@
 | T10 | 新 `injury-risk-policy.test` | — | 註冊 manifest（Quick） |
 
 實作時另加：負控制（計算順序對調、拿掉夾限、記錄改在 `chance` 後、`dom-snapshot` 投影移除、`markSeasonStart` 拿掉）、PC／モバイル截圖、四種顯示（診斷前／後、復健季、年初）的 E2E 確認。
+
+## 6. 正式實作（2026-11-21，分支 `feat/inj-ui-01-injury-risk`；macOS＋Brave 本機證據）
+
+- 草稿 19 檔逐 byte 搬回分支後追加：`injury-risk-e2e`（Quick，manifest 註冊）、`rollInjury` 抽選前記錄的單元測試、`season-phases.test` 的「每次 `phasePre` 標記一次」斷言、`game-view-dom-e2e` 的 `window.__expectInjuryRisk`（受測版缺列即 FAIL）。
+- 截圖後修正（T3 仍不改測試）：`summary` 改回預設 display（保留 ▸ 標記）；註記移到細目列表之前（新 px margin 會被 `design-tokens-06` 間距清單擋下）。
+- D3 決定：預測值只顯示 `X%`（表中「（現時点）」為註記，不顯示；使用者 2026-11-21）。
+- reviewer：無 medium 以上；low 4 項經使用者同意處理：(1) `phasePre` 前 `rehab>0` 也顯示「今季は健康診断なし（リハビリ中）」（`career-presenter.test` 兩個帶 rehab 的 fixture 預期值隨之更新，`dom-snapshot` 條件為 `skipMid||rehab>0`）；(2) `markInjurySeasonStart` 刪除同年判定記錄；(3) E2E 要求至少一個 seed 比對到結果卡「故障率」；(4) 照 D3。
+- 負控制 10／10 擋下：N1 鉄人上限套到含 `tmpInj` 的值、N2 拿掉夾限、N3 記錄改到抽選後（單元）；N4 診斷後顯示即時值、N5 重繪不保留展開、N6 年初不重置 `tmpInj`（E2E）；N7 `phasePre` 未標記（以關閉逐字比對的變體證明行為斷言）；N8 拿掉 `dom-snapshot` 投影（`game-view-dom-e2e` 第 0 步 `condition.length: 8 -> 7`，到達證明）；N9 年初 `rehab` 判斷、N10 同年記錄刪除（單元）。
+- 最終（含 reviewer 修正）：Quick **109／109 PASS**；`game-view-dom-e2e` 8 段生涯 vs `4f39a73` PASS（S／RNG 一致）；修正前另跑 `design-tokens-09-e2e` PASS；草稿階段使用者授權單獨執行的 Full 專用入口 7 個 PASS（其後只改 CSS／`ability-view` 註記位置／測試，`design-tokens-09-e2e` 已重跑）。
+- **Full 實行が必要（GitHub 手動・未実行）**：R3（故障判定路徑經新函式）。未在本機執行的 Full 專用入口見 §5。
+- 未做：版本（D4，與 INT-01 D6 一起決定）、commit／push／PR、Preview、實機。
