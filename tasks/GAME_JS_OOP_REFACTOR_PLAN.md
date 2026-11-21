@@ -4948,7 +4948,7 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - **Full 實行が必要（GitHub 手動・未実行）**：R3（存檔覆寫・刪除、`S` 重置路徑）。版本不變。
 - 交付（2026-11-21）：分支 `refactor/browser-save-guards`（`34d943c`）已 push，[PR #111](https://github.com/tt-chin/yakyujinsei/pull/111)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
 - 未做：合併、Linux CI Full（GitHub 手動）、Preview、實機。
-## 2ww. 第 45 期：測試改為直接呼叫模組，刪除 `game.js` 只供測試使用的 24 個包裝（細部計畫草案，2026-11-21；D1–D4、D10 決定 2026-11-21，T 表**未批准**）
+## 2ww. 第 45 期：測試改為直接呼叫模組，刪除 `game.js` 只供測試使用的 24 個包裝（細部計畫草案，2026-11-21；D1–D4、D10 決定 2026-11-21，草稿完成，T 表**未批准**）
 
 §3.30 盤點結果（使用者決定 2026-11-21）：「改為由測試直接呼叫模組方法」。這 24 個一行包裝在正式執行時沒有呼叫端，只是測試用來找到模組的入口；改由測試直接依賴模組後，從 `game.js` 刪除。另刪除無引用的 `deriveSeedInt`。
 
@@ -4966,37 +4966,40 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 
 | # | 決定 |
 |---|---|
-| D1 | 雙邊 hook 拆為舊側／新側兩份：**舊側字串逐字不變**，新側改呼叫模組實例（例：`seasonStats.blankStat()`、`careerMovement.outOfOrg(o)`）。harness 同理：舊 SHA 側照舊切片，現行側直接建構模組或使用 `game.js` 作用域的實例（決定 2026-11-21：A） |
+| D1 | 雙邊 hook 拆為舊側／新側兩份：**舊側字串逐字不變**，新側改呼叫模組實例（例：`seasonStats.blankStat()`、`careerMovement.outOfOrg(o)`）。harness 同理：舊 SHA 側照舊切片，現行側直接建構模組或使用 `game.js` 作用域的實例（決定 2026-11-21：A）。草稿實測後的實作方式：依原始碼內容判定新舊（§2ww.3 T1） |
 | D2 | `tools/development-b/` 3 檔一起改為呼叫模組（決定 2026-11-21：B）。`legacy-effect-boundaries.mjs:42` 的既存故障見 D4 |
-| D3 | `npb-return-ui.test`（33 處，`:56–57` 以包裝字串整行替換還原舊本體，`:107` 的切片錨點依賴替換結果）單獨 1 個 commit（決定 2026-11-21：是） |
+| D3 | `npb-return-ui.test`（33 處，`:56–57` 以包裝字串整行替換還原舊本體，`:107` 的切片錨點依賴替換結果）單獨 1 個 commit（決定 2026-11-21：是）。草稿實測：只有重建段依賴包裝，須與刪除同一 commit（§2ww.3 T5），**待確認** |
 | D4 | `legacy-effect-boundaries.mjs:42` 的既存故障本期一併修正，使其可在現行碼執行並以實際執行驗證（決定 2026-11-21：a） |
 | D5 | 不改的檔案（只引用模組方法、舊 SHA 或字串）：`event-integration.test`、`career-movement-policy`、`career-presenter.test`（只讀 `097e212`）、`event-category-badge.test`、`event-copy.test`、`full-power-pitching.test`、`kbo-renewal-floor.test`、`season-phases.test`、`salary-flow.test`、`ui-redesign-decision-e2e`、`verify-modularization:157` |
-| D6 | 包裝文字斷言的處置：斷言目的為「包裝委派正確」者（`season-stats.test:13` 的 `return seasonStats.NAME(`、`npb-return-ui:56–57`），改為斷言 `game.js` 已無該宣告＋模組方法存在；斷言目的為「函式存在」者（`information-architecture.test:21` `function addStatTotal(t,st)`）改指 `season-stats.js` 的 `addStatTotal(t,st)`。新舊行為比對的斷言內容不變 |
+| D6 | 包裝文字斷言的處置：斷言目的為「包裝委派正確」者（`season-stats.test:13` 的 `return seasonStats.NAME(`、`npb-return-ui:56–57`），改為斷言 `game.js` 已無該宣告＋模組方法存在；斷言目的為「函式存在」者（`information-architecture.test:21` `function addStatTotal(t,st)`）改指 `season-stats.js` 的 `addStatTotal(t,st)`。新舊行為比對的斷言內容不變。草稿實測：`season-stats.test` 只保留其餘 3 名稱的委派斷言並斷言 `SeasonStats` 具備 4 個方法，「`game.js` 已無宣告」的斷言只在 `npb-return-ui.test`（2 名稱）；其餘名稱的缺席由 `hookForSource` 的混合檢查與刪除後各測試間接保證 |
 | D7 | 新側取得實例的方式：E2E hook 已在 `game.js` 作用域，直接用實例名；vm harness 以 import 模組 class＋stub 建構（比照 `browser-save-controller.test`），stub 回傳有效值並計數，不用丟例外的 stub（memory：被 fallback 吞掉） |
 | D8 | 分類 R2（測試基礎設施＋刪除無呼叫端的程式碼；不改規則、RNG、狀態）。改動含 Full 限定 E2E，**Full 實行が必要（GitHub 手動・未実行）**，本機不跑 Full profile（AGENTS §6.2）。內部變更，依 §9.3 不改版本 |
 | D9 | 分支 `refactor/test-module-api`（自 `origin/dev` `8a4f765`，`--no-track`）。PR #111（第 44 期）的 `game.js` 變更在 `:366–408`，與本期刪除行不重疊；本計畫文件與 PR #111 同在 §2／§3 末尾新增章節，合併時處理文件衝突。實作前以 `git merge-tree` 確認 |
 | D10 | 另立 BACKLOG（決定 2026-11-21：是）：TEST-BASELINE-REBASE-01（將雙邊比較的舊基準換成模組化後、已證明等價的 SHA，使 hook 可合併為一份；逐測試確認選該 SHA 的理由，修正前基準不換，AGENTS §6.2／§6.3）。本期不做 |
 
-### 2ww.3 T 表（草案，**未批准**）
+### 2ww.3 T 表（草稿實測後修訂，2026-11-21；**未批准**）
+
+草稿：scratch worktree，基準 `c48d675`（`refactor/test-module-api` 併 dev `fcef9fe`：PR #110／#111／#112）。修正 1：D1 的新舊判定改為**依原始碼內容**（下表 T1），`--compare`／`--baseline` 指定任何 SHA 皆成立；舊側 hook 字串仍逐字不變（各檔被刪除的行只有套用處，`const hook=` 未改）。修正 2：D3 的 `npb-return-ui` 只有 `:56–57` 的重建段依賴包裝，必須在刪除後才會通過，故與刪除同一 commit。
 
 | # | 內容 | commit |
 |---|---|---|
-| T1 | `season-stats.test`：新側 vm 改為建構 `SeasonStats`（`ffb9e32` 舊側不變），`:13` 委派文字斷言依 D6；`information-architecture.test:21` 改指 `season-stats.js` | A |
-| T2 | 殿堂 harness：`retirement-hof-test-support` 現行側改為建構 `CareerRetirement`＋`careerScoreFor`／`honorScoreFor`，`:13` 的新舊判定改為 `season-stats.js` import 的有無；`retirement-hof-balance.test`（`:31`、`:37` B 側）、`hof-first-ballot-league.test`（新側）；`hof-first-ballot-e2e`、`trait-display-e2e`、`smallschool-c-e2e` 拆 hook（D1）；`game-view-dom-e2e:60`、`display-preferences-e2e:58` 改 `careerScoreFor(S.stats[b],S.pos)`（只有現行側）；`tools/development-b/runtime.mjs`、`defense-history-boundaries.mjs` | B |
-| T3 | `npb-return-ui.test`（D3、D6） | C |
-| T4 | 移籍／契約 E2E：`npb-return-e2e`、`contract-salary-e2e`、`global-contract-market-e2e`、`stage10-risk-e2e` 拆 hook；`jersey-e2e` 單一 hook 改寫；`tools/development-b/legacy-effect-boundaries.mjs`（依 D4） | D |
-| T5 | 業餘／事件／特性：`draft-signing-policy.test` 新側建構 `AmateurCareer`（`026c5cd` 舊側不變）；`trait-policy.test:104–105` 改為建構 `PlayerInjury`；`bug-act-01-02-e2e`、`event-system-e2e`、`event-fix-e2e`、`trait-system-e2e`（只有現行側）改呼叫實例 | E |
-| T6 | `game.js` 刪除 24 個包裝＋`deriveSeedInt`（約 26 行）；確認 `productionFunction` 切片尾端位移（刪除行前一個函式的切片會延伸到下一個 `function`）、`verify-modularization` 的逐字比對與 `salary-flow.test` 的 RNG 文字計數不變 | F |
-| T7 | `scripts/TESTING.md`（如有入口說明變動）、本節結果、BACKLOG（含 D10） | 文件 |
+| T1 | 新增 `tests/support/module-calls.mjs`：`hookForSource(source,hook,targets)`——原始碼仍宣告全部名稱（任何舊基準）時回傳原 hook，全部不宣告（現行）時以 `currentModuleCalls` 將每個裸呼叫改為模組呼叫，且次數須等於指定值；只宣告一部分則丟 `MODULE_CALL_MIXED_SOURCE`。成員呼叫 `x.name(` 與字串不改寫，展開 `...name(` 改寫。`scripts/test-manifest.mjs` 登記為 support | A |
+| T2 | 雙邊 hook（`hookForSource`）：`hof-first-ballot-e2e`、`smallschool-c-e2e`、`trait-display-e2e`、`npb-return-e2e`、`contract-salary-e2e`、`global-contract-market-e2e`、`stage10-risk-e2e`、`jersey-e2e`。只注入現行的 hook 直接改呼叫實例：`bug-act-01-02-e2e`、`event-system-e2e`、`event-fix-e2e`、`trait-system-e2e`；`game-view-dom-e2e`、`display-preferences-e2e` 改 `careerScoreFor(S.stats[b],S.pos)` | A |
+| T3 | vm／harness 現行側直接用模組：`season-stats.test`（4 名稱以測試內名稱呼叫 `seasonStats`，其餘 3 名稱的委派斷言保留）、`information-architecture.test`（改斷言 `season-stats.js` 的 `addStatTotal(t,st){`）、`retirement-hof-test-support`（新舊判定改為 `const seasonStats=new SeasonStats(`；`careerRetirement` 建構行以 regex 取得，切片已帶入時不重複）、`retirement-hof-balance.test`（現行側 `careerScoreFor`＋`defShare` 單行）、`draft-signing-policy.test`（`amateurCareer` 建構行）、`trait-policy.test`（`playerInjury` 建構行＋`playerInjury.afterGamble`） | B |
+| T4 | `tools/development-b/`：`runtime.mjs`（hook 改 `seasonStats.blankStat`、`honorScoreFor`）、`defense-history-boundaries.mjs`（現行側 `careerRetirement` 建構行）、`legacy-effect-boundaries.mjs`（D4＝a：現行側以 `career-movement.js` 的 `movement`／`handleDemotion` 本體＋真正的 `MovementGate`、`careerTraits` 建構行執行，取代已不存在的 `LEGACY` 覆寫行） | B |
+| T5 | `game.js` 刪除 24 個包裝＋`deriveSeedInt`（27 行；409 行／41,813 bytes → 382 行／39,870 bytes；混合換行逐位元組保留）。`npb-return-ui.test` 的重建段改為把 `handleDemotion`／`retireBelowActiveMinimum` 本體插在原位置（`/* 長期契約/短期契約 選択処理。 */` 之前），並斷言 `game.js` 已無宣告 | C |
+| T6 | 本節結果、§3.30、BACKLOG（含 D10 TEST-BASELINE-REBASE-01） | 文件 |
 
-驗證（每個 commit）：
-- V1：改過的測試逐一單獨執行 PASS；Full 限定 E2E 直接執行測試檔（非 Full profile）。
-- V2：拆 hook 的檔案，以腳本斷言舊側字串與修改前逐字相同。
-- V3：負控制——在 scratch 將對應模組方法改壞（替換斷言 1 次，還原後 sha 相同），確認改過的測試在預期斷言 FAIL；以 exit code＋`ERR_ASSERTION` 判定，不以標籤字串判定。
-- V4：抵達——新側 hook／harness 呼叫的模組方法以計數 spy 確認實際被呼叫（>0）。
-- V5：T6 後 Quick 全部；`game-view-dom-e2e` 直接執行證明正式行為無差異。
-- V6：草稿先在 scratch worktree 完成 T1–T6 並跑 Quick，耦合結果確定後再更新本 T 表請求批准。
-- reviewer（全 diff）。CI Full 由使用者於 GitHub 手動執行。
+草稿驗證結果（macOS＋Brave 157，本機，非 CI）：
+- Quick：基準 `c48d675` 109／109 PASS；草稿 109／109 PASS。草稿第 1 次啟動時 runner 因 `tests/support/module-calls.mjs` 未分類而在執行前中止（0 項執行），登記後重跑。
+- 不需瀏覽器的相關測試 19 個與 `tools/development-b` 2 個：PASS。刪除後 `retirement-hof-balance` 首次 FAIL（`CareerRetirement is not defined`：`defShare` 的切片尾端延伸到 `careerRetirement` 建構行），改為單行取得後 PASS。
+- 切片尾端位移（新舊 `game.js` 逐名比對 `productionFunction`）只有 `buyoutRemaining`、`defShare`、`runDraft`、`faMarket`；從現行 `game.js` 切這些名稱的只有 `npb-return-ui`（已處理）、`retirement-hof-balance`（已處理）、`defense-history-boundaries`（已處理），`income-summary` 只切舊 SHA。
+- Full 限定 E2E 直接執行（非 Full profile）15 次：第 1 輪 10 PASS／5 FAIL。4 個 FAIL（`hof-first-ballot`、`trait-display`、`stage10-risk`、`smallschool-c`）為 helper 的 regex 把展開 `...blankStat(` 當成成員呼叫而計數 0（`MODULE_CALL_COUNT`；`hof-first-ballot` 表現為伺服器內丟出的 404），修正後 4／4 PASS。`display-preferences-e2e` 未帶 runner 轉交的 `--baseline` 而在 `git show 8dd244b:…ability-evaluation-policy.js` 失敗，乾淨基準相同；以 `--baseline=d6cef67`（runner 的 `origin/main`）重跑，基準與草稿皆 PASS。`contract-salary-e2e` 以 `--compare=d6cef67` 與預設 `37121fb` 各 1 次 PASS。
+- 負控制（scratch，替換斷言 1 次、還原後 sha 相同；以 exit＋`ERR_ASSERTION` 判定）11／11 攔下：`SeasonStats.blankStat`／`defRuns`／`addStatTotal`→`season-stats.test`；`addStatTotal` 簽名→`information-architecture.test`；`posLegendPhrase` 文字→`defense-history-boundaries`；投票卡→`hof-first-ballot-league.test`；`hofInfo` 寫入→`retirement-hof-balance.test:13`；`handleDemotion` 閾值→`npb-return-ui.test`；`pathChoiceU4` 標題→`draft-signing-policy.test`；rubber 文字→`trait-policy.test`；`movement` ERA 閾值→`legacy-effect-boundaries`。另 4 個（N5、N6、N7、N7b）因 fixture 走不到而存活（等價突變），已改用走得到的位置（N5b、N6b、N7c）。
+- 抵達：`legacy-effect-boundaries` 現行側計數 probe：`movement` 759／759 案、`handleDemotion` 329 次，`observed` 全部非空。helper 單元檢查：舊原始碼回傳原 hook（逐字相同）、新原始碼改寫（含展開）、成員呼叫與字串不改、混合原始碼與次數不符皆丟錯。
+- 未做：E2E 各 hook fixture 的抵達 probe（刪除後裸名稱若被呼叫會 `ReferenceError`，PASS 間接表示改寫後的呼叫可執行，但未逐 fixture 證明被呼叫）——正式實作時以帶標記 probe 逐檔確認；reviewer；CI Full（GitHub 手動）。
+
+正式實作：依 A→B→C→文件 commit；每個 commit 跑 Quick；C 後重跑上列 15 次 E2E 與 E2E 抵達 probe；reviewer（全 diff）。**Full 實行が必要（GitHub 手動・未実行）**。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
