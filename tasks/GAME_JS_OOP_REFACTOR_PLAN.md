@@ -4946,7 +4946,8 @@ T2、T3b 使 Quick 由 83 增為 85、Full 由 109 增為 111。
 - 正式 commit `b7237d4`（3 檔與草稿 `cmp` 相同）：Quick **107／107 PASS**（summary SHA `b7237d441c49db0c9695b8321d6537a326fc3c70`）；`jersey-e2e`（Full 限定，使用者授權單獨執行）22／22 PASS（含 `new-career-over-save`）；`verify-modularization` PASS。
 - reviewer（`bdf1135..b7237d4`）：無發現。確認三條路徑等價（含 `confirmAction` 同步拋出時旗標與 rejection 的行為）；指出留在 `game.js` 的檢查（pending 旗標、`S`、刪除預檢與設旗標順序）未改且只由 E2E 涵蓋。
 - **Full 實行が必要（GitHub 手動・未実行）**：R3（存檔覆寫・刪除、`S` 重置路徑）。版本不變。
-- 未做：push、PR、Linux CI Full、Preview、實機。
+- 交付（2026-11-21）：分支 `refactor/browser-save-guards`（`34d943c`）已 push，[PR #111](https://github.com/tt-chin/yakyujinsei/pull/111)（→ dev）已開，內文以 API 讀回與草稿一致。PR → dev 不觸發 CI。
+- 未做：合併、Linux CI Full（GitHub 手動）、Preview、實機。
 
 ## 3. 後續各期概要（細節於各期開始前另立計畫）
 
