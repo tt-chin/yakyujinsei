@@ -1,3 +1,4 @@
+import {VERSION} from '../docs/src/config.js';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -42,7 +43,7 @@ try{
   const old=await baselineContext.newPage();old.on('pageerror',e=>errors.push('baseline '+e.message));await old.goto(`http://127.0.0.1:${server.address().port}/baseline/?seed=${before.state.seed}`);await old.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
   await old.locator('#in-name').fill('長い名前の検証選手');await old.locator(`#seg-pos [data-v="${pos}"]`).click();await old.locator('#btn-start').click();await old.locator('#act button').filter({hasText:'トレーニング成果を割り振る'}).click();await old.locator('#act .abrow').first().click();await old.evaluate(()=>window.__shell.settle());
   const reference=await get(old),project=(value,version)=>{const copy=structuredClone(value);assert.equal(copy.state.version,version);delete copy.state.version;assert.equal(copy.state.birthHighSchool.createdVersion,version);delete copy.state.birthHighSchool.createdVersion;return copy;};
-  assert.deepEqual(project(before,'2.0.0'),project(reference,'1.16.15'),pos+' exact pre-change allocation state and RNG, only verified version metadata differs');await baselineContext.close();
+  assert.deepEqual(project(before,VERSION),project(reference,'1.16.15'),pos+' exact pre-change allocation state and RNG, only verified version metadata differs');await baselineContext.close();
   // PLY-01: the candidate board carries the approved number badge/menu item; project them back (with contract checks) before the frozen 2.0.0 compare.
   await p.evaluate(({fn,jersey,current,previous})=>{window.__projectJerseyBoard=eval('('+jersey+')');window.__projectShell2000=eval('('+fn+')');window.__shellBoard2000=current;window.__shellBoard11615=previous;},{fn:projectShell2000.toString(),jersey:projectJerseyBoard.toString(),current:SHELL_BOARD_2000,previous:SHELL_BOARD_11615});
   await p.evaluate(()=>{window.__shellAct=document.querySelector('#act');window.__shellRows=[...document.querySelectorAll('#act .abrow')];window.__shellButtons=[...document.querySelectorAll('#act button')];window.__shellDraft=document.querySelector('#act').innerHTML;});
@@ -57,9 +58,14 @@ try{
     const desktop=width>=1100&&height>=700;
     assert.equal(geo.overflow,false,JSON.stringify({pos,width,height,theme,font,geo}));assert.equal(geo.sidebar.visible,desktop);
     assert.equal(geo.salaryText,'アマ');assert.equal(geo.log.height,0,'phase-4 dedicated allocation hides the retained event reader');
-    if(desktop){assert.ok(geo.sidebar.width>=280&&geo.sidebar.width<=320);assert.ok(geo.main.x>=geo.sidebar.right);assert.ok(geo.app.bottom<=height+1);assert.equal(geo.log.overflow,'auto');}
-    else{assert.equal(geo.board.position,'relative');assert.equal(geo.nav.position,'sticky');assert.equal(geo.act.overflow,'visible');}
+    if(desktop){assert.ok(Math.abs(geo.nav.y-geo.main.y-1)<1,'desktop navigation retains its original top position');assert.ok(geo.sidebar.width>=280&&geo.sidebar.width<=320);assert.ok(geo.main.x>=geo.sidebar.right);assert.ok(geo.app.bottom<=height+1);assert.equal(geo.log.overflow,'auto');}
+    else{assert.equal(geo.board.position,'sticky');assert.equal(geo.nav.position,'sticky');assert.equal(geo.act.overflow,'visible');}
     cases.push({pos,width,height,theme,font,geo});
+   }
+   if(width<1100||height<700){
+    await p.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await frames(p);
+    const header=await p.evaluate(()=>{const board=document.getElementById('board').getBoundingClientRect(),nav=document.getElementById('main-nav').getBoundingClientRect();return {boardTop:board.top,boardBottom:board.bottom,navTop:nav.top,navBottom:nav.bottom,saveBottom:document.getElementById('save-live').getBoundingClientRect().bottom};});
+    assert.ok(Math.abs(header.boardTop)<1,'player board stays pinned');assert.ok(Math.abs(header.navTop-header.boardBottom)<1,'navigation stays directly below the complete board');assert.ok(header.saveBottom<=header.navTop+1,'save status stays above navigation');
    }
    await p.locator('[data-main-view="player"]').click();
    await p.locator('[data-player-tab="ability"]').focus();await p.keyboard.press('ArrowRight');
