@@ -29,3 +29,9 @@ html:has(#view-home[data-allocation-open]:not([hidden])),#view-home[data-allocat
  #view-home[data-allocation-open]:not([hidden]){overflow-y:auto;display:block;overscroll-behavior:contain}
  #view-home[data-allocation-open]>#act{max-height:none;overflow:visible;min-height:100%}
 }
+
+/* Keep the current die raised without moving the dice row or ability cards. */
+[data-allocation-session] #dice{padding:var(--space-md) 0 var(--space-2xs)}
+[data-allocation-session] .die{transition:transform .12s ease-out}
+[data-allocation-session] .die.active:not(.used){transform:translateY(-6px)}
+@media(prefers-reduced-motion:reduce){[data-allocation-session] .die{transition:none}}

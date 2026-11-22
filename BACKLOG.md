@@ -1,5 +1,13 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-23 最終核對：FA比較與骰子上浮已實作（R2），在既有`codex/ui-2.0-mobile-fixes`接續開發，固定比較基準`dc9bf83aca09a82ccc891b061231490ec9295c68`。FA以現有日圓報價顯示球團／年俸／年數／保証年俸總額，三項數值皆降序、同值保留原順、缺損置末；母隊同樣排序。表格連結只定位，橫向球團卡片、鍵盤及選取列同步，原契約按鈕、條件、onclick與choiceViews.buttons順序保留，不改報價生成／簽約／保存／RNG。骰子僅將原active未用骰上移6px並保留余白，復原／重設／用完與完成後定位維持，低減動作設定取消動畫但保留靜態標示。FA新增畫面依MINOR從2.0.0→2.1.0；CURRENT_SPEC、CHANGELOG、RELEASE_NOTES及生成JS、設計書與測試手順已同步。前五批統一2.0.0的歷史不追改。
+>
+> 確定碼本機Quick **104／104 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`test-results/fa-dice-quick-final-02/summary.json`，490.675秒；104份日誌與19份修改來源SHA256一致，完整來源fingerprint `2429f6f7607041456a7d36f3a97bfb3ec7e41ee5403b62afc4e099b549d207fa`。FA的P／IF共64組尺寸／主題／字級，原生抽價及同一offer簽約的完整S／每次RNG對照、零報價、原按鈕identity、重複簽約拒絕、排序／橫捲／鍵盤與錯誤金額／球團／按鈕的DOM負控制通過；另直接執行原contract-salary的FA模式20項（4聯盟退役／延約／留隊／轉隊、薪資付款與原生防重複）全PASS、Console 0。既有128組配點／128組決策／112組外框與原季末退休fixture均通過；骰子6px上移、未裁切、復原／重設／用完、reduced-motion及完成定位由原配點入口驗證。手機FA與骰子截圖已確認。實機Safari／原生觸控仍待使用者驗收。
+>
+> 原FAIL保留：`fa-dice-related-final-01`的2 PASS／1 FAIL為配點固定基準仍期待2.0.0版本戳；僅明列允許state.version與birthHighSchool.createdVersion的2.0.0→2.1.0差異，未知戳仍拒絕，財務／規則／其餘S／RNG全保留。相關4入口`fa-dice-related-02`重測PASS。`fa-dice-quick-final-01`的103 PASS／1 FAIL為外框檢查寫死目前2.0.0；改以目前VERSION核對，歷史1.16.15及固定SHA不變，`fa-dice-shell-version-recheck`先重測PASS後全新執行最終Quick104，不沿用部分結果。原始摘要與日誌均保留。
+>
+> **Full実行が必要（GitHub手動・未実行）**：共用FA畫面／簽約UI接點、版本戳與Full專用DOM比較及新增入口受影響，需由使用者對新提交在GitHub手動執行Full134。本機未執行Full、未自行dispatch／重跑；本修正分支尚未併dev／main，既有ARTIFACT_COVERAGE_BLOCKED與正式受入／公開條件保留，不以舊SHA Full PASS替代本次結果。2026-11-23推送前確認origin/dev已前進至`b6e81a8f54f84789b4da8981d6922c7861eebc77`且有不同歷史／其他產品變更；本次104 PASS只對此功能分支的dc9bf83基準與本批修改有效，未覆蓋或整合最新dev。後續合併須先處理兩側差異並驗證整合碼，不將本次結果當作最新dev整合PASS。
+
 > 2026-11-17 Preview手機修正（R2・共用UI）：初版已依使用者指定以單一commit `59104210efa7704b4749f3da765544ea2e9b705b`合併dev；本修正從此另開`codex/ui-2.0-mobile-fixes`。手機固定完整選手／保存資訊及三分頁，桌面導覽維持top:0；投入標示縮至育成點說明字級並置同列，原能力卡44px操作範圍保留；無標題單一步驟省略通用選擇摘要／開關，保留原進行按鈕與返回入口；事件結果僅去除「イベントカード｜」前綴；配完只捲至原生確定區，保留原復原焦點，復原再配仍定位，Enter不誤確定。引擎、配點closure、保存、資料及RNG不變。未公開UI受入版2.0.0→2.0.0，CURRENT_SPEC、設計書、CHANGELOG及RELEASE_NOTES／生成JS同步。
 >
 > 確定碼本機Quick **102／102 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`test-results/mobile-fixes-quick-final-03/summary.json`，460.807秒；102份log SHA256及13份修改來源雜湊一致，完整來源fingerprint `f9dc5321418ba4473feeba05aa8b3ec2fdfc792f9c4fb680fc62b41fc9e6823d`。128組配點、128組決策與112組外框矩陣、P／IF完整配點／事件S／RNG、16組完成定位／復原再配、完成後Enter、手機單一步驟與錯誤焦點、精確事件名稱與履歷皆通過。個別配點重測`mobile-fixes-allocation-focus-final`及桌面／履歷重測`mobile-fixes-desktop-recheck`通過。前段直接E2E的8條歷史DOM生涯及11組說明視窗（`mobile-fixes-history-dialog-01`）通過；之後僅收斂額外移焦點與桌面導覽位移，最終來源以本輪Quick驗證，不稱前段入口為最終SHA Full。語法、來源連結、Diff檢查及390px配點前後／橫向／單一步驟截圖確認通過。實機Safari、真正200%縮放及原生分享仍待驗收。

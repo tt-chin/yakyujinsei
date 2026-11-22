@@ -29,7 +29,8 @@ test('81 phase-4 font sites plus two phase-5 review headings; name button uses -
   const rule=base.match(/(?:^|\n)\.random-name-button\{([^}]+)\}/);assert.ok(rule,'approved name button rule');
   assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
   const review=styles['career-review.css'];assert.deepEqual([...review.matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-xl','--fs-md'],'only the two approved summary heading sizes');
-  const original=outsideRoot.replace(review,'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
+  assert.deepEqual([...styles['fa-market.css'].matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-md','--fs-sm','--fs-md','--fs-md'],'FA comparison reuses four shared font sites');
+  const original=outsideRoot.replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
   const used=[...original.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
   assert.equal(used.length,81,'phase-4 allocation adds five shared font sites');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
@@ -82,9 +83,10 @@ test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   const rule=base.match(/(?:^|\n)\.player-name-row\{([^}]+)\}/);assert.ok(rule,'approved name row rule');
   assert.equal((rule[1].match(/gap:var\(--space-xs\)/g)||[]).length,1,'one explicit existing spacing token');
   const review=styles['career-review.css'];const added=[...review.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);assert.equal(added.length,11,'phase-5 summary uses eleven approved spacing-token sites');assert.deepEqual(added.filter(n=>!(n in rootTokens)),[],'undefined phase-5 spacing token');
-  const original=outsideRoot.replace(review,'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
+  const original=outsideRoot.replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,235,'compact allocation label removes one padding-token site');
+  assert.equal(used.length,237,'compact label plus two reserved dice-padding token sites');
+  assert.equal([...styles['fa-market.css'].matchAll(/var\((--space-[\w-]+)\)/g)].length,10,'FA comparison uses ten shared spacing sites');
   assert.match(styles['allocation-presentation.css'],/padding:0 var\(--space-2xs\);line-height:1\.6;white-space:nowrap/,'approved compact label retains tokenized inline padding');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');
   assert.deepEqual(Object.keys(SPACE).filter(n=>!used.includes(n)),[],'unused --space token');

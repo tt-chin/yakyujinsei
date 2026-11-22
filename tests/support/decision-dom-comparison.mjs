@@ -18,6 +18,19 @@ export function projectDecisionPresentation(markup,area,state){
     for(let node=walker.nextNode();node;node=walker.nextNode()){const old=node.nodeValue;node.nodeValue=old.replace('9回裏、最後の登板を終えると','9回裏、最後の打席を終えると').replace('最後の登板を前に観客は3分間の総立ち拍手。','最後の打席を前に観客は3分間の総立ち拍手。').replace('マウンドを降りると、全員が','打席後に交代すると、全員が');if(old!==node.nodeValue)changed=true;}
     if(!changed)fail('FAREWELL_COPY');card.removeAttribute('data-pitcher-farewell');
   }
+  if(area==='act'&&root.hasAttribute('data-fa-market')){
+    const market=state.lastFaMarket,view=window.__phase3Pending(),wrapper=root.querySelector('[data-fa-comparison]');
+    const offers=[...(market?.offers||[]),...(market?.stayOffer?[market.stayOffer]:[])],cards=[...root.querySelectorAll('.fa-offer-card')];
+    if(view?.title!=='FA市場オファー比較'||!offers.length||cards.length!==offers.length||!wrapper)fail('FA_MARKET');
+    const field=wrapper.querySelector('select')?.value;if(!['annualSalary','years','guaranteedTotal'].includes(field))fail('FA_SORT');
+    const rows=[...wrapper.querySelectorAll('tbody tr')],values=rows.map(r=>Number(r.dataset.faOfferIndex));
+    if(rows.length!==offers.length||new Set(values).size!==offers.length||values.some(i=>!Number.isInteger(i)||i<0||i>=offers.length))fail('FA_ROWS');
+    for(const row of rows){const i=Number(row.dataset.faOfferIndex),offer=offers[i];if(row.querySelector('a')?.textContent!==view.opts[i].t)fail('FA_NAME');
+      for(const cell of row.querySelectorAll('[data-fa-field]')){const key=cell.dataset.faField,value=offer[key],expected=Number.isFinite(value)&&value>=0?(key==='years'?value+'年':value.toLocaleString('ja-JP')+'円'):'詳細記録なし';if(cell.textContent!==expected)fail('FA_VALUE');}
+    }
+    const buttons=cards.map((card,i)=>{if(Number(card.dataset.faOfferIndex)!==i||card.querySelectorAll('button').length!==1)fail('FA_CARD');return card.querySelector('button');});
+    wrapper.replaceWith(...buttons);root.removeAttribute('data-fa-market');
+  }
   if(area==='act'&&root.hasAttribute('data-allocation-session')){
     const view=window.__phase3Pending();if(view?.kind!=='ALLOCATION'||root.dataset.allocationSession!==root.dataset.decisionId)fail('ALLOCATION_SESSION');
     window.__phase4Starts??=new WeakMap();let start=window.__phase4Starts.get(view);

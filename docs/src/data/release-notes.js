@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "2.1.0｜2026/11/18",
+    "lines": [
+      "- FAの提示条件を表で比較し、年俸・年数・保証年俸総額の高い順に並べ替えられます。球団名から条件カードへ移動し、左右にスワイプして確認できます。",
+      "- 配点中、今使うサイコロが少し上がるようにしました。取り消したときも正しいサイコロを示します。"
+    ]
+  },
+  {
     "title": "2.0.0｜2026/11/17",
     "lines": [
       "- スマートフォンで選手情報とメニューを上部に固定。配点の操作表示を小さくし、配り終えたら確定ボタンへ移動します。次へ進むだけの画面とイベント見出しの重複表示も整理しました。",

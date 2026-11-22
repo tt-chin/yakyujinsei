@@ -1,3 +1,4 @@
+import {projectUi21VersionStamps} from './support/ui-version-comparison.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -32,13 +33,13 @@ try{
  for(const pos of ['P','IF']){
   const {c,p}=await open(pos),reference=await open(pos,true);
   for(const page of [p,reference.p]){await page.locator('#act button').filter({hasText:'トレーニング成果を割り振る'}).click();await page.locator('#act .abrow').first().click();await page.evaluate(()=>window.__decisionProbe.settle());}
-  assert.deepEqual(await get(p),await get(reference.p),'same-version complete allocation S/RNG equals accepted phase 2');
+  assert.deepEqual(projectUi21VersionStamps(await get(p)),projectUi21VersionStamps(await get(reference.p)),'same-version complete allocation S/RNG equals accepted phase 2');
   const draft=await get(p);await p.evaluate(()=>{window.__draftNodes=[...document.querySelectorAll('#act .abrow,#act button')];window.__draftHTML=document.getElementById('act').innerHTML;});
   const id=await p.locator('#act').getAttribute('data-decision-id');assert.equal(await p.locator('#act-toggle').isVisible(),false,'phase-4 allocation is a dedicated view');
   await p.locator('[data-main-view="player"]').click();await p.locator('#decision-return').click();assert.equal(await p.locator('#act').getAttribute('data-decision-id'),id);assert.equal(await p.locator('#act .abrow').first().evaluate(e=>e===document.activeElement),true);
   assert.equal(await p.evaluate(()=>window.__draftNodes.every(n=>n.isConnected)&&document.getElementById('act').innerHTML===window.__draftHTML),true);assert.deepEqual(await get(p),draft);
   for(let n=0;n<120;n++){const a=await p.evaluate(()=>Boolean(window.__decisionProbe.get().state.pendingEvent)),b=await reference.p.evaluate(()=>Boolean(window.__decisionProbe.get().state.pendingEvent));assert.equal(a,b);if(a)break;const actual=await p.evaluate(step),expected=await reference.p.evaluate(step);assert.equal(actual,expected);await frames(p);if(n===119)throw Error('event not reached');}
-  assert.deepEqual(await get(p),await get(reference.p),'same-version complete pre-event S/RNG');
+  assert.deepEqual(projectUi21VersionStamps(await get(p)),projectUi21VersionStamps(await get(reference.p)),'same-version complete pre-event S/RNG');
   const pending=await get(p),view=await p.evaluate(()=>window.__decisionProbe.choice()),pendingId=await p.locator('#act').getAttribute('data-decision-id');
   await p.evaluate(()=>{window.__choiceNodes=[...document.querySelectorAll('#act button')];});
   await p.evaluate(()=>{const filler=document.createElement('div');filler.id='reading-scroll-fixture';filler.style.minHeight='1000px';document.getElementById('log').append(filler);});
@@ -68,7 +69,7 @@ try{
   }
   // One native double click equals one baseline ordinary selection.
   await p.evaluate(()=>document.getElementById('reading-scroll-fixture').remove());await p.setViewportSize({width:1440,height:900});await frames(p);await p.locator('#act button').nth(1).dblclick();await reference.p.locator('#act button').nth(1).click();await frames(p);
-  assert.deepEqual(await get(p),await get(reference.p),'double click equals exactly one accepted baseline action');
+  assert.deepEqual(projectUi21VersionStamps(await get(p)),projectUi21VersionStamps(await get(reference.p)),'double click equals exactly one accepted baseline action');
   const result=p.locator('#log [data-event-occurrence-id]').last();
   assert.doesNotMatch(await result.locator('h4').textContent(),/イベントカード｜/,'result heading keeps the name and badge without the repeated label');assert.ok((await result.locator('[data-event-effects]').textContent()).length>0);assert.equal(await result.locator('[data-event-calculation]').getAttribute('open'),null);
   assert.equal(await result.locator('h4').evaluate(e=>e===document.activeElement),true,'committed result gets focus');

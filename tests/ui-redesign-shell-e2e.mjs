@@ -1,3 +1,4 @@
+import {VERSION} from '../docs/src/config.js';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -41,7 +42,7 @@ try{
   const old=await baselineContext.newPage();old.on('pageerror',e=>errors.push('baseline '+e.message));await old.goto(`http://127.0.0.1:${server.address().port}/baseline/?seed=${before.state.seed}`);await old.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
   await old.locator('#in-name').fill('長い名前の検証選手');await old.locator(`#seg-pos [data-v="${pos}"]`).click();await old.locator('#btn-start').click();await old.locator('#act button').filter({hasText:'トレーニング成果を割り振る'}).click();await old.locator('#act .abrow').first().click();await old.evaluate(()=>window.__shell.settle());
   const reference=await get(old),project=(value,version)=>{const copy=structuredClone(value);assert.equal(copy.state.version,version);delete copy.state.version;assert.equal(copy.state.birthHighSchool.createdVersion,version);delete copy.state.birthHighSchool.createdVersion;return copy;};
-  assert.deepEqual(project(before,'2.0.0'),project(reference,'1.16.15'),pos+' exact pre-change allocation state and RNG, only verified version metadata differs');await baselineContext.close();
+  assert.deepEqual(project(before,VERSION),project(reference,'1.16.15'),pos+' exact pre-change allocation state and RNG, only verified version metadata differs');await baselineContext.close();
   await p.evaluate(({fn,current,previous})=>{window.__projectShell2000=eval('('+fn+')');window.__shellBoard2000=current;window.__shellBoard11615=previous;},{fn:projectShell2000.toString(),current:SHELL_BOARD_2000,previous:SHELL_BOARD_11615});
   await p.evaluate(()=>{window.__shellAct=document.querySelector('#act');window.__shellRows=[...document.querySelectorAll('#act .abrow')];window.__shellButtons=[...document.querySelectorAll('#act button')];window.__shellDraft=document.querySelector('#act').innerHTML;});
   for(const [width,height] of [[320,640],[390,844],[1099,900],[1100,700],[1440,900],[1440,699],[844,390]]){
