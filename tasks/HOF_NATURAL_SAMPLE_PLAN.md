@@ -1,6 +1,6 @@
 # HOF 自然樣本與投手平衡：研究路線計畫（草案）
 
-狀態：**第二版（2026-11-15 依 code owner 建議改寫）。H1～H4 已批准（code owner 於 PR #95 06:53 留言確認為已決定）。2026-11-21 使用者授權並實作 S1 與 H4（見 §7）；S2 以後未授權實作或批量研究。**
+狀態：**第二版（2026-11-15 依 code owner 建議改寫）。H1～H4 已批准（code owner 於 PR #95 06:53 留言確認為已決定）。2026-11-21 使用者授權並實作 S1 與 H4（見 §7）。2026-11-22 S2 規則草案（§8）經使用者確認，經 [PR #118](https://github.com/tt-chin/yakyujinsei/pull/118) 提交 code owner 決定後續；S2 以後仍未授權實作或批量研究。**
 對應：BACKLOG `HOF-NATURAL-SAMPLE-01`（補足自然生涯樣本，**不修改殿堂規則**）、`HOF-PITCHER-BALANCE-01`（RESEARCH_ONLY，只調查 SP／MR／CL，不調係數）。上位規格：[HOF_JERSEY_APPROVED_SPEC.md](HOF_JERSEY_APPROVED_SPEC.md) §3。
 調查基準：`origin/dev` `1494a24`（1.16.10）。
 
@@ -66,7 +66,7 @@ Code owner 決定（建議見 2026-11-15 PR #95 06:38 留言；06:53 留言確�
 | H3 | S3 的規模 | 150 條只是第一輪預算；投手／野手分組；先少量煙霧測試；保留未到達樣本；配對樣本不當獨立 | S3、S5 |
 | H4 | 兩個手動重放入口 | 另開小提案修正，不等下次 FAIL | §4 第 6 項 |
 
-**已決定。** S1 與 H4 於 2026-11-21 經使用者授權實作（§7）；S2 以後仍未授權。授權後、實作前另須確認：S2 各育成方式的能力優先表與操作規則、S3b 的 seed／守備位置／組合清單。
+**已決定。** S1 與 H4 於 2026-11-21 經使用者授權實作（§7）；S2 以後仍未授權。授權後、實作前另須確認：S2 各育成方式的能力優先表與操作規則、S3b 的 seed／守備位置／組合清單。前者的草案見 §8（2026-11-22 使用者確認，待 code owner 決定）；S3b 清單尚未擬定。
 
 ## 6. 驗證與分類
 
@@ -88,3 +88,41 @@ Code owner 決定（建議見 2026-11-15 PR #95 06:38 留言；06:53 留言確�
   - reviewer：無發現。讀碼確認兩個舊基準空白姓名時的預設名即同一組對照表，基準側填名後狀態不變；姓名在 `seedInit` 之前決定，不影響 RNG。
 - **新發現（未修正，另立 BACKLOG `TEST-MANUAL-HISTORICAL-COMPARE-01`）**：姓名修正後，兩入口手動模式接著在「舊基準 vs 新版」比較 FAIL（championship `unapproved first difference`、trait `first difference must be an event draw`）。原因是新版 state 從 step 0 就多了 `championmakerWins: []`（`2a7d8f4`，1.14.0，2026-11-07 新增），兩基準 `004cd26`（2026-10-10）、`2375d46`（2026-10-09）都早於此欄位。失效起點未確認：目前看到的第一差異來自 1.14.0，但 2026-10-31（早於 1.14.0）的本機紀錄已記載這兩入口不帶 manifest args 執行時，歷史比較在乾淨 HEAD 上也 FAIL（當時原因未記錄）。1.16.10 起姓名差異先在重放斷言 FAIL，遮蔽了這一層。此欄位之後是否還有其他差異未確認。依 AGENTS 6.3 未改比較條件。
 - **合併**（2026-11-22）：PR #117 併 dev（`2a2a60d`，樹與 `bf76978` 相同），[Tests #247](https://github.com/tt-chin/yakyujinsei/actions/runs/44972095949) Quick PASS；Full 未執行（兩入口的 Full 路徑不變）。S2 以後仍未授權。
+
+## 8. S2 規則草案（2026-11-22，讀碼基準 `origin/dev` `9f46594`；使用者已確認，待 code owner 決定是否實作）
+
+只讀調查，未改程式、未執行研究。以下行號為 `docs/src/engine/` 下的檔案。
+
+### 8.1 影響設計的既有事實
+
+- **聯盟無法直接指定**：offer 依條件出現，玩家只能在出現的選項中選。NPB1 季後的海外 offer（`career-movement.js` `overseasOffer`／`crossOffersRule`，:157-170）門檻為 ovr KBO≥47（前季 d≥1）、CPBL≥45（d≥0）、MLB≥60（d≥2），DOM 順序固定 KBO→CPBL→MLB，球團隨機。FA 市場（`faMarketRule`）只列出現的球團 `<球團>（<級別>）`；戰力外（`outOfOrg`）最多 4 家依級別排序。已在海外時只會收到 `NPB復帰オファー`，沒有海外對海外的 offer。沒有 posting 選項。
+- **投手角色只能間接影響**：`pitcherRole()`（`player-profile.js:12-19`）`sta≥52` 為 SP，否則牛棚（MR／CL 依前季 d）。唯一的畫面選擇：牛棚投手 `sta` 達標時，NPB1／CPBL1／MLB 會問 `先発へ転向し、ローテを担う`／`ブルペンに残り、自分の役割を守る`（`defense-position-review.js:39-47`）；SP 轉牛棚是自動的。
+- **沒有休養選項**：受傷判定全自動（`player-injury.js` `rollInjury`）。可選的只有：TJ 的 `トミー・ジョン手術を受ける`／`注射で今季を乗り切る`（`player-injury.js:19-37`）、36 歲後的 `もう一年挑戦する`／`契約を断り、日本球界へ戻る`／`引退記者会見を開く`（`season-phases.js:80-91`）、代表招集的出場／辭退。
+- **沒有「主要能力」對照表**：唯一相關是 `overallRatingFor`（`ability-evaluation-policy.js:16-30`）的權重——投手 vel／ctl／brk 取前三（0.42／0.30／0.18）＋sta 0.10；野手 con／pow／eye／spd 取前四（0.38／0.27／0.20／0.15）＋守備。
+- **現行 pilot 的「第一個非引退鈕」造成的偶然選擇**（`tests/retirement-hof-pilot.mjs:22-27`）：投球計畫每季選 `全力投球`（`season-phases.js:75-77` 順序為全力→通常→省エネ）；TJ 選手術；`ordered-overseas` 在海外 offer 中取第一個，實際多為 KBO；配點確定鈕 `確定 ▸`（`player-ability.js:53`）不符確定鈕的正規表示式，是靠 fallback 點到的。
+
+### 8.2 規則
+
+介面：新增 `--league=stay|overseas|target-kbo|target-mlb` 與 `--training=balanced|primary|pitcher-sp|pitcher-rp`。既有 `--strategy=ordered-overseas|balanced-stay` 原樣保留，用於重現舊結果，不改其行為。
+
+| 項目 | 規則 |
+|---|---|
+| `stay` | 有留隊選項（`現在の球団に残留`／`権利を行使せず残留`／`宣言残留`）就選；不宣告 FA |
+| `overseas` | 有海外 offer 就接，優先序 MLB＞KBO＞CPBL；沒有就留隊 |
+| `target-kbo`／`target-mlb` | 只接目標聯盟的 offer；有 FA 資格時宣告 `海外FAを宣言`，市場有目標聯盟球團就選，否則選 `宣言残留`，再沒有就選第一個 offer；戰力外時有目標聯盟 offer 就接，否則選第一個 |
+| 高中畢業 `米国プロ組織と契約する` | `overseas`、`target-mlb` 選；`stay`、`target-kbo` 走 `NPBドラフトへ` |
+| 海外時的 `NPB復帰オファー` | 四種皆選留隊 |
+| `balanced` | 維持現行：每次點目前值最低的能力 |
+| `primary`（只用於野手） | con／pow／eye／spd 中由低往高點；這組全滿後改點其餘能力（由低往高） |
+| `pitcher-sp` | 先把 `sta` 點到 52，之後 vel／ctl／brk 由低往高；被問轉先發時選轉先發 |
+| `pitcher-rp` | `sta` 不超過 51，只點 vel／ctl／brk；被問轉先發時選留在牛棚 |
+| 共通固定規則 | 投球計畫固定 `通常投球`；TJ 固定手術；36 歲後固定 `もう一年挑戦する`；事件卡、交易、代表等其他選擇維持現行「第一個非引退鈕」；配點確定鈕改為明確比對 `確定`／`捨てます` |
+
+- 投手的育成方式只用 `balanced`、`pitcher-sp`、`pitcher-rp`（投手的 `primary` 與 `pitcher-rp` 幾乎相同）。
+- 投球計畫由偶然的 `全力投球` 改為 `通常投球`：新策略的結果不與既有 50 條生涯直接比較（使用者已接受）。
+- `pitcher-rp` 不保證成為 CL，仍依 §4 第 2 項按實際 SP／MR／CL 紀錄分類。
+
+### 8.3 未決與實作時的驗證
+
+- 待 code owner 決定：是否依本規則實作 S2，以及規則的增刪。S3b 的 seed／守備位置／組合清單尚未擬定。
+- 實作範圍同 §6：只改 `tests/retirement-hof-pilot.mjs`（`audit`），不改遊戲與 Quick／Full 路徑。驗證：每種適用組合少量執行跑完；`__hofActions` 確認各規則確實被執行（例如 `pitcher-rp` 的 `sta` 從未超過 51、`target-mlb` 不接 KBO offer）；同版本重放 PASS；既有兩種 `--strategy` 的 `actionDigest` 與修改前一致；`node scripts/test.mjs list` 的模式不變。
