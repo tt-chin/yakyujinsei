@@ -86,7 +86,7 @@ Code owner 決定（建議見 2026-11-15 PR #95 06:38 留言；06:53 留言確�
   - 負控制（scratch 副本只讓重放那一次填不同名字，不提交）：3 入口皆 exit 1，分別在 `full game replay state`、`new replay mismatch`、`new annual draw rule is not reproducible` 以 `ERR_ASSERTION` FAIL，差異只在姓名。
   - 兩入口 `--ui-only`（Full 的路徑）exit 0，console 錯誤 0；Quick 109／109 PASS（不含這兩入口）。
   - reviewer：無發現。讀碼確認兩個舊基準空白姓名時的預設名即同一組對照表，基準側填名後狀態不變；姓名在 `seedInit` 之前決定，不影響 RNG。
-- **新發現（未修正，另立 BACKLOG `TEST-MANUAL-HISTORICAL-COMPARE-01`）**：姓名修正後，兩入口手動模式接著在「舊基準 vs 新版」比較 FAIL（championship `unapproved first difference`、trait `first difference must be an event draw`）。原因是新版 state 從 step 0 就多了 `championmakerWins: []`（`2a7d8f4`，1.14.0，2026-11-07 新增），兩基準 `004cd26`（2026-10-10）、`2375d46`（2026-10-09）都早於此欄位。失效起點未確認：目前看到的第一差異來自 1.14.0，但 2026-10-31（早於 1.14.0）的本機紀錄已記載這兩入口不帶 manifest args 執行時，歷史比較在乾淨 HEAD 上也 FAIL（當時原因未記錄）。1.16.10 起姓名差異先在重放斷言 FAIL，遮蔽了這一層。此欄位之後是否還有其他差異未確認。依 AGENTS 6.3 未改比較條件。
+- **新發現（另立 BACKLOG `TEST-MANUAL-HISTORICAL-COMPARE-01`；2026-11-22 已於 `test/historical-compare-alignment` 修正，診斷、決定與驗證見該條）**：姓名修正後，兩入口手動模式接著在「舊基準 vs 新版」比較 FAIL（championship `unapproved first difference`、trait `first difference must be an event draw`）。原因是新版 state 從 step 0 就多了 `championmakerWins: []`（`2a7d8f4`，1.14.0，2026-11-07 新增），兩基準 `004cd26`（2026-10-10）、`2375d46`（2026-10-09）都早於此欄位。失效起點未確認：目前看到的第一差異來自 1.14.0，但 2026-10-31（早於 1.14.0）的本機紀錄已記載這兩入口不帶 manifest args 執行時，歷史比較在乾淨 HEAD 上也 FAIL（當時原因未記錄）。1.16.10 起姓名差異先在重放斷言 FAIL，遮蔽了這一層。此欄位之後是否還有其他差異未確認。依 AGENTS 6.3 未改比較條件。
 - **合併**（2026-11-22）：PR #117 併 dev（`2a2a60d`，樹與 `bf76978` 相同），[Tests #247](https://github.com/tt-chin/yakyujinsei/actions/runs/44972095949) Quick PASS；Full 未執行（兩入口的 Full 路徑不變）。S2 以後仍未授權。
 
 ## 8. S2 規則草案（2026-11-22，讀碼基準 `origin/dev` `9f46594`；使用者已確認，待 code owner 決定是否實作）

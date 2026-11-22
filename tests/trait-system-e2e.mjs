@@ -30,33 +30,43 @@ const browser=await chromium.launch({channel:process.argv.find(a=>a.startsWith('
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&/\.(js|css)(\?|$)/.test(r.url()))errors.push(r.status()+' '+r.url());});};
 // Identical explicit input preserves full-state/RNG replay; blank product names intentionally vary.
 const replayNames={P:'投山翔太',C:'強肩剛',IF:'守田巧',OF:'走川隼人'};
-const start=async(p,url,pos='P',name)=>{await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#seg-pos [data-v="'+pos+'"]').click();if(name)await p.locator('#in-name').fill(name);await p.locator('#btn-start').click();};
-const action=()=>{const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];if(!b)throw Error('No career action');return b;};
+const start=async(p,url,pos='P',name,normalPitch=false)=>{if(normalPitch)await p.addInitScript(()=>window.__normalPitch=true);await p.goto(url);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#seg-pos [data-v="'+pos+'"]').click();if(name)await p.locator('#in-name').fill(name);await p.locator('#btn-start').click();};
+const action=()=>{const act=document.querySelector('#act'),rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||(window.__normalPitch&&buttons.find(e=>/^通常投球/.test(e.innerText)))||buttons[0];if(!b)throw Error('No career action');return b;};
 const extra=new Set(['version']);
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).filter(([key])=>!extra.has(key)).map(([key,v])=>[key,key==='removed'?v.map(x=>removedTraitLabel(x)):canonical(v)])):value;
+// Baseline comparison (TEST-MANUAL-HISTORICAL-COMPARE-01): every top-level state key the baseline already has must match,
+// except those `extra`/`beforeDrawMetadata` exclude (keys added later are not compared; nested values are compared in full),
+// plus RNG state/count. Action text is not compared.
+// The new-only jersey choice step (PLY-01, 9315543) is removed before step alignment.
+const jerseyStep=/背番号\s*\d+\s*で入団する/;
+const historical=(base,record=base)=>({state:Object.fromEntries(Object.keys(base.state).filter(k=>Object.hasOwn(record.state,k)).map(k=>[k,record.state[k]])),rng:record.rng,calls:record.calls});
 const beforeDrawMetadata=value=>Array.isArray(value)?value.map(beforeDrawMetadata):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).filter(([key])=>!['eventDrawYear','eventDrawnCardIDs','abilityPoints'].includes(key)).map(([key,v])=>[key,beforeDrawMetadata(v)])):value;
 let failure;
 try{
-  if(!arg('preview')&&!process.argv.includes('--ui-only'))for(const [seed,pos] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-catcher-01','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']]){
+  // jp3-catcher-03 replaces jp3-catcher-01, whose school changed in 1.12.0 (d8f2df9). jp3-pitcher-16 is the seed whose
+  // first draw difference comes after the jersey step and the 2029 pitching plan, so the jersey alignment and the
+  // 通常投球 choice are both exercised.
+  // Pitchers choose 通常投球, as in championship-intl-e2e (the 1.11.9 全力投球 fix a1658c9 changes stats).
+  if(!arg('preview')&&!process.argv.includes('--ui-only'))for(const [seed,pos] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-pitcher-16','P'],['jp3-catcher-03','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']]){
     const runs=[];
     for(const old of [true,false,false]){
-      const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos,replayNames[pos]);const records=[];
+      const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos,replayNames[pos],true);const records=[];
       for(let i=0;i<2500;i++){
         const r=await p.evaluate(`(()=>{const h=window.__traitTest.get();if(h.state.done)return{record:h,done:true};const b=(${action.toString()})();h.action=b.innerText;b.click();return{record:h,done:false};})()`);records.push(r.record);if(r.done)break;if(i===2499)throw Error('Career did not complete');
       }
       runs.push(records);await p.close();
     }
     assert.deepEqual(runs[2],runs[1],seed+' new annual draw rule is not reproducible');
-    let firstDifference=null;
-    for(let i=0;i<Math.min(runs[0].length,runs[1].length);i++){
-      const old=beforeDrawMetadata(canonical(runs[0][i])),now=beforeDrawMetadata(canonical(runs[1][i]));
+    let firstDifference=null;const aligned=runs[1].filter(r=>!jerseyStep.test(r.action||''));
+    for(let i=0;i<Math.min(runs[0].length,aligned.length);i++){
+      const old=beforeDrawMetadata(canonical(historical(runs[0][i]))),now=beforeDrawMetadata(canonical(historical(runs[0][i],aligned[i])));
       if(JSON.stringify(old)!==JSON.stringify(now)){
         console.error('HISTORICAL_FIRST_DIFFERENCE '+JSON.stringify({baseline,seed,pos,step:i,year:now.state.year,oldCalls:old.calls,newCalls:now.calls,difference:findFirstDifference(old,now)}));
-        assert.ok(old.state.pendingEvent&&now.state.pendingEvent,'first difference must be an event draw');assert.equal(old.state.year,now.state.year);assert.notEqual(old.state.pendingEvent.cardID,now.state.pendingEvent.cardID,'unrelated first difference');assert.ok(runs[1][i].state.eventDrawnCardIDs.length>=2);firstDifference={step:i,year:now.state.year,oldCard:old.state.pendingEvent.cardID,newCard:now.state.pendingEvent.cardID};break;
+        assert.ok(old.state.pendingEvent&&now.state.pendingEvent,'first difference must be an event draw');assert.equal(old.state.year,now.state.year);assert.notEqual(old.state.pendingEvent.cardID,now.state.pendingEvent.cardID,'unrelated first difference');assert.ok(aligned[i].state.eventDrawnCardIDs.length>=2);firstDifference={step:i,year:now.state.year,oldCard:old.state.pendingEvent.cardID,newCard:now.state.pendingEvent.cardID};break;
       }
     }
     for(const record of runs[1])assert.equal(new Set(record.state.eventDrawnCardIDs).size,record.state.eventDrawnCardIDs.length,'duplicate annual draw');
-    const last=runs[1].at(-1),oldLast=runs[0].at(-1);assert.ok(last.state.done);assert.ok(oldLast.state.done);console.log(`${seed}/${pos}: old ${runs[0].length} actions/RNG ${oldLast.calls} -> new ${runs[1].length} actions/RNG ${last.calls}; two exact new runs, first approved draw difference ${JSON.stringify(firstDifference)}`);
+    const last=runs[1].at(-1),oldLast=runs[0].at(-1);assert.ok(last.state.done);assert.ok(oldLast.state.done);console.log(`${seed}/${pos}: old ${runs[0].length} actions/RNG ${oldLast.calls} -> new ${runs[1].length} actions/RNG ${last.calls}; two exact new runs, ${runs[1].length-aligned.length} jersey steps aligned, first approved draw difference ${JSON.stringify(firstDifference)}`);
   }
   for(const width of [1280,320,390]){
     const ctx=await browser.newContext({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500}),p=await ctx.newPage();wire(p);await start(p,(arg('preview')||local)+'/?seed=trait-ui');
