@@ -1,4 +1,4 @@
-import {projectUi21VersionStamps} from './support/ui-version-comparison.mjs';
+import {assertUi20VersionStamps} from './support/ui-version-comparison.mjs';
 import {openReaderDetails} from './support/reader-disclosure.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -23,12 +23,12 @@ try{
   const p=await open(pos),old=await open(pos,true);
   const fixture={name:'長い選手名'.repeat(4),year:2050,age:40,stage:'PRO',lv:'NPB1',team:'長い球団名'.repeat(8),log:[{y:2026,age:16,tm:'高校',line:'地区予選'},{y:2029,age:19,tm:'東京',st:stat,line:'プロ初年度'},{y:2031,age:21,tm:'海外',st:{...stat,form:1}},{y:2049,age:39,tm:'東京',inj:true,line:'全休'},{y:2050,age:40,tm:'東京',st:stat}],stats:{NPB:{...stat,yr:15}},honors:['2029 新人王','2031 MVP','2050 最多勝'],teamTally:{NPB:{tokyo:15}},ct:{annualSchedule:[{year:2050,amount:100000000,paid:true}]},salaryDecisionHistory:[]};
   for(const q of [p,old])await q.evaluate(f=>{window.__reviewTest.set(f);window.__reviewTest.season();},fixture);
-  assert.deepEqual(projectUi21VersionStamps(await snapshot(p)),projectUi21VersionStamps(await snapshot(old)),'season fixture complete S/RNG');
+  assert.deepEqual(assertUi20VersionStamps(await snapshot(p)),assertUi20VersionStamps(await snapshot(old)),'season fixture complete S/RNG');
   const season=p.locator('[data-career-review="season"]');assert.deepEqual(await season.locator('dd').allTextContents(),['1億円','未定']);assert.match(await season.textContent(),pos==='P'?/123\.2/:/本塁打 20/);assert.match(await season.textContent(),/2050 最多勝/);assert.doesNotMatch(await season.textContent(),/2031 MVP/);
   const before=await snapshot(p);await p.evaluate(()=>window.__reviewTest.refresh());assert.deepEqual(await snapshot(p),before);assert.equal(await season.count(),1,'redraw never duplicates summary');
   for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.postResult());assert.equal(await p.locator('.card').filter({has:p.locator('h4',{hasText:'季末後の結果'})}).locator('details').evaluate(e=>e.open),true,'later event results keep phase-3 reading/focus behavior');assert.deepEqual(await snapshot(p),before,'later result display preserves complete state/RNG');
   for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.retire());await frames(p);await frames(old);
-  assert.deepEqual(projectUi21VersionStamps(await snapshot(p)),projectUi21VersionStamps(await snapshot(old)),'native retirement complete S/RNG including HOF and fan draws');
+  assert.deepEqual(assertUi20VersionStamps(await snapshot(p)),assertUi20VersionStamps(await snapshot(old)),'native retirement complete S/RNG including HOF and fan draws');
   const original=q=>q.evaluate(()=>window.__projectReview(document.getElementById('log').outerHTML,'log',window.__reviewTest.get().state));assert.equal(await original(p),await original(old),'every original retirement node/text preserved');
   const review=p.locator('[data-career-review="retirement"]');assert.equal(await review.count(),1);assert.match(await review.textContent(),/2026年｜野球人生の始まり/);assert.match(await review.textContent(),/2029年｜プロでの最初の記録/);assert.match(await review.textContent(),/2031年｜キャリアハイ/);assert.match(await review.textContent(),/2050年/);
   assert.equal(await p.locator('.yr-block').last().locator('.card > details[open]').count(),0,'original tables/narratives start collapsed');
@@ -51,7 +51,7 @@ try{
  if(!process.argv.includes('--fixtures-only'))for(const pos of ['P','IF']){
   const p=await open(pos),old=await open(pos,true);let steps=0;
   for(;steps<2000;steps++){
-   const current=await snapshot(p);assert.deepEqual(projectUi21VersionStamps(current),projectUi21VersionStamps(await snapshot(old)),'natural '+pos+' step '+steps);if(current.state.done)break;
+   const current=await snapshot(p);assert.deepEqual(assertUi20VersionStamps(current),assertUi20VersionStamps(await snapshot(old)),'natural '+pos+' step '+steps);if(current.state.done)break;
    for(const q of [p,old])await q.evaluate(()=>{const a=document.getElementById('act'),rows=[...a.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...a.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.textContent));const b=buttons.find(e=>e.textContent.startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.textContent))||buttons[0];if(!b)throw Error('no action');b.click();});
   }
   assert(steps<2000);checks.push({pos,naturalExactCareer:'PASS',steps});await p.close();await old.close();

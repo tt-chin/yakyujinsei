@@ -1,5 +1,21 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-23 Full CI追修（R2・僅測試）：[Run45036594000](https://github.com/tt-chin/yakyujinsei/actions/runs/45036594000) attempt1，受驗`de2817950e4a366dc3f32c17a22c7d1651f05b95`，原132 PASS／2 FAIL／0 SKIP／0 BLOCKED保持，134份log SHA256已核對。`npb-return-e2e`仍期待手機nav top:0，與已核准固定完整board相衝突；本機原碼亦重現。限定改為手機top等於board高度、實際nav頂端緊接board底端，桌面仍top:0，不降低其他幾何／44px／溢出／薪資斷言。
+>
+> `display-preferences-e2e`原CI在關閉設定後姓名為空字串；原碼的本機完整相關入口及引擎延遲0／200／1200ms探查均未重現，根因仍未確定。一般設定矩陣改等原生開始按鈕enabled後輸入，逐次設定／尺寸／開關對話框檢查姓名，失敗另存被動輸入事件、節點identity、焦點與初始化狀態JSON／截圖；不補填、不重試、不放寬原姓名及生涯斷言。獨立的引擎載入中先輸入姓名案例保留。本次CI追修不改遊戲規則／保存流程／RNG；另依使用者最新指定，開發標示2.1.0改回統一2.0.0，只改版本metadata與更新摘要，不做狀態移行。
+>
+> 修正後相關入口PASS：NPB的22個原生流程與1280／320／375／390／430px共120組設定／版面；display的24種設定×6尺寸、新增姓名檢查、原載入中輸入與P543操作／652 RNG、IF544操作／549 RNG的完整歷史生涯比較（皆2058退休），Console／HTTP錯誤0。證據`test-results/ci45036594000-fix/npb-related.log`與`display-related.log`。以上相關結果受驗時仍標示2.1.0。使用者指定維持2.0.0後，已停止進行中的Quick（quick-final-01，NOT_COMPLETED，紀錄保留）；版本同步後將重新驗證，不沿用為新來源PASS。原CI132／2不是本次修正的Full結果。
+>
+> 版本補正：依2026-11-23最新明示指示維持2.0.0，config、CURRENT_SPEC、CHANGELOG、RELEASE_NOTES／生成資料與設計書同步；FA／骰子納入同一2.0.0更新紀錄（2026-11-23）。取消FA與第2～5批比較器對版本欄位的投影，改嚴格驗證2.0.0並返回完整原snapshot，比較包含state.version與出生createdVersion；錯誤／未知版本仍拒絕。下方2.1.0升版敘述及先前測試結果是改回前的歷史，不代表現行版本。
+>
+> 版本影響追加分類R3：VERSION亦用於出生快照／保存標示及退役smallSchoolEligibility的既有同版檢查。相對修正前`de2817950e4a366dc3f32c17a22c7d1651f05b95`，新生涯／保存允許差異只為version／createdVersion／gameVersion改回2.0.0與更新摘要；不修改規則或新增移行。既存2.0.0出生快照恢復同版資格判定，2.1.0快照在2.0.0下依原跨版規則為UNKNOWN，不冒稱舊存檔稱號資格完全不變。S／A／B／C×兩個出生版本的8組邊界對照PASS，快照不變、無RNG呼叫，證據`test-results/ci45036594000-fix/version-boundary-v200.json`。另需保留固定P／IF前後生涯比較與GitHub手動Full的確認。
+>
+> 2.0.0確定來源重新驗證：NPB原22流程＋120組設定／幾何、display原24種設定×6尺寸及P／IF兩條歷史生涯全部PASS，日誌`npb-related-v200.log`／`display-related-v200.log`（位於`test-results/ci45036594000-fix/`）。最終Quick **104／104 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`quick-final-v200-02/summary.json`，925.129秒；104份log、11份修改程式來源SHA256與完整fingerprint `b5d05c7300cf498b277d9c455b6209378cb335c06db2ed3039fe0855e2aa264c`已核對。FA、配點、決策及季末fixture均以完整2.0.0版本欄位比較PASS。版本常數、規格、同日單一2.0.0更新紀錄與生成資料一致、無重複版本；產品差異僅config及release-notes資料，遊戲引擎／UI／CSS／index原碼不變。
+>
+> 修正前後原始生涯比較PASS：對完整修正前SHA `de2817950e4a366dc3f32c17a22c7d1651f05b95`，P `yakyo-test-001`為543操作／652次RNG、IF `jp3-infielder-01`為544操作／549次RNG，皆2058退休。沿用display原生UI進行策略的獨立本機probe，先保存完整原始雙方記錄，逐操作驗證雙方version／出生createdVersion分別為2.1.0／2.0.0後，僅排除這兩項批准差異；其餘完整S（含awardDecisions及personalStats）、RNG狀態／呼叫數／每次draw值皆嚴格相等，不用歷史狀態投影。Console／HTTP錯誤0、舊HOF oracle請求0。原始P／IF JSON、probe與日誌SHA256及11份確定來源雜湊保存於`test-results/ci45036594000-fix/version-careers-v200-integrity.json`，不是Full PASS。初次ignored probe搬移import誤改HOF判斷字串，導致測試用oracle404及開始等待timeout（exit1）；原probe／`version-careers-v200.log`保留。修正probe後在新`version-comparison-v200-r2/`與`version-careers-v200-r2.log`取得上述PASS，產品與受驗測試來源未變，不把probe錯誤改寫為PASS。
+>
+> **Full実行が必要（GitHub手動・未実行）**：兩個失敗入口屬Full專用，共用版本驗證亦涉及Full比較路徑，且原Linux姓名空白尚未重現，需使用者對`codex/ui-2.0-mobile-fixes`的新提交手動執行Full134確認。本機未啟動Full、Agent未dispatch／重跑；未合併dev／main，正式受入與ARTIFACT_COVERAGE_BLOCKED限制保留。
+
 > 2026-11-23 最終核對：FA比較與骰子上浮已實作（R2），在既有`codex/ui-2.0-mobile-fixes`接續開發，固定比較基準`dc9bf83aca09a82ccc891b061231490ec9295c68`。FA以現有日圓報價顯示球團／年俸／年數／保証年俸總額，三項數值皆降序、同值保留原順、缺損置末；母隊同樣排序。表格連結只定位，橫向球團卡片、鍵盤及選取列同步，原契約按鈕、條件、onclick與choiceViews.buttons順序保留，不改報價生成／簽約／保存／RNG。骰子僅將原active未用骰上移6px並保留余白，復原／重設／用完與完成後定位維持，低減動作設定取消動畫但保留靜態標示。FA新增畫面依MINOR從2.0.0→2.1.0；CURRENT_SPEC、CHANGELOG、RELEASE_NOTES及生成JS、設計書與測試手順已同步。前五批統一2.0.0的歷史不追改。
 >
 > 確定碼本機Quick **104／104 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`test-results/fa-dice-quick-final-02/summary.json`，490.675秒；104份日誌與19份修改來源SHA256一致，完整來源fingerprint `2429f6f7607041456a7d36f3a97bfb3ec7e41ee5403b62afc4e099b549d207fa`。FA的P／IF共64組尺寸／主題／字級，原生抽價及同一offer簽約的完整S／每次RNG對照、零報價、原按鈕identity、重複簽約拒絕、排序／橫捲／鍵盤與錯誤金額／球團／按鈕的DOM負控制通過；另直接執行原contract-salary的FA模式20項（4聯盟退役／延約／留隊／轉隊、薪資付款與原生防重複）全PASS、Console 0。既有128組配點／128組決策／112組外框與原季末退休fixture均通過；骰子6px上移、未裁切、復原／重設／用完、reduced-motion及完成定位由原配點入口驗證。手機FA與骰子截圖已確認。實機Safari／原生觸控仍待使用者驗收。

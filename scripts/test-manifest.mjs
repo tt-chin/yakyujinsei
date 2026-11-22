@@ -51,7 +51,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
-  'support/ui-version-comparison.mjs': ['support','Only approved 2.0.0/2.1.0 state.version and birth createdVersion stamps; unknown stamps rejected and all gameplay/RNG retained.'],
+  'support/ui-version-comparison.mjs': ['support','Require unified 2.0.0 state and birth version stamps; retain complete snapshots including all metadata, gameplay and RNG.'],
   'support/reader-disclosure.mjs': ['support','Native summary click and visible original body with complete state/RNG invariance; no forced DOM changes or archived-description bypass.'],
   'support/allocation-comparison.mjs': ['support','Validates phase-4 allocation presentation before legacy action/choice/text comparisons. Original states, RNG and historical baselines remain strict.'],
   'support/decision-dom-comparison.mjs':['support','Validates approved phase-3 reader wrappers, committed event effects and decision metadata before reconstructing historical DOM; no S/RNG projection.'],

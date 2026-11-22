@@ -1,3 +1,4 @@
+import {assertUi20VersionStamps} from './support/ui-version-comparison.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -17,7 +18,7 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright'),browser=await chromium.launch({headless:true,...(arg('browser')?{channel:arg('browser')}:{})}),errors=[],cases=[];
 const frames=p=>p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
 const get=p=>p.evaluate(()=>window.__faProbe.get());
-function comparable(value){const copy=structuredClone(value);delete copy.state.version;if(copy.state.birthHighSchool)delete copy.state.birthHighSchool.createdVersion;return copy;}
+function comparable(value){return assertUi20VersionStamps(value);}
 async function open(pos,old=false){const c=await browser.newContext({viewport:{width:390,height:844},hasTouch:true});await c.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.fulfill({contentType:'text/css',body:''}));const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400)errors.push(r.status()+' '+r.url());});await p.goto(url+(old?'/baseline/':'/')+'?seed=fa-ui-'+pos);await p.waitForFunction(()=>!document.getElementById('btn-start').disabled);await p.locator('#in-name').fill('契約比較');await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#btn-start').click();await p.evaluate(()=>window.__faProbe.settle());await p.evaluate(()=>window.__faProbe.fixture());await frames(p);return{c,p};}
 let failure;
 try{
@@ -63,5 +64,5 @@ try{
   await reference.c.close();await c.close();console.log('PASS '+pos+': 32 layouts, numeric sorts, selected card/scroll/keyboard, retained handlers, same baseline generation/signing S/RNG and zero offers');
  }
  assert.deepEqual(errors,[]);
-}catch(e){failure=e;console.error(e.stack);}finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));await writeFile(path.join(output,'summary.json'),JSON.stringify({status:failure?'FAIL':'PASS',baseline,allowedDifferences:['state.version','state.birthHighSchool.createdVersion'],cases,errors,failure:failure?.stack},null,2));}
+}catch(e){failure=e;console.error(e.stack);}finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));await writeFile(path.join(output,'summary.json'),JSON.stringify({status:failure?'FAIL':'PASS',baseline,allowedDifferences:[],cases,errors,failure:failure?.stack},null,2));}
 if(failure)throw failure;

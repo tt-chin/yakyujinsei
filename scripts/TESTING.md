@@ -6,11 +6,17 @@
 
 Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
 
-## UI 2.1 FA比較與骰子標示
+## UI 2.0 FA比較與骰子標示
 
-`fa-market-presentation.test`固定三種數值降序、同值穩定、缺損／非法值與凍結來源不變，並驗證只允許2.0.0／2.1.0兩個版本戳的比較投影。`fa-market-presentation-e2e`對固定`dc9bf83aca09a82ccc891b061231490ec9295c68`比較原生FA抽價及同一offer簽約的完整S／每次RNG，64組尺寸／主題／字級、排序與可視卡片／鍵盤／零報價、原按鈕identity／防重複及DOM投影錯值拒絕；不改FA抽價、金額或契約處理。既有contract-salary的FA模式仍比較原球團／原報價，先透過表格定位再按原按鈕。骰子上移由原allocation E2E驗證active、余白、復原／重設／用完與完成定位。
+`fa-market-presentation.test`固定三種數值降序、同值穩定、缺損／非法值與凍結來源不變，並驗證統一2.0.0的版本戳、未知／錯誤版本拒絕及完整來源不變。`fa-market-presentation-e2e`對固定`dc9bf83aca09a82ccc891b061231490ec9295c68`比較原生FA抽價及同一offer簽約的完整S／每次RNG，64組尺寸／主題／字級、排序與可視卡片／鍵盤／零報價、原按鈕identity／防重複及DOM投影錯值拒絕；不改FA抽價、金額或契約處理。既有contract-salary的FA模式仍比較原球團／原報價，先透過表格定位再按原按鈕。骰子上移由原allocation E2E驗證active、余白、復原／重設／用完與完成定位。
 
-Quick104／Full134入口；本機只執行相關個別入口與Quick，不執行Full。2.1.0對2.0.0的比較只排除經明列驗證的state.version與birthHighSchool.createdVersion，其他S／RNG不投影。UI專用WeakMap／CSS排序不改原offers或choiceViews.buttons順序；歷史比較先驗證金額／球團／原按鈕再拆除呈現包裝。
+Quick104／Full134入口；本機只執行相關個別入口與Quick，不執行Full。2026-11-23依使用者指定維持2.0.0；FA與第2～5批固定2.0.0基準比較均保留state.version與birthHighSchool.createdVersion，不排除任何版本欄位或其他S／RNG。UI專用WeakMap／CSS排序不改原offers或choiceViews.buttons順序；歷史比較先驗證金額／球團／原按鈕再拆除呈現包裝。
+
+### Full 45036594000 的 UI 測試追修
+
+`npb-return-e2e`依核准的固定完整抬頭規格檢查導覽：桌面閱讀欄的 CSS top 為0，手機則等於完整board高度，並驗證導覽實際頂端緊接board底端；原120組設定矩陣、44px操作尺寸、溢出、薪資與狀態／RNG斷言保留。
+
+`display-preferences-e2e`的一般設定矩陣先等原生開始按鈕enabled（引擎／存檔初始化完成）再輸入姓名；原獨立延遲引擎載入時先輸入姓名的案例仍保留。填入、開關對話框、每次設定及尺寸變更後逐步嚴格檢查姓名，不補填、不重試、不忽略姓名差異。失敗時在既有tmp證據目錄保存`name-preservation-failure.json`與截圖，記錄節點identity、焦點、設定、初始化狀態及最近輸入事件；原CI姓名空白尚未重現，不將新增診斷稱為已確認原始原因。Runner、入口數、歷史基準與遊戲程式不變；修正後需在新SHA由使用者手動執行GitHub Full。
 
 ## UI 2.0 季末／退休呈現
 

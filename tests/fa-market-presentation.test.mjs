@@ -6,8 +6,11 @@ assert.deepEqual(sortFaOffers([{annualSalary:null},{annualSalary:0},{annualSalar
 assert.deepEqual(sortFaOffers([]),[]);assert.deepEqual(sortFaOffers([{years:1}],'years'),[0]);assert.throws(()=>sortFaOffers(offers,'teamId'),/Unknown FA sort/);
 assert.deepEqual(offers.map(o=>o.annualSalary),[100,250,100]);console.log('PASS FA sort: annual/years/guaranteed, stable ties, missing/invalid, empty/single, rejected field and frozen source unchanged');
 
-const {projectUi21VersionStamps}=await import('./support/ui-version-comparison.mjs');
-const original={state:{version:'2.1.0',birthHighSchool:{createdVersion:'2.1.0',school:'A'},salary:10},rng:[1,2]};
-assert.deepEqual(projectUi21VersionStamps(original),{state:{birthHighSchool:{school:'A'},salary:10},rng:[1,2]});assert.equal(original.state.version,'2.1.0');
-assert.throws(()=>projectUi21VersionStamps({state:{version:'9.0.0'}}),/UI21_VERSION/);assert.throws(()=>projectUi21VersionStamps({state:{version:'2.1.0',birthHighSchool:{createdVersion:'9.0.0'}}}),/UI21_BIRTH/);
-console.log('PASS strict version metadata projection; original state, financial values and RNG retained; unknown stamps rejected');
+const {assertUi20VersionStamps}=await import('./support/ui-version-comparison.mjs');
+const original={state:{version:'2.0.0',birthHighSchool:{createdVersion:'2.0.0',school:'A'},salary:10},rng:[1,2]},before=structuredClone(original);
+assert.equal(assertUi20VersionStamps(original),original);assert.deepEqual(original,before);
+for(const version of ['2.1.0','9.0.0']){assert.throws(()=>assertUi20VersionStamps({state:{version}}),/UI20_VERSION/);assert.throws(()=>assertUi20VersionStamps({state:{version:'2.0.0',birthHighSchool:{createdVersion:version}}}),/UI20_BIRTH/);}
+assert.throws(()=>assertUi20VersionStamps({state:{version:'2.0.0',birthHighSchool:{createdVersion:null}}}),/UI20_BIRTH/);
+assert.deepEqual(assertUi20VersionStamps({state:{version:'2.0.0'},rng:[]}),{state:{version:'2.0.0'},rng:[]});
+assert.deepEqual(assertUi20VersionStamps({state:{version:'2.0.0',birthHighSchool:{school:'legacy'}},rng:[]}),{state:{version:'2.0.0',birthHighSchool:{school:'legacy'}},rng:[]});
+console.log('PASS unified 2.0.0 version validation; complete snapshot identity, financial values and RNG retained; wrong stamps rejected');

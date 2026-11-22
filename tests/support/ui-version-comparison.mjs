@@ -1,11 +1,9 @@
-// Only the approved 2.0.0 -> 2.1.0 metadata delta. Never project gameplay or RNG.
-export function projectUi21VersionStamps(snapshot){
-  const result=structuredClone(snapshot),state=result.state;
-  if(!state||!['2.0.0','2.1.0'].includes(state.version))throw Error('UI21_VERSION_STAMP');
-  delete state.version;
+// The UI release stays at 2.0.0. Keep every version, gameplay and RNG field.
+export function assertUi20VersionStamps(snapshot){
+  const state=snapshot?.state;
+  if(!state||state.version!=='2.0.0')throw Error('UI20_VERSION_STAMP');
   if(state.birthHighSchool&&Object.hasOwn(state.birthHighSchool,'createdVersion')){
-    if(!['2.0.0','2.1.0'].includes(state.birthHighSchool.createdVersion))throw Error('UI21_BIRTH_VERSION_STAMP');
-    delete state.birthHighSchool.createdVersion;
+    if(state.birthHighSchool.createdVersion!=='2.0.0')throw Error('UI20_BIRTH_VERSION_STAMP');
   }
-  return result;
+  return snapshot;
 }
