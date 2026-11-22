@@ -154,3 +154,5 @@ D4：目標 offer 未出現時當年留隊、隔年再等；未到達的生涯�
 | `target-mlb` | 2／2／3 | 1／3 |
 
 `target-mlb` 36 條中 24 條從未在美國出場（目標 offer 未出現）；殿堂入り 3 條（KBO 2、CPBL 1），NPB／MLB 0。配對樣本，不當到達率。詳細表格、配對矩陣與觀察見 [S3b 報告](../docs/reviews/HOF_NATURAL_SAMPLE_S3B.md)。下一步（S4 角色分析、S5 規模、MLB offer 不出現的處理）須另行授權。
+
+**MLB offer 調查**（2026-11-22，唯讀；scratch 副本只在 wrapper 加紀錄，36／36 digest 與 S3b 相同）：`target-mlb` 中 24 條未在美國出場的原因：從未上 NPB 一軍 5 條；NPB 一軍的季末最高 OVR 53～57 共 14 條；OVR 曾達 63 但 `lastD` 未曾 ≥2 有 1 條；門檻已達到但落在空窗年份 4 條。NPB 一軍的 MLB offer 須 OVR≥60 且 `lastD`≥2（`career-movement.js:163-171`），海外 FA 市場門檻相同（`:222`）。空窗年份：一軍年數 `S.svc`≥5 時 `S.faElig` 被設為 true（`:262-266`）；合約到期時改走 `faFlow` 並 return，不呼叫 `crossOffers`；而 NPB 年資 <8 時 `faFlow` 只做保有權續約（`:202`）。因此一軍第 5 年起、NPB 年資 8 年前的合約到期年度，沒有任何海外 offer（KBO／CPBL 亦同）。是否為原意見 BACKLOG NPB-OFFER-WINDOW-01。S3b 的 MLB 到達數主要受 OVR 門檻限制，不是研究工具的問題。
