@@ -44,6 +44,12 @@ const action=()=>{const act=document.querySelector('#act'),rows=[...act.querySel
 const metadata=new Set(['version','championshipResults','seasonChampContext','seasonEndMaintenanceYear','championshipMigrationVersion','internationalTraitMigrationVersion','intlFinalCount','intlTraitResults','wonChamp']);
 const championshipKeys=new Set(['honors','champThisTeam','champTeam','tradeRefuse']);
 // Awards renamed in 56e72d9 (D2 pitcher awards): 004cd26 honors are mapped to the current names before comparing.
+// Not mapped: 最多奪三振 (now 最多三振奪取投手賞) and 最優秀投手賞 (now 最優秀防御率投手賞) are renames of the same draw too, but no listed
+// or searched seed earns either before its first difference, so a mapping could not be verified; such a difference fails and must be
+// investigated (CURRENT_SPEC also keeps the old 最優秀投手賞 as LEGACY_BEST_PITCHER, not P02). A mapping would not hide the seed-hash D2
+// additions either: 最多勝利投手賞 is decided for every top-level pitcher season (勝率第一位投手賞 in NPB/KBO), 沢村賞 for NPB starters, and
+// 投手三冠王 (with its guaranteed 年間MVP and the pitcherTC trait) needs both unmapped awards in one season.
+// 004cd26 already writes 本塁打王 (ホームラン王 is only a consumer alias).
 const awardRenames=[['最多セーブ','最多セーブ投手賞'],['最優秀中継ぎ','最優秀中継ぎ投手賞']];
 const renameAward=h=>{if(typeof h==='string')for(const [from,to] of awardRenames)if(h.endsWith(from))return h.slice(0,-from.length)+to;return h;};
 const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?Object.fromEntries(Object.entries(x).filter(([k])=>!metadata.has(k)).map(([k,v])=>[k,canonical(v)])):x;
@@ -73,7 +79,8 @@ try{
  // jp3-catcher-03 replaces jp3-catcher-01, whose school changed in 1.12.0 (d8f2df9); jp3-pitcher-16 reaches championship-eligible CPBL seasons
  // (lost, so with the isolated stream they leave no difference).
  // jp3-infielder-12: first difference is the 2042 WBC unlock (step 273), only traits.intlace differs. jp3-pitcher-25 earns 台湾プロ野球最多セーブ
- // (renamed 最多セーブ投手賞 in 56e72d9) and, with the rename mapped, has no difference at all.
+ // (renamed 最多セーブ投手賞 in 56e72d9) and, with the rename mapped, has no difference at all; jp3-pitcher-18 does the same for 2034
+ // KBO最優秀中継ぎ (renamed 最優秀中継ぎ投手賞).
  // Pitchers choose 通常投球: 004cd26 stored 全力投球 as '全力投', so its effect was missing until 1.11.9 (a1658c9).
  // jp3-catcher-16 with the balanced picker: first difference is the won 2040 KBO1 season (step 223), so the honors check below sees won=1.
  // jp3-infielder-11 refuses a star trade: the first difference (step 168) is the refusal step, which also settles the eligible 2036 season, so the
@@ -86,7 +93,7 @@ try{
  // Approval: the first difference must be the step that adds a championship-eligible result (only championshipKeys may differ, values checked)
  // or an international unlock (1.11.0; 004cd26's overlay counts appearances but never unlocks 国際大会の鬼, so only traits.intlace may turn on).
  // Any other first difference fails and must be investigated.
- if(!process.argv.includes('--ui-only'))for(const [seed,pos,opts={}] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-pitcher-16','P',{eligible:true}],['jp3-catcher-03','C'],['jp3-catcher-16','C',{picker:'balanced',won:true}],['jp3-infielder-01','IF'],['jp3-infielder-11','IF',{picker:'balanced',refuse:true,trade:true}],['jp3-infielder-12','IF',{picker:'balanced',intl:true}],['jp3-outfielder-01','OF'],['jp3-pitcher-25','P',{picker:'balanced',rename:true}]].filter(([seed])=>!arg('seed')||arg('seed').split(',').includes(seed))){
+ if(!process.argv.includes('--ui-only'))for(const [seed,pos,opts={}] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-pitcher-16','P',{eligible:true}],['jp3-catcher-03','C'],['jp3-catcher-16','C',{picker:'balanced',won:true}],['jp3-infielder-01','IF'],['jp3-infielder-11','IF',{picker:'balanced',refuse:true,trade:true}],['jp3-infielder-12','IF',{picker:'balanced',intl:true}],['jp3-outfielder-01','OF'],['jp3-pitcher-25','P',{picker:'balanced',rename:'最多セーブ'}],['jp3-pitcher-18','P',{picker:'balanced',rename:'最優秀中継ぎ'}]].filter(([seed])=>!arg('seed')||arg('seed').split(',').includes(seed))){
   const runs=[];
   for(const old of [true,false,false]){const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos,replayNames[pos],true,{...opts,isolate:'championship:'+seed});const records=[];
    for(let i=0;i<2500;i++){const r=await p.evaluate(`(()=>{const h=window.__champTest.get();h.champDraws=window.__champDraws||0;if(h.state.done)return{record:h,done:true};h.action=(${action.toString()})().innerText;(${action.toString()})().click();return{record:h,done:false};})()`);records.push(r.record);if(r.done)break;if(i===2499)throw Error('Career did not complete');}
@@ -108,9 +115,10 @@ try{
   for(const r of Object.values(last.championshipResults))if(r.eligible)assert.equal(last.honors.filter(h=>h===r.honorText).length,r.won?1:0);
   assert.equal(runs[1].at(-1).champDraws,Object.values(last.championshipResults).filter(r=>r.eligible).length,seed+' championship draws did not use the isolated stream');
   // Coverage guards (opts.eligible / opts.won / opts.trade / opts.intl / opts.rename): a seed listed for a branch must keep reaching it.
+  // opts.rename names the 004cd26 award suffix whose mapping must be used before the first difference.
   if(opts.eligible)assert.ok(Object.values(last.championshipResults).some(r=>r.eligible),seed+' lost its championship-eligible seasons');
   if(opts.intl)assert.ok(approved?.international,seed+' lost its international-unlock first difference');
-  if(opts.rename)assert.ok(runs[0].slice(0,first<0?runs[0].length:first+1).some(r=>(r.state.honors||[]).some(h=>renameAward(h)!==h)),seed+' lost its renamed baseline award before the first difference');
+  if(opts.rename)assert.ok(runs[0].slice(0,first<0?runs[0].length:first+1).some(r=>(r.state.honors||[]).some(h=>h.endsWith(opts.rename)&&renameAward(h)!==h)),seed+' lost its renamed baseline award '+opts.rename+' before the first difference');
   if(opts.won)assert.ok(Object.values(last.championshipResults).some(r=>r.eligible&&r.won),seed+' lost its won championship-eligible season');
   if(opts.trade)assert.ok(first>=0&&runs[0][first].state.tradeRefuse>0,seed+' lost its baseline tradeRefuse first difference');
   console.log(`${seed}/${pos}: old ${runs[0].length}/RNG ${runs[0].at(-1).calls} -> new ${runs[1].length}/RNG ${runs[1].at(-1).calls}; exact new replay, ${runs[1].length-aligned.length} jersey steps aligned, first approved difference ${first}, ${Object.values(last.championshipResults).filter(r=>r.eligible).length} eligible seasons`);
