@@ -1,3 +1,4 @@
+import {assertUi20VersionStamps} from './support/ui-version-comparison.mjs';
 import {openReaderDetails} from './support/reader-disclosure.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -28,12 +29,12 @@ try{
   const p=await open(pos),old=await open(pos,true);
   const fixture={name:'長い選手名'.repeat(4),year:2050,age:40,stage:'PRO',lv:'NPB1',team:'長い球団名'.repeat(8),log:[{y:2026,age:16,tm:'高校',line:'地区予選'},{y:2029,age:19,tm:'東京',st:stat,line:'プロ初年度'},{y:2031,age:21,tm:'海外',st:{...stat,form:1}},{y:2049,age:39,tm:'東京',inj:true,line:'全休'},{y:2050,age:40,tm:'東京',st:stat}],stats:{NPB:{...stat,yr:15}},honors:['2029 新人王','2031 MVP','2050 最多勝'],teamTally:{NPB:{tokyo:15}},ct:{annualSchedule:[{year:2050,amount:100000000,paid:true}]},salaryDecisionHistory:[]};
   for(const q of [p,old])await q.evaluate(f=>{window.__reviewTest.set(f);window.__reviewTest.season();},fixture);
-  assert.deepEqual(await snapshot(p),await snapshot(old),'season fixture complete S/RNG');
+  assert.deepEqual(assertUi20VersionStamps(await snapshot(p)),assertUi20VersionStamps(await snapshot(old)),'season fixture complete S/RNG');
   const season=p.locator('[data-career-review="season"]');assert.deepEqual(await season.locator('dd').allTextContents(),['1億円','未定']);assert.match(await season.textContent(),pos==='P'?/123\.2/:/本塁打 20/);assert.match(await season.textContent(),/2050 最多勝/);assert.doesNotMatch(await season.textContent(),/2031 MVP/);
   const before=await snapshot(p);await p.evaluate(()=>window.__reviewTest.refresh());assert.deepEqual(await snapshot(p),before);assert.equal(await season.count(),1,'redraw never duplicates summary');
   for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.postResult());assert.equal(await p.locator('.card').filter({has:p.locator('h4',{hasText:'季末後の結果'})}).locator('details').evaluate(e=>e.open),true,'later event results keep phase-3 reading/focus behavior');assert.deepEqual(await snapshot(p),before,'later result display preserves complete state/RNG');
   for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.retire());await frames(p);await frames(old);
-  assert.deepEqual(await snapshot(p),await snapshot(old),'native retirement complete S/RNG including HOF and fan draws');
+  assert.deepEqual(assertUi20VersionStamps(await snapshot(p)),assertUi20VersionStamps(await snapshot(old)),'native retirement complete S/RNG including HOF and fan draws');
   // PLY-01: the candidate retirement card carries the approved 背番号 table; after the phase-5 projection, remove it with its contract check (exactly one table).
   const original=(q,jersey)=>q.evaluate(source=>{const state=window.__reviewTest.get().state,markup=window.__projectReview(document.getElementById('log').outerHTML,'log',state);if(!source)return markup;const t=document.createElement('template');t.innerHTML=markup;const log=t.content.firstElementChild;if(eval('('+source+')')(log,state).table!==1)throw Error('JERSEY_REVIEW_TABLE');return log.outerHTML;},jersey?removeJerseyDisplay.toString():null);assert.equal(await original(p,true),await original(old,false),'every original retirement node/text preserved');
   const review=p.locator('[data-career-review="retirement"]');assert.equal(await review.count(),1);assert.match(await review.textContent(),/2026年｜野球人生の始まり/);assert.match(await review.textContent(),/2029年｜プロでの最初の記録/);assert.match(await review.textContent(),/2031年｜キャリアハイ/);assert.match(await review.textContent(),/2050年/);
@@ -62,7 +63,7 @@ try{
   const withoutJersey=v=>{const j=v.state.jerseyHistory;assert.ok(j===undefined||Array.isArray(j)&&j.every(x=>typeof x.teamId==='string'&&Number.isInteger(x.year)&&typeof x.number==='string'),'jerseyHistory shape');jerseyLast=j;const c=structuredClone(v);delete c.state.jerseyHistory;return c;};
   for(;steps<2000;steps++){
    while(await jerseyStep())jerseySkips++;
-   const current=withoutJersey(await snapshot(p));if(current.state.stage==='PRO')proSeen=true;assert.deepEqual(current,await snapshot(old),'natural '+pos+' step '+steps);if(current.state.done)break;
+   const current=withoutJersey(assertUi20VersionStamps(await snapshot(p)));if(current.state.stage==='PRO')proSeen=true;assert.deepEqual(current,assertUi20VersionStamps(await snapshot(old)),'natural '+pos+' step '+steps);if(current.state.done)break;
    for(const q of [p,old])await q.evaluate(()=>{const a=document.getElementById('act'),rows=[...a.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...a.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.textContent));const b=buttons.find(e=>e.textContent.startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.textContent))||buttons[0];if(!b)throw Error('no action');b.click();});
   }
   assert(steps<2000);assert.equal(jerseySkips>0,proSeen,pos+' number step appears exactly when the career reaches a professional team');assert.equal(jerseyLast?.length||0,jerseySkips,pos+' every confirmed number step appends one record');checks.push({pos,naturalExactCareer:'PASS',steps,jerseySkips});await p.close();await old.close();

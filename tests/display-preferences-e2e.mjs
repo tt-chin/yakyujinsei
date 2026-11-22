@@ -11,7 +11,7 @@ import {historicalCareer,franchiseComparisonProof} from '../tools/development-b/
 import {baselineNeedsChampionmakerProjection} from '../tools/development-b/championmaker-state-oracle.mjs';
 import {assertSameCareer} from './support/first-difference.mjs';
 import {createServer} from 'node:http';
-import {readFile, mkdir} from 'node:fs/promises';
+import {readFile, mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
@@ -84,16 +84,23 @@ try{
   if(!process.argv.includes('--careers-only')){
   const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();wire(page);
   await page.goto(`${target}/?seed=display-settings-test`);await page.locator('#btn-start').waitFor();
+  // Normal settings coverage starts after engine/save initialization; the separate
+  // delayed-engine case below still verifies input entered during loading.
+  await page.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
+  await page.evaluate(()=>{const input=document.getElementById('in-name');window.__displayNameProbe={input,events:[],stage:'before-fill'};for(const type of ['input','change','focus','blur'])document.addEventListener(type,event=>{if(event.target===input){const p=window.__displayNameProbe;p.events.push({type,value:input.value,stage:p.stage,time:performance.now()});p.events=p.events.slice(-30);}},true);});
+  const checkName=async stage=>{const data=await page.evaluate(stage=>{const p=window.__displayNameProbe,input=document.getElementById('in-name');p.stage=stage;return{stage,value:input?.value,sameNode:input===p.input,connected:p.input.isConnected,attribute:input?.getAttribute('value'),type:input?.type,formHidden:document.getElementById('home-create').hidden,startDisabled:document.getElementById('btn-start').disabled,engineHook:typeof window.__displayRegression,active:{id:document.activeElement.id,name:document.activeElement.name},theme:document.documentElement.dataset.theme,fontSize:document.documentElement.dataset.fontSize,density:document.documentElement.dataset.density,viewport:[innerWidth,innerHeight],events:p.events};},stage);if(data.value!=='長い名前テスト'){const file=path.join(artifacts,'name-preservation-failure.json');await writeFile(file,JSON.stringify(data,null,2));console.error('Name preservation diagnostic: '+JSON.stringify(data));await page.screenshot({path:path.join(artifacts,'name-preservation-failure.png')}).catch(error=>console.error('Name diagnostic screenshot failed: '+error.message));}assert.equal(data.value,'長い名前テスト','name preserved at '+stage);};
   await page.locator('#in-name').fill('長い名前テスト');
+  await checkName('after-fill');
   await page.locator('[data-open-preferences]').first().click();
+  await checkName('dialog-open');
   for(const theme of THEME_IDS)for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
-    await setPreferences(page,theme,fontSize,density);combinations++;
+    for(const [key,value] of Object.entries({theme,fontSize,density})){await page.evaluate(stage=>window.__displayNameProbe.stage=stage,'change '+key+'='+value);await page.locator('[name="'+key+'"][value="'+value+'"]').check();await checkName('after '+key+'='+value);}combinations++;
     for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[560,800],[1280,800]]){
-      await page.setViewportSize({width,height});const size=await fits(page);assert.ok(size.width<=width,`${theme}/${fontSize}/${density} overflow ${JSON.stringify(size)}`);assert.ok(size.dialog<=size.dialogClient+1,'dialog overflow');
+      await page.evaluate(stage=>window.__displayNameProbe.stage=stage,'resize '+width+'x'+height);await page.setViewportSize({width,height});await checkName('viewport '+width+'x'+height);const size=await fits(page);assert.ok(size.width<=width,`${theme}/${fontSize}/${density} overflow ${JSON.stringify(size)}`);assert.ok(size.dialog<=size.dialogClient+1,'dialog overflow');
     }
     if([1,4,6,12,18,24].includes(combinations)){await page.setViewportSize({width:combinations%2?320:390,height:844});await page.screenshot({path:path.join(artifacts,`settings-${theme}-${fontSize}-${density}.png`)});screenshots++;}
   }
-  await page.locator('#preferences-close').click();assert.equal(await page.locator('#in-name').inputValue(),'長い名前テスト');
+  await page.locator('#preferences-close').click();await checkName('dialog-close');assert.equal(await page.locator('#in-name').inputValue(),'長い名前テスト');
   assert.equal(await page.evaluate(()=>document.activeElement.hasAttribute('data-open-preferences')),true);
   await page.reload();assert.equal(await page.locator('html').getAttribute('data-theme'),'scoreboard');
   await page.locator('#btn-start').click();await openBoardAction(page,'board-preferences');

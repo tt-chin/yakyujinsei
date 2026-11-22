@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'fa-market-presentation-e2e': {quick:[],seconds:120,reason:'Read-only FA table/sorting/card navigation, retained native choice handlers and exact frozen-baseline state/RNG before and after signing; zero offers unchanged.'},
   'ui-redesign-review-e2e': {quick:['--fixtures-only'],seconds:240,reason:'UI phase 5: native P/IF season and retirement summaries, 128 layouts, missing/signed salary and original DOM/state/RNG; two frozen-phase-4 natural careers in the complete entry.'},
   'ui-redesign-allocation-e2e': {quick:[],seconds:120,reason:'UI phase 4: dedicated allocation, 128 viewport/theme/font layouts, original nodes/draft/scroll, exact phase-3 S/RNG and original DOM for native dice/point/carry/cap/undo/reset/once-only confirmation; growth core unchanged.'},
   'ui-redesign-decision-e2e': {quick:[],seconds:120,reason:'UI phase 3: stable decision identity/return/scroll/collapse, retained allocation nodes, double-click guard, committed result payload boundaries and unchanged error recovery; exact phase-2 S/RNG controls at P/IF allocation and events, 128 viewport/theme/font cases.'},
@@ -53,6 +54,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
+  'support/ui-version-comparison.mjs': ['support','Require unified 2.0.0 state and birth version stamps; retain complete snapshots including all metadata, gameplay and RNG.'],
   'support/reader-disclosure.mjs': ['support','Native summary click and visible original body with complete state/RNG invariance; no forced DOM changes or archived-description bypass.'],
   'support/allocation-comparison.mjs': ['support','Validates phase-4 allocation presentation before legacy action/choice/text comparisons. Original states, RNG and historical baselines remain strict.'],
   'support/decision-dom-comparison.mjs':['support','Validates approved phase-3 reader wrappers, committed event effects and decision metadata before reconstructing historical DOM; no S/RNG projection.'],

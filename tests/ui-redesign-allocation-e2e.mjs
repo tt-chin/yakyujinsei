@@ -1,3 +1,4 @@
+import {assertUi20VersionStamps} from './support/ui-version-comparison.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -21,24 +22,29 @@ const errors=[],cases=[],checks=[];const frames=p=>p.evaluate(()=>new Promise(r=
 const get=p=>p.evaluate(()=>window.__allocationProbe.get());
 const dom=p=>p.evaluate(()=>window.__projectDecisionPresentation(document.getElementById('act').outerHTML,'act',window.__allocationProbe.get().state));
 async function open(pos,old=false){const c=await browser.newContext({viewport:{width:1440,height:900}});await c.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.fulfill({contentType:'text/css',body:''}));const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400)errors.push(r.status()+' '+r.url());});await p.goto(base+(old?'/baseline/':'/')+'?seed='+(pos==='P'?'jp3-pitcher-02':'jp3-infielder-01'));await p.waitForFunction(()=>!document.getElementById('btn-start').disabled);await p.locator('#in-name').fill('配分検証');await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#btn-start').click();await p.locator('#act button').filter({hasText:'トレーニング成果を割り振る'}).click();await p.evaluate(()=>window.__allocationProbe.settle());return{c,p};}
-async function equal(a,b,label){assertSameCareer(await get(a),await get(b),label+' complete S/RNG');assert.equal(await dom(a),await dom(b),label+' original allocation DOM');
+async function equal(a,b,label){assertSameCareer(assertUi20VersionStamps(await get(a)),assertUi20VersionStamps(await get(b)),label+' complete S/RNG');assert.equal(await dom(a),await dom(b),label+' original allocation DOM');
  const legacy=page=>page.evaluate(()=>({text:window.__allocationComparison.areaText(),choices:window.__allocationComparison.choices(),actions:[...document.querySelectorAll('#act .abrow,#act button:not(:disabled)')].map(node=>[window.__allocationComparison.action(node),window.__allocationComparison.action(node,'innerText')])}));
  assertSameCareer(await legacy(a),await legacy(b),label+' verified legacy labels/choices/rendered text');}
-async function action(a,b,operation){for(const p of [a,b])await p.evaluate(op=>{const act=document.getElementById('act');const el=op==='spend'?act.querySelector('.abrow[aria-disabled="false"]'):op==='undo'?[...act.querySelectorAll('button')].find(e=>e.textContent.includes('元に戻す')):op==='reset'?[...act.querySelectorAll('button')].find(e=>e.textContent==='すべてリセット'):act.querySelector('button.main:not(:disabled)');if(!el)throw Error('missing '+op);el.click();},operation);await equal(a,b,operation);}
+async function raised(page){await page.waitForTimeout(150);const dice=await page.evaluate(()=>{const row=document.getElementById('dice');if(!row)return null;const active=row.querySelector('.die.active:not(.used)'),box=row.getBoundingClientRect();return {remaining:row.querySelectorAll('.die:not(.used)').length,count:row.querySelectorAll('.die.active:not(.used)').length,y:active?new DOMMatrixReadOnly(getComputedStyle(active).transform).m42:null,clipped:active?active.getBoundingClientRect().top<box.top:false};});if(dice){assert.equal(dice.count,dice.remaining?1:0);if(dice.remaining){assert.equal(dice.y,-6,'only the current unspent die is raised');assert.equal(dice.clipped,false,'raised die has reserved space');}}}
+async function action(a,b,operation){for(const p of [a,b])await p.evaluate(op=>{const act=document.getElementById('act');const el=op==='spend'?act.querySelector('.abrow[aria-disabled="false"]'):op==='undo'?[...act.querySelectorAll('button')].find(e=>e.textContent.includes('元に戻す')):op==='reset'?[...act.querySelectorAll('button')].find(e=>e.textContent==='すべてリセット'):act.querySelector('button.main:not(:disabled)');if(!el)throw Error('missing '+op);el.click();},operation);await equal(a,b,operation);await raised(a);}
 let failure;
 try{
  // The growth module itself must remain byte-for-byte (newline-normalized) unchanged.
  const core=await readFile(path.join(root,'docs/src/engine/player-ability.js'),'utf8');assert.equal(core.replaceAll('\r\n','\n'),execFileSync('git',['show',`${baseline}:docs/src/engine/player-ability.js`],{cwd:root,encoding:'utf8'}).replaceAll('\r\n','\n'));
  for(const pos of ['P','IF']){
-  const {c,p}=await open(pos),reference=await open(pos,true);await equal(p,reference.p,'initial natural dice');
+  const {c,p}=await open(pos),reference=await open(pos,true);await equal(p,reference.p,'initial natural dice');await raised(p);
+  await p.emulateMedia({reducedMotion:'reduce'});await raised(p);assert.equal(await p.locator('.die.active').evaluate(e=>getComputedStyle(e).transitionDuration),'0s','reduced motion retains the static cue without animation');await p.emulateMedia({reducedMotion:'no-preference'});
   for(const q of [p,reference.p]){await q.bringToFront();await q.locator('#act .abrow').first().focus();await frames(q);assert.equal(await q.locator('#act .abrow').first().evaluate(e=>e===document.activeElement),true,'native keyboard input targets the focused ability');await q.keyboard.press('Enter');assert.equal(await q.locator('#dice .die.used').count(),1,'native Enter consumes exactly one die');}await equal(p,reference.p,'native keyboard allocation');const before=await get(p);
   await p.evaluate(()=>{window.__allocationNodes=[...document.querySelectorAll('#act .abrow,#act button')];window.__allocationMarkup=document.getElementById('act').innerHTML;});
   for(const [width,height] of [[320,568],[375,667],[390,844],[844,390],[1024,600],[768,1024],[1280,720],[1440,900]])for(const theme of THEME_IDS)for(const font of ['medium','large']){
    await p.setViewportSize({width,height});await p.evaluate(({theme,font})=>{document.documentElement.dataset.theme=theme;document.documentElement.dataset.fontSize=font;},{theme,font});await frames(p);
    const g=await p.evaluate(()=>{const act=document.getElementById('act'),rows=[...act.querySelectorAll('.abrow')],footer=document.getElementById('al-btm');const box=e=>{const b=e.getBoundingClientRect();return{x:b.x,y:b.y,width:b.width,height:b.height};};return{overflow:document.documentElement.scrollWidth>innerWidth,logVisible:getComputedStyle(document.getElementById('log')).display!=='none',rows:rows.map(r=>({...box(r),overflow:r.scrollWidth>r.clientWidth+1})),footer:getComputedStyle(footer).position,home:getComputedStyle(document.getElementById('view-home')).overflowY,confirmDisabled:act.querySelector('[data-allocation-confirm-placeholder]')?.disabled};});
+   const compact=await p.locator('[data-allocation-action]').first().evaluate(e=>({height:e.getBoundingClientRect().height,line:Number.parseFloat(getComputedStyle(e).lineHeight),font:getComputedStyle(e).fontSize,previewFont:getComputedStyle(e.previousElementSibling).fontSize}));
+   assert.equal(compact.font,compact.previewFont);assert.ok(compact.height<=compact.line+2,'allocation label has a single compact text line');
    assert.equal(g.overflow,false,JSON.stringify({width,height,theme,font,g}));assert.equal(g.logVisible,false);assert.equal(g.confirmDisabled,true);assert.ok(g.rows.every(r=>r.height>=44&&!r.overflow));if(width<700)assert.ok(g.rows.every(r=>Math.abs(r.x-g.rows[0].x)<1));if(height<=699)assert.equal(g.footer,'static');if(width>=1100&&height>=700)assert.equal(g.home,'auto');
    // Last row and all footer controls remain reachable with one main scroll area.
    await p.evaluate(()=>{document.getElementById('view-home').scrollTop=document.getElementById('view-home').scrollHeight;window.scrollTo(0,document.documentElement.scrollHeight);});await frames(p);
+   await p.locator('#al-rows .abrow').last().evaluate(row=>row.scrollIntoView({block:'center'}));await frames(p);
    assert.equal(await p.locator('#al-rows .abrow').last().evaluate(row=>{const b=row.getBoundingClientRect();return document.elementFromPoint(b.x+b.width/2,b.y+b.height/2)?.closest('.abrow')===row;}),true,'last ability is not covered by the confirmation bar');
    await p.locator('#al-btm button').first().scrollIntoViewIfNeeded();assert.equal(await p.locator('#al-btm button').first().isVisible(),true);
    const scroll=await p.evaluate(()=>{window.__allocationBeforeNav={y:scrollY,boxes:Object.fromEntries(['app','game-body','game-main','main-nav','view-host','view-home','act'].map(id=>{const e=document.getElementById(id),r=e.getBoundingClientRect(),s=getComputedStyle(e);return[id,{top:r.top,height:r.height,position:s.position,cssTop:s.top,overflow:s.overflow,flex:s.flex}]}))};return{page:scrollY,home:document.getElementById('view-home').scrollTop};});
@@ -61,6 +67,29 @@ try{
   // Real engine fixtures: rising costs, over potential, carry, caps and empty resources.
   const keys=pos==='P'?['vel','ctl','brk','sta']:['sta','con','pow','eye','spd','rng','fld','arm','cat'];
   const fixture=(value,potential,carry=0)=>({ab:Object.fromEntries(keys.map(k=>[k,value])),pot:Object.fromEntries(keys.map(k=>[k,potential])),carry:Object.fromEntries(keys.map(k=>[k,carry])),traits:{},age:20,stage:'HS'});
+  // User regression: the last input reveals the native confirmation and retains native focus,
+  // including after undo; presentation must keep the exact historical S/RNG.
+  for(const [width,height] of [[320,568],[390,844],[844,390],[1440,900]])for(const mode of [{dice:[1,2]},{pool:2}]){
+   await p.setViewportSize({width,height});
+   for(const q of [p,reference.p])await q.evaluate(v=>window.__allocationProbe.fixture(v.state,v.mode),{state:fixture(40,62),mode});
+   await action(p,reference.p,'spend');await frames(p);
+   assert.equal(await p.locator('#al-btm .main:not(:disabled)').count(),0,'partial allocation never exposes confirmation');
+   await p.evaluate(()=>{window.scrollTo(0,0);document.getElementById('view-home').scrollTop=0;});
+   for(const operation of ['spend','undo','spend']){
+    await action(p,reference.p,operation);await frames(p);
+    if(operation==='undo')continue;
+    const visibility=await p.locator('#al-btm .main:not(:disabled)').evaluate(button=>{const b=button.getBoundingClientRect(),nav=document.getElementById('main-nav').getBoundingClientRect();return {focused:document.activeElement===document.querySelector('#al-btm button'),top:b.top,bottom:b.bottom,navBottom:nav.bottom,height:innerHeight,hit:button.contains(document.elementFromPoint(b.x+b.width/2,b.y+b.height/2))};});
+    assert.ok(visibility.focused&&visibility.hit&&visibility.top>=visibility.navBottom-1&&visibility.bottom<=height+1,'completed allocation reveals confirmation and retains native undo focus: '+JSON.stringify({pos,width,height,mode,visibility}));
+   }
+   if(width===390){
+    const done=(await get(p)).done;
+    for(const q of [p,reference.p])await q.keyboard.press('Enter');await equal(p,reference.p,'Enter after completion retains native undo behavior');
+    assert.equal((await get(p)).done,done,'completion scrolling never moves Enter onto confirmation');
+    await action(p,reference.p,'spend');await frames(p);
+   }
+   if(width===390&&!mode.dice)await p.screenshot({path:path.join(out,pos+'-390-points-confirm.png'),animations:'disabled'});
+   checks.push({pos,width,height,mode:mode.dice?'dice':'points',completionScroll:'PASS',undoAndCompleteAgain:'PASS'});
+  }
   const variants=[{name:'dice-cost-potential',state:fixture(pos==='P'?66:72,60),mode:{dice:[1,6,2]}},{name:'point-cost-potential',state:fixture(pos==='P'?66:72,60),mode:{pool:5}},{name:'carry-cap-discard',state:{...fixture(80,80),ab:{...fixture(80,80).ab,[keys[0]]:79},carry:{[keys[0]]:pos==='P'?6:2}},mode:{pool:4}},{name:'all-cap-dice',state:fixture(80,80),mode:{dice:[6,2]}},{name:'empty-dice',state:{...fixture(40,62),carry:null},mode:{dice:[]}},{name:'empty-points',state:fixture(40,62),mode:{pool:0}}];
   for(const v of variants){for(const q of [p,reference.p])await q.evaluate(v=>window.__allocationProbe.fixture(v.state,v.mode),v);await equal(p,reference.p,v.name+' initial');
    assert.equal(await p.locator('#view-home').getAttribute('data-allocation-open'),'');

@@ -1,5 +1,49 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-23 合併準備：使用者手動[Full Run45043264922](https://github.com/tt-chin/yakyujinsei/actions/runs/45043264922) attempt1已確認，完整受驗SHA `6cf2f591eeb4db475de149a3a001ecfa23bfed07`，134 PASS／0 FAIL／0 SKIP／0 BLOCKED；8批與Aggregate成功、acceptedPass134、unverified0、issues空，134份log SHA256全部一致，原兩個失敗入口均已PASS。此結果僅適用手機／FA／骰子修正分支，不代替下列dev整合碼驗證。原132／2及本機探查FAIL保持歷史。
+>
+> 在`codex/ui-2.0-dev-integration`以最新dev `ec54634829de0cb879ba8cea3e24d7df3dbf053f`為基準squash整合修正，準備單一commit；dev／main不更新。保留dev背號、國際賽履歷、故障風險、模組API、存檔控制與歷史測試修正；保留手機完整固定抬頭、配點定位／小標示、單一步驟整理、FA比較／橫向卡片與骰子上浮。design-tokens-06、ui-redesign-review、ui-redesign-shell三檔衝突以保留雙方斷言解決：FA與背號token、原生背號步驟及DOM契約、完整2.0.0版本驗證並存，不放寬數值／基準或移除未知版本拒絕。
+>
+> 分類R3（既有背號永續狀態與年度步驟的整合接點）：相對dev完整SHA的產品引擎／保存／RNG程式不改，允許的完整S與RNG差異為零；版號維持2.0.0，不重設dev已批准的規則。整合後入口為Quick111／Full142，相關驗證與最終Quick已通過（見下）；**Full実行が必要（GitHub手動・未実行）**：新整合來源與Full專用比較路徑須由使用者對新提交手動執行，原修正分支134 PASS不冒稱整合Full PASS。Preview／實機、正式受入及ARTIFACT_COVERAGE_BLOCKED仍按既有條件。
+>
+> 整合相關驗證PASS：`test-results/dev-integration/related-ui-01/summary.json`為FA／決策／季末fixture／外框4入口全PASS；design-tokens-06共11項PASS。NPB原22流程＋120組版面設定與display原24設定×6尺寸（含逐步姓名保留及載入中先輸入、保留配點節點）PASS，後者用原`--skip-careers`限定UI；退休回顧入口另完整執行128版面＋P／IF兩條自然生涯，驗證衝突解決後的背號確認與舊版原文／狀態／RNG。Console／HTTP錯誤0，手機FA及桌面截圖已檢查。
+>
+> 以dev `ec54634829de0cb879ba8cea3e24d7df3dbf053f`進行獨立原生UI固定生涯比較PASS：P `yakyo-test-001`544操作／652次RNG、IF `jp3-infielder-01`544操作／549次RNG，皆2058退休。每一步完整S（含version、birthHighSchool、jerseyHistory、awardDecisions、personalStats）、RNG狀態／消費數／全部draw值嚴格相等，不投影／刪除任何狀態欄位，允許差異0；當中背號確認屬雙方原生流程。原始雙方JSON、probe／日誌雜湊與26份修改來源核對見`test-results/dev-integration/native-dev-integrity.json`；相對dev產品引擎差異為零。相關日誌`npb-related-01.log`、`display-ui-01.log`、`review-natural-01.log`、`raw-dev-comparison-01.log`均保留。本次不執行HOF採樣研究或Full profile。
+>
+> 最終整合Quick **111／111 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`test-results/dev-integration/quick-final-01/summary.json`，566.144秒。111份Quick及4份先行UI日誌SHA256、26份修改程式來源與整體fingerprint `6c86e25de66760c8ff0e9e14bf2d3553c7ef1643d2b12a9cc08d6400d55a39e3`全部核對，兩輪受驗來源一致；核對結果`quick-integrity.json`。語法／引用、無殘留衝突及Diff檢查PASS。此PASS為本機整合來源的Quick，不稱新SHA已取得Linux CI／Full／Preview驗收；dev／main尚未更新。
+
+> 2026-11-23 Full CI追修（R2・僅測試）：[Run45036594000](https://github.com/tt-chin/yakyujinsei/actions/runs/45036594000) attempt1，受驗`de2817950e4a366dc3f32c17a22c7d1651f05b95`，原132 PASS／2 FAIL／0 SKIP／0 BLOCKED保持，134份log SHA256已核對。`npb-return-e2e`仍期待手機nav top:0，與已核准固定完整board相衝突；本機原碼亦重現。限定改為手機top等於board高度、實際nav頂端緊接board底端，桌面仍top:0，不降低其他幾何／44px／溢出／薪資斷言。
+>
+> `display-preferences-e2e`原CI在關閉設定後姓名為空字串；原碼的本機完整相關入口及引擎延遲0／200／1200ms探查均未重現，根因仍未確定。一般設定矩陣改等原生開始按鈕enabled後輸入，逐次設定／尺寸／開關對話框檢查姓名，失敗另存被動輸入事件、節點identity、焦點與初始化狀態JSON／截圖；不補填、不重試、不放寬原姓名及生涯斷言。獨立的引擎載入中先輸入姓名案例保留。本次CI追修不改遊戲規則／保存流程／RNG；另依使用者最新指定，開發標示2.1.0改回統一2.0.0，只改版本metadata與更新摘要，不做狀態移行。
+>
+> 修正後相關入口PASS：NPB的22個原生流程與1280／320／375／390／430px共120組設定／版面；display的24種設定×6尺寸、新增姓名檢查、原載入中輸入與P543操作／652 RNG、IF544操作／549 RNG的完整歷史生涯比較（皆2058退休），Console／HTTP錯誤0。證據`test-results/ci45036594000-fix/npb-related.log`與`display-related.log`。以上相關結果受驗時仍標示2.1.0。使用者指定維持2.0.0後，已停止進行中的Quick（quick-final-01，NOT_COMPLETED，紀錄保留）；版本同步後將重新驗證，不沿用為新來源PASS。原CI132／2不是本次修正的Full結果。
+>
+> 版本補正：依2026-11-23最新明示指示維持2.0.0，config、CURRENT_SPEC、CHANGELOG、RELEASE_NOTES／生成資料與設計書同步；FA／骰子納入同一2.0.0更新紀錄（2026-11-23）。取消FA與第2～5批比較器對版本欄位的投影，改嚴格驗證2.0.0並返回完整原snapshot，比較包含state.version與出生createdVersion；錯誤／未知版本仍拒絕。下方2.1.0升版敘述及先前測試結果是改回前的歷史，不代表現行版本。
+>
+> 版本影響追加分類R3：VERSION亦用於出生快照／保存標示及退役smallSchoolEligibility的既有同版檢查。相對修正前`de2817950e4a366dc3f32c17a22c7d1651f05b95`，新生涯／保存允許差異只為version／createdVersion／gameVersion改回2.0.0與更新摘要；不修改規則或新增移行。既存2.0.0出生快照恢復同版資格判定，2.1.0快照在2.0.0下依原跨版規則為UNKNOWN，不冒稱舊存檔稱號資格完全不變。S／A／B／C×兩個出生版本的8組邊界對照PASS，快照不變、無RNG呼叫，證據`test-results/ci45036594000-fix/version-boundary-v200.json`。另需保留固定P／IF前後生涯比較與GitHub手動Full的確認。
+>
+> 2.0.0確定來源重新驗證：NPB原22流程＋120組設定／幾何、display原24種設定×6尺寸及P／IF兩條歷史生涯全部PASS，日誌`npb-related-v200.log`／`display-related-v200.log`（位於`test-results/ci45036594000-fix/`）。最終Quick **104／104 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`quick-final-v200-02/summary.json`，925.129秒；104份log、11份修改程式來源SHA256與完整fingerprint `b5d05c7300cf498b277d9c455b6209378cb335c06db2ed3039fe0855e2aa264c`已核對。FA、配點、決策及季末fixture均以完整2.0.0版本欄位比較PASS。版本常數、規格、同日單一2.0.0更新紀錄與生成資料一致、無重複版本；產品差異僅config及release-notes資料，遊戲引擎／UI／CSS／index原碼不變。
+>
+> 修正前後原始生涯比較PASS：對完整修正前SHA `de2817950e4a366dc3f32c17a22c7d1651f05b95`，P `yakyo-test-001`為543操作／652次RNG、IF `jp3-infielder-01`為544操作／549次RNG，皆2058退休。沿用display原生UI進行策略的獨立本機probe，先保存完整原始雙方記錄，逐操作驗證雙方version／出生createdVersion分別為2.1.0／2.0.0後，僅排除這兩項批准差異；其餘完整S（含awardDecisions及personalStats）、RNG狀態／呼叫數／每次draw值皆嚴格相等，不用歷史狀態投影。Console／HTTP錯誤0、舊HOF oracle請求0。原始P／IF JSON、probe與日誌SHA256及11份確定來源雜湊保存於`test-results/ci45036594000-fix/version-careers-v200-integrity.json`，不是Full PASS。初次ignored probe搬移import誤改HOF判斷字串，導致測試用oracle404及開始等待timeout（exit1）；原probe／`version-careers-v200.log`保留。修正probe後在新`version-comparison-v200-r2/`與`version-careers-v200-r2.log`取得上述PASS，產品與受驗測試來源未變，不把probe錯誤改寫為PASS。
+>
+> **Full実行が必要（GitHub手動・未実行）**：兩個失敗入口屬Full專用，共用版本驗證亦涉及Full比較路徑，且原Linux姓名空白尚未重現，需使用者對`codex/ui-2.0-mobile-fixes`的新提交手動執行Full134確認。本機未啟動Full、Agent未dispatch／重跑；未合併dev／main，正式受入與ARTIFACT_COVERAGE_BLOCKED限制保留。
+
+> 2026-11-23 最終核對：FA比較與骰子上浮已實作（R2），在既有`codex/ui-2.0-mobile-fixes`接續開發，固定比較基準`dc9bf83aca09a82ccc891b061231490ec9295c68`。FA以現有日圓報價顯示球團／年俸／年數／保証年俸總額，三項數值皆降序、同值保留原順、缺損置末；母隊同樣排序。表格連結只定位，橫向球團卡片、鍵盤及選取列同步，原契約按鈕、條件、onclick與choiceViews.buttons順序保留，不改報價生成／簽約／保存／RNG。骰子僅將原active未用骰上移6px並保留余白，復原／重設／用完與完成後定位維持，低減動作設定取消動畫但保留靜態標示。FA新增畫面依MINOR從2.0.0→2.1.0；CURRENT_SPEC、CHANGELOG、RELEASE_NOTES及生成JS、設計書與測試手順已同步。前五批統一2.0.0的歷史不追改。
+>
+> 確定碼本機Quick **104／104 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`test-results/fa-dice-quick-final-02/summary.json`，490.675秒；104份日誌與19份修改來源SHA256一致，完整來源fingerprint `2429f6f7607041456a7d36f3a97bfb3ec7e41ee5403b62afc4e099b549d207fa`。FA的P／IF共64組尺寸／主題／字級，原生抽價及同一offer簽約的完整S／每次RNG對照、零報價、原按鈕identity、重複簽約拒絕、排序／橫捲／鍵盤與錯誤金額／球團／按鈕的DOM負控制通過；另直接執行原contract-salary的FA模式20項（4聯盟退役／延約／留隊／轉隊、薪資付款與原生防重複）全PASS、Console 0。既有128組配點／128組決策／112組外框與原季末退休fixture均通過；骰子6px上移、未裁切、復原／重設／用完、reduced-motion及完成定位由原配點入口驗證。手機FA與骰子截圖已確認。實機Safari／原生觸控仍待使用者驗收。
+>
+> 原FAIL保留：`fa-dice-related-final-01`的2 PASS／1 FAIL為配點固定基準仍期待2.0.0版本戳；僅明列允許state.version與birthHighSchool.createdVersion的2.0.0→2.1.0差異，未知戳仍拒絕，財務／規則／其餘S／RNG全保留。相關4入口`fa-dice-related-02`重測PASS。`fa-dice-quick-final-01`的103 PASS／1 FAIL為外框檢查寫死目前2.0.0；改以目前VERSION核對，歷史1.16.15及固定SHA不變，`fa-dice-shell-version-recheck`先重測PASS後全新執行最終Quick104，不沿用部分結果。原始摘要與日誌均保留。
+>
+> **Full実行が必要（GitHub手動・未実行）**：共用FA畫面／簽約UI接點、版本戳與Full專用DOM比較及新增入口受影響，需由使用者對新提交在GitHub手動執行Full134。本機未執行Full、未自行dispatch／重跑；本修正分支尚未併dev／main，既有ARTIFACT_COVERAGE_BLOCKED與正式受入／公開條件保留，不以舊SHA Full PASS替代本次結果。2026-11-23推送前確認origin/dev已前進至`b6e81a8f54f84789b4da8981d6922c7861eebc77`且有不同歷史／其他產品變更；本次104 PASS只對此功能分支的dc9bf83基準與本批修改有效，未覆蓋或整合最新dev。後續合併須先處理兩側差異並驗證整合碼，不將本次結果當作最新dev整合PASS。
+
+> 2026-11-17 Preview手機修正（R2・共用UI）：初版已依使用者指定以單一commit `59104210efa7704b4749f3da765544ea2e9b705b`合併dev；本修正從此另開`codex/ui-2.0-mobile-fixes`。手機固定完整選手／保存資訊及三分頁，桌面導覽維持top:0；投入標示縮至育成點說明字級並置同列，原能力卡44px操作範圍保留；無標題單一步驟省略通用選擇摘要／開關，保留原進行按鈕與返回入口；事件結果僅去除「イベントカード｜」前綴；配完只捲至原生確定區，保留原復原焦點，復原再配仍定位，Enter不誤確定。引擎、配點closure、保存、資料及RNG不變。未公開UI受入版2.0.0→2.0.0，CURRENT_SPEC、設計書、CHANGELOG及RELEASE_NOTES／生成JS同步。
+>
+> 確定碼本機Quick **102／102 PASS**（0 FAIL／SKIP／BLOCKED，重用0），`test-results/mobile-fixes-quick-final-03/summary.json`，460.807秒；102份log SHA256及13份修改來源雜湊一致，完整來源fingerprint `f9dc5321418ba4473feeba05aa8b3ec2fdfc792f9c4fb680fc62b41fc9e6823d`。128組配點、128組決策與112組外框矩陣、P／IF完整配點／事件S／RNG、16組完成定位／復原再配、完成後Enter、手機單一步驟與錯誤焦點、精確事件名稱與履歷皆通過。個別配點重測`mobile-fixes-allocation-focus-final`及桌面／履歷重測`mobile-fixes-desktop-recheck`通過。前段直接E2E的8條歷史DOM生涯及11組說明視窗（`mobile-fixes-history-dialog-01`）通過；之後僅收斂額外移焦點與桌面導覽位移，最終來源以本輪Quick驗證，不稱前段入口為最終SHA Full。語法、來源連結、Diff檢查及390px配點前後／橫向／單一步驟截圖確認通過。實機Safari、真正200%縮放及原生分享仍待驗收。
+>
+> 原FAIL與停止紀錄保留：spacing計數236／實際235，依批准的小標示padding少一處token使用改為235，另加精確CSS斷言；`mobile-fixes-related-01`為1 PASS／2 FAIL（固定抬頭後最後列定位與測試工具捲動導覽的舊假設），保留可見性及捲動還原斷言，改用實際閱讀／點擊；`mobile-fixes-related-02`為1 PASS／1 FAIL（反例破壞第一個非事件標題），限定實際事件標題後4種錯值皆拒絕。`mobile-fixes-quick-final-01`在焦點收斂前停止，未作整套PASS；`mobile-fixes-quick-final-02`保留event-history桌面遮擋FAIL，僅停止自有程序樹（decision入口exit4294967295為停止中斷，不作完成PASS），修正desktop top:0後先重測失敗入口及外框2 PASS，再全新執行最終Quick，未沿用部分結果。原日誌與stopped.json保持。
+>
+> **Full実行が必要（GitHub手動・未実行）**／需要執行Full：共用固定導覽、捲動／焦點及Full專用歷史DOM比較受影響，需由使用者對本次新提交手動執行。本機未Full、未自行dispatch／重跑。本修正分支尚未併回dev／main；既有ARTIFACT_COVERAGE_BLOCKED及正式受入／公開條件保留，不以舊SHA的132 PASS代替本次新SHA Full。
+
 > 2026-11-17 最新確認：第0～5批主要實作與自動驗證完成。使用者手動[Full Run44067661326](https://github.com/tt-chin/yakyujinsei/actions/runs/44067661326)（attempt 1，完整SHA `1a9d159bc6b2a1d21a5c5eb9fdf1f8831e42bb7f`）132 PASS／0 FAIL／0 SKIP／0 BLOCKED；8批及Aggregate成功、acceptedPass 132、unverified 0、issues空，132份log SHA256已核對。此PASS僅適用該SHA，不冒充後續說明文字修正的Full。以下各批未實作／Full待確認是當時歷史狀態，原127 PASS／5 FAIL及中途失敗紀錄保留。Preview／實機、實際200%瀏覽器縮放、字型網路／原生分享與ARTIFACT_COVERAGE_BLOCKED仍待確認；dev／main未合併、未正式公開。
 
 > 2026-11-17 說明補正（R2純顯示／R0文件）：補齊存檔說明與現行規格的舊敘述，明示作成中保留舊存檔、開始時確認覆寫、取消保留輸入、詳細設定獨立刪除。版號依統一UI版本維持2.0.0；CHANGELOG／RELEASE_NOTES與配信資料同步。存檔控制器19項、說明／更新視窗11組（5尺寸、S／RNG不變、Console 0）、規格來源連結及Diff檢查PASS，320／390px截圖人工確認。依純顯示例外不追加Quick／Full；既有132 PASS屬上列SHA，不稱本次新SHA Full PASS，main合併Gate仍有效。來源與結果見第5批收據helpCopyCloseout。

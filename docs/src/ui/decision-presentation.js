@@ -26,6 +26,8 @@ export class DecisionPresentation {
     let meta=this.views.get(key);
     if(!meta||meta.owner!==view.state||meta.year!==view.year){meta={id:'decision-'+(++this.sequence),collapsed:false,owner:view.state,year:view.year};this.views.set(key,meta);}
     this.current=meta;
+    const continuation=view.kind==='CHOICE'&&!this.plain(view.title)&&view.opts.length===1;
+    if(continuation)meta.collapsed=false;
     const title=view.kind==='CHOICE'?this.plain(view.title)||'次の行動を選んでください':'トレーニングの配分を確認してください';
     this.act.dataset.decisionId=meta.id;this.act.dataset.decisionKind=view.kind;
     this.act.dataset.eventChoice=String(view.kind==='CHOICE'&&String(view.title).includes('event-badge'));
@@ -33,12 +35,12 @@ export class DecisionPresentation {
     this.heading.textContent=title;
     const titleNode=this.act.querySelector(':scope > .title');
     if(titleNode){titleNode.tabIndex=-1;titleNode.dataset.readerFocus='';}
-    this.targetHeading=titleNode||this.heading;
+    this.targetHeading=titleNode||(continuation?view.buttons[0]:this.heading);
     this.heading.hidden=!meta.collapsed&&Boolean(titleNode);
     this.doc.getElementById('decision-period').textContent=`今の選択｜${view.year??this.getYear()}年・${this.phaseText()}`;
     this.toggleButton.setAttribute('aria-controls','act');this.toggleButton.setAttribute('aria-expanded',String(!meta.collapsed));
     this.toggleButton.textContent=meta.collapsed?'選択肢を開く':'選択肢を閉じる';
-    this.summary.hidden=false;this.returnButton.hidden=this.view==='home';
+    this.summary.hidden=continuation;this.toggleButton.style.display=continuation?'none':'block';this.returnButton.hidden=this.view==='home';
   }
   clear(){
     if(!this.summary)return;

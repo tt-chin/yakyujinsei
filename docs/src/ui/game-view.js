@@ -1,5 +1,6 @@
 import {DecisionPresentation} from './decision-presentation.js';
 import {AllocationPresentation} from './allocation-presentation.js';
+import {FaMarketPresentation} from './fa-market-presentation.js';
 import {CareerReview} from './career-review.js';
 // game.js の純DOM基本操作（物件導向化 第2期）。S と RNG に触れず、S に依存する処理は game.js から注入する。
 export class GameView {
@@ -8,6 +9,7 @@ export class GameView {
     const documentRef=byId('act')?.ownerDocument;
     if(documentRef)this.decisionUI=new DecisionPresentation({documentRef,getDecision,getYear,getPhase:()=>this.boardContext?.phase,getReturnTarget:()=>this.allocationUI?.returnTarget()});
     if(documentRef)this.allocationUI=new AllocationPresentation({documentRef,getDecision});
+    if(documentRef)this.faUI=new FaMarketPresentation({documentRef,getDecision,getState});
     if(documentRef)this.careerReview=new CareerReview({documentRef,getState,labels:reviewLabels});
   }
   scrollBottom(){ /* iOS Safari iframe内でスムーズスクロールでは白画面が起きやすいため、同期スクロールへ変更+rAF。 */
@@ -34,6 +36,7 @@ export class GameView {
   actClear(){ const a=this.byId('act'); a.innerHTML=''; a.classList.remove('collapsed'); a.style.pointerEvents='';
     this.decisionUI?.clear();
     this.allocationUI?.clear();
+    this.faUI?.clear();
     const t=this.byId('act-toggle'); if(t)t.style.display='none'; }
   toggleActions(){this.decisionUI?.toggle();}
   actToggleSync(){
@@ -43,6 +46,7 @@ export class GameView {
     t.textContent=a.classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる';
     this.decisionUI?.sync();
     this.allocationUI?.sync();
+    this.faUI?.sync();
   }
   renderBoard(m){ /* m は game.js の boardModel が S から作る書き込み値。 */
     this.boardContext={year:m.year,phase:m.phase};
