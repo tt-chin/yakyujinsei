@@ -65,15 +65,18 @@ try{
  // jp3-catcher-03 replaces jp3-catcher-01, whose school changed in 1.12.0 (d8f2df9); jp3-pitcher-16 reaches championship-eligible CPBL seasons.
  // Pitchers choose 通常投球: 004cd26 stored 全力投球 as '全力投', so its effect was missing until 1.11.9 (a1658c9).
  // jp3-catcher-16 with the balanced picker: first difference is a won championship-eligible KBO1 season (2041), so the honors check below sees won=1.
- // jp3-infielder-11 refuses a star trade: the first difference (2037 KBO1) has baseline tradeRefuse>0; it is also championship-eligible,
- // so removing only the trade condition is not detected (no trade-only first difference was found, TEST-HISTORICAL-BRANCH-COVERAGE-01).
+ // jp3-infielder-11 refuses a star trade: the first difference (2037 KBO1) has baseline tradeRefuse>0, and the same step settles an eligible season.
+ // Approval (TEST-HISTORICAL-BRANCH-COVERAGE-01): the first difference must be the step that adds a championship-eligible result; an eligible
+ // season earlier in the career does not approve a later difference. The international-unlock and baseline trade conditions were removed: no seed
+ // reached a first difference that needed them (every observed first difference adds an eligible result at that step: jp3-pitcher-16 310,
+ // jp3-catcher-16 223, jp3-infielder-11 168; 004cd26 never raises tradeHeat), so such a difference now fails and must be investigated.
  if(!process.argv.includes('--ui-only'))for(const [seed,pos,opts={}] of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-pitcher-16','P'],['jp3-catcher-03','C'],['jp3-catcher-16','C',{picker:'balanced',won:true}],['jp3-infielder-01','IF'],['jp3-infielder-11','IF',{picker:'balanced',refuse:true,trade:true}],['jp3-outfielder-01','OF']].filter(([seed])=>!arg('seed')||arg('seed').split(',').includes(seed))){
   const runs=[];
   for(const old of [true,false,false]){const p=await browser.newPage();wire(p);await start(p,local+(old?'/baseline/':'/')+'?seed='+seed,pos,replayNames[pos],true,opts);const records=[];
    for(let i=0;i<2500;i++){const r=await p.evaluate(`(()=>{const h=window.__champTest.get();if(h.state.done)return{record:h,done:true};h.action=(${action.toString()})().innerText;(${action.toString()})().click();return{record:h,done:false};})()`);records.push(r.record);if(r.done)break;if(i===2499)throw Error('Career did not complete');}
    console.log(`${seed}/${pos} ${old?'baseline':'new'}: ${records.length} actions completed`);runs.push(records);await p.close();}
   assert.deepEqual(runs[1],runs[2],seed+' new replay mismatch');let first=-1;const aligned=runs[1].filter(r=>!jerseyStep.test(r.action||''));
-  for(let i=0;i<Math.min(runs[0].length,aligned.length);i++)if(JSON.stringify(canonical(historical(runs[0][i])))!==JSON.stringify(canonical(historical(runs[0][i],aligned[i])))){first=i;const newRun=aligned[i],results=Object.values(newRun.state.championshipResults);assert.ok(results.some(r=>r.eligible)||Object.values(newRun.state.intlTraitResults).some(r=>r.unlockedIntlace)||runs[0][i].state.tradeRefuse>0||runs[0][i].state.tradeHeat>0,'unapproved first difference');break;}
+  for(let i=0;i<Math.min(runs[0].length,aligned.length);i++)if(JSON.stringify(canonical(historical(runs[0][i])))!==JSON.stringify(canonical(historical(runs[0][i],aligned[i])))){first=i;const prev=i>0?aligned[i-1].state.championshipResults:null;assert.ok(prev&&Object.entries(aligned[i].state.championshipResults).some(([year,r])=>r.eligible&&!prev[year]?.eligible),'unapproved first difference');break;}
   const last=runs[1].at(-1).state;for(const record of runs[1])if(record.state.seasonChampContext?.year===record.state.year){assert.ok(Number.isFinite(record.state.seasonChampContext.ratingD));}
   for(const r of Object.values(last.championshipResults))if(r.eligible)assert.equal(last.honors.filter(h=>h===r.honorText).length,r.won?1:0);
   // Coverage guard: a seed listed for the won branch must keep reaching it.
