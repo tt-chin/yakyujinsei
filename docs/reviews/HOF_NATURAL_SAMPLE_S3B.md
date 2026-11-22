@@ -1,6 +1,6 @@
 # HOF-NATURAL-SAMPLE-01 S3b 第一輪結果
 
-2026-11-22。研究計畫見 [tasks/HOF_NATURAL_SAMPLE_PLAN.md](../../tasks/HOF_NATURAL_SAMPLE_PLAN.md) §9；規則表見同檔 §8。只出研究結果，**不修改殿堂規則、不改遊戲**。
+2026-11-22。研究計畫見 [tasks/HOF_NATURAL_SAMPLE_PLAN.md](../../tasks/HOF_NATURAL_SAMPLE_PLAN.md) §9；規則表見同檔 §8b（D1～D7；與 §8 草案以哪份為準待 code owner 決定）。只出研究結果，**不修改殿堂規則、不改遊戲**。
 
 ## 1. 執行條件
 
