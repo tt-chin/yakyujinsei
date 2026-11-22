@@ -1,6 +1,6 @@
 # HOF 自然樣本與投手平衡：研究路線計畫（草案）
 
-狀態：**第二版（2026-11-15 依 code owner 建議改寫）。H1～H4 已批准（code owner 於 PR #95 06:53 留言確認為已決定）。2026-11-21 使用者授權並實作 S1 與 H4（見 §7）。2026-11-22 S2 規則草案（§8）經使用者確認，提交 code owner 決定後續；S2 以後仍未授權實作或批量研究。**
+狀態：**第二版（2026-11-15 依 code owner 建議改寫）。H1～H4 已批准（code owner 於 PR #95 06:53 留言確認為已決定）。2026-11-21 使用者授權並實作 S1 與 H4（見 §7）。2026-11-22 S2 規則草案（§8）經使用者確認，經 [PR #118](https://github.com/tt-chin/yakyujinsei/pull/118) 提交 code owner 決定後續；S2 以後仍未授權實作或批量研究。**
 對應：BACKLOG `HOF-NATURAL-SAMPLE-01`（補足自然生涯樣本，**不修改殿堂規則**）、`HOF-PITCHER-BALANCE-01`（RESEARCH_ONLY，只調查 SP／MR／CL，不調係數）。上位規格：[HOF_JERSEY_APPROVED_SPEC.md](HOF_JERSEY_APPROVED_SPEC.md) §3。
 調查基準：`origin/dev` `1494a24`（1.16.10）。
 
