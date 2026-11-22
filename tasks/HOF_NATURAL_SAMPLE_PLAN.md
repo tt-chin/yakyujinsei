@@ -1,6 +1,6 @@
 # HOF 自然樣本與投手平衡：研究路線計畫（草案）
 
-狀態：**第二版（2026-11-15 依 code owner 建議改寫）。H1～H4 已批准（code owner 於 PR #95 06:53 留言確認為已決定）。2026-11-21 使用者授權並實作 S1 與 H4（見 §7）；S2 以後未授權實作或批量研究。**
+狀態：**第二版（2026-11-15 依 code owner 建議改寫）。H1～H4 已批准（code owner 於 PR #95 06:53 留言確認為已決定）。2026-11-21 使用者授權並實作 S1 與 H4（見 §7）；2026-11-22 授權並實作 S2（見 §8）；S3b 以後未授權實作或批量研究。**
 對應：BACKLOG `HOF-NATURAL-SAMPLE-01`（補足自然生涯樣本，**不修改殿堂規則**）、`HOF-PITCHER-BALANCE-01`（RESEARCH_ONLY，只調查 SP／MR／CL，不調係數）。上位規格：[HOF_JERSEY_APPROVED_SPEC.md](HOF_JERSEY_APPROVED_SPEC.md) §3。
 調查基準：`origin/dev` `1494a24`（1.16.10）。
 
@@ -66,7 +66,7 @@ Code owner 決定（建議見 2026-11-15 PR #95 06:38 留言；06:53 留言確�
 | H3 | S3 的規模 | 150 條只是第一輪預算；投手／野手分組；先少量煙霧測試；保留未到達樣本；配對樣本不當獨立 | S3、S5 |
 | H4 | 兩個手動重放入口 | 另開小提案修正，不等下次 FAIL | §4 第 6 項 |
 
-**已決定。** S1 與 H4 於 2026-11-21 經使用者授權實作（§7）；S2 以後仍未授權。授權後、實作前另須確認：S2 各育成方式的能力優先表與操作規則、S3b 的 seed／守備位置／組合清單。
+**已決定。** S1 與 H4 於 2026-11-21 經使用者授權實作（§7）；S2 於 2026-11-22 授權實作（§8）；S3b 以後仍未授權。授權後、實作前另須確認：S2 各育成方式的能力優先表與操作規則、S3b 的 seed／守備位置／組合清單。
 
 ## 6. 驗證與分類
 
@@ -88,3 +88,54 @@ Code owner 決定（建議見 2026-11-15 PR #95 06:38 留言；06:53 留言確�
   - reviewer：無發現。讀碼確認兩個舊基準空白姓名時的預設名即同一組對照表，基準側填名後狀態不變；姓名在 `seedInit` 之前決定，不影響 RNG。
 - **新發現（未修正，另立 BACKLOG `TEST-MANUAL-HISTORICAL-COMPARE-01`）**：姓名修正後，兩入口手動模式接著在「舊基準 vs 新版」比較 FAIL（championship `unapproved first difference`、trait `first difference must be an event draw`）。原因是新版 state 從 step 0 就多了 `championmakerWins: []`（`2a7d8f4`，1.14.0，2026-11-07 新增），兩基準 `004cd26`（2026-10-10）、`2375d46`（2026-10-09）都早於此欄位。失效起點未確認：目前看到的第一差異來自 1.14.0，但 2026-10-31（早於 1.14.0）的本機紀錄已記載這兩入口不帶 manifest args 執行時，歷史比較在乾淨 HEAD 上也 FAIL（當時原因未記錄）。1.16.10 起姓名差異先在重放斷言 FAIL，遮蔽了這一層。此欄位之後是否還有其他差異未確認。依 AGENTS 6.3 未改比較條件。
 - **合併**（2026-11-22）：PR #117 併 dev（`2a2a60d`，樹與 `bf76978` 相同），[Tests #247](https://github.com/tt-chin/yakyujinsei/actions/runs/44972095949) Quick PASS；Full 未執行（兩入口的 Full 路徑不變）。S2 以後仍未授權。
+
+## 8. S2 規則表（2026-11-22 使用者核准 D1～D7 並授權 S2 實作；S3b 以後仍未授權）
+
+調查（scout，唯讀；門檻、投球方針、角色判定、按鈕判斷等引用已逐處核對）修正三個前提：遊戲**沒有休養選項**（投手只有 TJ 的手術／注射，季中受傷無選擇）；現行兩策略的投手都因預設規則選到第一個按鈕「全力投球」（TJ ×1.25）；遊戲沒有「主要能力」概念（OVR：投手 vel／ctl／brk 由高到低 .42／.30／.18＋sta×.10；野手攻擊 70%＋守備 30%，sta 不計），`primary` 由本表定義。投手的 `lastD` 為 `(vel+ctl+brk)/3−par`（`season-stats.js:17`），野手未確認。
+
+**育成方式**（每次點擊花一顆骰子／一點，點「第一個未到上限的項目」）：
+
+| 方式 | 適用 | 點選規則 |
+|---|---|---|
+| `balanced` | 全部 | 沿用現行：先點目前數值最低者，同值依畫面順序 |
+| `primary` | 野手（D1：投手不用） | 固定順序集中點，到潛力值（`S.pot`，未設為 62）或上限就換下一項；全部到潛力值後依同順序點到上限（D2：集中三年觸發「小細工無用」，保留不排除）。C：con→pow→eye→spd→fld→cat→arm→rng→sta；IF／OF：con→pow→eye→spd→rng→fld→arm→sta |
+| `pitcher-sp` | 投手 | 先把 sta 點到 52，之後 vel／ctl／brk 中先點最低者 |
+| `pitcher-rp` | 投手 | 不點 sta（vel／ctl／brk 全到上限時才點），三項中先點最低者；初始 sta 已 ≥52 時照實際角色記錄 |
+
+角色轉換詢問（救援→先發）：`pitcher-sp` 選「先発へ転向し、ローテを担う」，`pitcher-rp` 選「ブルペンに残り、自分の役割を守る」，其他依共用規則。
+
+**聯盟選擇**：
+
+| 時機 | `stay` | `overseas` | `target-kbo` | `target-mlb` |
+|---|---|---|---|---|
+| 規則 | 沿用 `balanced-stay` 正則 | 沿用 `ordered-overseas` 正則 | 見下 | 見下 |
+| NPB 一軍海外移籍 offer | 残留 | 第一個海外 offer | 「韓国プロ野球への海外移籍：」 | 「MLBへの海外移籍：」 |
+| FA 權（`海外FAを宣言` 需 9 年） | 権利を行使せず残留 | 海外FAを宣言 | 有則宣言海外 FA，否則留隊 | 同左 |
+| FA 市場 | 宣言残留 | 第一個海外 offer | 「（KBO一軍）」的 offer | 「（メジャーリーグ）」或「（ルーキーリーグ）」的 offer（未具美國資格者的 MLB 路線會降為ルーキーリーグ，`cross-league-market-policy.js:24`） |
+| 降格畫面「降格を受け入れるか、新天地を選ぶか？」 | 接受降格 | 共用規則 | 接受降格 | 接受降格 |
+| 戰力外 | 共用規則 | 共用規則 | 優先「韓国プロ野球への海外移籍オファー」 | 優先「米国プロ野球への海外移籍オファー」 |
+| 高校「米国プロ組織と契約する」 | 不選 | 會選（正則含「米国」） | 不選 | 選（D3） |
+| 到達目標聯盟後 | — | — | 留下（`S.org==='KBO'`） | 留下（`S.org` 為 `MiLB`／`MLB`） |
+
+D4：目標 offer 未出現時當年留隊、隔年再等；未到達的生涯照 H3 保留。戰力外時沒有目標 offer 則走共用規則（可能轉往其他聯盟）。
+
+**共用規則**（D5，所有新組合一致）：投球方針一律「通常投球」；TJ 選「トミー・ジョン手術を受ける」；其他選擇（事件＝`bold`、契約、交易、降格、國際大會、背號等）沿用現行預設規則（第一個非引退按鈕）。
+
+**介面**（D6）：不帶 `--strategies` 時的 50 條與兩個舊策略不變。新增 `--strategies=<league>:<dev>,…`（例：`target-mlb:pitcher-sp`），與 `--seeds` 交叉；`pitcher-*` 只套投手、`primary` 只套野手，不適用的組合略過；名稱錯誤、組合全被略過，或條數超過 `--limit` 時即中止。
+
+**S3a 煙霧測試**（D7）：投手 `hof111-pilot-01`／`02` × 4 聯盟 × 3 育成（`balanced`／`pitcher-sp`／`pitcher-rp`）＝24 條；野手 `hof111-pilot-03`（C）／`04`（IF）× 4 聯盟 × 2 育成（`balanced`／`primary`）＝16 條；合計 40 條。
+
+**分類與驗證**：只改 `tests/retirement-hof-pilot.mjs`（audit），不進 Quick／Full、不改遊戲、不升版本。驗證：舊策略預設路徑改動前後 digest 相同、S3a 40 條跑完且重放 PASS、策略照設定執行的檢查、姓名負控制、`node scripts/test.mjs list` 模式不變。
+
+**S3a 後追加（2026-11-22 使用者核准）**：首輪 S3a 發現 `stay` 10 條中 6 條在降格畫面被共用規則的 `オファーを受ける` 選去台灣、`primary` 集中超過潛力值（花費 ×3）使 8 條都未到 NPB 一軍；reviewer 指出 MLB 路線 FA offer 的降級顯示與條數截斷／0 條未中止。上表已反映四項修正。
+
+**S3a 結果**（2026-11-22，本機 macOS＋Brave 158，非 CI，`test/hof-s2-strategies` 修正後）：40／40 完成、重放 PASS、exit 0、console 錯誤 0；以 scratch 副本（digest 與正式版 40／40 相同）檢查逐步選擇：投手全為「通常投球」、`pitcher-rp` 未點 sta、`stay`／`target-*` 未經降格畫面離隊，0 違規。不帶 `--strategies` 的舊路徑改動前後 4 條 state／action／RNG digest 相同；姓名負控制以 `ERR_ASSERTION`（`full game replay state`）FAIL；0 條、超過 `--limit`、非數字 `--limit` 皆中止。到達判定以 `seasons` 中 `G>0` 的等級為準（`statsByLevel` 預先列出所有等級，不能用）。
+
+| 聯盟選擇 | 條數 | NPB 一軍 | KBO 一軍 | MLB |
+|---|---|---|---|---|
+| `stay` | 10 | 10 | 0 | 0 |
+| `overseas` | 10 | 8 | 9 | 0 |
+| `target-kbo` | 10 | 3 | 8 | 0 |
+| `target-mlb` | 10 | 10 | 0 | 5 |
+
+煙霧測試樣本，不當到達率。MLB 移籍 offer 實際從ルーキーリーグ起步再升上 MLB。`02 target-mlb:pitcher-rp` 戰力外時無美國 offer，依 D4 走共用規則轉往 KBO。下一步 S3b 須另行授權，並先確認 seed／守備位置／組合清單（§5）。
