@@ -1,5 +1,10 @@
 // Presentation lifetime only. Choice objects are read; no S, persistence or RNG writes.
 const PHASES=['シーズン前','シーズン中','シーズン終了'];
+function stripEventTitlePrefix(node){
+  const label=node.querySelector('.event-badge')?.nextSibling||node.firstChild;
+  if(label?.nodeType===3)label.nodeValue=label.nodeValue.replace(/^(?:イベントカード|イベント)｜/,'');
+  return label;
+}
 export class DecisionPresentation {
   constructor({documentRef,getDecision,getYear,getPhase,getReturnTarget=()=>null}){
     this.doc=documentRef;this.win=documentRef.defaultView;this.getDecision=getDecision;this.getYear=getYear;this.getPhase=getPhase;
@@ -28,13 +33,18 @@ export class DecisionPresentation {
     this.current=meta;
     const continuation=view.kind==='CHOICE'&&!this.plain(view.title)&&view.opts.length===1;
     if(continuation)meta.collapsed=false;
-    const title=view.kind==='CHOICE'?this.plain(view.title)||'次の行動を選んでください':'トレーニングの配分を確認してください';
+    const titleTemplate=this.doc.createElement('template');titleTemplate.innerHTML=view.title||'';const titleLabel=stripEventTitlePrefix(titleTemplate.content);
+    const title=view.kind==='CHOICE'?titleTemplate.content.textContent.trim()||'次の行動を選んでください':'トレーニングの配分を確認してください';
     this.act.dataset.decisionId=meta.id;this.act.dataset.decisionKind=view.kind;
     this.act.dataset.eventChoice=String(view.kind==='CHOICE'&&String(view.title).includes('event-badge'));
     this.act.classList.toggle('collapsed',meta.collapsed);
     this.heading.textContent=title;
     const titleNode=this.act.querySelector(':scope > .title');
-    if(titleNode){titleNode.tabIndex=-1;titleNode.dataset.readerFocus='';}
+    if(titleNode){
+      const label=titleNode.querySelector('.event-badge')?.nextSibling||titleNode.firstChild;
+      if(view.kind==='CHOICE'&&label?.nodeType===3&&titleLabel?.nodeType===3)label.nodeValue=titleLabel.nodeValue;
+      titleNode.tabIndex=-1;titleNode.dataset.readerFocus='';
+    }
     this.targetHeading=titleNode||(continuation?view.buttons[0]:this.heading);
     this.heading.hidden=!meta.collapsed&&Boolean(titleNode);
     this.doc.getElementById('decision-period').textContent=`今の選択｜${view.year??this.getYear()}年・${this.phaseText()}`;

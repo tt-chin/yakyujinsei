@@ -6,7 +6,7 @@ export function installAllocationComparison(project,getState,getPending){
   window.__phase3Pending=getPending;
   const original=()=>{
     const act=document.getElementById('act');
-    if(!act.hasAttribute('data-allocation-session'))return null;
+    if(!act.hasAttribute('data-allocation-session')&&!act.querySelector(':scope > .title > .event-badge'))return null;
     const template=document.createElement('template');
     template.innerHTML=project(act.outerHTML,'act',getState());
     return template.content.firstElementChild;

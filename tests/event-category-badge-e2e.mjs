@@ -14,7 +14,7 @@ const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').sl
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const THEMES=['standard','night','classic','scoreboard'];
 const LABELS={training:'トレーニング',encounter:'日常・交流',endorsement:'広報・スポンサー'};
-const hook=`\nwindow.__evtBadge={pending:()=>{const p=S.pendingEvent;if(!p)return null;const ev=EVENTS.find(e=>e.id===p.cardID);return {cardID:p.cardID,name:ev.n,stage:S.stage,raw:ev.category,expected:effectiveCategory(ev,S.stage)};},saved:id=>S.processedEventIDs[id]?.category??null};`;
+const hook=`\nwindow.__evtBadge={pending:()=>{const p=S.pendingEvent;if(!p)return null;const ev=EVENTS.find(e=>e.id===p.cardID);return {cardID:p.cardID,name:ev.n,intro:ev.intro,stage:S.stage,raw:ev.category,expected:effectiveCategory(ev,S.stage)};},saved:id=>S.processedEventIDs[id]?.category??null};`;
 const server=createServer(async(req,res)=>{
   try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\//,'')||'index.html';if(rel.includes('..'))throw Error('path');
     let content=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')content=content.toString()+hook;
@@ -29,7 +29,7 @@ const wire=async(ctx,p)=>{await ctx.route(/fonts\.(googleapis|gstatic)\.com/,r=>
 const start=async(p,seed,pos)=>{await p.goto(local+'/?seed='+seed);await p.waitForFunction(()=>document.querySelector('#btn-start')?.disabled===false);await p.locator('#seg-pos [data-v="'+pos+'"]').click();await p.locator('#in-name').fill('分類検証');await p.locator('#btn-start').click();};
 // Click through until the event prompt is up (same selection as event-system-e2e's mobile walk).
 const toEvent=async p=>{for(let i=0;i<300;i++){
-  const status=await p.evaluate(()=>{const act=document.querySelector('#act');if(act.querySelector('.title')?.textContent.includes('イベント｜'))return 'event';
+  const status=await p.evaluate(()=>{const act=document.querySelector('#act');if(act.querySelector('.title .event-badge'))return 'event';
     const rows=[...act.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'),buttons=[...act.querySelectorAll('button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));
     const b=rows[0]||buttons.find(e=>/配分を確定|配分完了|完了/.test(e.innerText))||buttons[0];if(!b)throw Error('No action');b.click();return 'next';});
   if(status==='event')return;await p.waitForTimeout(20);}throw Error('No event prompt within 300 actions');};
@@ -42,7 +42,7 @@ try{
     await toEvent(p);const pending=await p.evaluate(()=>window.__evtBadge.pending());assert.ok(pending,'pending event');
     const prompt=await badgeOf(p,'#act .title .event-badge');
     assert.equal(prompt.length,1,'one prompt badge');assert.equal(prompt[0].cls,'event-badge event-badge-'+pending.expected,JSON.stringify(pending));
-    assert.equal(prompt[0].text,LABELS[pending.expected]);assert.ok(prompt[0].next.startsWith('イベント｜'),prompt[0].next);assert.ok(['normal','0px'].includes(prompt[0].ls),'letter-spacing reset: '+prompt[0].ls);assert.equal(prompt[0].lines,1,'badge on one line');
+    assert.equal(prompt[0].text,LABELS[pending.expected]);assert.equal(prompt[0].next,pending.name+'――'+pending.intro,'event name and complete introduction without the repeated label');assert.ok(['normal','0px'].includes(prompt[0].ls),'letter-spacing reset: '+prompt[0].ls);assert.equal(prompt[0].lines,1,'badge on one line');
     await p.screenshot({path:path.join(artifacts,`prompt-${width}.png`)});
     await p.locator('#act button').first().click();
     const card=p.locator('#log [data-event-occurrence-id]').last();await card.waitFor();

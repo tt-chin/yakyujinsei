@@ -1,5 +1,11 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-23 dev追加UI修正（R2・純顯示）：更新至`d82e44eb7566d618d30ef24116276dcd5c6e3f74`後實作。事件選項與收合摘要只在呈現層省略「イベント｜」「イベントカード｜」，保留分類span、名稱、完整說明與原選擇資訊；重新繪製從原標題取得文字，避免名稱本身含同字串時被再次刪除。#board使用既有桌面／手機球場圖與88%主題panel遮罩，強化直接位於照片上的次要文字，僅限頁內資訊區；不改系統狀態列／theme-color、尺寸、布局與固定捲動。產品版號依使用者指定維持2.0.0，CURRENT_SPEC、設計書、CHANGELOG／RELEASE_NOTES與生成資料同步；引擎、薪資公式、規則、保存與RNG不改。
+>
+> 使用者限定本次驗證範圍，依純顯示例外只做相關檢查：40組（320／390／430／844橫向／1280桌面×4主題×2字級）與固定修改前SHA對照，高度／布局完全相同、各主題照片黑白極端下的保守文字對比均≥4.5:1；手機捲動後board top:0、nav緊接board，頁面無橫向溢出。10組標題涵蓋兩種前綴、3分類、缺分類、空／一般標題、名稱內同字串與3次重繪；分類／說明／原title與S不變，歷史DOM投影僅還原批准前綴且拒絕竄改名稱。相關原生事件分類E2E在1280／390px通過選項及結果卡標題、4主題徽章檢查；Console／HTTP錯誤0。四主題手機截圖與事件選項截圖已確認，證據`test-results/ui-title-board/summary.json`、`scoped-03.log`、`event-titles-01.log`。
+>
+> 初輪84%遮罩在night球團文字的最亮背景保守對比3.99:1而FAIL，僅加強產品遮罩為88%後重測PASS；未降低對比門檻，原`scoped-01.log`／`summary-scoped-01.json`保留。只同步相關標題期待值與既有歷史顯示fixture，不更改Runner、基準或S／RNG斷言。依明示範圍未執行本機Quick／Full、完整生涯比較或audit研究；既有自動CI觸發不變。本輪限定PASS不替代先前整合Full142與main正式Gate，原待確認狀態保留。實機Safari／原生狀態列視覺未實測，不以Chromium手機尺寸代稱實機驗收。
+
 > 2026-11-23 合併準備：使用者手動[Full Run45043264922](https://github.com/tt-chin/yakyujinsei/actions/runs/45043264922) attempt1已確認，完整受驗SHA `6cf2f591eeb4db475de149a3a001ecfa23bfed07`，134 PASS／0 FAIL／0 SKIP／0 BLOCKED；8批與Aggregate成功、acceptedPass134、unverified0、issues空，134份log SHA256全部一致，原兩個失敗入口均已PASS。此結果僅適用手機／FA／骰子修正分支，不代替下列dev整合碼驗證。原132／2及本機探查FAIL保持歷史。
 >
 > 在`codex/ui-2.0-dev-integration`以最新dev `ec54634829de0cb879ba8cea3e24d7df3dbf053f`為基準squash整合修正，準備單一commit；dev／main不更新。保留dev背號、國際賽履歷、故障風險、模組API、存檔控制與歷史測試修正；保留手機完整固定抬頭、配點定位／小標示、單一步驟整理、FA比較／橫向卡片與骰子上浮。design-tokens-06、ui-redesign-review、ui-redesign-shell三檔衝突以保留雙方斷言解決：FA與背號token、原生背號步驟及DOM契約、完整2.0.0版本驗證並存，不放寬數值／基準或移除未知版本拒絕。

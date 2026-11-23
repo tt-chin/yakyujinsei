@@ -23,11 +23,15 @@ body::before{--stadium-shade:linear-gradient(to bottom,rgba(0,0,0,.5) 0%,rgba(0,
 #start .home-credit{width:fit-content;max-width:100%;margin:var(--space-lg) auto 0;padding:var(--space-xs);border-radius:var(--radius-md);background:var(--panel);text-align:center;overflow-wrap:anywhere}
 body:has(#start:not([style*="display: none"])) #app{display:none}
 #app{background:var(--bg);background:color-mix(in srgb,var(--bg) 90%,transparent)}
+/* Paint only the in-page player header; keep its layout and native status bar unchanged. */
+#board{background-color:var(--panel);background-image:linear-gradient(color-mix(in srgb,var(--panel) 88%,transparent),color-mix(in srgb,var(--panel) 88%,transparent)),url('../assets/escon-background/escon-desktop.webp');background-position:center 65%;background-size:cover;background-repeat:no-repeat}
+#board #bd-period,#board #bd-name small{color:var(--chalk)}
 .information-dialog a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
 
 
 /* Mobile focal point follows the infield; keep one photo layer behind the controls. */
 @media(max-width:699px){
+ #board{background-image:linear-gradient(color-mix(in srgb,var(--panel) 88%,transparent),color-mix(in srgb,var(--panel) 88%,transparent)),url('../assets/escon-background/escon-mobile.webp');background-position:center 75%}
  body::before{background-image:var(--stadium-shade),url('../assets/escon-background/escon-mobile.webp');background-position:center center}
  #start::before{--home-field-position:center 75%;background-image:linear-gradient(to bottom,#080d1433,#080d1466 35%,#080d14bb),url('../assets/escon-background/escon-mobile.webp');background-position:var(--home-field-position)}
  #start .home-title{min-height:160px}#start .wrap{width:calc(100% - 24px)}

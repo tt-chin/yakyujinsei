@@ -99,6 +99,16 @@ export function projectDecisionPresentation(markup,area,state){
   if(area==='act'){
     const id=root.dataset.decisionId;
     if(id){const view=window.__phase3Pending();if(!/^decision-\d+$/.test(id)||root.dataset.decisionKind!==view.kind||root.dataset.eventChoice!==String(view.kind==='CHOICE'&&String(view.title).includes('event-badge')))fail('PENDING');}
+    const view=window.__phase3Pending?.(),title=root.querySelector(':scope > .title');
+    if(view?.kind==='CHOICE'&&title){
+      const expected=document.createElement('template');expected.innerHTML=view.title||'';const original=expected.innerHTML;
+      const label=expected.content.querySelector('.event-badge')?.nextSibling||expected.content.firstChild;
+      if(label?.nodeType===3&&/^(?:イベントカード|イベント)｜/.test(label.nodeValue)){
+        label.nodeValue=label.nodeValue.replace(/^(?:イベントカード|イベント)｜/,'');
+        if(![original,expected.innerHTML].includes(title.innerHTML))fail('EVENT_PROMPT_TITLE');
+        title.innerHTML=original;
+      }
+    }
     for(const attr of ['data-decision-id','data-decision-kind','data-event-choice'])root.removeAttribute(attr);
   }
   for(const heading of root.querySelectorAll('[data-reader-focus]')){if(!(heading.tagName==='H4'||heading.matches('div.title'))||heading.getAttribute('tabindex')!=='-1')fail('FOCUS');heading.removeAttribute('tabindex');heading.removeAttribute('data-reader-focus');}
