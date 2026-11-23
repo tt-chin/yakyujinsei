@@ -6,6 +6,10 @@
 
 Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
 
+## 歷史間距比較與球場抬頭
+
+`design-tokens-09-e2e`維持`f8afd8e`間距基準與`ad8e77f53ede29de6a51c23708b2370eed7b414d`凍結UI runtime。已核准的`235fd22827478884ad4a5b046002e62eb326ffe0`球場抬頭背景／文字色，以三條獨立固定CSS參考規則加至舊頁面；現行CSS須逐字命中每條一次，且手機規則仍位於699px斷點。41項樣式（含背景／文字／邊框色）、全部位置尺寸及34個間距selector仍嚴格比較，不忽略差異、不更換歷史基準。Tests #262的143 PASS／1 FAIL保留為歷史結果，修正後個別入口PASS不等於Full PASS；新提交仍需使用者在GitHub手動Full。本項僅改表示期待值，依AGENTS 6.1純表示例外執行相關入口，不額外重跑未受影響的Quick。
+
 ## 季末收入與來季契約整合
 
 `season-summary.test`驗證實際Receipt／同年度schedule與決定、零／缺損、只讀snapshot與跨年隔離。`season-summary-e2e`以固定`cf88d1a9d621c354d64a2de5c427cd437a8094bf`比較原生付款、升降格／到期降格、續約、移籍、引退的完整S／全部RNG及還原後原卡DOM；含兩年度真實付款、變更最新契約後舊年度內訳、4個非職業邊界與64組版面。新入口進Quick／Full，不增加生涯批次。既有`ui-redesign-review-e2e --fixtures-only`保留128版面與原季末／引退fixture；歷史來源不換成HEAD，原文／狀態不放寬。

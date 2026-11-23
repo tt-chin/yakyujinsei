@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-24 Tests #262追修：Run `45282550368`／`c64d3ccc88053d7803d63901874c4301830704f1`的Full143 PASS／1 FAIL保留，唯一失敗`design-tokens-09-e2e`為核准球場抬頭背景／文字色造成864筆舊期待差異（34個間距selector無差異）。R2純表示期待值修正：只在舊參考頁加三條獨立固定CSS，現行來源逐字／唯一性及699px斷點檢查；原41樣式、矩形及34個selector斷言與歷史基準不變。修正後個別入口78,624次比對、0差異、34個selector全部命中，exit 0；背景／文字色／斷點／重複規則4個負控制均拒絕，source-text19項PASS，語法與diff檢查PASS。證據`test-results/ci262-investigation/design-tokens-09-fixed-02.log`與`header-fixture-controls.log`。依AGENTS 6.1表示期待值例外不重跑未受影響Quick；未改產品／runner／manifest／版本2.0.0。**Full実行が必要（GitHub手動・未実行）**：需在修正後dev提交確認原Full失敗已解，提交SHA以Git記錄與回報為準，不將本機個別PASS當Full PASS；代理不dispatch。
+
 > 2026-11-24 提交／Full授權更新：使用者明示「推送並且在git上執行full」，解除本批先不提交／推送的限制，且僅就本次授權代理在GitHub啟動Full。將已取得Quick113／113與原生20案例／64版面PASS的季末整合及配點小間距修正一併提交dev，版號2.0.0維持；本機不執行Full。Full在提交後調度、結果待GitHub實際確認，不將本機PASS稱為CI／Full PASS；後續執行連結與受驗SHA以GitHub run及回報為準，未更新main。
 
 > 2026-11-24 季末整合驗證（依使用者新指示解除本項NOT_RUN，仍不提交／推送）：R2共用UI。新增原生season-summary E2E，對固定修改前完整SHA `cf88d1a9d621c354d64a2de5c427cd437a8094bf`比較每一步完整S與每次RNG值／狀態，無欄位投影或允許狀態差異。P／IF×契約維持、升格、降格、到期降格、續約、移籍、缺記錄、引退16組，另HS／U／IND／CORP保留舊呈現4組，共20組PASS；升格案例64組手機／橫向／桌面×4主題×2字級、按鈕命中檢查。含實際下一年度付款、再換成不同最新契約與決定後，舊年度總結及內訳仍維持原值；重繪3次與重入付款入口不新增付款或RNG，原始卡片DOM逐步嚴格對照，竄改總額負控制拒絕。證據`test-results/season-summary/native-04/summary.json`。既有季末／引退fixture128組PASS（`review-01`）；單體、71版詳細／70版摘要生成一致性、42本機連結／5歷史來源PASS。手機／桌面截圖已檢視，均為Chromium，不冒稱Safari實機。

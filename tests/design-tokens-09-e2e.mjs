@@ -1,4 +1,5 @@
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
+import {readSourceText} from './support/source-text.mjs';
 // UI 2.0 intentionally replaces the board/sidebar layout. Keep this historical
 // spacing-migration oracle on its last accepted UI runtime, comparing today's
 // shared CSS against f8afd8e's independently rewritten values. The new shell
@@ -43,6 +44,18 @@ const oldNameField='<div class="field"><label>選手名</label><input id="in-nam
 const nameField='<div class="field"><label for="in-name">選手名</label><div class="player-name-row"><input id="in-name" maxlength="10" placeholder="例：山田太郎" value=""><button type="button" class="btn random-name-button" id="btn-random-name" aria-label="名前をランダムに生成" title="名前をランダムに生成" disabled><span aria-hidden="true">🎲</span></button></div></div>';
 assert.ok((await readFile(path.join(root,'docs/index.html'),'utf8')).includes(nameField),'exact approved new name markup');
 const nameCss='.player-name-row{display:flex;align-items:stretch;gap:8px}.player-name-row input{flex:1;min-width:0}.random-name-button{flex:0 0 44px;min-width:44px;min-height:44px;margin-top:0;padding:0;text-align:center;font-size:var(--fs-5xl)}.random-name-button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}.random-name-button:disabled{opacity:.6;cursor:default}';
+// Approved header paint delta (235fd22827478884ad4a5b046002e62eb326ffe0).
+// Independent fixed expectations on the old side, not CSS copied from the candidate.
+// Keep all color/border/geometry comparisons active, and fail if these declarations drift.
+const headerPaintRules=[
+  '#board{background-color:var(--panel);background-image:linear-gradient(color-mix(in srgb,var(--panel) 88%,transparent),color-mix(in srgb,var(--panel) 88%,transparent)),url(\'../assets/escon-background/escon-desktop.webp\');background-position:center 65%;background-size:cover;background-repeat:no-repeat}',
+  '#board #bd-period,#board #bd-name small{color:var(--chalk)}',
+  '#board{background-image:linear-gradient(color-mix(in srgb,var(--panel) 88%,transparent),color-mix(in srgb,var(--panel) 88%,transparent)),url(\'../assets/escon-background/escon-mobile.webp\');background-position:center 75%}'
+];
+const stadiumCss=readSourceText(path.join(root,'docs/styles/stadium-background.css'));
+for(const rule of headerPaintRules)assert.equal(stadiumCss.split(rule).length,2,'exact approved header paint rule: '+rule);
+assert.ok(stadiumCss.includes('@media(max-width:699px){\n '+headerPaintRules[2]),'approved mobile header breakpoint');
+const headerPaintCss=headerPaintRules.slice(0,2).join('\n')+'\n@media(max-width:699px){'+headerPaintRules[2]+'}';
 const server=createServer(async(req,res)=>{try{
   const u=new URL(req.url,'http://localhost'),m=u.pathname.match(/^\/(old|new)-(P|IF)\//);if(!m)throw Error('route');
   const rel=decodeURIComponent(u.pathname.slice(m[0].length))||'index.html';if(rel.includes('..'))throw Error('path');
@@ -59,6 +72,7 @@ const server=createServer(async(req,res)=>{try{
   if(rel==='src/engine/game.js')body=body.toString()+hook(m[2])+(m[1]==='old'?"document.getElementById('btn-random-name').disabled=false;":'');
   if(m[1]==='old'&&rel.startsWith('styles/')&&rel.endsWith('.css'))body=rewrite(body.toString());
   if(m[1]==='old'&&rel==='styles/base.css')body=body.toString()+'\n'+nameCss;
+  if(m[1]==='old'&&rel==='styles/stadium-background.css')body=body.toString()+'\n'+headerPaintCss;
   const type={js:'text/javascript',css:'text/css',html:'text/html',png:'image/png',webp:'image/webp',svg:'image/svg+xml',woff2:'font/woff2'}[rel.split('.').pop()]||'application/octet-stream';
   res.writeHead(200,{'content-type':type+'; charset=utf-8'});res.end(body);
 }catch{res.writeHead(404);res.end();}});
