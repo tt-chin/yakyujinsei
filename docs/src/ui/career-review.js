@@ -1,4 +1,5 @@
 import {fmtIP} from './stat-format.js';
+import {SeasonSummary} from './season-summary.js';
 
 // Read-only summaries. No inferred contracts, awards, events or persisted fields.
 export function reviewStatLine(pos,st,formatIP=fmtIP){
@@ -23,17 +24,19 @@ export function careerReviewModel(state,{leagueName=key=>key,teamName=key=>key,t
 }
 
 export class CareerReview {
-  constructor({documentRef,getState,labels}){this.doc=documentRef;this.getState=getState;this.labels=labels;}
+  constructor({documentRef,getState,labels,getSeasonContext,openSalaryDetail}){this.doc=documentRef;this.getState=getState;this.labels=labels;this.seasons=new SeasonSummary({documentRef,getState,getSeasonContext,openSalaryDetail,formatMoney:labels?.formatMoney});}
   node(tag,text){const node=this.doc.createElement(tag);if(text!==undefined)node.textContent=text;return node;}
   list(values){const ul=this.node('ul');for(const value of values)ul.append(this.node('li',value));return ul;}
   render(retired=false){
     const state=this.getState();if(!state||(!retired&&state.done))return;
     const log=this.doc.getElementById('log'),body=[...(log?.querySelectorAll('.yr-block')||[])].at(-1)?.querySelector('.yr-body');if(!body)return;
     const model=careerReviewModel(state,this.labels),kind=retired?'retirement':'season';
-    let root=body.querySelector(':scope > [data-career-review]');
+    let root=body.querySelector(`:scope > [data-career-review="${kind}"]`);
     if(!root){root=this.node('section');root.className='career-review';root.dataset.careerReview=kind;body.prepend(root);}
-    root.replaceChildren();root.dataset.careerReview=kind;root.dataset.reviewYear=String(model.year);root.setAttribute('aria-label',retired?'野球人生の振り返り':'シーズンの振り返り');
     body.querySelectorAll('.card > details[data-reader-details]').forEach(details=>{const title=details.parentElement.querySelector('h4')?.textContent;if(retired||['シーズン成績','シーズン成績（シーズン途中の移籍）','シーズン終了','独立リーグ年間報酬','社会人給与'].includes(title))details.open=false;});
+    if(!retired&&(state.stage==='PRO'||this.seasons.entries(state).has(state.year))){root.dataset.reviewYear=String(model.year);this.seasons.render(root,body,model);return;}
+    this.seasons.retire();
+    root.replaceChildren();root.dataset.careerReview=kind;root.dataset.reviewYear=String(model.year);root.setAttribute('aria-label',retired?'野球人生の振り返り':'シーズンの振り返り');
     root.append(this.node('p',`${model.year}年｜${retired?'引退':'シーズン終了'}`),this.node('h2',retired?model.name+'の野球人生':'今季の振り返り'));
     if(retired){
       if(model.representative)root.append(this.node('p','最長在籍球団：'+model.representative));
@@ -47,6 +50,7 @@ export class CareerReview {
       const timeline=this.node('ol');for(const item of model.moments)timeline.append(this.node('li',`${item.year}年｜${item.label}｜${item.team}｜${item.line}`));root.append(timeline);
       root.append(this.node('p','各リーグの評価・年度別成績・物語は下の「内容と結果」を開いて確認できます。共有と新しい人生の操作は記録の後にあります。'));
     }else{
+      // Amateur/independent/corporate summaries retain their existing presentation.
       root.append(this.node('p',model.team+'｜'+model.league),this.node('p',model.line));
       if(model.salaryApplies){const dl=this.node('dl');dl.className='income-summary';for(const [label,value] of [['当年年俸',model.salary],['翌年年俸',model.nextSalary]])dl.append(this.node('dt',label),this.node('dd',value));root.append(dl);}
       root.append(this.node('h3','今季の受賞'),this.list(model.awards.length?model.awards:['受賞記録なし']));
@@ -58,6 +62,6 @@ export class CareerReview {
     if(title!=='引退の日'||this.getState()?.pos!=='P')return html;
     return html.replace('9回裏、最後の打席を終えると','9回裏、最後の登板を終えると').replace('最後の打席を前に観客は3分間の総立ち拍手。','最後の登板を前に観客は3分間の総立ち拍手。').replace('打席後に交代すると、全員が','マウンドを降りると、全員が');
   }
-  card(node){if(this.getState()?.done){const details=node.querySelector(':scope > details[data-reader-details]');if(details)details.open=false;}else if(this.phase===2)this.render();}
+  card(node,title){this.seasons.card(node,title);if(this.getState()?.done){const details=node.querySelector(':scope > details[data-reader-details]');if(details)details.open=false;}else if(this.phase===2)this.render();}
   finish(){this.render(true);}
 }

@@ -6,6 +6,10 @@
 
 Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
 
+## 季末收入與來季契約整合
+
+`season-summary.test`驗證實際Receipt／同年度schedule與決定、零／缺損、只讀snapshot與跨年隔離。`season-summary-e2e`以固定`cf88d1a9d621c354d64a2de5c427cd437a8094bf`比較原生付款、升降格／到期降格、續約、移籍、引退的完整S／全部RNG及還原後原卡DOM；含兩年度真實付款、變更最新契約後舊年度內訳、4個非職業邊界與64組版面。新入口進Quick／Full，不增加生涯批次。既有`ui-redesign-review-e2e --fixtures-only`保留128版面與原季末／引退fixture；歷史來源不換成HEAD，原文／狀態不放寬。
+
 ## UI 2.0 FA比較與骰子標示
 
 `fa-market-presentation.test`固定三種數值降序、同值穩定、缺損／非法值與凍結來源不變，並驗證統一2.0.0的版本戳、未知／錯誤版本拒絕及完整來源不變。`fa-market-presentation-e2e`對固定`dc9bf83aca09a82ccc891b061231490ec9295c68`比較原生FA抽價及同一offer簽約的完整S／每次RNG，64組尺寸／主題／字級、排序與可視卡片／鍵盤／零報價、原按鈕identity／防重複及DOM投影錯值拒絕；不改FA抽價、金額或契約處理。既有contract-salary的FA模式仍比較原球團／原報價，先透過表格定位再按原按鈕。骰子上移由原allocation E2E驗證active、余白、復原／重設／用完與完成定位。

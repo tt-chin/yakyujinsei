@@ -32,7 +32,7 @@ const withoutPly01=css=>ply01Rules.reduce((t,r)=>t.replace(r,''),css);
 test('81 phase-4 font sites plus two phase-5 review headings; name button uses --fs-5xl',()=>{
   const rule=base.match(/(?:^|\n)\.random-name-button\{([^}]+)\}/);assert.ok(rule,'approved name button rule');
   assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
-  const review=styles['career-review.css'];assert.deepEqual([...review.matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-xl','--fs-md'],'only the two approved summary heading sizes');
+  const review=styles['career-review.css'];assert.deepEqual([...review.matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-xl','--fs-md','--fs-md'],'two review headings and the collapsed financial detail text use shared font tokens');
   assert.equal((ply01Rules.join('\n').match(/var\(--fs-[\w-]+\)/g)||[]).length,1,'PLY-01 #bd-number font site');
   assert.deepEqual([...styles['fa-market.css'].matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-md','--fs-sm','--fs-md','--fs-md'],'FA comparison reuses four shared font sites');
   const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
@@ -87,11 +87,11 @@ test('px spacing uses tokens outside the 6 remaining untouched declarations',()=
 test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   const rule=base.match(/(?:^|\n)\.player-name-row\{([^}]+)\}/);assert.ok(rule,'approved name row rule');
   assert.equal((rule[1].match(/gap:var\(--space-xs\)/g)||[]).length,1,'one explicit existing spacing token');
-  const review=styles['career-review.css'];const added=[...review.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);assert.equal(added.length,11,'phase-5 summary uses eleven approved spacing-token sites');assert.deepEqual(added.filter(n=>!(n in rootTokens)),[],'undefined phase-5 spacing token');
+  const review=styles['career-review.css'];const added=[...review.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);assert.equal(added.length,16,'season disclosures and salary-detail control add five approved spacing-token sites');assert.deepEqual(added.filter(n=>!(n in rootTokens)),[],'undefined phase-5 spacing token');
   assert.equal([...ply01Rules.join('\n').matchAll(/var\((--space-[\w-]+)\)/g)].map(x=>x[1]).filter(isSpace).length,5,'PLY-01 spacing sites');
   const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,238,'compact label, dice padding and mobile confirmation clearance token sites');
+  assert.equal(used.length,236,'compact label and dice padding; footer bottom uses the shared event-action inset');
   assert.equal([...styles['fa-market.css'].matchAll(/var\((--space-[\w-]+)\)/g)].length,10,'FA comparison uses ten shared spacing sites');
   assert.match(styles['allocation-presentation.css'],/padding:0 var\(--space-2xs\);line-height:1\.6;white-space:nowrap/,'approved compact label retains tokenized inline padding');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');

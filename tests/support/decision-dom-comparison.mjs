@@ -9,8 +9,34 @@ export function projectDecisionPresentation(markup,area,state){
   // historical traces still compare every original card and full state/RNG.
   for(const review of root.querySelectorAll('[data-career-review]')){
     const retired=review.dataset.careerReview==='retirement',year=Number(review.dataset.reviewYear);
+    if(review.hasAttribute('data-season-summary')){
+      if(retired||review.dataset.careerReview!=='season'||!Number.isInteger(year)||year>state.year||review.dataset.seasonSummary!==String(year)||review.tagName!=='SECTION'||review.className!=='career-review'||review.firstElementChild?.textContent!==`${year}年 シーズンのまとめ`)fail('SEASON_SUMMARY');
+      only(review,['class','data-career-review','data-review-year','aria-label','data-season-summary']);
+      const disclosures=[...review.querySelectorAll(':scope > details')];
+      if(disclosures.map(n=>n.dataset.seasonDisclosure).join(',')!=='income,contract,review'||disclosures.map(n=>n.firstElementChild?.textContent).join(',')!=='収入の内訳,契約の詳細,成績・受賞・振り返り')fail('SEASON_DISCLOSURES');
+      const source=review.parentElement.querySelector('[data-season-finance-source="シーズン終了"] [data-reader-body]');
+      const amounts=source?[...source.querySelectorAll('b.hl')].map(n=>n.textContent):[];
+      const sponsor=source?.innerHTML.match(/スポンサー収入：([^<]*)/)?.[1],lifetime=source?.innerHTML.match(/生涯収入：([^<]*)/)?.[1];
+      const income=[...disclosures[0].querySelectorAll(':scope > p')].map(n=>n.textContent);
+      const expected=['今季支給年俸：'+(amounts[0]||'記録なし'),'出来高：'+(amounts[1]||'記録なし'),'スポンサー収入：'+(sponsor||'記録なし'),'生涯収入：'+(lifetime||'記録なし')];
+      if(JSON.stringify(income)!==JSON.stringify(expected)||[...review.querySelectorAll(':scope > p')].find(n=>n.textContent.startsWith('今季受取総額：'))?.textContent!=='今季受取総額：'+(amounts[2]||'記録なし'))fail('SEASON_INCOME');
+      const salary=[...review.querySelectorAll(':scope > p')].find(n=>n.textContent.startsWith('来季年俸：'))?.textContent;
+      if(!salary||/undefined|NaN/.test(review.textContent)||(year===state.year&&!state.done&&salary!=='来季年俸：手続き中'))fail('SEASON_CONTRACT');
+      const controls=review.querySelectorAll('button,input,a,table');if(controls.length!==1||controls[0].tagName!=='BUTTON'||controls[0].textContent!=='年俸の内訳を見る'||controls[0].className!=='season-salary-detail')fail('SEASON_CONTROL');
+      review.remove();continue;
+    }
     if(!['retirement','season'].includes(review.dataset.careerReview)||!Number.isInteger(year)||year>state.year||review.tagName!=='SECTION'||review.className!=='career-review'||review.children[0]?.textContent!==`${year}年｜${retired?'引退':'シーズン終了'}`||review.children[1]?.tagName!=='H2'||review.children[1].textContent!==(retired?(state.name||'選手')+'の野球人生':'今季の振り返り')||review.querySelector('button,input,a,table'))fail('CAREER_REVIEW');
     only(review,['class','data-career-review','data-review-year','aria-label']);review.remove();
+  }
+  for(const node of root.querySelectorAll('[data-season-finance-source]')){
+    if(!['シーズン終了','来季年俸決定'].includes(node.dataset.seasonFinanceSource)||!node.hidden||node.querySelector('h4')?.textContent!==node.dataset.seasonFinanceSource)fail('SEASON_SOURCE');
+    node.removeAttribute('hidden');node.removeAttribute('data-season-finance-source');
+  }
+  const contractBriefs={契約:'所属先と契約を結びました。',契約更改:'契約を更新しました。',MLB年俸調停:'年俸調停が終了しました。',FA契約成立:'FA契約が成立しました。',チーム契約更新:'球団が契約更新権を行使しました。',延長契約の内訳:'延長契約の条件を確認しました。'};
+  for(const card of root.querySelectorAll('.card')){
+    const original=card.querySelector('[data-reader-body][hidden]'),title=card.querySelector('h4')?.textContent;if(!original||!Object.hasOwn(contractBriefs,title))continue;
+    const brief=original.nextElementSibling;if(brief?.tagName!=='P'||brief.attributes.length||brief.textContent!==contractBriefs[title]+'年俸と詳細は同年度の「シーズンのまとめ」で確認できます。')fail('SEASON_EVENT');
+    brief.remove();original.removeAttribute('hidden');
   }
   for(const card of root.querySelectorAll('[data-pitcher-farewell]')){
     if(state.pos!=='P'||card.querySelector('h4')?.textContent!=='引退の日')fail('FAREWELL');

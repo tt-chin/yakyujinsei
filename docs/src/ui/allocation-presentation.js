@@ -6,7 +6,7 @@ export class AllocationPresentation {
     this.home=documentRef.getElementById('view-home');this.sessions=new WeakMap();
     this.act.addEventListener('focusin',event=>{const target=event.target.closest('.abrow,#al-btm button');if(target)this.focusTarget=target;});
   }
-  stopReveal(){this.cancelReveal?.();this.cancelReveal=null;}
+  stopReveal(resetOffset=true){this.cancelReveal?.();this.cancelReveal=null;if(resetOffset)this.doc.documentElement.style.removeProperty('--allocation-viewport-gap');}
   visibleBounds(){
     const win=this.doc.defaultView,visual=win.visualViewport;
     return {top:Math.max(visual?.offsetTop||0,this.doc.getElementById('main-nav').getBoundingClientRect().bottom),bottom:Math.min(win.innerHeight,(visual?.offsetTop||0)+(visual?.height??win.innerHeight))};
@@ -17,16 +17,26 @@ export class AllocationPresentation {
     const valid=()=>this.getDecision()===view&&!this.home.hidden&&confirm.isConnected&&footer.contains(confirm)&&!this.doc.querySelector('dialog[open]');
     const reveal=()=>{
       frame=0;if(!valid()){this.stopReveal();return;}
-      const bounds=this.visibleBounds(),gap=Math.max(0,win.innerHeight-bounds.bottom);
-      this.doc.documentElement.style.setProperty('--allocation-viewport-gap',gap+'px');
-      const box=confirm.getBoundingClientRect(),padding=Math.max(0,(parseFloat(win.getComputedStyle(footer).paddingBottom)||0)-gap);
-      if(box.bottom>bounds.bottom-padding+1||box.top<bounds.top)footer.scrollIntoView({block:'end',behavior:'instant'});
+      const bounds=this.visibleBounds(),outside=box=>box.bottom>bounds.bottom+1||box.top<bounds.top-1;
+      if(outside(confirm.getBoundingClientRect()))footer.scrollIntoView({block:'end',behavior:'instant'});
+      // Only compensate an observed sticky-footer overlap, after normal scrolling.
+      // Browsers that already position it inside visualViewport need no offset.
+      const previous=parseFloat(this.doc.documentElement.style.getPropertyValue('--allocation-viewport-gap'))||0;
+      const gap=win.getComputedStyle(footer).position==='sticky'?Math.min(Math.max(0,win.innerHeight-bounds.bottom),Math.max(0,footer.getBoundingClientRect().bottom+previous-bounds.bottom)):0;
+      if(gap>0)this.doc.documentElement.style.setProperty('--allocation-viewport-gap',gap+'px');
+      else this.doc.documentElement.style.removeProperty('--allocation-viewport-gap');
+      if(outside(confirm.getBoundingClientRect()))footer.scrollIntoView({block:'end',behavior:'instant'});
     };
     const schedule=()=>{if(!frame)frame=win.requestAnimationFrame(reveal);};
     const listen=(target,type,handler)=>{target?.addEventListener(type,handler,{passive:true});if(target)listeners.push([target,type,handler]);};
     // Follow toolbar/viewport changes only until the next intentional user action.
     // Never fight manual reading, reopen an old decision, or move keyboard focus.
-    for(const type of ['pointerdown','touchstart','wheel','keydown'])listen(this.doc,type,()=>this.stopReveal());
+    for(const type of ['pointerdown','touchstart','wheel','keydown'])listen(this.doc,type,event=>{
+      // Do not move a footer button between pointer-down and click. Its native
+      // action will clear/re-render the footer; scrolling elsewhere releases it.
+      const activating=event.target.closest?.('#al-btm button')&&(type==='pointerdown'||type==='touchstart'||(type==='keydown'&&['Enter',' '].includes(event.key)));
+      this.stopReveal(!activating);
+    });
     listen(this.doc,'yakyujinsei:mainview',()=>this.stopReveal());
     listen(win,'resize',schedule);listen(visual,'resize',schedule);listen(visual,'scroll',schedule);
     this.cancelReveal=()=>{if(frame)win.cancelAnimationFrame(frame);for(const [target,type,handler] of listeners)target.removeEventListener(type,handler);};
@@ -93,9 +103,7 @@ export class AllocationPresentation {
   }
   returnTarget(){
     if(this.getDecision()?.kind!=='ALLOCATION'||!this.act.hasAttribute('data-allocation-session'))return null;
-    const {top,bottom:visibleBottom}=this.visibleBounds(),footer=this.act.querySelector('#al-btm');
-    const gap=parseFloat(this.doc.documentElement.style.getPropertyValue('--allocation-viewport-gap'))||0;
-    const bottom=visibleBottom-Math.max(0,(footer?parseFloat(this.doc.defaultView.getComputedStyle(footer).paddingBottom)||0:0)-gap);
+    const {top,bottom}=this.visibleBounds();
     const candidates=[this.focusTarget,...this.act.querySelectorAll('.abrow[aria-disabled="false"],#al-btm button:not(:disabled),[data-allocation-guide]>summary')];
     return candidates.find(node=>{if(!node?.isConnected||!this.act.contains(node))return false;const b=node.getBoundingClientRect();return b.height>0&&b.top>=top&&b.bottom<=bottom&&node.contains(this.doc.elementFromPoint(b.x+b.width/2,b.y+b.height/2));})||this.act.querySelector(':scope > .title');
   }

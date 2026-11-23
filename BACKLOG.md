@@ -1,5 +1,21 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-24 提交／Full授權更新：使用者明示「推送並且在git上執行full」，解除本批先不提交／推送的限制，且僅就本次授權代理在GitHub啟動Full。將已取得Quick113／113與原生20案例／64版面PASS的季末整合及配點小間距修正一併提交dev，版號2.0.0維持；本機不執行Full。Full在提交後調度、結果待GitHub實際確認，不將本機PASS稱為CI／Full PASS；後續執行連結與受驗SHA以GitHub run及回報為準，未更新main。
+
+> 2026-11-24 季末整合驗證（依使用者新指示解除本項NOT_RUN，仍不提交／推送）：R2共用UI。新增原生season-summary E2E，對固定修改前完整SHA `cf88d1a9d621c354d64a2de5c427cd437a8094bf`比較每一步完整S與每次RNG值／狀態，無欄位投影或允許狀態差異。P／IF×契約維持、升格、降格、到期降格、續約、移籍、缺記錄、引退16組，另HS／U／IND／CORP保留舊呈現4組，共20組PASS；升格案例64組手機／橫向／桌面×4主題×2字級、按鈕命中檢查。含實際下一年度付款、再換成不同最新契約與決定後，舊年度總結及內訳仍維持原值；重繪3次與重入付款入口不新增付款或RNG，原始卡片DOM逐步嚴格對照，竄改總額負控制拒絕。證據`test-results/season-summary/native-04/summary.json`。既有季末／引退fixture128組PASS（`review-01`）；單體、71版詳細／70版摘要生成一致性、42本機連結／5歷史來源PASS。手機／桌面截圖已檢視，均為Chromium，不冒稱Safari實機。
+>
+> 測試同步：舊回顧fixture改驗無Receipt時的「記録なし／手続き中」，共享歷史DOM投影驗證新卡結構及原結算卡金額後才移除顯示層、還原原事件卡，不忽略原文或S／RNG。style token核准新增收合文字字級1處／間距5處；G1賞identity的原碼凍結另明列歷史明細snapshot的3組精確替換，原基準與其他限制不變。首輪Quick因該舊原碼凍結期待未同步而FAIL，原日誌保留；失敗入口同步後135項單獨PASS。第二輪為補強下一年度真實付款與不同契約的隔離，以及非職業原呈現保護而中止，均不冒稱完整Quick PASS。最終Quick `quick-final-03`為113／113 PASS（0 FAIL／SKIP／BLOCKED、重用0，524.602秒），113份log SHA256與runner覆蓋的來源fingerprint `c804e3c9a286ba50b5bd8757b351aa64dcd6967cfb99d49a3106db563454c237`已核對；未追蹤的新產品模組season-summary.js另記SHA256 `9686a27f2deead0bb9063622647a2e3b65f98be0475af1546187b01384f6b5cc`，避免漏出runner的git-ls-files範圍。證據`test-results/season-summary/integrity.json`。最終Quick亦重新通過配點128版面與復原／重配／可視性、決策128版面及季末／引退fixture128版面。引擎唯有game.js增加兩個唯讀UI依存；移除這兩個精確接點後與基準原文完全相同，其他引擎／契約／付款／存檔／RNG檔案不變。未執行本機Full／未dispatch。本次僅本機未提交工作樹PASS，不稱CI或Full PASS。
+>
+> **Full実行が必要（GitHub手動・未実行）**：新增manifest入口及共用歷史DOM比較亦供Full使用，需使用者對後續確定提交手動執行；目標dev。本批仍依指示不提交／推送，受驗提交SHA尚未產生，不能把上述修改前SHA當成本批Full來源；待提交後再提供完整SHA。原main正式Gate、Preview／實機限制保留。
+
+> 2026-11-24 配點小間距追修（R2・本次相關驗證PASS）：使用者要求撤銷固定72px避讓。以事件操作區既有card-padding-y＋safe-area作為唯一底部間距，外層配點act不再疊加padding；--allocation-viewport-gap僅在原生捲動後仍有實測sticky遮擋時調整bottom，不再加入padding，瀏覽器已避讓時為0。只在按鈕超出可視邊界才捲動，手動操作停止追蹤並移除殘留補償，不移動焦點或確定／付款／RNG。同步移除測試固定72px的期待，改驗正常間距、可視性、重配及點擊。此最新決定取代下方72px方案，原歷史測試與FAIL紀錄不改寫。本次僅驗配點；季末收入／契約草稿仍NOT_RUN，依前次指示不提交／推送，Preview未更新；Safari實機待確認。
+>
+> 最終配點個別E2E `test-results/allocation-small-inset/related-04/summary.json`為128組版面／28組操作與fixture PASS，Console／HTTP錯誤0；包括直向／橫向、dice／points、完成／復原重配、縮小visualViewport、瀏覽器已避讓時不補償、已可見時不額外捲動、手動停止及補償啟用時的原生指標確定點擊。原始完整S／RNG及DOM比較保留；headless正常下端padding為事件相同的12px（模擬safe-area為0），手機截圖已檢視。配點spacing token獨立隔離檢查11項PASS：以HEAD其他CSS＋本次allocation CSS／測試建立ignored副本，未將未測季末career-review草稿算入PASS。來源SHA256與範圍見`verified-scope.json`。依使用者本次限定範圍不執行整套Quick／Full；原先季末待驗與未提交／推送狀態不變。
+>
+> 中途`related-02` FAIL來自新測試模擬footer bottom後還原留下空style屬性，原嚴格DOM對照正確拒絕；只完整還原測試自己加上的屬性，不放寬原DOM斷言。原log／summary保留；`related-03`重測PASS後，補上按鈕押下時保留補償至click成立的產品修正，並以`related-04`重新取得上述最終結果。模擬視窗不宣稱Safari網址列實機PASS。
+
+> 2026-11-24 季末収入／来季契約統合（R2・UI、実装中／NOT_RUN）：使用者要求在最新dev `cf88d1a`接續，沿用既有季末回顧區，付款Receipt與當時實收僅複製到UI；年度交接完成時封存同年度契約snapshot、精確按年度讀取，歷史內訳不讀目前最新契約。保留成績／受賞／轉機及昇降格事件，收入／年俸原卡不再重複顯示；契約事件的金額說明移入總結詳細。版本維持2.0.0。使用者最新指示：開發完後先不測試、不提交、不推送，待其他修改一起處理。本次沒有執行單體、E2E、Quick、Full或實機確認；已草擬相關單體入口，原季末E2E與歷史DOM比較期待值仍須依最終顯示規格同步後驗證；此次涉及結果焦點與內訳開啟接點，待其他修改完成後依R2執行相關E2E與必要Quick，不把草稿當PASS。待驗：契約維持、升格調薪、降格、續約、移籍、未定、引退；同年度唯一可見總結、實收／來季額、跨年隔離、重繪S／RNG／付款不變及各主題／大字／手機遮擋。
+
 > 2026-11-23 配點底部遮擋修正（R2・局部UI控制）：依使用者指示先只修配點。手機／單欄寬度1099px以下保留72px與safe-area較大者＋原10px底部余白；72px為保守避讓量，不冒稱取得Safari網址列高度。配完後依visualViewport邊界檢查確定按鈕，在視窗resize／scroll時補正；下一次手動操作、復原／重設或切頁後停止追蹤，別選擇／失效節點／開啟dialog不執行遲延移動。返回焦點亦使用可視邊界；原生焦點、DOM操作、配點closure、引擎／S／RNG／保存不改。版號2.0.0維持，CURRENT_SPEC與同版更新摘要同步。
 >
 > 配點專用E2E已PASS：P／IF共128組版面、28組操作／fixture，完整歷史S／RNG與原始DOM比較、復原／重配／重設、防重複確定及原生Enter焦點保留。新增72px底部余白、可視視窗縮小100px後補正、手動wheel後停止追蹤且不變更S／RNG；Console／HTTP錯誤0。證據`test-results/allocation-viewport-fix/related-02/summary.json`；手機確定畫面截圖已確認。最終Quick `quick-02`為111／111 PASS（0 FAIL／SKIP／BLOCKED、重用0，509.493秒），111份log SHA256與確定來源fingerprint `8b7b841075ac362db87f07076fb5c121f8a90078ece8e7ac74d05901709390cb`全部核對；證據`test-results/allocation-viewport-fix/integrity.json`。本次為局部UI捲動／焦點修正，相關完整配點S／RNG及Quick已覆蓋，不另加Full；未執行本機Full，不替代既有main正式Gate。此為Chromium幾何／模擬viewport訊號，Safari真實浮動網址列尚待實機確認。一般選項／選單、其他彈窗、FA與退休區域的遮擋風險仍未修正；本次不宣稱全站問題解決。

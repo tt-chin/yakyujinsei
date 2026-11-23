@@ -94,9 +94,10 @@ export class DecisionPresentation {
     this.win.requestAnimationFrame(()=>{
       if(this.selection!==selected)return;this.selection=null;
       if(this.view!=='home')return;
-      const card=[...this.log.querySelectorAll('.card')].find(node=>!selected.before.has(node));
+      const card=[...this.log.querySelectorAll('.card')].find(node=>!node.hidden&&!selected.before.has(node));
       const error=[...this.log.querySelectorAll('[data-reader-error]')].find(node=>!selected.before.has(node));
-      const target=(error||card)?.querySelector('h4')||this.targetHeading||this.heading;
+      const financial=[...this.log.querySelectorAll('[data-season-finance-source]')].find(node=>!selected.before.has(node));
+      const target=(error||card)?.querySelector('h4')||financial?.closest('.yr-body')?.querySelector('[data-season-summary] h2')||this.targetHeading||this.heading;
       this.win.requestAnimationFrame(()=>{if(this.view==='home'&&this.latestSelection===selected&&target.isConnected&&!this.doc.querySelector('dialog[open]')){target.focus({preventScroll:true});target.scrollIntoView({block:'nearest'});}});
     });
   }
