@@ -91,7 +91,7 @@ test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   assert.equal([...ply01Rules.join('\n').matchAll(/var\((--space-[\w-]+)\)/g)].map(x=>x[1]).filter(isSpace).length,5,'PLY-01 spacing sites');
   const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,237,'compact label plus two reserved dice-padding token sites');
+  assert.equal(used.length,238,'compact label, dice padding and mobile confirmation clearance token sites');
   assert.equal([...styles['fa-market.css'].matchAll(/var\((--space-[\w-]+)\)/g)].length,10,'FA comparison uses ten shared spacing sites');
   assert.match(styles['allocation-presentation.css'],/padding:0 var\(--space-2xs\);line-height:1\.6;white-space:nowrap/,'approved compact label retains tokenized inline padding');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');

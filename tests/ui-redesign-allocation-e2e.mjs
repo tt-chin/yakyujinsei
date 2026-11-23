@@ -80,6 +80,18 @@ try{
     if(operation==='undo')continue;
     const visibility=await p.locator('#al-btm .main:not(:disabled)').evaluate(button=>{const b=button.getBoundingClientRect(),nav=document.getElementById('main-nav').getBoundingClientRect();return {focused:document.activeElement===document.querySelector('#al-btm button'),top:b.top,bottom:b.bottom,navBottom:nav.bottom,height:innerHeight,hit:button.contains(document.elementFromPoint(b.x+b.width/2,b.y+b.height/2))};});
     assert.ok(visibility.focused&&visibility.hit&&visibility.top>=visibility.navBottom-1&&visibility.bottom<=height+1,'completed allocation reveals confirmation and retains native undo focus: '+JSON.stringify({pos,width,height,mode,visibility}));
+    if(width<1100)assert.ok(visibility.bottom<=height-72,'mobile confirmation reserves clearance for floating browser controls');
+    if(width===390){
+     const unchanged=await get(p);
+     // Controlled viewport signal, not a claim of real Safari chrome emulation.
+     await p.evaluate(()=>{Object.defineProperty(visualViewport,'height',{configurable:true,value:innerHeight-100});visualViewport.dispatchEvent(new Event('resize'));});await frames(p);await frames(p);
+     const b=await p.locator('#al-btm .main').boundingBox();assert.ok(b.y+b.height<=height-100-72+1,'completion follows a reduced visual viewport with browser clearance');
+     assert.deepEqual(await get(p),unchanged,'viewport changes never spend, confirm or draw RNG');
+     await p.evaluate(()=>{delete visualViewport.height;visualViewport.dispatchEvent(new Event('resize'));});await frames(p);await frames(p);
+     await p.evaluate(()=>{window.__allocationViewportScrolls=0;window.__allocationOriginalScroll=Element.prototype.scrollIntoView;Element.prototype.scrollIntoView=function(...args){if(this.id==='al-btm')window.__allocationViewportScrolls++;return window.__allocationOriginalScroll.apply(this,args);};document.dispatchEvent(new WheelEvent('wheel'));visualViewport.dispatchEvent(new Event('resize'));});await frames(p);
+     assert.equal(await p.evaluate(()=>window.__allocationViewportScrolls),0,'manual interaction stops completion follow-up scrolling');
+     await p.evaluate(()=>{Element.prototype.scrollIntoView=window.__allocationOriginalScroll;});
+    }
    }
    if(width===390){
     const done=(await get(p)).done;

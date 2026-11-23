@@ -1,5 +1,11 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-23 配點底部遮擋修正（R2・局部UI控制）：依使用者指示先只修配點。手機／單欄寬度1099px以下保留72px與safe-area較大者＋原10px底部余白；72px為保守避讓量，不冒稱取得Safari網址列高度。配完後依visualViewport邊界檢查確定按鈕，在視窗resize／scroll時補正；下一次手動操作、復原／重設或切頁後停止追蹤，別選擇／失效節點／開啟dialog不執行遲延移動。返回焦點亦使用可視邊界；原生焦點、DOM操作、配點closure、引擎／S／RNG／保存不改。版號2.0.0維持，CURRENT_SPEC與同版更新摘要同步。
+>
+> 配點專用E2E已PASS：P／IF共128組版面、28組操作／fixture，完整歷史S／RNG與原始DOM比較、復原／重配／重設、防重複確定及原生Enter焦點保留。新增72px底部余白、可視視窗縮小100px後補正、手動wheel後停止追蹤且不變更S／RNG；Console／HTTP錯誤0。證據`test-results/allocation-viewport-fix/related-02/summary.json`；手機確定畫面截圖已確認。最終Quick `quick-02`為111／111 PASS（0 FAIL／SKIP／BLOCKED、重用0，509.493秒），111份log SHA256與確定來源fingerprint `8b7b841075ac362db87f07076fb5c121f8a90078ece8e7ac74d05901709390cb`全部核對；證據`test-results/allocation-viewport-fix/integrity.json`。本次為局部UI捲動／焦點修正，相關完整配點S／RNG及Quick已覆蓋，不另加Full；未執行本機Full，不替代既有main正式Gate。此為Chromium幾何／模擬viewport訊號，Safari真實浮動網址列尚待實機確認。一般選項／選單、其他彈窗、FA與退休區域的遮擋風險仍未修正；本次不宣稱全站問題解決。
+>
+> 首輪Quick `quick-01`因新增底部padding使用一處既有space token，`design-tokens-06.test`舊總數237而實際238造成FAIL。原54 PASS／1 FAIL及中止紀錄保留，不稱整套完成；只將已批准新增間距的固定數量同步為238，不改遊戲或放寬其他斷言。單獨重測11項PASS，並以更新後來源重新執行Quick `quick-02`，不重用首輪結果。
+
 > 2026-11-23 dev追加UI修正（R2・純顯示）：更新至`d82e44eb7566d618d30ef24116276dcd5c6e3f74`後實作。事件選項與收合摘要只在呈現層省略「イベント｜」「イベントカード｜」，保留分類span、名稱、完整說明與原選擇資訊；重新繪製從原標題取得文字，避免名稱本身含同字串時被再次刪除。#board使用既有桌面／手機球場圖與88%主題panel遮罩，強化直接位於照片上的次要文字，僅限頁內資訊區；不改系統狀態列／theme-color、尺寸、布局與固定捲動。產品版號依使用者指定維持2.0.0，CURRENT_SPEC、設計書、CHANGELOG／RELEASE_NOTES與生成資料同步；引擎、薪資公式、規則、保存與RNG不改。
 >
 > 使用者限定本次驗證範圍，依純顯示例外只做相關檢查：40組（320／390／430／844橫向／1280桌面×4主題×2字級）與固定修改前SHA對照，高度／布局完全相同、各主題照片黑白極端下的保守文字對比均≥4.5:1；手機捲動後board top:0、nav緊接board，頁面無橫向溢出。10組標題涵蓋兩種前綴、3分類、缺分類、空／一般標題、名稱內同字串與3次重繪；分類／說明／原title與S不變，歷史DOM投影僅還原批准前綴且拒絕竄改名稱。相關原生事件分類E2E在1280／390px通過選項及結果卡標題、4主題徽章檢查；Console／HTTP錯誤0。四主題手機截圖與事件選項截圖已確認，證據`test-results/ui-title-board/summary.json`、`scoped-03.log`、`event-titles-01.log`。

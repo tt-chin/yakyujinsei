@@ -6,7 +6,33 @@ export class AllocationPresentation {
     this.home=documentRef.getElementById('view-home');this.sessions=new WeakMap();
     this.act.addEventListener('focusin',event=>{const target=event.target.closest('.abrow,#al-btm button');if(target)this.focusTarget=target;});
   }
-  clear(){this.home?.removeAttribute('data-allocation-open');this.act.removeAttribute('data-allocation-session');this.observer?.disconnect();this.observedFooter=null;this.doc.documentElement.style.removeProperty('--allocation-footer-height');}
+  stopReveal(){this.cancelReveal?.();this.cancelReveal=null;}
+  visibleBounds(){
+    const win=this.doc.defaultView,visual=win.visualViewport;
+    return {top:Math.max(visual?.offsetTop||0,this.doc.getElementById('main-nav').getBoundingClientRect().bottom),bottom:Math.min(win.innerHeight,(visual?.offsetTop||0)+(visual?.height??win.innerHeight))};
+  }
+  revealConfirmation(view,footer,confirm){
+    this.stopReveal();
+    const win=this.doc.defaultView,visual=win.visualViewport,listeners=[];let frame=0;
+    const valid=()=>this.getDecision()===view&&!this.home.hidden&&confirm.isConnected&&footer.contains(confirm)&&!this.doc.querySelector('dialog[open]');
+    const reveal=()=>{
+      frame=0;if(!valid()){this.stopReveal();return;}
+      const bounds=this.visibleBounds(),gap=Math.max(0,win.innerHeight-bounds.bottom);
+      this.doc.documentElement.style.setProperty('--allocation-viewport-gap',gap+'px');
+      const box=confirm.getBoundingClientRect(),padding=Math.max(0,(parseFloat(win.getComputedStyle(footer).paddingBottom)||0)-gap);
+      if(box.bottom>bounds.bottom-padding+1||box.top<bounds.top)footer.scrollIntoView({block:'end',behavior:'instant'});
+    };
+    const schedule=()=>{if(!frame)frame=win.requestAnimationFrame(reveal);};
+    const listen=(target,type,handler)=>{target?.addEventListener(type,handler,{passive:true});if(target)listeners.push([target,type,handler]);};
+    // Follow toolbar/viewport changes only until the next intentional user action.
+    // Never fight manual reading, reopen an old decision, or move keyboard focus.
+    for(const type of ['pointerdown','touchstart','wheel','keydown'])listen(this.doc,type,()=>this.stopReveal());
+    listen(this.doc,'yakyujinsei:mainview',()=>this.stopReveal());
+    listen(win,'resize',schedule);listen(visual,'resize',schedule);listen(visual,'scroll',schedule);
+    this.cancelReveal=()=>{if(frame)win.cancelAnimationFrame(frame);for(const [target,type,handler] of listeners)target.removeEventListener(type,handler);};
+    schedule();
+  }
+  clear(){this.stopReveal();this.home?.removeAttribute('data-allocation-open');this.act.removeAttribute('data-allocation-session');this.observer?.disconnect();this.observedFooter=null;for(const name of ['--allocation-footer-height','--allocation-viewport-gap'])this.doc.documentElement.style.removeProperty(name);}
   sync(){
     const view=this.getDecision();
     if(view?.kind!=='ALLOCATION'||!this.act.querySelector('#al-rows')){this.clear();return;}
@@ -56,10 +82,8 @@ export class AllocationPresentation {
     // Only the transition to a usable native confirm button requests scrolling.
     // Wait for the original renderer's focus step; never confirm or mutate a draft.
     const ready=Boolean(confirm),becameReady=session.ready===false&&ready;session.ready=ready;
-    if(becameReady)this.doc.defaultView.requestAnimationFrame(()=>{
-      if(this.getDecision()!==view||this.home.hidden||!confirm.isConnected||!footer.contains(confirm)||this.doc.querySelector('dialog[open]'))return;
-      footer.scrollIntoView({block:'end',behavior:'instant'});
-    });
+    if(becameReady)this.revealConfirmation(view,footer,confirm);
+    else if(!ready)this.stopReveal();
     if(this.observedFooter!==footer){
       this.observer?.disconnect();this.observedFooter=footer;
       const measure=()=>{if(!this.home.hidden&&footer.isConnected&&this.act.hasAttribute('data-allocation-session'))this.doc.documentElement.style.setProperty('--allocation-footer-height',`${this.doc.defaultView.getComputedStyle(footer).position==='sticky'?footer.getBoundingClientRect().height:0}px`);};
@@ -69,7 +93,9 @@ export class AllocationPresentation {
   }
   returnTarget(){
     if(this.getDecision()?.kind!=='ALLOCATION'||!this.act.hasAttribute('data-allocation-session'))return null;
-    const top=Math.max(0,this.doc.getElementById('main-nav').getBoundingClientRect().bottom),bottom=this.doc.defaultView.innerHeight;
+    const {top,bottom:visibleBottom}=this.visibleBounds(),footer=this.act.querySelector('#al-btm');
+    const gap=parseFloat(this.doc.documentElement.style.getPropertyValue('--allocation-viewport-gap'))||0;
+    const bottom=visibleBottom-Math.max(0,(footer?parseFloat(this.doc.defaultView.getComputedStyle(footer).paddingBottom)||0:0)-gap);
     const candidates=[this.focusTarget,...this.act.querySelectorAll('.abrow[aria-disabled="false"],#al-btm button:not(:disabled),[data-allocation-guide]>summary')];
     return candidates.find(node=>{if(!node?.isConnected||!this.act.contains(node))return false;const b=node.getBoundingClientRect();return b.height>0&&b.top>=top&&b.bottom<=bottom&&node.contains(this.doc.elementFromPoint(b.x+b.width/2,b.y+b.height/2));})||this.act.querySelector(':scope > .title');
   }
