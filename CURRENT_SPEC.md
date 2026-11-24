@@ -552,6 +552,9 @@ NPB 維持原有一次 ri()，單位萬円、含上下界：
 - 另記認可一軍季數，不替換現行保有權／FA serviceTime。不從混合一二軍的league stats.yr補算。
 - 舊狀態缺少新年資時，僅從保存的年度階層與稼働資訊重建；證據不足不猜測豁免資格，標示資料不足。既有MLB/MiLB選手不重跑首次資格判定。
 - 既有 NPB 非海外FA的赴美轉隊分類為遊戲簡化 posting，無需新增球團同意抽選；已有海外FA權或戰力外則fee=0。不將所有海外轉隊誤標為posting。
+  - 已批准變更、**未實作**（MLB-POSTING-DESIGN-01，[PR #126決定](https://github.com/tt-chin/yakyujinsei/pull/126#issuecomment-7111666298)）：實作時本條改為「申請→母球團同意抽選→報價→玩家決定」，規則見[定案規格](tasks/MLB_POSTING_DESIGN.md)。實作前以本條現行行為為準。
+- 現行NPB一軍保有權空窗：一軍第5年起（或換過聯盟）合約到期且NPB年資<9時走FA流程，年資<8只做1年保有權續約、年資8只有國內FA，季末不出現KBO／CPBL／MLB海外offer。
+  - 已批准變更、**未實作**（NPB-OFFER-WINDOW-01，[PR #127決定](https://github.com/tt-chin/yakyujinsei/pull/127#issuecomment-7111768280)）：空窗年度補齊KBO／CPBL offer，先決定去留再續約，赴美依上條。規則見[定案規格](tasks/NPB_OFFER_WINDOW_DESIGN.md)。實作前以本條現行行為為準。
 - Major posting：以保證年俸總額及保證契約金作為保證成本 G；前2500萬美元20%、接著2500萬美元17.5%、超過部分15%，依固定150匯率計円金額。未保證出来高不納入初期fee。
 - Minor posting：契約金25%。育成支度金不算美國國際契約金。
 - 本次只處理 NPB → 美國的posting；KBO/CPBL不自行虛構posting資格或球團fee。
