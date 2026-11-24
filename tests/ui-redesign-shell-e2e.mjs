@@ -95,7 +95,7 @@ try{
   await p.locator('#act button').filter({hasText:'元に戻す'}).click();
   assert.notDeepEqual((await get(p)).state.ab,before.state.ab);assert.deepEqual((await get(p)).rng,before.rng);
   await p.evaluate(()=>window.__shell.fixture({stage:'PRO',currentSalary:1234567890,injNext:17,rehab:1,skipMid:true,seasonFactor:0}));await p.setViewportSize({width:1440,height:900});await frames(p);
-  assert.equal(await p.locator('#bd-sal').textContent(),'123,457');assert.equal(await p.locator('#bd-risk').textContent(),'17%');assert.match(await p.locator('#desktop-player').textContent(),/リハビリ中（今季全休・残り1年）/);
+  assert.equal(await p.locator('#bd-sal').textContent(),'123,457');assert.equal(await p.locator('#bd-risk').textContent(),'-');assert.match(await p.locator('#desktop-player').textContent(),/リハビリ中（今季全休・残り1年）/);
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth||document.querySelector('#desktop-player').scrollWidth>document.querySelector('#desktop-player').clientWidth),false,'long rehab and salary fit the sidebar');
   await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(window.__projectJerseyBoard(board.outerHTML,window.__shell.get().state),window.__shellRenderedBoard);});
   // Expected values come from renderer inputs, so corrupt live DOM must fail.

@@ -36,7 +36,9 @@ test('81 phase-4 font sites plus two phase-5 review headings; name button uses -
   assert.equal((ply01Rules.join('\n').match(/var\(--fs-[\w-]+\)/g)||[]).length,1,'PLY-01 #bd-number font site');
   assert.deepEqual([...styles['fa-market.css'].matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-md','--fs-sm','--fs-md','--fs-md'],'FA comparison reuses four shared font sites');
   const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
-  const used=[...original.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
+  const header='#bd-grid[data-pitcher="true"] :is(#bd-sal,#bd-tj-gauge){font-size:clamp(10px,2.8vw,var(--fs-lg))}';
+  assert.equal(styles['game-shell.css'].split(header).length,2,'one approved responsive four-column font rule');
+  const used=[...original.replace(header,header.replace('var(--fs-lg)','')).matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
   assert.equal(used.length,81,'phase-4 allocation adds five shared font sites');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
   // The responsive home title now uses clamp(26px,4vw,40px); the shared scale is retained.

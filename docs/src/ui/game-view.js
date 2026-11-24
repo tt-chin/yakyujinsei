@@ -54,6 +54,7 @@ export class GameView {
     this.byId('board').dataset.amateur=String(m.isAmateur===true);
     if(m.phase===2)this.careerReview?.render();
     const risk=this.byId('bd-risk');if(risk)risk.textContent=m.injuryRiskText??'0%';
+    const tj=this.byId('bd-tj-gauge-cell');if(tj){this.byId('bd-grid').dataset.pitcher=String(m.isPitcher===true);tj.hidden=!m.isPitcher;this.byId('bd-tj-gauge').textContent=m.tjGaugeText??'';}
     this.byId('bd-name').innerHTML=m.nameHtml;
     this.byId('bd-team').innerHTML = m.teamHtml;
     this.setBoardNumber(m.numberText);{const change=this.byId('board-number');if(change)change.disabled=!m.numberChangeEnabled;}

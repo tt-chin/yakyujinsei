@@ -1,5 +1,9 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-24 頁首故障風險／投手TJ（R2純顯示、2.0.0維持）：故障リスク沿用injuryRiskStatus，健檢後採該次記錄，全休無判定為「-」。投手TJ與狀態明細共用一位小數及實際上限，野手三欄。相關5入口PASS／0 FAIL（36.978秒；test-results/header-risk-tj/related-final-02/summary.json），涵蓋健檢前後、全休、自訂上限73與原生50／100、96組手機直橫向／主題／字級／高額年俸版面，完整S與RNG消耗不變。手機截圖已檢視；Safari實機未測。首輪320px長金額溢出FAIL保留，調整欄寬／數字字級後通過。依純顯示例外未跑整套Quick／Full，main正式Gate保留。使用者已授權提交。
+>
+> Tests #269（run45363340751／9f8428486d0e191371e013df6ab8f491aad1edd3）：第一次143 PASS／1 FAIL，player-random-name-e2e在Space後讀到前一姓名；同SHA第二次八批與彙整成功。亂數輸入固定，鍵盤啟動／焦點時序為可能原因，缺CI事件追蹤而未確診。隔離同版姓名案例17 PASS；未修改姓名功能或降低斷言，原FAIL保留。此Full成功只屬該SHA，不涵蓋本次頁首修改。
+
 > 2026-11-24 結果卡開關／箭頭80%（R2純顯示，2.0.0維持）：移除CareerReview.render對年度成績、季末結算、獨立報酬、社會人給与及引退卡的強制收合，以及card()在done時收合新卡的覆寫。建立／更新／重繪保留原生details當時開關；新卡展開、下一個原生遊戲選擇收合舊卡、三種總結明細的預設關閉與狀態保持、効果詳細／年度區塊與隱藏重複收入卡不變。浮動箭頭視覺圓形48→38.4px、字形80%，透明操作範圍仍48px，導覽JS未變。
 >
 > 限定驗證：career-review單體、style token、season-summary原生E2E及review原生fixture共4／4 PASS（41.373秒），新增PRO／IND／CORP五類結果混合手動開關、建立及3次重繪、原生下一選擇仍收合、done新卡展開／退休重繪保留；既有P／IF完整S／RNG及原卡DOM、128版面、同年度整合／零重複收入卡與總結明細預設維持通過。arrow-80-02限定導覽fixture通過四種尺寸、透明命中區≥44px、圓形與字形80%、鍵盤／觸控及高度變動；手機圖已檢視。首輪箭頭尺寸斷言遇偽元素content-box／border-box計量差異，明列box-sizing:border-box後重測通過，原失敗紀錄保留。Release notes原三條／80字上限及生成一致性、語法與Diff檢查通過。證據test-results/review-disclosures/related-01/summary.json、arrow-80-02/summary.json及相關日誌。

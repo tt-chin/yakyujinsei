@@ -6,7 +6,7 @@
 // intentionally retain its previous salary while a season result updates S.
 export function observeShellBoard(view,target){
   const render=view.renderBoard,patch=view.patchBoard;
-  view.renderBoard=function(model){const result=render.call(this,model);target.__shellRenderedBoard={isAmateur:model.isAmateur,salaryText:model.salaryText,injuryRiskText:model.injuryRiskText};return result;};
+  view.renderBoard=function(model){const result=render.call(this,model);target.__shellRenderedBoard={isAmateur:model.isAmateur,salaryText:model.salaryText,injuryRiskText:model.injuryRiskText,isPitcher:model.isPitcher,tjGaugeText:model.tjGaugeText};return result;};
   view.patchBoard=function(values){const result=patch.call(this,values);target.__shellRenderedBoard={...target.__shellRenderedBoard,salaryText:values.salaryText};return result;};
 }
 export function projectShell2000(markup,rendered){
@@ -22,6 +22,14 @@ export function projectShell2000(markup,rendered){
   expectedSalary.setAttribute('aria-label',amateur?'アマチュア。収入の内訳を見る':'年俸、単位は万円。年俸の内訳を見る');
   if(salary.outerHTML!==expectedSalary.outerHTML)throw Error('UI_SHELL_2000_SALARY_CONTRACT');
   q(expected,'bd-risk').textContent=rendered.injuryRiskText;
+  // Approved read-only header risk/TJ delta. Keep the frozen historical templates.
+  if(typeof rendered.isPitcher==='boolean'||q(actual,'bd-tj-gauge-cell')){
+    if(typeof rendered.isPitcher!=='boolean'||(rendered.isPitcher?typeof rendered.tjGaugeText!=='string':rendered.tjGaugeText!==null))throw Error('UI_SHELL_2000_HEADER_INPUT');
+    q(expected,'bd-risk').nextElementSibling.textContent='故障リスク';
+    const cell=parse('<div class="bd-cell" id="bd-tj-gauge-cell" hidden><b id="bd-tj-gauge"></b><span>TJゲージ</span></div>');
+    cell.hidden=!rendered.isPitcher;q(cell,'bd-tj-gauge').textContent=rendered.tjGaugeText??'';
+    q(expected,'bd-grid').dataset.pitcher=String(rendered.isPitcher);q(expected,'bd-grid').append(cell);
+  }
   expected.dataset.amateur=String(amateur);
   for(const id of ['bd-name','bd-team','bd-age','bd-year','bd-ovr','bd-tj']){
     q(expected,id).innerHTML=q(actual,id).innerHTML;q(old,id).innerHTML=q(actual,id).innerHTML;

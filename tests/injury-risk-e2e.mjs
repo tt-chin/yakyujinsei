@@ -15,7 +15,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.split('=').slice(1).join('=');
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const THEMES=['standard','night','classic','scoreboard'];
-const hook=`\nwindow.__injRisk={state:()=>JSON.stringify(S),done:()=>S.done,set:o=>{Object.assign(S,o);board(1);},mark:()=>{markInjurySeasonStart(S);board(1);},newYear:()=>{S.year++;board(1);}};`;
+const hook=`\nwindow.__headerDraws=0;careerRng.onDraw=()=>window.__headerDraws++;window.__injRisk={draws:()=>window.__headerDraws,state:()=>JSON.stringify(S),done:()=>S.done,set:o=>{Object.assign(S,o);board(1);},mark:()=>{markInjurySeasonStart(S);board(1);},newYear:()=>{S.year++;board(1);}};`;
 const server=createServer(async(req,res)=>{
   try{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\//,'')||'index.html';if(rel.includes('..'))throw Error('path');
     let content=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')content=content.toString()+hook;
@@ -50,7 +50,7 @@ try{
     await toHealthCheck(p);await openPlayer(p);let c=await conditionOf(p,'#player-content');
     assert.equal(c.rows[1][0],'健康診断時の故障リスク');assert.equal(c.rows[0][0],'シーズン稼働率');
     const shown=riskOf(c),m=/^(\d+)%$/.exec(shown);assert.ok(m,'forecast value '+shown);
-    assert.equal(c.details,1);assert.equal(c.open,false);assert.equal(c.summary,'故障リスクの内訳');assert.deepEqual(c.breakdown.at(-1),['結果',shown]);
+    assert.equal(await p.locator('#bd-risk').textContent(),shown,'header forecast equals shared condition');assert.equal(await p.locator('#bd-risk').evaluate(e=>e.nextElementSibling.textContent),'故障リスク');assert.equal(c.details,1);assert.equal(c.open,false);assert.equal(c.summary,'故障リスクの内訳');assert.deepEqual(c.breakdown.at(-1),['結果',shown]);
     assert.deepEqual(c.children,['H2','DL.ui-data-list','DETAILS.ui-condition-breakdown']);assert.match(c.note,/健康診断1回の判定確率です。.*今後のイベントで変わることがあります。$/);
     const before=await p.evaluate(()=>window.__injRisk.state());
     await p.locator('#player-content details.ui-condition-breakdown summary').click();c=await conditionOf(p,'#player-content');assert.equal(c.open,true,'expands');
@@ -65,6 +65,7 @@ try{
     const used=/故障率 (\d+)%/.exec(card);if(used){assert.equal(used[1]+'%',shown,'result card 故障率 equals the shown value');matched++;}
     await openPlayer(p);c=await conditionOf(p,'#player-content');
     assert.equal(riskOf(c),`判定済み（${shown}）`);assert.deepEqual(c.breakdown.at(-1),['結果',shown]);assert.match(c.note,/今季の判定は終了しました。内訳は判定時の値です。$/);
+    assert.equal(await p.locator('#bd-risk').textContent(),shown,'header keeps judged risk after carry cleared');
     const checkedState=JSON.parse(await p.evaluate(()=>window.__injRisk.state()));assert.equal(checkedState.injNext,0,'the check reset injNext');
     // 3) year start before phasePre: the stale tmpInj counts as reset; 4) after phasePre it counts; 5) rehab season.
     await home(p);await p.evaluate(()=>{window.__injRisk.set({tmpInj:10,injNext:10,skipMid:false});window.__injRisk.newYear();});await openPlayer(p);c=await conditionOf(p,'#player-content');
@@ -73,7 +74,7 @@ try{
     await home(p);await p.evaluate(()=>window.__injRisk.mark());await openPlayer(p);c=await conditionOf(p,'#player-content');
     assert.deepEqual(c.breakdown.find(([l])=>l==='今季の一時加算'),['今季の一時加算','+10%']);assert.equal(Number(riskOf(c).replace('%','')),Math.min(95,reset+10));
     await home(p);await p.evaluate(()=>window.__injRisk.set({skipMid:true}));await openPlayer(p);c=await conditionOf(p,'#player-content');
-    assert.equal(riskOf(c),'今季は健康診断なし（リハビリ中）');assert.equal(c.details,0,'no breakdown without a check');
+    assert.equal(riskOf(c),'今季は健康診断なし（リハビリ中）');assert.equal(c.details,0,'no breakdown without a check');assert.equal(await p.locator('#bd-risk').textContent(),'-','no-check header is an ASCII dash');
     await home(p);await p.evaluate(()=>{window.__injRisk.set({skipMid:false,rehab:1});window.__injRisk.newYear();});await openPlayer(p);c=await conditionOf(p,'#player-content');
     assert.equal(riskOf(c),'今季は健康診断なし（リハビリ中）','year start with a pending rehab');await home(p);await p.evaluate(()=>{window.__injRisk.set({rehab:0});window.__injRisk.mark();});
     await p.screenshot({path:path.join(artifacts,`player-${width}-rehab.png`),fullPage:true});
@@ -92,6 +93,20 @@ try{
       assert.deepEqual(open,[['潜在能力について',true],['ui-condition-breakdown',false]],'re-render keeps the guide open, breakdown closed');
       const after=JSON.parse(await p.evaluate(()=>window.__injRisk.state())),was=JSON.parse(sidebarBefore);was.tmpInj=6;assert.deepEqual(after,was,'only the hook-set tmpInj changed');
       await p.locator('#desktop-player').screenshot({path:path.join(artifacts,`sidebar-${width}.png`)});
+    }
+    // Target header layouts: P/IF, 50/100 actual caps, high salary and large text.
+    await home(p);
+    for(const cap of [50,100]){
+      await p.evaluate(cap=>{const state=JSON.parse(window.__injRisk.state());window.__injRisk.set({stage:'PRO',currentSalary:1234567890000,traits:{...state.traits,rubber:cap===100},tj:cap+.04,rehab:0,skipMid:false,seasonFactor:1});window.__injRisk.newYear();window.__injRisk.mark();},cap);
+      const original=await p.evaluate(()=>({state:window.__injRisk.state(),draws:window.__injRisk.draws()}));
+      await openPlayer(p);const condition=await conditionOf(p,'#player-content');if(pos==='P')assert.equal(await p.locator('#bd-tj-gauge').textContent(),condition.rows.find(([label])=>label==='TJゲージ')[1],'same TJ source and precision');await home(p);
+      for(const [w,h] of [[320,568],[390,844],[844,390]])for(const theme of THEMES)for(const font of ['medium','large']){
+        await p.setViewportSize({width:w,height:h});await p.evaluate(v=>{document.documentElement.dataset.theme=v.theme;document.documentElement.dataset.fontSize=v.font;},{theme,font});await frame(p);
+        const layout=await p.evaluate(()=>{const grid=document.getElementById('bd-grid'),cells=[...grid.children].filter(e=>getComputedStyle(e).display!=='none'),boxes=cells.map(e=>e.getBoundingClientRect());return{columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length,count:cells.length,metrics:cells.map(e=>{const b=e.querySelector('b');return {text:b.textContent,font:getComputedStyle(b).fontSize,width:b.clientWidth,scroll:b.scrollWidth,cell:e.getBoundingClientRect().width};}),overflow:cells.some(e=>e.querySelector('b').scrollWidth>e.querySelector('b').clientWidth+1),labelOverflow:cells.some(e=>{const span=e.querySelector('span'),range=document.createRange();range.selectNodeContents(span);return range.getBoundingClientRect().width>e.clientWidth-parseFloat(getComputedStyle(e).paddingLeft)-parseFloat(getComputedStyle(e).paddingRight)+1;}),tops:boxes.map(r=>r.top),salary:document.getElementById('bd-sal').textContent,tjHidden:document.getElementById('bd-tj-gauge-cell').hidden,tj:document.getElementById('bd-tj-gauge').textContent};});
+        assert.equal(layout.count,pos==='P'?4:3,JSON.stringify({pos,w,h,theme,font,layout}));assert.equal(layout.columns,layout.count);assert.equal(layout.overflow,false,JSON.stringify({pos,w,h,theme,font,layout}));assert.equal(layout.labelOverflow,false);assert.ok(layout.tops.every(y=>Math.abs(y-layout.tops[0])<1),'one metric row');assert.equal(layout.salary,'123,456,789');assert.equal(layout.tjHidden,pos!=='P');assert.equal(layout.tj,pos==='P'?cap.toFixed(1)+' / '+cap:'');
+        if(w===320&&theme==='standard'&&font==='large')await p.screenshot({path:path.join(artifacts,'header-'+pos+'-cap-'+cap+'.png')});
+      }
+      assert.deepEqual(await p.evaluate(()=>({state:window.__injRisk.state(),draws:window.__injRisk.draws()})),original,'header/layout/condition reads preserve complete state and RNG consumption');
     }
     console.log(`${width}px ${pos}: forecast ${shown}, card ${used?used[0]:'injured (no rate on card)'}, year-start reset ${reset}%`);
     await ctx.close();
