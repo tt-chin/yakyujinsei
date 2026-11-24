@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {careerReviewModel,reviewStatLine} from '../docs/src/ui/career-review.js';
+import {careerRecordModel} from '../docs/src/ui/career-record.js';
 
 const stat={G:31,IP:123+2/3,W:12,L:4,SO:133,PA:500,AB:400,H:120,HR:21,RBI:77};
 assert.equal(reviewStatLine('P',stat),'登板 31｜投球回 123.2｜12勝4敗｜奪三振 133');
@@ -16,4 +17,15 @@ model=careerReviewModel({...state,ct:{annualSchedule:[{year:2041,amount:0}]},sal
 assert.equal(model.salary,'円55');assert.equal(model.nextSalary,'円0','zero is known, not missing');
 for(const pos of ['P','IF']){const empty=careerReviewModel({pos,year:2026});assert.deepEqual(empty.moments,[]);assert.deepEqual(empty.totals,[]);assert.equal(empty.salary,'未定');assert.equal(empty.nextSalary,'未定');assert.equal(empty.salaryApplies,false);assert.doesNotMatch(JSON.stringify(empty),/undefined|NaN/);}
 assert.equal(careerReviewModel({...state,stage:'HS'}).salaryApplies,false);
+for(const pos of ['P','IF']){
+ const levels=['NPB1','NPB2','NPB_DEV','KBO1','KBO2','CPBL1','CPBL2','MLB','A3','A2','A1','R','IND','CORP'];
+ const sample={pos,year:2040,statsByLevel:Object.fromEntries(levels.map(key=>[key,{yr:1,G:1,IP:0,W:0,H:0,PA:1,AB:1}])),stats:{NPB:null,MINOR:{yr:999,IP:9999}},log:[]},before=JSON.stringify(sample);
+ const shared=careerRecordModel(sample),retired=careerReviewModel(sample);
+ assert.equal(retired.totals.length,levels.length);assert.deepEqual(retired.totals,shared.groups.flatMap(group=>group.levels.map(level=>({league:group.label,label:level.label,line:level.summary}))));
+ assert.deepEqual(retired.totals.filter(row=>row.league==='MiLB').map(row=>row.label),['3A','2A','1A','ルーキーリーグ']);
+ assert.doesNotMatch(JSON.stringify(retired.totals),/マイナー／二軍|9999/);assert.equal(JSON.stringify(sample),before);
+ assert.equal(careerReviewModel({...sample,statsByLevel:{NPB1:null,NPB2:{},MLB:{yr:0,G:0,H:0,IP:0}}}).totals.length,0);
+ assert.equal(careerReviewModel({...sample,statsByLevel:{MLB:{yr:1,G:0,H:0,IP:0}}}).totals.length,1,'an actual all-zero season remains a record');
+ assert.equal(careerReviewModel({...sample,statsByLevel:{MLB:{G:1,IP:0,W:0,H:0}}}).totals.length,1,'zero IP/wins/hits do not hide an appearance');
+}
 console.log('PASS career-review: P/IF baseball innings, existing season/awards, cross-stage selection, signed vs offered/unknown/zero salary, empty/legacy and immutable reads');

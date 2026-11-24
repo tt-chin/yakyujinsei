@@ -1,5 +1,13 @@
 # 統一測試入口
 
+## 米国服務年資與引退摘要
+
+`american-service.test`先以MiLB／MLB錯配、既有5年服務年資重現舊版漏加與CONTROL，再測80組美國層級／出賽比例／2→3與5→6邊界／新controller重試，以及原生CareerMovement的滿期／未滿期／正常延長與升降格。`browser-save-codec.test`驗證原envelope不變、兩種美國org／lv錯配可載入、重複載入不重算、只依明示的年度／level／seasonFactor補年資，不採stats.MLB.yr，且非美國錯配仍拒絕。
+
+新增`american-service-e2e`為Quick／Full的限定原生路線。固定基準8964d627a1f2dff5f38da31bd3a092eeaa903a6e與P／IF固定seed比較，年資加算本身無RNG；錯配案例只允許org、MLB服務年資及派生資格三項狀態差異，之後明確驗證實際調停／FA及同seed重複性。正常直接MLB與NPB／KBO／CPBL案例完整S、選項與每次RNG值不排除欄位。另以原生簽約／升降格／再升格／交易／更新驗證組織與合約保證。不得把後續FA選項造成的生涯差異寫入新golden，或重建舊基準。
+
+`career-review.test`與原生`ui-redesign-review-e2e --fixtures-only`驗證共用careerRecordModel的14層級、零值紀錄、全空fallback，保持原引退卡／保存圖片範圍及完整S／RNG。既有固定seed投手／野手個別契約E2E亦對照上述完整SHA並重播；不是本機Full。最終Full由使用者對確定提交於GitHub手動執行。
+
 ## 季末まとめ初次定位與年度別字體
 
 `season-summary-e2e`沿用原固定基準`cf88d1a9d621c354d64a2de5c427cd437a8094bf`與完整S／每次RNG／原卡DOM比對，新增手機直橫向／短視窗及桌面實際log捲動容器：首次標題在固定頁首下、同年度重繪／契約更新／次年度不重播、原生季末能力點分配不回跳、原生交易與TJ選項先回答再結算。wheel／touchmove／鍵盤、選手／キャリア、dialog、跨年及DOM移除均在rAF前介入，驗證舊請求取消且重繪不補跳；同年度的新生涯可再次定位，明細手動開關及箭頭條件保持。只以fixture控制測試前提與結算後續，不更改產品流程或抽樣結果。

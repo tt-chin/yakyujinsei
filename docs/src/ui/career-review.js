@@ -1,12 +1,8 @@
-import {fmtIP} from './stat-format.js';
+import {careerRecordModel,reviewStatLine} from './career-record.js';
+export {reviewStatLine} from './career-record.js';
 import {SeasonSummary} from './season-summary.js';
 
 // Read-only summaries. No inferred contracts, awards, events or persisted fields.
-export function reviewStatLine(pos,st,formatIP=fmtIP){
-  if(!st)return '';
-  if(pos==='P')return `登板 ${st.G||0}｜投球回 ${formatIP(st.IP||0)}｜${st.W||0}勝${st.L||0}敗｜奪三振 ${st.SO||0}`;
-  return `出場 ${st.G||0}｜打席 ${st.PA||0}｜打率 ${(st.AB?(st.H||0)/st.AB:0).toFixed(3).replace(/^0/,'')}｜本塁打 ${st.HR||0}｜打点 ${st.RBI||0}`;
-}
 export function careerReviewModel(state,{leagueName=key=>key,teamName=key=>key,teamLeague=()=>null,formatMoney=String}={}){
   const logs=Array.isArray(state.log)?state.log:[],honors=Array.isArray(state.honors)?state.honors:[];
   const current=logs.findLast(row=>row.y===state.year),schedule=Array.isArray(state.ct?.annualSchedule)?state.ct.annualSchedule:[];
@@ -20,7 +16,7 @@ export function careerReviewModel(state,{leagueName=key=>key,teamName=key=>key,t
   moments.sort((a,b)=>a.year-b.year);
   const teams=Object.values(state.teamTally||{}).flatMap(group=>Object.entries(group||{})),representative=teams.reduce((best,row)=>row[1]>(best?.[1]??-1)?row:best,null);
   const playedLeague=current?(current.st?(leagueName(teamLeague(current.tm))||'リーグ記録なし'):'アマチュア'):leagueName(state.lv)||'—';
-  return {year:state.year,name:state.name||'選手',team:current?.tm||state.team||'所属記録なし',league:playedLeague,line:reviewStatLine(state.pos,current?.st)||current?.line||'今季の成績記録なし',salary:salary(state.year),nextSalary:salary(state.year+1),salaryApplies:state.stage==='PRO'||state.stage==='IND',awards:honors.filter(text=>String(text).startsWith(state.year+' ')),changes:changes.slice(0,3),representative:representative?teamName(representative[0]):null,totals:Object.entries(state.stats||{}).map(([key,st])=>({league:leagueName(key)||key,line:reviewStatLine(state.pos,st)})),honors:honors.slice(0,3),moments};
+  return {year:state.year,name:state.name||'選手',team:current?.tm||state.team||'所属記録なし',league:playedLeague,line:reviewStatLine(state.pos,current?.st)||current?.line||'今季の成績記録なし',salary:salary(state.year),nextSalary:salary(state.year+1),salaryApplies:state.stage==='PRO'||state.stage==='IND',awards:honors.filter(text=>String(text).startsWith(state.year+' ')),changes:changes.slice(0,3),representative:representative?teamName(representative[0]):null,totals:careerRecordModel(state,{recordedOnly:true}).groups.flatMap(group=>group.levels.map(level=>({league:group.label,label:level.label,line:level.summary}))),honors:honors.slice(0,3),moments};
 }
 
 export class CareerReview {
@@ -43,7 +39,7 @@ export class CareerReview {
       if(reason){const copy=reason.cloneNode(true);copy.querySelectorAll('[data-reader-selection]').forEach(node=>node.remove());root.append(this.node('p',copy.textContent));}
       const evaluation=[...body.querySelectorAll('.card')].find(card=>card.querySelector('h4')?.textContent==='通算評価');
       if(evaluation){const value=evaluation.querySelector('[data-reader-body]')?.cloneNode(true);if(value){value.querySelectorAll('[data-reader-selection]').forEach(node=>node.remove());root.append(this.node('p',value.textContent));}}
-      root.append(this.node('h3','主な通算成績'),this.list(model.totals.length?model.totals.map(row=>row.league+'｜'+row.line):['通算成績の記録なし']));
+      root.append(this.node('h3','主な通算成績'),this.list(model.totals.length?model.totals.map(row=>(row.league==='MiLB'?'MiLB｜':'')+row.label+'｜'+row.line):['通算成績の記録なし']));
       root.append(this.node('h3','代表的な受賞記録'),this.list(model.honors.length?model.honors:['受賞記録なし']));
       root.append(this.node('h3','生涯の主な記録'));
       const timeline=this.node('ol');for(const item of model.moments)timeline.append(this.node('li',`${item.year}年｜${item.label}｜${item.team}｜${item.line}`));root.append(timeline);

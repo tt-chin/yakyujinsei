@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'american-service-e2e': {quick:[],seconds:90,reason:'Native US org/level, service accrual and actual arbitration/FA boundaries; exact declared deltas vs fixed pre-fix source, unchanged direct MLB and NPB/KBO/CPBL state/RNG, signing/trade/promotion/renewal.'},
   'season-summary-e2e': {quick:[],seconds:90,reason:'Exact-year unified season income/contract UI: native payment, promotion/demotion/renewal/transfer/retirement, raw complete S/RNG vs frozen pre-change source, historical isolation and mobile/theme/font layouts.'},
   'fa-market-presentation-e2e': {quick:[],seconds:120,reason:'Read-only FA table/sorting/card navigation, retained native choice handlers and exact frozen-baseline state/RNG before and after signing; zero offers unchanged.'},
   'ui-redesign-review-e2e': {quick:['--fixtures-only'],seconds:240,reason:'UI phase 5: native P/IF season and retirement summaries, 128 layouts, missing/signed salary and original DOM/state/RNG; two frozen-phase-4 natural careers in the complete entry.'},

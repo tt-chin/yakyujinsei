@@ -1,5 +1,21 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-25 本批最終本機驗證：Quick115 PASS／0 FAIL／0 SKIP／0 BLOCKED（753.833秒、未重用），`test-results/american-service/quick-final-14/summary.json`；115份日誌SHA256與來源fingerprint `e9f2b1c20a9a2ca56e262e491fc6c341ef2781b26a6740659e61de683966ce1a`核對通過，新共用career-record.js另核SHA256 `0737ac56aeed2543464b1574e29039589489d25908ad1bfa29de186a17200a34`（integrity.json）。固定修復前基準8964d627a1f2dff5f38da31bd3a092eeaa903a6e的原生P／IF生涯完整S、選項與每次RNG比較2／2 PASS（133.154秒，fixed-seeds-final-11；P 542操作／652 draws、IF 404操作／677 draws），原生FA專項20 PASS／0 Console、US邊界24情境及引退128版面PASS。語法、履歷生成與Diff檢查通過；不重建golden。手機為Chromium模擬，非Safari實機。
+>
+> 提交前確認遠端dev新增PR #127，13b921ba7c0ab74933e4259e652884286ce2c55b僅改BACKLOG、CURRENT_SPEC與兩份移籍設計，不含產品／測試程式。保留並整合遠端文件；本批不實作入札與NPB海外報價新制度。純文件整合不重跑相同產品的Quick，並核對產品／測試內容未變；不將本機工作樹結果稱為新SHA的CI PASS。依使用者授權提交推送dev，完整提交SHA以Git與回報為準。**Full実行が必要（GitHub手動・未実行）**：R3年資／契約／FA修正需對新dev提交手動Full；代理不dispatch、不在本機執行Full。下段尚未提交／重測中文字為過程紀錄，由本段與本次提交結果更新；原FAIL證據保留。
+
+> 2026-11-25 本批提交授權更新：使用者明示完成後可直接提交推送，解除下段本批「先不提交」限制；最終驗證完成後提交dev，Full仍由使用者對新SHA在GitHub手動執行。Quick首輪110 PASS／5 FAIL（552.457秒）保留於american-service/quick-final-10：3個VM fixture未接入新增的reconcileAmericanCareer依存（其中一項直接嵌入module的import）、1項升格原碼期待未同步、1項季末比較遇到核准的US org差異。產品邏輯未為通過這5項而再修改；VM使用實際函式並精確處理單一import，原歷史來源保護保留。季末只校正該A3→MLB fixture的org／升格決定org與明示LATER契約org，其餘完整S、金額、排程與每個RNG值仍逐字／逐欄比較。失敗入口重測5／5 PASS（36.532秒；failure-recheck-13/summary.json）；原基準與FAIL日誌保留，不當成舊版所有生涯都不變。最終Quick重測中，提交SHA以本次Git與回報為準。
+
+> 2026-11-24 引退階級分類／美國年資FA（R3、dev本機開發、2.0.0維持）：先以MiLB來源、lv=MLB、既有5年年資建立重現，原程式5≠6而FAIL（test-results/american-service-before.log保留）。根因為升降格只改lv；年資入口與契約階段仍讀舊org。另移除MLB遷移以stats.MLB.yr當合格年資的舊推算，MLB的派生資格不再被通用svc五年／跨組織旗標覆寫。共用既有effectiveMarketOrg，簽約／升降格／交易／續約／季末與認證後載入補正美國身分；MLB只在原條件seasonFactor>=.5累加，同年度仍用既有marker防重複，不提前終止有效契約。NPB／KBO／CPBL制度不變。
+>
+> 引退摘要抽出careerRecordModel共享既有14階級的順序、標籤、statsByLevel與成績格式；只有摘要過濾未累積分類，yr>0的全零年度及有出賽但零勝／安打／投球局數仍保留。全空為「通算成績の記録なし」。キャリア既有範圍、原引退卡、保存圖片、積算與殿堂評分原碼未改。
+>
+> 舊保存：格式／compatibilityId不變；只接受美國org／lv的舊錯配，先驗證／認證原envelope，再補正副本，不改原簽名資料或既有合約排程。保留明確既有MLB計數，僅以明示完了年度／MLB層級／seasonFactor的去重件數作下限補值；同年度矛盾不採、重疊不猜。一般舊log缺階級或出賽比例時無法完整補回過去年資，不能用stats.MLB.yr或成績推算；保留已知計數，未來合格年度正常累積。契約表內原簽約組織歷史不因載入補正而重寫。
+>
+> 已有直接證據：80組年資／層級／傷缺／controller重試及原生契約邊界；原生US E2E24情境，錯配在年資步驟僅允許org／serviceTime.MLB／faElig三項狀態差異且RNG零新增，正常直接MLB及NPB／KBO／CPBL全S／選項／每次RNG值與固定8964d627a1f2dff5f38da31bd3a092eeaa903a6e一致，新增FA分支同seed重播一致。引退原生P／IF與128版面、14分類及原卡DOM／完整S／RNG比對通過。20個原生契約／延長／FA情境通過；首輪20個遊戲情境通過但Console錯誤1項，整體FAIL日誌保留；錯誤項目細節未保留，不能確診為字型或DNS。具網路測試環境以原Console斷言重測20 PASS／0 Console。舊原碼凍結與MLB遷移期待只同步精確核准差分，保留固定基準及其餘逐字保護，另加6年門檻與無關追加的負控制；不重建golden。相關初期FAIL與診斷保留於test-results/american-service/，最終Quick／來源核對結果另補。
+>
+> 許容差分：美國正確org、可靠MLB年資與派生契約階段，之後的契約／選項／FA市場及RNG路徑可與舊CONTROL錯誤分支不同。補正本身無RNG；不把後續人生強稱同seed舊版完全相同。**Full実行が必要（GitHub手動・未実行）**：R3影響年資、契約及FA後續流程，需允許提交後對新dev完整SHA手動驗證。現在為8964d627a1f2dff5f38da31bd3a092eeaa903a6e上的未提交工作樹，無代表本批的新SHA；未提交／未推送，代理不dispatch或本機跑Full。上一批推送及其CI不代表本批通過。
+
 > 季末定位／年度別字體最終驗證：Quick113 PASS／0 FAIL／0 SKIP／0 BLOCKED（543.914秒、未重用），test-results/season-summary-scroll/quick-final-11/summary.json；113份日誌SHA256與目前來源fingerprint b228b4a16ab3e7eea5b9b3b48d17d41a13de22740ac35a4da43dc0b4466c5f02已核對，完整性記錄integrity.json。涵蓋本批31季末情境／68版面、32字體fixture及既有配點／決策各128版面；更新履歷生成一致性、語法及Diff檢查PASS。這是未提交工作樹的本機結果，不稱CI或Full PASS；下段「Quick最終結果另補」由此解除。依最新指示未暫存、未提交、未推送；Safari實機與新提交的手動Full仍待確認。
 
 > 2026-11-24 季末首次定位／年度別字體（dev未提交、2.0.0維持）：首次繪製まとめ才通知DecisionPresentation，以狀態物件＋年度的WeakMap記錄只發一次；完成繪製後讀取最新標題，依內部容器與頁面定位至固定頁首下，不移動焦點。舊scrollBottom及當次結果定位以世代／優先權失效；隱藏薪資卡不再反覆定位既有まとめ。只取消仍屬まとめ的定位，保留一般事件原有焦點；手動讀書、切頁、dialog、跨年／生涯替換或斷開DOM使舊請求失效。未提前建立回顧，不改引擎、結算、配點、收入、契約、保存或RNG。年度別表格限定繼承字型／字級／字重及100%文字自動調整；不改其他成績表、橫捲、事件開關或資料。
