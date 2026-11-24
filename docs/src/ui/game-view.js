@@ -7,15 +7,17 @@ export class GameView {
   constructor({ byId, logTarget, decorateCard, onTraitShown, getDecision=()=>null, getYear=()=>null, getState=()=>null, getSeasonContext=()=>null, openSalaryDetail=()=>{}, reviewLabels={} }) {
     this.byId = byId; this.logTarget = logTarget; this.decorateCard = decorateCard; this.onTraitShown = onTraitShown;
     const documentRef=byId('act')?.ownerDocument;
-    if(documentRef)this.decisionUI=new DecisionPresentation({documentRef,getDecision,getYear,getPhase:()=>this.boardContext?.phase,getReturnTarget:()=>this.allocationUI?.returnTarget()});
+    if(documentRef)this.decisionUI=new DecisionPresentation({documentRef,getDecision,getYear,getState,getPhase:()=>this.boardContext?.phase,getReturnTarget:()=>this.allocationUI?.returnTarget()});
     if(documentRef)this.allocationUI=new AllocationPresentation({documentRef,getDecision});
     if(documentRef)this.faUI=new FaMarketPresentation({documentRef,getDecision,getState});
-    if(documentRef)this.careerReview=new CareerReview({documentRef,getState,labels:reviewLabels,getSeasonContext,openSalaryDetail});
+    if(documentRef)this.careerReview=new CareerReview({documentRef,getState,labels:reviewLabels,getSeasonContext,openSalaryDetail,onFirstSeasonDisplay:(root,state,year)=>this.decisionUI?.revealSeasonSummary(root,state,year)});
   }
   scrollBottom(){ /* iOS Safari iframe内でスムーズスクロールでは白画面が起きやすいため、同期スクロールへ変更+rAF。 */
+    const revision=this.decisionUI?.scrollRevision;
+    if(this.decisionUI&&!this.decisionUI.canScrollBottom(revision))return;
     if(this.decisionUI?.isReadingHistory()){this.decisionUI.scheduleJump();return;}
-    try{ requestAnimationFrame(()=>{if(this.decisionUI?.isReadingHistory())return;const log=this.byId('log');if(log.scrollHeight>log.clientHeight&&getComputedStyle(log).overflowY==='auto')log.scrollTop=log.scrollHeight;else window.scrollTo(0, document.body.scrollHeight);}); }
-    catch(e){ try{ window.scrollTo(0, document.body.scrollHeight); }catch(_){} }
+    try{ requestAnimationFrame(()=>{if(this.decisionUI&&(!this.decisionUI.canScrollBottom(revision)||this.decisionUI.isReadingHistory()))return;const log=this.byId('log');if(log.scrollHeight>log.clientHeight&&getComputedStyle(log).overflowY==='auto')log.scrollTop=log.scrollHeight;else window.scrollTo(0, document.body.scrollHeight);}); }
+    catch(e){ try{ if(!this.decisionUI||this.decisionUI.canScrollBottom(revision))window.scrollTo(0, document.body.scrollHeight); }catch(_){} }
   }
   archiveTraitResults(){
     this.byId('log').querySelectorAll('[data-trait-result]').forEach(node=>{

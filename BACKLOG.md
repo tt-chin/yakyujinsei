@@ -1,5 +1,13 @@
 # BACKLOG — 野球人生（日文版）
 
+> 季末定位／年度別字體最終驗證：Quick113 PASS／0 FAIL／0 SKIP／0 BLOCKED（543.914秒、未重用），test-results/season-summary-scroll/quick-final-11/summary.json；113份日誌SHA256與目前來源fingerprint b228b4a16ab3e7eea5b9b3b48d17d41a13de22740ac35a4da43dc0b4466c5f02已核對，完整性記錄integrity.json。涵蓋本批31季末情境／68版面、32字體fixture及既有配點／決策各128版面；更新履歷生成一致性、語法及Diff檢查PASS。這是未提交工作樹的本機結果，不稱CI或Full PASS；下段「Quick最終結果另補」由此解除。依最新指示未暫存、未提交、未推送；Safari實機與新提交的手動Full仍待確認。
+
+> 2026-11-24 季末首次定位／年度別字體（dev未提交、2.0.0維持）：首次繪製まとめ才通知DecisionPresentation，以狀態物件＋年度的WeakMap記錄只發一次；完成繪製後讀取最新標題，依內部容器與頁面定位至固定頁首下，不移動焦點。舊scrollBottom及當次結果定位以世代／優先權失效；隱藏薪資卡不再反覆定位既有まとめ。只取消仍屬まとめ的定位，保留一般事件原有焦點；手動讀書、切頁、dialog、跨年／生涯替換或斷開DOM使舊請求失效。未提前建立回顧，不改引擎、結算、配點、收入、契約、保存或RNG。年度別表格限定繼承字型／字級／字重及100%文字自動調整；不改其他成績表、橫捲、事件開關或資料。
+>
+> 直接驗證：season-summary原生31情境／68版面（含原生交易／TJ、季末分配及8種取消），逐步完整S／每次RNG／原卡DOM對照原cf88d1a9d621c354d64a2de5c427cd437a8094bf；同年不同生涯、重繪／契約／跨年不重播、手動明細及箭頭條件通過。event-history自然年度／事件測試與手機桌面×P／IF×四主題×兩字級32組字體fixture通過。截圖已檢視；Chromium模擬不稱Safari實機通過，新字體自動放大抑制與原生網址列仍待實機確認。先前共用取消範圍過大導致雙擊結果焦點FAIL的日誌保留於related-02及failure-recheck-04／08；收窄至まとめ請求後，原失敗入口與季末入口2／2 PASS（53.787秒；failure-recheck-10/summary.json），未修改／放寬原雙擊斷言。Quick最終結果另補；本次依使用者明示不提交、不推送。
+>
+> **Full実行が必要（GitHub手動・未実行）**：共用Decision／scrollBottom亦供Full自然生涯及歷史DOM路線使用；待允許提交後，需在新dev完整SHA手動驗證。現在仍為480ff43744bd81983bd3966925c663ef4126dd4d上的未提交工作樹，尚無代表本批的新commit SHA，不將基準或舊CI PASS當成本批Full。代理不dispatch，本機不跑Full。
+
 > 2026-11-24 Tests #271／#272追修（R2表示期待值、2.0.0維持）：同一b6286fd344d5235ef85e7a20e5ca75905017f70c的Quick112 PASS／1 FAIL與Full143 PASS／1 FAIL，均為award-identity-policy.test的舊原碼凍結只允許tjGaugeCap，未同步本次核准的唯讀tjGaugeText；非偶發錯誤。本機原失敗已重現，日誌test-results/ci271-award-identity-repro.log保留。只在該精確原碼期待加入共用TJ顯示函式，保留歷史SHA與其他逐字限制，並驗證無關追加、上限與小數精度變更仍被拒絕；產品／引擎／runner／workflow未改。失敗入口及直接相關presenter／risk單體3／3 PASS（6.396秒；test-results/ci271-fix/related-01/summary.json），不稱整套Quick或Full。測試期待值修正不變更現行規格或產品更新履歷。
 >
 > **Full実行が必要（GitHub手動・未実行）**：原Full失敗須在修正後dev提交確認；完整SHA見本次Git提交與回報。本機不啟動Full，代理不dispatch／重跑；原#271／#272 FAIL記錄保留，不將部分PASS當Full PASS。

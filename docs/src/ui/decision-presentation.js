@@ -6,13 +6,24 @@ function stripEventTitlePrefix(node){
   return label;
 }
 export class DecisionPresentation {
-  constructor({documentRef,getDecision,getYear,getPhase,getReturnTarget=()=>null}){
+  constructor({documentRef,getDecision,getYear,getPhase,getState=()=>null,getReturnTarget=()=>null}){
     this.doc=documentRef;this.win=documentRef.defaultView;this.getDecision=getDecision;this.getYear=getYear;this.getPhase=getPhase;
     this.getReturnTarget=getReturnTarget;
+    this.getState=getState;this.scrollRevision=0;this.summaryYears=new WeakMap();
     this.act=documentRef.getElementById('act');this.log=documentRef.getElementById('log');
     this.returnButton=documentRef.getElementById('decision-return');this.jump=documentRef.getElementById('decision-jump');
     this.toggleButton=documentRef.getElementById('act-toggle');this.views=new WeakMap();this.sequence=0;this.cardSequence=0;this.view='home';
     if(!this.jump)return;
+    for(const type of ['pointerdown','touchstart','touchmove','wheel','keydown'])documentRef.addEventListener(type,event=>{
+      // A repeated native tap on an action is not a manual reading gesture.
+      // Keep the original accepted result's focus unless a summary is pending.
+      if(type==='pointerdown'&&event.detail>1)return;
+      if(['pointerdown','touchstart'].includes(type)&&this.act.contains(event.target)&&!this.summaryScroll)return;
+      this.cancelSeasonScroll();
+    },{capture:true,passive:true});
+    documentRef.addEventListener('focusin',event=>{if(event.target.closest('dialog[open],.salary-detail-panel:not([hidden])'))this.cancelSeasonScroll();},true);
+    this.dialogObserver=new this.win.MutationObserver(()=>this.cancelSeasonScroll());
+    for(const panel of documentRef.querySelectorAll('dialog,.salary-detail-panel'))this.dialogObserver.observe(panel,{attributes:true,attributeFilter:['open','hidden']});
     this.returnButton.addEventListener('click',()=>this.returnToDecision(true));
     this.jump.addEventListener('click',()=>this.jumpForward());
     const schedule=()=>this.scheduleJump();
@@ -36,6 +47,32 @@ export class DecisionPresentation {
     documentRef.addEventListener('yakyujinsei:mainview',event=>this.navigate(event.detail));
   }
   plain(html){const t=this.doc.createElement('template');t.innerHTML=html||'';return t.content.textContent.trim();}
+  cancelSeasonScroll(){
+    // Outside a summary request, retain the existing result/choice focus flow.
+    if(!this.summaryScroll)return;
+    this.scrollRevision++;this.summaryScroll=null;
+    if(this.summaryFrame)this.win.cancelAnimationFrame(this.summaryFrame);this.summaryFrame=0;
+  }
+  canScrollBottom(revision){return revision===this.scrollRevision&&!this.summaryScroll&&this.view==='home'&&!this.doc.querySelector('dialog[open],.salary-detail-panel:not([hidden])');}
+  revealSeasonSummary(root,state,year){
+    let years=this.summaryYears.get(state);if(!years){years=new Set();this.summaryYears.set(state,years);}
+    if(years.has(year))return;years.add(year);
+    // This is a one-shot presentation request, not a pending game action. Never
+    // replay a skipped/cancelled request when returning from reading or a dialog.
+    const reading=this.isReadingHistory();this.cancelSeasonScroll();this.scrollRevision++;
+    if(reading||this.view!=='home'||this.doc.getElementById('view-home').hidden||this.doc.querySelector('dialog[open],.salary-detail-panel:not([hidden])'))return;
+    const request={root,state,year};this.summaryScroll=request;
+    const valid=()=>this.summaryScroll===request&&root.isConnected&&this.getState()===state&&this.getYear()===year&&this.view==='home'&&!this.doc.getElementById('view-home').hidden&&!this.doc.querySelector('dialog[open],.salary-detail-panel:not([hidden])');
+    // Wait for the originating native choice and header layout to finish. Read
+    // the heading again because the same summary may be repainted in this turn.
+    this.summaryFrame=this.win.requestAnimationFrame(()=>{
+      this.summaryFrame=this.win.requestAnimationFrame(()=>{
+        this.summaryFrame=0;if(!valid()){if(this.summaryScroll===request)this.cancelSeasonScroll();return;}
+        const heading=root.querySelector('h2');if(heading)this.reveal(heading);
+        this.scheduleJump();
+      });
+    });
+  }
   phaseText(){return PHASES[this.getPhase()]||'進行中';}
   sync(){
     if(!this.jump)return;
@@ -144,6 +181,7 @@ export class DecisionPresentation {
   toggle(){if(!this.current)return;const opening=this.current.collapsed;if(!opening)this.current.actionScroll=this.act.scrollTop;this.current.collapsed=!this.current.collapsed;this.sync();if(opening)this.act.scrollTop=this.current.actionScroll||0;}
   scrollState(){return {id:this.current?.id,page:[this.win.scrollX,this.win.scrollY],log:this.log.scrollTop,act:this.act.scrollTop,home:this.doc.getElementById('view-home').scrollTop,host:this.doc.getElementById('view-host').scrollTop};}
   navigate({stage,view,previous}){
+    if(stage==='before')this.cancelSeasonScroll();
     if(stage==='before'&&previous==='home'&&view!=='home')this.homeScroll=this.scrollState();
     if(stage!=='after')return;
     this.view=view;this.returnButton.hidden=!this.live()||view==='home';
@@ -169,6 +207,7 @@ export class DecisionPresentation {
     this.readingRequested=false;
     const view=this.getDecision();
     if(view?.kind==='CHOICE'&&event.detail>1){event.preventDefault();event.stopImmediatePropagation();return;}
+    this.cancelSeasonScroll();const revision=this.scrollRevision;
     const option=view?.kind==='CHOICE'?view.opts[view.buttons.indexOf(button)]:null;
     // Allocation retains its original inputs, closure and controls. Any other #act button ends the
     // previous choice's selection, so its mark never depends on whether a frame ran in between.
@@ -180,12 +219,11 @@ export class DecisionPresentation {
     // dispatch finishes, then focus after the engine's own scrolling frame.
     this.win.requestAnimationFrame(()=>{
       if(this.selection!==selected)return;this.selection=null;
-      if(this.view!=='home')return;
+      if(this.view!=='home'||revision!==this.scrollRevision)return;
       const card=[...this.log.querySelectorAll('.card')].find(node=>!node.hidden&&!selected.before.has(node));
       const error=[...this.log.querySelectorAll('[data-reader-error]')].find(node=>!selected.before.has(node));
-      const financial=[...this.log.querySelectorAll('[data-season-finance-source]')].find(node=>!selected.before.has(node));
-      const target=(error||card)?.querySelector('h4')||financial?.closest('.yr-body')?.querySelector('[data-season-summary] h2')||this.targetHeading;
-      this.win.requestAnimationFrame(()=>{if(this.view==='home'&&this.latestSelection===selected&&target.isConnected&&!this.doc.querySelector('dialog[open]')){target.focus({preventScroll:true});target.scrollIntoView({block:'nearest'});}});
+      const target=(error||card)?.querySelector('h4')||this.targetHeading;
+      this.win.requestAnimationFrame(()=>{if(this.view==='home'&&revision===this.scrollRevision&&this.latestSelection===selected&&target?.isConnected&&!this.doc.querySelector('dialog[open],.salary-detail-panel:not([hidden])')){target.focus({preventScroll:true});target.scrollIntoView({block:'nearest'});}});
     });
   }
   decorateCard(node,{hasTitle,title}){

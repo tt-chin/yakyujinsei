@@ -24,7 +24,7 @@ export function careerReviewModel(state,{leagueName=key=>key,teamName=key=>key,t
 }
 
 export class CareerReview {
-  constructor({documentRef,getState,labels,getSeasonContext,openSalaryDetail}){this.doc=documentRef;this.getState=getState;this.labels=labels;this.seasons=new SeasonSummary({documentRef,getState,getSeasonContext,openSalaryDetail,formatMoney:labels?.formatMoney});}
+  constructor({documentRef,getState,labels,getSeasonContext,openSalaryDetail,onFirstSeasonDisplay}){this.doc=documentRef;this.getState=getState;this.labels=labels;this.seasons=new SeasonSummary({documentRef,getState,getSeasonContext,openSalaryDetail,formatMoney:labels?.formatMoney,onFirstDisplay:onFirstSeasonDisplay});}
   node(tag,text){const node=this.doc.createElement(tag);if(text!==undefined)node.textContent=text;return node;}
   list(values){const ul=this.node('ul');for(const value of values)ul.append(this.node('li',value));return ul;}
   render(retired=false){

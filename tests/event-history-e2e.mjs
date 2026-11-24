@@ -83,6 +83,30 @@ try{
     await ctx.close();
   }
   assert.ok(wired.ability>0,'at least one ability effect checked: '+JSON.stringify(wired));
+  // Isolated presentation fixtures include amateur text and both professional
+  // stat formats. No career data or calculation is replaced in the product.
+  for(const [width,height] of [[390,844],[1280,800]]){
+    const ctx=await browser.newContext({viewport:{width,height},isMobile:width<500,hasTouch:width<500}),p=await ctx.newPage();await wire(ctx,p);await start(p,'yearly-type','P');
+    const original=await p.evaluate(()=>window.__evtHist.state());
+    await p.locator('[data-main-view="career"]').click();
+    for(const pos of ['P','IF']){
+      await p.evaluate(async pos=>{const {renderCareer}=await import('/src/ui/player-detail.js');const yearly=[
+        {year:2026,age:16,team:'高校',summary:'甲子園出場・ベスト8'},
+        {year:2030,age:20,team:'東京の球団',summary:pos==='P'?'登板 31｜投球回 123.2｜12勝4敗｜奪三振 133':'出場 135｜打席 550｜打率 .321｜本塁打 35｜打点 101'}];
+        renderCareer(document.getElementById('career-content'),{yearly,events:{status:'ok',current:[],afterRow:{0:[{occurrenceID:'typography',title:'当時のイベント',outcome:'安全成功',effects:[]}]}}},'yearly');},pos);
+      for(const theme of THEMES)for(const font of ['medium','large']){
+        await p.evaluate(v=>{document.documentElement.dataset.theme=v.theme;document.documentElement.dataset.fontSize=v.font;},{theme,font});await p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+        const metrics=await p.evaluate(()=>{const font=n=>{const s=getComputedStyle(n);return [s.fontFamily,s.fontSize,s.fontWeight];},t=document.querySelector('.ui-yearly-table');return {headers:[...t.tHead.rows[0].cells].map(font),rows:[...t.tBodies[0].rows].filter(r=>!r.classList.contains('ui-yearly-events')).map(r=>[...r.cells].map(font)),adjust:getComputedStyle(t).getPropertyValue('text-size-adjust'),overflow:document.documentElement.scrollWidth>innerWidth};});
+        for(const row of [metrics.headers,...metrics.rows])for(const cell of row)assert.deepEqual(cell,row[0],JSON.stringify({width,pos,theme,font,metrics}));
+        assert.equal(metrics.adjust,'100%');assert.equal(metrics.overflow,false);
+      }
+      const detail=p.locator('.ui-yearly-events details');assert.equal(await detail.evaluate(n=>n.open),false);await detail.locator('summary').click();assert.equal(await detail.evaluate(n=>n.open),true);
+      const scrolled=await p.evaluate(()=>{const sc=document.querySelector('.ui-yearly-scroll');sc.scrollLeft=sc.scrollWidth;return {left:sc.scrollLeft,overflow:getComputedStyle(sc).overflowX};});assert.equal(scrolled.overflow,'auto');if(width<500)assert.ok(scrolled.left>0,'phone retains horizontal scrolling');
+      await p.evaluate(()=>document.querySelector('.ui-yearly-scroll').scrollLeft=0);await detail.locator('summary').click();assert.equal(await detail.evaluate(n=>n.open),false);
+      await p.screenshot({path:path.join(artifacts,`yearly-type-${width}-${pos}.png`)});
+    }
+    assert.deepEqual(await p.evaluate(()=>window.__evtHist.state()),original,'yearly display fixtures do not mutate career records');await ctx.close();
+  }
   // Unreadable records: real DOM, one イベント詳細記録なし row at the top of the table, no event rows.
   {const ctx=await browser.newContext({viewport:{width:390,height:844}}),p=await ctx.newPage();await wire(ctx,p);await p.goto(local+'/');
     const missing=await p.evaluate(async()=>{const m=await import('/src/ui/career-event-history.js');const out={};

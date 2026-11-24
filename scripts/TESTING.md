@@ -1,5 +1,11 @@
 # 統一測試入口
 
+## 季末まとめ初次定位與年度別字體
+
+`season-summary-e2e`沿用原固定基準`cf88d1a9d621c354d64a2de5c427cd437a8094bf`與完整S／每次RNG／原卡DOM比對，新增手機直橫向／短視窗及桌面實際log捲動容器：首次標題在固定頁首下、同年度重繪／契約更新／次年度不重播、原生季末能力點分配不回跳、原生交易與TJ選項先回答再結算。wheel／touchmove／鍵盤、選手／キャリア、dialog、跨年及DOM移除均在rAF前介入，驗證舊請求取消且重繪不補跳；同年度的新生涯可再次定位，明細手動開關及箭頭條件保持。只以fixture控制測試前提與結算後續，不更改產品流程或抽樣結果。
+
+`event-history-e2e`保留自然年度與原事件展開／橫捲斷言，另用只讀呈現fixture檢查手機／桌面、P／IF、業餘文字／職業數字、四主題及標準／大字的每列四格font-family／font-size／font-weight一致，限定table的text-size-adjust為100%。這是Chromium模擬；Safari原生文字自動放大與工具列遮蔽仍須實機確認。
+
 ## 本機與 GitHub Full 的分工
 
 依使用者2026-11-17的長期指示，後續所有作業本機均不啟動Full模式（含整套、batch及Full模式的`--only`），也不拆批變相跑完整Full；直接相關的單體／個別E2E及必要Quick仍按`AGENTS.md`第6章執行。需要Full時，在結果明列 **「需要執行Full（GitHub手動／未執行）」**，附原因、分支、完整提交SHA與本機結果，由使用者手動在GitHub執行。Agent不自行dispatch或重跑手動Full；既有自動CI觸發條件不變。下方Full命令是入口與既有CI用法說明，不代表允許Agent在本機啟動Full。

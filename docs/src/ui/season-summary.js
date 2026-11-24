@@ -27,8 +27,8 @@ export function seasonContractSnapshot(state,year,income,{retired=false,initialC
 }
 
 export class SeasonSummary {
-  constructor({documentRef,getState,getSeasonContext=()=>null,openSalaryDetail=()=>{},formatMoney=String}){
-    this.doc=documentRef;this.getState=getState;this.getSeasonContext=getSeasonContext;this.openSalaryDetail=openSalaryDetail;this.formatMoney=formatMoney;this.careers=new WeakMap();
+  constructor({documentRef,getState,getSeasonContext=()=>null,openSalaryDetail=()=>{},formatMoney=String,onFirstDisplay=()=>{}}){
+    this.doc=documentRef;this.getState=getState;this.getSeasonContext=getSeasonContext;this.openSalaryDetail=openSalaryDetail;this.formatMoney=formatMoney;this.onFirstDisplay=onFirstDisplay;this.careers=new WeakMap();
   }
   entries(state){let years=this.careers.get(state);if(!years){years=new Map();this.careers.set(state,years);}for(const [year,entry] of years)if(entry.root&&!entry.root.isConnected)years.delete(year);return years;}
   entry(year,body){const state=this.getState(),years=this.entries(state);let entry=years.get(year);if(!entry){entry={year,body,status:'pending',initialContractId:state.ct?.contractId||null};years.set(year,entry);}return entry;}
@@ -60,9 +60,11 @@ export class SeasonSummary {
   retire(){const state=this.getState(),entry=state&&this.entries(state).get(state.year);if(entry&&entry.status==='pending'){entry.contract=seasonContractSnapshot(state,entry.year,entry.income,{retired:true});entry.status='closed';this.paint(entry);}}
   render(root,body,model){
     const entry=this.entry(model.year,body);if(entry.status!=='pending')return;
+    const first=!entry.root;
     entry.root=root;entry.model=structuredClone(model);
     if(!entry.income)entry.income=seasonIncomeSnapshot(this.getState(),this.getSeasonContext(),model.year);
     this.paint(entry);
+    if(first)this.onFirstDisplay(root,this.getState(),model.year);
   }
   paint(entry){
     const {root,model,income,contract,year}=entry;if(!root?.isConnected||!model)return;
