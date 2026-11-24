@@ -229,7 +229,16 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
       assert.equal(current.slice(0,current.indexOf(marker)).trimEnd(),acceptedA.trimEnd(),'original championship rules and draw order unchanged');
       assert.match(current.slice(current.indexOf(marker)),/export function updateChampionmaker\(/);
     }else if(file==='docs/src/ui/condition-view-model.js'){
-      assert.equal(current,acceptedA+'export function tjGaugeCap(state){return state.traits?.rubber?100:50;}\n','only approved read-only TJ cap helper added');
+      // UI 2.0 shares the existing TJ precision and injected limit with the header.
+      const expected=acceptedA+[
+        'export function tjGaugeCap(state){return state.traits?.rubber?100:50;}',
+        'export function tjGaugeText(state,limit=tjGaugeCap(state)){return `${Number(state.tj||0).toFixed(1)} / ${limit}`;}',
+        ''
+      ].join('\n');
+      assert.equal(current,expected,'only approved read-only TJ cap and display helpers added');
+      assert.throws(()=>assert.equal(current+'\n// unexpected',expected),'TJ display approval cannot allow unrelated edits');
+      assert.throws(()=>assert.equal(current.replace('?100:50','?100:51'),expected),'TJ cap changes remain rejected');
+      assert.throws(()=>assert.equal(current.replace('.toFixed(1)','.toFixed(0)'),expected),'TJ precision changes remain rejected');
     }else if(!allowedB.has(path.basename(file)))assert.equal(current,acceptedA,file+': no unrelated B wiring');
   }
 });

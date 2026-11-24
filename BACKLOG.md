@@ -1,5 +1,9 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-24 Tests #271／#272追修（R2表示期待值、2.0.0維持）：同一b6286fd344d5235ef85e7a20e5ca75905017f70c的Quick112 PASS／1 FAIL與Full143 PASS／1 FAIL，均為award-identity-policy.test的舊原碼凍結只允許tjGaugeCap，未同步本次核准的唯讀tjGaugeText；非偶發錯誤。本機原失敗已重現，日誌test-results/ci271-award-identity-repro.log保留。只在該精確原碼期待加入共用TJ顯示函式，保留歷史SHA與其他逐字限制，並驗證無關追加、上限與小數精度變更仍被拒絕；產品／引擎／runner／workflow未改。失敗入口及直接相關presenter／risk單體3／3 PASS（6.396秒；test-results/ci271-fix/related-01/summary.json），不稱整套Quick或Full。測試期待值修正不變更現行規格或產品更新履歷。
+>
+> **Full実行が必要（GitHub手動・未実行）**：原Full失敗須在修正後dev提交確認；完整SHA見本次Git提交與回報。本機不啟動Full，代理不dispatch／重跑；原#271／#272 FAIL記錄保留，不將部分PASS當Full PASS。
+
 > 2026-11-24 頁首故障風險／投手TJ（R2純顯示、2.0.0維持）：故障リスク沿用injuryRiskStatus，健檢後採該次記錄，全休無判定為「-」。投手TJ與狀態明細共用一位小數及實際上限，野手三欄。相關5入口PASS／0 FAIL（36.978秒；test-results/header-risk-tj/related-final-02/summary.json），涵蓋健檢前後、全休、自訂上限73與原生50／100、96組手機直橫向／主題／字級／高額年俸版面，完整S與RNG消耗不變。手機截圖已檢視；Safari實機未測。首輪320px長金額溢出FAIL保留，調整欄寬／數字字級後通過。依純顯示例外未跑整套Quick／Full，main正式Gate保留。使用者已授權提交。
 >
 > Tests #269（run45363340751／9f8428486d0e191371e013df6ab8f491aad1edd3）：第一次143 PASS／1 FAIL，player-random-name-e2e在Space後讀到前一姓名；同SHA第二次八批與彙整成功。亂數輸入固定，鍵盤啟動／焦點時序為可能原因，缺CI事件追蹤而未確診。隔離同版姓名案例17 PASS；未修改姓名功能或降低斷言，原FAIL保留。此Full成功只屬該SHA，不涵蓋本次頁首修改。
