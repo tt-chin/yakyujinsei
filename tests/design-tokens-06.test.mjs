@@ -40,7 +40,7 @@ test('81 phase-4 font sites plus two phase-5 review headings; name button uses -
   assert.equal(used.length,81,'phase-4 allocation adds five shared font sites');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
   // The responsive home title now uses clamp(26px,4vw,40px); the shared scale is retained.
-  assert.deepEqual(Object.keys(FS).filter(n=>!used.includes(n)),['--fs-6xl'],'only the former home-title token is unused');
+  assert.deepEqual(Object.keys(FS).filter(n=>!used.includes(n)),[],'floating return arrow uses the former home-title size token');
 });
 test('--font-scale is multiplied only by the tokens and the two .abrow widths',()=>{
   const sites=Object.entries(styles).flatMap(([f,css])=>[...css.replace(f==='base.css'?rootBlock:'\0','').matchAll(/[^;{}]*var\(--font-scale[^;}]*/g)].map(m=>f+' '+m[0].trim()));
@@ -91,7 +91,9 @@ test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   assert.equal([...ply01Rules.join('\n').matchAll(/var\((--space-[\w-]+)\)/g)].map(x=>x[1]).filter(isSpace).length,5,'PLY-01 spacing sites');
   const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,236,'compact label and dice padding; footer bottom uses the shared event-action inset');
+  assert.doesNotMatch(styles['decision-presentation.css'],/#decision-summary|#decision-question/,'approved removal of summary placeholder styles');
+  assert.match(styles['decision-presentation.css'],/#decision-jump\{[^}]*font-size:var\(--fs-6xl\)/,'arrow uses a shared size token');
+  assert.equal(used.length,236-7,'removed summary padding (2), reserved jump width (2), old jump position (2), desktop summary padding (1); other spacing sites unchanged');
   assert.equal([...styles['fa-market.css'].matchAll(/var\((--space-[\w-]+)\)/g)].length,10,'FA comparison uses ten shared spacing sites');
   assert.match(styles['allocation-presentation.css'],/padding:0 var\(--space-2xs\);line-height:1\.6;white-space:nowrap/,'approved compact label retains tokenized inline padding');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');

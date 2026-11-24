@@ -110,7 +110,13 @@ try{
    if(width===390&&!mode.dice)await p.screenshot({path:path.join(out,pos+'-390-points-confirm.png'),animations:'disabled'});
    const completed=(await get(p)).done;
    if(width===390){await p.evaluate(()=>{Object.defineProperty(visualViewport,'height',{configurable:true,value:innerHeight-100});visualViewport.dispatchEvent(new Event('resize'));});await frames(p);await frames(p);}
-   await p.locator('#al-btm .main:not(:disabled)').click();await reference.p.locator('#al-btm .main:not(:disabled)').click();await equal(p,reference.p,'visible native confirm pointer click');
+   const confirmationVisible=await p.locator('#al-btm .main:not(:disabled)').evaluate(node=>{const r=node.getBoundingClientRect();return r.top>=document.getElementById('main-nav').getBoundingClientRect().bottom&&r.bottom<=(visualViewport.offsetTop+visualViewport.height);});
+   if(confirmationVisible)assert.equal(await p.locator('#decision-jump').isVisible(),false,'footer compensation hides a stale navigation arrow once confirmation fits');
+   try{await p.locator('#al-btm .main:not(:disabled)').click();}catch(error){
+    const diagnostic=await p.evaluate(()=>{const box=e=>e?.getBoundingClientRect().toJSON();return{viewport:{height:innerHeight,visual:visualViewport.height,offset:visualViewport.offsetTop},jump:{hidden:document.getElementById('decision-jump').hidden,style:document.getElementById('decision-jump').style.cssText,box:box(document.getElementById('decision-jump'))},act:box(document.getElementById('act')),footer:box(document.getElementById('al-btm')),controls:[...document.querySelectorAll('#al-btm button,#al-rows .abrow')].map(e=>({text:e.textContent.slice(0,50),disabled:e.disabled,aria:e.getAttribute('aria-disabled'),box:box(e)}))};});
+    await writeFile(path.join(out,'confirm-navigation-failure.json'),JSON.stringify({pos,width,height,mode,diagnostic},null,2));await p.screenshot({path:path.join(out,'confirm-navigation-failure.png')});console.error(JSON.stringify({pos,width,height,mode,diagnostic}));throw error;
+   }
+   await reference.p.locator('#al-btm .main:not(:disabled)').click();await equal(p,reference.p,'visible native confirm pointer click');
    assert.equal((await get(p)).done,completed+1,'the visible confirmation is clickable exactly once');
    if(width===390){await p.evaluate(()=>{delete visualViewport.height;visualViewport.dispatchEvent(new Event('resize'));});await frames(p);}
    const eventPadding=await p.locator('#act').evaluate(node=>({actual:parseFloat(getComputedStyle(node).paddingBottom),normal:parseFloat(getComputedStyle(node).getPropertyValue('--card-padding-y')),allocation:node.hasAttribute('data-allocation-session')}));

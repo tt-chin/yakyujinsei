@@ -6,7 +6,15 @@
 
 Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
 
+## 現在選項的浮動箭頭
+
+配點入口另嚴格檢查visualViewport縮小、原footer補償生效後「確定」完整可見時箭頭必須隱藏，再以原指標點擊確定且只執行一次；失敗保存`confirm-navigation-failure.json`與截圖。根style監測只重算箭頭，不改配點避讓、分配、復原／確定或持續強制捲動。
+
+`ui-redesign-decision-e2e`保留原P／IF完整S／RNG、原生配點草稿、防重複操作及128組版面，移除舊開關的可見點擊期待；收合狀態由原UI hook準備，新的返回入口必須展開並露出目前標題。新增390直向、844橫向、320短視窗與桌面內部選項overflow，驗證鍵盤Enter／Space、44px命中區、按鈕中心可點擊、收合／長選項逐次捲動／末尾隱藏、年度更新時保留舊閱讀位置、資料分頁返回、單一繼續與空選項。配點只操作箭頭並比對完整草稿／S／RNG，不觸發分配或確定。`--navigation-only`僅供直接執行時診斷新導覽fixture，不代替完整入口／Quick／Full。visualViewport高度以受控物件另作模擬；Chromium尺寸與模擬工具列均不是Safari實機PASS。原生Safari工具列展開／收合、直橫向切換及觸控命中須在本次實作完成後另外確認。
+
 ## 歷史間距比較與球場抬頭
+
+後續確認：`77d536bb031ef70801b0511c057ae8145f028d1d`已取得Tests #265 Full144／144 PASS及#264 Quick success，歷史間距修正的舊待Full狀態已解除。這不覆蓋後續浮動箭頭；新導覽仍需新提交的GitHub手動Full。
 
 `design-tokens-09-e2e`維持`f8afd8e`間距基準與`ad8e77f53ede29de6a51c23708b2370eed7b414d`凍結UI runtime。已核准的`235fd22827478884ad4a5b046002e62eb326ffe0`球場抬頭背景／文字色，以三條獨立固定CSS參考規則加至舊頁面；現行CSS須逐字命中每條一次，且手機規則仍位於699px斷點。41項樣式（含背景／文字／邊框色）、全部位置尺寸及34個間距selector仍嚴格比較，不忽略差異、不更換歷史基準。Tests #262的143 PASS／1 FAIL保留為歷史結果，修正後個別入口PASS不等於Full PASS；新提交仍需使用者在GitHub手動Full。本項僅改表示期待值，依AGENTS 6.1純表示例外執行相關入口，不額外重跑未受影響的Quick。
 
