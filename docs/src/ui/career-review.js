@@ -33,7 +33,6 @@ export class CareerReview {
     const model=careerReviewModel(state,this.labels),kind=retired?'retirement':'season';
     let root=body.querySelector(`:scope > [data-career-review="${kind}"]`);
     if(!root){root=this.node('section');root.className='career-review';root.dataset.careerReview=kind;body.prepend(root);}
-    body.querySelectorAll('.card > details[data-reader-details]').forEach(details=>{const title=details.parentElement.querySelector('h4')?.textContent;if(retired||['シーズン成績','シーズン成績（シーズン途中の移籍）','シーズン終了','独立リーグ年間報酬','社会人給与'].includes(title))details.open=false;});
     if(!retired&&(state.stage==='PRO'||this.seasons.entries(state).has(state.year))){root.dataset.reviewYear=String(model.year);this.seasons.render(root,body,model);return;}
     this.seasons.retire();
     root.replaceChildren();root.dataset.careerReview=kind;root.dataset.reviewYear=String(model.year);root.setAttribute('aria-label',retired?'野球人生の振り返り':'シーズンの振り返り');
@@ -62,6 +61,6 @@ export class CareerReview {
     if(title!=='引退の日'||this.getState()?.pos!=='P')return html;
     return html.replace('9回裏、最後の打席を終えると','9回裏、最後の登板を終えると').replace('最後の打席を前に観客は3分間の総立ち拍手。','最後の登板を前に観客は3分間の総立ち拍手。').replace('打席後に交代すると、全員が','マウンドを降りると、全員が');
   }
-  card(node,title){this.seasons.card(node,title);if(this.getState()?.done){const details=node.querySelector(':scope > details[data-reader-details]');if(details)details.open=false;}else if(this.phase===2)this.render();}
+  card(node,title){this.seasons.card(node,title);if(!this.getState()?.done&&this.phase===2)this.render();}
   finish(){this.render(true);}
 }

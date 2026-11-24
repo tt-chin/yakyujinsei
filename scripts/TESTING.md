@@ -36,6 +36,8 @@ Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SH
 
 ## UI 2.0 季末／退休呈現
 
+CareerReview只整理回顧，不再改結果卡的原生details.open。review的fixtures-only新增PRO／IND／CORP五類結果卡的混合手動狀態、整理建立／重繪保持、done後新結果展開及原生下一選擇收合舊卡；總結三明細預設關閉、重繪保持與隱藏收入卡沿用season-summary E2E。舊「引退原卡全關」期待改為新結果展開，手動關／再開與原S／RNG／DOM比較保留。箭頭80%只改CSS外觀，navigation-only另驗偽元素38.4px及字形80%、原48px點擊區與四尺寸操作；兩項均屬局部顯示，不更動通用選擇控制或Runner。
+
 `career-review.test`驗證既有資料的唯讀摘要、棒球局數、確定／未定／零年薪與報價隔離、跨階段紀錄及缺少資料。`ui-redesign-review-e2e`的Quick僅跑原生fixture；個別完整入口另比較第4批固定SHA的P／IF兩條自然生涯，逐步全S與RNG嚴格相同。退休規則、年度付款、成長與存檔核心來源也須保持不變。128組viewport／主題／字級、無背景／無blur、空資料、原生details展開與分享控制項可達性另外驗證。720×450為200%等效重排尺寸，不能稱為桌面瀏覽器200%縮放或實機PASS。
 
 `decision-dom-comparison`只驗證並移除新增回顧區，以及還原明確批准的投手告別文字；原卡片全文、節點與完整S／RNG仍嚴格比較。新增摘要的數值與資料來源由單體／原生fixture直接驗證，不靠忽略欄位或更換歷史基準。收入舊斷言須先以原生summary展開「キャリアプロフィール」，再驗證既有可見收入文字；不以textContent替代可見性檢查。

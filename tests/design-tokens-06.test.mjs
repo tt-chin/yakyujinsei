@@ -92,7 +92,7 @@ test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
   const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
   assert.doesNotMatch(styles['decision-presentation.css'],/#decision-summary|#decision-question/,'approved removal of summary placeholder styles');
-  assert.match(styles['decision-presentation.css'],/#decision-jump\{[^}]*font-size:var\(--fs-6xl\)/,'arrow uses a shared size token');
+  assert.match(styles['decision-presentation.css'],/#decision-jump\{[^}]*font-size:calc\(var\(--fs-6xl\) \* \.8\)/,'80% arrow uses the shared size token');
   assert.equal(used.length,236-7,'removed summary padding (2), reserved jump width (2), old jump position (2), desktop summary padding (1); other spacing sites unchanged');
   assert.equal([...styles['fa-market.css'].matchAll(/var\((--space-[\w-]+)\)/g)].length,10,'FA comparison uses ten shared spacing sites');
   assert.match(styles['allocation-presentation.css'],/padding:0 var\(--space-2xs\);line-height:1\.6;white-space:nowrap/,'approved compact label retains tokenized inline padding');

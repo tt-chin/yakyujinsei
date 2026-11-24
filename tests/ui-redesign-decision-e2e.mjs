@@ -138,6 +138,8 @@ try{
    assert.equal(await jump.getAttribute('aria-label'),'現在の選択肢へ移動');
    await p.waitForFunction(()=>!document.getElementById('decision-jump').hidden).catch(async e=>{console.error(JSON.stringify(await p.evaluate(()=>{const n=window.__decisionProbe.navigation(),a=document.getElementById('act');return {live:n.live(),remaining:n.remaining(),bounds:n.bounds(),view:n.getDecision()?.kind,year:n.getYear(),decisionYear:n.getDecision()?.year,stateYear:n.getDecision()?.state?.year,current:!!n.current,act:a.getBoundingClientRect().toJSON(),last:n.controls().at(-1)?.getBoundingClientRect().toJSON(),style:a.style.cssText,hidden:document.getElementById('view-home').hidden};})));throw e;});
    const box=await jump.boundingBox();assert.ok(box.width>=44&&box.height>=44,'44px hit target');assert.ok(box.y+box.height<=height-6,'small visible viewport gap');
+   const visual=await jump.evaluate(node=>{const circle=getComputedStyle(node,'::before'),style=getComputedStyle(node),scale=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-scale'))||1;return {width:parseFloat(circle.width),height:parseFloat(circle.height),font:parseFloat(style.fontSize),scale};});
+   assert.ok(Math.abs(visual.width-box.width*.8)<.2&&Math.abs(visual.height-box.height*.8)<.2,'circle is 80% inside the unchanged hit target');assert.ok(Math.abs(visual.font-28*visual.scale*.8)<.2,'arrow glyph is 80% of its original token size');
    // Keyboard activation has the same navigation-only semantics as touch.
    await jump.focus();await p.keyboard.press(width===320?'Space':'Enter');await frames(p);
    const heading=await p.locator('#act > .title').boundingBox(),nav=await p.locator('#main-nav').boundingBox();

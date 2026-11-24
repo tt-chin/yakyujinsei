@@ -1,5 +1,11 @@
 # BACKLOG — 野球人生（日文版）
 
+> 2026-11-24 結果卡開關／箭頭80%（R2純顯示，2.0.0維持）：移除CareerReview.render對年度成績、季末結算、獨立報酬、社會人給与及引退卡的強制收合，以及card()在done時收合新卡的覆寫。建立／更新／重繪保留原生details當時開關；新卡展開、下一個原生遊戲選擇收合舊卡、三種總結明細的預設關閉與狀態保持、効果詳細／年度區塊與隱藏重複收入卡不變。浮動箭頭視覺圓形48→38.4px、字形80%，透明操作範圍仍48px，導覽JS未變。
+>
+> 限定驗證：career-review單體、style token、season-summary原生E2E及review原生fixture共4／4 PASS（41.373秒），新增PRO／IND／CORP五類結果混合手動開關、建立及3次重繪、原生下一選擇仍收合、done新卡展開／退休重繪保留；既有P／IF完整S／RNG及原卡DOM、128版面、同年度整合／零重複收入卡與總結明細預設維持通過。arrow-80-02限定導覽fixture通過四種尺寸、透明命中區≥44px、圓形與字形80%、鍵盤／觸控及高度變動；手機圖已檢視。首輪箭頭尺寸斷言遇偽元素content-box／border-box計量差異，明列box-sizing:border-box後重測通過，原失敗紀錄保留。Release notes原三條／80字上限及生成一致性、語法與Diff檢查通過。證據test-results/review-disclosures/related-01/summary.json、arrow-80-02/summary.json及相關日誌。
+>
+> 依AGENTS 6.1純顯示例外只跑相關單體／E2E，未跑整套Quick／Full、未dispatch；未改引擎／流程／結算／保存／RNG、共用Decision選擇收合與捲動控制。CI同步：先前浮動導覽提交03972f962a978735e27b56ff9363456dc47c1caa的Quick #266與Full #267（https://github.com/tt-chin/yakyujinsei/actions/runs/45348885236 ）已確認success，8批與Aggregate成功；下段先前待Full文字為當時狀態，已由本次確認解除。此PASS僅屬03972f9，不稱本次修改後SHA的Full PASS，main正式Gate仍按原規定。Safari實機未追加測試，不以Chromium代稱實機；本次新改修尚未取得使用者驗收。
+
 > 2026-11-24 浮動箭頭（R2共用導覽，開發版2.0.0維持）：首頁摘要占位與移動／開關的可見按鈕改為48px浮動「↓」，只讀目前年度的有效選項；舊開關只保留隱藏相容接點。展開後定位標題並避開頁首，長選項依實際頁面／內部操作區續捲，末尾／無選項／別分頁隱藏。原分頁閱讀位置、草稿、節點與回呼保留；使用者閱讀舊記錄時不自動送到年度末尾或收合所讀舊年度，原記錄上限維持。配點既有sticky位移透過根style變更監測後重算箭頭，未增加留白或追蹤捲動；不改引擎、選擇結果、保存或RNG。CURRENT_SPEC、CHANGELOG、三條／80字摘要與生成資料同步。
 >
 > 本機驗證：最終Quick113 PASS／0 FAIL／0 SKIP／0 BLOCKED（107項本輪執行，6項沿用同來源成功重測；240.687秒），113份日誌SHA256與來源fingerprint `cb48c68062ef76b62661317f4457277b254ccd49c54b1c07d6649510580e3e87`均核對。原失敗入口與直接相關導覽先重測6／6 PASS（464.357秒），再由原Runner嚴格核對相同來源／baseline／瀏覽器後沿用。證據`test-results/floating-decision/quick-final-02/summary.json`、`failure-recheck-01/summary.json`及`integrity.json`。涵蓋原P／IF完整S／RNG、128組配點／128組決策版面、直橫向／短視窗、觸控與鍵盤、單一繼續／空選項、年度閱讀保留、分頁返回及模擬visualViewport縮小；手機截圖已檢視。更新履歷生成／原80字斷言與Diff檢查PASS。
