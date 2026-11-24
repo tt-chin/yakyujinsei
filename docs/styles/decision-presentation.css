@@ -1,11 +1,8 @@
-#decision-summary[hidden],#decision-return[hidden],#decision-question[hidden]{display:none!important}
-#decision-summary{flex:none;position:relative;min-width:0;padding:var(--space-2xs) var(--space-md);border-top:1px solid var(--edge);background:var(--panel)}
-#decision-period,[data-reader-period]{font-size:var(--fs-sm);color:var(--dim);margin:0 0 var(--space-3xs)}
-#decision-question{font-size:var(--fs-lg);line-height:1.5;margin:0;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-#decision-question:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
-#decision-summary:has(#decision-jump){padding-right:calc(var(--space-5xl) + var(--space-4xl))}
+#decision-jump[hidden],#decision-return[hidden],#act-toggle[hidden]{display:none!important}
+[data-reader-period]{font-size:var(--fs-sm);color:var(--dim);margin:0 0 var(--space-3xs)}
 #decision-jump,#decision-return{min-height:44px;min-width:44px;border:1px solid var(--control-edge);border-radius:var(--radius-md);background:var(--panel2);color:var(--chalk);font:700 var(--fs-sm) var(--sans);cursor:pointer;padding:var(--space-2xs) var(--space-sm)}
-#decision-jump{position:absolute;right:var(--space-md);top:var(--space-2xs)}
+#decision-jump{position:fixed;z-index:21;transform:translateX(-50%);width:48px;height:48px;min-height:44px;border:0;border-radius:50%;padding:0;background:transparent;font-size:calc(var(--fs-6xl) * .8);line-height:1;isolation:isolate}
+#decision-jump::before{content:'';position:absolute;inset:10%;z-index:-1;box-sizing:border-box;border:1px solid var(--control-edge);border-radius:50%;background:var(--panel2);box-shadow:var(--shadow-nav);pointer-events:none}
 #decision-return{flex:none;margin:var(--space-2xs) var(--space-sm);align-self:flex-start}
 #decision-jump:focus-visible,#decision-return:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 #act-toggle{min-height:44px}
@@ -28,8 +25,6 @@
 [data-event-effects] dd{margin:0;text-align:right;overflow-wrap:anywhere;font-family:var(--mono)}
 [data-event-calculation]{margin-top:var(--space-xs)}
 @media(min-width:1100px) and (min-height:700px){
- #decision-summary:has(#decision-jump){padding-right:var(--space-md)}
- #decision-jump{display:none}
  #act[data-decision-kind="CHOICE"]{grid-template-columns:repeat(2,minmax(0,1fr))}
  #act[data-decision-kind="CHOICE"]>.btn:only-of-type{grid-column:1 / -1}
  #view-home #log{min-height:100px}

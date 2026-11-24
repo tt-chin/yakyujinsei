@@ -13,3 +13,16 @@
 #view-home:has([data-career-review="retirement"]) #log{overflow:visible;min-height:0}
 #view-home:has([data-career-review="retirement"]) #act{max-height:none;overflow:visible}
 #view-home:has([data-career-review="retirement"]) #act-toggle{position:static;margin:var(--space-xs) auto}
+
+/* One annual financial summary; source cards remain noninteractive receipt markup. */
+[data-season-finance-source][hidden]{display:none!important}
+[data-season-summary] details{margin-block:var(--space-sm)}
+[data-season-summary] summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--dim);overflow-wrap:anywhere}
+[data-season-summary] summary::before{content:'▸';margin-right:var(--space-xs)}
+[data-season-summary] summary::-webkit-details-marker{display:none}
+[data-season-summary] details[open]>summary::before{content:'▾'}
+[data-season-summary] details>p{font-size:var(--fs-md)}
+.season-salary-detail{min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:var(--space-xs) var(--space-md);border:1px solid var(--control-edge);border-radius:var(--radius-md);background:var(--panel2);color:var(--chalk);font:inherit;cursor:pointer;scroll-margin-block:var(--space-lg)}
+.season-salary-detail:disabled{opacity:.5;cursor:default}
+.season-salary-detail:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.season-salary-detail{scroll-margin-bottom:calc(120px + env(safe-area-inset-bottom,0px))}

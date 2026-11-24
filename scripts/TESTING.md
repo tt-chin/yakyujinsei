@@ -6,6 +6,22 @@
 
 Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
 
+## 現在選項的浮動箭頭
+
+配點入口另嚴格檢查visualViewport縮小、原footer補償生效後「確定」完整可見時箭頭必須隱藏，再以原指標點擊確定且只執行一次；失敗保存`confirm-navigation-failure.json`與截圖。根style監測只重算箭頭，不改配點避讓、分配、復原／確定或持續強制捲動。
+
+`ui-redesign-decision-e2e`保留原P／IF完整S／RNG、原生配點草稿、防重複操作及128組版面，移除舊開關的可見點擊期待；收合狀態由原UI hook準備，新的返回入口必須展開並露出目前標題。新增390直向、844橫向、320短視窗與桌面內部選項overflow，驗證鍵盤Enter／Space、44px命中區、按鈕中心可點擊、收合／長選項逐次捲動／末尾隱藏、年度更新時保留舊閱讀位置、資料分頁返回、單一繼續與空選項。配點只操作箭頭並比對完整草稿／S／RNG，不觸發分配或確定。`--navigation-only`僅供直接執行時診斷新導覽fixture，不代替完整入口／Quick／Full。visualViewport高度以受控物件另作模擬；Chromium尺寸與模擬工具列均不是Safari實機PASS。原生Safari工具列展開／收合、直橫向切換及觸控命中須在本次實作完成後另外確認。
+
+## 歷史間距比較與球場抬頭
+
+後續確認：`77d536bb031ef70801b0511c057ae8145f028d1d`已取得Tests #265 Full144／144 PASS及#264 Quick success，歷史間距修正的舊待Full狀態已解除。這不覆蓋後續浮動箭頭；新導覽仍需新提交的GitHub手動Full。
+
+`design-tokens-09-e2e`維持`f8afd8e`間距基準與`ad8e77f53ede29de6a51c23708b2370eed7b414d`凍結UI runtime。已核准的`235fd22827478884ad4a5b046002e62eb326ffe0`球場抬頭背景／文字色，以三條獨立固定CSS參考規則加至舊頁面；現行CSS須逐字命中每條一次，且手機規則仍位於699px斷點。41項樣式（含背景／文字／邊框色）、全部位置尺寸及34個間距selector仍嚴格比較，不忽略差異、不更換歷史基準。Tests #262的143 PASS／1 FAIL保留為歷史結果，修正後個別入口PASS不等於Full PASS；新提交仍需使用者在GitHub手動Full。本項僅改表示期待值，依AGENTS 6.1純表示例外執行相關入口，不額外重跑未受影響的Quick。
+
+## 季末收入與來季契約整合
+
+`season-summary.test`驗證實際Receipt／同年度schedule與決定、零／缺損、只讀snapshot與跨年隔離。`season-summary-e2e`以固定`cf88d1a9d621c354d64a2de5c427cd437a8094bf`比較原生付款、升降格／到期降格、續約、移籍、引退的完整S／全部RNG及還原後原卡DOM；含兩年度真實付款、變更最新契約後舊年度內訳、4個非職業邊界與64組版面。新入口進Quick／Full，不增加生涯批次。既有`ui-redesign-review-e2e --fixtures-only`保留128版面與原季末／引退fixture；歷史來源不換成HEAD，原文／狀態不放寬。
+
 ## UI 2.0 FA比較與骰子標示
 
 `fa-market-presentation.test`固定三種數值降序、同值穩定、缺損／非法值與凍結來源不變，並驗證統一2.0.0的版本戳、未知／錯誤版本拒絕及完整來源不變。`fa-market-presentation-e2e`對固定`dc9bf83aca09a82ccc891b061231490ec9295c68`比較原生FA抽價及同一offer簽約的完整S／每次RNG，64組尺寸／主題／字級、排序與可視卡片／鍵盤／零報價、原按鈕identity／防重複及DOM投影錯值拒絕；不改FA抽價、金額或契約處理。既有contract-salary的FA模式仍比較原球團／原報價，先透過表格定位再按原按鈕。骰子上移由原allocation E2E驗證active、余白、復原／重設／用完與完成定位。
@@ -19,6 +35,8 @@ Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SH
 `display-preferences-e2e`的一般設定矩陣先等原生開始按鈕enabled（引擎／存檔初始化完成）再輸入姓名；原獨立延遲引擎載入時先輸入姓名的案例仍保留。填入、開關對話框、每次設定及尺寸變更後逐步嚴格檢查姓名，不補填、不重試、不忽略姓名差異。失敗時在既有tmp證據目錄保存`name-preservation-failure.json`與截圖，記錄節點identity、焦點、設定、初始化狀態及最近輸入事件；原CI姓名空白尚未重現，不將新增診斷稱為已確認原始原因。Runner、入口數、歷史基準與遊戲程式不變；修正後需在新SHA由使用者手動執行GitHub Full。
 
 ## UI 2.0 季末／退休呈現
+
+CareerReview只整理回顧，不再改結果卡的原生details.open。review的fixtures-only新增PRO／IND／CORP五類結果卡的混合手動狀態、整理建立／重繪保持、done後新結果展開及原生下一選擇收合舊卡；總結三明細預設關閉、重繪保持與隱藏收入卡沿用season-summary E2E。舊「引退原卡全關」期待改為新結果展開，手動關／再開與原S／RNG／DOM比較保留。箭頭80%只改CSS外觀，navigation-only另驗偽元素38.4px及字形80%、原48px點擊區與四尺寸操作；兩項均屬局部顯示，不更動通用選擇控制或Runner。
 
 `career-review.test`驗證既有資料的唯讀摘要、棒球局數、確定／未定／零年薪與報價隔離、跨階段紀錄及缺少資料。`ui-redesign-review-e2e`的Quick僅跑原生fixture；個別完整入口另比較第4批固定SHA的P／IF兩條自然生涯，逐步全S與RNG嚴格相同。退休規則、年度付款、成長與存檔核心來源也須保持不變。128組viewport／主題／字級、無背景／無blur、空資料、原生details展開與分享控制項可達性另外驗證。720×450為200%等效重排尺寸，不能稱為桌面瀏覽器200%縮放或實機PASS。
 

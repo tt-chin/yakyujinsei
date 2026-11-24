@@ -80,15 +80,23 @@ try{
     if(operation==='undo')continue;
     const visibility=await p.locator('#al-btm .main:not(:disabled)').evaluate(button=>{const b=button.getBoundingClientRect(),nav=document.getElementById('main-nav').getBoundingClientRect();return {focused:document.activeElement===document.querySelector('#al-btm button'),top:b.top,bottom:b.bottom,navBottom:nav.bottom,height:innerHeight,hit:button.contains(document.elementFromPoint(b.x+b.width/2,b.y+b.height/2))};});
     assert.ok(visibility.focused&&visibility.hit&&visibility.top>=visibility.navBottom-1&&visibility.bottom<=height+1,'completed allocation reveals confirmation and retains native undo focus: '+JSON.stringify({pos,width,height,mode,visibility}));
-    if(width<1100)assert.ok(visibility.bottom<=height-72,'mobile confirmation reserves clearance for floating browser controls');
+    const spacing=await p.locator('#al-btm').evaluate(footer=>{const win=footer.ownerDocument.defaultView,outer=footer.parentElement,probe=document.createElement('div');probe.style.cssText='position:fixed;visibility:hidden;padding-bottom:calc(var(--card-padding-y) + env(safe-area-inset-bottom,0px))';document.body.append(probe);const expected=parseFloat(win.getComputedStyle(probe).paddingBottom),actual=parseFloat(win.getComputedStyle(footer).paddingBottom)+parseFloat(win.getComputedStyle(outer).paddingBottom);probe.remove();return{actual,expected};});
+    assert.ok(Math.abs(spacing.actual-spacing.expected)<=1,'allocation uses one normal event-sized bottom inset: '+JSON.stringify(spacing));
     if(width===390){
      const unchanged=await get(p);
      // Controlled viewport signal, not a claim of real Safari chrome emulation.
      await p.evaluate(()=>{Object.defineProperty(visualViewport,'height',{configurable:true,value:innerHeight-100});visualViewport.dispatchEvent(new Event('resize'));});await frames(p);await frames(p);
-     const b=await p.locator('#al-btm .main').boundingBox();assert.ok(b.y+b.height<=height-100-72+1,'completion follows a reduced visual viewport with browser clearance');
+     const b=await p.locator('#al-btm .main').boundingBox();assert.ok(b.y+b.height<=height-100+1,'completion follows the actual reduced visual viewport');
+     assert.ok(height-100-b.y-b.height<=spacing.expected+2,'visual viewport compensation does not become an extra blank padding area');
      assert.deepEqual(await get(p),unchanged,'viewport changes never spend, confirm or draw RNG');
      await p.evaluate(()=>{delete visualViewport.height;visualViewport.dispatchEvent(new Event('resize'));});await frames(p);await frames(p);
-     await p.evaluate(()=>{window.__allocationViewportScrolls=0;window.__allocationOriginalScroll=Element.prototype.scrollIntoView;Element.prototype.scrollIntoView=function(...args){if(this.id==='al-btm')window.__allocationViewportScrolls++;return window.__allocationOriginalScroll.apply(this,args);};document.dispatchEvent(new WheelEvent('wheel'));visualViewport.dispatchEvent(new Event('resize'));});await frames(p);
+     await p.evaluate(()=>{document.getElementById('al-btm').style.bottom='100px';Object.defineProperty(visualViewport,'height',{configurable:true,value:innerHeight-100});visualViewport.dispatchEvent(new Event('resize'));});await frames(p);await frames(p);
+     assert.equal(await p.evaluate(()=>document.documentElement.style.getPropertyValue('--allocation-viewport-gap')),'','no compensation when native layout already clears the reduced viewport');
+     await p.evaluate(()=>{const footer=document.getElementById('al-btm');footer.style.removeProperty('bottom');if(!footer.getAttribute('style'))footer.removeAttribute('style');delete visualViewport.height;visualViewport.dispatchEvent(new Event('resize'));});await frames(p);await frames(p);
+     await p.evaluate(()=>{window.__allocationViewportScrolls=0;window.__allocationOriginalScroll=Element.prototype.scrollIntoView;Element.prototype.scrollIntoView=function(...args){if(this.id==='al-btm')window.__allocationViewportScrolls++;return window.__allocationOriginalScroll.apply(this,args);};visualViewport.dispatchEvent(new Event('resize'));});await frames(p);
+     assert.equal(await p.evaluate(()=>window.__allocationViewportScrolls),0,'a fully visible confirmation never triggers another scroll');
+     assert.equal(await p.evaluate(()=>document.documentElement.style.getPropertyValue('--allocation-viewport-gap')),'','expanded viewport clears the obsolete offset');
+     await p.evaluate(()=>{document.dispatchEvent(new WheelEvent('wheel'));visualViewport.dispatchEvent(new Event('resize'));});await frames(p);
      assert.equal(await p.evaluate(()=>window.__allocationViewportScrolls),0,'manual interaction stops completion follow-up scrolling');
      await p.evaluate(()=>{Element.prototype.scrollIntoView=window.__allocationOriginalScroll;});
     }
@@ -100,6 +108,19 @@ try{
     await action(p,reference.p,'spend');await frames(p);
    }
    if(width===390&&!mode.dice)await p.screenshot({path:path.join(out,pos+'-390-points-confirm.png'),animations:'disabled'});
+   const completed=(await get(p)).done;
+   if(width===390){await p.evaluate(()=>{Object.defineProperty(visualViewport,'height',{configurable:true,value:innerHeight-100});visualViewport.dispatchEvent(new Event('resize'));});await frames(p);await frames(p);}
+   const confirmationVisible=await p.locator('#al-btm .main:not(:disabled)').evaluate(node=>{const r=node.getBoundingClientRect();return r.top>=document.getElementById('main-nav').getBoundingClientRect().bottom&&r.bottom<=(visualViewport.offsetTop+visualViewport.height);});
+   if(confirmationVisible)assert.equal(await p.locator('#decision-jump').isVisible(),false,'footer compensation hides a stale navigation arrow once confirmation fits');
+   try{await p.locator('#al-btm .main:not(:disabled)').click();}catch(error){
+    const diagnostic=await p.evaluate(()=>{const box=e=>e?.getBoundingClientRect().toJSON();return{viewport:{height:innerHeight,visual:visualViewport.height,offset:visualViewport.offsetTop},jump:{hidden:document.getElementById('decision-jump').hidden,style:document.getElementById('decision-jump').style.cssText,box:box(document.getElementById('decision-jump'))},act:box(document.getElementById('act')),footer:box(document.getElementById('al-btm')),controls:[...document.querySelectorAll('#al-btm button,#al-rows .abrow')].map(e=>({text:e.textContent.slice(0,50),disabled:e.disabled,aria:e.getAttribute('aria-disabled'),box:box(e)}))};});
+    await writeFile(path.join(out,'confirm-navigation-failure.json'),JSON.stringify({pos,width,height,mode,diagnostic},null,2));await p.screenshot({path:path.join(out,'confirm-navigation-failure.png')});console.error(JSON.stringify({pos,width,height,mode,diagnostic}));throw error;
+   }
+   await reference.p.locator('#al-btm .main:not(:disabled)').click();await equal(p,reference.p,'visible native confirm pointer click');
+   assert.equal((await get(p)).done,completed+1,'the visible confirmation is clickable exactly once');
+   if(width===390){await p.evaluate(()=>{delete visualViewport.height;visualViewport.dispatchEvent(new Event('resize'));});await frames(p);}
+   const eventPadding=await p.locator('#act').evaluate(node=>({actual:parseFloat(getComputedStyle(node).paddingBottom),normal:parseFloat(getComputedStyle(node).getPropertyValue('--card-padding-y')),allocation:node.hasAttribute('data-allocation-session')}));
+   assert.equal(eventPadding.allocation,false);assert.equal(eventPadding.actual,eventPadding.normal,'normal event action padding is unchanged in the headless browser (safe area zero)');
    checks.push({pos,width,height,mode:mode.dice?'dice':'points',completionScroll:'PASS',undoAndCompleteAgain:'PASS'});
   }
   const variants=[{name:'dice-cost-potential',state:fixture(pos==='P'?66:72,60),mode:{dice:[1,6,2]}},{name:'point-cost-potential',state:fixture(pos==='P'?66:72,60),mode:{pool:5}},{name:'carry-cap-discard',state:{...fixture(80,80),ab:{...fixture(80,80).ab,[keys[0]]:79},carry:{[keys[0]]:pos==='P'?6:2}},mode:{pool:4}},{name:'all-cap-dice',state:fixture(80,80),mode:{dice:[6,2]}},{name:'empty-dice',state:{...fixture(40,62),carry:null},mode:{dice:[]}},{name:'empty-points',state:fixture(40,62),mode:{pool:0}}];

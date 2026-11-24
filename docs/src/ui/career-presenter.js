@@ -1,7 +1,7 @@
 import {reviewStatLine} from './career-review.js';
 import {incomeSummary} from './income-summary.js';
 import {formatRehabStatus} from './condition-view-model.js';
-import {tjGaugeCap} from './condition-view-model.js';
+import {tjGaugeCap,tjGaugeText} from './condition-view-model.js';
 import {contractTypeLabel} from './contract-labels.js';
 import {removedTraitLabel} from '../engine/trait-policy.js';
 import {slgOf} from './stat-format.js';
@@ -9,7 +9,7 @@ import {buildEventHistory} from './career-event-history.js';
 import {buildInternationalHistory} from './international-history.js';
 import {currentJerseyNumber,canChangeJersey,yearlyJerseyLabel} from '../engine/jersey-policy.js';
 import {EVENT_CATALOG} from '../data/event-cards-jp.js';
-import {injuryRiskCondition} from './injury-risk-view-model.js';
+import {injuryRiskCondition,injuryRiskHeader} from './injury-risk-view-model.js';
 
 // Read-only player/career view models for navigation, the desktop overview (OOP plan §2g) and the scoreboard (§2ff).
 // The career state is read on every call through getState, so a new career (S reassigned) is seen at once.
@@ -23,7 +23,7 @@ export class CareerPresenter {
   #statSummary(bucket,st){return reviewStatLine(this.#getState().pos,st,this.#deps.fmtIP); }
   record(){const S=this.#getState();const definitions=[['NPB',[['NPB1','NPB一軍'],['NPB2','NPB二軍'],['NPB_DEV','NPB育成']]],['KBO',[['KBO1','KBO一軍'],['KBO2','KBOフューチャース']]],['台湾プロ野球',[['CPBL1','台湾プロ野球一軍'],['CPBL2','台湾プロ野球二軍']]],['MLB',[['MLB','MLB']]],['MiLB',[['A3','3A'],['A2','2A'],['A1','1A'],['R','ルーキーリーグ']]],['独立リーグ',[['IND','独立リーグ']]],['社会人野球',[['CORP','社会人野球']]]];const byLevel=S.statsByLevel||{};const groups=definitions.map(([label,levels])=>Object.freeze({label,levels:levels.filter(([key])=>byLevel[key]).map(([key,levelLabel])=>Object.freeze({key,label:levelLabel,summary:this.#statSummary(key,byLevel[key])}))})).filter(group=>group.levels.length);return Object.freeze({seasons:Array.isArray(S.log)?S.log.length:0,internationalCount:S.intlCount||0,groups});}
   #rehabStatusText(){const S=this.#getState();return formatRehabStatus(S);}
-  ability(){const S=this.#getState(),{ABL,POS_AB,POSN}=this.#deps;const condition=[{label:'シーズン稼働率',value:`${Math.round((S.seasonFactor??1)*100)}%`},injuryRiskCondition(S),{label:'次回故障リスク加算',value:`${S.injNext||0}%`},{label:'今季一時故障リスク加算',value:`${S.tmpInj||0}%`},{label:'大きな故障（通算）',value:`${S.bigInj||0}回`},{label:'リハビリ',value:this.#rehabStatusText()}];if(S.pos==='P')condition.push({label:'TJゲージ',value:`${Number(S.tj||0).toFixed(1)} / ${this.#deps.tjCap()}`},{label:'トミー・ジョン手術（通算）',value:`${S.tjCount||0}回`});return Object.freeze({positionLabel:POSN[S.pos],abilities:POS_AB[S.pos].map(key=>Object.freeze({key,label:ABL[key],current:S.ab[key]||0,potential:S.pot?.[key]??62})),condition:condition.map(item=>Object.freeze(item))});}
+  ability(){const S=this.#getState(),{ABL,POS_AB,POSN}=this.#deps;const condition=[{label:'シーズン稼働率',value:`${Math.round((S.seasonFactor??1)*100)}%`},injuryRiskCondition(S),{label:'次回故障リスク加算',value:`${S.injNext||0}%`},{label:'今季一時故障リスク加算',value:`${S.tmpInj||0}%`},{label:'大きな故障（通算）',value:`${S.bigInj||0}回`},{label:'リハビリ',value:this.#rehabStatusText()}];if(S.pos==='P')condition.push({label:'TJゲージ',value:tjGaugeText(S,this.#deps.tjCap())},{label:'トミー・ジョン手術（通算）',value:`${S.tjCount||0}回`});return Object.freeze({positionLabel:POSN[S.pos],abilities:POS_AB[S.pos].map(key=>Object.freeze({key,label:ABL[key],current:S.ab[key]||0,potential:S.pot?.[key]??62})),condition:condition.map(item=>Object.freeze(item))});}
   traits(){const S=this.#getState(),{displayTrait,teamNick}=this.#deps;return Object.freeze({active:Object.entries(S.traits||{}).filter(([,enabled])=>enabled).map(([key])=>displayTrait(key)),removed:(S.removed||[]).map(item=>removedTraitLabel(item,S,teamNick))});}
   board(phase){const S=this.#getState(),{DPN,POSN,TEAM_COLOR,roleN,playerType,ovr}=this.#deps;
     const nameHtml=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
@@ -49,7 +49,7 @@ export class CareerPresenter {
     const age=S.age, year=S.year;
     const ovrValue=ovr(), clearTj=S.pos==='P', salaryText=Math.round((S.currentSalary||0)/10000).toLocaleString();
     const jersey=currentJerseyNumber(S),numberText=jersey===null?'':`#${jersey}`,numberChangeEnabled=canChangeJersey(S);
-    return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase,isAmateur:S.stage!=='PRO',injuryRiskText:`${S.injNext||0}%`,numberText,numberChangeEnabled};
+    return {nameHtml,teamHtml,age,year,ovr:ovrValue,clearTj,salaryText,phase,isAmateur:S.stage!=='PRO',injuryRiskText:injuryRiskHeader(S),isPitcher:S.pos==='P',tjGaugeText:S.pos==='P'?tjGaugeText(S,this.#deps.tjCap()):null,numberText,numberChangeEnabled};
   }
   statLine(st){const S=this.#getState(),{fmtIP,roleN}=this.#deps;
     if(S.pos==='P'){ const role=roleN(S.role); const relief=(S.role==='CL'&&st.SV)?`｜${st.SV}セーブ`:(S.role==='MR'&&st.HLD)?`｜${st.HLD}ホールド`:''; return `出場 ${st.G}｜投球回 ${fmtIP(st.IP)}｜${st.W}勝${st.L}敗${relief}｜奪三振 ${st.SO}｜四球 ${st.BB||0}｜ERA ${st.era.toFixed(2)}｜WHIP ${(st.WHIP||0).toFixed(2)}`; }

@@ -12,8 +12,13 @@ html{scroll-padding-top:var(--game-header-height,0px)}
 #lamps{margin:0;justify-content:start}
 #lamps .lamp:not(.on){display:none}
 #bd-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:var(--space-3xs)}
+#bd-grid[data-pitcher="true"]{grid-template-columns:minmax(0,.7fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.1fr)}
+#bd-tj-gauge-cell[hidden]{display:none!important}
+#bd-grid .bd-cell{min-width:0}
+#bd-grid .bd-cell b,#bd-grid .bd-cell span{white-space:nowrap;letter-spacing:0}
+#bd-grid[data-pitcher="true"] :is(#bd-sal,#bd-tj-gauge){font-size:clamp(10px,2.8vw,var(--fs-lg))}
 .bd-cell{padding:var(--space-4xs)}
-.bd-cell b{font-size:var(--fs-lg)}
+.bd-cell b{font-size:clamp(10px,3.8vw,var(--fs-lg))}
 #salary-detail-trigger small{display:none}
 
 #game-body,#game-main{min-width:0;min-height:0}

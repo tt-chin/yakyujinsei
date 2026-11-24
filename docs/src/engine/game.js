@@ -162,7 +162,7 @@ var MAX_YEARS=8;         /* DOM 最大保持年度領域数。 */
 function logTarget(){ return _curYearBody || $('log'); }
 // DOM presentation lifetime only; no display markers in S or replay data.
 const traitPresentation=new WeakMap();
-const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key),getDecision:()=>S?choiceViews.get(S):null,getYear:()=>S?.year,getState:()=>S,reviewLabels:{leagueName:key=>LG_N[key]||LV[key]?.n||key,teamName:key=>leagueCatalog.teamRec(key)?.name||key,teamLeague:name=>typeof name!=='string'?null:Object.values(leagueCatalog.teamMaster).find(team=>(name===team.name||name.startsWith(team.name+' ')))?.org,formatMoney:fmtMoney}});
+const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key),getDecision:()=>S?choiceViews.get(S):null,getYear:()=>S?.year,getState:()=>S,getSeasonContext:()=>careerSession.seasonEndContext,openSalaryDetail:snapshot=>salaryDetailController.open(snapshot),reviewLabels:{leagueName:key=>LG_N[key]||LV[key]?.n||key,teamName:key=>leagueCatalog.teamRec(key)?.name||key,teamLeague:name=>typeof name!=='string'?null:Object.values(leagueCatalog.teamMaster).find(team=>(name===team.name||name.startsWith(team.name+' ')))?.org,formatMoney:fmtMoney}});
 function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){return traitResultCard.decorate(node,title,html);}
 const traitResultCard=new TraitResultCard({getState:()=>S,traitPresentation,displayTrait});

@@ -1,6 +1,6 @@
 /* Dedicated allocation view; original rows, undo/reset and confirmation remain live. */
 #view-home[data-allocation-open]>#log,#view-home[data-allocation-open]>#decision-summary,#view-home[data-allocation-open]>#act-toggle{display:none!important}
-#view-home[data-allocation-open]>#act{display:block!important;max-height:none;overflow:visible;flex:1;min-height:0;border-top:0;z-index:0}
+#view-home[data-allocation-open]>#act{display:block!important;max-height:none;overflow:visible;flex:1;min-height:0;border-top:0;z-index:0;padding-bottom:0}
 html:has(#view-home[data-allocation-open]:not([hidden])),#view-home[data-allocation-open]{scroll-padding-bottom:var(--allocation-footer-height,0px)}
 [data-allocation-period]{font-size:var(--fs-sm);color:var(--dim);margin:0 0 var(--space-xs)}
 [data-allocation-guide]{margin:var(--space-sm) 0;color:var(--dim);font-size:var(--fs-sm)}
@@ -15,11 +15,9 @@ html:has(#view-home[data-allocation-open]:not([hidden])),#view-home[data-allocat
 [data-allocation-session] .abrow .val{width:auto}
 [data-allocation-preview]{grid-column:1;grid-row:2;font-size:var(--fs-sm);line-height:1.6;color:var(--dim);overflow-wrap:anywhere}
 [data-allocation-action]{grid-column:2;grid-row:2;align-self:center;justify-self:end;border:1px solid var(--control-edge);border-radius:var(--radius-md);padding:0 var(--space-2xs);line-height:1.6;white-space:nowrap;font-size:var(--fs-sm);font-weight:700}
-#act[data-allocation-session] #al-btm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-xs);position:sticky;bottom:0;z-index:1;background:var(--panel);border-top:1px solid var(--edge);padding:var(--space-sm) 0 calc(var(--space-sm) + env(safe-area-inset-bottom,0px))}
+#act[data-allocation-session] #al-btm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-xs);position:sticky;bottom:var(--allocation-viewport-gap,0px);z-index:1;background:var(--panel);border-top:1px solid var(--edge);padding:var(--space-sm) 0 calc(var(--card-padding-y) + env(safe-area-inset-bottom,0px))}
 #act[data-allocation-session] #al-btm .btn{margin:0;min-height:44px;white-space:normal;overflow-wrap:anywhere}
-/* Native floating browser controls are not always excluded from visualViewport.
-   Keep a conservative clearance on the single-column/mobile shell, also in short windows. */
-@media(max-width:1099px){#act[data-allocation-session] #al-btm{padding-bottom:calc(var(--space-sm) + max(72px,env(safe-area-inset-bottom,0px)) + var(--allocation-viewport-gap,0px))}}
+/* The footer owns the same single bottom inset as normal event actions. */
 [data-allocation-status],#act[data-allocation-session] #al-btm>.main{grid-column:1 / -1}
 [data-allocation-status]{font-size:var(--fs-sm);line-height:1.6;margin:0;overflow-wrap:anywhere}
 #act[data-allocation-session] #al-btm [disabled]{cursor:default;opacity:.5}

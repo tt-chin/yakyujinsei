@@ -4,6 +4,7 @@ import { injuryRiskStatus } from '../engine/injury-risk-policy.js';
 
 const LABEL='健康診断時の故障リスク';
 const pct=value=>`${value}%`;
+export function injuryRiskHeader(state){const status=injuryRiskStatus(state);return status.kind==='NO_CHECK'?'-':pct(status.breakdown.total);}
 const signed=value=>value>0?`+${value}%`:value<0?`−${-value}%`:'±0%';
 const TRAIT_LABEL={IRON:'鉄人（上限10%）',GLASS:'スペランカー（下限40%）',IRON_GLASS:'鉄人＋スペランカー（25%固定）'};
 function rows(breakdown){

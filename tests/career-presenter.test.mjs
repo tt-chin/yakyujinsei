@@ -1,3 +1,4 @@
+import {markInjurySeasonStart,recordInjuryCheck} from '../docs/src/engine/injury-risk-policy.js';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {execFileSync} from 'node:child_process';
@@ -86,7 +87,7 @@ const boardStart=boardGame.indexOf('\nfunction boardModel('),boardEnd=boardGame.
 assert.ok(boardStart>0&&boardEnd>boardStart);const oldBoard=boardGame.slice(boardStart,boardEnd);
 const boardDeps={DPN:{SS:'DP:SS',CF:'DP:CF'},POSN:{P:'PN:P',IF:'PN:IF'},TEAM_COLOR:{red:'#AA0000',white:'#FFFFFF',shortWhite:'#fff'},roleN:role=>'R:'+role,playerType:()=>'TYPE',ovr:()=>77};
 const {DPN,POSN,TEAM_COLOR,...boardHelpers}=boardDeps;
-const boardState=over=>({name:'選手',pos:'IF',dpos:null,role:null,traits:{},stage:'PRO',stageYr:1,team:'高校',orgTeamId:null,age:20,year:2030,currentSalary:12345678,teamName:()=>'球団',...over});
+const boardState=over=>({name:'選手',pos:'IF',dpos:null,role:null,traits:{},stage:'PRO',stageYr:1,team:'高校',orgTeamId:null,age:20,year:2030,currentSalary:12345678,injNext:0,teamName:()=>'球団',...over});
 const boardFixtures={
   ...Object.fromEntries([1,2,3].map(n=>['HS year '+n,{stage:'HS',stageYr:n}])),...Object.fromEntries([1,2,3,4].map(n=>['U year '+n,{stage:'U',stageYr:n}])),
   CORP:{stage:'CORP'},IND:{stage:'IND'},'amateur with team color':{stage:'CORP',orgTeamId:'red'},
@@ -113,10 +114,19 @@ for(const [name,over] of Object.entries(boardFixtures))for(const phase of [0,1,2
   expected.teamHtml=expected.teamHtml.replaceAll('rgba(0、0、0、0.4)','rgba(0,0,0,0.4)').replaceAll('rgba(0、0、0、0.2)','rgba(0,0,0,0.2)');
   expected.teamHtml=approvedTeamBadgeClasses(expected.teamHtml);
   // UI 2.0 adds read-only mobile summary fields; all existing board fields stay exact.
-  expected.isAmateur=state.stage!=='PRO';expected.injuryRiskText=`${state.injNext||0}%`;
+  expected.isAmateur=state.stage!=='PRO';expected.injuryRiskText='15%';expected.isPitcher=state.pos==='P';expected.tjGaugeText=state.pos==='P'?'0.0 / 50':null;
   // PLY-01 (J1/J6): board() adds the number badge text and the menu availability; these fixtures have no jerseyHistory.
   Object.assign(expected,{numberText:'',numberChangeEnabled:false});
   assert.deepEqual(shape(presenter.board(phase)),shape(expected));
 });
 assert.equal(Object.keys(boardFixtures).length,18);
+
+
+for(const pos of ['P','IF'])test('header risk and TJ read-only '+pos,()=>{
+ const state=boardState({pos,ab:{},age:33,injNext:10,tmpInj:5,tj:18.26});const presenter=new CareerPresenter({getState:()=>state,labels:{...labels,POSN,DPN},TEAM_COLOR,...helpers,...boardHelpers,tjCap:()=>73});
+ assert.equal(presenter.board(0).injuryRiskText,'31%');markInjurySeasonStart(state);assert.equal(presenter.board(1).injuryRiskText,'36%');recordInjuryCheck(state);state.injNext=0;state.tmpInj=0;const before=JSON.stringify(state);assert.equal(presenter.board(2).injuryRiskText,'36%','recorded check survives cleared additions');assert.equal(JSON.stringify(state),before);
+ assert.equal(presenter.board(1).tjGaugeText,pos==='P'?'18.3 / 73':null);if(pos==='P')assert.equal(presenter.ability().condition.find(x=>x.label==='TJゲージ').value,presenter.board(1).tjGaugeText);
+ state.year++;state.rehab=1;state.skipMid=true;state.seasonFactor=0;markInjurySeasonStart(state);const rest=JSON.stringify(state);assert.equal(presenter.board(1).injuryRiskText,'-');assert.equal(presenter.board(1).tjGaugeText,pos==='P'?'18.3 / 73':null);assert.equal(JSON.stringify(state),rest);
+});
+
 console.log(`career-presenter: ${pass} cases PASS.`);

@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
+  'season-summary-e2e': {quick:[],seconds:90,reason:'Exact-year unified season income/contract UI: native payment, promotion/demotion/renewal/transfer/retirement, raw complete S/RNG vs frozen pre-change source, historical isolation and mobile/theme/font layouts.'},
   'fa-market-presentation-e2e': {quick:[],seconds:120,reason:'Read-only FA table/sorting/card navigation, retained native choice handlers and exact frozen-baseline state/RNG before and after signing; zero offers unchanged.'},
   'ui-redesign-review-e2e': {quick:['--fixtures-only'],seconds:240,reason:'UI phase 5: native P/IF season and retirement summaries, 128 layouts, missing/signed salary and original DOM/state/RNG; two frozen-phase-4 natural careers in the complete entry.'},
   'ui-redesign-allocation-e2e': {quick:[],seconds:120,reason:'UI phase 4: dedicated allocation, 128 viewport/theme/font layouts, original nodes/draft/scroll, exact phase-3 S/RNG and original DOM for native dice/point/carry/cap/undo/reset/once-only confirmation; growth core unchanged.'},
