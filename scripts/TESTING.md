@@ -8,6 +8,8 @@
 
 `career-review.test`與原生`ui-redesign-review-e2e --fixtures-only`驗證共用careerRecordModel的14層級、零值紀錄、全空fallback，保持原引退卡／保存圖片範圍及完整S／RNG。既有固定seed投手／野手個別契約E2E亦對照上述完整SHA並重播；不是本機Full。最終Full由使用者對確定提交於GitHub手動執行。
 
+`npb-return-e2e`的3A fixture在顯示復歸／留隊選項前已升格MLB；留隊應維持升格後的MLB組織與層級，新約org亦為MLB，不沿用起始MiLB身分。明確驗證剛結束的小聯盟年度不加MLB年資、留隊續約不重複加年資，原金額、付款、雙擊、重繪完整S／RNG與歷史基準不變。此入口不屬Quick；`--quick`只略過其末段四組自然生涯重播，不代表整套Quick或Full PASS。
+
 ## 季末まとめ初次定位與年度別字體
 
 `season-summary-e2e`沿用原固定基準`cf88d1a9d621c354d64a2de5c427cd437a8094bf`與完整S／每次RNG／原卡DOM比對，新增手機直橫向／短視窗及桌面實際log捲動容器：首次標題在固定頁首下、同年度重繪／契約更新／次年度不重播、原生季末能力點分配不回跳、原生交易與TJ選項先回答再結算。wheel／touchmove／鍵盤、選手／キャリア、dialog、跨年及DOM移除均在rAF前介入，驗證舊請求取消且重繪不補跳；同年度的新生涯可再次定位，明細手動開關及箭頭條件保持。只以fixture控制測試前提與結算後續，不更改產品流程或抽樣結果。

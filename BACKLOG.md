@@ -1,5 +1,11 @@
 # BACKLOG — 野球人生（日文版）
 
+> #279追修最終驗證：Quick115 PASS／0 FAIL／0 SKIP／0 BLOCKED（735.618秒、未重用），`test-results/ci279/quick-final/summary.json`。115份log SHA256與目前來源fingerprint `75cb3a821efb2bd90ab861a4adfcd209000734f3c405554e8261ebe67e35fb18`核對通過（integrity.json）；產品檔案與HEAD完全不變。初次沿用前批ignored核對腳本的未追蹤模組raw hash遇checkout換行差異，該檔現已由Runner tracked來源涵蓋，另與HEAD正規化內容確認一致後移除過期的補充檢查，未改Runner／測試或放寬日誌完整性。語法與Diff檢查PASS。下段Quick執行中由此更新；依授權提交推送dev，完整SHA見Git與回報，Full仍須使用者於該新SHA手動執行，不稱#279或本次Full PASS。
+
+> 2026-11-25 Tests #279追修（R2、測試期待值）：[Full 45503425592](https://github.com/tt-chin/yakyujinsei/actions/runs/45503425592)、dev `9b97b86029c161b81166cf66237ad1a9398e4c67`為145 PASS／1 FAIL；唯一失敗npb-return-e2e在3A fixture已升格MLB後仍預期留隊org=MiLB。本機重現相同斷言，診斷確認選擇前已為org=MLB／lv=MLB；非偶發環境錯誤。同SHA Quick #278成功，但該E2E未納入Quick。只更新獨立固定fixture期待並增加升格前小聯盟年度不加MLB年資、續約不重複累加、新約組織正確的斷言；原歷史基準、金額／付款／雙擊與重繪完整S／RNG斷言保留，產品／runner／manifest／workflow未改，版號2.0.0維持，不新增產品CHANGELOG。
+>
+> 原失敗入口`npb-return-e2e --quick`的22契約／升降格／延長／FA／復歸案例與5尺寸×24偏好版面PASS、Console／JS-CSS404為0；`--rng-only`10組原歷史薪資／抽取比較PASS；american-service的80組邊界與原生Movement、npb-return-ui的75項均PASS。證據`test-results/ci279/return-fixed-quick.log`、`return-rng.log`；原CI／本機FAIL及診斷保留。本次個別`--quick`略過未改的末段四生涯重播，不稱整支預設入口或整套Full PASS。專案Quick執行中，最終結果另補。**Full実行が必要（GitHub手動・未実行）**：原Full失敗入口須對修正後dev SHA確認；代理不在本機執行或dispatch Full，完整提交SHA以本次Git與回報為準。
+
 > 2026-11-25 本批最終本機驗證：Quick115 PASS／0 FAIL／0 SKIP／0 BLOCKED（753.833秒、未重用），`test-results/american-service/quick-final-14/summary.json`；115份日誌SHA256與來源fingerprint `e9f2b1c20a9a2ca56e262e491fc6c341ef2781b26a6740659e61de683966ce1a`核對通過，新共用career-record.js另核SHA256 `0737ac56aeed2543464b1574e29039589489d25908ad1bfa29de186a17200a34`（integrity.json）。固定修復前基準8964d627a1f2dff5f38da31bd3a092eeaa903a6e的原生P／IF生涯完整S、選項與每次RNG比較2／2 PASS（133.154秒，fixed-seeds-final-11；P 542操作／652 draws、IF 404操作／677 draws），原生FA專項20 PASS／0 Console、US邊界24情境及引退128版面PASS。語法、履歷生成與Diff檢查通過；不重建golden。手機為Chromium模擬，非Safari實機。
 >
 > 提交前確認遠端dev新增PR #127，13b921ba7c0ab74933e4259e652884286ce2c55b僅改BACKLOG、CURRENT_SPEC與兩份移籍設計，不含產品／測試程式。保留並整合遠端文件；本批不實作入札與NPB海外報價新制度。純文件整合不重跑相同產品的Quick，並核對產品／測試內容未變；不將本機工作樹結果稱為新SHA的CI PASS。依使用者授權提交推送dev，完整提交SHA以Git與回報為準。**Full実行が必要（GitHub手動・未実行）**：R3年資／契約／FA修正需對新dev提交手動Full；代理不dispatch、不在本機執行Full。下段尚未提交／重測中文字為過程紀錄，由本段與本次提交結果更新；原FAIL證據保留。
