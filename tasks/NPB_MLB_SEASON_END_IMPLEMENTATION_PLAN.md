@@ -3,6 +3,7 @@
 狀態：**計畫草案，未授權實作**。兩案規格已批准（`tasks/MLB_POSTING_DESIGN.md` P1～P8、`tasks/NPB_OFFER_WINDOW_DESIGN.md` Q1～Q6），產品實作須另行取得 code owner 授權。本文件提出兩份規格「實作邊界」各項的處理方式、新文字草案、許可差異與驗證範圍，供確認。
 分類：R3（移籍流程、RNG 消耗、同 seed 結果改變）、MINOR。版本號待 code owner 決定（§8）。
 讀碼基準：`84291592dfdc004082ffe6d15b75450fb4bc138b`（PR #127 head）；`origin/dev` `13b921b`（#127 合併後）的 `docs/src/engine` 與 `docs/src/ui/choice-prompt.js` 與其相同（`git diff` 確認）。`docs/src/ui/decision-presentation.js` 等 UI 檔於 `8964d62` 有變更，入札子選單的呈現於 scratch 草稿階段確認。
+dev 後續變更（2026-11-25 確認，`origin/dev` `b2ab72d`）：`f9ae156` 在 `career-movement.js` 新增 1 行 import，本文件引用的該檔行號在 dev 上 +1；`faFlow` 對非國內 FA 新增本聯盟球團路由（NPB 國內 FA 不變）。實作時以當時的 dev 重新確認行號與 F 各項。
 
 ## 1. 範圍
 
@@ -16,7 +17,7 @@
 |---|---|---|
 | F1 | NPB 一軍季末 offer 由 `crossOffersRule` 依 KBO→CPBL→MLB 順序產生；每個符合門檻的 offer 在產生時 `pickRecord` 抽 1 次（`R()` 1 次），接受時 `ri(1,3)` 抽年數 | `career-movement.js:156-172` |
 | F2 | MLB offer 門檻 ovr≥60、`lastD`≥2，與 P2 申請資格相同 | `:158`、`:171` |
-| F3 | **延長合約 offer 那年也會走到 `crossOffers`**：`extensionOffer` 接受或拒絕延長後都呼叫 `crossOffers(o)`。規格 MLB §2.2「例外」與 §4 第 1 點此處讀碼有誤（§8 Q4） | `career-contract.js:92-103` |
+| F3 | **延長合約 offer 那年也會走到 `crossOffers`**：`extensionOffer` 接受延長時先以 `appendContractExtension` 把延長年數併入 `S.ct`（`appendExtension`，`startYear:S.year+1`）並記錄 `NEW_CONTRACT` 年俸決定，之後才呼叫 `crossOffers(o)`；拒絕延長也呼叫 `crossOffers(o)`。規格 MLB §2.2「例外」與 §4 第 1 點此處讀碼有誤，兩案決定（#126 P6、#127 Q1）是在此錯誤前提下作成（§8 Q4） | `career-contract.js:92-103`、`:202` |
 | F4 | 不走到 `crossOffers` 的 NPB 一軍季末：全休年（`:260`）、降格（`:313`、`:316`）、合約到期且 `S.faElig`（改走 `faFlow`，`:334`） | `career-movement.js` |
 | F5 | `faFlow` 對 NPB：年資 <8 時 `contractStageFor('NPB')` 為 `CONTROL`，`:199` 立即 `renewAndAdvance(1,false,'CONTROL')`；年資 8 為 `FA` 階段，選單「権利を行使せず残留」（`renewAndAdvance(1)`）／「国内FAを宣言」；≥9 加「海外FAを宣言」 | `:196-207`、`career-contract.js:134`、`control-period-policy.js:3-6` |
 | F6 | `:199` 同時處理 KBO／CPBL（未取得 FA）與 MLB（<3 年）的 `CONTROL`；本案只改 `S.org==='NPB'` 的情況 | `:198-199` |
@@ -84,7 +85,7 @@
 - NPB 年資 ≥9、合約期間中：`crossOffers` 的「MLBへの海外移籍」照舊（不需同意、fee 0、未到期付 70%）。P7「海外 FA 路線使用獨立用語」：現行用語已與入札用語不同，**不改用語**（需確認，§8 Q3）。
 - 全休年：照舊沒有季末 offer（P2 前季 `lastD` 與全休不相容；規格 MLB §4 第 1 點）。
 - 降格年：已非一軍，不符合 P2。
-- 延長合約交涉年：依 F3 本來就會走到 `crossOffers`，入札照一般年度處理。
+- 延長合約交涉年：**未定，待 §8 Q4**。依 F3，接受延長後才出現季末 offer；若入札照一般年度處理，玩家可先簽延長再入札成功赴美，剛簽、尚未開始的延長即被取代，與 #126 P6「入札結果確定前不完成續約，避免先簽續約再赴美」及 #127 Q1「不可先續約再立即買斷剛建立、尚未開始的合約」的原則衝突。接受延長後轉韓台時，`buyoutRemaining` 以併入延長後的 `S.ct` 計算 70% 買斷，推定含延長年數（讀碼推定，未以執行確認），此為現行行為。
 
 ## 4. 新文字草案（需批准，AGENTS §4）
 
@@ -113,7 +114,7 @@
 
 | # | 內容 | 方式 |
 |---|---|---|
-| V1 | 同意率四區間邊界（年資 2／3、4／5、6／7、8）、資格邊界（年資 8／9、ovr 59／60、`lastD` 1／2、二軍） | 新增單元測試（stub RNG） |
+| V1 | 同意率四區間邊界（年資 2／3、4／5、6／7、8）、資格邊界（年資 8／9、ovr 59／60、`lastD` 1／2、二軍）；`franchise` 特性有無時資格與同意率相同（P4） | 新增單元測試（stub RNG） |
 | V2 | 不同意／無報價／拒絕後：同年度韓台 option 的球團與條件不變、RNG 消耗 0、入札 option 消失；隔年可再申請 | 單元測試 |
 | V3 | 原約已到期／未到期 × 韓台接受：買斷 0／70%；入札成功：買斷 0、posting fee 金額與收款者、不計入生涯收入、`MLB_INTL_RESTRICTED` 仍適用 | 單元測試＋既有 `global-contract-market` 相關測試 |
 | V4 | 同年度只建立一份新合約；空窗年度選擇留隊後的 `S.ct`／`lastSalaryDecision` 與現行立即續約相同 | 單元測試（同輸入比對） |
@@ -133,10 +134,10 @@
 
 | # | 事項 |
 |---|---|
-| Q1 | 版本號：2.1.0，或併入未發布的 2.0.0 |
+| Q1 | 版本號：併入 dev 上尚未發布的 2.1.0，或另採 2.2.0（2026-11-25：`origin/main` 為 2.0.0 已發布，`origin/dev` 為 2.1.0） |
 | Q2 | §4 T1～T5 文字 |
 | Q3 | D7：年資 ≥9 合約期間中的「MLBへの海外移籍」維持現行用語 |
-| Q4 | F3 讀碼更正：`tasks/MLB_POSTING_DESIGN.md` §2.2 與 §4 第 1 點「延長合約 offer 那年不走到 `crossOffers`」有誤，是否在本案一併更正文件 |
+| Q4 | 延長合約交涉年的處理順序（F3、D7）：(a) 入札與韓台報價放在延長交涉之前，放棄所有移籍選項後才交涉延長；(b) 接受延長後當年不可申請入札（拒絕延長則照一般年度）；(c) 維持現行順序（接受延長後仍可入札／韓台）。另請確認接受延長後轉韓台的 70% 買斷是否維持現行。決定後一併更正 `tasks/MLB_POSTING_DESIGN.md` §2.2 與 §4 第 1 點「延長合約 offer 那年不走到 `crossOffers`」的讀碼錯誤 |
 | Q5 | D1 RNG 順序（產生時先抽 MLB 球團） |
 | Q6 | 實作授權 |
 
