@@ -4,7 +4,7 @@
 
 ## 1. 最新進度總覽
 
-- 2.1.0：[Full #286](https://github.com/tt-chin/yakyujinsei/actions/runs/45549669028)的10項失敗已修正，本地相關E2E及Quick（115 PASS）通過；尚待修正提交的GitHub手動Full及Safari實機排序確認。原失敗與修正範圍見[測試說明](scripts/TESTING.md)；PR #128入札方案仍未實作。
+- 2.1.0：[Full #286](https://github.com/tt-chin/yakyujinsei/actions/runs/45549669028)的10項失敗已修正，本地相關E2E及Quick（115 PASS）通過；尚待修正提交的GitHub手動Full及Safari實機排序確認。原失敗與修正範圍見[測試說明](scripts/TESTING.md)；PR #128入札方案與保有權年度海外報價已實作（2026-11-25，使用者授權），本地相關E2E及Quick（116 PASS）通過，尚待GitHub手動Full；延長交涉年的順序暫依現行（計畫§8 Q4待決）。
 - 2.0.0開發已告一段落，目前已交付功能的實機驗收已由使用者確認完成。未來依AGENTS第9章正常採番，不再固定2.0.0。
 - 受驗提交 `875a8af62189e7ddcc2eac27afd3c80783d45210` 的 [Quick #280](https://github.com/tt-chin/yakyujinsei/actions/runs/45510842813) 與 [Full #281](https://github.com/tt-chin/yakyujinsei/actions/runs/45512251900) 均成功；Full 146 PASS、0 FAIL／SKIP／BLOCKED。此結果只對應該提交，不代表後續提交已執行Full。
 - 目前有 **12項未完成工作**，列於下節。已完成功能不重列待驗收；研究、全量稽核及CI證據封存仍各自保留。本次整理不構成新實作或正式發布授權。
@@ -40,17 +40,17 @@
   - 完成條件：由使用者決定維持現制並以研究結案，或另批後續方案；不得自行套用HOF A／B／C假說係數。
   - 依據：[批准範圍](tasks/HOF_JERSEY_APPROVED_SPEC.md)、[S4分析](docs/reviews/HOF_NATURAL_SAMPLE_S4.md)。
 
-### 2.3 已批准設計、尚未實作（2項）
+### 2.3 已批准設計、實作待驗證（2項）
 
-- [ ] **NPB-OFFER-WINDOW-01** — `SPEC_APPROVED / NOT_IMPLEMENTED`。
-  - 剩餘：NPB保有權空窗年度的KBO／CPBL報價，與MLB入札共同整理季末選擇及續約順序。
-  - 完成條件：依定案規格提出兩案整合計畫，釐清邊界並取得授權後實作；驗證先去留再續約、到期／未到期買斷、國內FA銜接、報價不重抽、固定seed許可差異與GitHub手動Full。屬R3／MINOR，目前未授權實作。
-  - 依據：[定案規格](tasks/NPB_OFFER_WINDOW_DESIGN.md)、[兩案實作計畫草案](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md)（§8 Q1、Q2、Q4、Q6待code owner決定，Q3、Q5由開發端決定；未授權實作）。
+- [ ] **NPB-OFFER-WINDOW-01** — `IMPLEMENTED_UNVERIFIED`（2026-11-25，使用者授權實作，併入2.1.0）。
+  - 現況：保有權年度及年資8的季末顯示KBO／CPBL報價與入札申請，留隊後才續約，年資8可取消國內FA宣言返回；本地相關E2E、固定seed比對及Quick通過，見[實作計畫](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md) §7、§10。
+  - 完成條件：GitHub手動Full於最終提交PASS；計畫§8 Q4（延長交涉年的順序）決定並反映；Preview確認。屬R3／MINOR。
+  - 依據：[定案規格](tasks/NPB_OFFER_WINDOW_DESIGN.md)、[兩案實作計畫草案](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md)（§8 Q4待決；Q1、Q2、Q6已由使用者決定，Q3、Q5由開發端決定）。
 
-- [ ] **MLB-POSTING-DESIGN-01** — `SPEC_APPROVED / NOT_IMPLEMENTED`。
-  - 剩餘：未取得海外FA前的赴美申請、母球團同意、報價與玩家選擇流程。
-  - 完成條件：與上一案共同提出整合計畫，釐清全休／延長等邊界並取得授權後實作；驗證資格、同意率、無報價、每年一次、成功不付70%買斷、原契約、限制型美國契約及RNG順序。屬R3／MINOR，目前未授權實作。
-  - 依據：[定案規格](tasks/MLB_POSTING_DESIGN.md)、[兩案實作計畫草案](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md)（§8 Q1、Q2、Q4、Q6待code owner決定，Q3、Q5由開發端決定；未授權實作）。讀碼更正：`extensionOffer`接受或拒絕後都呼叫`crossOffers`（`career-contract.js:92-103`），與規格§2.2、§4第1點不符；延長交涉年的處理順序及規格更正列為計畫§8 Q4。
+- [ ] **MLB-POSTING-DESIGN-01** — `IMPLEMENTED_UNVERIFIED`（2026-11-25，使用者授權實作，併入2.1.0）。
+  - 現況：NPB年資<9的赴美改為申請→同意→入札→玩家決定，成功不付70%買斷；同意率、無報價、每年一次、限制型美國契約、RNG順序已以單元測試與E2E驗證，見[實作計畫](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md) §7、§10。延長交涉年暫依現行順序。
+  - 完成條件：GitHub手動Full於最終提交PASS；計畫§8 Q4決定並反映（含規格§2.2、§4第1點更正）；Preview確認。屬R3／MINOR。
+  - 依據：[定案規格](tasks/MLB_POSTING_DESIGN.md)、[兩案實作計畫草案](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md)（§8 Q4待決；Q1、Q2、Q6已由使用者決定，Q3、Q5由開發端決定）。讀碼更正：`extensionOffer`接受或拒絕後都呼叫`crossOffers`（`career-contract.js:92-103`），與規格§2.2、§4第1點不符；延長交涉年的處理順序及規格更正列為計畫§8 Q4。
 
 ### 2.4 保留設計（1項）
 

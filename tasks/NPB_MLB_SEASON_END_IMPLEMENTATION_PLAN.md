@@ -1,7 +1,7 @@
-# NPB 季末移籍整合（MLB-POSTING-DESIGN-01＋NPB-OFFER-WINDOW-01）：實作計畫（草案）
+# NPB 季末移籍整合（MLB-POSTING-DESIGN-01＋NPB-OFFER-WINDOW-01）：實作計畫
 
-狀態：**計畫草案，未授權實作**。兩案規格已批准（`tasks/MLB_POSTING_DESIGN.md` P1～P8、`tasks/NPB_OFFER_WINDOW_DESIGN.md` Q1～Q6），產品實作須另行取得 code owner 授權。本文件提出兩份規格「實作邊界」各項的處理方式、新文字草案、許可差異與驗證範圍，供確認。
-分類：R3（移籍流程、RNG 消耗、同 seed 結果改變）、MINOR。版本號待 code owner 決定（§8）。
+狀態：**已實作、待 GitHub 手動 Full**（2026-11-25，使用者授權實作，結果見 §10）。兩案規格已批准（`tasks/MLB_POSTING_DESIGN.md` P1～P8、`tasks/NPB_OFFER_WINDOW_DESIGN.md` Q1～Q6）。§8 Q4 待決，暫依現行順序。本文件提出兩份規格「實作邊界」各項的處理方式、新文字草案、許可差異與驗證範圍，供確認。
+分類：R3（移籍流程、RNG 消耗、同 seed 結果改變）、MINOR，併入 2.1.0（§8 Q1）。
 讀碼基準：`84291592dfdc004082ffe6d15b75450fb4bc138b`（PR #127 head）；`origin/dev` `13b921b`（#127 合併後）的 `docs/src/engine` 與 `docs/src/ui/choice-prompt.js` 與其相同（`git diff` 確認）。`docs/src/ui/decision-presentation.js` 等 UI 檔於 `8964d62` 有變更，入札子選單的呈現於 scratch 草稿階段確認。
 dev 後續變更（2026-11-25 確認，`origin/dev` `b2ab72d`）：`f9ae156` 在 `career-movement.js` 新增 1 行 import，本文件引用的該檔行號在 dev 上 +1；`faFlow` 對非國內 FA 新增本聯盟球團路由（NPB 國內 FA 不變）。實作時以當時的 dev 重新確認行號與 F 各項。
 
@@ -107,6 +107,7 @@ dev 後續變更（2026-11-25 確認，`origin/dev` `b2ab72d`）：`f9ae156` 在
 | A3 | 「MLBへの海外移籍：球団名」改為「ポスティングを申請」（年資 <9）；選單文字與 option 數不變，RNG 不變 | 首個 MLB 門檻到達年度（顯示差異，非 RNG 差異） |
 | A4 | 申請入札後新增 `chance` 1～2 次；成功時無 70% 買斷卡與買斷金 | 首次申請年度 |
 
+- A5（狀態，無 RNG）：第 8 年宣告國內 FA 後取消時，只還原 `faType`／`faUsed`／`npbFaSeasons`；`S.faMarketKey` 與 `S.lastFaMarket`（`acceptedOfferId:null`）保留。`lastFaMarket` 是重新宣告時不重抽的快取（#127 Q4「不允許藉重開選單重抽」）；兩欄位目前除 FA 市場本身外無讀取者。
 - 起點之前：完整 `S` 與 RNG 狀態一致。
 - 起點之後的差異都須能追溯到 A1～A4；不能以「同 seed 允許改變」概括。
 - 自動選擇的測試若原本依「MLBへの海外移籍」字樣挑選 option，A3 會使其挑選結果改變，須個別列出（§7）。
@@ -148,23 +149,45 @@ dev 後續變更（2026-11-25 確認，`origin/dev` `b2ab72d`）：`f9ae156` 在
 - A1 在自然生涯中會出現：上述 `jp3-infielder-01` 的海外回歸球員（換過聯盟、`S.faElig` 為 true、NPB 年資 <8、到期）即進入空窗年度。
 - `career-movement.js`、`career-contract.js`、`movement-gate.js` 不在 `287dd1a` 凍結清單內。期待值變更皆須對應 §5 的許可差異，由 code owner 確認。
 
-## 8. 待 code owner 決定
+## 8. 決定事項
 
-Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_POSTING_DESIGN.md` P8 與 `tasks/NPB_OFFER_WINDOW_DESIGN.md` Q6 將許可差異交由開發端整理，AGENTS §6.1 R3 要求事前明示），改為開發端決定並記錄於此，編號保留。其餘待 code owner 決定。
+Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_POSTING_DESIGN.md` P8 與 `tasks/NPB_OFFER_WINDOW_DESIGN.md` Q6 將許可差異交由開發端整理，AGENTS §6.1 R3 要求事前明示），改為開發端決定並記錄於此，編號保留。2026-11-25 使用者決定 Q1、Q2、Q6，Q4 暫依 (c) 並標為待決。
 
 | # | 事項 |
 |---|---|
-| Q1 | 版本號：併入 dev 上尚未發布的 2.1.0，或另採 2.2.0（2026-11-25：`origin/main` 為 2.0.0 已發布，`origin/dev` 為 2.1.0） |
-| Q2 | §4 T1～T5 文字（超出 P7 已批准用語的措辭須另行批准，`tasks/MLB_POSTING_DESIGN.md` §4 第 6 點） |
+| Q1 | **使用者決定（2026-11-25）：併入 2.1.0**。選項為併入 dev 上尚未發布的 2.1.0，或另採 2.2.0（`origin/main` 為 2.0.0 已發布，`origin/dev` 為 2.1.0） |
+| Q2 | **使用者決定（2026-11-25）：採用 §4 T1～T5 草案**（超出 P7 已批准用語的措辭，`tasks/MLB_POSTING_DESIGN.md` §4 第 6 點） |
 | Q3 | **開發端決定**：D7，年資 ≥9 合約期間中的「MLBへの海外移籍」維持現行用語 |
-| Q4 | 延長合約交涉年的處理順序（F3、D7）：(a) 入札與韓台報價放在延長交涉之前，放棄所有移籍選項後才交涉延長；(b) 接受延長後當年不可申請入札（拒絕延長則照一般年度）；(c) 維持現行順序（接受延長後仍可入札／韓台）。另請確認接受延長後轉韓台的 70% 買斷（含延長年數，D7）是否維持現行。影響範圍見 D7：空窗年度不會遇到延長交涉，主要是換過聯盟並簽多年合約者。決定後一併更正 `tasks/MLB_POSTING_DESIGN.md` §2.2 與 §4 第 1 點「延長合約 offer 那年不走到 `crossOffers`」的讀碼錯誤 |
+| Q4 | **待決；實作暫依 (c)（使用者決定，2026-11-25）**。延長合約交涉年的處理順序（F3、D7）：(a) 入札與韓台報價放在延長交涉之前，放棄所有移籍選項後才交涉延長；(b) 接受延長後當年不可申請入札（拒絕延長則照一般年度）；(c) 維持現行順序（接受延長後仍可入札／韓台）。另請確認接受延長後轉韓台的 70% 買斷（含延長年數，D7）是否維持現行。影響範圍見 D7：空窗年度不會遇到延長交涉，主要是換過聯盟並簽多年合約者。決定後一併更正 `tasks/MLB_POSTING_DESIGN.md` §2.2 與 §4 第 1 點「延長合約 offer 那年不走到 `crossOffers`」的讀碼錯誤 |
 | Q5 | **開發端決定**：D1 RNG 順序（產生時先抽 MLB 球團；未申請入札的年度 RNG 消耗與現行相同） |
-| Q6 | 實作授權 |
+| Q6 | **使用者授權實作（2026-11-25）**，分支沿用 PR #128 的 `feat/npb-mlb-season-end` |
 
-## 9. 步驟（授權後）
+## 9. 步驟
 
 1. scratch 草稿實作 D2～D6，跑關聯測試與 Quick，補 §7 T table，提出確認。（2026-11-25 完成，結果見 §7；Q4 決定後若改順序須重跑）
-2. 正式實作＋新增單元測試（V1～V5）。
-3. V6～V8；reviewer。
-4. `CURRENT_SPEC.md` §11.7 改寫、版本與 `CHANGELOG.md`／`RELEASE_NOTES.md`（依 Q1）。
+2. 正式實作＋新增單元測試（V1～V5）。（2026-11-25 完成，§10）
+3. V6～V8；reviewer。（V7、V8 完成；V6 NOT_RUN，§10）
+4. `CURRENT_SPEC.md` §11.7 改寫、版本與 `CHANGELOG.md`／`RELEASE_NOTES.md`（依 Q1）。（2026-11-25 完成）
 5. commit／push 到功能分支，開 PR 到 dev；提出 Full（GitHub 手動）所需的分支與完整 SHA。
+
+## 10. 實作結果（2026-11-25，本機 macOS＋Brave 158，非 CI）
+
+- 產品：`docs/src/engine/career-movement.js` 依 D1～D7 實作（與 §7 scratch 草稿相同，另加註解）；版本 2.1.0 不變，`CHANGELOG.md`／`RELEASE_NOTES.md`／`docs/src/data/release-notes.js`（生成）、`CURRENT_SPEC.md` 2.1.0 節與 §11.7、`BACKLOG.md` 同步。
+- 新增 `tests/npb-season-end.test.mjs`（Quick，23 案例）。負控制 11 個突變（同意率兩區間、入札 90%、`postingResolved`、成功時加買斷、還原、留隊續約種類、ovr 門檻、空窗限 NPB 一軍、年資 9 界線、取消選項常駐）皆以 `ERR_ASSERTION` FAIL。
+- 既有測試依 §7 T table 修改 7 檔；新斷言負控制 5 個（`npb-return-ui` 拒絕文字／入札標籤、`fa-market-policy` hunk 外與 hunk 內修改、`salary-flow` 多一個 `chance`）皆 FAIL。E2E 比對 helper 未另做突變驗證（分歧點前為嚴格比對）。`kbo-renewal-e2e` 依 §7 (a)；原建議「fixture 輸入等於 `old.final.failure.input`」不成立（fixture 是另一組前一年俸 1.6821 億円的降格情境），改為把 `old.final.failure.input` 原樣交給現行 `applyKboForeignPackageCap`，結果 800 万円、RNG 0。
+- 驗證：
+  - Quick 116 PASS／0 FAIL／SKIP／BLOCKED（116 入口皆執行）。
+  - Full 專屬相關 E2E 個別直接執行：`contract-salary-e2e --compare=b8bc49b` 381／0；`kbo-renewal-e2e` `--quick` 與完整模式 PASS（第 64 行 `yakyo-test-001`／P、`jp3-infielder-01`／IF 與基準完全一致）；`global-contract-market-e2e --quick` PASS；`npb-return-e2e`、`stage10-risk-e2e` 於 scratch 草稿 PASS。
+  - V7：`contract-salary-e2e` 的生涯比對以 `probe33-1`～`8`（P／IF／C／OF 各 2，balanced）對 `b2ab72d` 執行 8／8 PASS：7 條全程一致；`probe33-7`／C 於第 232 步分歧，為換過聯盟（`faElig`、NPB 年資 1）球員 2040 年保有權年度的韓台選單（A1），之前完整 state／動作／RNG 一致。另 `jp3-infielder-01`／IF 第 257 步（A1，§7）。
+  - V4／F13：`american-service-e2e` NPB1 fixture（P／IF）選留隊後，除 `rngState` 外完整 `S` 與現行立即續約相同。
+  - **V6 NOT_RUN**：季末選單中途重新載入（年初存檔重播）一致性未驗證。
+- reviewer（2026-11-25）6 項，皆核對屬實：
+  1. 第 8 年整合選單宣告國內 FA 且有報價時，取消選項使 `FaMarketPresentation` 的按鈕數檢查失敗、比較表不顯示 → 修正：取消選項加 `faAside:true`，`fa-market-presentation.js` 只接受報價按鈕之後的 `faAside` 選項並置於比較表之後，未標記的多餘選項仍停用比較表。`fa-market-presentation-e2e` 新增兩情境。
+  2. `contract-salary-e2e` 的比對 helper 未要求基準同一步不同 → 修正：基準該步須不存在或年／動作不同。
+  3. `kbo-renewal-e2e` 依 (a) 失去 2049 年 KBO2 續約的合約／年度表斷言，只剩上限檢查結果 → 已知代價，未補（需另建 2049 KBO2 fixture）。
+  4. 取消宣告後 `faMarketKey`／`lastFaMarket` 殘留 → 列為 §5 A5。
+  5. 例外恢復重繪後可再申請入札 → 修正：入札 option 開頭檢查 `postingResolved`；`npb-season-end.test` 新增案例（24 案例）。
+  6. 第 8 年「宣告→取消→再宣告」與兩畫面的取消選項未以實際市場執行 → `global-contract-market-e2e` 新增第 8 年情境（實際 `faMarket`：比較表＋取消、欄位還原、RNG 0、同一快取、無報價畫面的取消）。
+  - 修正後重跑：Quick 116 PASS／0 FAIL／SKIP／BLOCKED（116 入口）；`contract-salary-e2e --compare=b8bc49b` 381／0；`kbo-renewal-e2e` 完整模式、`global-contract-market-e2e --quick`、`fa-market-presentation-e2e` PASS。
+  - 修正後負控制 5 個（移除 `postingResolved` 檢查、比較表改回嚴格按鈕數、移除 `faAside`、無報價畫面不加取消、取消按鈕不移到比較表後）皆於對應斷言 FAIL。
+  - **Full：GitHub 手動、未執行**（AGENTS §6.2）。

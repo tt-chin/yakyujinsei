@@ -91,10 +91,24 @@ console.log('PASS native FA candidates/gates, demand/limits/injuries, no-bid/sta
 // Nothing before the market may change except the separately approved result copy.
 const {readFileSync}=await import('node:fs');
 const stripMarket=s=>s.replaceAll('\r\n','\n').replace(/  function faMarketRule\(o,d\)\{[\s\S]*?(?=  function outOfOrg\(o\))/,'');
-const currentSource=readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8')
+// MLB-POSTING-DESIGN-01 / NPB-OFFER-WINDOW-01 (approved R3): the season-end menu is reverted by exact text,
+// each hunk exactly once, so every other line still has to equal the pre-fix source.
+const SEASON_END_HUNKS=[
+ ["      offerType=crossOfferType(S.org,'MiLB');\n      const menu=npbSeasonEndMenu(o,crossOfferTitle(offerType),[],[{t:'現在の球団に残留',main:true,f:finish}],finish);\n      if(!npbSeasonEndHasMoves(menu)){finish();return;}\n      showNpbSeasonEndMenu(menu);return;\n","      offerType=crossOfferType(S.org,'MiLB');\n      const k=overseasOffer('KBO','KBO1','韓国プロ野球への海外移籍',o,1,finish);\n      const c=overseasOffer('CPBL','CPBL1','台湾プロ野球への海外移籍',o,0,finish);\n      const m=overseasOffer('MiLB','MLB','MLBへの海外移籍',o,2,finish);\n      if(k)opts.push(k);if(c)opts.push(c);if(m)opts.push(m);\n","crossOffers NPB branch"],
+ ["    if(stage==='CONTROL'){\n      if(S.org==='NPB'&&S.lv==='NPB1'){\n        const finish=()=>reportFlowOutcome({kind:'CROSS_OFFER_RESOLVED'});\n        const menu=npbSeasonEndMenu(o,crossOfferTitle(crossOfferType('NPB','MiLB')),[],[{t:'現在の球団に残留',main:true,f:()=>renewAndAdvance(1,false,'CONTROL')}],finish);\n        if(npbSeasonEndHasMoves(menu)){showNpbSeasonEndMenu(menu);return;}\n      }\n      renewAndAdvance(1,false,'CONTROL');return;}\n","    if(stage==='CONTROL'){renewAndAdvance(1,false,'CONTROL');return;}\n","faFlow window CONTROL"],
+ ["    let menu=null;\n    const declareFA=type=>{const S=getState();faReturn=menu?{state:S,year:S.year,menu,saved:{faType:S.faType,faUsed:S.faUsed,npbFaSeasons:S.npbFaSeasons}}:null;S.faType=type;S.faUsed=true;S.npbFaSeasons=0;faMarket(o,S.lastD||0);};\n    const opts=[{t:'権利を行使せず残留',main:true,f:()=>renewAndAdvance(1)},{t:'国内FAを宣言',warn:true,f:()=>declareFA('DOMESTIC')}];\n    if(serviceYearsFor('NPB')>=9)opts.push({t:'海外FAを宣言',warn:true,f:()=>declareFA('OVERSEAS')});\n    const title=`FA権取得・登録${serviceYearsFor('NPB')}シーズン`;\n    if(serviceYearsFor('NPB')<9&&S.lv==='NPB1'){\n      const candidate=npbSeasonEndMenu(o,title,opts,[],()=>reportFlowOutcome({kind:'CROSS_OFFER_RESOLVED'}));\n      if(npbSeasonEndHasMoves(candidate)){menu=candidate;showNpbSeasonEndMenu(menu);return;}\n    }\n    choose(title,opts);\n","    const declareFA=type=>{const S=getState();S.faType=type;S.faUsed=true;S.npbFaSeasons=0;faMarket(o,S.lastD||0);};\n    const opts=[{t:'権利を行使せず残留',main:true,f:()=>renewAndAdvance(1)},{t:'国内FAを宣言',warn:true,f:()=>declareFA('DOMESTIC')}];\n    if(serviceYearsFor('NPB')>=9)opts.push({t:'海外FAを宣言',warn:true,f:()=>declareFA('OVERSEAS')});\n    choose(`FA権取得・登録${serviceYearsFor('NPB')}シーズン`,opts);\n","faFlow year-8 menu"],
+ ["{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'FA_RETIRED',reason:'FA市場で獲得オファーがなく、現役を引退した。'})},...faCancelOption()]);return;}","{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'FA_RETIRED',reason:'FA市場で獲得オファーがなく、現役を引退した。'})}]);return;}","FA no-bid cancel option"],
+ ["    choose('FA市場オファー比較',[...choices,...faCancelOption()]);","    choose('FA市場オファー比較',choices);","FA comparison cancel option"],
+];
+const onceText=(s,from,to,label)=>{assert.equal(s.split(from).length,2,label);return s.replace(from,()=>to);};
+const dropBlock=(s,start,end,label)=>{const i=s.indexOf(start),j=s.indexOf(end);assert.ok(i>=0&&j>i&&s.indexOf(start,i+1)<0,label);return s.slice(0,i)+s.slice(j);};
+const revertSeasonEnd=s=>{s=dropBlock(s,'  // NPB season-end menu (MLB-POSTING-DESIGN-01','  function crossOffersRule(o){','season-end helpers');
+ s=dropBlock(s,'  function faCancelOption(){','  function showFaMarket(market){','FA cancel option');
+ for(const [from,to,label] of SEASON_END_HUNKS)s=onceText(s,from,to,label);return s;};
+const currentSource=revertSeasonEnd(readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8'))
  .replace("import {effectiveMarketOrg} from './cross-league-market-policy.js';",'')
  .replace("card('info','トレードは成立せず','トレードの噂はあったものの、移籍は実現せず、引き続き同じ球団でプレーすることになった。')","card('info','泊まった','噂はあくまで噂です。新しい野球シーズンでも、同じジャージを着ます。')");
-assert.equal(stripMarket(currentSource).replace(/\n\n\nexport class/,'\n\nexport class'),stripMarket(oldSource),'outside FA market, source and pre-entry RNG sites unchanged except approved copy/import');
+assert.equal(stripMarket(currentSource).replace(/\n\n\nexport class/,'\n\nexport class'),stripMarket(oldSource),'outside FA market, source and pre-entry RNG sites unchanged except approved copy/import and season-end menu');
 
 const oldCached=marketFixture({Movement:BeforeMovement}).state.lastFaMarket,reopened=marketFixture({cached:oldCached});
 assert.equal(reopened.state.lastFaMarket,oldCached,'pre-fix same-year cache remains authoritative');
