@@ -12,10 +12,10 @@ const JERSEY=/^背番号 \S+ (で入団する|にする)$/;
 // In-page driver (serialized into the hook): balanced first-row strategy of contract-salary-e2e; the number prompt's main button is picked by /入団/ or the explicit check.
 async function jerseyPlay(until={}){
   const jersey=/^背番号 \S+ (で入団する|にする)$/,prompts=[];
-  const action=()=>{const rows=[...document.querySelectorAll('#act .abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...document.querySelectorAll('#act button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));rows.sort((a,b)=>{const p=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return p(a)-p(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});const main=buttons.find(e=>jersey.test(e.innerText.trim()))||(until.stay?buttons.find(e=>e.innerText.trim()==='現在の球団に残留'):null);return main||buttons.find(e=>e.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];};
+  const action=()=>{const rows=[...document.querySelectorAll('#act .abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...document.querySelectorAll('#act button:not([data-fa-sort])')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));rows.sort((a,b)=>{const p=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return p(a)-p(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});const main=buttons.find(e=>jersey.test(e.innerText.trim()))||(until.stay?buttons.find(e=>e.innerText.trim()==='現在の球団に残留'):null);return main||buttons.find(e=>e.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];};
   let lastPrompt=null;
   for(let i=0;i<6000;i++){
-    const S=window.__jersey.get().state,texts=[...document.querySelectorAll('#act button')].map(b=>b.innerText.trim()),prompt=texts.some(t=>jersey.test(t));
+    const S=window.__jersey.get().state,texts=[...document.querySelectorAll('#act button:not([data-fa-sort])')].map(b=>b.innerText.trim()),prompt=texts.some(t=>jersey.test(t));
     if(prompt&&lastPrompt!==i-1)prompts.push({year:S.year,team:S.orgTeamId,stage:S.stage,lv:S.lv,heading:(document.querySelector('#act')?.innerText||'').split('\n')[0],texts});
     if(prompt)lastPrompt=i;
     if(S.done||(until.year!==undefined&&S.year>=until.year)||(until.prompt&&prompt)||(until.b1&&!prompt&&S.stage==='PRO'&&(S.log||[]).some(r=>r.y===S.year&&r.st)&&texts.length))return{prompts,state:S,texts,reason:S.done?'done':'until'};
@@ -57,11 +57,11 @@ async function open(entry,{width=1280,height=720,context}={}){
 }
 const ready=p=>p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
 const saved=(p,year)=>p.waitForFunction(y=>document.querySelector('#save-live').textContent.includes((y?y+'年の':'')+'開始時点をセーブしました'),year);
-async function start(page,{seed,pos,prefix='/'}){await page.goto(base+prefix+'?seed='+seed);await ready(page);await page.locator(`#seg-pos [data-v="${pos}"]`).click();await page.locator('#in-name').fill('背番号検証');await page.locator('#btn-start').click();await page.waitForFunction(()=>window.__jersey&&!window.__jersey.get().state.done&&document.querySelector('#act button,#act .abrow'));}
+async function start(page,{seed,pos,prefix='/'}){await page.goto(base+prefix+'?seed='+seed);await ready(page);await page.locator(`#seg-pos [data-v="${pos}"]`).click();await page.locator('#in-name').fill('背番号検証');await page.locator('#btn-start').click();await page.waitForFunction(()=>window.__jersey&&!window.__jersey.get().state.done&&document.querySelector('#act button:not([data-fa-sort]),#act .abrow'));}
 async function resume(page,year){await page.reload();await ready(page);await page.locator('#save-continue').click();await page.waitForFunction(y=>document.querySelector('#save-live').textContent.includes(y+'年の最初から再開しました'),year);}
 const get=p=>p.evaluate(()=>window.__jersey.get());
 const play=(p,until)=>p.evaluate(u=>window.__jerseyPlay(u),until);
-const actTexts=p=>p.locator('#act button').evaluateAll(bs=>bs.map(b=>b.innerText.trim()));
+const actTexts=p=>p.locator('#act button:not([data-fa-sort])').evaluateAll(bs=>bs.map(b=>b.innerText.trim()));
 const board=p=>p.evaluate(()=>({number:document.querySelector('#bd-number').hidden?null:document.querySelector('#bd-number').textContent,menuDisabled:document.querySelector('#board-number').disabled,name:document.querySelector('#bd-name').textContent,team:document.querySelector('#bd-team').textContent,year:document.querySelector('#bd-year').textContent}));
 // Menu change through the real header menu and dialog.
 async function menuDialog(page){await openBoardAction(page,'board-number');const d=page.locator('#jersey-dialog');await d.waitFor({state:'visible'});return d;}
@@ -80,7 +80,7 @@ for(const [pos,width]of [['P',1280],['C',390],['IF',1280],['OF',390]])await test
   assert.equal(at.prompts.length,1);assert.equal(s.stage,'PRO');assert.deepEqual(at.texts,[`背番号 ${number} で入団する`,'背番号を選ぶ']);assert.match(at.prompts[0].heading,/と契約しました。背番号はどうする？$/);
   assert.equal(b.number,null,'J1: no number before the record');assert.equal(b.menuDisabled,true);assert.equal(b.year,String(s.year));
   const before=await get(page);assert.equal(before.captures.at(-1).year,s.year);assert.equal(before.draws,before.captures.at(-1).draw,'no RNG draw between the year-start save and the prompt');
-  await page.locator('#act button').first().click();const after=await get(page);assert.deepEqual(after.state.jerseyHistory,[{teamId:s.orgTeamId,year:s.year,number}]);
+  await page.locator('#act button:not([data-fa-sort])').first().click();const after=await get(page);assert.deepEqual(after.state.jerseyHistory,[{teamId:s.orgTeamId,year:s.year,number}]);
   assert.deepEqual(await board(page).then(x=>[x.number,x.menuDisabled]),['#'+number,false]);
   const rest=await play(page,{year:s.year+1});assert.equal(rest.prompts.filter(p=>p.year===s.year).length,0,'the prompt appears once per entry');
   assert.ok(await page.locator('#log .tag',{hasText:' · #'+number}).count()>=1,'season card carries the number');
@@ -99,15 +99,15 @@ for(const [pos,width]of [['P',1280],['C',390],['IF',1280],['OF',390]])await test
 // 2. "背番号を選ぶ": cancel returns to the two-button prompt (A4 focus), 0 and 00 stay distinct, the dialog answer goes through the main button (A3).
 await test('entry-dialog',async e=>{
   const {page,close}=await open(e);await start(page,{seed:'probe33-1',pos:'P'});const at=await play(page,{prompt:true}),year=at.state.year,draws=(await get(page)).draws;
-  await page.locator('#act button',{hasText:'背番号を選ぶ'}).click();await page.locator('#jersey-dialog').waitFor({state:'visible'});
+  await page.locator('#act button:not([data-fa-sort])',{hasText:'背番号を選ぶ'}).click();await page.locator('#jersey-dialog').waitFor({state:'visible'});
   const t=await dialogText(page);assert.equal(t.title,'背番号を選ぶ');assert.equal(t.label,'背番号');assert.equal(t.selected,'18');assert.equal(t.note,`${year}年シーズンから有効。過去の年度の背番号は変わりません。能力・成績・年俸には影響しません。`);assert.equal(t.ok,'この背番号にする');
   const values=await page.locator('#jersey-select option').evaluateAll(o=>o.map(x=>x.value));assert.equal(values.length,101);assert.deepEqual(values.slice(0,3),['0','00','1']);
   assert.ok(await page.evaluate(()=>{const r=document.querySelector('#jersey-dialog').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&document.documentElement.scrollWidth<=innerWidth;}),'dialog fits');await page.screenshot({path:path.join(out,'entry-dialog-1280.png')});
   await page.locator('#jersey-cancel').click();await page.locator('#jersey-dialog').waitFor({state:'hidden'});
-  assert.deepEqual(await actTexts(page),['背番号 18 で入団する','背番号を選ぶ']);assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('#act button')),true,'A4: focus on the first button');
+  assert.deepEqual(await actTexts(page),['背番号 18 で入団する','背番号を選ぶ']);assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('#act button:not([data-fa-sort])')),true,'A4: focus on the first button');
   assert.equal((await get(page)).state.jerseyHistory?.length||0,0);
-  await page.locator('#act button',{hasText:'背番号を選ぶ'}).click();await page.keyboard.press('Escape');await page.locator('#jersey-dialog').waitFor({state:'hidden'});assert.deepEqual(await actTexts(page),['背番号 18 で入団する','背番号を選ぶ']);
-  await page.locator('#act button',{hasText:'背番号を選ぶ'}).click();await pick(page,'00');
+  await page.locator('#act button:not([data-fa-sort])',{hasText:'背番号を選ぶ'}).click();await page.keyboard.press('Escape');await page.locator('#jersey-dialog').waitFor({state:'hidden'});assert.deepEqual(await actTexts(page),['背番号 18 で入団する','背番号を選ぶ']);
+  await page.locator('#act button:not([data-fa-sort])',{hasText:'背番号を選ぶ'}).click();await pick(page,'00');
   const after=await get(page);assert.deepEqual(after.state.jerseyHistory,[{teamId:at.state.orgTeamId,year,number:'00'}],'00 is not 0');assert.equal(after.draws,draws,'the dialog path draws no RNG');
   assert.ok(!(await actTexts(page)).some(x=>JERSEY.test(x)),'A3: the main button confirmed and the flow moved on');assert.equal((await board(page)).number,'#00');
   await close();
@@ -116,7 +116,7 @@ await test('entry-dialog',async e=>{
 // 3. Menu change: same-year changes all kept, past rows untouched; B1 after this year's season row the change is for next year.
 await test('menu-change',async e=>{
   const {page,close}=await open(e);await start(page,{seed:'probe33-6',pos:'P'});const at=await play(page,{prompt:true}),year=at.state.year,team=at.state.orgTeamId;
-  await page.locator('#act button').first().click();const draws=(await get(page)).draws;
+  await page.locator('#act button:not([data-fa-sort])').first().click();const draws=(await get(page)).draws;
   let d=await menuDialog(page),t=await dialogText(page);assert.equal(t.title,'背番号の変更');assert.equal(t.label,'新しい背番号');assert.ok(t.summary.endsWith('現在の背番号 #18'));assert.ok(t.note.startsWith(year+'年シーズンから有効。'));assert.equal(t.ok,'変更する');
   await page.screenshot({path:path.join(out,'menu-dialog-1280.png')});await pick(page,'7');
   // 2.0.0 menu dialog: the item click closes the menu first (focus to ☰), so the number dialog returns focus to ☰ on OK and on cancel.
@@ -143,8 +143,8 @@ await test('resume-entry-unsaved',async e=>{
   await saved(page,year);await resume(page,year);const back=await play(page,{prompt:true});assert.equal(back.state.year,year);assert.equal(back.prompts.length,1);assert.equal(back.state.jerseyHistory?.length||0,0);
   const b=await board(page);assert.equal(b.year,String(year),'A2 board year');assert.ok(b.name.trim()&&b.team.trim(),'A2 board drawn');assert.equal(b.number,null);
   // J2(2): a mid-year change before the next save is not kept; after the next year-start save it is.
-  await page.locator('#act button').first().click();await menuDialog(page);await pick(page,'7');await resume(page,year);
-  const again=await play(page,{prompt:true});assert.equal(again.state.jerseyHistory?.length||0,0,'mid-year change not saved');await page.locator('#act button').first().click();
+  await page.locator('#act button:not([data-fa-sort])').first().click();await menuDialog(page);await pick(page,'7');await resume(page,year);
+  const again=await play(page,{prompt:true});assert.equal(again.state.jerseyHistory?.length||0,0,'mid-year change not saved');await page.locator('#act button:not([data-fa-sort])').first().click();
   await menuDialog(page);await pick(page,'7');await play(page,{year:year+1});await saved(page,year+1);await resume(page,year+1);
   const kept=await get(page);assert.deepEqual(kept.state.jerseyHistory.map(r=>r.number),['18','7']);assert.equal((await board(page)).number,'#7');
   await close();
@@ -154,13 +154,13 @@ await test('resume-entry-unsaved',async e=>{
 // career carries no number history (board number hidden, menu item disabled).
 await test('new-career-over-save',async e=>{
   const {page,close}=await open(e);await start(page,{seed:'probe33-1',pos:'P'});const at=await play(page,{prompt:true}),year=at.state.year;
-  await page.locator('#act button').first().click();await play(page,{year:year+1});await saved(page,year+1);
+  await page.locator('#act button:not([data-fa-sort])').first().click();await play(page,{year:year+1});await saved(page,year+1);
   assert.deepEqual((await get(page)).state.jerseyHistory.map(r=>r.number),['18'],'live S after the next year-start save holds the number history');
   await page.goto(base+'/?seed=probe33-1');await ready(page);
   if(await page.locator('#save-new').isVisible())await page.locator('#save-new').click();
   await page.locator('#seg-pos [data-v="P"]').click();await page.locator('#in-name').fill('背番号検証');await page.locator('#btn-start').click();
   await page.locator('#confirmation-dialog').waitFor({state:'visible'});assert.match(await page.locator('#confirmation-message').innerText(),/上書きされます/);await page.locator('#confirmation-ok').click();
-  await page.waitForFunction(()=>{const st=window.__jersey?.get().state;return !!st&&!st.done&&st.year===2026&&!!document.querySelector('#act button,#act .abrow');}); /* S is null while the career is replaced */
+  await page.waitForFunction(()=>{const st=window.__jersey?.get().state;return !!st&&!st.done&&st.year===2026&&!!document.querySelector('#act button:not([data-fa-sort]),#act .abrow');}); /* S is null while the career is replaced */
   const fresh=await get(page),b=await board(page);assert.equal(fresh.state.jerseyHistory,undefined,'no number history in the new career');assert.equal(b.number,null);assert.equal(b.menuDisabled,true);
   await close();
 });
@@ -168,7 +168,7 @@ await test('new-career-over-save',async e=>{
 // 5. No RNG: current vs /baseline/ (same seed, full draw list + state), and default vs dialog/menu variant.
 await test('rng-identity',async e=>{
   const run=async(seed,pos,prefix,variant)=>{const {page,close}=await open(e);await start(page,{seed,pos,prefix});let b1=null;
-    if(variant){const at=await play(page,{prompt:true});await page.locator('#act button',{hasText:'背番号を選ぶ'}).click();await pick(page,'00');await menuDialog(page);await pick(page,'7');b1=(await play(page,{b1:true,year:2031})).state;assert.equal(b1.year,at.state.year,'B1 point in the entry year');await menuDialog(page);await pick(page,'9');}
+    if(variant){const at=await play(page,{prompt:true});await page.locator('#act button:not([data-fa-sort])',{hasText:'背番号を選ぶ'}).click();await pick(page,'00');await menuDialog(page);await pick(page,'7');b1=(await play(page,{b1:true,year:2031})).state;assert.equal(b1.year,at.state.year,'B1 point in the entry year');await menuDialog(page);await pick(page,'9');}
     const end=await play(page,{year:2031}),rng=await page.evaluate(()=>window.__jersey.rng()),captures=(await get(page)).captures;await close();return {state:end.state,rng,texts:end.texts,captures};};
   // Same-seed draw values are always a prefix of one stream, so the list above only pins the total count at the stop point;
   // the draw count at every year-start save pins where an extra or missing draw happens.
@@ -183,13 +183,13 @@ await test('rng-identity',async e=>{
 
 // 6. Duplicate activation of the entry main button: one record, one step.
 await test('entry-double-click',async e=>{
-  const once=async double=>{const {page,close}=await open(e);await start(page,{seed:'probe33-1',pos:'C'});await play(page,{prompt:true});await page.locator('#act button').first().evaluate((b,d)=>{b.click();if(d)b.click();},double);await page.waitForTimeout(50);const s=await get(page),texts=await actTexts(page);await close();return {s,texts};};
+  const once=async double=>{const {page,close}=await open(e);await start(page,{seed:'probe33-1',pos:'C'});await play(page,{prompt:true});await page.locator('#act button:not([data-fa-sort])').first().evaluate((b,d)=>{b.click();if(d)b.click();},double);await page.waitForTimeout(50);const s=await get(page),texts=await actTexts(page);await close();return {s,texts};};
   const single=await once(false),double=await once(true);assert.equal(double.s.state.jerseyHistory.length,1);assertSameCareer(double.s.state,single.s.state,'double click equals single click');assert.equal(double.s.draws,single.s.draws);assert.deepEqual(double.texts,single.texts);
 });
 
 // 7. B6: a tampered save is rejected with SAVE_JERSEY, one field at a time; the untampered row reads.
 await test('save-tamper',async e=>{
-  const {page,close}=await open(e);await start(page,{seed:'probe33-1',pos:'P'});const at=await play(page,{prompt:true});await page.locator('#act button').first().click();await play(page,{year:at.state.year+1});await saved(page,at.state.year+1);
+  const {page,close}=await open(e);await start(page,{seed:'probe33-1',pos:'P'});const at=await play(page,{prompt:true});await page.locator('#act button:not([data-fa-sort])').first().click();await play(page,{year:at.state.year+1});await saved(page,at.state.year+1);
   const results=await page.evaluate(async()=>{
     const {BrowserSaveStore}=await import('/src/engine/browser-save-store.js'),{JP_DATA}=await import('/src/data/jp-data.js');
     const db=await new Promise((ok,ng)=>{const r=indexedDB.open('yakyujinsei-career',1);r.onsuccess=()=>ok(r.result);r.onerror=()=>ng(r.error);});
@@ -213,7 +213,7 @@ for(const [id,prefix,label] of [['legacy-save','/baseline/','2.0.0'],['legacy-sa
   const {page,close}=await open(e,{context:ctx});await page.goto(base+'/');await ready(page);await page.locator('#save-continue').click();await page.waitForFunction(()=>document.querySelector('#save-live').textContent.includes('2030年の最初から再開しました'));
   const at=await play(page,{prompt:true}),team=at.state.orgTeamId;assert.equal(at.state.year,2030);assert.deepEqual(at.texts,['背番号 18 にする','背番号を選ぶ']);assert.match(at.prompts[0].heading,/での背番号が記録されていません。背番号はどうする？$/);
   const b=await board(page);assert.equal(b.year,'2030','A2 board year');assert.ok(b.name.trim()&&b.team.trim());assert.equal(b.number,null);await page.screenshot({path:path.join(out,id+'-prompt-1280.png')});
-  await page.locator('#act button').first().click();const rest=await play(page,{year:2031});assert.equal(rest.prompts.length,0);await saved(page,2031);await resume(page,2031);
+  await page.locator('#act button:not([data-fa-sort])').first().click();const rest=await play(page,{year:2031});assert.equal(rest.prompts.length,0);await saved(page,2031);await resume(page,2031);
   const kept=await play(page,{year:2031});assert.equal(kept.prompts.length,0,'no second legacy prompt after the next save');assert.deepEqual(kept.state.jerseyHistory,[{teamId:team,year:2030,number:'18'}]);
   const ylog=await yearly(page);assert.ok(ylog.split('\n').some(l=>l.includes('2029')&&l.includes('（背番号不明）')));
   const done=await play(page,{});const rows=await retirementRows(page);assert.ok(done.state.done);
@@ -232,7 +232,7 @@ await test('fixture-trade',async e=>{
   await page.evaluate(()=>window.__jersey.next());const run=await play(page,{prompt:true,stay:true,year:2035});const s=run.state;
   assert.deepEqual(s.lastTrade&&[s.lastTrade.year,s.lastTrade.fromTeamId],[2033,from],'fixture trade happened');assert.equal(s.year,2034);assert.equal(s.orgTeamId,s.lastTrade.toTeamId,'the prompt is for the trade destination');assert.deepEqual(run.texts,['背番号 18 で入団する','背番号を選ぶ']);
   const row=s.log.find(r=>r.y===2033);assert.equal(row.tm.split(' ')[0],fromName,'the trade-year row is team A');
-  await page.evaluate(()=>window.__jersey.set({tradeHeat:0}));await page.locator('#act button').first().click();
+  await page.evaluate(()=>window.__jersey.set({tradeHeat:0}));await page.locator('#act button:not([data-fa-sort])').first().click();
   const ylog=await yearly(page);assert.ok(ylog.split('\n').some(l=>l.includes('2033')&&l.includes('#18')),'trade-year row shows A number');
   await page.evaluate(()=>window.__jersey.retire('検証'));const rows=await retirementRows(page);assert.deepEqual(rows,[[fromName,'2033','#18']],'trade year belongs to the A period');
   e.rows=rows;await close();
@@ -243,7 +243,7 @@ async function tradeLabel(page,jersey){
 }
 await test('deadpath-trade-label',async e=>{
   const {page,close}=await open(e);await start(page,{seed:'jersey-fixture',pos:'P'});const t=await tradeLabel(page,[{year:2031,number:'18'}]);
-  const first=await play(page,{year:2033});assert.equal(first.prompts.length,1,'B has no record: asks at the year start');await page.locator('#act button',{hasText:'背番号を選ぶ'}).click();await pick(page,'7');
+  const first=await play(page,{year:2033});assert.equal(first.prompts.length,1,'B has no record: asks at the year start');await page.locator('#act button:not([data-fa-sort])',{hasText:'背番号を選ぶ'}).click();await pick(page,'7');
   // Undo the B record so the A→B row is judged by A's record only (D3: the row year's last record).
   await page.evaluate(()=>{const S=window.__jersey.get().state;window.__jersey.set({jerseyHistory:S.jerseyHistory.slice(0,1)});});
   const after=await play(page,{b1:true,stay:true});const row=after.state.log.find(r=>r.y===2033);assert.ok(row.tm.startsWith(t.fromName+'→'),'fixture A→B row');
@@ -252,7 +252,7 @@ await test('deadpath-trade-label',async e=>{
 });
 await test('deadpath-trade-unknown',async e=>{
   const {page,close}=await open(e);await start(page,{seed:'jersey-fixture',pos:'P'});const t=await tradeLabel(page,undefined);
-  await play(page,{year:2033});await page.locator('#act button').first().click();const after=await play(page,{b1:true,stay:true});assert.ok(after.state.log.find(r=>r.y===2033).tm.includes('→'));
+  await play(page,{year:2033});await page.locator('#act button:not([data-fa-sort])').first().click();const after=await play(page,{b1:true,stay:true});assert.ok(after.state.log.find(r=>r.y===2033).tm.includes('→'));
   await page.evaluate(()=>{window.__jersey.set({jerseyHistory:[]});window.__jersey.retire('検証');});const rows=await retirementRows(page);
   assert.deepEqual(rows,[[t.to.name,'2033','不明']],'B7: unknown period named by the team after the trade prefix, without level suffix');e.rows=rows;await close();
 });
@@ -269,7 +269,7 @@ await test('fixture-milb-promotion',async e=>{
 await test('fixture-mlb-demotion',async e=>{
   const {page,close}=await open(e);await start(page,{seed:'jersey-fixture',pos:'P'});
   const team=await page.evaluate(()=>window.__jersey.fixture({id:'mlb-demotion',level:'MLB',abilityOf:'A3',jersey:[{year:2031,number:'18'}]}));await page.evaluate(()=>window.__jersey.demote());
-  const accept=page.locator('#act button',{hasText:'への降格を受け入れ'});assert.equal(await accept.count(),1,'in-organization demotion offered');await accept.click();
+  const accept=page.locator('#act button:not([data-fa-sort])',{hasText:'への降格を受け入れ'});assert.equal(await accept.count(),1,'in-organization demotion offered');await accept.click();
   const at=await play(page,{year:2033});assert.notEqual(at.state.lv,'MLB','fixture demotion happened');assert.equal(at.state.orgTeamId,team);assert.equal(at.prompts.length,0,'no prompt after MLB→MiLB');assert.equal((await board(page)).number,'#18');await close();
 });
 
@@ -277,14 +277,14 @@ await test('fixture-mlb-demotion',async e=>{
 for(const [stage,label]of [['IND','独立リーグ・'],['CORP','社会人野球・']])await test('fixture-'+stage.toLowerCase(),async e=>{
   const {page,close}=await open(e);await start(page,{seed:'jersey-fixture',pos:'P'});
   await page.evaluate(()=>window.__jersey.fixture({id:'amateur',level:'NPB1',ability:33,jersey:[{year:2031,number:'18'}]}));await page.evaluate(()=>window.__jersey.release(33));
-  await page.locator('#act button',{hasText:label}).first().click();const s=await play(page,{year:2033});
+  await page.locator('#act button:not([data-fa-sort])',{hasText:label}).first().click();const s=await play(page,{year:2033});
   assert.equal(s.state.stage,stage);assert.equal(s.state.year,2033);assert.equal(s.prompts.length,0);assert.equal((await get(page)).captures.at(-1)?.year,2033,'a year start happened');
   const b=await board(page);assert.equal(b.number,null);assert.equal(b.menuDisabled,true);await close();
 });
 await test('fixture-stay',async e=>{
   const {page,close}=await open(e);await start(page,{seed:'jersey-fixture',pos:'P'});
   await page.evaluate(()=>window.__jersey.fixture({id:'stay',level:'NPB1',ability:60,status:'EXPIRED',rating:3,jersey:[{year:2031,number:'18'}]}));await page.evaluate(()=>window.__jersey.move());
-  const stay=page.locator('#act button',{hasText:'現在の球団に残留'});assert.equal(await stay.count(),1,'renewal offers a stay');await stay.click();const s=await play(page,{year:2033});
+  const stay=page.locator('#act button:not([data-fa-sort])',{hasText:'現在の球団に残留'});assert.equal(await stay.count(),1,'renewal offers a stay');await stay.click();const s=await play(page,{year:2033});
   assert.equal(s.state.year,2033);assert.equal(s.prompts.length,0,'J3 stay');assert.deepEqual(s.state.jerseyHistory.length,1);await close();
 });
 // 12. Fixture B2: no record after IND is an ordinary entry; no record after a pro season is the D4 copy; a record for the same team after IND does not ask (J3).

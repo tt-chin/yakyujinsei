@@ -1,5 +1,16 @@
 # 統一測試入口
 
+## Tests #286：FA操作按鈕與歷史測試前提
+
+[Full #286](https://github.com/tt-chin/yakyujinsei/actions/runs/45549669028)在f9ae156f224790e825a32867957dd2414797fa33為136 PASS／10 FAIL，保留原失敗結果。本次分類R2（測試自動操作／計數與歷史fixture前提修正），產品引擎與RNG不變，不升版。
+
+生涯自動選項及報價計數僅排除明示的[data-fa-sort]呈現按鈕；排序本身仍由fa-market-presentation-e2e測試，不增加步數上限、不改抽選或遊戲選擇順序。原FA簽約金額、重複操作、付款、原始狀態與RNG斷言保留。
+
+hof-first-ballot／trait-display沿用ee0ae9ec863e4be0d1abc345d24080744bb6858c及既有新生涯版本對齊helper，完整S不刪除出生版本欄位。draft-income／display-preferences／game-view-dom按指定基準的實際背號功能驗證：舊基準仍要求無背號步驟；現代基準保留雙方背號紀錄並驗證提示存在性；GameView另比對雙方提示次數。display-preferences亦依基準是否已有decision-presentation，對現代基準與現行畫面對稱使用原有的嚴格UI包裝投影，保留原卡內文及完整既有S／RNG斷言。指定b8bc49b7b0cb14b24cec3b3499a57ecfb61e1a0d及其他歷史基準均不替換，不重建golden。只重跑失敗的個別E2E與必要Quick；GitHub手動Full仍須新提交重新驗證。
+
+本地驗證：10個失敗入口的相關案例均重跑PASS；包含FA原生簽約20項、存檔15路線、GameView 8組生涯、選秀收入24項（含6組固定生涯）、HOF與特性P／IF、ACT原生／自然生涯與重播、背號2個原失敗案例，以及display-preferences的2個原失敗seed。必要Quick為115 PASS／0 FAIL／SKIP／BLOCKED。只執行個別E2E與Quick，未啟動Full profile；不將部分重跑稱為新Full PASS。
+
+
 ## 2.1.0 FA候選、欄位排序、文案與正常採番
 
 本批本地Quick初跑112 PASS／3 FAIL；失敗為american-service-e2e、design-tokens-06.test及season-summary-e2e的舊期待值。各自調整後以Quick的--only入口重跑均PASS，未把原整套結果改寫為PASS，也未重跑已通過入口；其後新增的舊市場快取與市場metadata斷言另於fa-market-policy.test通過。GitHub Quick及手動Full須以推送後確定SHA另行判定。

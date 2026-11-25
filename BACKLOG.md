@@ -4,7 +4,7 @@
 
 ## 1. 最新進度總覽
 
-- 2.1.0：FA同聯盟候選、表頭雙向排序與交易文案已實作；本地Quick初跑的3項舊期待值已修正並定點重跑通過，使用者已授權提交／推送dev。尚待新提交的GitHub手動Full及新排序的Safari實機確認；比較基準、許可差異與舊存檔版本邊界見[測試說明](scripts/TESTING.md)。PR #128的入札方案仍未實作。
+- 2.1.0：[Full #286](https://github.com/tt-chin/yakyujinsei/actions/runs/45549669028)的10項失敗已修正，本地相關E2E及Quick（115 PASS）通過；尚待修正提交的GitHub手動Full及Safari實機排序確認。原失敗與修正範圍見[測試說明](scripts/TESTING.md)；PR #128入札方案仍未實作。
 - 2.0.0開發已告一段落，目前已交付功能的實機驗收已由使用者確認完成。未來依AGENTS第9章正常採番，不再固定2.0.0。
 - 受驗提交 `875a8af62189e7ddcc2eac27afd3c80783d45210` 的 [Quick #280](https://github.com/tt-chin/yakyujinsei/actions/runs/45510842813) 與 [Full #281](https://github.com/tt-chin/yakyujinsei/actions/runs/45512251900) 均成功；Full 146 PASS、0 FAIL／SKIP／BLOCKED。此結果只對應該提交，不代表後續提交已執行Full。
 - 目前有 **12項未完成工作**，列於下節。已完成功能不重列待驗收；研究、全量稽核及CI證據封存仍各自保留。本次整理不構成新實作或正式發布授權。
