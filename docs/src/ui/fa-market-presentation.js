@@ -15,7 +15,9 @@ export class FaMarketPresentation{
     const view=this.getDecision(),market=this.getState()?.lastFaMarket;
     if(view?.kind!=='CHOICE'||view.title!=='FA市場オファー比較'||!market?.offers?.length||market.acceptedOfferId){this.clear();return;}
     const offers=[...market.offers,...(market.stayOffer?[market.stayOffer]:[])];
-    if(view.buttons.length!==offers.length||view.buttons.some(b=>!this.act.contains(b))){this.clear();return;}
+    // Offer buttons come first; only choices marked faAside (e.g. cancelling a year-8 FA declaration) may follow them.
+    const asides=view.buttons.slice(offers.length);
+    if(view.buttons.length<offers.length||view.opts.slice(offers.length).some(o=>!o.faAside)||view.buttons.some(b=>!this.act.contains(b))){this.clear();return;}
     if(this.view===view&&this.root?.isConnected)return;
     this.clear();this.view=view;this.home.dataset.faMarketOpen='';this.act.dataset.faMarket='';
     let session=this.sessions.get(view.opts);if(!session){session={sort:'annualSalary',direction:'descending',selected:null};this.sessions.set(view.opts,session);}
@@ -53,6 +55,6 @@ export class FaMarketPresentation{
     for(const {field,button} of sortHeaders)button.addEventListener('click',()=>{session.direction=field===session.sort&&session.direction==='descending'?'ascending':'descending';session.sort=field;sort();});
     rail.addEventListener('keydown',event=>{if(event.target!==rail||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const current=order.indexOf(session.selected),next=event.key==='Home'?0:event.key==='End'?order.length-1:Math.max(0,Math.min(order.length-1,current+(event.key==='ArrowRight'?1:-1)));show(order[next]);});
     this.onScroll=()=>{if(frame)return;frame=this.win.requestAnimationFrame(()=>{frame=0;if(this.view!==view||!rail.isConnected)return;const left=rail.getBoundingClientRect().left;mark(order.reduce((best,index)=>Math.abs(cards[index].getBoundingClientRect().left-left)<Math.abs(cards[best].getBoundingClientRect().left-left)?index:best,order[0]));});};
-    rail.addEventListener('scroll',this.onScroll,{passive:true});root.append(hint,scroller,rail,status);this.act.append(root);sort();
+    rail.addEventListener('scroll',this.onScroll,{passive:true});root.append(hint,scroller,rail,status);this.act.append(root,...asides);sort();
   }
 }

@@ -78,6 +78,15 @@ try{
   for(const level of ['NPB1','KBO1','CPBL1']){
    for(const q of [p,old])await q.evaluate(v=>window.__us.fixture(v),{pos,level,years:0,active:false});
    for(const q of [p,old])await q.evaluate(()=>{window.__us.accrue();window.__us.decide();});
+   if(level==='NPB1'){ // NPB-OFFER-WINDOW-01 (approved A1): an expired NPB control year now offers KBO/CPBL first; staying renews afterwards.
+    const menu=await get(p),base=await get(old),stay='現在の球団に残留';
+    assert.equal(menu.title,'シーズン後の海外移籍オファー');assert.equal(menu.buttons.at(-1),stay);assert.ok(menu.buttons.length>1&&menu.buttons.slice(0,-1).every(t=>/^(韓国|台湾)プロ野球への海外移籍：/.test(t)),menu.buttons.join());
+    assert.deepEqual(base.buttons,[]);assert.deepEqual(base.draws,[]);assert.equal(menu.draws.length,menu.buttons.length-1,'one team draw per window offer, nothing else');
+    await p.locator('#act > button').filter({hasText:stay}).click();await p.waitForFunction(text=>![...document.querySelectorAll('#act > button')].some(n=>n.textContent===text),stay);
+    const after=await get(p),{rngState:_a,...stayed}=after.state,{rngState:_b,...renewed}=base.state;
+    assert.deepEqual(stayed,renewed,level+' staying gives the same complete state as the immediate CONTROL renewal');assert.deepEqual(after.draws,menu.draws,'the renewal itself draws nothing');
+    cases.push({pos,level,route:'window offers then stay (A1)',status:'PASS'});continue;
+   }
    assert.deepEqual(await get(p),await get(old),level+' complete state, choice labels and every RNG value unchanged');cases.push({pos,level,status:'PASS'});
   }
   await p.evaluate(v=>window.__us.fixture(v),{pos,level:'A3',active:true,years:2});
