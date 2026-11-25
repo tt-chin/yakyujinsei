@@ -1,10 +1,22 @@
 # 統一測試入口
 
+## 2.1.0 FA候選、欄位排序、文案與正常採番
+
+本批本地Quick初跑112 PASS／3 FAIL；失敗為american-service-e2e、design-tokens-06.test及season-summary-e2e的舊期待值。各自調整後以Quick的--only入口重跑均PASS，未把原整套結果改寫為PASS，也未重跑已通過入口；其後新增的舊市場快取與市場metadata斷言另於fa-market-policy.test通過。GitHub Quick及手動Full須以推送後確定SHA另行判定。
+
+FA候選修正屬R3。fa-market-policy.test先以原生CareerMovement市場重現MLB／MiLB來源MLB、KBO及CPBL低評價被排除；再驗證跨聯盟門檻、NPB國內FA限定、需求排名、最多4件、傷勢／特性減量、無報價、元球團排除與另列留隊、候選去重、同年度快取。固定b8bc49b7b0cb14b24cec3b3499a57ecfb61e1a0d不替換：候選集合未變的市場完整結果／RNG相同；受影響市場只允許lastFaMarket的報價改變，其他狀態保持。
+
+american-service-e2e保留原8964d627a1f2dff5f38da31bd3a092eeaa903a6e年資修正基準，另以b8bc49b7b0cb14b24cec3b3499a57ecfb61e1a0d作FA修正前基準。P／IF固定seed於實際movement年資加算後及faMarket進入點比對完整S與每次RNG，候選新增前必須一致；候選新增後允許報價與後續選項／生涯分歧，不重建golden。報價件數相同的fixture仍嚴格比對全部抽值；快取重開不加RNG。原8964基準中直接MLB且滿期6年FA的舊市場期待值，僅改為允許這次已批准的市場欄位差異，其餘狀態／年資／抽值維持嚴格比較。
+
+fa-market-presentation-e2e驗證64組P／IF版面、三欄雙方向、同值穩定、球團跳轉、鍵盤焦點／scrollLeft及原生契約選擇／重複點擊；排序／重繪前後完整S及每次RNG不得變動。PR #128為未合併設計草案，沒有產品碼可覆蓋；不先行實作其中待授權方案。
+
+交易未成立卡只允許標題／內文差異；交易判定、35%抽選、續行及狀態須與b8bc49b7b0cb14b24cec3b3499a57ecfb61e1a0d一致。UI歷史比較的新生涯只在測試server將已凍結的2.0.0 config常數對齊目前VERSION，先驗證原設定的完整格式；歷史引擎、基準SHA及完整S／RNG比較不變，不從snapshot刪除版號。舊存檔跨版另測：依既有school-policy，2.0.0出生快照在2.1.0仍為UNKNOWN，無推算或移行；新建2.1.0的S／A／B／C按原條件判定。正常採番改變版本metadata與此既有跨版結果，不宣稱舊快照資格不變。版號涉及退役資格，相關比較、Quick及GitHub手動Full按R3完成；本機不執行Full。
+
 ## 米国服務年資與引退摘要
 
 `american-service.test`先以MiLB／MLB錯配、既有5年服務年資重現舊版漏加與CONTROL，再測80組美國層級／出賽比例／2→3與5→6邊界／新controller重試，以及原生CareerMovement的滿期／未滿期／正常延長與升降格。`browser-save-codec.test`驗證原envelope不變、兩種美國org／lv錯配可載入、重複載入不重算、只依明示的年度／level／seasonFactor補年資，不採stats.MLB.yr，且非美國錯配仍拒絕。
 
-新增`american-service-e2e`為Quick／Full的限定原生路線。固定基準8964d627a1f2dff5f38da31bd3a092eeaa903a6e與P／IF固定seed比較，年資加算本身無RNG；錯配案例只允許org、MLB服務年資及派生資格三項狀態差異，之後明確驗證實際調停／FA及同seed重複性。正常直接MLB與NPB／KBO／CPBL案例完整S、選項與每次RNG值不排除欄位。另以原生簽約／升降格／再升格／交易／更新驗證組織與合約保證。不得把後續FA選項造成的生涯差異寫入新golden，或重建舊基準。
+新增`american-service-e2e`為Quick／Full的限定原生路線。固定基準8964d627a1f2dff5f38da31bd3a092eeaa903a6e與P／IF固定seed比較，年資加算本身無RNG；錯配案例只允許org、MLB服務年資及派生資格三項狀態差異，之後明確驗證實際調停／FA及同seed重複性。正常直接MLB與NPB／KBO／CPBL案例在受影響FA市場前，完整S、選項與每次RNG值不排除欄位；2.1.0市場候選許可差異見上節。另以原生簽約／升降格／再升格／交易／更新驗證組織與合約保證。不得把後續FA選項造成的生涯差異寫入新golden，或重建舊基準。
 
 `career-review.test`與原生`ui-redesign-review-e2e --fixtures-only`驗證共用careerRecordModel的14層級、零值紀錄、全空fallback，保持原引退卡／保存圖片範圍及完整S／RNG。既有固定seed投手／野手個別契約E2E亦對照上述完整SHA並重播；不是本機Full。最終Full由使用者對確定提交於GitHub手動執行。
 
@@ -40,7 +52,7 @@ Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SH
 
 ## UI 2.0 FA比較與骰子標示
 
-`fa-market-presentation.test`固定三種數值降序、同值穩定、缺損／非法值與凍結來源不變，並驗證統一2.0.0的版本戳、未知／錯誤版本拒絕及完整來源不變。`fa-market-presentation-e2e`對固定`dc9bf83aca09a82ccc891b061231490ec9295c68`比較原生FA抽價及同一offer簽約的完整S／每次RNG，64組尺寸／主題／字級、排序與可視卡片／鍵盤／零報價、原按鈕identity／防重複及DOM投影錯值拒絕；不改FA抽價、金額或契約處理。既有contract-salary的FA模式仍比較原球團／原報價，先透過表格定位再按原按鈕。骰子上移由原allocation E2E驗證active、余白、復原／重設／用完與完成定位。
+`fa-market-presentation.test`驗證三種數值升／降序、同值穩定、缺損／非法值與凍結來源不變，並驗證目前VERSION的版本戳、未知／錯誤版本拒絕及完整來源不變。`fa-market-presentation-e2e`對固定`dc9bf83aca09a82ccc891b061231490ec9295c68`比較原生FA抽價及同一offer簽約的完整S／每次RNG，64組尺寸／主題／字級、排序與可視卡片／鍵盤／零報價、原按鈕identity／防重複及DOM投影錯值拒絕；不改FA抽價、金額或契約處理。既有contract-salary的FA模式仍比較原球團／原報價，先透過表格定位再按原按鈕。骰子上移由原allocation E2E驗證active、余白、復原／重設／用完與完成定位。
 
 手機／FA／骰子原分支為Quick104／Full134，`6cf2f591eeb4db475de149a3a001ecfa23bfed07`已取得使用者手動Full134 PASS（Run45043264922）。合併最新dev的準備分支為Quick111／Full142，須另外驗證整合來源。本機只執行相關個別入口與Quick，不執行Full。2026-11-23依使用者指定維持2.0.0；FA與第2～5批固定2.0.0基準比較均保留state.version與birthHighSchool.createdVersion，不排除版本欄位。dev既有PLY-01比較仍按原契約驗證背號新增顯示與jerseyHistory，保留其餘S／RNG及原始基準。UI專用WeakMap／CSS排序不改原offers或choiceViews.buttons順序；歷史比較先驗證金額／球團／原按鈕再拆除呈現包裝。
 

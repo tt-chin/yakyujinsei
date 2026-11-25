@@ -34,7 +34,8 @@ test('81 phase-4 font sites plus two phase-5 review headings; name button uses -
   assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
   const review=styles['career-review.css'];assert.deepEqual([...review.matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-xl','--fs-md','--fs-md'],'two review headings and the collapsed financial detail text use shared font tokens');
   assert.equal((ply01Rules.join('\n').match(/var\(--fs-[\w-]+\)/g)||[]).length,1,'PLY-01 #bd-number font site');
-  assert.deepEqual([...styles['fa-market.css'].matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-md','--fs-sm','--fs-md','--fs-md'],'FA comparison reuses four shared font sites');
+  assert.deepEqual([...styles['fa-market.css'].matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-sm','--fs-md','--fs-md'],'FA comparison reuses three font sites after removing the sort select');
+  assert.match(styles['fa-market.css'],/\.fa-sort-button\{[^}]*font:inherit;/,'header buttons inherit the shared table font');
   const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
   const header='#bd-grid[data-pitcher="true"] :is(#bd-sal,#bd-tj-gauge){font-size:clamp(10px,2.8vw,var(--fs-lg))}';
   assert.equal(styles['game-shell.css'].split(header).length,2,'one approved responsive four-column font rule');
@@ -96,7 +97,7 @@ test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
   assert.doesNotMatch(styles['decision-presentation.css'],/#decision-summary|#decision-question/,'approved removal of summary placeholder styles');
   assert.match(styles['decision-presentation.css'],/#decision-jump\{[^}]*font-size:calc\(var\(--fs-6xl\) \* \.8\)/,'80% arrow uses the shared size token');
   assert.equal(used.length,236-7,'removed summary padding (2), reserved jump width (2), old jump position (2), desktop summary padding (1); other spacing sites unchanged');
-  assert.equal([...styles['fa-market.css'].matchAll(/var\((--space-[\w-]+)\)/g)].length,10,'FA comparison uses ten shared spacing sites');
+  assert.equal([...styles['fa-market.css'].matchAll(/var\((--space-[\w-]+)\)/g)].length,9,'FA comparison uses nine shared spacing sites after replacing label/select with header buttons');
   assert.match(styles['allocation-presentation.css'],/padding:0 var\(--space-2xs\);line-height:1\.6;white-space:nowrap/,'approved compact label retains tokenized inline padding');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');
   assert.deepEqual(Object.keys(SPACE).filter(n=>!used.includes(n)),[],'unused --space token');
