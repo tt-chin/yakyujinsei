@@ -1,5 +1,7 @@
 # BACKLOG — 野球人生（日文版）
 
+> 最新狀態（2026-11-25）：dev `875a8af62189e7ddcc2eac27afd3c80783d45210`的Quick #280與手動Full #281均成功，已解除本批「待Full」；詳見§1現況摘要。以下開發過程、待執行文字及原FAIL保留為當時紀錄，不代表目前CI狀態。
+
 > #279追修最終驗證：Quick115 PASS／0 FAIL／0 SKIP／0 BLOCKED（735.618秒、未重用），`test-results/ci279/quick-final/summary.json`。115份log SHA256與目前來源fingerprint `75cb3a821efb2bd90ab861a4adfcd209000734f3c405554e8261ebe67e35fb18`核對通過（integrity.json）；產品檔案與HEAD完全不變。初次沿用前批ignored核對腳本的未追蹤模組raw hash遇checkout換行差異，該檔現已由Runner tracked來源涵蓋，另與HEAD正規化內容確認一致後移除過期的補充檢查，未改Runner／測試或放寬日誌完整性。語法與Diff檢查PASS。下段Quick執行中由此更新；依授權提交推送dev，完整SHA見Git與回報，Full仍須使用者於該新SHA手動執行，不稱#279或本次Full PASS。
 
 > 2026-11-25 Tests #279追修（R2、測試期待值）：[Full 45503425592](https://github.com/tt-chin/yakyujinsei/actions/runs/45503425592)、dev `9b97b86029c161b81166cf66237ad1a9398e4c67`為145 PASS／1 FAIL；唯一失敗npb-return-e2e在3A fixture已升格MLB後仍預期留隊org=MiLB。本機重現相同斷言，診斷確認選擇前已為org=MLB／lv=MLB；非偶發環境錯誤。同SHA Quick #278成功，但該E2E未納入Quick。只更新獨立固定fixture期待並增加升格前小聯盟年度不加MLB年資、續約不重複累加、新約組織正確的斷言；原歷史基準、金額／付款／雙擊與重繪完整S／RNG斷言保留，產品／runner／manifest／workflow未改，版號2.0.0維持，不新增產品CHANGELOG。
@@ -168,7 +170,14 @@
 
 ## 1. 最新進度總覽
 
-### 現況摘要（2026-11-15，優先於下方歷史紀錄）
+### 現況摘要（2026-11-25，優先於下方歷史紀錄）
+
+- **開發基準：** dev `875a8af62189e7ddcc2eac27afd3c80783d45210`，2.0.0。引退摘要階級分類／空紀錄處理、美國組織與MLB服務年資／FA修正、#279測試期待值追修均已提交推送；季末首次定位與年度別字體亦已包含於此來源。main／正式站未於本次反映。
+- **最新CI：** 同一SHA的[Quick #280](https://github.com/tt-chin/yakyujinsei/actions/runs/45510842813)與使用者手動[Full #281](https://github.com/tt-chin/yakyujinsei/actions/runs/45512251900)皆success。Full為146 PASS／0 FAIL／0 SKIP／0 BLOCKED、acceptedPass146、unverified0，8批與Aggregate均成功；下載彙整證據並核對146份log SHA256（`test-results/ci281/aggregate`）。原#279的145 PASS／1 FAIL保留，npb-return-e2e在#281已通過22個契約案例、120組版面與P／P／C／IF四生涯同seed重播，Console／JS-CSS404為0。原先本批「待Full」由本次確認解除，不改寫舊FAIL。
+- **Preview與驗收：** 上述SHA的Cloudflare部署已成功，[dev Preview](https://dev.yakyujinsei.pages.dev)可確認。CI PASS不代稱本次新功能的使用者驗收或Safari實機通過；先前已獲接受的既有功能不重列待驗收。殘存的`ARTIFACT_COVERAGE_BLOCKED`為獨立覆蓋證據限制，不因本次Full成功解除；未實作研究／設計及發布Gate維持原狀。
+- **本次文件同步：** 僅更新BACKLOG的CI／提交狀態，產品與測試未變，屬R0，不追加本機Quick／Full或dispatch。後續純文件提交不冒稱已在其新SHA執行Full；上述PASS只屬完整受驗SHA875a8af62189e7ddcc2eac27afd3c80783d45210。
+
+### 2026-11-15進度快照（保留原時點，非目前狀態）
 
 - **來源與版本：** 最新開發基準dev `f3bffeee49cd6a9cca3f56b9118bf164992bd8af`（1.16.9）；本次1.16.10維持原定版號，新增46姓／50名獨立抽取的空白姓名補完，並同步4個舊測試期待／VM依賴。限定驗證結果與原始FAIL見末節。使用者已授權提交及推送dev，尚未取得本次來源CI、Preview或實機結果，未授權main反映／正式發布。下列舊版本進度保留為各次歷史紀錄。
 - **PR #95 決策（2026-11-15）：** 以下均已決定。PLY-01 D1～D4、W1～W8（W1＝B入團選號、W7＝②加選單改號、W8＝甲下一年度開始前插入），見[背號計畫](tasks/PLY_01_JERSEY_PLAN.md)；HOF研究線H1～H4（第二版路線），見[研究計畫](tasks/HOF_NATURAL_SAMPLE_PLAN.md)；INT-01 N1＝B／N2＝A、EVT-01 E1～E3（E3＝a）、INJ-UI-01 I1＝公開／I2＝細目，見[顯示計畫](tasks/P2_DISPLAY_DECISIONS_PLAN.md)。其中HOF研究線、INT-01、INJ-UI-01**尚未授權實作**；PLY-01另經使用者授權依T1～T9正式實作（2026-11-15，R3，1.17.0），合併與部署未因此一併授權；EVT-01另經使用者授權實作，E1＋E2（PR #97）與E3（PR #99）均已併dev並結案。
