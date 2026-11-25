@@ -69,7 +69,7 @@ export function validateSaveEnvelope(input){
  if(!Number.isInteger(s.rngState)||s.rngState<0||s.rngState>0xffffffff)fail('SAVE_RNG');
  if(!['P','C','IF','OF'].includes(s.pos)||!['HS','U','CORP','IND','PRO'].includes(s.stage)||!['HS','U','CORP','IND','NPB1','NPB2','NPB_DEV','KBO1','KBO2','CPBL1','CPBL2','MLB','R','A1','A2','A3'].includes(s.lv))fail('SAVE_ROUTE');
  const amateur={HS:'AMATEUR',U:'AMATEUR',CORP:'CORP',IND:'IND'};const org=s.lv.startsWith('NPB')?'NPB':s.lv.startsWith('KBO')?'KBO':s.lv.startsWith('CPBL')?'CPBL':['R','A1','A2','A3'].includes(s.lv)?'MiLB':null;
- if(Object.hasOwn(amateur,s.lv)){if(s.stage!==s.lv||s.org!==amateur[s.lv])fail('SAVE_ROUTE_IDENTITY');}else if(s.stage!=='PRO'||(s.lv==='MLB'?!['MLB','MiLB'].includes(s.org):s.org!==org))fail('SAVE_ROUTE_IDENTITY');
+ if(Object.hasOwn(amateur,s.lv)){if(s.stage!==s.lv||s.org!==amateur[s.lv])fail('SAVE_ROUTE_IDENTITY');}else if(s.stage!=='PRO'||(['MLB','R','A1','A2','A3'].includes(s.lv)?!['MLB','MiLB'].includes(s.org):s.org!==org))fail('SAVE_ROUTE_IDENTITY');
  if(typeof s.name!=='string'||typeof s.seed!=='string'||!s.seed||!s.ab||!s.pot||!s.traits||!Array.isArray(s.log))fail('SAVE_REQUIRED');
  const keys=s.pos==='P'?['sta','vel','ctl','brk']:['sta','con','pow','spd','eye','rng','fld','arm',...(s.pos==='C'?['cat']:[])];
  for(const field of ['ab','pot']){if(keys.some(k=>typeof s[field][k]!=='number')||Object.values(s[field]).some(v=>typeof v!=='number'||!Number.isFinite(v)))fail('SAVE_ABILITY');}

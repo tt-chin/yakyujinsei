@@ -1,3 +1,4 @@
+import {reconcileAmericanCareer} from '../docs/src/engine/control-period-policy.js';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {readSourceText} from './support/source-text.mjs';
@@ -71,12 +72,16 @@ for(const [name,wrapper,reads,indent] of [
 const demotionSource=movementFunction('handleDemotion')+'\n'+yearFlowReporter(yearFlowSource);
 for(const sourceLevel of ['A3','A2'])for(const [overall,targetLevel,title]of [[54,'NPB1','NPB一軍への移籍'],[50,'NPB2','日本の二軍（支配下）へ移籍']])for(const transfer of [false,true]){
   const S={org:'MiLB',lv:sourceLevel,age:25,lastD:0,seasonFactor:1,traits:{},ct:{remainingYears:1},currentSalary:10_000_000},input=[],draws=[],signed=[],candidate=Object.freeze({annualSalary:41_370_000,targetLevel});let choices,advances=0,buyouts=0;
-  const context={S,getState:()=>S,LV:{NPB1:{min:53},NPB2:{min:47},A3:{n:'3A'},A2:{n:'2A'},A1:{n:'1A'}},findDemotionTarget:()=> 'A1',demotionChoiceText:()=> '降格',ageGateJP:()=>1,chance:p=>{draws.push(p);return true;},salaryCandidate:v=>{input.push({...v});return candidate;},fmtMoney:v=>v/10000+'万円',card:()=>{},board:()=>{},choose:(_t,opts)=>{choices=opts;},applyDemotionSalary:()=>{},advance:()=>advances++,buyoutRemaining:()=>{buyouts++;S.currentSalary=0;},signTo:(...args)=>signed.push(args)};
+  const context={S,reconcileAmericanCareer,getState:()=>S,LV:{NPB1:{min:53},NPB2:{min:47},A3:{n:'3A'},A2:{n:'2A'},A1:{n:'1A'}},findDemotionTarget:()=> 'A1',demotionChoiceText:()=> '降格',ageGateJP:()=>1,chance:p=>{draws.push(p);return true;},salaryCandidate:v=>{input.push({...v});return candidate;},fmtMoney:v=>v/10000+'万円',card:()=>{},board:()=>{},choose:(_t,opts)=>{choices=opts;},applyDemotionSalary:()=>{},advance:()=>advances++,buyoutRemaining:()=>{buyouts++;S.currentSalary=0;},signTo:(...args)=>signed.push(args)};
   runInNewContext(demotionSource+';handleDemotion('+overall+',[],0);',context);
   assert.deepEqual(draws,[targetLevel==='NPB1'?60:50]);assert.deepEqual(input,[{sourceLevel,targetLevel,contractMult:1}]);assert.equal(choices.length,2);assert.equal(choices[1].t,title);assert.match(choices[1].s,/年俸4137万円/);assert.equal(S.lv,sourceLevel);assert.equal(advances,0);assert.equal(buyouts,0);
   choices[transfer?1:0].f();assert.equal(advances,1);assert.equal(buyouts,transfer?1:0);assert.equal(signed.length,transfer?1:0);
   if(transfer){assert.equal(signed[0][0],'NPB');assert.equal(signed[0][1],targetLevel);assert.deepEqual(signed[0].slice(2,6),[undefined,undefined,undefined,undefined]);assert.equal(signed[0][6].annualSalary,candidate.annualSalary);assert.equal(signed[0][6].candidate,candidate);}else assert.equal(S.lv,'A1');cases++;
 }
+// The new US reconciler is a real dependency in the VM above. Only these two
+// exact demotion insertions are projected out for the unchanged historical oracle.
+const usDemotion='S.lv=targetLevel;reconcileAmericanCareer(S);';
+assert.equal(now.split(usDemotion).length,3);now=now.replaceAll(usDemotion,'S.lv=targetLevel;');
 // Narrow textual allow-list: strip only these exact tested additions. Any other
 // change to eligibility, draws, years, ordering or demotion handling still fails.
 for(const [start,end,original]of [
@@ -118,7 +123,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
   function demotionRun(source,{state,overall,target,hit,entry},picks){
     const log=[],choices=[],reported=[];
     const S={year:2040,age:25,org:'MiLB',lv:'A3',lastD:0,seasonFactor:1,traits:{},ct:{remainingYears:1},...structuredClone(state)};
-    const context=createContext({S,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,reported,
+    const context=createContext({S,reconcileAmericanCareer,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,reported,
       findDemotionTarget:()=>target,demotionChoiceText:lv=>'降格:'+lv,ageGateJP:()=>1,fmtMoney:String,
       chance:p=>{log.push(['chance',p]);return hit;},
       salaryCandidate:v=>{log.push(['salaryCandidate',v]);return {annualSalary:41_370_000,targetLevel:v.targetLevel};},
@@ -182,7 +187,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
     const log=[],choices=[],reported=[];
     const S={year:2040,age:25,stage:'PRO',org:'NPB',lv:'NPB1',orgTeamId:'T0',lastD:0,currentSalary:50_000_000,marketInjury:null,salaryEvaluationHistory:[],npbYears:0,traits:{},ct:{expired:false},...structuredClone(state)};
     const careerSession={npbReturnOfferContext:null,pendingOffseasonSalary:'pending'};
-    const context=createContext({S,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,careerSession,reported,
+    const context=createContext({S,reconcileAmericanCareer,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,careerSession,reported,
       fmtMoney:String,escapeHTML:String,dpMult:()=>1,isRecentStar:()=>false,kboPreviousPackage:()=>null,currentMarketRating:()=>55,serviceYearsFor:()=>4,
       roundToTenThousandYen:v=>Math.round(v/1e4)*1e4,injurySalaryMultiplier:()=>0.95,salaryFor:(lv,rating)=>10_000_000+rating*100_000,
       contractNeedsRenewal:ct=>!!ct?.expired,crossOfferType:(from,to)=>from+'>'+to,crossOfferTitle:type=>'title:'+type,
@@ -252,7 +257,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
     const log=[],choices=[],reported=[];let draws=0;
     const S={year:2040,age:36,pos:'IF',stage:'PRO',org:'NPB',lv:'NPB1',lastD:2,rehab:0,six:0,tj:0,traits:{},ab:{con:50,pow:50,spd:50,vel:50,ctl:50,sta:50},pot:{},log:[],ct:{remainingYears:1},...structuredClone(state)};
     S.teamName=()=>'球団:'+S.org+':'+S.lv;
-    const context=createContext({S,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,reported,
+    const context=createContext({S,reconcileAmericanCareer,getState:()=>S,markSeasonStart:()=>{}/* INJ-UI-01 session-only display mark */,LV:levels,reported,
       POS_AB:{IF:['con','pow','spd'],P:['vel','ctl','sta']},ABL:{con:'ミート',pow:'パワー',spd:'走力',vel:'球速',ctl:'制球',sta:'スタミナ'},
       clamp:(v,a,b)=>Math.min(b,Math.max(a,v)),declineForSeason:(_s,base)=>{log.push(['declineForSeason',base]);return base;},
       stageLabel:()=>'stage',tjCap:()=>100,ovr:()=>{log.push(['ovr']);return overall;},

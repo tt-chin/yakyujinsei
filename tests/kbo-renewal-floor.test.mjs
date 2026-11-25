@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
 import * as market from '../docs/src/engine/cross-league-market-policy.js';
 import * as contract from '../docs/src/engine/contract-policy.js';
-import {calculateControlOffer} from '../docs/src/engine/control-period-policy.js';
+import {calculateControlOffer,reconcileAmericanCareer} from '../docs/src/engine/control-period-policy.js';
 import {leagueTables} from '../docs/src/engine/league-catalog.js';
 import {calculateSalaryCurve,convertRatingBetweenLevels,roundToTenThousandYen} from '../docs/src/engine/salary-promotion-policy.js';
 import {createIncentiveTerms} from '../docs/src/engine/incentive-policy.js';
@@ -57,7 +57,7 @@ function harness(){
  let old=contract.createContract({contractId:'KBO:KBO_DAEGU_LIONS:2041:009',org:'KBO',teamId:S.orgTeamId,signedYear:2041,startYear:2042,years:3,annualSalary:140_180_000,contractType:'OVERSEAS_FA'});
  old=contract.appendExtension(old,{signedYear:2043,startYear:2045,years:5,annualSalary:168_210_000,incentive:createIncentiveTerms({org:'KBO',annualSalary:168_210_000})});
  for(let year=2042;year<=2049;year++)old=contract.markSalaryPaid(old,year).contract;S.ct=old;
- const context=vm.createContext({S,getState:()=>S,...policy,...contract,calculateControlOffer,calculateSalaryCurve,convertRatingBetweenLevels,roundToTenThousandYen,createIncentiveTerms,createSigningBonusTerms,
+ const context=vm.createContext({S,reconcileAmericanCareer,getState:()=>S,...policy,...contract,calculateControlOffer,calculateSalaryCurve,convertRatingBetweenLevels,roundToTenThousandYen,createIncentiveTerms,createSigningBonusTerms,
   currentMarketRating:()=>-5.75,dpMult:()=>.92,ovr:()=>44,injurySalaryMultiplier:()=>1,isRecentStar:()=>false,serviceYearsFor:org=>S.serviceTime[org]||0,previousSalaryForOffer:()=>S.currentSalary,hadAmericanContract:()=>false,migrateSalaryV130State:()=>{},
   card:()=>{},board:()=>{},bindLatestSalaryDetailLink:()=>{},fmtMoney:String,salaryDecisionSummary:()=>'',salaryDecisionLink:()=>'',isBelowActiveMinimum:()=>false,
   saveSalaryDecision:(type,candidate,previousSalary,finalSalary)=>S.salaryDecisionHistory.push({type,candidate,previousSalary,finalSalary}),advances:0});

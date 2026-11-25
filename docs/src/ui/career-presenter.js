@@ -1,4 +1,4 @@
-import {reviewStatLine} from './career-review.js';
+import {reviewStatLine,careerRecordModel} from './career-record.js';
 import {incomeSummary} from './income-summary.js';
 import {formatRehabStatus} from './condition-view-model.js';
 import {tjGaugeCap,tjGaugeText} from './condition-view-model.js';
@@ -20,8 +20,7 @@ export class CareerPresenter {
   constructor({getState,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN,playerType,ovr,tjCap=()=>tjGaugeCap(getState())}){
     this.#getState=getState;this.#deps={ABL,POS_AB,POSN,DPN,TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN,playerType,ovr,tjCap};
   }
-  #statSummary(bucket,st){return reviewStatLine(this.#getState().pos,st,this.#deps.fmtIP); }
-  record(){const S=this.#getState();const definitions=[['NPB',[['NPB1','NPB一軍'],['NPB2','NPB二軍'],['NPB_DEV','NPB育成']]],['KBO',[['KBO1','KBO一軍'],['KBO2','KBOフューチャース']]],['台湾プロ野球',[['CPBL1','台湾プロ野球一軍'],['CPBL2','台湾プロ野球二軍']]],['MLB',[['MLB','MLB']]],['MiLB',[['A3','3A'],['A2','2A'],['A1','1A'],['R','ルーキーリーグ']]],['独立リーグ',[['IND','独立リーグ']]],['社会人野球',[['CORP','社会人野球']]]];const byLevel=S.statsByLevel||{};const groups=definitions.map(([label,levels])=>Object.freeze({label,levels:levels.filter(([key])=>byLevel[key]).map(([key,levelLabel])=>Object.freeze({key,label:levelLabel,summary:this.#statSummary(key,byLevel[key])}))})).filter(group=>group.levels.length);return Object.freeze({seasons:Array.isArray(S.log)?S.log.length:0,internationalCount:S.intlCount||0,groups});}
+  record(){return careerRecordModel(this.#getState(),{formatIP:this.#deps.fmtIP});}
   #rehabStatusText(){const S=this.#getState();return formatRehabStatus(S);}
   ability(){const S=this.#getState(),{ABL,POS_AB,POSN}=this.#deps;const condition=[{label:'シーズン稼働率',value:`${Math.round((S.seasonFactor??1)*100)}%`},injuryRiskCondition(S),{label:'次回故障リスク加算',value:`${S.injNext||0}%`},{label:'今季一時故障リスク加算',value:`${S.tmpInj||0}%`},{label:'大きな故障（通算）',value:`${S.bigInj||0}回`},{label:'リハビリ',value:this.#rehabStatusText()}];if(S.pos==='P')condition.push({label:'TJゲージ',value:tjGaugeText(S,this.#deps.tjCap())},{label:'トミー・ジョン手術（通算）',value:`${S.tjCount||0}回`});return Object.freeze({positionLabel:POSN[S.pos],abilities:POS_AB[S.pos].map(key=>Object.freeze({key,label:ABL[key],current:S.ab[key]||0,potential:S.pot?.[key]??62})),condition:condition.map(item=>Object.freeze(item))});}
   traits(){const S=this.#getState(),{displayTrait,teamNick}=this.#deps;return Object.freeze({active:Object.entries(S.traits||{}).filter(([,enabled])=>enabled).map(([key])=>displayTrait(key)),removed:(S.removed||[]).map(item=>removedTraitLabel(item,S,teamNick))});}

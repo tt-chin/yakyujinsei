@@ -1,3 +1,4 @@
+import {reconcileAmericanCareer} from '../docs/src/engine/control-period-policy.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -105,7 +106,9 @@ const movementEntry = source => {
   assert.equal(wrapper?.length, 1, 'movement wrapper once'); assert.equal(ctor?.length, 1, 'movementGate construction once');
   assert.equal(movementGateSource.split('export class MovementGate {').length, 2, 'MovementGate class once');
   const body = wrapper[0].slice('function movement(){'.length, -1);
-  return movementGateSource.replace('export class MovementGate {', 'class MovementGate {') + '\n' + 'movement=function(){' + body + '};' + '\n' + ctor[0];
+  const importLine="import {reconcileAmericanCareer} from './control-period-policy.js';\n";
+  assert.equal(movementGateSource.replaceAll('\r\n','\n').split(importLine).length,2,'one explicit module dependency');
+  return movementGateSource.replaceAll('\r\n','\n').replace(importLine,'').replace('export class MovementGate {', 'class MovementGate {') + '\n' + 'movement=function(){' + body + '};' + '\n' + ctor[0];
 };
 const amateurSource = fs.readFileSync(new URL('../docs/src/engine/amateur-career.js', import.meta.url), 'utf8');
 const contractSource = fs.readFileSync(new URL('../docs/src/engine/career-contract.js', import.meta.url), 'utf8');
@@ -124,7 +127,7 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
     const movementLayer = { movement: () => log.push(['legacyMovement']) };
     const S = { entryRoute: 'HS', corpYears: 0, indYears: 0, ...state };
     const context = vm.createContext({
-      S, LV: { A1: { n: 'A+' }, R: { n: 'ルーキー' } }, isDraftFallbackResult, reported, AmateurCareer, DATA: {},
+      S, reconcileAmericanCareer, LV: { A1: { n: 'A+' }, R: { n: 'ルーキー' } }, isDraftFallbackResult, reported, AmateurCareer, DATA: {},
       ovr: () => overall, ri: low => low, R: () => 0, fmtMoney: String, salaryFor: () => 0,
       createSigningBonusTerms: () => ({ signingBonus: 0 }),
       listByOrg: () => [{ name: 'MiLB-A', teamId: 'MILB-A' }, { name: 'MiLB-B', teamId: 'MILB-B' }, { name: 'MiLB-C', teamId: 'MILB-C' }],

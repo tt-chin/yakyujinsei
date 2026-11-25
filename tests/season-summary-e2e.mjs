@@ -6,6 +6,7 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
+import {currentUiBaselineVersion} from './support/ui-version-comparison.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
 const baseline='cf88d1a9d621c354d64a2de5c427cd437a8094bf',output=path.resolve(arg('output')||'test-results/season-summary');await mkdir(output,{recursive:true});
 const hook=`
@@ -28,10 +29,29 @@ window.__summaryTest={
  amateur:stage=>{S.stage=stage;S.done=false;S.year=2040;careerSession.seasonEndContext=null;document.getElementById('log').replaceChildren();divider('2040年・シーズン終了');board(2);},
  later:()=>{S.year=2032;S.currentSalary=999999999;S.yearOutsideIncome=999;S.careerEarnings+=123;S.ct=createContract({contractId:'LATER',org:S.org,teamId:S.orgTeamId,signedYear:2031,startYear:2032,years:2,annualSalary:999999999});if(S.lastSalaryDecision)S.lastSalaryDecision={...S.lastSalaryDecision,decisionYear:2031,salaryYear:2032,finalSalary:999999999};},
 };`;
-const cache=new Map(),server=createServer(async(req,res)=>{try{let rel=new URL(req.url,'http://local').pathname.slice(1)||'index.html',old=rel.startsWith('baseline/');if(old)rel=rel.slice(9)||'index.html';if(rel==='favicon.ico'){res.statusCode=204;return res.end();}if(rel.split('/').includes('..'))throw Error('path');let body;if(old){if(!cache.has(rel))cache.set(rel,execFileSync('git',['show',baseline+':docs/'+rel],{cwd:root,maxBuffer:30e6}));body=cache.get(rel);}else body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=body.toString()+hook;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const cache=new Map(),server=createServer(async(req,res)=>{try{let rel=new URL(req.url,'http://local').pathname.slice(1)||'index.html',old=rel.startsWith('baseline/');if(old)rel=rel.slice(9)||'index.html';if(rel==='favicon.ico'){res.statusCode=204;return res.end();}if(rel.split('/').includes('..'))throw Error('path');let body;if(old){if(!cache.has(rel))cache.set(rel,execFileSync('git',['show',baseline+':docs/'+rel],{cwd:root,maxBuffer:30e6}));body=cache.get(rel);}else body=await readFile(path.join(root,'docs',rel));if(old&&rel==='src/config.js')body=currentUiBaselineVersion(body);if(rel==='src/engine/game.js')body=body.toString()+hook;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||process.env.PLAYWRIGHT_MODULE||'playwright'),browser=await chromium.launch({headless:true,channel:arg('browser')||'chromium'}),errors=[],cases=[],layouts=[];
 const frames=p=>p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
 const get=p=>p.evaluate(()=>window.__summaryTest.get());
+// Preserve the pre-integration baseline. The promotion fixture's approved US
+// identity fix changes only these exact org fields; compare every other field
+// and every RNG value, including all financial amounts, without projection.
+function withApprovedUsPromotion(snapshot){
+ const expected=structuredClone(snapshot),s=expected.state;
+ if(s.org!=='MiLB'||s.lv!=='MLB')return expected;
+ assert.equal(s.lastSalaryDecision?.decisionType,'PROMOTION');
+ assert.equal(s.lastSalaryDecision.sourceLevel,'A3');assert.equal(s.lastSalaryDecision.targetLevel,'MLB');
+ s.org='MLB';
+ for(const decision of [s.lastSalaryDecision,...s.salaryDecisionHistory]){
+  if(decision.org!=='MiLB')continue;
+  assert.equal(decision.decisionType,'PROMOTION');assert.equal(decision.sourceLevel,'A3');assert.equal(decision.targetLevel,'MLB');
+  assert.ok([2030,2031].includes(decision.decisionYear));decision.org='MLB';
+ }
+ // The explicit later-year isolation fixture creates this contract using S.org.
+ // Keep the original signed contract's historical org unchanged everywhere else.
+ if(s.ct?.contractId==='LATER'){assert.equal(s.ct.org,'MiLB');s.ct.org='MLB';}
+ return expected;
+}
 async function open(old){const p=await browser.newPage({viewport:{width:390,height:844}});await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.fulfill({body:'',contentType:'text/css'}));p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400)errors.push(r.status()+' '+r.url());});await p.goto('http://127.0.0.1:'+server.address().port+(old?'/baseline/':'/')+'?seed=season-summary-regression');await p.waitForFunction(()=>!document.getElementById('btn-start').disabled);await p.locator('#in-name').fill('年度表示検証');await p.locator('#btn-start').click();await p.evaluate(()=>window.__summaryTest.settle());return p;}
 async function scrollChecks(p,old,both){
  const settle=async()=>{await frames(p);await frames(p);};
@@ -104,7 +124,7 @@ async function scrollChecks(p,old,both){
 }
 let failure;
 try{
- const p=await open(false),old=await open(true),project=q=>q.evaluate(()=>window.__summaryProjection(document.getElementById('log').outerHTML,'log',window.__summaryTest.get().state)),both=async(fn,arg)=>{await p.evaluate(fn,arg);await old.evaluate(fn,arg);assert.deepEqual(await get(p),await get(old),'complete raw state/RNG at every native operation');assert.equal(await project(p),await project(old),'every original card survives the explicitly validated display integration');};
+ const p=await open(false),old=await open(true),project=q=>q.evaluate(()=>window.__summaryProjection(document.getElementById('log').outerHTML,'log',window.__summaryTest.get().state)),both=async(fn,arg)=>{await p.evaluate(fn,arg);await old.evaluate(fn,arg);assert.deepEqual(await get(p),withApprovedUsPromotion(await get(old)),'complete state/RNG except the exact approved promotion org fields');assert.equal(await project(p),await project(old),'every original card survives the explicitly validated display integration');};
  for(const pos of ['P','IF'])for(const kind of ['continuation','promotion','demotion','expired-demotion','renewal','transfer','missing','retirement']){
   await both(v=>window.__summaryTest.setup(v.pos,v.kind),{pos,kind});
   await both(()=>window.__summaryTest.pay());const paid=await get(p);assert.equal(paid.state.careerBaseSalary,40_000_000);assert.equal(paid.state.yearlyIncentivePaid['2030'].amount,200_000);

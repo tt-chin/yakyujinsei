@@ -157,6 +157,8 @@ check('snapshot verifier accepts EOL only and rejects tampering',()=>{
   assert.throws(()=>assertFrozenSnapshot(original,Buffer.from('tampered'),expected));
   assert.throws(()=>assertFrozenSnapshot(Buffer.from([0xff]),original,expected));
 });
+// Approved US service repair: exact static source deltas, not a new baseline.
+const approvedAmericanServiceEdits=[["const clamp=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0));\n\n","import {effectiveMarketOrg} from './cross-league-market-policy.js';\nconst clamp=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0));\n\n// Aggregated MLB seasons include injury/full-rest years and are not service proof.\nexport function reliableMlbServiceYears(state={}){\n  const existing=Number.isSafeInteger(state.serviceTime?.MLB)&&state.serviceTime.MLB>=0?state.serviceTime.MLB:0;\n  if(!Number.isSafeInteger(state.year)||state.year<1)return existing;\n  const through=state.serviceTimeAccruedYear===state.year?state.year:state.year-1,years=new Map();\n  for(const row of Array.isArray(state.log)?state.log:[]){\n    const year=row?.y??row?.year;\n    if(!Number.isSafeInteger(year)||year<1||year>through)continue;\n    if(!years.has(year))years.set(year,[]);years.get(year).push(row);\n  }\n  // A conflicting same-year record is ambiguous, not another service season.\n  const proven=[...years.values()].filter(rows=>rows.every(row=>row.level==='MLB'&&typeof row.seasonFactor==='number'&&Number.isFinite(row.seasonFactor)&&row.seasonFactor>=.5&&row.seasonFactor<=1)).length;\n  return Math.max(existing,proven);\n}\nexport function reconcileAmericanCareer(state){\n  if(state?.stage!=='PRO'||!['MLB','MiLB'].includes(state.org))return state;\n  state.org=effectiveMarketOrg(state.lv,state.org);\n  if(state.serviceTime)state.serviceTime.MLB=reliableMlbServiceYears(state);\n  return state;\n}\n\n"],["export function getContractStage({org,serviceYears=0,faEligible=false}){","export function getContractStage({org,level,serviceYears=0,faEligible=false}){\n  if(['MLB','MiLB'].includes(org))org=effectiveMarketOrg(level,org);"],["MLB:Math.max(Number(existing.MLB)||0,Number(stats.MLB?.yr)||0)","MLB:reliableMlbServiceYears(state)"]];
 check('frozen B1/A product-isolation evidence retained; B consumer contracts are separately tested', () => {
   const base = '287dd1a00448add8563410659170aba0d8f2f012';
   const historical = JSON.parse(fs.readFileSync('docs/reviews/development-a/before-hashes.json', 'utf8'));
@@ -239,6 +241,12 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
       assert.throws(()=>assert.equal(current+'\n// unexpected',expected),'TJ display approval cannot allow unrelated edits');
       assert.throws(()=>assert.equal(current.replace('?100:50','?100:51'),expected),'TJ cap changes remain rejected');
       assert.throws(()=>assert.equal(current.replace('.toFixed(1)','.toFixed(0)'),expected),'TJ precision changes remain rejected');
+    }else if(file==='docs/src/engine/control-period-policy.js'){
+      let expected=acceptedA;for(const [before,after] of approvedAmericanServiceEdits)expected=exactReplacement(expected,before,after);
+      assert.equal(current,expected,'exact approved US service repair; other league rules and salary coefficients unchanged');
+      assert.throws(()=>assert.equal(current+'\n// unexpected',expected));
+      assert.throws(()=>assert.equal(current.replace('years>=6','years>=5'),expected),'MLB FA threshold remains frozen at six');
+      assert.doesNotMatch(current,/\b(?:R|ri|chance|pick)\s*\(/,'reconciliation cannot draw RNG');
     }else if(!allowedB.has(path.basename(file)))assert.equal(current,acceptedA,file+': no unrelated B wiring');
   }
 });

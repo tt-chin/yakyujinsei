@@ -6,6 +6,8 @@ assert.equal(getContractStage({org:'NPB',serviceYears:4,faEligible:false}),'CONT
 const offer=calculateControlOffer({marketSalary:40_000_000,previousSalary:80_000_000,marketRating:0,serviceYears:1,org:'NPB',levelMinimum:16_000_000});assert.equal(offer.protectedSalary,60_000_000);
 const floored=calculateControlOffer({marketSalary:4_000_000,previousSalary:0,marketRating:-2,serviceYears:0,org:'NPB',levelMinimum:16_000_000});assert.equal(floored.protectedSalary,16_000_000);assert.equal(floored.floorApplied,true);
 const equalMinimum=calculateControlOffer({marketSalary:16_000_000,previousSalary:0,marketRating:1,serviceYears:1,org:'NPB',levelMinimum:16_000_000});assert.equal(equalMinimum.protectedSalary,16_000_000);assert.equal(equalMinimum.floorApplied,false);
-assert.deepEqual(migrateServiceTime({npbFaSeasons:4,stats:{MLB:{yr:3},MINOR:{yr:9},KBO:{yr:2},CPBL:{yr:1}}}),{NPB:4,MLB:3,KBO:2,CPBL:1});
-assert.deepEqual(migrateServiceTime({serviceTime:{NPB:8,MLB:2,KBO:0,CPBL:4},npbFaSeasons:7,stats:{MLB:{yr:3},KBO:{yr:1},CPBL:{yr:2}}}),{NPB:8,MLB:3,KBO:1,CPBL:4});
+// Approved MLB compatibility fix: total recorded seasons are not qualified service.
+// Other leagues retain their existing migration; explicit MLB counters survive.
+assert.deepEqual(migrateServiceTime({npbFaSeasons:4,stats:{MLB:{yr:3},MINOR:{yr:9},KBO:{yr:2},CPBL:{yr:1}}}),{NPB:4,MLB:0,KBO:2,CPBL:1});
+assert.deepEqual(migrateServiceTime({serviceTime:{NPB:8,MLB:2,KBO:0,CPBL:4},npbFaSeasons:7,stats:{MLB:{yr:3},KBO:{yr:1},CPBL:{yr:2}}}),{NPB:8,MLB:2,KBO:1,CPBL:4});
 console.log('control period policy tests passed');

@@ -1,9 +1,12 @@
 import {restoreCompletedAwardProofs} from './award-transaction-policy.js';
 import {validateSaveEnvelope} from './browser-save-codec.js';
-// Restore data/methods only. No initialization, defaults, migration or RNG draw.
+import {reconcileAmericanCareer} from './control-period-policy.js';
+// Validate/authenticate first, then restore methods and reconcile explicit US
+// level/service evidence. No initialization, simulated history or RNG draw.
 export function hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization}){
  const validated=validateSaveEnvelope(envelope),state=validated.state;
  if(authorization)restoreCompletedAwardProofs(state,authorization,validated);else if(envelope.awardProofs.length)throw Error('SAVE_AUTH_REQUIRED');
+ reconcileAmericanCareer(state);
  Object.defineProperty(state,'salary',{get(){return this.careerEarnings;},set(v){this.careerEarnings=v;},enumerable:false});
  Object.defineProperty(state,'orgTeam',{get(){return this.orgTeamId;},set(v){this.orgTeamId=teamRec(v)?v:(DATA.teams.find(t=>t.name===v)?.teamId||v);},enumerable:false});
  state.teamName=function(){return teamDisplay(this.orgTeamId,this.lv);};

@@ -68,7 +68,7 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const local=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({channel:arg('browser')||'chrome',headless:true});
 const errors=[];
-function careerAction(balanced){const rows=[...document.querySelectorAll('#act .abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...document.querySelectorAll('#act button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));if(balanced)rows.sort((a,b)=>{const priority=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return priority(a)-priority(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});return buttons.find(e=>e.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];}
+function careerAction(balanced){const rows=[...document.querySelectorAll('#act .abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...document.querySelectorAll('#act button:not([data-fa-sort])')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));if(balanced)rows.sort((a,b)=>{const priority=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return priority(a)-priority(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});return buttons.find(e=>e.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];}
 // Plays one career; returns per-step digests, or the full snapshot at step stopAt.
 async function career(variant,{seed,pos,balanced},viewport,stopAt=-1){
   const context=await browser.newContext({viewport}),page=await context.newPage();
@@ -81,7 +81,7 @@ async function career(variant,{seed,pos,balanced},viewport,stopAt=-1){
       const snap=new Function('return '+capture)(),choose=new Function('return '+action)(),steps=[];let jerseySkips=0;
       for(let step=0;step<2500;step++){
         // PLY-01: the year-start number prompt is the only approved new step; confirm it with its main button, unrecorded, before the snapshot.
-        const jb=[...document.querySelectorAll('#act button')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.innerText.trim()));if(jb){jb.click();jerseySkips++;}
+        const jb=[...document.querySelectorAll('#act button:not([data-fa-sort])')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.innerText.trim()));if(jb){jb.click();jerseySkips++;}
         const s=await snap(step===stopAt);
         if(step===stopAt)return {full:s};
         steps.push(s);if(s.done)return {steps,tokens06:{board:window.__designTokens06Board||0,log:window.__designTokens06Log||0},jersey:{skips:jerseySkips,...window.__jerseyCounts}};
@@ -129,8 +129,8 @@ try{
       assert.fail(`${label} differs from ${baselineRef} at step ${at} (year ${base.steps[at]?.year}) ${d?d.path+': '+near(d.before,d.after).join(' -> '):'(length only)'}`);
     }
     const last=base.steps.at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');
-    // PLY-01 projection contract: the baseline never shows the prompt; on the candidate the prompt appears exactly when the career is professional, and every projection ran on every step.
-    assert.equal(base.jersey.skips,0,'baseline has no number step');
+    // PLY-01: only pre-jersey baselines lack the prompt; modern baselines retain both sides and the existing projection checks.
+    if(jersey)assert.equal(base.jersey.skips,0,'pre-jersey baseline has no number step');else assert.equal(base.jersey.skips,head.jersey.skips,'modern baseline retains the same number steps');
     if(jersey){assert.equal(head.jersey.board,head.steps.length,'JERSEY_BOARD_PROJECTION_COUNT');assert.equal(head.jersey.skips>0,head.jersey.pro>0,'number step appears exactly when the career reaches a professional team');if(head.jersey.pro>0){assert.ok(head.jersey.season>0,'JERSEY_SEASON_PROJECTION_COUNT');assert.ok(head.jersey.yearly>0,'JERSEY_YEARLY_PROJECTION_COUNT');assert.ok(head.jersey.table>0,'JERSEY_TABLE_PROJECTION_COUNT');}}
     // UI-DESIGN-TOKENS-06 projection must actually run: #bd-tj on every step, retirement-card elements at least once.
     if(designTokens06){assert.equal(head.tokens06.board,head.steps.length,'DESIGN_TOKENS_06_BOARD_PROJECTION_COUNT');assert.ok(head.tokens06.log>0,'DESIGN_TOKENS_06_LOG_PROJECTION_COUNT');}

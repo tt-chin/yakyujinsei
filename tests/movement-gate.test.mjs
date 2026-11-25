@@ -40,7 +40,12 @@ ${l3Body.replaceAll('performMovement()','this.#performMovement()')}
 }
 `;
 const moduleText=await readSourceText(new URL('../docs/src/engine/movement-gate.js',import.meta.url));
-assert.equal(moduleText,expected,'module = base section plus the listed edits');
+// Approved MLB-origin compatibility: pin exactly the import and reconciliation
+// call; the old baseline and every other byte remain the original oracle.
+const importLine="import {reconcileAmericanCareer} from './control-period-policy.js';\n";
+const gateCall='if(amateurCareer.seasonEndMovement())return;reconcileAmericanCareer(S);';
+assert.equal(moduleText.split(importLine).length,2);assert.equal(moduleText.split(gateCall).length,2);
+assert.equal(moduleText.replace(importLine,'').replace(gateCall,'if(amateurCareer.seasonEndMovement())return;'),expected,'only the approved US reconciliation changed');
 assert.doesNotMatch(moduleText,/\b(?:R|ri|chance|pick|pickRecord)\(/,'no draw site');
 
 // ---- Part 2: behaviour, old section (vm) vs module (main realm) ----
@@ -113,6 +118,11 @@ function play(h,steps){
 let compared=0;
 for(const [name,steps] of scenarios){
   const a=play(oldHarness(),steps),b=play(newHarness(),steps);
+  if(name==='MLB minors')for(const row of a){
+    const s=JSON.parse(row.state);assert.equal(s.org,'MLB');assert.equal(s.lv,'A3');assert.equal(s.faElig,true);
+    s.org='MiLB';s.faElig=false;row.state=JSON.stringify(s);
+    row.log=row.log.map(call=>call[0]==='contractStage'?['contractStage','MiLB']:call);
+  }
   assert.equal(a.length,steps.length,name+': all steps ran');assert.ok(a.some(x=>x.log.length>0),name+': stubs reached');
   assert.equal(JSON.stringify(b),JSON.stringify(a),name);compared++;
 }

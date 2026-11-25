@@ -13,6 +13,8 @@ import { playerMarketCategory, rankTeamsByDemand, teamDemandLabel, teamDemandMul
 import { contractTypeLabel } from '../ui/contract-labels.js';
 import { traitLabel, TRAIT_TEXT, goldclothEligible } from './trait-policy.js';
 import { hasCurrentAwardEffect } from './award-consumer-policy.js';
+import {reconcileAmericanCareer} from './control-period-policy.js';
+import {effectiveMarketOrg} from './cross-league-market-policy.js';
 
 export class CareerMovement {
   #rules;
@@ -81,7 +83,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
         cont(); }},
       {t:'黙ってプレーに集中する',main:true,s:'トレード確率は変わらない',f:()=>{
         if(chance(35)){ doTradeExec(); card('info','取引は完了しました',`あなたの沈黙にもかかわらず、チームは取引を完了しました。 '`); board(1); }
-        else card('info','泊まった','噂はあくまで噂です。新しい野球シーズンでも、同じジャージを着ます。');
+        else card('info','トレードは成立せず','トレードの噂はあったものの、移籍は実現せず、引き続き同じ球団でプレーすることになった。');
         cont(); }}]);
   }
   function buyoutRemaining(rate){ /* 残契約の支払いは選手都合の解除で70%、球団都合なら100%。 */
@@ -125,8 +127,8 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
         if(alts.length){
           card('bad','降格通告',`成績が基準に届かず、球団は<b class="dn">${LV[targetLevel].n}</b>への降格を通告。しかし同時に、他リーグからオファーが届いた。`);
           choose('降格を受け入れるか、新天地を選ぶか？',[
-            {t:LV[targetLevel].n+'への降格を受け入れる',main:true,f:()=>{const S=getState();const fromLv=S.lv;S.lv=targetLevel;applyDemotionSalary(fromLv,targetLevel);board(2);reportFlowOutcome({kind:'DEMOTION_ACCEPTED'});}},...alts]);
-        }else{ const fromLv=S.lv;S.lv=targetLevel;applyDemotionSalary(fromLv,targetLevel);card('bad','降格通告',`成績が基準に届かず、<b class="dn">${LV[targetLevel].n}</b>への降格が決まった。`); board(2); reportFlowOutcome({kind:'DEMOTION_ACCEPTED'}); }
+            {t:LV[targetLevel].n+'への降格を受け入れる',main:true,f:()=>{const S=getState();const fromLv=S.lv;S.lv=targetLevel;reconcileAmericanCareer(S);applyDemotionSalary(fromLv,targetLevel);board(2);reportFlowOutcome({kind:'DEMOTION_ACCEPTED'});}},...alts]);
+        }else{ const fromLv=S.lv;S.lv=targetLevel;reconcileAmericanCareer(S);applyDemotionSalary(fromLv,targetLevel);card('bad','降格通告',`成績が基準に届かず、<b class="dn">${LV[targetLevel].n}</b>への降格が決まった。`); board(2); reportFlowOutcome({kind:'DEMOTION_ACCEPTED'}); }
       }
       else outOfOrg(o);
     };
@@ -221,7 +223,12 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
     if(S.lastFaMarket?.marketKey===key){showFaMarket(S.lastFaMarket);return;}
     S.faMarketKey=key;const rating=currentMarketRating(),baseCount=baseFaOfferCount(rating),context=buildMarketContext({marketSalary:0,marketInjury:S.marketInjury,history:S.salaryEvaluationHistory||[],normalMaxYears:4,baseOfferCount:Math.max(0,baseCount-(S.traits.cancer?1:0))}),offerCount=context.offerCount,category=playerMarketCategory({pos:S.pos,role:S.role,dpos:S.dpos});
     const routes=S.faType==='DOMESTIC'?[{org:'NPB',level:'NPB1'}]:[{org:'NPB',level:'NPB1'},...(o>=47&&d>=1?[{org:'KBO',level:'KBO1'}]:[]),...(o>=45&&d>=0?[{org:'CPBL',level:'CPBL1'}]:[]),...(o>=60&&d>=2?[{org:'MiLB',level:'MLB'}]:[])];
-    const candidates=routes.flatMap(route=>listByOrg(route.org).filter(team=>team.teamId!==S.orgTeamId).map(team=>({team,...route}))),ranked=rankTeamsByDemand({teams:candidates.map(x=>x.team),seed:S.seed,year:S.year,category});
+    // Domestic NPB FA stays domestic. Otherwise own-league clubs do not need
+    // the thresholds for moving abroad; retain the existing cross-league routes.
+    const currentOrg=effectiveMarketOrg(S.lv,S.org),ownLeague=currentOrg==='MiLB'?'MLB':currentOrg;
+    const ownRoute={NPB:{org:'NPB',level:'NPB1'},KBO:{org:'KBO',level:'KBO1'},CPBL:{org:'CPBL',level:'CPBL1'},MLB:{org:'MLB',level:'MLB'}}[ownLeague];
+    if(S.faType!=='DOMESTIC'&&ownRoute&&!routes.some(route=>effectiveMarketOrg(route.level,route.org)===ownLeague))routes.push(ownRoute);
+    const candidates=[...new Map(routes.flatMap(route=>listByOrg(route.org).filter(team=>team.teamId!==S.orgTeamId).map(team=>({team,...route}))).map(entry=>[entry.team.teamId,entry])).values()],ranked=rankTeamsByDemand({teams:candidates.map(x=>x.team),seed:S.seed,year:S.year,category});
     const routeByTeam=new Map(candidates.map(x=>[x.team.teamId,x])),selected=ranked.slice(0,offerCount).map(x=>({...x,...routeByTeam.get(x.team.teamId)})).sort((a,b)=>a.team.teamId.localeCompare(b.team.teamId)),comp=competitionMultiplier(selected.length),offers=[],jitterByTeam=new Map(generateBidJitters(selected.map(x=>x.team.teamId),R).map(x=>[x.teamId,x.multiplier]));
     selected.forEach((entry,index)=>{const proof=context.preferProof,contractType=proof?'PROOF':index%2===0&&context.maxYears>=3?'LONG':'SHORT',years=proof?1:contractType==='LONG'?context.maxYears:Math.min(2,context.maxYears),converted=convertRatingBetweenLevels(rating,S.lv,entry.level,LV),marketSalary=salaryFor(entry.level,converted),breakdown={injuryMultiplier:context.injuryMultiplier,positionMultiplier:dpMult(),contractTypeMultiplier:contractTypeMultiplier(contractType),teamDemandMultiplier:teamDemandMultiplier(entry.demandScore),franchiseMultiplier:1,competitionMultiplier:comp,bidJitterMultiplier:jitterByTeam.get(entry.team.teamId)},incentive=createIncentiveTerms({org:entry.org,annualSalary:marketSalary});const offer=buildFaOffer({offerId:`${key}:${entry.team.teamId}`,teamId:entry.team.teamId,org:entry.org,level:entry.level,category,demandScore:entry.demandScore,years,contractType,marketSalary,levelMinimum:salaryFor(entry.level,0),breakdown,incentiveTerms:incentive});priceFaOffer(offer);offer.incentive=createIncentiveTerms({org:entry.org,annualSalary:offer.annualSalary});offer.incentiveAnnualMax=offer.incentive?.annualMax||0;offers.push(offer);});
     let stayOffer=null;if(offers.length&&S.orgTeamId){const demand=rankTeamsByDemand({teams:[teamRec(S.orgTeamId)],seed:S.seed,year:S.year,category})[0]?.demandScore||0,contractType=context.preferProof?'PROOF':'SHORT',years=context.preferProof?1:Math.min(2,context.maxYears),marketSalary=salaryFor(S.lv,rating),breakdown={injuryMultiplier:context.injuryMultiplier,positionMultiplier:dpMult(),contractTypeMultiplier:contractTypeMultiplier(contractType),teamDemandMultiplier:teamDemandMultiplier(demand),franchiseMultiplier:S.traits.franchise?1.04:1,competitionMultiplier:comp,bidJitterMultiplier:1},incentive=createIncentiveTerms({org:S.org,annualSalary:marketSalary});stayOffer=buildFaOffer({offerId:`${key}:STAY`,teamId:S.orgTeamId,org:S.org,level:S.lv,category,demandScore:demand,years,contractType:'RETURN',marketSalary,levelMinimum:salaryFor(S.lv,0),breakdown,incentiveTerms:incentive});priceFaOffer(stayOffer);stayOffer.incentive=createIncentiveTerms({org:S.org,annualSalary:stayOffer.annualSalary});stayOffer.incentiveAnnualMax=stayOffer.incentive?.annualMax||0;}
@@ -251,6 +258,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
   }
   function movement(){
     const S=getState();
+    reconcileAmericanCareer(S);
     const o=ovr();
     /* プロ。 */
     if(isBelowActiveMinimum(o)){
@@ -260,9 +268,9 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
     if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);reportFlowOutcome({kind:'REHAB_YEAR_COMPLETED'});return;} /* リハビリ全休年も満了契約の来季更新を飛ばさない。 */
     if(S.org==='NPB')S.npbYears++;
     if(LV[S.lv].top){ /* 轉換リーグ：直接解除球団 5 年控制期制限、往後のみ要契約満了就是自由球員。 */
-      if(S.svcOrg && S.svcOrg!==S.org){ S.faElig=true; }
+      if(S.org!=='MLB'&&S.svcOrg && S.svcOrg!==S.org){ S.faElig=true; }
       S.svcOrg=S.org;
-      S.svc=(S.svc||0)+1; if(S.svc>=5)S.faElig=true;
+      S.svc=(S.svc||0)+1; if(S.org==='MLB')S.faElig=contractStageFor('MLB')!=='CONTROL';else if(S.svc>=5)S.faElig=true;
     }
     /* 神主牌：同一球団での連続在籍年数(移籍でリセット、見 doTrade/signTo)。 */
     if(S.stage==='PRO'&&LV[S.lv].top){ S.teamYears=(S.teamYears||0)+1;
@@ -322,7 +330,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
         if(idx<path.length-2){ const nx2=path[idx+2];
           if(o>=LV[nx2].min+2&&(S.lastD||0)>=4)to=nx2; }
         const fromLv=S.lv;
-        S.lv=to; applyPromotionSalary(fromLv,to); card('good','昇格通知',`活躍が評価され、${to!==nx?'<b class="hl">二段階昇格</b>':'昇格'}！ 新天地は<b class="hl">${LV[to].n}</b>。`); board(2);
+        S.lv=to; reconcileAmericanCareer(S); applyPromotionSalary(fromLv,to); card('good','昇格通知',`活躍が評価され、${to!==nx?'<b class="hl">二段階昇格</b>':'昇格'}！ 新天地は<b class="hl">${LV[to].n}</b>。`); board(2);
         if(S.traits.yips){ removeTrait('yips','イップス'); card('good','イップス克服','本来の階級へ戻り、自分のリズムを取り戻した――<b class="hl">イップスを克服した</b>。'); } } }
     if(!S.ct)throw new Error('PRO_PLAYER_WITHOUT_CONTRACT');
     /* 所属球団との延長交渉は複数年契約の残り2年時点、または最終契約の残り1年で行う。 */
