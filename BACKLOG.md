@@ -50,7 +50,7 @@
 - [ ] **MLB-POSTING-DESIGN-01** — `SPEC_APPROVED / NOT_IMPLEMENTED`。
   - 剩餘：未取得海外FA前的赴美申請、母球團同意、報價與玩家選擇流程。
   - 完成條件：與上一案共同提出整合計畫，釐清全休／延長等邊界並取得授權後實作；驗證資格、同意率、無報價、每年一次、成功不付70%買斷、原契約、限制型美國契約及RNG順序。屬R3／MINOR，目前未授權實作。
-  - 依據：[定案規格](tasks/MLB_POSTING_DESIGN.md)、[兩案實作計畫草案](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md)（§8 Q1～Q6待code owner決定，未授權實作）。讀碼更正：`extensionOffer`接受或拒絕後都呼叫`crossOffers`（`career-contract.js:92-103`），與規格§2.2、§4第1點不符，是否更正列為計畫§8 Q4。
+  - 依據：[定案規格](tasks/MLB_POSTING_DESIGN.md)、[兩案實作計畫草案](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md)（§8 Q1～Q6待code owner決定，未授權實作）。讀碼更正：`extensionOffer`接受或拒絕後都呼叫`crossOffers`（`career-contract.js:92-103`），與規格§2.2、§4第1點不符；延長交涉年的處理順序及規格更正列為計畫§8 Q4。
 
 ### 2.4 保留設計（1項）
 
