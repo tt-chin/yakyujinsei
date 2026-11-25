@@ -1,6 +1,6 @@
 # NPB 季末移籍整合（MLB-POSTING-DESIGN-01＋NPB-OFFER-WINDOW-01）：實作計畫
 
-狀態：**已實作、待 GitHub 手動 Full**（2026-11-25，使用者授權實作，結果見 §10）。兩案規格已批准（`tasks/MLB_POSTING_DESIGN.md` P1～P8、`tasks/NPB_OFFER_WINDOW_DESIGN.md` Q1～Q6）。§8 Q4 待決，暫依現行順序。本文件提出兩份規格「實作邊界」各項的處理方式、新文字草案、許可差異與驗證範圍，供確認。
+狀態：**已實作並合併 dev（`00fc40d`）；Full #289 FAIL 4 項，修正進行中（§11）**（2026-11-25，使用者授權實作，結果見 §10）。兩案規格已批准（`tasks/MLB_POSTING_DESIGN.md` P1～P8、`tasks/NPB_OFFER_WINDOW_DESIGN.md` Q1～Q6）。§8 Q4 待決，暫依現行順序。本文件提出兩份規格「實作邊界」各項的處理方式、新文字草案、許可差異與驗證範圍，供確認。
 分類：R3（移籍流程、RNG 消耗、同 seed 結果改變）、MINOR，併入 2.1.0（§8 Q1）。
 讀碼基準：`84291592dfdc004082ffe6d15b75450fb4bc138b`（PR #127 head）；`origin/dev` `13b921b`（#127 合併後）的 `docs/src/engine` 與 `docs/src/ui/choice-prompt.js` 與其相同（`git diff` 確認）。`docs/src/ui/decision-presentation.js` 等 UI 檔於 `8964d62` 有變更，入札子選單的呈現於 scratch 草稿階段確認。
 dev 後續變更（2026-11-25 確認，`origin/dev` `b2ab72d`）：`f9ae156` 在 `career-movement.js` 新增 1 行 import，本文件引用的該檔行號在 dev 上 +1；`faFlow` 對非國內 FA 新增本聯盟球團路由（NPB 國內 FA 不變）。實作時以當時的 dev 重新確認行號與 F 各項。
@@ -190,4 +190,42 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
   6. 第 8 年「宣告→取消→再宣告」與兩畫面的取消選項未以實際市場執行 → `global-contract-market-e2e` 新增第 8 年情境（實際 `faMarket`：比較表＋取消、欄位還原、RNG 0、同一快取、無報價畫面的取消）。
   - 修正後重跑：Quick 116 PASS／0 FAIL／SKIP／BLOCKED（116 入口）；`contract-salary-e2e --compare=b8bc49b` 381／0；`kbo-renewal-e2e` 完整模式、`global-contract-market-e2e --quick`、`fa-market-presentation-e2e` PASS。
   - 修正後負控制 5 個（移除 `postingResolved` 檢查、比較表改回嚴格按鈕數、移除 `faAside`、無報價畫面不加取消、取消按鈕不移到比較表後）皆於對應斷言 FAIL。
-  - **Full：GitHub 手動、未執行**（AGENTS §6.2）。
+  - Full：其後由 Brave dispatch [Full #289](https://github.com/tt-chin/yakyujinsei/actions/runs/45645665227) FAIL 143／147，見 §11。
+
+## 11. Full #289 修正（進行中，2026-11-26 交接）
+
+### 11.1 狀態
+
+- PR #128 由 code owner 合併入 dev（merge `00fc40d460e706a8f994aebe936a41f1fc4d45a8`，含實作 `f8b512e`）。dev push [Quick #290](https://github.com/tt-chin/yakyujinsei/actions/runs/45653369126) PASS。
+- [Full #289](https://github.com/tt-chin/yakyujinsei/actions/runs/45645665227)（使用者指示由 Brave dispatch，分支 `feat/npb-mlb-season-end`，`f8b512e`）**FAIL 143／147**。同一 dev 內容前的 [Full #288](https://github.com/tt-chin/yakyujinsei/actions/runs/45554986597)（`b2ab72d`）全 PASS，故 4 FAIL 由本案造成。**dev 現在已知 Full 有 4 FAIL**，此紀錄不得改寫為 PASS。
+- 原因：§7 T table 只列 4 個 Full 專屬入口，未逐一檢查 32 個 Full 專屬的固定 seed 生涯比對入口。4 個 FAIL 都是 A1（新季末選單的抽球團使之後 RNG 偏移）造成的歷史比對分歧，不是產品錯誤。
+
+| 入口（batch） | 失敗 | 修正狀態（分支 `fix/season-end-full-compare`，自 `00fc40d`，未 push） |
+|---|---|---|
+| `game-view-dom-e2e`（8） | `jp3-pitcher-02`／P 第 232 步（2040）與 `4f39a73` 的 DOM 不同 | 已修正：第一個差異步須顯示基準該步沒有的已核准季末選項（ポスティング／韓台），之前嚴格；基準與現行背號步數比對只在無分歧時要求。本機 8／8 PASS |
+| `full-power-pitching-jp3-pitcher-02-e2e`（7） | 通常投球／省エネ投球 `same seed required for producer rename`（生涯長度不同） | 已修正：`seasonEndDivergence` 找第一個基準沒有的已核准季末選項，之前以 `assertApprovedProducerRenameCareer`（只容許 D2 名稱）＋RNG 數值嚴格比對。本機 3／3 PASS |
+| `international-personal-stats-e2e`（2） | `jp3-pitcher-02`／`-03`／`jp3-outfielder-01` 同上；`jp3-infielder-01` `FRANCHISE_NATIVE_GRANT_CONTRACT` | `seasonEndOpening` 同樣處理已改好，**尚未執行**；`jp3-infielder-01`（phoenixCase）待 11.2 |
+| `full-power-pitching-e2e`（5，`--part=fixtures`） | `S03-IF-unchanged` `FRANCHISE_NATIVE_GRANT_CONTRACT` | 待 11.2 |
+
+- `FRANCHISE_NATIVE_GRANT_CONTRACT`：新生涯 `jp3-infielder-01` 在 2048 年「今季の成績を見る」同一步奪冠並取得 franchise（`champThisTeam` false→true、`teamYears` 7→8），符合產品規則；`tools/development-b/historical-comparison.mjs` 的 `verifyFranchiseGrant` 假設奪冠在前一步，故丟例外。決定：不改共用工具，franchise 檢查只套用於分歧點之前。
+
+### 11.2 phoenix 自然路線（使用者決定採方案 (b)）
+
+- 問題：`assertApprovedPhoenixCareer`（`tests/support/first-difference.mjs`）要求 `jp3-infielder-01`／IF 於 2041 年首位打者自然觸發 phoenix，且現行生涯與「舊引擎＋`withApprovedPhoenixControl`」完全一致；寫死 seed、年度 2041、`2041 NPB首位打者`。新規則下該生涯 2040 年進入保有權年度（海外回歸），A1 使路線消失。
+- (a)（比對到 2040 年為止、phoenix 改依單元測試）未採用。(b)：另找 seed，在舊引擎＋已核准 phoenix 修補版上自然觸發 phoenix，且現行生涯全程不經新季末選單；兩測試的 phoenix 斷言改為以 seed 參數化（年度、稱號、位置）。`withApprovedPhoenixControl` 為原始碼通用修補，不綁 seed。
+- 掃描（2026-11-25，現行引擎，`international-personal-stats-e2e` 的 step 策略，IF，`phx-9`～`phx-370` 362 條完成、0 錯誤；之後 6 個 worker 卡在 `page.create` 約 88 分鐘，停止）：glass 122 條，phoenix 3 條：
+
+| seed | glass | phoenix | 生涯中點選季末選項次數（含既有選單） |
+|---|---|---|---|
+| `phx-85` | 2038（28 歲） | 2040 NPB1 首位打者 | 11 |
+| `phx-207` | 2038（28 歲） | 2040 NPB1 首位打者 | 9 |
+| `phx-238` | 2041（31 歲） | 2043 NPB1 首位打者 | 5 |
+
+- 掃描器：未追蹤檔 `tests/_scan-phoenix-intl.mjs`（`international-personal-stats-e2e.mjs` 前 33 行＋平行掃描迴圈；`--seeds=a,b --pos=IF --conc=N --playwright=<shim>`，每 seed 輸出 `RES {seed,glass,phoenix,menus}`）。**不提交**；用完刪除。並行 6 會卡住，用 2～3 並監看 log 更新時間。
+- 下一步：
+  1. 每個候選 seed 以 `international-personal-stats-e2e` 的 phoenixCase 流程（baseline／current／approved／repeat）執行 `assertApprovedPhoenixCareer`：current 與 approved 全程一致、phoenix 為與 baseline 的第一個差異。可暫時把 `phoenixCase` 條件與 seed 清單改為候選 seed 試跑。
+  2. 合格者再以 `full-power-pitching-e2e` `S03-IF-unchanged`（`通常投球`）驗證；兩測試可用不同 seed。
+  3. 改寫 `assertApprovedPhoenixCareer` 的寫死值為參數（seed、pos、年度、稱號），兩測試傳入新 seed；`jp3-infielder-01` 仍保留於一般固定生涯（走 `seasonEndOpening`）。
+  4. 全不合格：降低並行數擴大掃描，必要時加 OF／C。
+  5. 本機個別執行 4 個入口（不用 Full profile），reviewer，commit／push `fix/season-end-full-compare`，開 PR 到 dev（繁中），以 Brave dispatch Full。BACKLOG／本節更新結果。
+- 本機 E2E：Brave shim 依記憶 `local-e2e-brave-playwright` 重建（scratchpad 為對話專用）。

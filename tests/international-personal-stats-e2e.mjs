@@ -10,6 +10,15 @@ import {withApprovedPhoenixControl,phoenixAwardProbe,assertApprovedPhoenixCareer
 import {openBoardAction} from './support/board-menu.mjs';
 import {injectOverlayHook} from './support/overlay-hook.mjs';
 import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
+// NPB-OFFER-WINDOW-01 / MLB-POSTING-DESIGN-01 (approved A1/A3): a natural career may reach a new NPB1 season-end choice;
+// its team draw shifts every later RNG value. Returns null when no such choice exists (the career must stay identical),
+// otherwise the index of the action whose click opened the first choice the baseline does not have. The strict
+// comparison then covers every earlier action and that action's before-state (which carries rngState).
+const approvedSeasonEndChoice=/^(韓国プロ野球への海外移籍：|台湾プロ野球への海外移籍：|ポスティングを申請|現在の球団に残留)/;
+function seasonEndOpening(old,now){
+ const t=now.findIndex((s,i)=>i>0&&s.beforeState.lv==='NPB1'&&approvedSeasonEndChoice.test(s.action)&&s.beforeState.year===now[i-1].beforeState.year&&!(old[i]&&old[i].beforeState.year===s.beforeState.year&&old[i].action===s.action));
+ return t<0?null:t-1;
+}
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'e602174a22d7472e1021d780388ad61adc6b11b6')+'^{commit}'],{encoding:'utf8'}).trim();
 const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
 const approvedPhoenixPrior=withApprovedPhoenixControl(prior);
@@ -66,7 +75,10 @@ try{
     await p.close();
    }
    if(phoenixCase)e.phoenixComparison=assertApprovedPhoenixCareer(runs[0],runs[1],runs[2],runs[3],'actions',{championmaker:true});
-   else e.d2ProducerRenameComparison=assertApprovedProducerRenameCareer(runs[0],runs[1],{championmaker:true});
+   else{const k=seasonEndOpening(runs[0].actions,runs[1].actions);
+    if(k===null)e.d2ProducerRenameComparison=assertApprovedProducerRenameCareer(runs[0],runs[1],{championmaker:true});
+    else{assert.ok(k>0,seed+' approved NPB1 season-end choice step');assert.equal(runs[1].actions[k].action,runs[0].actions[k].action,'the opening click is the baseline action');
+     e.d2ProducerRenameComparison=assertApprovedProducerRenameCareer({actions:runs[0].actions.slice(0,k),opening:runs[0].actions[k].beforeState},{actions:runs[1].actions.slice(0,k),opening:runs[1].actions[k].beforeState},{championmaker:true});e.seasonEndStep=k;}}
   });
   await h.test('fixed-career-international-coverage',{natural:true},async()=>{assert.ok(wbc>0,'natural WBC appearance required');assert.ok(p12>0,'natural Premier12 appearance required');});
  }

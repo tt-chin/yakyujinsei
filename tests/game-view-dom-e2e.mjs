@@ -119,22 +119,29 @@ try{
   for(const viewport of viewports)for(const c of cases){
     const label=`${c.seed}/${c.pos}/${c.balanced?'balanced':'first-row'}/${viewport.width}`;
     const [base,head]=[await career('baseline',c,viewport),await career('candidate',c,viewport)];
-    const step=base.steps.findIndex((s,i)=>s.digest!==head.steps[i]?.digest);
+    const step=base.steps.findIndex((s,i)=>s.digest!==head.steps[i]?.digest);let seasonEndStep=null;
     if(step>=0||base.steps.length!==head.steps.length){
       const at=step>=0?step:Math.min(base.steps.length,head.steps.length);
       const [b,h]=[await career('baseline',c,viewport,at),await career('candidate',c,viewport,at)];
+      // NPB-OFFER-WINDOW-01 / MLB-POSTING-DESIGN-01 (approved A1/A3): a natural career may reach a new NPB1 season-end
+      // choice whose team draw shifts every later RNG value. Everything before that step stays strict; the first
+      // differing step must show an approved season-end option the baseline step does not show.
+      const approvedOptions=['ポスティングを申請','韓国プロ野球への海外移籍：','台湾プロ野球への海外移籍：'],newOptions=approvedOptions.filter(t=>String(h.full.dom.act).includes(t)&&!String(b.full.dom.act).includes(t));
+      if(step>0&&newOptions.length&&h.full.state.lv==='NPB1'&&h.full.state.year===base.steps[at-1].year){seasonEndStep=at;}
+      else{
       const d=findFirstDifference(h.full,b.full);
       // outerHTML strings are long; show the region around the first differing character.
       const near=(x,y)=>{if(typeof x!=='string'||typeof y!=='string')return [x,y].map(v=>JSON.stringify(v)?.slice(0,300));let i=0;while(x[i]===y[i])i++;return [x,y].map(v=>JSON.stringify(v.slice(Math.max(0,i-80),i+160)));};
       assert.fail(`${label} differs from ${baselineRef} at step ${at} (year ${base.steps[at]?.year}) ${d?d.path+': '+near(d.before,d.after).join(' -> '):'(length only)'}`);
+      }
     }
     const last=base.steps.at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');
     // PLY-01: only pre-jersey baselines lack the prompt; modern baselines retain both sides and the existing projection checks.
-    if(jersey)assert.equal(base.jersey.skips,0,'pre-jersey baseline has no number step');else assert.equal(base.jersey.skips,head.jersey.skips,'modern baseline retains the same number steps');
+    if(jersey)assert.equal(base.jersey.skips,0,'pre-jersey baseline has no number step');else if(seasonEndStep===null)assert.equal(base.jersey.skips,head.jersey.skips,'modern baseline retains the same number steps');
     if(jersey){assert.equal(head.jersey.board,head.steps.length,'JERSEY_BOARD_PROJECTION_COUNT');assert.equal(head.jersey.skips>0,head.jersey.pro>0,'number step appears exactly when the career reaches a professional team');if(head.jersey.pro>0){assert.ok(head.jersey.season>0,'JERSEY_SEASON_PROJECTION_COUNT');assert.ok(head.jersey.yearly>0,'JERSEY_YEARLY_PROJECTION_COUNT');assert.ok(head.jersey.table>0,'JERSEY_TABLE_PROJECTION_COUNT');}}
     // UI-DESIGN-TOKENS-06 projection must actually run: #bd-tj on every step, retirement-card elements at least once.
     if(designTokens06){assert.equal(head.tokens06.board,head.steps.length,'DESIGN_TOKENS_06_BOARD_PROJECTION_COUNT');assert.ok(head.tokens06.log>0,'DESIGN_TOKENS_06_LOG_PROJECTION_COUNT');}
-    console.log(`PASS ${label}: ${base.steps.length} steps, RNG ${last.calls}, retirement ${last.year}, verified approved HOF/provenance display${designTokens06?`, tokens-06 projection board ${head.tokens06.board}/log ${head.tokens06.log}`:''}; remaining DOM/S/RNG strict`);
+    console.log(`PASS ${label}: ${base.steps.length} steps, RNG ${last.calls}, retirement ${last.year}, verified approved HOF/provenance display${designTokens06?`, tokens-06 projection board ${head.tokens06.board}/log ${head.tokens06.log}`:''}; ${seasonEndStep===null?'remaining DOM/S/RNG strict':'DOM/S/RNG strict until the approved season-end choice at step '+seasonEndStep}`);
   }
   assert.deepEqual(errors,[],'Console or page errors');
   console.log(`GameView DOM E2E passed: ${cases.length*viewports.length} careers vs ${baselineRef}`);
