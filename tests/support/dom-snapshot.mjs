@@ -3,7 +3,7 @@
 // game.js must be served with instrumentRng(...,'__rngCalls') and GAME_VIEW_HOOK appended.
 export const GAME_VIEW_HOOK='\nwindow.__gameViewState=()=>({state:JSON.parse(JSON.stringify(S)),calls:window.__rngCalls||0,views:JSON.parse(JSON.stringify({player:buildPlayerViewModel(),career:buildCareerViewModel()}))});';
 
-// Browser-side; passed by source. Waits for scrollBottom's rAF and the endGame override's setTimeout(0)
+// Browser-side; passed by source. Waits for scrollBottom's rAF and a following setTimeout(0)
 // before reading. Returns only a digest unless full is set, so long careers stay small in memory.
 export async function captureGameView(full){
   await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
@@ -18,6 +18,7 @@ export async function captureGameView(full){
   const state=window.__expect1140?window.__projectChampionmaker(projected,window.__champTeams):projected;
   delete state.version;if(state.birthHighSchool)delete state.birthHighSchool.createdVersion;
   const dom=Object.fromEntries(['log','act','board'].map(id=>[id,document.getElementById(id)?.outerHTML??null]));
+  if(window.__projectDecisionPresentation)for(const id of ['log','act'])dom[id]=window.__projectDecisionPresentation(dom[id],id,rawState);
   if(window.__expectBrowserSave){
     const board=document.getElementById('board').cloneNode(true),live=board.querySelector('#save-live');
     if(!live||board.querySelectorAll('#save-live').length!==1||live.children.length!==3)throw Error('SAVE_STATUS_STRUCTURE');
@@ -27,6 +28,8 @@ export async function captureGameView(full){
     const year=status.textContent.match(/^(\d{4})年/);if(year&&Number(year[1])>rawState.year)throw Error('SAVE_STATUS_FUTURE_YEAR');
     live.remove();dom.board=board.outerHTML;
   }
+  if(window.__expectJersey){dom.board=window.__projectJerseyBoard(dom.board,rawState);(window.__jerseyCounts=window.__jerseyCounts||{board:0,season:0,table:0,yearly:0,pro:0}).board++;}
+  if(window.__projectShell2000)dom.board=window.__projectShell2000(dom.board,window.__shellRenderedBoard);
   if(window.__expectMenu1163)dom.board=window.__projectMenu1163(dom.board);
   if(window.__expect1141){
     // Approved 1.14.1 UI-only delta: the credits menu button. Validate its exact
@@ -119,7 +122,62 @@ export async function captureGameView(full){
     }
     delete views.career.events;
   }
-  const log=document.getElementById('log')?.cloneNode(true);
+  // Approved INT-01 delta: career().international lists the played tournaments (S.intlTraitResults) in schedule order.
+  // Check it against the saved results (every played eventKey once, saved rank and personal stats, years ascending), then drop it.
+  const intlRecord=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+  const intlPlayed=Object.entries(intlRecord(rawState.intlTraitResults)?rawState.intlTraitResults:{}).filter(([key,r])=>intlRecord(r)&&r.eventKey===key&&Number.isInteger(r.year)).map(([,r])=>r);
+  const intlRows=views.career.international;
+  if(window.__expectIntlHistory&&intlRows===undefined)throw Error('INTL_HISTORY_VIEW_MISSING');
+  if(intlRows!==undefined){
+    const byKey=new Map(intlPlayed.map(r=>[r.eventKey,r]));
+    if(!Array.isArray(intlRows)||intlRows.length!==intlPlayed.length||new Set(intlRows.map(x=>x.eventKey)).size!==intlRows.length)throw Error('INTL_HISTORY_VIEW_ROWS');
+    intlRows.forEach((x,i)=>{const r=byKey.get(x.eventKey);
+      if(!r||x.year!==r.year||x.rank!==String(r.rank??'')||typeof x.name!=='string'||!x.name||JSON.stringify(x.personalStats)!==JSON.stringify(r.personalStats??null)||(i&&x.year<intlRows[i-1].year))throw Error('INTL_HISTORY_VIEW_CONTRACT');});
+    delete views.career.international;
+  }
+  let log=document.getElementById('log')?.cloneNode(true);
+  if(window.__projectDecisionPresentation){const template=document.createElement('template');template.innerHTML=dom.log;log=template.content.firstElementChild;}
+  const jerseyHistory=rawState.jerseyHistory,jerseyNumbers=new Set(),jerseyCounts=window.__jerseyCounts=window.__jerseyCounts||{board:0,season:0,table:0,yearly:0,pro:0};
+  if(window.__expectJersey){
+    // Approved PLY-01 delta (1.17.0): jerseyHistory is the only new state. Shape-check it first; every projection below
+    // validates its own markup against it and removes exactly what it expected, so all other S/DOM/view bytes stay strict.
+    if(jerseyHistory!==undefined&&!(Array.isArray(jerseyHistory)&&jerseyHistory.every(r=>r&&typeof r==='object'&&typeof r.teamId==='string'&&Number.isInteger(r.year)&&typeof r.number==='string')))throw Error('JERSEY_HISTORY_CONTRACT');
+    for(const r of jerseyHistory||[])jerseyNumbers.add(r.number);
+    if(rawState.stage==='PRO')jerseyCounts.pro++;
+    if(log){
+      // Retirement 通算成績 card: <h4.jersey-heading>背番号</h4><table.fin.jersey-table> (rows: team / years / number) before the league tables.
+      const tables=[...log.querySelectorAll('table.jersey-table')],headings=[...log.querySelectorAll('h4.jersey-heading')];
+      const wantTable=rawState.done&&(rawState.log||[]).some(r=>r&&r.st)?1:0;
+      if(tables.length!==wantTable||headings.length!==wantTable)throw Error('JERSEY_TABLE_COUNT');
+      for(const table of tables){
+        const card=table.closest('.card'),h=headings[0];
+        if(!card||card.querySelector('h4')?.textContent!=='通算成績'||h.textContent!=='背番号'||h.attributes.length!==1||h.nextElementSibling!==table||h.previousElementSibling!==card.querySelector('h4')||table.className!=='fin jersey-table'||table.attributes.length!==1)throw Error('JERSEY_TABLE_CONTRACT');
+        const rows=[...table.rows];
+        if(!rows.length)throw Error('JERSEY_TABLE_ROWS');
+        // Keep in step with removeJerseyDisplay: rows walk the professional log rows (with st) in order. Each row covers
+        // consecutive rows that share the record in effect (last record with year <= y; none = 不明), records are never
+        // split across rows, and every professional row is covered once. Team cells are only checked to be non-empty.
+        const recordAt=y=>{let found=-1;(jerseyHistory||[]).forEach((r,i)=>{if(r.year<=y)found=i;});return found;};
+        const pro=[];(rawState.log||[]).forEach((r,i)=>{if(r&&r.st)pro.push({i,y:r.y,k:recordAt(r.y)});});
+        let at=0;
+        for(const tr of rows){
+          const cells=[...tr.children];
+          if(cells.length!==3||cells.some(c=>c.tagName!=='TD'||c.children.length)||cells[0].className!=='cell-left'||cells[1].className!=='cell-nowrap'||cells[2].className!=='cell-nowrap'||!cells[0].textContent||!/^\d{4}(–\d{4})?$/.test(cells[1].textContent))throw Error('JERSEY_TABLE_ROW');
+          const [from,to=from]=cells[1].textContent.split('–').map(Number),first=pro[at];
+          if(!first||first.y!==from||(from===to)!==!cells[1].textContent.includes('–'))throw Error('JERSEY_TABLE_PERIOD');
+          let j=at;while(pro[j].y!==to){j++;if(j>=pro.length||pro[j].i!==pro[j-1].i+1||pro[j].k!==first.k)throw Error('JERSEY_TABLE_PERIOD');}
+          while(pro[j+1]&&pro[j+1].i===pro[j].i+1&&pro[j+1].y===to&&pro[j+1].k===first.k)j++; /* same-year rows of one record merge into this row */
+          if(first.k>=0&&pro[j+1]&&pro[j+1].i===pro[j].i+1&&pro[j+1].k===first.k)throw Error('JERSEY_TABLE_SPLIT');
+          if(cells[2].textContent!==(first.k>=0?'#'+jerseyHistory[first.k].number:'不明'))throw Error('JERSEY_TABLE_NUMBER');
+          at=j+1;
+        }
+        if(at!==pro.length)throw Error('JERSEY_TABLE_COVER');
+        h.remove();table.remove();jerseyCounts.table++;
+      }
+      if(log.querySelector('.jersey-heading,.jersey-table'))throw Error('JERSEY_TABLE_UNEXPECTED');
+      dom.log=log.outerHTML;
+    }
+  }
   const profile=[...log?.querySelectorAll('.card')||[]].find(e=>e.querySelector('h4')?.textContent==='キャリアプロフィール');
   if(window.__expectDesignTokens02&&log){
     // Approved UI-DESIGN-TOKENS-02 (DESIGN_SYSTEM_PLAN §8 D2/D5): retirement trait tags carry a category
@@ -196,6 +254,64 @@ export async function captureGameView(full){
   }
   // Last, after every projection that re-clones #log from the page (EVT-01 badge strip must see the final markup).
   if(window.__expectEventBadge){dom.log=window.__projectEventBadges(dom.log);dom.act=window.__projectEventBadges(dom.act);}
+  if(window.__expectJersey){
+    // Season card tag: ' · #N' appended after the team (and position) label of every シーズン成績 card.
+    const logTpl=document.createElement('template');logTpl.innerHTML=dom.log;
+    let seasonCards=0;
+    for(const card of logTpl.content.querySelectorAll('.card')){
+      if(card.querySelector('h4')?.textContent!=='シーズン成績')continue;
+      const tag=card.querySelector('.tag'),text=tag?.lastChild;
+      if(!tag){if(card.textContent.includes('（今季はけがで全休）'))continue;throw Error('JERSEY_SEASON_TAG');} /* full-season injury cards carry no team tag */
+      const m=text?.nodeType===3?text.nodeValue.match(/^(.*) · #(\S+)$/s):null;
+      if(!m||!jerseyNumbers.has(m[2]))throw Error('JERSEY_SEASON_TAG');
+      // The number is the record in effect for the card's year (its .yr-head 'YYYY年・…'); keep in step with removeJerseyDisplay.
+      const year=Number(card.closest('.yr-block')?.querySelector('.yr-head')?.textContent.match(/^(\d{4})年・/)?.[1]);
+      let record=null;for(const r of jerseyHistory||[])if(r.year<=year)record=r;
+      if(!record||record.number!==m[2])throw Error('JERSEY_SEASON_YEAR');
+      text.nodeValue=m[1];seasonCards++;
+    }
+    if(seasonCards)dom.log=logTpl.innerHTML;
+    if(/ · #\S/.test(logTpl.content.textContent))throw Error('JERSEY_SEASON_TAG_UNEXPECTED');
+    jerseyCounts.season+=seasonCards;
+    // Career view yearly rows: professional rows (with st) carry ' #N' or '（背番号不明）'; other rows are unchanged.
+    const yearly=views.career.yearly,source=Array.isArray(rawState.log)?rawState.log:[];
+    if(!Array.isArray(yearly)||yearly.length!==source.length)throw Error('JERSEY_YEARLY_COUNT');
+    yearly.forEach((row,i)=>{
+      const src=source[i];let suffix='';
+      if(src.st){let rec=null;for(const r of jerseyHistory||[])if(r.year<=src.y)rec=r;suffix=rec?' #'+rec.number:'（背番号不明）';jerseyCounts.yearly++;}
+      if(row.team!==src.tm+suffix)throw Error('JERSEY_YEARLY_TEAM');
+      row.team=src.tm;
+    });
+    delete state.jerseyHistory;
+  }
+  if(window.__expectIntlHistory){
+    // Approved INT-01 delta: the retirement 通算成績 card carries <section data-intl-history> right after the 国際大会通算
+    // table (one collapsed row per played tournament, in view-model order). Validate, then remove it; nothing else changes.
+    const tpl=document.createElement('template');tpl.innerHTML=dom.log;const root=tpl.content.firstElementChild;
+    const blocks=root?[...root.querySelectorAll('[data-intl-history]')]:[];
+    const want=rawState.done&&intlPlayed.length?1:0;
+    if(blocks.length!==want)throw Error('INTL_HISTORY_BLOCK_COUNT');
+    for(const block of blocks){
+      const card=block.closest('.card'),prev=block.previousElementSibling,rows=[...block.querySelectorAll(':scope>details.intl-history-item')];
+      if(card?.querySelector('h4')?.textContent!=='通算成績'||prev?.tagName!=='TABLE'||prev.className!=='st'||!/^国際大会通算/.test(prev.previousElementSibling?.textContent||'')||block.querySelector(':scope>h4')?.textContent!=='国際大会出場履歴'||block.children.length!==rows.length+1)throw Error('INTL_HISTORY_BLOCK_CONTRACT');
+      // Each row reads exactly 'year name　rank' of the (already checked) career().international row at the same position.
+      const want=(intlRows||[]).map(x=>`${x.year} ${x.name}　${x.rank}`);
+      if(!intlRows||rows.length!==want.length||rows.some((d,i)=>d.open||d.querySelector('summary')?.textContent!==want[i]))throw Error('INTL_HISTORY_BLOCK_ROWS');
+      block.remove();
+    }
+    if(root)dom.log=root.outerHTML;
+  }
+  // Approved INJ-UI-01 delta: ability().condition carries the health check risk row right after シーズン稼働率.
+  // Validate its label, value form and breakdown result, then drop it (content in injury-risk-policy.test); nothing else changes.
+  const riskRows=views.player.ability.condition.filter(r=>r.label==='健康診断時の故障リスク');
+  if(window.__expectInjuryRisk&&!riskRows.length)throw Error('INJURY_RISK_ROW_MISSING');
+  if(riskRows.length){
+    const row=riskRows[0],m=/^(?:判定済み（)?(\d+)%）?$/.exec(row.value);
+    if(riskRows.length!==1||views.player.ability.condition[1]!==row)throw Error('INJURY_RISK_ROW_POSITION');
+    if(row.value==='今季は健康診断なし（リハビリ中）'){if(row.breakdown!==undefined||!(rawState.skipMid||rawState.rehab>0))throw Error('INJURY_RISK_NO_CHECK');}
+    else if(!m||row.breakdown?.rows?.at(-1)?.label!=='結果'||row.breakdown.rows.at(-1).value!==m[1]+'%'||+m[1]<3||+m[1]>95)throw Error('INJURY_RISK_ROW_VALUE');
+    views.player.ability.condition.splice(1,1);
+  }
   const snapshot={dom,state,calls,views};
   if(full)return snapshot;
   const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(snapshot))));
@@ -259,4 +375,74 @@ export function removeEventBadges(root){
     badge.remove();removed.push(labels[kind]);
   }
   return removed;
+}
+
+// Browser-side DOM variant of the PLY-01 jersey projection for E2Es that compare text or layout (display-preferences-e2e):
+// validates then removes the retirement 背番号 heading+table and the ' · #N' suffix of each シーズン成績 tag from a detached #log clone.
+// `state` is the page's S snapshot; jerseyHistory is shape-checked here. Returns how many of each were removed.
+export function removeJerseyDisplay(root,state){
+  const history=state.jerseyHistory;
+  if(history!==undefined&&!(Array.isArray(history)&&history.every(r=>r&&typeof r==='object'&&typeof r.teamId==='string'&&Number.isInteger(r.year)&&typeof r.number==='string')))throw Error('JERSEY_HISTORY_CONTRACT');
+  const numbers=new Set((history||[]).map(r=>r.number)),counts={table:0,season:0};
+  const tables=[...root.querySelectorAll('table.jersey-table')],headings=[...root.querySelectorAll('h4.jersey-heading')];
+  const wantTable=state.done&&(state.log||[]).some(r=>r&&r.st)?1:0;
+  if(tables.length!==wantTable||headings.length!==wantTable)throw Error('JERSEY_TABLE_COUNT');
+  for(const table of tables){
+    const card=table.closest('.card'),h=headings[0];
+    if(!card||card.querySelector('h4')?.textContent!=='通算成績'||h.textContent!=='背番号'||h.attributes.length!==1||h.nextElementSibling!==table||h.previousElementSibling!==card.querySelector('h4')||table.className!=='fin jersey-table'||table.attributes.length!==1)throw Error('JERSEY_TABLE_CONTRACT');
+    if(!table.rows.length)throw Error('JERSEY_TABLE_ROWS');
+    // Same period walk as captureGameView (keep both in step): consecutive professional log rows per record in effect, none split, all covered once.
+    const recordAt=y=>{let found=-1;(history||[]).forEach((r,i)=>{if(r.year<=y)found=i;});return found;};
+    const pro=[];(state.log||[]).forEach((r,i)=>{if(r&&r.st)pro.push({i,y:r.y,k:recordAt(r.y)});});
+    let at=0;
+    for(const tr of table.rows){
+      const cells=[...tr.children];
+      if(cells.length!==3||cells.some(c=>c.tagName!=='TD'||c.children.length)||cells[0].className!=='cell-left'||cells[1].className!=='cell-nowrap'||cells[2].className!=='cell-nowrap'||!cells[0].textContent||!/^\d{4}(–\d{4})?$/.test(cells[1].textContent))throw Error('JERSEY_TABLE_ROW');
+      const [from,to=from]=cells[1].textContent.split('–').map(Number),first=pro[at];
+      if(!first||first.y!==from||(from===to)!==!cells[1].textContent.includes('–'))throw Error('JERSEY_TABLE_PERIOD');
+      let j=at;while(pro[j].y!==to){j++;if(j>=pro.length||pro[j].i!==pro[j-1].i+1||pro[j].k!==first.k)throw Error('JERSEY_TABLE_PERIOD');}
+      while(pro[j+1]&&pro[j+1].i===pro[j].i+1&&pro[j+1].y===to&&pro[j+1].k===first.k)j++; /* same-year rows of one record merge into this row */
+      if(first.k>=0&&pro[j+1]&&pro[j+1].i===pro[j].i+1&&pro[j+1].k===first.k)throw Error('JERSEY_TABLE_SPLIT');
+      if(cells[2].textContent!==(first.k>=0?'#'+history[first.k].number:'不明'))throw Error('JERSEY_TABLE_NUMBER');
+      at=j+1;
+    }
+    if(at!==pro.length)throw Error('JERSEY_TABLE_COVER');
+    h.remove();table.remove();counts.table++;
+  }
+  for(const card of root.querySelectorAll('.card')){
+    if(card.querySelector('h4')?.textContent!=='シーズン成績')continue;
+    if(!card.querySelector('.tag')){if(card.textContent.includes('（今季はけがで全休）'))continue;throw Error('JERSEY_SEASON_TAG');} /* full-season injury cards carry no team tag */
+    const text=card.querySelector('.tag')?.lastChild,m=text?.nodeType===3?text.nodeValue.match(/^(.*) · #(\S+)$/s):null;
+    if(!m||!numbers.has(m[2]))throw Error('JERSEY_SEASON_TAG');
+    const year=Number(card.closest('.yr-block')?.querySelector('.yr-head')?.textContent.match(/^(\d{4})年・/)?.[1]);
+    let record=null;for(const r of history||[])if(r.year<=year)record=r;
+    if(!record||record.number!==m[2])throw Error('JERSEY_SEASON_YEAR');
+    text.nodeValue=m[1];counts.season++;
+  }
+  if(root.querySelector('.jersey-heading,.jersey-table')||/ · #\S/.test(root.textContent))throw Error('JERSEY_DISPLAY_UNEXPECTED');
+  return counts;
+}
+// PLY-01 candidate-only #board projection, run before the UI 2.0 shell projection: validate #bd-number (current team's number only)
+// in the .bd-name-row wrapper, the 背番号変更 menu item and the ☰-only toggle, then rebuild the 2.0.0 markup (unwrap #bd-name,
+// drop both, restore the visible メニュー label; the aria-label is unchanged).
+export function projectJerseyBoard(markup,rawState){
+    const dom={board:markup};
+    const jerseyHistory=rawState.jerseyHistory,last=jerseyHistory?.length?jerseyHistory[jerseyHistory.length-1]:null;
+    const wantNumber=!rawState.done&&rawState.stage==='PRO'&&typeof rawState.orgTeamId==='string'&&last&&last.teamId===rawState.orgTeamId?'#'+last.number:'';
+    const tpl=document.createElement('template');tpl.innerHTML=dom.board;
+    const num=tpl.content.querySelectorAll('#bd-number'),change=tpl.content.querySelectorAll('#board-number'),toggle=tpl.content.querySelectorAll('#board-menu-toggle');
+    if(num.length!==1||change.length!==1||toggle.length!==1)throw Error('JERSEY_BOARD_COUNT');
+    const n=num[0],c=change[0],t=toggle[0];
+    if(n.tagName!=='SPAN'||n.textContent!==wantNumber||n.children.length||n.hasAttribute('hidden')!==(wantNumber===''))throw Error('JERSEY_BOARD_NUMBER');
+    if(n.attributes.length!==(wantNumber===''?2:1)||n.nextElementSibling?.id!=='bd-name'||n.previousSibling)throw Error('JERSEY_BOARD_NUMBER_PLACE');
+    const row=n.parentElement;if(row?.className!=='bd-name-row'||row.attributes.length!==1||row.childNodes.length!==2||row.parentElement?.id!=='bd-top'||row.previousSibling)throw Error('JERSEY_BOARD_ROW_PLACE');
+    if(c.tagName!=='BUTTON'||c.textContent!=='•背番号変更'||c.getAttribute('aria-haspopup')!=='dialog'||c.hasAttribute('disabled')===(wantNumber!==''&&(jerseyHistory?.length||0)<960))throw Error('JERSEY_MENU_ITEM'); /* 960 = JERSEY_MENU_LIMIT */
+    const gap=c.previousSibling;
+    if(c.previousElementSibling?.id!=='board-credits'||c.nextElementSibling?.id!=='board-preferences'||gap?.nodeType!==3||gap.nodeValue.trim()!=='')throw Error('JERSEY_MENU_PLACE');
+    if(t.children.length!==1||t.children[0].textContent!=='☰'||t.getAttribute('aria-label')!=='メニュー'||t.textContent!=='☰')throw Error('JERSEY_TOGGLE_CONTRACT');
+    // The visible メニュー label of the old toggle is restored (the aria-label is unchanged).
+    const label=document.createElement('span');label.textContent='メニュー';t.append(label);
+    row.replaceWith(n.nextElementSibling);gap.remove();c.remove();
+    if(tpl.content.querySelector('#bd-number,#board-number'))throw Error('JERSEY_BOARD_UNEXPECTED');
+    return tpl.innerHTML;
 }

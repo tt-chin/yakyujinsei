@@ -10,7 +10,25 @@ export class BrowserSaveController {
   if(!['ready','unavailable'].includes(this.state.phase))return false;
   if(this.state.phase==='unavailable'&&!allowUnsaved)return false;
   if(this.state.phase==='ready'&&this.state.slot)return false;
-  ++this.#generation;this.#store.cancelPendingWrites();this.state.careerId=globalThis.crypto.randomUUID();this.state.writable=this.state.phase==='ready';this.#show(this.state.writable?'年度開始時にセーブします。':'今回の進行状況は保存されません。');return true;
+  return this.#beginCareer();
+ }
+ #beginCareer(){++this.#generation;this.#store.cancelPendingWrites();this.state.careerId=globalThis.crypto.randomUUID();this.state.writable=this.state.phase==='ready';this.#show(this.state.writable?'年度開始時にセーブします。':'今回の進行状況は保存されません。');return true;}
+ async replaceCareer({confirmed=false,expectedRevision,start}={}){
+  if(!confirmed||typeof start!=='function'||this.state.phase!=='ready'||!this.state.slot||this.state.revision!==expectedRevision)return false;
+  const previous={...this.state},generation=++this.#generation;
+  this.state.phase='replacing';this.#show('セーブデータを確認しています…');
+  try{
+   const row=await this.#store.read();
+   if(generation!==this.#generation)return false;
+   if(row.revision!==expectedRevision||row.save?.careerId!==previous.slot.careerId)throw Object.assign(Error('SAVE_CONFLICT'),{code:'SAVE_CONFLICT'});
+   this.state.phase='ready';this.#beginCareer();
+   // The old slot remains until the first valid annual capture commits by revision CAS.
+   // A synchronous start failure cancels queued captures before they can write.
+   start();return true;
+  }catch(error){
+   ++this.#generation;this.#store.cancelPendingWrites();this.state={...previous,phase:'replace-error',writable:false};
+   this.#show(error.code==='SAVE_CONFLICT'?'別のタブでセーブデータが更新されました。上書きせずに停止しました。もう一度読み込んでください。':'新しい人生を始められませんでした。セーブデータは削除していません。もう一度読み込んでください。');return false;
+  }
  }
  capture(state){
   if(this.#restoring){this.#captured.set(state,state.year);return;}
@@ -37,5 +55,25 @@ export class BrowserSaveController {
   if(!current())return false;
   this.state.slot=null;this.state.phase='ready';this.state.revision=row.revision;this.state.careerId=null;this.#show('セーブデータを削除しました。');return true;
  }
+ hasReadySlot(){return this.state.phase==='ready'&&!!this.state.slot;}
+ isUnavailable(){return this.state.phase==='unavailable';}
+ // Confirmation flows: the caller supplies the dialog; the controller owns the checks made before and after it.
+ async replaceAfterConfirm(confirm,start){
+  const expectedRevision=this.state.revision;
+  if(!await confirm())return false;
+  return this.replaceCareer({confirmed:true,expectedRevision,start});
+ }
+ async removeAfterConfirm(confirm){
+  if(!this.hasReadySlot())return false;
+  const state=this.state,revision=state.revision;
+  if(!await confirm())return false;
+  if(this.state!==state||state.phase!=='ready'||state.revision!==revision)return false;
+  return this.remove({confirmed:true});
+ }
+ startUnsavedAfterConfirm(confirm){
+  const state=this.state;
+  return confirm().then(ok=>!!ok&&this.state===state&&state.phase==='unavailable'&&this.newCareer({allowUnsaved:true}));
+ }
+ retry(){return ['delete-error','replace-error'].includes(this.state.phase)?this.initialize():this.restore();}
  async settled(){await this.#queue;}
 }

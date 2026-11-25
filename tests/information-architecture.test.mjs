@@ -18,7 +18,8 @@ assert.equal((html.match(/data-main-view=/g)||[]).length,3);
 for(const label of ['ホーム','選手','キャリア'])assert.match(html,new RegExp(`>${label}<`));
 assert.match(initialState,/statsByLevel:\{NPB1:null,NPB2:null,NPB_DEV:null,KBO1:null,KBO2:null,CPBL1:null,CPBL2:null,MLB:null,A3:null,A2:null,A1:null,R:null,IND:null,CORP:null\}/);
 assert.match(professionalSeason,/const levelKey=S\.lv,bucket=bucketOf\(levelKey\); accStat\(bucket,st\); accLevelStat\(levelKey,st\);/);
-assert.match(game,/function addStatTotal\(t,st\)/);
+// OOP plan §2ww: the game.js addStatTotal delegate had no caller; the totals live in SeasonStats.
+assert.match(read('../docs/src/engine/season-stats.js'),/\n  addStatTotal\(t,st\)\{/);
 const seasonStats=game.includes('seasonStats.accLevelStat(')?read('../docs/src/engine/season-stats.js'):null;
 const levelAccumulator=seasonStats?seasonStats.slice(seasonStats.indexOf('accLevelStat(levelKey,st){')):game.slice(game.indexOf('function accLevelStat'),game.indexOf('function statLine'));
 assert.doesNotMatch(levelAccumulator,/\b(?:R|ri|pick|chance)\s*\(/);

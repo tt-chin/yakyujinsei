@@ -1,3 +1,4 @@
+import {openReaderDetails} from './support/reader-disclosure.mjs';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {harness,instrument} from './support/stage6-browser.mjs';
@@ -21,7 +22,7 @@ const hofNativeEnd=endGame;
 endGame=reason=>{if(!hofPending)hofPending={reason,state:JSON.parse(JSON.stringify(S)),rng:JSON.parse(JSON.stringify(window.__stage6.get().rng)),thresholds:TIER_TH,names:LG_N,tiers:Object.fromEntries(['NPB','MLB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,tierOf(b)]))};};
 window.__hofTest={pending:()=>hofPending,finish:tiers=>{if(tiers)tierOf=b=>tiers[b];hofExecuting=true;try{hofNativeEnd(hofPending.reason);}finally{hofExecuting=false;}},get:()=>({state:JSON.parse(JSON.stringify(S)),rng:window.__stage6.get().rng,retirementTrace:JSON.parse(JSON.stringify(hofTrace))}),
  fixture:()=>{const blank={yr:10,G:1000,PA:5000,AB:4500,H:0,HR:0,RBI:0,SB:0,BB:0,DEF:0,W:0,SV:0,SO:0,IP:0,L:0,ER:0};S.stage='PRO';S.lv='NPB1';S.age=40;S.year=2050;S.stats={NPB:{...blank,H:S.pos==='P'?0:8500,W:S.pos==='P'?700:0}};S.statsByLevel={NPB1:{...blank,H:S.pos==='P'?0:100,W:S.pos==='P'?10:0},NPB2:{...blank,H:8400}};S.honors=['2035 NPB年間MVP','2035 NPB年間MVP','2037 ワールド・ベースボール・クラシック優勝'];S.intlCount=4;S.traits={};endGame('CONTROLLED_RETIREMENT');},
- advance:async()=>{const choices=[];for(let i=0;i<2200&&!hofPending;i++){const before=JSON.parse(JSON.stringify(S)),rows=[...document.querySelectorAll('#act .abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),bs=[...document.querySelectorAll('#act button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.textContent));const b=bs.find(e=>/通常投球/.test(e.textContent))||rows[0]||bs.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.textContent))||bs[0];if(!b)throw Error('NO_ACTION');const action=b.textContent;b.click();if(!before.traits.franchise&&S.traits.franchise&&S.franchiseAchievement){const f=S.franchiseAchievement;if(f.year!==before.year||f.teamId!==before.orgTeamId||f.league!==LV[before.lv].statBucket)throw Error('BAD_FRANCHISE_PROVENANCE');}const stable=JSON.parse(JSON.stringify(S));delete stable.franchiseAchievement;const bytes=new TextEncoder().encode(JSON.stringify(stable)),hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('');choices.push({action,hash});}if(!hofPending)throw Error('CAREER_LIMIT');return choices;}};
+ advance:async()=>{const choices=[];for(let i=0;i<2200&&!hofPending;i++){const before=JSON.parse(JSON.stringify(S)),rows=[...document.querySelectorAll('#act .abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),bs=[...document.querySelectorAll('#act button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.textContent));const jb=bs.find(e=>/^背番号 \\S+ (で入団する|にする)$/.test(e.textContent));if(jb){window.__jerseySkips=(window.__jerseySkips||0)+1;jb.click();continue;}const b=bs.find(e=>/通常投球/.test(e.textContent))||rows[0]||bs.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.textContent))||bs[0];if(!b)throw Error('NO_ACTION');const action=window.__allocationComparison.action(b);b.click();if(!before.traits.franchise&&S.traits.franchise&&S.franchiseAchievement){const f=S.franchiseAchievement;if(f.year!==before.year||f.teamId!==before.orgTeamId||f.league!==LV[before.lv].statBucket)throw Error('BAD_FRANCHISE_PROVENANCE');}const stable=JSON.parse(JSON.stringify(S));delete stable.franchiseAchievement;delete stable.jerseyHistory;const bytes=new TextEncoder().encode(JSON.stringify(stable)),hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('');choices.push({action,hash});}if(!hofPending)throw Error('CAREER_LIMIT');return choices;}};
 `;
 // Independent reference for this controlled fixture, with literal approved award weights.
 // Natural careers are required to match completely before retirement and same-version replay.
@@ -33,7 +34,7 @@ try{for(const pos of ['P','IF'])for(const controlled of [true,false]){
   if(mode==='oracle'&&!controlled)continue;
   const page=await h.page(390,pos,seed,{beforeLoad:async p=>{
    for(const file of ['hall-of-fame-policy.js','career-movement.js'])if(mode==='old'||mode==='oracle')await p.route('**/src/engine/'+file,r=>r.fulfill({body:old(file),contentType:'text/javascript'}));
-   if(mode==='old')await p.route('**/src/engine/movement-gate.js',r=>r.fulfill({body:old('movement-gate.js'),contentType:'text/javascript'}));// phase 40: the baseline game.js passes LEGACY
+   if(mode==='old')for(const file of ['movement-gate.js','player-injury.js','season-phases.js'])await p.route('**/src/engine/'+file,r=>r.fulfill({body:old(file),contentType:'text/javascript'}));// phase 40: the baseline game.js passes LEGACY; INJ-UI-01 (564621c): it lacks injuryRisk/recordInjuryCheck/markSeasonStart
    await p.route('**/src/engine/career-retirement.js',async r=>{const response=await r.fetch(),body=mode==='old'||mode==='oracle'?old('career-retirement.js'):await response.text();await r.fulfill({response,body:tagRetirement(body)});});
    await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();const body=mode==='old'?instrument(old('game.js')):await response.text();await route.fulfill({response,body:body+hooks});});
   }});
@@ -41,8 +42,15 @@ try{for(const pos of ['P','IF'])for(const controlled of [true,false]){
   const pending=await page.evaluate(()=>window.__hofTest.pending());assert.ok(pending);
   const tiers=mode==='oracle'?controlledTiers(pending.state,pending.thresholds,pending.names):null;
   await page.evaluate(t=>window.__hofTest.finish(t),tiers);const after=await page.evaluate(()=>window.__hofTest.get());
-  runs.push({mode,choices,pending,after});
+  const jerseySkips=await page.evaluate(()=>window.__jerseySkips||0);
+  // PLY-01: jerseyHistory is the only approved new state; candidate copies drop it after a shape check (content: jersey-policy.test, jersey-e2e).
+  const cmpPending=structuredClone(pending),cmpAfter=structuredClone(after);
+  if(mode==='old')assert.equal(jerseySkips,0,'baseline has no number step');
+  else for(const st of [cmpPending.state,cmpAfter.state]){if(!controlled){const proReached=pending.state.stage==='PRO';assert.equal(jerseySkips>0,proReached,'number step appears exactly when the career reaches a professional team');if(proReached)assert.ok(Array.isArray(st.jerseyHistory)&&st.jerseyHistory.length>0&&st.jerseyHistory.every(j=>typeof j.teamId==='string'&&Number.isInteger(j.year)&&typeof j.number==='string'),'jerseyHistory shape');}delete st.jerseyHistory;}
+  runs.push({mode,choices,pending:cmpPending,after:cmpAfter});
   if(mode==='new'&&controlled){
+   const breakdowns=page.locator('#log .card').filter({has:page.locator('h4',{hasText:/評価の内訳$/})});assert.ok(await breakdowns.count()>0,'original evaluation detail cards exist');
+   for(const card of await breakdowns.all())await openReaderDetails(card,{snapshot:()=>page.evaluate(()=>window.__hofTest.get())});
    assert.ok(await page.locator('#log').innerText().then(t=>t.includes('国際大会・代表の栄誉：殿堂評価への加点なし')));
    for(const width of [1280,320,390]){await page.setViewportSize({width,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'retirement layout '+width);await page.screenshot({path:h.output+'/retirement-'+pos+'-'+width+'.png',fullPage:true});}
    await page.locator('#sh-img').click();await page.locator('#sh-out img').waitFor();assertSameCareer(await page.evaluate(()=>window.__hofTest.get()),after,'viewports and share image keep complete S/RNG unchanged');

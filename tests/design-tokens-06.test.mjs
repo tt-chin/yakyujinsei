@@ -24,12 +24,25 @@ test('base.css defines the 13 --fs-* scale tokens as calc(<px>px * var(--font-sc
   assert.doesNotMatch(allCss,/--fs-\d+(?:-5)?(?![a-z\d])/,'old --fs-<px> name left');
 });
 // 59 former calc() sites plus 5 moved inline 11/12px sizes (scaled before by the preferences.css [style*=] rules),
+// PLY-01 adds four base.css rules, excluded by name: the board name row (1 spacing site), #bd-number (1 font, 2 spacing),
+// the 背番号 heading (1 spacing) and the number dialog row (1 spacing).
+const ply01Rules=['.bd-name-row','#bd-number','.card h4.jersey-heading','.jersey-field-row'].map(sel=>{const found=[...base.matchAll(new RegExp('(?:^|\\n)'+sel.replace(/[.#]/g,'\\$&')+'\\{[^}]+\\}','g'))];assert.equal(found.length,1,sel);return found[0][0];});
+const withoutPly01=css=>ply01Rules.reduce((t,r)=>t.replace(r,''),css);
 // plus 1 for the EVT-01 .event-badge (1.16.11).
-test('every var(--fs-*) is defined and every token is used (65 sites)',()=>{
-  const used=[...outsideRoot.matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
-  assert.equal(used.length,65);
+test('81 phase-4 font sites plus two phase-5 review headings; name button uses --fs-5xl',()=>{
+  const rule=base.match(/(?:^|\n)\.random-name-button\{([^}]+)\}/);assert.ok(rule,'approved name button rule');
+  assert.equal((rule[1].match(/font-size:var\(--fs-5xl\)/g)||[]).length,1,'one explicit existing font token');
+  const review=styles['career-review.css'];assert.deepEqual([...review.matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-xl','--fs-md','--fs-md'],'two review headings and the collapsed financial detail text use shared font tokens');
+  assert.equal((ply01Rules.join('\n').match(/var\(--fs-[\w-]+\)/g)||[]).length,1,'PLY-01 #bd-number font site');
+  assert.deepEqual([...styles['fa-market.css'].matchAll(/font-size:var\((--fs-[\w-]+)\)/g)].map(m=>m[1]),['--fs-md','--fs-sm','--fs-md','--fs-md'],'FA comparison reuses four shared font sites');
+  const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('font-size:var(--fs-5xl)',''));
+  const header='#bd-grid[data-pitcher="true"] :is(#bd-sal,#bd-tj-gauge){font-size:clamp(10px,2.8vw,var(--fs-lg))}';
+  assert.equal(styles['game-shell.css'].split(header).length,2,'one approved responsive four-column font rule');
+  const used=[...original.replace(header,header.replace('var(--fs-lg)','')).matchAll(/var\((--fs-[\w-]+)\)/g)].map(m=>m[1]);
+  assert.equal(used.length,81,'phase-4 allocation adds five shared font sites');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --fs token');
-  assert.deepEqual(Object.keys(FS).filter(n=>!used.includes(n)),[],'unused --fs token');
+  // The responsive home title now uses clamp(26px,4vw,40px); the shared scale is retained.
+  assert.deepEqual(Object.keys(FS).filter(n=>!used.includes(n)),[],'floating return arrow uses the former home-title size token');
 });
 test('--font-scale is multiplied only by the tokens and the two .abrow widths',()=>{
   const sites=Object.entries(styles).flatMap(([f,css])=>[...css.replace(f==='base.css'?rootBlock:'\0','').matchAll(/[^;{}]*var\(--font-scale[^;}]*/g)].map(m=>f+' '+m[0].trim()));
@@ -55,9 +68,10 @@ test('base.css defines the 12 --space-* steps as plain px (-09)',()=>{
 });
 // §17.3 W12 = A: a declaration containing calc()/var()/env(), auto or a negative value is left whole; these 7 keep a
 // top-level px literal. Every other margin/padding/gap px value is a var(--space-*) (W11: 0 stays a literal).
-const KEEP_PX=['base.css|#board|padding','base.css|#log|padding','base.css|.salary-detail-dialog|padding','stadium-background.css|#start .wrap|margin',
+// Home redesign replaces the old 16px auto wrap margin with 0 auto.
+const KEEP_PX=['base.css|#board|padding','base.css|#log|padding','base.css|.salary-detail-dialog|padding',
   'ui-navigation.css|#main-nav|padding','ui-navigation.css|#view-player,#view-career|padding','ui-navigation.css|.ui-ability-guide|margin'];
-test('px margin/padding/gap go through var(--space-*) outside the 7 untouched declarations (-09)',()=>{
+test('px spacing uses tokens outside the 6 remaining untouched declarations',()=>{
   const SP=/^(?:margin|padding|gap|row-gap|column-gap)(?:-(?:top|right|bottom|left|inline|block)(?:-(?:start|end))?)?$/,kept=[];
   for(const [f,raw] of Object.entries(styles)){
     const css=raw.replace(/\/\*[\s\S]*?\*\//g,'');
@@ -72,9 +86,18 @@ test('px margin/padding/gap go through var(--space-*) outside the 7 untouched de
   assert.deepEqual(kept.sort(),[...KEEP_PX].sort());
 });
 // EVT-01 (1.16.11) added 2: .event-badge padding and margin-right. EVT-01 E3 (1.16.12) added 5: sticky event details left and width, .ui-yearly-events-body margin, its li margin, badge margin-right.
-test('every var(--space-*) is defined and every step is used (179 sites, -09 + EVT-01 + E3)',()=>{
-  const used=[...outsideRoot.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
-  assert.equal(used.length,179);
+test('UI 2.0 spacing sites and the name row use shared tokens',()=>{
+  const rule=base.match(/(?:^|\n)\.player-name-row\{([^}]+)\}/);assert.ok(rule,'approved name row rule');
+  assert.equal((rule[1].match(/gap:var\(--space-xs\)/g)||[]).length,1,'one explicit existing spacing token');
+  const review=styles['career-review.css'];const added=[...review.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);assert.equal(added.length,16,'season disclosures and salary-detail control add five approved spacing-token sites');assert.deepEqual(added.filter(n=>!(n in rootTokens)),[],'undefined phase-5 spacing token');
+  assert.equal([...ply01Rules.join('\n').matchAll(/var\((--space-[\w-]+)\)/g)].map(x=>x[1]).filter(isSpace).length,5,'PLY-01 spacing sites');
+  const original=withoutPly01(outsideRoot).replace(review,'').replace(styles['fa-market.css'],'').replace(rule[0],rule[0].replace('gap:var(--space-xs)',''));
+  const used=[...original.matchAll(/var\((--space-[\w-]+)\)/g)].map(m=>m[1]).filter(isSpace);
+  assert.doesNotMatch(styles['decision-presentation.css'],/#decision-summary|#decision-question/,'approved removal of summary placeholder styles');
+  assert.match(styles['decision-presentation.css'],/#decision-jump\{[^}]*font-size:calc\(var\(--fs-6xl\) \* \.8\)/,'80% arrow uses the shared size token');
+  assert.equal(used.length,236-7,'removed summary padding (2), reserved jump width (2), old jump position (2), desktop summary padding (1); other spacing sites unchanged');
+  assert.equal([...styles['fa-market.css'].matchAll(/var\((--space-[\w-]+)\)/g)].length,10,'FA comparison uses ten shared spacing sites');
+  assert.match(styles['allocation-presentation.css'],/padding:0 var\(--space-2xs\);line-height:1\.6;white-space:nowrap/,'approved compact label retains tokenized inline padding');
   assert.deepEqual(used.filter(n=>!(n in rootTokens)),[],'undefined --space token');
   assert.deepEqual(Object.keys(SPACE).filter(n=>!used.includes(n)),[],'unused --space token');
 });

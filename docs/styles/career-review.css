@@ -1,0 +1,28 @@
+/* UI 2.0: summaries share the existing reading/scroll column. */
+.career-review{margin:var(--space-md) 0;padding:var(--space-md);border:1px solid var(--edge);border-top:3px solid var(--amber);border-radius:var(--radius-md);background:var(--panel);color:var(--chalk);min-width:0;overflow-wrap:anywhere}
+.career-review h2{font-size:var(--fs-xl);margin:var(--space-xs) 0}
+.career-review h3{font-size:var(--fs-md);margin:var(--space-md) 0 var(--space-xs)}
+.career-review p,.career-review li{line-height:1.8}
+.career-review ul,.career-review ol{padding-inline-start:var(--space-lg);margin:var(--space-xs) 0}
+.career-review li+li{margin-top:var(--space-xs)}
+.career-review .income-summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.yr-body:has(>[data-career-review]) [data-reader-body]:has(.fin){overflow-x:auto;max-width:100%}
+@media(min-width:700px){.career-review ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-xs) var(--space-lg)}}
+/* Read the retirement record before reaching share/new-career actions. */
+#view-home:has([data-career-review="retirement"]){display:block;overflow-y:auto}
+#view-home:has([data-career-review="retirement"]) #log{overflow:visible;min-height:0}
+#view-home:has([data-career-review="retirement"]) #act{max-height:none;overflow:visible}
+#view-home:has([data-career-review="retirement"]) #act-toggle{position:static;margin:var(--space-xs) auto}
+
+/* One annual financial summary; source cards remain noninteractive receipt markup. */
+[data-season-finance-source][hidden]{display:none!important}
+[data-season-summary] details{margin-block:var(--space-sm)}
+[data-season-summary] summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--dim);overflow-wrap:anywhere}
+[data-season-summary] summary::before{content:'▸';margin-right:var(--space-xs)}
+[data-season-summary] summary::-webkit-details-marker{display:none}
+[data-season-summary] details[open]>summary::before{content:'▾'}
+[data-season-summary] details>p{font-size:var(--fs-md)}
+.season-salary-detail{min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:var(--space-xs) var(--space-md);border:1px solid var(--control-edge);border-radius:var(--radius-md);background:var(--panel2);color:var(--chalk);font:inherit;cursor:pointer;scroll-margin-block:var(--space-lg)}
+.season-salary-detail:disabled{opacity:.5;cursor:default}
+.season-salary-detail:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.season-salary-detail{scroll-margin-bottom:calc(120px + env(safe-area-inset-bottom,0px))}

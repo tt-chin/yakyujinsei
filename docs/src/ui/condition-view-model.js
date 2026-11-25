@@ -4,3 +4,4 @@ export function formatRehabStatus({rehab=0,skipMid=false,seasonFactor=1}){
   return rehab>0?`残り${rehab}年`:'なし';
 }
 export function tjGaugeCap(state){return state.traits?.rubber?100:50;}
+export function tjGaugeText(state,limit=tjGaugeCap(state)){return `${Number(state.tj||0).toFixed(1)} / ${limit}`;}

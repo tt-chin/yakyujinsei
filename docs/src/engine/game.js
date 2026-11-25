@@ -1,3 +1,4 @@
+import {bindRandomPlayerName} from '../ui/random-player-name.js';
 import {generatePlayerName} from '../data/player-names.js';
 import {confirmAction} from '../ui/confirmation-dialog.js';
 import {BrowserSaveController} from './browser-save-controller.js';
@@ -18,12 +19,16 @@ import { EVENT_CATALOG } from '../data/event-cards-jp.js';
 import { EVENT_MODES, eventEligible, eventOdds, effectiveCategory, eventTier, eventPlan, eventInjury, eventIncome, eventTraitUnlocks, EVENT_TRAIT_TEXT, validateEventCatalog } from './event-policy.js';
 import { ensureEventState, beginEvent, eventDrawPool, applyEvent, beginEventSeason, consumeEventSeason, resetEventYear } from './event-state-policy.js';
 import { createInitialState } from './initial-state.js';
+import { jerseyEntryPending, proposedJerseyNumber, isLegacyJerseyEntry, appendJerseyRecord, currentJerseyNumber, canChangeJersey, jerseyChangeYear, jerseyPeriods } from './jersey-policy.js';
+import { chooseJerseyNumber } from '../ui/jersey-dialog.js';
+import { JerseyFlow } from './jersey-flow.js';
 import { createSeedShareController, replayURL, shareReplayURL } from '../ui/seed-share.js';
 import { ShareImage } from '../ui/share-image.js';
 import { DefensePositionReview } from './defense-position-review.js';
 import { DefensePosition, DP_RANK, DP_MULT } from './defense-position.js';
 import { InternationalTournament } from './international-tournament.js';
 import { PlayerInjury } from './player-injury.js';
+import { injuryRiskBreakdown, recordInjuryCheck, markInjurySeasonStart } from './injury-risk-policy.js';
 import { PlayerAbility } from './player-ability.js';
 import { SeasonEvents } from './season-events.js';
 import { PlayerRomance } from './player-romance.js';
@@ -66,9 +71,11 @@ import { honorScoreFor } from './hall-of-fame-policy.js';
 import {evaluateLeagueHof} from './hof-evaluation-policy.js';
 import { careerScoreFor, defenseShareFor, hallOfFameTier } from './hall-of-fame-tier-policy.js';
 import { toolGapFor, overallRatingFor, playerTypeFor, abilityStepCostFor } from './ability-evaluation-policy.js';
+import { PlayerProfile } from './player-profile.js';
 import { resolveStatBucket } from './stat-bucket.js';
 import { CareerPresenter } from '../ui/career-presenter.js';
 import { fmtIP, slgOf } from '../ui/stat-format.js';
+import { buildInternationalHistory, internationalHistoryHTML } from '../ui/international-history.js';
 import {TraitResultCard} from '../ui/trait-result-card.js';
 import { CareerTraits } from './career-traits.js';
 import { contractTypeLabel } from '../ui/contract-labels.js';
@@ -119,37 +126,25 @@ let browserSave=null;
 const careerSession=new CareerSession();
 const seasonStats=new SeasonStats({getState:()=>S,levels:LV,rng:{R:()=>R(),N0:sd=>N0(sd),chance:p=>chance(p),ri:(a,b)=>ri(a,b)},clamp,isSP:()=>isSP(),pitcherRole:()=>pitcherRole(),checkGoldclothSeason:()=>checkGoldclothSeason()});
 let careerRng = null;
-function blankStat(){return seasonStats.blankStat();}
 function bucketOf(lv){return resolveStatBucket(LV,lv);}
 function traitCard(key,name,desc,tone){careerTraits.unlock(key,name,desc,tone);}
 function removeTrait(key,label){careerTraits.remove(key,label);}
-/* 一芸特化：評価対象は三つの役割軸のみ——打撃(長打力/Contact)、走塁(速度)、守備(総合)。 */
-function careerAllStars(){ let n=0; ['CPBL','KBO','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
-function toolGap(){return toolGapFor(S.ab,S.pos);}
+function careerAllStars(){return playerProfile.allStars();}
+function toolGap(){return playerProfile.toolGap();}
 function tjAccrue(){return playerInjury.accrueTj();}
 function tjCap(){return playerInjury.tjGaugeLimit();}
-function afterGamble(kind,cont){playerInjury.afterGamble(kind,cont);}
 function tjGamble(cont){playerInjury.tjGamble(cont);}
-const playerInjury=new PlayerInjury({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,v)=>addAb(k,v),board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),removeTrait:(key,label)=>removeTrait(key,label),tjCap:()=>tjCap(),rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}});
-function pitcherRole(){ /* スタミナ >=52 先発;それ以外はブルペン、ブルペン内では成績ならクローザーへ昇格。 */
-  if(S.ab.sta>=52)return 'SP';
-  /* ブルペン：前季のdはprevDから参照する。lastDはphasePreで初期化済み;トップ級なら クローザー。 */
-  const pd=(S.prevD!==undefined?S.prevD:(S.lastD||0));
-  const d=(S.role&&S.role!=='SP')?pd:-99;
-  if(S.role==='CL')return d>=1?'CL':'MR';   /* クローザー成績急落時のみセットアッパー。 */
-  return d>=3?'CL':'MR';                     /* セットアッパーがトップ階級の成績ならクローザーへ昇格。 */
-}
+const playerInjury=new PlayerInjury({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,v)=>addAb(k,v),board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),removeTrait:(key,label)=>removeTrait(key,label),tjCap:()=>tjCap(),injuryRisk:state=>injuryRiskBreakdown(state),recordInjuryCheck:state=>recordInjuryCheck(state),rng:{ri:(a,b)=>ri(a,b),chance:p=>chance(p),pick:keys=>pick(keys)}});
+function pitcherRole(){return playerProfile.pitcherRole();}
 function roleN(r){ return {SP:'先発',MR:'中継ぎ',CL:'抑え'}[r]||'—'; }
-function isSP(){ return S.role==='SP'; } /* 先発引擎判定。 */
-function ovr(){return overallRatingFor({ability:S.ab,position:S.pos,defensePosition:S.dpos,traits:S.traits});}
-function playerType(){return playerTypeFor({ability:S.ab,position:S.pos,traits:S.traits,toolRole:S.toolRole});}
-function abCost(k){return abilityStepCostFor({ability:S.ab,potential:S.pot,key:k,position:S.pos});}
+function isSP(){return playerProfile.isStarter();}
+const playerProfile=new PlayerProfile({getState:()=>S});
+function ovr(){return playerProfile.overall();}
+function playerType(){return playerProfile.type();}
+function abCost(k){return playerProfile.stepCost(k);}
 function addAb(k,v){return playerAbility.addAb(k,v);}
 /* 成績シミュレーション。 */
 function simSeason(lv){return seasonStats.simSeason(lv);}
-function applySeasonForm(st,lv){return seasonStats.applySeasonForm(st,lv);}
-function defRuns(lv){return seasonStats.defRuns(lv);}
-function addStatTotal(t,st){return seasonStats.addStatTotal(t,st);}
 function accStat(bucket,st){return seasonStats.accStat(bucket,st);}
 function accLevelStat(levelKey,st){return seasonStats.accLevelStat(levelKey,st);}
 function statLine(st){return careerPresenter.statLine(st);}
@@ -158,9 +153,6 @@ function displayTrait(key){return careerTraits.label(key);}
 function traitNames(){return careerTraits.names();}
 function checkGoldclothSeason(){careerTraits.checkGoldclothSeason();}
 const careerPresenter=new CareerPresenter({getState:()=>S,labels:{ABL,POS_AB,POSN,DPN},TEAM_COLOR,fmtMoney,fmtIP,displayTrait,teamNick,roleN:r=>roleN(r),playerType:()=>playerType(),ovr:()=>ovr(),tjCap:()=>tjCap()});
-function buildRecordViewModel(){return careerPresenter.record();}
-function buildAbilityViewModel(){return careerPresenter.ability();}
-function buildTraitsViewModel(){return careerPresenter.traits();}
 function buildPlayerViewModel(){return careerPresenter.player();}
 function buildCareerViewModel(){return careerPresenter.career();}
 /* UI基盤。 */
@@ -170,7 +162,7 @@ var MAX_YEARS=8;         /* DOM 最大保持年度領域数。 */
 function logTarget(){ return _curYearBody || $('log'); }
 // DOM presentation lifetime only; no display markers in S or replay data.
 const traitPresentation=new WeakMap();
-const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key)});
+const gameView=new GameView({byId:$,logTarget,decorateCard:traitResultMarkup,onTraitShown:key=>traitPresentation.get(S).add(key),getDecision:()=>S?choiceViews.get(S):null,getYear:()=>S?.year,getState:()=>S,getSeasonContext:()=>careerSession.seasonEndContext,openSalaryDetail:snapshot=>salaryDetailController.open(snapshot),reviewLabels:{leagueName:key=>LG_N[key]||LV[key]?.n||key,teamName:key=>leagueCatalog.teamRec(key)?.name||key,teamLeague:name=>typeof name!=='string'?null:Object.values(leagueCatalog.teamMaster).find(team=>(name===team.name||name.startsWith(team.name+' ')))?.org,formatMoney:fmtMoney}});
 function archiveTraitResults(){ gameView.archiveTraitResults(); }
 function traitResultMarkup(node,title,html){return traitResultCard.decorate(node,title,html);}
 const traitResultCard=new TraitResultCard({getState:()=>S,traitPresentation,displayTrait});
@@ -197,21 +189,19 @@ function nextStep(){return yearFlow.nextStep();}
 function phasePre(){return seasonPhases.phasePre();}
 /* シーズン中。 */
 function phaseMid(){return seasonPhases.phaseMid();}
-const seasonPhases=new SeasonPhases({getState:()=>S,POS_AB,ABL,LV,clamp,board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),buyoutRemaining:rate=>buyoutRemaining(rate),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),declineForSeason:(state,amount)=>declineForSeason(state,amount),checkGoldclothSeason:()=>checkGoldclothSeason(),stageLabel:()=>stageLabel(),addAb:(k,v)=>addAb(k,v),dposReview:cont=>dposReview(cont),allocUI:(mode,label,done)=>allocUI(mode,label,done),nextStep:()=>nextStep(),tjCap:()=>tjCap(),ovr:()=>ovr(),signTo:(...args)=>signTo(...args),daibaFarewell:cont=>daibaFarewell(cont),loveEvent:next=>loveEvent(next),drawEvents:(n,done)=>drawEvents(n,done),rollInjury:()=>rollInjury(),proSeason:()=>proSeason(),amateurSeason:()=>amateurSeason(),rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});
-function eventChoiceSummary(ev,mode){return seasonEvents.eventChoiceSummary(ev,mode);}
+const seasonPhases=new SeasonPhases({getState:()=>S,POS_AB,ABL,LV,clamp,board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),buyoutRemaining:rate=>buyoutRemaining(rate),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),declineForSeason:(state,amount)=>declineForSeason(state,amount),checkGoldclothSeason:()=>checkGoldclothSeason(),stageLabel:()=>stageLabel(),addAb:(k,v)=>addAb(k,v),dposReview:cont=>dposReview(cont),allocUI:(mode,label,done)=>allocUI(mode,label,done),nextStep:()=>nextStep(),tjCap:()=>tjCap(),ovr:()=>ovr(),signTo:(...args)=>signTo(...args),daibaFarewell:cont=>daibaFarewell(cont),loveEvent:next=>loveEvent(next),drawEvents:(n,done)=>drawEvents(n,done),rollInjury:()=>rollInjury(),markSeasonStart:state=>markInjurySeasonStart(state),proSeason:()=>proSeason(),amateurSeason:()=>amateurSeason(),rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});
 function drawEvents(n,done){seasonEvents.drawEvents(n,done);}
 function loveEvent(next){playerRomance.loveEvent(next);}
 const seasonEvents=new SeasonEvents({getState:()=>S,EVENTS,POS_AB,ABL,choose:(title,opts)=>choose(title,opts),card:(cls,title,html)=>card(cls,title,html),board:p=>board(p),fmtMoney,logTarget:()=>logTarget(),displayTrait:key=>displayTrait(key),rng:{chance:p=>chance(p),pick:pool=>pick(pool)}});
 const playerRomance=new PlayerRomance({getState:()=>S,clamp,POS_AB,ABL,addAb:(k,v)=>addAb(k,v),addAbStat:(k,amt)=>addAbStat(k,amt),card:(cls,title,html)=>card(cls,title,html),board:p=>board(p),choose:(title,opts)=>choose(title,opts),rng:{R:()=>R(),chance:p=>chance(p),pick:list=>pick(list)}});
 function addAbStat(k,amt){return playerAbility.addAbStat(k,amt);}
-function renderEventResult(ev,result){seasonEvents.renderEventResult(ev,result);}
 function allocDone(touched,isDice){playerAbility.allocDone(touched,isDice);}
 function teamNick(team){return leagueCatalog.teamNick(team);}
 function demotionAudit(cont){return careerMovement.demotionAudit(cont);}
 function tradeCheck(cont){return careerMovement.tradeCheck(cont);}
 function rollInjury(){playerInjury.rollInjury();}
 function proSeason(){return professionalSeason.proSeason();}
-const professionalSeason=new ProfessionalSeason({getState:()=>S,LV,clamp,simSeason:lv=>simSeason(lv),applyEventSeason:(st,options)=>applyEventSeason(st,options),consumeEventSeason:state=>consumeEventSeason(state),normalizeEventSeason:(st,options)=>normalizeEventSeason(st,options),bucketOf:lv=>bucketOf(lv),accStat:(bucket,st)=>accStat(bucket,st),accLevelStat:(levelKey,st)=>accLevelStat(levelKey,st),card:(cls,title,html)=>card(cls,title,html),statLine:st=>statLine(st),isSP:()=>isSP(),toolGap:()=>toolGap(),careerAllStars:()=>careerAllStars(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),removeTrait:(key,label)=>removeTrait(key,label),board:phase=>board(phase),awards:(bucket,st)=>awards(bucket,st),classifyMarketInjury:input=>classifyMarketInjury(input),recordSalaryEvaluation:st=>recordSalaryEvaluation(st),captureSeasonChampionship:state=>captureSeasonChampionship(state),tjAccrue:()=>tjAccrue(),tjGamble:cont=>tjGamble(cont),demotionAudit:cont=>demotionAudit(cont),tradeCheck:cont=>tradeCheck(cont),maybeIntl:done=>maybeIntl(done),nextStep:()=>nextStep(),resumeSeasonEnd:()=>resumeSeasonEnd(),restorePendingChoice:()=>restorePendingChoice(),seasonRng:{R:()=>R()}});
+const professionalSeason=new ProfessionalSeason({getState:()=>S,jerseyLabel:()=>jerseyLabelText(),LV,clamp,simSeason:lv=>simSeason(lv),applyEventSeason:(st,options)=>applyEventSeason(st,options),consumeEventSeason:state=>consumeEventSeason(state),normalizeEventSeason:(st,options)=>normalizeEventSeason(st,options),bucketOf:lv=>bucketOf(lv),accStat:(bucket,st)=>accStat(bucket,st),accLevelStat:(levelKey,st)=>accLevelStat(levelKey,st),card:(cls,title,html)=>card(cls,title,html),statLine:st=>statLine(st),isSP:()=>isSP(),toolGap:()=>toolGap(),careerAllStars:()=>careerAllStars(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),removeTrait:(key,label)=>removeTrait(key,label),board:phase=>board(phase),awards:(bucket,st)=>awards(bucket,st),classifyMarketInjury:input=>classifyMarketInjury(input),recordSalaryEvaluation:st=>recordSalaryEvaluation(st),captureSeasonChampionship:state=>captureSeasonChampionship(state),tjAccrue:()=>tjAccrue(),tjGamble:cont=>tjGamble(cont),demotionAudit:cont=>demotionAudit(cont),tradeCheck:cont=>tradeCheck(cont),maybeIntl:done=>maybeIntl(done),nextStep:()=>nextStep(),resumeSeasonEnd:()=>resumeSeasonEnd(),restorePendingChoice:()=>restorePendingChoice(),seasonRng:{R:()=>R()}});
 function awards(bucket,st){seasonAwards.awards(bucket,st);}
 const seasonAwards=new SeasonAwards({getState:()=>S,getSeed:()=>SEED,LV,clamp,traitPresentation,isSP:()=>isSP(),teamNick,renderCheckpointCard:(owner,key,args)=>renderCheckpointCard(owner,key,args),journalRng:{R:()=>R()},annualAwardTransaction,preallocateAwardSlots,captureAwardSlot,prepareAwardReceipt,commitAwardReceipt,awardPlan,awardInputs,prepareD2AwardDecisions,recordAwardDecisions,completeAwardDecisions,getAwardDefinition,hasCurrentAwardEffect});
 function renderCheckpointCard(owner,key,args){checkpointRenderer.render(owner,key,args);}
@@ -219,8 +209,6 @@ const checkpointRenderer=new CheckpointRenderer({card:(...args)=>card(...args),l
 /* 升降格と去向。 */
 function movement(){return movementGate.movement();}
 function buyoutRemaining(rate){return careerMovement.buyoutRemaining(rate);}
-function handleDemotion(o,path,idx){return careerMovement.handleDemotion(o,path,idx);}
-function retireBelowActiveMinimum(){return careerMovement.retireBelowActiveMinimum();}
 /* 長期契約/短期契約 選択処理。 */
 function extensionOffer(o){return careerContract.extensionOffer(o);}
 function ageGateJP(){return careerContract.ageGateJP();}
@@ -228,31 +216,17 @@ function advance(){return yearFlow.advance();}
 /* キャリア終盤。 */
 const TIER_TH=leagueCatalog.tierThresholds;
 const LG_N=leagueCatalog.leagueNames;
-function careerScore(st){return careerScoreFor(st,S.pos);}
 function primaryPos(){return careerRetirement.primaryPos();}
-function capTeam(bucket){return careerRetirement.capTeam(bucket);}
 function defShare(bucket){return defenseShareFor(S.stats[bucket],S.pos);}
-function posLegendPhrase(bucket){return careerRetirement.posLegendPhrase(bucket);}
-const careerRetirement=new CareerRetirement({getState:()=>S,getSeed:()=>SEED,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$:id=>$(id),fmtMoney:yen=>fmtMoney(yen),fmtIP:ip=>fmtIP(ip),slgOf:st=>slgOf(st),card:(cls,title,html)=>card(cls,title,html),divider:t=>divider(t),choose:(title,opts)=>choose(title,opts),actClear:()=>actClear(),defShare:bucket=>defShare(bucket),tierOf:bucket=>tierOf(bucket),traitNames:()=>traitNames(),teamNick:team=>teamNick(team),archiveTraitResults:()=>archiveTraitResults(),shareImage:(evals,out)=>shareImage(evals,out),rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}});
-function honorScore(bucket){
-  return honorScoreFor({bucket,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S});
-}
+const careerRetirement=new CareerRetirement({getState:()=>S,jerseyPeriods:()=>jerseyPeriods(S.log,S.jerseyHistory,id=>jerseyTeamName(id),tm=>jerseyUnknownTeam(tm)),jerseyRetired:()=>{gameView.setBoardNumber('');$('board-number').disabled=true;},intlHistory:()=>internationalHistoryHTML(buildInternationalHistory(S)),getSeed:()=>SEED,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$:id=>$(id),fmtMoney:yen=>fmtMoney(yen),fmtIP:ip=>fmtIP(ip),slgOf:st=>slgOf(st),card:(cls,title,html)=>card(cls,title,html),divider:t=>divider(t),choose:(title,opts)=>choose(title,opts),actClear:()=>actClear(),defShare:bucket=>defShare(bucket),tierOf:bucket=>tierOf(bucket),traitNames:()=>traitNames(),teamNick:team=>teamNick(team),archiveTraitResults:()=>archiveTraitResults(),shareImage:(evals,out)=>shareImage(evals,out),rng:{R:()=>R(),ri:(a,b)=>ri(a,b)}});
 function tierOf(bucket){return evaluateLeagueHof(S,bucket,TIER_TH[bucket],LG_N[bucket]);}
-function retireScene(tiers){careerRetirement.retireScene(tiers);}
-function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
-  /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
-  document.querySelectorAll('.card').forEach(c=>{
-    const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
-    for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeValue=n.nodeValue.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');
-  });
-},0);}
+function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();}
 /* 結算圖（Canvas 產生 PNG、可長按儲存または自動下載）。 */
 const shareImageView=new ShareImage({getState:()=>S,getSeed:()=>SEED,LG_N,TEAM_COLOR,teamNick,roleN,playerType,primaryPos,traitNames,fmtIP,slgOf,fmtMoney});
 function shareImage(evals,out){return shareImageView.render(evals,out);}
 /* 開始設定。 */
 (function(){ const t=document.getElementById('act-toggle');
-  if(t)t.onclick=()=>{ document.getElementById('act').classList.toggle('collapsed');
-    t.textContent=document.getElementById('act').classList.contains('collapsed')?'⌃ 選択肢を展開':'⌄ 選択肢を閉じる'; };
+  if(t)t.onclick=()=>gameView.toggleActions();
 })();
 document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#seg-pos button').forEach(x=>x.classList.remove('on'));
@@ -269,7 +243,6 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   }
   function fnv1a32(str){ let h=0x811C9DC5; for(const b of new TextEncoder().encode(str)){h^=b;h=Math.imul(h,0x01000193)>>>0;} return h>>>0; }
   function generateSeed(){ const a=new Uint32Array(2);crypto.getRandomValues(a);return (a[0].toString(36)+a[1].toString(36)).slice(0,8); }
-  function deriveSeedInt(seed,salt){ return fnv1a32('v1\0'+seed+'\0'+salt); }
   function deriveDefaultName(seed,pos){ return generatePlayerName(); }
   function normalizePlayerName(raw,seed,pos){ const n=[...String(raw??'').normalize('NFKC').trim().replace(/[\u0000-\u001f\u007f-\u009f]/g,'')].slice(0,10).join('');return n||deriveDefaultName(seed,pos); }
   function escapeHTML(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
@@ -297,7 +270,6 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function applyPromotionSalary(fromLv,toLv){return careerContract.applyPromotionSalary(fromLv,toLv);}
   function applyDemotionSalary(fromLv,toLv){return careerContract.applyDemotionSalary(fromLv,toLv);}
   function markClubInitiatedRenewal(years){return careerContract.markClubInitiatedRenewal(years);}
-  function appendContractExtension(years,mult){return careerContract.appendContractExtension(years,mult);}
   function recordSalaryEvaluation(st){return careerContract.recordSalaryEvaluation(st);}
   function recordIndependentSalaryEvaluation(results){return careerContract.recordIndependentSalaryEvaluation(results);}
 
@@ -314,13 +286,9 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
 
   function setSchool(kind){amateurCareer.setSchool(kind);}
   function setAmateur(stage){amateurCareer.setAmateur(stage);}
-  function enterDraftPath(from){amateurCareer.enterDraftPath(from);}
-  function draftFallback(from){amateurCareer.draftFallback(from);}
 
   function runDraft(fromSchool,cb){amateurCareer.runDraft(fromSchool,cb);}
 
-  function pathChoiceHS(){amateurCareer.pathChoiceHS();}
-  function pathChoiceU4(){amateurCareer.pathChoiceU4();}
   const amateurCareer=new AmateurCareer({getState:()=>S,DATA,LV,ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),salaryFor:(lv,d)=>salaryFor(lv,d),listByOrg:org=>listByOrg(org),signTo:(...args)=>signTo(...args),choose:(title,opts)=>choose(title,opts),card:(cls,title,html)=>card(cls,title,html),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),displayTrait:key=>displayTrait(key),setSchool:kind=>setSchool(kind),setAmateur:stage=>setAmateur(stage),runDraft:(fromSchool,cb)=>runDraft(fromSchool,cb),pickRecord:a=>pickRecord(a),escapeHTML:v=>escapeHTML(v),salaryDecisionLink:()=>salaryDecisionLink(),bindLatestSalaryDetailLink:()=>bindLatestSalaryDetailLink(),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),nextStep:()=>nextStep(),maybeIntl:done=>maybeIntl(done),recordIndependentSalaryEvaluation:results=>recordIndependentSalaryEvaluation(results),teamRec:id=>teamRec(id),rng:{ri:(a,b)=>ri(a,b),R:()=>R()}});
 
   function amateurSeason(){amateurCareer.amateurSeason();}
@@ -333,19 +301,22 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   function processIntlPhase(phase,done){internationalTournament.process(phase,done);}
   const internationalTournament=new InternationalTournament({getState:()=>S,normalizeInternationalState,validateInternationalEntry,prepareInternationalResult,commitInternationalResult,INTLACE_UNLOCK_TEXT,internationalPersonalStats,renderInternationalPersonalStats,intlEvents:year=>intlEvents(year),intlPhase:e=>intlPhase(e),intlThreshold:e=>intlThreshold(e),intlSelection:e=>intlSelection(e),addIntlStats:()=>addIntlStats(),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),displayTrait:key=>displayTrait(key),fmtIP:ip=>fmtIP(ip),pick:a=>pick(a)});
   function maybeIntl(done){processIntlPhase('POST',done);}
+  function jerseyStep(){return jerseyFlow.step();}
+  function jerseyTeamName(teamId){return jerseyFlow.teamName(teamId);}
+  function jerseyUnknownTeam(tm){return jerseyFlow.unknownTeam(tm);}
+  function jerseyLabelText(){return jerseyFlow.label();}
+  const jerseyFlow=new JerseyFlow({getState:()=>S,nextStep:()=>nextStep(),board:p=>board(p),choose:(title,opts)=>choose(title,opts),chooseNumber:options=>chooseJerseyNumber(options),byId:id=>$(id),setBoardNumber:text=>gameView.setBoardNumber(text),teamRec:id=>teamRec(id),teamMaster:()=>leagueCatalog.teamMaster});
   function phaseIntlPre(){return yearFlow.phaseIntlPre();}
   function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}
-  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]});
+  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[jerseyStep,phasePre,phaseIntlPre,phaseMid,phaseEnd]});
 
   function daibaFarewell(cont){return careerMovement.daibaFarewell(cont);}
 
-  function overseasOffer(org,lv,label,o,minD,finish){return careerMovement.overseasOffer(org,lv,label,o,minD,finish);}
   function crossOffers(o){return careerMovement.crossOffers(o);}
 
   function renewAndAdvance(mult,allowDecrease,contractType){return careerContract.renewAndAdvance(mult,allowDecrease,contractType);}
   function arbitrationFlow(){return careerContract.arbitrationFlow();}
   function faMarket(o,d){return careerMovement.faMarket(o,d);}
-  function outOfOrg(o){return careerMovement.outOfOrg(o);}
   const careerMovement=new CareerMovement({getState:()=>S,LV,PATHS,careerSession,faMarket:(o,d)=>faMarket(o,d),crossOffers:o=>crossOffers(o),applyPromotionSalary:(fromLv,toLv)=>applyPromotionSalary(fromLv,toLv),markClubInitiatedRenewal:years=>markClubInitiatedRenewal(years),extensionOffer:o=>extensionOffer(o),displayTrait:key=>displayTrait(key),slgOf:st=>slgOf(st),teamNick:id=>teamNick(id),applyKboForeignPackageCap:input=>applyKboForeignPackageCap(input),salaryCandidate:input=>salaryCandidate(input),salaryFor:(lv,d)=>salaryFor(lv,d),fixedContract:input=>fixedContract(input),signTo:(org,lv,teamId,years,mult,reason,options)=>signTo(org,lv,teamId,years,mult,reason,options),saveSalaryDecision:(decisionType,candidate,previousSalary,finalSalary,options)=>saveSalaryDecision(decisionType,candidate,previousSalary,finalSalary,options),renewAndAdvance:(mult,allowDecrease,contractType)=>renewAndAdvance(mult,allowDecrease,contractType),arbitrationFlow:()=>arbitrationFlow(),kboPreviousPackage:()=>kboPreviousPackage(),currentMarketRating:()=>currentMarketRating(),contractStageFor:org=>contractStageFor(org),serviceYearsFor:org=>serviceYearsFor(org),migrateSalaryV130State:()=>migrateSalaryV130State(),migrateSalaryV140State:()=>migrateSalaryV140State(),applyDemotionSalary:(fromLv,toLv)=>applyDemotionSalary(fromLv,toLv),ageGateJP:()=>ageGateJP(),doTradeExec:()=>doTradeExec(),dpMult:()=>defensePosition.multiplier(),ovr:()=>ovr(),fmtMoney:yen=>fmtMoney(yen),card:(cls,title,html)=>card(cls,title,html),board:phase=>board(phase),choose:(title,opts)=>choose(title,opts),escapeHTML:v=>escapeHTML(v),teamRec:id=>teamRec(id),listByOrg:org=>listByOrg(org),pickRecord:a=>pickRecord(a),removeTrait:(key,name)=>removeTrait(key,name),traitCard:(key,name,text,cls)=>traitCard(key,name,text,cls),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),rng:{R:()=>R(),ri:(a,b)=>ri(a,b),chance:p=>chance(p)}});
 
   resumeSeasonEnd=()=>seasonSettlement.resumeSeasonEnd();
@@ -361,17 +332,26 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   const salaryDetailController=createSalaryDetailController({trigger:$('salary-detail-trigger'),panel:$('salary-detail-panel'),closeButton:$('salary-detail-close'),title:$('salary-detail-title'),body:$('salary-detail-body'),getDecision:()=>S?.lastSalaryDecision||null,getCurrentSalary:()=>S?.currentSalary||0,getContract:()=>S?.ct||null,getIncome:()=>({signing:S?.careerSigningBonus||0,stipend:S?.careerDevelopmentStipend||0,base:S?.careerBaseSalary||0,incentive:S?.careerIncentive||0,buyout:S?.careerBuyout||0,outside:S?.careerOutsideIncome||0,yearOutside:S?.yearOutsideIncome||0,total:S?.careerEarnings||0,corp:S?.corpIncome||0}),isProfessional:()=>S?.stage==='PRO'||S?.stage==='IND',fmtMoney});
   const navigation=initNavigation({onNavigate:archiveTraitResults,onOpenPlayer:buildPlayerViewModel,onOpenCareer:buildCareerViewModel});
   let startPromptPending=false;
-  $('btn-start').onclick=()=>{
-    if(startPromptPending)return;
-    if(browserSave?.state.phase==='unavailable'){
-      const state=browserSave.state;startPromptPending=true;
-      confirmAction({title:'セーブせずに始める',message:'セーブデータを確認できません。今回の進行状況は保存されません。セーブせずに始めますか？'})
-        .then(ok=>{if(ok&&browserSave.state===state&&state.phase==='unavailable'&&browserSave.newCareer({allowUnsaved:true}))startJapanese();})
+  bindRandomPlayerName({input:$('in-name'),button:$('btn-random-name')});
+  $('btn-start').onclick=async()=>{
+    if(startPromptPending||S)return;
+    if(browserSave?.hasReadySlot()){
+      startPromptPending=true;
+      try{
+        await browserSave.replaceAfterConfirm(()=>confirmAction({title:'新しく始める',message:'新しい人生を始めると、現在のセーブデータが上書きされます。',confirmLabel:'始める'}),()=>{try{startJapanese();}catch(error){S=null;throw error;}});
+      }finally{startPromptPending=false;}
+      return;
+    }
+    if(browserSave?.isUnavailable()){
+      startPromptPending=true;
+      browserSave.startUnsavedAfterConfirm(()=>confirmAction({title:'セーブせずに始める',message:'セーブデータを確認できません。今回の進行状況は保存されません。セーブせずに始めますか？'}))
+        .then(ok=>{if(ok)startJapanese();})
         .finally(()=>{startPromptPending=false;});
     }else if(!browserSave||browserSave.newCareer())startJapanese();
   };
   $('seed-re').onclick=e=>{e.preventDefault();const s=generateSeed();$('seed-show').value=s;SEED=s;};
   $('seed-show').value=normalizeSeed(new URLSearchParams(location.search).get('seed'))||generateSeed();
+  $('board-number').onclick=()=>jerseyFlow.openChange();
   $('btn-restart').onclick=()=>{confirmAction({title:'タイトルに戻る',message:'タイトルに戻りますか？セーブデータは残ります。未保存の操作は、もう一度プレイする必要があります。'}).then(ok=>{if(ok)location.href=location.pathname;});};
 
 // Bootstrap completes storage inspection before enabling new-career controls.
@@ -379,16 +359,15 @@ export async function initializeBrowserSave(){
  if(browserSave)return;
  const home=async()=>{if(S&&!await confirmAction({title:'タイトルに戻る',message:'このタブの未保存の操作を破棄して、タイトルに戻りますか？セーブデータは残ります。'}))return;location.href=location.pathname+location.search;};
  let newPromptPending=false;
- const fresh=async()=>{
-  if(newPromptPending||S||browserSave.state.phase!=='ready'||!browserSave.state.slot)return false;
-  const state=browserSave.state,revision=state.revision;newPromptPending=true;
+ const fresh=()=>!newPromptPending&&!S&&browserSave.hasReadySlot();
+ const deleteSave=async()=>{
+  if(newPromptPending||S||!browserSave.hasReadySlot())return false;
+  newPromptPending=true;
   try{
-   if(!await confirmAction({title:'新しく始める',message:'現在の進行状況を破棄して、新しく始めますか？\nOKを選ぶと、現在のセーブデータを削除します。'}))return false;
-   if(browserSave.state!==state||state.phase!=='ready'||state.revision!==revision)return false;
-   return await browserSave.remove({confirmed:true});
+   return await browserSave.removeAfterConfirm(()=>confirmAction({title:'セーブデータを削除',message:'セーブデータを削除します。この操作は元に戻せません。',confirmLabel:'削除する'}));
   }finally{newPromptPending=false;}
  };
- const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onRetry:()=>browserSave.state.phase==='delete-error'?browserSave.initialize():browserSave.restore(),onHome:home});
+ const show=createBrowserSaveUI({onContinue:()=>browserSave.restore(),onNew:fresh,onDelete:deleteSave,onRetry:()=>browserSave.retry(),onHome:home});
  browserSave=new BrowserSaveController({notify:show,lock:locked=>{$('app').inert=locked;if(locked){++careerSession.choiceGeneration;careerSession.activeChoiceToken=null;}},restore:(envelope,{authorization}={})=>{
   const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});
   careerEntry.resume(candidate);

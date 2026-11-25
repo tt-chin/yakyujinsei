@@ -2,11 +2,12 @@
 // careerMovement.movement(), and the professional same-year continuation guard around it. The career state is
 // read at the start of each method through getState. careerMovement and amateurCareer are the game.js objects,
 // passed by reference. Every other game.js function is an injected late-binding lambda. No draw site.
+import {reconcileAmericanCareer} from './control-period-policy.js';
 export class MovementGate {
   #deps;
   #professionalMoves=new WeakMap();
   constructor(deps){this.#deps=deps;}
-  #performMovement(){const S=this.#deps.getState(),{careerMovement,amateurCareer,migrateSalaryV130State,accrueForeignFirstTeamSeason,contractStageFor}=this.#deps;migrateSalaryV130State();if(amateurCareer.seasonEndMovement())return;accrueForeignFirstTeamSeason(S);if(S.serviceTimeAccruedYear!==S.year){if(S.org==='NPB'&&S.lv==='NPB1'&&S.seasonFactor>0){S.npbRosterDays+=Math.round(145*S.seasonFactor);while(S.npbRosterDays>=145){S.npbRosterDays-=145;S.npbFaSeasons++;}S.serviceTime.NPB=Math.max(S.serviceTime.NPB,S.npbFaSeasons);}else if(S.org==='MLB'&&S.lv==='MLB'&&S.seasonFactor>=.5)S.serviceTime.MLB++;else if((S.org==='KBO'&&S.lv==='KBO1'||S.org==='CPBL'&&S.lv==='CPBL1')&&S.seasonFactor>0)S.serviceTime[S.org]++;S.serviceTimeAccruedYear=S.year;}const stage=contractStageFor(S.org);if(S.org==='NPB')S.faElig=S.serviceTime.NPB>=8;else if(S.org==='MLB')S.faElig=stage!=='CONTROL';careerMovement.movement();}
+  #performMovement(){const S=this.#deps.getState(),{careerMovement,amateurCareer,migrateSalaryV130State,accrueForeignFirstTeamSeason,contractStageFor}=this.#deps;migrateSalaryV130State();if(amateurCareer.seasonEndMovement())return;reconcileAmericanCareer(S);accrueForeignFirstTeamSeason(S);if(S.serviceTimeAccruedYear!==S.year){if(S.org==='NPB'&&S.lv==='NPB1'&&S.seasonFactor>0){S.npbRosterDays+=Math.round(145*S.seasonFactor);while(S.npbRosterDays>=145){S.npbRosterDays-=145;S.npbFaSeasons++;}S.serviceTime.NPB=Math.max(S.serviceTime.NPB,S.npbFaSeasons);}else if(S.org==='MLB'&&S.lv==='MLB'&&S.seasonFactor>=.5)S.serviceTime.MLB++;else if((S.org==='KBO'&&S.lv==='KBO1'||S.org==='CPBL'&&S.lv==='CPBL1')&&S.seasonFactor>0)S.serviceTime[S.org]++;S.serviceTimeAccruedYear=S.year;}const stage=contractStageFor(S.org);if(S.org==='NPB')S.faElig=S.serviceTime.NPB>=8;else if(S.org==='MLB')S.faElig=stage!=='CONTROL';careerMovement.movement();}
   movement(){const S=this.#deps.getState(),professionalMoves=this.#professionalMoves,{restorePendingChoice}=this.#deps;
     if(S.stage!=='PRO')return this.#performMovement();
     let entry=professionalMoves.get(S);

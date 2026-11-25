@@ -1,44 +1,46 @@
-// Header disclosure only: no game model, persistence or RNG access.
+// Native modal supplies background inertness and top-layer stacking. No S/persistence/RNG.
 export function initializeBoardMenu({documentRef=document}={}) {
-  const root=documentRef.getElementById('board-menu');
-  if(!root)return;
+  const root=documentRef.getElementById('board-menu');if(!root)return;
   const toggle=root.querySelector('#board-menu-toggle'),panel=root.querySelector('#board-menu-panel');
   let dialogAction=null;
   const items=()=>[...panel.querySelectorAll('button,a[href]')].filter(item=>!item.disabled);
-  const close=(restore=false)=>{
-    panel.hidden=true;toggle.setAttribute('aria-expanded','false');
+  const close=(restore=true)=>{
+    if(panel.open)panel.close();panel.hidden=true;toggle.setAttribute('aria-expanded','false');
     if(restore)toggle.focus({preventScroll:true});
   };
   const open=()=>{
-    panel.hidden=false;toggle.setAttribute('aria-expanded','true');
+    if(panel.open)return;
+    panel.hidden=false;panel.showModal();toggle.setAttribute('aria-expanded','true');
+    documentRef.getElementById('board-menu-close').focus({preventScroll:true});
   };
-  toggle.addEventListener('click',()=>panel.hidden?open():close(true));
+  toggle.addEventListener('click',()=>panel.open?close():open());
   toggle.addEventListener('keydown',event=>{
     if(!['ArrowDown','ArrowUp'].includes(event.key))return;
-    event.preventDefault();event.stopPropagation();open();const all=items();
-    (event.key==='ArrowDown'?all[0]:all.at(-1))?.focus();
+    event.preventDefault();open();const all=items();(event.key==='ArrowDown'?all[0]:all.at(-1))?.focus();
   });
-  root.addEventListener('keydown',event=>{
-    if(event.key==='Escape'&&!panel.hidden){event.preventDefault();close(true);}
-    if(panel.hidden||!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
-    event.preventDefault();const all=items(),at=all.indexOf(documentRef.activeElement);
-    const index=event.key==='Home'?0:event.key==='End'?all.length-1:
-      (at+(event.key==='ArrowDown'?1:-1)+all.length)%all.length;
+  panel.addEventListener('cancel',event=>{event.preventDefault();close();});
+  panel.addEventListener('keydown',event=>{
+    const all=items(),at=all.indexOf(documentRef.activeElement);
+    if(event.key==='Tab'){
+      if(event.shiftKey&&at<=0){event.preventDefault();all.at(-1)?.focus();}
+      else if(!event.shiftKey&&at===all.length-1){event.preventDefault();all[0]?.focus();}
+    }
+    if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+    event.preventDefault();const index=event.key==='Home'?0:event.key==='End'?all.length-1:(at+(event.key==='ArrowDown'?1:-1)+all.length)%all.length;
     all[index]?.focus();
   });
-  // Close before the existing action runs; never delay share behind an async task.
+  // Close synchronously before existing action handlers, including native share.
   panel.addEventListener('click',event=>{
-    const item=event.target.closest('button,a[href]');
-    if(!item)return;
+    const item=event.target.closest('button,a[href]');if(!item)return;
     dialogAction=item.id==='board-preferences'?'display-preferences':item.id==='board-share'?'seed-share':null;
-    close(true);
+    close();
   },true);
-  documentRef.addEventListener('pointerdown',event=>{if(!root.contains(event.target))close();});
-  documentRef.addEventListener('focusin',event=>{if(!root.contains(event.target))close();});
-  // Existing dialogs keep their own behavior; return to the visible disclosure.
-  for(const id of ['display-preferences','seed-share']){
-    documentRef.getElementById(id)?.addEventListener('close',()=>{
-      if(dialogAction===id){dialogAction=null;toggle.focus({preventScroll:true});}
-    });
-  }
+  panel.addEventListener('click',event=>{
+    if(event.target!==panel)return;
+    const r=panel.getBoundingClientRect();
+    if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)close();
+  });
+  for(const id of ['display-preferences','seed-share'])documentRef.getElementById(id)?.addEventListener('close',()=>{
+    if(dialogAction===id){dialogAction=null;toggle.focus({preventScroll:true});}
+  });
 }

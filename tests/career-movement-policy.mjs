@@ -87,7 +87,7 @@ assert.match(careerMovement, /t:'現在の球団に残留',main:true,f:finish/);
 assert.match(careerMovement, /annualSalary=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:'CPBL1',contractMult:1\}\)\.annualSalary/);
 assert.match(careerMovement, /s:`台湾プロ野球一軍契約｜年俸\$\{fmtMoney\(annualSalary\)\}`/);
 assert.match(careerMovement, /signTo\('CPBL','CPBL1',undefined,undefined,undefined,undefined,\{annualSalary\}\)/);
-assert.match(careerMovement, /\{t:LV\[targetLevel\]\.n\+'への降格を受け入れる',main:true,f:\(\)=>\{const S=getState\(\);const fromLv=S\.lv;S\.lv=targetLevel;applyDemotionSalary\(fromLv,targetLevel\)/);
+assert.match(careerMovement, /\{t:LV\[targetLevel\]\.n\+'への降格を受け入れる',main:true,f:\(\)=>\{const S=getState\(\);const fromLv=S\.lv;S\.lv=targetLevel;reconcileAmericanCareer\(S\);applyDemotionSalary\(fromLv,targetLevel\)/);
 
 // 再契約の資格・並びは保持し、NPB育成も同じ候補価格スナップショットを使用する。
 assert.match(careerMovement, /pushPro\('NPB','NPB_DEV','NPB育成再契約'\)/);

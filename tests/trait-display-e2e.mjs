@@ -1,16 +1,17 @@
+import {openReaderDetails} from './support/reader-disclosure.mjs';
 import {assertSameCareer} from './support/first-difference.mjs';
 import assert from 'node:assert/strict';
-import {historicalCareer} from '../tools/development-b/historical-comparison.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {routeHistoricalShareTheme,harness,arg,instrument} from './support/stage6-browser.mjs';
+import {harness,arg,instrument,instrumentAbility} from './support/stage6-browser.mjs';
 import {TRAIT_LABELS,TRAIT_TEXT} from '../docs/src/engine/trait-policy.js';
 import {EVENT_TRAIT_TEXT} from '../docs/src/engine/event-policy.js';
-import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
 import {injectOverlayHook} from './support/overlay-hook.mjs';
 
-const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'a0b880bb7e7fe74e743daa0cb8144455c9fdded2')+'^{commit}'],{encoding:'utf8'}).trim();
-const source=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
+// TEST-BASELINE-REBASE-01: post-modularization baseline (dev after OOP phase 45). The whole docs tree is served from it, so one hook and raw S serve both sides.
+const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'ee0ae9ec863e4be0d1abc345d24080744bb6858c')+'^{commit}'],{encoding:'utf8'}).trim();
+const baselineFiles=new Map(),baselineFile=rel=>{if(!baselineFiles.has(rel))baselineFiles.set(rel,execFileSync('git',['show',baseline+':docs/'+rel],{maxBuffer:20e6,stdio:['ignore','pipe','ignore']}));return baselineFiles.get(rel);};
+if(/(?:^|\n)[ \t]*function (?:blankStat|buildTraitsViewModel)\(/.test(baselineFile('src/engine/game.js').toString()))throw Error('TRAIT_DISPLAY_BASELINE_PRE_MODULE '+baseline);
 const h=await harness('trait-display'),labels=Object.keys(TRAIT_LABELS);
 const runTest=h.test;h.test=(id,input,action)=>!arg('cases')||id.startsWith(arg('cases'))?runTest(id,input,action):Promise.resolve();
 const hook=`window.__traitDisplay={
@@ -18,24 +19,24 @@ const hook=`window.__traitDisplay={
  patch:v=>Object.assign(S,v),
  labels:()=>({position:primaryPos(),type:playerType(),traits:traitNames()}),
  tier:bucket=>tierOf(bucket),
- emptyLeague:()=>{const st={...blankStat(),yr:1};S.stats.NPB={...st};S.statsByLevel??={};S.statsByLevel.NPB1={...st};},
+ emptyLeague:()=>{const st={...seasonStats.blankStat(),yr:1};S.stats.NPB={...st};S.statsByLevel??={};S.statsByLevel.NPB1={...st};},
  clear:()=>{$('log').replaceChildren();_curYearBody=null;},
- model:()=>buildTraitsViewModel(),
+ model:()=>careerPresenter.traits(),
  acquire:(key,description)=>traitCard(key,displayTrait(key),description),
  lose:()=>{removeTrait('rubber','ゴムゴムの腕');card('bad','ゴムゴムの腕、ついに限界','手術により効果が終了。');},
  archive:()=>{if(typeof archiveTraitResults==='function')archiveTraitResults();},
  retire:()=>endGame('特性表示fixture'),
- grinder:()=>{S.stage='PRO';S.lv='NPB1';S.org='NPB';S.orgTeamId='NPB_CL_HAN';S.potSum0=469;S.stats.NPB={...blankStat(),yr:1,G:1,PA:4,AB:3,H:1};endGame('引退時の新規取得fixture');},
+ grinder:()=>{S.stage='PRO';S.lv='NPB1';S.org='NPB';S.orgTeamId='NPB_CL_HAN';S.potSum0=469;S.stats.NPB={...seasonStats.blankStat(),yr:1,G:1,PA:4,AB:3,H:1};endGame('引退時の新規取得fixture');},
  oldLegend:()=>{S.traits.legend=true;S.legendLeague='NPB';endGame('既取得の相容fixture');},
  choose:()=>choose('次の操作',[{t:'次へ',f:()=>card('info','次へ','進行しました。')}]),
  saveChoice:()=>{window.__traitStale=$('act').querySelector('button').onclick;},
  stale:()=>window.__traitStale(),
  share:async(evals=[])=>{const out=document.createElement('div'),texts=[],boxes=[],original=CanvasRenderingContext2D.prototype.fillText;document.body.appendChild(out);CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(text);boxes.push({text:String(text),x:args[0],y:args[1],width:this.measureText(String(text)).width});return original.call(this,text,...args);};try{await shareImage(evals,out);const png=out.querySelector('img').src;out.remove();return {texts,png,boxes};}finally{CanvasRenderingContext2D.prototype.fillText=original;}},
- step:()=>{if(S.done)return{done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));let b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows.sort((a,b)=>S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey])[0]||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S));delete before.version;const action=b.textContent;b.click();const after=JSON.parse(JSON.stringify(S));delete after.version;return{before,after,action};}
+ step:()=>{if(S.done)return{done:true};const rows=[...$('act').querySelectorAll('.abrow')].filter(n=>n.getAttribute('aria-disabled')!=='true'&&!n.classList.contains('capped')),buttons=[...$('act').querySelectorAll('button')].filter(n=>!n.disabled&&!/元に戻す|すべてリセット/.test(n.textContent));const jb=buttons.find(n=>/^背番号 \\S+ (で入団する|にする)$/.test(n.textContent.trim()));if(jb){jb.click();return{skip:true};}let b=buttons.find(n=>n.textContent.trim().startsWith('通常投球'))||rows.sort((a,b)=>S.ab[a.dataset.abilityKey]-S.ab[b.dataset.abilityKey])[0]||buttons.find(n=>/配分を確定|次へ|完了/.test(n.textContent))||buttons.find(n=>/NPBドラフト|プロ志望|指名を受け|オファーを受け|契約を結|入団/.test(n.textContent))||buttons[0];if(!b)throw Error('NO_ACTION');const before=JSON.parse(JSON.stringify(S));delete before.version;delete before.jerseyHistory;const action=window.__allocationComparison.action(b);b.click();const jb2=[...$('act').querySelectorAll('button')].find(n=>/^背番号 \\S+ (で入団する|にする)$/.test(n.textContent.trim()));if(jb2)jb2.click();const after=JSON.parse(JSON.stringify(S));delete after.version;delete after.jerseyHistory;return{before,after,action,jersey:!!jb2};}
 };`;
 async function page(width,pos='IF',seed='trait-display',old=false){
- const p=await h.page(width,pos,seed,{historical:old,beforeLoad:async p=>{if(old)await routeHistoricalShareTheme(p,baseline);
- await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(source):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook)});});}});await p.waitForFunction(()=>window.__traitDisplay&&!document.querySelector('#btn-start').disabled);return p;
+ const p=await h.page(width,pos,seed,{beforeLoad:async p=>{if(old)await p.route(url=>url.hostname==='127.0.0.1'||(!!arg('preview')&&url.origin===new URL(arg('preview')).origin),async route=>{const rel=decodeURIComponent(new URL(route.request().url()).pathname).slice(1)||'index.html';let body;try{body=baselineFile(rel);}catch{return route.fulfill({status:404,body:'baseline missing '+rel});}if(rel==='src/engine/player-ability.js')body=instrumentAbility(body.toString());await route.fulfill({body,contentType:rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.png')?'image/png':rel.endsWith('.json')?'application/json':'text/html'});});
+ await p.route('**/src/engine/game.js',async route=>{const response=await route.fetch();let body=old?instrument(baselineFile('src/engine/game.js').toString()):await response.text();if(!body.includes('let s6rng=[]'))body=instrument(body);await route.fulfill({response,body:injectOverlayHook(body,hook)});});}});await p.waitForFunction(()=>window.__traitDisplay&&!document.querySelector('#btn-start').disabled);return p;
 }
 const descriptions={...TRAIT_TEXT,...EVENT_TRAIT_TEXT};
 try{
@@ -109,6 +110,7 @@ try{
    const history=await p.locator('#log').innerText();for(const desc of Object.values(descriptions))assert.ok(!history.includes(desc));
    await p.locator('[data-main-view="home"]').click();
    await p.evaluate(()=>window.__traitDisplay.retire());
+   await openReaderDetails(p.locator('#log .card').filter({has:p.locator('h4',{hasText:'キャリアプロフィール'})}),{snapshot:()=>h.get(p)});
    const profile=await p.locator('#log .card').filter({hasText:'キャリアプロフィール'}).innerText();for(const desc of Object.values(descriptions))assert.ok(!profile.includes(desc));for(const label of Object.values(TRAIT_LABELS))assert.ok(profile.includes(label),label+' retirement profile missing');
    const snapshot=await h.get(p),image=await p.evaluate(()=>window.__traitDisplay.share());assertSameCareer(await h.get(p),snapshot);assert.match(image.png,/^data:image\/png;base64,/);
    for(const key of labels)assert.ok(image.texts.join('\n').includes(TRAIT_LABELS[key]),key+' PNG label missing');
@@ -131,11 +133,11 @@ try{
   });
   await h.test('retirement-new-grinder-'+width,{width,fixture:true},async()=>{
    const p=await page(width);await p.evaluate(()=>{window.__stage6.fixture({pos:'IF'});window.__traitDisplay.clear();window.__traitDisplay.grinder();});
-   assert.match(await p.locator('[data-trait-result="grinder"]').innerText(),/記念称号/);const profile=await p.locator('#log .card').filter({hasText:'キャリアプロフィール'}).innerText();assert.doesNotMatch(profile,/記念称号/);await p.locator('[data-main-view="career"]').click();assert.equal(await p.locator('[data-trait-result]').count(),0);await p.close();
+   await openReaderDetails(p.locator('[data-trait-result="grinder"]'),{snapshot:()=>h.get(p)});assert.match(await p.locator('[data-trait-result="grinder"]').innerText(),/記念称号/);await openReaderDetails(p.locator('#log .card').filter({has:p.locator('h4',{hasText:'キャリアプロフィール'})}),{snapshot:()=>h.get(p)});const profile=await p.locator('#log .card').filter({hasText:'キャリアプロフィール'}).innerText();assert.doesNotMatch(profile,/記念称号/);await p.locator('[data-main-view="career"]').click();assert.equal(await p.locator('[data-trait-result]').count(),0);await p.close();
   });
   await h.test('old-owned-legend-'+width,{width,fixture:true},async()=>{const p=await page(width);await p.evaluate(()=>{window.__stage6.fixture({pos:'IF'});window.__traitDisplay.clear();window.__traitDisplay.oldLegend();});assert.equal(await p.locator('[data-trait-result="legend"]').count(),0,'already owned legend must not be presented as newly acquired');assert.equal((await h.get(p)).state.legendLeague,'NPB');await p.close();});
  }
  if(arg('source')!=='baseline')for(const [pos,seed]of [['P','yakyo-test-001'],['IF','s10-trait-38']])await h.test('exact-full-career-'+pos,{pos,seed,baseline},async e=>{
-  const runs=[];for(const old of [true,false]){const p=await page(1280,pos,seed,old),actions=[];for(let n=0;n<1800;n++){const step=await p.evaluate(()=>window.__traitDisplay.step());if(step.done)break;actions.push({action:step.action,before:createHash('sha256').update(JSON.stringify(step.before)).digest('hex'),after:createHash('sha256').update(JSON.stringify(step.after)).digest('hex'),beforeState:step.before,afterState:step.after});if(n===1799)throw Error('CAREER_LIMIT');}const result=await h.get(p);delete result.state.version;runs.push({actions,state:result.state,rng:result.rng});await h.save('career-'+pos+'-'+(old?'baseline':'current'),runs.at(-1));await p.close();}assertSameCareer(historicalCareer(runs[1],{championmaker:true}),historicalCareer(runs[0]));e.snapshots.push({actions:runs[1].actions.length,rng:runs[1].rng.length});
+  const runs=[];for(const old of [true,false]){const p=await page(1280,pos,seed,old),actions=[];let skips=0;for(let n=0;n<1800;n++){const step=await p.evaluate(()=>window.__traitDisplay.step());if(step.done)break;if(step.skip){skips++;continue;}if(step.jersey)skips++;actions.push({action:step.action,before:createHash('sha256').update(JSON.stringify(step.before)).digest('hex'),after:createHash('sha256').update(JSON.stringify(step.after)).digest('hex'),beforeState:step.before,afterState:step.after});if(n===1799)throw Error('CAREER_LIMIT');}const result=await h.get(p);delete result.state.version;{const proPlayed=Object.values(result.state.statsByLevel||{}).some(v=>v&&(v.G>0||v.PA>0||v.IP>0));/* PLY-01 number step on both sides (the baseline is 2.0.0+): skipped unrecorded and counted; jerseyHistory is shape-checked and kept in the exact compare. */{const j=result.state.jerseyHistory;assert.equal(skips>0,proPlayed,seed+' number step appears exactly when the career reaches a professional team');if(skips>0)assert.ok(Array.isArray(j)&&j.length>0&&j.every(x=>typeof x.teamId==='string'&&Number.isInteger(x.year)&&typeof x.number==='string'),seed+' jerseyHistory shape');}}runs.push({actions,skips,state:result.state,rng:result.rng});await h.save('career-'+pos+'-'+(old?'baseline':'current'),runs.at(-1));await p.close();}assertSameCareer(runs[1],runs[0],pos+' exact full career vs baseline: raw S, actions, number steps, RNG');e.snapshots.push({actions:runs[1].actions.length,rng:runs[1].rng.length});
  });
 }finally{const result=await h.finish();process.exit(result.fail||h.errors.length?1:0);}

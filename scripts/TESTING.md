@@ -1,5 +1,71 @@
 # 統一測試入口
 
+## 米国服務年資與引退摘要
+
+`american-service.test`先以MiLB／MLB錯配、既有5年服務年資重現舊版漏加與CONTROL，再測80組美國層級／出賽比例／2→3與5→6邊界／新controller重試，以及原生CareerMovement的滿期／未滿期／正常延長與升降格。`browser-save-codec.test`驗證原envelope不變、兩種美國org／lv錯配可載入、重複載入不重算、只依明示的年度／level／seasonFactor補年資，不採stats.MLB.yr，且非美國錯配仍拒絕。
+
+新增`american-service-e2e`為Quick／Full的限定原生路線。固定基準8964d627a1f2dff5f38da31bd3a092eeaa903a6e與P／IF固定seed比較，年資加算本身無RNG；錯配案例只允許org、MLB服務年資及派生資格三項狀態差異，之後明確驗證實際調停／FA及同seed重複性。正常直接MLB與NPB／KBO／CPBL案例完整S、選項與每次RNG值不排除欄位。另以原生簽約／升降格／再升格／交易／更新驗證組織與合約保證。不得把後續FA選項造成的生涯差異寫入新golden，或重建舊基準。
+
+`career-review.test`與原生`ui-redesign-review-e2e --fixtures-only`驗證共用careerRecordModel的14層級、零值紀錄、全空fallback，保持原引退卡／保存圖片範圍及完整S／RNG。既有固定seed投手／野手個別契約E2E亦對照上述完整SHA並重播；不是本機Full。最終Full由使用者對確定提交於GitHub手動執行。
+
+`npb-return-e2e`的3A fixture在顯示復歸／留隊選項前已升格MLB；留隊應維持升格後的MLB組織與層級，新約org亦為MLB，不沿用起始MiLB身分。明確驗證剛結束的小聯盟年度不加MLB年資、留隊續約不重複加年資，原金額、付款、雙擊、重繪完整S／RNG與歷史基準不變。此入口不屬Quick；`--quick`只略過其末段四組自然生涯重播，不代表整套Quick或Full PASS。
+
+## 季末まとめ初次定位與年度別字體
+
+`season-summary-e2e`沿用原固定基準`cf88d1a9d621c354d64a2de5c427cd437a8094bf`與完整S／每次RNG／原卡DOM比對，新增手機直橫向／短視窗及桌面實際log捲動容器：首次標題在固定頁首下、同年度重繪／契約更新／次年度不重播、原生季末能力點分配不回跳、原生交易與TJ選項先回答再結算。wheel／touchmove／鍵盤、選手／キャリア、dialog、跨年及DOM移除均在rAF前介入，驗證舊請求取消且重繪不補跳；同年度的新生涯可再次定位，明細手動開關及箭頭條件保持。只以fixture控制測試前提與結算後續，不更改產品流程或抽樣結果。
+
+`event-history-e2e`保留自然年度與原事件展開／橫捲斷言，另用只讀呈現fixture檢查手機／桌面、P／IF、業餘文字／職業數字、四主題及標準／大字的每列四格font-family／font-size／font-weight一致，限定table的text-size-adjust為100%。這是Chromium模擬；Safari原生文字自動放大與工具列遮蔽仍須實機確認。
+
+## 本機與 GitHub Full 的分工
+
+依使用者2026-11-17的長期指示，後續所有作業本機均不啟動Full模式（含整套、batch及Full模式的`--only`），也不拆批變相跑完整Full；直接相關的單體／個別E2E及必要Quick仍按`AGENTS.md`第6章執行。需要Full時，在結果明列 **「需要執行Full（GitHub手動／未執行）」**，附原因、分支、完整提交SHA與本機結果，由使用者手動在GitHub執行。Agent不自行dispatch或重跑手動Full；既有自動CI觸發條件不變。下方Full命令是入口與既有CI用法說明，不代表允許Agent在本機啟動Full。
+
+Full需求、正式Gate與main合併條件仍保留；確認使用者執行的SHA與成功結果前，不能將未執行／待確認寫成Full PASS或正式驗收完成。
+
+## 現在選項的浮動箭頭
+
+配點入口另嚴格檢查visualViewport縮小、原footer補償生效後「確定」完整可見時箭頭必須隱藏，再以原指標點擊確定且只執行一次；失敗保存`confirm-navigation-failure.json`與截圖。根style監測只重算箭頭，不改配點避讓、分配、復原／確定或持續強制捲動。
+
+`ui-redesign-decision-e2e`保留原P／IF完整S／RNG、原生配點草稿、防重複操作及128組版面，移除舊開關的可見點擊期待；收合狀態由原UI hook準備，新的返回入口必須展開並露出目前標題。新增390直向、844橫向、320短視窗與桌面內部選項overflow，驗證鍵盤Enter／Space、44px命中區、按鈕中心可點擊、收合／長選項逐次捲動／末尾隱藏、年度更新時保留舊閱讀位置、資料分頁返回、單一繼續與空選項。配點只操作箭頭並比對完整草稿／S／RNG，不觸發分配或確定。`--navigation-only`僅供直接執行時診斷新導覽fixture，不代替完整入口／Quick／Full。visualViewport高度以受控物件另作模擬；Chromium尺寸與模擬工具列均不是Safari實機PASS。原生Safari工具列展開／收合、直橫向切換及觸控命中須在本次實作完成後另外確認。
+
+## 歷史間距比較與球場抬頭
+
+後續確認：`77d536bb031ef70801b0511c057ae8145f028d1d`已取得Tests #265 Full144／144 PASS及#264 Quick success，歷史間距修正的舊待Full狀態已解除。這不覆蓋後續浮動箭頭；新導覽仍需新提交的GitHub手動Full。
+
+`design-tokens-09-e2e`維持`f8afd8e`間距基準與`ad8e77f53ede29de6a51c23708b2370eed7b414d`凍結UI runtime。已核准的`235fd22827478884ad4a5b046002e62eb326ffe0`球場抬頭背景／文字色，以三條獨立固定CSS參考規則加至舊頁面；現行CSS須逐字命中每條一次，且手機規則仍位於699px斷點。41項樣式（含背景／文字／邊框色）、全部位置尺寸及34個間距selector仍嚴格比較，不忽略差異、不更換歷史基準。Tests #262的143 PASS／1 FAIL保留為歷史結果，修正後個別入口PASS不等於Full PASS；新提交仍需使用者在GitHub手動Full。本項僅改表示期待值，依AGENTS 6.1純表示例外執行相關入口，不額外重跑未受影響的Quick。
+
+## 季末收入與來季契約整合
+
+`season-summary.test`驗證實際Receipt／同年度schedule與決定、零／缺損、只讀snapshot與跨年隔離。`season-summary-e2e`以固定`cf88d1a9d621c354d64a2de5c427cd437a8094bf`比較原生付款、升降格／到期降格、續約、移籍、引退的完整S／全部RNG及還原後原卡DOM；含兩年度真實付款、變更最新契約後舊年度內訳、4個非職業邊界與64組版面。新入口進Quick／Full，不增加生涯批次。既有`ui-redesign-review-e2e --fixtures-only`保留128版面與原季末／引退fixture；歷史來源不換成HEAD，原文／狀態不放寬。
+
+## UI 2.0 FA比較與骰子標示
+
+`fa-market-presentation.test`固定三種數值降序、同值穩定、缺損／非法值與凍結來源不變，並驗證統一2.0.0的版本戳、未知／錯誤版本拒絕及完整來源不變。`fa-market-presentation-e2e`對固定`dc9bf83aca09a82ccc891b061231490ec9295c68`比較原生FA抽價及同一offer簽約的完整S／每次RNG，64組尺寸／主題／字級、排序與可視卡片／鍵盤／零報價、原按鈕identity／防重複及DOM投影錯值拒絕；不改FA抽價、金額或契約處理。既有contract-salary的FA模式仍比較原球團／原報價，先透過表格定位再按原按鈕。骰子上移由原allocation E2E驗證active、余白、復原／重設／用完與完成定位。
+
+手機／FA／骰子原分支為Quick104／Full134，`6cf2f591eeb4db475de149a3a001ecfa23bfed07`已取得使用者手動Full134 PASS（Run45043264922）。合併最新dev的準備分支為Quick111／Full142，須另外驗證整合來源。本機只執行相關個別入口與Quick，不執行Full。2026-11-23依使用者指定維持2.0.0；FA與第2～5批固定2.0.0基準比較均保留state.version與birthHighSchool.createdVersion，不排除版本欄位。dev既有PLY-01比較仍按原契約驗證背號新增顯示與jerseyHistory，保留其餘S／RNG及原始基準。UI專用WeakMap／CSS排序不改原offers或choiceViews.buttons順序；歷史比較先驗證金額／球團／原按鈕再拆除呈現包裝。
+
+### Full 45036594000 的 UI 測試追修
+
+`npb-return-e2e`依核准的固定完整抬頭規格檢查導覽：桌面閱讀欄的 CSS top 為0，手機則等於完整board高度，並驗證導覽實際頂端緊接board底端；原120組設定矩陣、44px操作尺寸、溢出、薪資與狀態／RNG斷言保留。
+
+`display-preferences-e2e`的一般設定矩陣先等原生開始按鈕enabled（引擎／存檔初始化完成）再輸入姓名；原獨立延遲引擎載入時先輸入姓名的案例仍保留。填入、開關對話框、每次設定及尺寸變更後逐步嚴格檢查姓名，不補填、不重試、不忽略姓名差異。失敗時在既有tmp證據目錄保存`name-preservation-failure.json`與截圖，記錄節點identity、焦點、設定、初始化狀態及最近輸入事件；原CI姓名空白尚未重現，不將新增診斷稱為已確認原始原因。Runner、入口數、歷史基準與遊戲程式不變；修正後需在新SHA由使用者手動執行GitHub Full。
+
+## UI 2.0 季末／退休呈現
+
+CareerReview只整理回顧，不再改結果卡的原生details.open。review的fixtures-only新增PRO／IND／CORP五類結果卡的混合手動狀態、整理建立／重繪保持、done後新結果展開及原生下一選擇收合舊卡；總結三明細預設關閉、重繪保持與隱藏收入卡沿用season-summary E2E。舊「引退原卡全關」期待改為新結果展開，手動關／再開與原S／RNG／DOM比較保留。箭頭80%只改CSS外觀，navigation-only另驗偽元素38.4px及字形80%、原48px點擊區與四尺寸操作；兩項均屬局部顯示，不更動通用選擇控制或Runner。
+
+`career-review.test`驗證既有資料的唯讀摘要、棒球局數、確定／未定／零年薪與報價隔離、跨階段紀錄及缺少資料。`ui-redesign-review-e2e`的Quick僅跑原生fixture；個別完整入口另比較第4批固定SHA的P／IF兩條自然生涯，逐步全S與RNG嚴格相同。退休規則、年度付款、成長與存檔核心來源也須保持不變。128組viewport／主題／字級、無背景／無blur、空資料、原生details展開與分享控制項可達性另外驗證。720×450為200%等效重排尺寸，不能稱為桌面瀏覽器200%縮放或實機PASS。
+
+`decision-dom-comparison`只驗證並移除新增回顧區，以及還原明確批准的投手告別文字；原卡片全文、節點與完整S／RNG仍嚴格比較。新增摘要的數值與資料來源由單體／原生fixture直接驗證，不靠忽略欄位或更換歷史基準。收入舊斷言須先以原生summary展開「キャリアプロフィール」，再驗證既有可見收入文字；不以textContent替代可見性檢查。
+
+`tests/support/reader-disclosure.mjs`以原生summary點擊讀取退休卡片，先檢查唯一原卡片／details／控制項、展開後原body可見，再比較展開前後完整S／RNG。特性、稱號、評價與告別原innerText斷言保留；新取得說明仍須在導航後按原規則封存。不改DOM強制open、不全域改用textContent、不忽略原文。只有既有手動baseline路徑明示允許舊版沒有reader details；當前版本一律嚴格要求控制項。此helper由既有Quick季末／退休fixture實際使用，Quick102／Full132入口數不變。
+
+## UI 2.0 配點的歷史比較
+
+`tests/support/allocation-comparison.mjs`只注入E2E回應，不修改產品檔案或歷史基準。它在原生`allocUI`返回後讀取本次起點，先以既有DOM比較器驗證能力／繰越預覽、資源、原說明及無效確認按鈕，再提供原有操作標籤、選項結構與操作區文字。整區`innerText`使用短暫的離屏、inert／ARIA隱藏副本取得真實排版文字，完成即移除；不改動實際遊戲節點、S或RNG。
+
+跨版比較不得直接把整個`.abrow`的新預覽文字當作原操作名稱，也不得不加驗證就忽略新增控制項。姓名測試保留同版原始`choices`比較，只有跨版才使用已驗證的原選項結構；其他入口仍保留原有完整狀態、RNG、歷史特例與輸入／timeout。`ui-redesign-allocation-e2e`以凍結第3批驗證各種原生配點、原DOM／標籤／文字及S／RNG，並要求錯誤預覽、資源及被啟用的假確認一律失敗。這些相關驗證不代替新SHA的GitHub Full。
+
 ## 原始碼文字比較的換行契約
 
 跨Git歷史／Windows／Linux的來源比較，使用`tests/support/source-text.mjs`的`readSourceText(path)`（嚴格UTF-8讀取）或`sourceText(text)`，在切片、字串替換及比較**之前**將兩端CRLF統一成LF；其餘內容維持逐字相等。單獨CR、BOM、縮排、尾端空白、文字與程式變更不忽略。不可把此工具用於凍結快照、檔案SHA256、二進位證據或golden；原始資料不改寫。
@@ -10,7 +76,7 @@ Windows系統Git的`core.autocrlf=true`可使Git內LF在工作樹成為CRLF，�
 
 ## 歷史分享配色模組依賴
 
-1.16.2移除產品的`getSharePalette`後，仍載入舊`game.js`的投球、國際賽、弱小校及特性顯示比較，必須在舊版頁面呼叫`routeHistoricalShareTheme(page, baseline)`。基準必須為該入口原先的完整40位SHA；helper只將該頁面的`src/ui/share-theme.js`回應設為同SHA的完整Git原件。基準缺失／不可解析即失敗，不回退現行模組、不補空函式、不更換舊game或golden。現行頁面不接此route；既有同版重播、狀態／RNG、比較斷言與timeout保持。
+1.16.2移除產品的`getSharePalette`後，仍載入舊`game.js`的投球、國際賽及弱小校比較，必須在舊版頁面呼叫`routeHistoricalShareTheme(page, baseline)`。特性顯示比較（`trait-display-e2e`）自TEST-BASELINE-REBASE-01起改以模組化後的基準`ee0ae9e`整棵docs供檔，不再使用此route；其`a0b880bb`仍作為helper／啟動檢查的基準。基準必須為該入口原先的完整40位SHA；helper只將該頁面的`src/ui/share-theme.js`回應設為同SHA的完整Git原件。基準缺失／不可解析即失敗，不回退現行模組、不補空函式、不更換舊game或golden。現行頁面不接此route；既有同版重播、狀態／RNG、比較斷言與timeout保持。
 
 `node scripts/test-historical-share-theme.mjs --playwright=<外部Playwright模組> --browser=chrome --output=test-results/historical-share-theme-check`為獨立限定驗證：四組原始模組逐字一致、無效基準拒絕、四個歷史引擎實際啟動、現行模組隔離，並以移除route後的同型import重現原缺失export錯誤作負控制。不是完整生涯或Full PASS；不新增／刪除原117個自動Full入口。修正後仍須在新SHA取得GitHub Quick及必要Full結果，歷史111 PASS／6 FAIL不改寫。
 
@@ -59,6 +125,23 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 `international-personal-stats.test`はQuick／Full／Auditの整形・差分・値コピー・旧結果単体（T01〜T13）。`international-personal-stats-e2e`はFull／Auditで、正式processIntlPhase、WBC／プレミア12、二重操作、T14全テーマ・大字・1280／320／360／390px、投手3／野手3の固定seed生涯を検証する。単独実行は`node scripts/test.mjs full --only=international-personal-stats-e2e`。`--fixtures-only`は明示的な専用入口直接実行に限り、生涯比較の代用ではない。
 
 比較基準は表示修正直前devの完全SHA `e602174a22d7472e1021d780388ad61adc6b11b6`、または明示`--baseline=<完全SHA>`。各操作の完全S digest、選択文、最終S及び全R値／前後状態を比較し、versionとintlTraitResults内の追加personalStatsだけを除外する。大会結果全体や通算／所得を除外しない。元の完全Sも保存する。人工formatter入力／制御fixtureと自然生涯の出場を区別し、後者でWBCとプレミア12の到達を必須にする。
+
+## 背番號（PLY-01）
+
+`jersey-policy.test`為Quick／Full／Audit的規則單元。`jersey-e2e`為Full／Audit（約20秒）：本機server同時提供目前`docs/`、`/baseline/`（`59104210efa7704b4749f3da765544ea2e9b705b`，2.0.0，PLY-01合併前的dev）與`/legacy/`（`75ab10b7d442db7aeccde0d649a852f224eed481`，1.16.13，正式站main）。自然生涯（`probe33-1`／`probe33-6`／`probe33-8`）驗證P／C／IF／OF預設號碼、入團只問一次、對話框取消／0與00／A3／A4、選單改號與B1（OK／取消後焦點回☰）、J2續玩、退休後A1、二重操作、1280／390截圖；同seed與baseline比較全R值／rngState與S（只排除version、createdVersion、jerseyHistory），預設與對話框＋選單改號版本亦同。舊存檔D4以baseline（2.0.0）與legacy（1.16.13）各自實際產生；已有含jerseyHistory的存檔時開新生涯須經覆寫確認且不帶入號碼紀錄；B6直接竄改IndexedDB逐欄斷言`SAVE_JERSEY`。交易、MiLB→MLB、IND／CORP、留隊、B2以標示fixture的狀態加真實移籍函式驗證；目前程式不設定`tradeFrom`，「A→B」年度列只以fixture固定。
+
+`jersey-flow.test`與`player-profile.test`為Quick／Full／Audit（重構第43期，`tasks/GAME_JS_OOP_REFACTOR_PLAN.md` §2uu）：以`159dbf2b293c6087df6a8f3713a19e6e61ad4a74`的舊`game.js`本體對照`JerseyFlow`（`teamName`／`unknownTeam`／`label`）與`PlayerProfile`（`allStars`／`pitcherRole`／`isStarter`），並以spy確認`game.js`的一行包裝委派到對應方法；`jersey-flow.test`另驗證對話框延遲回呼在state被替換後不再提示或寫入。`ovr`／`playerType`／`toolGap`／`abCost`的等價仍由`ability-allocation.test`負責。
+
+## 国際大会出場履歴（INT-01）
+
+`international-history.test`與`international-history-e2e`為Quick／Full／Audit（`tasks/INT_01_INTL_HISTORY_PLAN.md`）。單元測試以fixture驗證只列`S.intlTraitResults`的實際出場、依年度與實際日程排序（同年WBC先於プレミア12，自然生涯不會發生，只能在此驗證）、未知大會名「国際大会」、舊結果無個人成績顯示「記録なし」、跳脫、列凍結與狀態不變。E2E（約4秒）以hook注入結果，檢查「キャリア → 実績」與引退「通算成績」卡（緊接国際大会通算表之後）的收合列、展開內容、0屆時不加任何節點、查看與展開前後S（含`rngState`）不變，1280／390 px與4主題。
+
+既有測試的核准差異：`ui-redesign-review-e2e`的`INT01_CORE`（`career-retirement.js`兩段插入）、`award-identity-policy.test`的`player-detail.js`兩組逐字修改、`career-presenter.test`的`career().international`空列表、`dom-snapshot`在`window.__expectIntlHistory`（只注入受測版）下檢查並刪除`career().international`與引退`#log`的`[data-intl-history]`區塊（`game-view-dom-e2e`的jp3-pitcher-02會到達）。`display-preferences-e2e`未處理此區塊：manifest以`--only-seed=yakyo-test-001,jp3-infielder-01`執行，兩者引退時沒有國際結果；改用其他種子（含不加`--only-seed`）前，須先比照`dom-snapshot`加上受測版的檢查與移除。
+
+## 健康診断時の故障リスク（INJ-UI-01）
+
+`injury-risk-policy.test`與`injury-risk-e2e`為Quick／Full／Audit（`tasks/INJ_UI_01_INJURY_RISK_PLAN.md`）。以`8a4f765`的`player-injury.js` `injuryProb`本體在vm中與`injuryRiskBreakdown().total`逐格比較（特性7組合×年齡15～48×`injNext`×`tmpInj`），並驗證步驟順序與凍結、年齡邊界、特性規則先於`tmpInj`、3／95%夾限、診斷後（本session記錄）、`phasePre`前（`tmpInj`視為重置）與復健季的顯示，以及`rollInjury`以`total`抽選並在抽選前記錄。E2E（約20秒）以真實賽季打到健康診斷，比對診斷前顯示值與結果卡「故障率」、診斷後「判定済み」，再以hook檢查年初（`phasePre`前）、`phasePre`後、復健季與年初待復健；桌面側欄重繪時細目與「潜在能力について」各自保留展開狀態；查看與展開前後S（含`rngState`）不變，1280／390 px與4主題。
+既有測試的核准差異：`award-identity-policy.test`的`ability-view.js`兩組逐字修改、`career-presenter.test`的condition第1列（fixture只補缺欄）、`phasePre`的`markSeasonStart(S)`一行（`season-phases.test`插入清單、`verify-modularization`建構行、`full-power-pitching.test`／`npb-return-ui.test`的stub、`full-power-pitching-e2e`剝除清單）、`dom-snapshot`驗證並刪除condition的風險列（`game-view-dom-e2e`以`window.__expectInjuryRisk`要求受測版必須有該列）。
 
 ## 生涯RNG（`Rng`）
 

@@ -6,6 +6,7 @@
 import { EVENT_MODES, eventOdds, effectiveCategory, eventTier, eventPlan, eventInjury, eventIncome, EVENT_TRAIT_TEXT } from './event-policy.js';
 import { eventDrawPool, beginEvent, applyEvent } from './event-state-policy.js';
 import { EVENT_CATEGORY_LABEL, eventCategoryBadge } from '../ui/event-category-badge.js';
+import {decorateEventResult} from '../ui/event-result-view.js';
 
 export class SeasonEvents {
   #rules;
@@ -47,7 +48,7 @@ function seasonEventRules({getState,EVENTS,POS_AB,ABL,choose,card,board,fmtMoney
     if(result.injuryAdded)out.push('今季の故障リスク加算+'+result.injuryAdded+'ポイント（故障確定ではありません）');
     if(result.incomeYen)out.push('スポンサー収入：'+fmtMoney(result.incomeYen));
     card(result.success?'good':'bad',eventCategoryBadge(result.category)+'イベントカード｜'+ev.n,escape(ev.choices[result.mode][result.success?'good':'bad'])+'<br>'+out.map(escape).join('｜'));
-    const node=logTarget().lastElementChild;if(node){node.dataset.eventOccurrenceId=result.eventOccurrenceID;node.dataset.cardId=String(result.cardID);}
+    const node=logTarget().lastElementChild;if(node){node.dataset.eventOccurrenceId=result.eventOccurrenceID;node.dataset.cardId=String(result.cardID);decorateEventResult(node,ev,result,{abilityLabels:ABL,fmtMoney});}
   }
   function resolveEvent(ev,mode,done,occurrenceID){
     const S=getState();

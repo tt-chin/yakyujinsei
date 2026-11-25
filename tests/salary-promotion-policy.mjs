@@ -96,7 +96,7 @@ assert.match(seasonSettlement, /今季支給年俸：<b class="hl">\$\{fmtMoney\
 assert.match(careerContract, /card\('info','来季年俸決定',`所属先の確定に伴い、来季の年俸は/);
 assert.match(careerContract, /\$\{preventDecrease\?'昇格後の最低保証を確認':'降格後も現契約を維持'\}し、来季の年俸は/);
 assert.doesNotMatch(gameAndModules, /次年度年俸：\$\{fmtMoney\(S\.currentSalary\)\}/);
-assert.match(careerMovement, /const fromLv=S\.lv;\s*S\.lv=to; applyPromotionSalary\(fromLv,to\);/);
+assert.match(careerMovement, /const fromLv=S\.lv;\s*S\.lv=to; reconcileAmericanCareer\(S\); applyPromotionSalary\(fromLv,to\);/);
 assert.match(careerContract, /Object\.values\(PATHS\)\.some\(path=>path\.includes\(fromLv\)&&path\.includes\(toLv\)\)/);
 assert.match(careerContract, /applyLevelMinimumToUnpaidSchedule\(S\.ct,minimumSalary,S\.year\+1\)/);
 assert.match(careerContract, /if\(normalizeContract\(S\.ct\)\.remainingYears===0\)return/);

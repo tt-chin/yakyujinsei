@@ -1,0 +1,681 @@
+{
+  "phase": 5,
+  "risk": "R2 read-only presentation and related test infrastructure",
+  "version": {
+    "before": "2.0.0",
+    "after": "2.0.0",
+    "reason": "User explicitly groups all five UI batches into 2.0.0; no additional bump.",
+    "managementFiles": [
+      "CHANGELOG.md",
+      "RELEASE_NOTES.md",
+      "docs/src/data/release-notes.js",
+      "CURRENT_SPEC.md"
+    ],
+    "generator": "node scripts/update-release-notes.mjs"
+  },
+  "baseline": "ce5f73257fd4b0be6d3770fa943bb633baaad8c5",
+  "baselineFull": {
+    "runId": 44025979978,
+    "status": "PASS",
+    "counts": {
+      "PASS": 130,
+      "FAIL": 0,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "url": "https://github.com/tt-chin/yakyujinsei/actions/runs/44025979978"
+  },
+  "scope": [
+    "Existing seasonal log, signed contract schedule/salary decision history only; unknown salary stays unknown, offers excluded",
+    "Existing retirement reason/evaluation, league totals, original first three honors and chronological cross-stage source records",
+    "Original narrative/table nodes retained with native details closed; share/new-career controls retained after the reading content",
+    "Pitcher CPBL/MLB farewell copy only; no rule/state/RNG/save/receipt changes"
+  ],
+  "allowedDifferences": [
+    "Read-only summary section, original disclosure open state, retirement natural scroll layout",
+    "Three exact pitcher-only farewell phrases; original batter copy unchanged",
+    "Generated 2.0.0 release notes"
+  ],
+  "preservedFailures": [
+    {
+      "file": "test-results/ui-phase5-related-01/summary.json",
+      "reason": "Retirement summary used :last-child but the existing share card follows the year block; fixed to select the last actual year block.",
+      "sha256": "28d6f68b56076b77eeba33d3b8080b3edfcdd1bb7ac8725f6270efa3f9351f13"
+    },
+    {
+      "file": "test-results/ui-phase5-related-02/summary.json",
+      "reason": "Farewell test selected the last global card (share) instead of the farewell card in the last year block; test locator corrected.",
+      "sha256": "89a50d1f64c808580991706f33532e7687aee117ee5b6f1ddc2573c4abd58c11"
+    }
+  ],
+  "related": {
+    "review": {
+      "file": "test-results/ui-phase5-related-05/summary.json",
+      "status": "PASS",
+      "sha256": "2197d23c827332376957202f5609b38a3dff1cb9f551f3afc1b5777b0bfad4d5",
+      "layouts": 128,
+      "nativeRoles": [
+        "P",
+        "IF"
+      ],
+      "naturalCareers": [
+        {
+          "pos": "P",
+          "steps": 534
+        },
+        {
+          "pos": "IF",
+          "steps": 543
+        }
+      ],
+      "note": "Final product JS with season-later results kept open. Subsequent CSS only removes an overridden duplicate block; final Quick rechecks all native fixtures."
+    },
+    "income": {
+      "file": "test-results/ui-phase5-income-01/summary.json",
+      "status": "PASS",
+      "fixtures": 30,
+      "retirementLayouts": 6,
+      "sha256": "eb1983e2e9d3b383c571f8dfa1eec13614c87eab86866507144d9783418a4303"
+    },
+    "historicalDOM": {
+      "file": "test-results/ui-phase5-dom-01.log",
+      "status": "PASS",
+      "careers": 8,
+      "sha256": "0a8ecda786ded4e5d597d5f2db40ff21faf39073693c074df0d62849d4e201d7",
+      "note": "Executed before narrowing season auto-collapse to result/payment cards; no original DOM, state or RNG logic changed by that narrowing. Subsequent final native P/IF careers and Quick verify the new behavior."
+    },
+    "presenter": {
+      "file": "test-results/ui-phase5-presenter.log",
+      "status": "PASS",
+      "cases": 60,
+      "sha256": "f15173eb7286c08cf1ae3509282c1c201803f06c5c6d0c9bc00c7aa10b61ad93"
+    },
+    "designTokens": {
+      "file": "test-results/ui-phase5-design-tokens-fixed.log",
+      "status": "PASS",
+      "cases": 11,
+      "note": "Preserves original81 font/236 spacing sites; independently verifies added2 font/11 spacing sites. No blanket count relaxation."
+    },
+    "farewell": {
+      "file": "test-results/ui-phase5-farewell.log",
+      "status": "PASS",
+      "assertions": 8
+    },
+    "modularization": {
+      "file": "test-results/ui-phase5-modularization-fixed-02.log",
+      "status": "PASS",
+      "sha256": "5e77dfcadeed57d7f467832b83dfc9d4007d0f87a1df50be4adaa95e500a83ba"
+    },
+    "finalNative": {
+      "file": "test-results/ui-phase5-related-06/summary.json",
+      "status": "PASS",
+      "sha256": "f2fe195f0cea2fbf6c2ad4e350a1c0dc224b5b95af37601c344791549e87a642",
+      "note": "Final catalog lookup interface; original and candidate P/IF native retirement state/RNG/DOM exact. Prior natural careers remain source evidence; lookup now uses the same catalog object that initializes the legacy global."
+    }
+  },
+  "quick": {
+    "status": "PASS",
+    "file": "test-results/ui-phase5-quick-03/summary.json",
+    "summarySha256": "a2ad0bd84f4b11eba28459c7588277a95c0ab66878833132c5f72a405ad46bfe",
+    "counts": {
+      "PASS": 102,
+      "FAIL": 0,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "seconds": 882.767,
+    "head": "ce5f73257fd4b0be6d3770fa943bb633baaad8c5",
+    "branch": "codex/ui-redesign",
+    "baseline": "d6cef67ef6ac8e348f66f2f5ed32c4fa3d6b7cd1",
+    "sourceFingerprint": "5f7ffa59583724660f3e17437d48adb3f37a24208d0b3790e34a2363edfa9b67",
+    "browser": {
+      "channel": "chromium",
+      "version": "151.0.7922.34",
+      "playwrightVersion": "1.62.1"
+    },
+    "allLogHashesVerified": 102,
+    "sourceFilesVerified": 16,
+    "nativeSummary": {
+      "file": "test-results/ui-phase5-quick-03/review-summary.json",
+      "sha256": "f2fe195f0cea2fbf6c2ad4e350a1c0dc224b5b95af37601c344791549e87a642"
+    },
+    "note": "Local worktree result before commit; exact executable/product hashes unchanged. No CI Full claimed.",
+    "version": "2.0.0"
+  },
+  "full": {
+    "status": "NOT_RUN",
+    "execution": "User manually starts a new GitHub Full on final new SHA; no local Full or agent dispatch.",
+    "reason": "Shared result-reading UI and Full-only historical DOM/comparison paths changed; final new SHA requires user-run Full."
+  },
+  "limitations": [
+    "Preview deployment and physical iPhone Safari/Android Chrome NOT_RUN",
+    "Actual browser 200% zoom NOT_RUN; 720x450 effective reflow tested separately from app large font",
+    "ARTIFACT_COVERAGE_BLOCKED unchanged",
+    "No retirement collection/database introduced; any future persisted collection requires separate scope"
+  ],
+  "priorIntermediatePass": "test-results/ui-phase5-related-03/summary.json",
+  "rollback": "Revert the phase-5 commit; no state/save migration, rule or RNG changes. Prior phase-4 Full applies only to ce5f732.",
+  "sourceFiles": [
+    {
+      "file": "docs/index.html",
+      "sha256": "2e1ecd16da53c33e3f9a34f954663d7445473a9f3d9810c22171931617042a40"
+    },
+    {
+      "file": "docs/src/data/release-notes.js",
+      "sha256": "ae09c1ac09a200ff86f351860d6bd0332c2dda84741d7c7c685084eff890339a"
+    },
+    {
+      "file": "docs/src/engine/game.js",
+      "sha256": "6c0ed84240fddffc3159fdf6255bb3402d093a3d73b85afdf41a74c4b02f6198"
+    },
+    {
+      "file": "docs/src/ui/career-presenter.js",
+      "sha256": "37cc31bd85872a403bc50de0110d5a32720d01db891e13d53ad988ff94ea8050"
+    },
+    {
+      "file": "docs/src/ui/career-review.js",
+      "sha256": "22371336277f9da94745991e005091419cb0426e901ca00b3ff2bc5f819df549"
+    },
+    {
+      "file": "docs/src/ui/game-view.js",
+      "sha256": "8347e27b7000b37cec673231733d95f3e0bc9725b1e29e978996ea218d7e586e"
+    },
+    {
+      "file": "docs/styles/career-review.css",
+      "sha256": "b3eb8b60464841c11b824554a4076cc5ef7de1cbf77c16e9edca3f4e20c64145"
+    },
+    {
+      "file": "docs/styles/stadium-background.css",
+      "sha256": "a98254ce16d8381448448a0e9cccf8839d9e99da90ef966c9344945652fd32bb"
+    },
+    {
+      "file": "scripts/test-manifest.mjs",
+      "sha256": "38d00002e684cfc11079b8d30cf9c23692fc81a8110e2c6da8cf1004f5d1ab19"
+    },
+    {
+      "file": "tests/career-review.test.mjs",
+      "sha256": "681ad7bf93829faaf805396f0ce9a8ad55262f3ada4141c45141975b6002569c"
+    },
+    {
+      "file": "tests/design-tokens-06.test.mjs",
+      "sha256": "b433e51bf91de4b2cf96920a26ece8b4013fc72ec21d3a7409fad5dc74ffd214"
+    },
+    {
+      "file": "tests/draft-income-e2e.mjs",
+      "sha256": "9a432823a99e2009a0fc938deaca4321936c8b30e025e505b2e13d689dc1ff44"
+    },
+    {
+      "file": "tests/event-system-e2e.mjs",
+      "sha256": "ff3d9542af8bf25bee52540af250dcec25910e2816b377a3ff57a63a73170f38"
+    },
+    {
+      "file": "tests/support/decision-dom-comparison.mjs",
+      "sha256": "da5c218762651cb370456987dd8e591856e2a2e9929f657356161e3f6b560d8c"
+    },
+    {
+      "file": "tests/ui-redesign-review-e2e.mjs",
+      "sha256": "3850e235e01a760c99b9688ce53735dc22281d295e20c4bca15b4fbf6d83f76e"
+    },
+    {
+      "file": "tests/verify-modularization.mjs",
+      "sha256": "148d39d251187e327b2f768a899a8acd6a045d39d513f95e178a2d21f706cf22"
+    }
+  ],
+  "interruptedQuick": {
+    "status": "FAIL",
+    "complete": false,
+    "output": "test-results/ui-phase5-quick-01",
+    "failureLog": "test-results/ui-phase5-quick-01/design-tokens-06.test.log",
+    "failureLogSha256": "6dfb7b44c8ec45735423bac5fec772f2438bb75edebdf8eef26f7acb9ef699af",
+    "reason": "Old font-site count 81 vs actual83 due to two new approved headings; interrupted after FAIL while addressing season-later result visibility. No completed Quick summary and no reuse."
+  },
+  "observedRelatedFailure": {
+    "entry": "design-tokens-06.test",
+    "reason": "After separating the two new heading sites, spacing contract found 247 vs236. Eleven added summary spacing sites will be verified separately while preserving original236."
+  },
+  "previousCompletedQuick": {
+    "status": "FAIL",
+    "file": "test-results/ui-phase5-quick-02/summary.json",
+    "sha256": "7d229020c2fbf09a672556fe4d80c63b854b4a3ba112474a94548853b43a6948",
+    "counts": {
+      "PASS": 101,
+      "FAIL": 1
+    },
+    "sourceFiles": [
+      {
+        "file": "docs/index.html",
+        "sha256": "2e1ecd16da53c33e3f9a34f954663d7445473a9f3d9810c22171931617042a40"
+      },
+      {
+        "file": "docs/src/data/release-notes.js",
+        "sha256": "ae09c1ac09a200ff86f351860d6bd0332c2dda84741d7c7c685084eff890339a"
+      },
+      {
+        "file": "docs/src/engine/game.js",
+        "sha256": "6ae74eb9a49baa36f5ccb54a8508cfcb305a66ace52b7e885e367677fed17c7a"
+      },
+      {
+        "file": "docs/src/ui/career-presenter.js",
+        "sha256": "37cc31bd85872a403bc50de0110d5a32720d01db891e13d53ad988ff94ea8050"
+      },
+      {
+        "file": "docs/src/ui/career-review.js",
+        "sha256": "22371336277f9da94745991e005091419cb0426e901ca00b3ff2bc5f819df549"
+      },
+      {
+        "file": "docs/src/ui/game-view.js",
+        "sha256": "8347e27b7000b37cec673231733d95f3e0bc9725b1e29e978996ea218d7e586e"
+      },
+      {
+        "file": "docs/styles/career-review.css",
+        "sha256": "b3eb8b60464841c11b824554a4076cc5ef7de1cbf77c16e9edca3f4e20c64145"
+      },
+      {
+        "file": "docs/styles/stadium-background.css",
+        "sha256": "a98254ce16d8381448448a0e9cccf8839d9e99da90ef966c9344945652fd32bb"
+      },
+      {
+        "file": "scripts/test-manifest.mjs",
+        "sha256": "38d00002e684cfc11079b8d30cf9c23692fc81a8110e2c6da8cf1004f5d1ab19"
+      },
+      {
+        "file": "tests/career-review.test.mjs",
+        "sha256": "681ad7bf93829faaf805396f0ce9a8ad55262f3ada4141c45141975b6002569c"
+      },
+      {
+        "file": "tests/design-tokens-06.test.mjs",
+        "sha256": "b433e51bf91de4b2cf96920a26ece8b4013fc72ec21d3a7409fad5dc74ffd214"
+      },
+      {
+        "file": "tests/draft-income-e2e.mjs",
+        "sha256": "9a432823a99e2009a0fc938deaca4321936c8b30e025e505b2e13d689dc1ff44"
+      },
+      {
+        "file": "tests/event-system-e2e.mjs",
+        "sha256": "ff3d9542af8bf25bee52540af250dcec25910e2816b377a3ff57a63a73170f38"
+      },
+      {
+        "file": "tests/support/decision-dom-comparison.mjs",
+        "sha256": "da5c218762651cb370456987dd8e591856e2a2e9929f657356161e3f6b560d8c"
+      },
+      {
+        "file": "tests/ui-redesign-review-e2e.mjs",
+        "sha256": "3850e235e01a760c99b9688ce53735dc22281d295e20c4bca15b4fbf6d83f76e"
+      }
+    ],
+    "reason": "101 PASS / 1 FAIL: two added direct TEAM_MASTER references violated existing catalog wiring count. Fixed using the original catalog interface; followup strict endGame literal amended only for approved read-only UI call."
+  },
+  "observedModularizationFollowupFailure": {
+    "reason": "After correcting catalog references, old literal endGame wrapper expected no phase-5 presentation call (1 vs2). Exact full wrapper expectation now includes only the approved read-only call; all original body text and single-declaration checks retained."
+  },
+  "status": "IMPLEMENTED_LOCAL_VERIFIED_FULL_PENDING",
+  "changedFiles": [
+    "BACKLOG.md",
+    "CHANGELOG.md",
+    "CURRENT_SPEC.md",
+    "RELEASE_NOTES.md",
+    "docs/index.html",
+    "docs/src/data/release-notes.js",
+    "docs/src/engine/game.js",
+    "docs/src/ui/career-presenter.js",
+    "docs/src/ui/career-review.js",
+    "docs/src/ui/game-view.js",
+    "docs/styles/career-review.css",
+    "docs/styles/stadium-background.css",
+    "scripts/TESTING.md",
+    "scripts/test-manifest.mjs",
+    "tasks/UI_REDESIGN_IMPLEMENTATION_SPEC.md",
+    "tasks/UI_REDESIGN_PHASE4_EVIDENCE.json",
+    "tasks/UI_REDESIGN_PHASE5_EVIDENCE.json",
+    "tests/career-review.test.mjs",
+    "tests/design-tokens-06.test.mjs",
+    "tests/draft-income-e2e.mjs",
+    "tests/event-system-e2e.mjs",
+    "tests/support/decision-dom-comparison.mjs",
+    "tests/ui-redesign-review-e2e.mjs",
+    "tests/verify-modularization.mjs"
+  ],
+  "ciFollowup": {
+    "risk": "R2 test infrastructure only",
+    "productVersion": "2.0.0 unchanged",
+    "originalFailure": {
+      "runId": 44037832570,
+      "url": "https://github.com/tt-chin/yakyujinsei/actions/runs/44037832570",
+      "attempt": 1,
+      "head": "9e764ad88cb6201c46df26be1c0bf8011556730e",
+      "status": "FAIL_OR_INCOMPLETE",
+      "counts": {
+        "PASS": 127,
+        "FAIL": 5,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "expected": 132,
+      "acceptedPass": 127,
+      "unverified": 0,
+      "summary": "test-results/investigation-44037832570-attempt1/summary.json",
+      "summarySha256": "ea1781ce594513d31e061b4ff4422b6ca7a86d97278af70c2db6bfd54cfcec27",
+      "logHashesVerified": 132,
+      "failures": [
+        {
+          "id": "trait-system-e2e",
+          "batch": 1,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-1/trait-system-e2e.log",
+          "logSha256": "63d27d554aa75faac1ec5e5654fb596d9fd0778bce2066757cbccadde82459b1"
+        },
+        {
+          "id": "event-fix-e2e",
+          "batch": 3,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-3/event-fix-e2e.log",
+          "logSha256": "046ba61b45942dee1d50166ebb7e9426ba7482839291270ac2440f5ba4c440d1"
+        },
+        {
+          "id": "smallschool-c-e2e",
+          "batch": 3,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-3/smallschool-c-e2e.log",
+          "logSha256": "f30242c225c9b8e05e7c78b7f4de8c8335e17704f3273883a0391a7bf33678ae"
+        },
+        {
+          "id": "hof-retirement-policy-e2e",
+          "batch": 4,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-4/hof-retirement-policy-e2e.log",
+          "logSha256": "0ce43be6aca5d347553edb4e225a4344ea596da9ccba6d4c78f2aff2e27761fb"
+        },
+        {
+          "id": "trait-display-e2e",
+          "batch": 5,
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "test-results/investigation-44037832570-attempt1/batch-5/trait-display-e2e.log",
+          "logSha256": "764057125d8b17f609f0a766710a0e854a59f925e753e7c019805c6059125a1c"
+        }
+      ]
+    },
+    "diagnosis": {
+      "file": "test-results/investigation-44037832570-attempt1/findings.json",
+      "nativeProbe": "test-results/investigation-44037832570-attempt1/disclosure-probe.json",
+      "scope": "Original retirement text is present, hidden by approved native disclosure. Installed Chrome native expansion restores visible text with exact S/RNG invariance."
+    },
+    "fix": "Native reader-disclosure helper validates unique original card/control, clicks the existing summary if closed, verifies visible original body, and compares complete snapshot before/after. Original innerText/content/archival assertions, baselines, inputs and timeouts retained; no product edits.",
+    "related": {
+      "status": "PASS",
+      "output": "test-results/ui-phase5-ci-related-01",
+      "scope": "Five original failed entry commands, sequential direct E2Es, Chrome. This is related testing, not Full.",
+      "results": [
+        {
+          "exitCode": 0,
+          "id": "trait-system-e2e",
+          "status": "PASS",
+          "seconds": 15.5843104,
+          "command": [
+            "tests/trait-system-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/trait-system-e2e",
+            "--ui-only"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/trait-system-e2e.log",
+          "logSha256": "3eaa6cf93dd479baa5099e40635d52a610eb515665d4a66ebbcd4aeb966a04cd"
+        },
+        {
+          "exitCode": 0,
+          "id": "event-fix-e2e",
+          "status": "PASS",
+          "seconds": 22.9218602,
+          "command": [
+            "tests/event-fix-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/event-fix-e2e"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/event-fix-e2e.log",
+          "logSha256": "25ef016f7f6249bdd892d81a7c6deb49f5e6ef36faf345d9bb68d82077d9d8cf"
+        },
+        {
+          "exitCode": 0,
+          "id": "hof-retirement-policy-e2e",
+          "status": "PASS",
+          "seconds": 25.3970989,
+          "command": [
+            "tests/hof-retirement-policy-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/hof-retirement-policy-e2e"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/hof-retirement-policy-e2e.log",
+          "logSha256": "e7ec72340140b889b130d3a517537091532f9ed0484654db187975fb7bd16c19"
+        },
+        {
+          "exitCode": 0,
+          "id": "smallschool-c-e2e",
+          "status": "PASS",
+          "seconds": 244.289436,
+          "command": [
+            "tests/smallschool-c-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/smallschool-c-e2e"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/smallschool-c-e2e.log",
+          "logSha256": "dab30c298704736d8d9bf6690f461df0e3d5623a37a3f19be2fe70f9cb9a259c"
+        },
+        {
+          "exitCode": 0,
+          "id": "trait-display-e2e",
+          "status": "PASS",
+          "seconds": 198.1768181,
+          "command": [
+            "tests/trait-display-e2e.mjs",
+            "--playwright=C:/Users/rtsai/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+            "--browser=chrome",
+            "--output=test-results/ui-phase5-ci-related-01/trait-display-e2e"
+          ],
+          "log": "test-results/ui-phase5-ci-related-01/trait-display-e2e.log",
+          "logSha256": "d144413fa40bebd1ae51f9217288ce6325cbab44e61f2f78d64b3d614da5b6c9"
+        }
+      ]
+    },
+    "quick": {
+      "status": "PASS",
+      "file": "test-results/ui-phase5-ci-quick-02/summary.json",
+      "summarySha256": "f094e6d2fa32ad9dddaf14a7b2a6975d6dd66d2d4065af0f5bb45555b71b0ac8",
+      "counts": {
+        "PASS": 102,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "seconds": 452.956,
+      "head": "9e764ad88cb6201c46df26be1c0bf8011556730e",
+      "branch": "codex/ui-redesign",
+      "baseline": "d6cef67ef6ac8e348f66f2f5ed32c4fa3d6b7cd1",
+      "sourceFingerprint": "08508d97f732734bbb30462d27461b0ebe1249e8d655384bfd57e55473aa8e0e",
+      "browser": {
+        "channel": "chromium",
+        "version": "151.0.7922.34",
+        "playwrightVersion": "1.62.1"
+      },
+      "version": "2.0.0",
+      "logHashesVerified": 102,
+      "sourceHashesVerified": 8,
+      "nativeHelperCoverage": {
+        "file": "test-results/ui-phase5-ci-quick-02/review-summary.json",
+        "sha256": "f2fe195f0cea2fbf6c2ad4e350a1c0dc224b5b95af37601c344791549e87a642"
+      },
+      "reusedResults": false
+    },
+    "full": {
+      "status": "NOT_RUN",
+      "execution": "User starts a new GitHub Full on final new SHA. No local Full or agent dispatch/rerun.",
+      "reason": "Shared test-only disclosure helper is used by Full-only retirement/trait assertions. New GitHub Full required on final new SHA; original127/5 FAIL remains historical."
+    },
+    "productTree": "29294ed47f21d794997868a10e279693e38e3e39",
+    "sourceFiles": [
+      {
+        "file": "scripts/test-manifest.mjs",
+        "sha256": "137597995fd35fef84885e60ecb80fff50d8478e73be6e9f4332619ad05c0c25"
+      },
+      {
+        "file": "tests/event-fix-e2e.mjs",
+        "sha256": "114f69f69cfaf5714d1466ca27246008bd82dc6ffcf3f95c0acbedf7f6f98aba"
+      },
+      {
+        "file": "tests/hof-retirement-policy-e2e.mjs",
+        "sha256": "032be1db3ba02a6c0ebcca9145803c7246c1bfe4a6069679921314cbae2e1992"
+      },
+      {
+        "file": "tests/smallschool-c-e2e.mjs",
+        "sha256": "962e2076f7c019fd8086642ac60d9e129013c24832dacbd3e5fa42a4b2d36875"
+      },
+      {
+        "file": "tests/support/reader-disclosure.mjs",
+        "sha256": "1f8ef794cad54880a288a2ec81a93f381caf5a89bb6f752e653af38d291e88ba"
+      },
+      {
+        "file": "tests/trait-display-e2e.mjs",
+        "sha256": "4cfdc71782845a3fdbab52171105ab94f65004f17d96f5a37d591d695b76ac55"
+      },
+      {
+        "file": "tests/trait-system-e2e.mjs",
+        "sha256": "447383a3350008e55a7fadb45039c5ffd4dd9f17fc313995677ed99cf8888b47"
+      },
+      {
+        "file": "tests/ui-redesign-review-e2e.mjs",
+        "sha256": "81bd780196f1c5b98862177dec53964a22c8c5abe825a56b210cd2e87b27dd17"
+      }
+    ],
+    "interruptedLocalQuick": {
+      "status": "BLOCKED",
+      "complete": false,
+      "output": "test-results/ui-phase5-ci-quick-01",
+      "browser": "Installed Chrome",
+      "entry": "ui-redesign-allocation-e2e",
+      "log": "test-results/ui-phase5-ci-quick-01/ui-redesign-allocation-e2e.log",
+      "logSha256": "28e56efa0060efb422406a1d160f62ee1e2330d29f4477690de26155ade9db79",
+      "reason": "P/IF assertions and all 128 allocation layouts printed PASS, but process remained at browser/server shutdown with no completion summary. Only the identified owned Quick process was stopped. No partial result is accepted as Quick PASS.",
+      "recovery": "Matching Playwright headless Chromium151.0.7922.34 installed into ignored test-results/pw-browsers; no npm dependency/product/timeout changes. Rerun affected entry, then fresh Quick without reuse."
+    },
+    "environmentRecovery": {
+      "status": "PASS",
+      "file": "test-results/ui-phase5-ci-allocation-recheck-01/summary.json",
+      "sha256": "696388371d05301bdab221c1dcd329b2d868fbf35b8ccec0183f66e7b3797851",
+      "browser": "Matching headless Chromium151.0.7922.34",
+      "scope": "Same unchanged allocation entry,128 layouts and P/IF fixtures, completed and exited0 after matching browser installation. No product/test/timeout changes."
+    },
+    "productUnchanged": true,
+    "status": "FIXED_FULL_CONFIRMED",
+    "changedFiles": [
+      "BACKLOG.md",
+      "scripts/TESTING.md",
+      "scripts/test-manifest.mjs",
+      "tasks/UI_REDESIGN_IMPLEMENTATION_SPEC.md",
+      "tasks/UI_REDESIGN_PHASE5_EVIDENCE.json",
+      "tests/event-fix-e2e.mjs",
+      "tests/hof-retirement-policy-e2e.mjs",
+      "tests/smallschool-c-e2e.mjs",
+      "tests/support/reader-disclosure.mjs",
+      "tests/trait-display-e2e.mjs",
+      "tests/trait-system-e2e.mjs",
+      "tests/ui-redesign-review-e2e.mjs"
+    ],
+    "confirmedFull": {
+      "runUrl": "https://github.com/tt-chin/yakyujinsei/actions/runs/44067661326",
+      "runAttempt": 1,
+      "head": "1a9d159bc6b2a1d21a5c5eb9fdf1f8831e42bb7f",
+      "status": "PASS",
+      "counts": {
+        "PASS": 132,
+        "FAIL": 0,
+        "SKIP": 0,
+        "BLOCKED": 0
+      },
+      "acceptedPass": 132,
+      "unverified": 0,
+      "batchCount": 8,
+      "issues": [],
+      "artifactCoverage": "ARTIFACT_COVERAGE_BLOCKED",
+      "verifiedLogSha256Count": 132,
+      "summary": "test-results/confirmation-44067661326-attempt1/summary.json",
+      "summarySha256": "e0698289d3c114adfce7d5699c9d6862505c15aa7b1a9fed36b7282835855a70",
+      "scope": "User-triggered GitHub Full on this exact SHA; historical FAIL and NOT_RUN records retained. Does not cover subsequent help-copy correction or manual acceptance."
+    }
+  },
+  "helpCopyCloseout": {
+    "date": "2026-11-17",
+    "baseline": "1a9d159bc6b2a1d21a5c5eb9fdf1f8831e42bb7f",
+    "risk": "R2 pure display copy; R0 progress/spec consistency",
+    "version": "2.0.0 -> 2.0.0 per user unified UI release",
+    "scope": "Correct resume help to preserve old save during creation, confirm overwrite at actual start, retain input/save on cancel and use separate settings deletion. Synchronize four stale current-spec clauses; no handlers, save/state/RNG or test-runner changes.",
+    "validation": {
+      "syntax": "PASS",
+      "browserSaveController": {
+        "status": "PASS",
+        "cases": 19
+      },
+      "informationDialog": {
+        "status": "PASS",
+        "cases": 11,
+        "viewports": [
+          "320x568",
+          "390x844",
+          "844x390",
+          "390x240",
+          "1280x900"
+        ],
+        "summary": "test-results/ui-help-closeout-dialog-01/summary.json",
+        "summarySha256": "25f7bc9f2989f0fe7f13fe2cbe2375f184b187f7af05a86657fee983205d6c50",
+        "screenshots": 12,
+        "visualInspection": [
+          "help-bottom-320.png",
+          "help-bottom.png"
+        ],
+        "stateAndRng": "unchanged",
+        "consoleErrors": 0
+      },
+      "specSourceLinks": "PASS: 40 local links and 5 Git-verified historical sources",
+      "releaseNotesGenerator": "PASS; generated from RELEASE_NOTES.md",
+      "diffCheck": "PASS"
+    },
+    "quick": {
+      "status": "NOT_RUN",
+      "reason": "AGENTS 6.1 pure-display exception; bounded related unit/E2E validation instead."
+    },
+    "full": {
+      "status": "NOT_RUN",
+      "reason": "Pure-copy correction does not alter state, rules, events, RNG or shared controls. Existing 132 PASS belongs to baseline SHA only; main merge Full Gate remains."
+    },
+    "sourceHashes": [
+      {
+        "file": "docs/src/ui/information-dialog.js",
+        "sha256": "c8d8661f697c00f3dbd3ca83dea76d37c2b0c4376c42f74d27ce6cfab3d063b9"
+      },
+      {
+        "file": "tests/information-dialog-e2e.mjs",
+        "sha256": "2b123b744ebdc797e0d16479b3285146e74c3d30881ecc885ec14d03e54e7ca7"
+      },
+      {
+        "file": "docs/src/data/release-notes.js",
+        "sha256": "3f63348cc7699d77ff089964ba6ce3ea5a658893a998b8463a4a94c4b2d9fd61"
+      }
+    ],
+    "remaining": [
+      "Feature Preview and user acceptance",
+      "Physical devices, real browser 200% zoom, webfont network and native sharing",
+      "ARTIFACT_COVERAGE_BLOCKED",
+      "dev/main merge and production approval"
+    ]
+  }
+}

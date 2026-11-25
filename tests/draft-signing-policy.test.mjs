@@ -1,3 +1,4 @@
+import {reconcileAmericanCareer} from '../docs/src/engine/control-period-policy.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -105,7 +106,9 @@ const movementEntry = source => {
   assert.equal(wrapper?.length, 1, 'movement wrapper once'); assert.equal(ctor?.length, 1, 'movementGate construction once');
   assert.equal(movementGateSource.split('export class MovementGate {').length, 2, 'MovementGate class once');
   const body = wrapper[0].slice('function movement(){'.length, -1);
-  return movementGateSource.replace('export class MovementGate {', 'class MovementGate {') + '\n' + 'movement=function(){' + body + '};' + '\n' + ctor[0];
+  const importLine="import {reconcileAmericanCareer} from './control-period-policy.js';\n";
+  assert.equal(movementGateSource.replaceAll('\r\n','\n').split(importLine).length,2,'one explicit module dependency');
+  return movementGateSource.replaceAll('\r\n','\n').replace(importLine,'').replace('export class MovementGate {', 'class MovementGate {') + '\n' + 'movement=function(){' + body + '};' + '\n' + ctor[0];
 };
 const amateurSource = fs.readFileSync(new URL('../docs/src/engine/amateur-career.js', import.meta.url), 'utf8');
 const contractSource = fs.readFileSync(new URL('../docs/src/engine/career-contract.js', import.meta.url), 'utf8');
@@ -118,12 +121,13 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
 {
   const baseSource = execFileSync('git', ['show', '026c5cd89e3b189cf2a93e9425f344f57fafc208:docs/src/engine/game.js'], { encoding: 'utf8', maxBuffer: 20e6 });
   const amateurNames = ['enterDraftPath', 'draftFallback', 'pathChoiceHS', 'pathChoiceU4'];
+  const amateurConstruction = source => { const ctor = source.match(/^  const amateurCareer=new AmateurCareer\(\{[^\r\n]+/gm); assert.equal(ctor?.length, 1, 'amateurCareer construction once'); return ctor[0]; };
   function amateurRun(source, { state, overall, draft }, picks) {
     const log = [], choices = [], reported = [];
     const movementLayer = { movement: () => log.push(['legacyMovement']) };
     const S = { entryRoute: 'HS', corpYears: 0, indYears: 0, ...state };
     const context = vm.createContext({
-      S, LV: { A1: { n: 'A+' }, R: { n: 'ルーキー' } }, isDraftFallbackResult, reported, AmateurCareer, DATA: {},
+      S, reconcileAmericanCareer, LV: { A1: { n: 'A+' }, R: { n: 'ルーキー' } }, isDraftFallbackResult, reported, AmateurCareer, DATA: {},
       ovr: () => overall, ri: low => low, R: () => 0, fmtMoney: String, salaryFor: () => 0,
       createSigningBonusTerms: () => ({ signingBonus: 0 }),
       listByOrg: () => [{ name: 'MiLB-A', teamId: 'MILB-A' }, { name: 'MiLB-B', teamId: 'MILB-B' }, { name: 'MiLB-C', teamId: 'MILB-C' }],
@@ -139,7 +143,9 @@ assert.doesNotMatch(game + '\n' + contractSource + '\n' + amateurSource + '\n' +
       choose: (title, opts) => { log.push(['choose', title, opts.map(o => o.t)]); choices.push(opts); },
     });
     const reporter = source.includes('yearFlow.reportFlowOutcome(') ? [yearFlowReporter(yearFlowSource)] : source.includes('function reportFlowOutcome(') ? [productionFunction('reportFlowOutcome', source)] : [];
-    vm.runInContext("'use strict';\nlet movement;\n" + [...reporter, ...amateurNames.map(name => productionFunction(name, source))].join('\n') + '\n' + movementEntry(source), context);
+    // OOP plan §2ww: the current game.js keeps no amateur delegates; its AmateurCareer construction line is used directly.
+    const amateur = source.includes("from './amateur-career.js'") ? [amateurConstruction(source)] : amateurNames.map(name => productionFunction(name, source));
+    vm.runInContext("'use strict';\nlet movement;\n" + [...reporter, ...amateur].join('\n') + '\n' + movementEntry(source), context);
     if (reporter.length) vm.runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};", context);
     vm.runInContext('movement()', context);
     for (let k = 0; k < picks.length; k++) choices[k][picks[k]].f();

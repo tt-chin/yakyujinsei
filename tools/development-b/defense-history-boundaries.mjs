@@ -9,7 +9,11 @@ import {CareerRetirement} from '../../docs/src/engine/career-retirement.js';
 function phrase(src,text,bucket){
  const S={pos:'IF',dpos:'SS',honors:[text],stats:{[bucket]:{H:80,HR:0,SB:0,RBI:0,BB:0,DEF:4}}};
  const c=vm.createContext({S,DPN:{SS:'遊撃手'},hasHistoricalDefenseAward,defenseShareFor,bucket,CareerRetirement,LV:{},POSN:{},TIER_TH:{},LG_N:{},TEAM_COLOR:{}});
- vm.runInContext(productionFunction('defShare',src)+'\n'+productionFunction('posLegendPhrase',src),c);
+ // OOP plan §2ww: the current game.js has no posLegendPhrase delegate; call CareerRetirement through its construction line.
+ let code=productionFunction('defShare',src);
+ if(src===source){const ctor=src.match(/^const careerRetirement=new CareerRetirement\(.*$/m)[0];if(!code.includes(ctor))code+='\n'+ctor;code+='\nfunction posLegendPhrase(bucket){return careerRetirement.posLegendPhrase(bucket);}';}
+ else code+='\n'+productionFunction('posLegendPhrase',src);
+ vm.runInContext(code,c);
  const before=structuredClone(S),result=vm.runInContext('posLegendPhrase(bucket)',c);assert.deepEqual(S,before);return result;
 }
 let pass=0;

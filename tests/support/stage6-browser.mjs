@@ -1,3 +1,4 @@
+import {allocationComparisonHook} from './allocation-comparison.mjs';
 import {observeBrowserOperation,configureBrowserProgress,browserProgress} from '../../tools/test-support/browser-progress.mjs';
 import assert from 'node:assert/strict';
 import {withCareerSessionAccess} from './career-session-access.mjs';
@@ -39,7 +40,7 @@ export function instrument(source){
   const marker='  const touchedKeys={};';assert.ok(source.split(marker).length<=2);
   source=source.replace(marker,marker+allocationProbe('  '));
   source=withCareerSessionAccess(source);
-  return injectOverlayHook(source,hook);
+  return injectOverlayHook(source,hook+allocationComparisonHook);
 }
 export function instrumentAbility(source){
   const marker='    const touchedKeys={};';assert.equal(source.split(marker).length,2);

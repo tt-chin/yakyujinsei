@@ -21,13 +21,16 @@ for(const [,ref]of refs){
   }});
  }},ref);assert.equal(seen,1);
 }
-const entries=['full-power-pitching-e2e.mjs','international-personal-stats-e2e.mjs','smallschool-c-e2e.mjs','trait-display-e2e.mjs'];
+// TEST-BASELINE-REBASE-01: trait-display-e2e now serves its post-modularization baseline tree, so it no longer routes the historical palette;
+// its a0b880bb ref stays above as a helper/boot control.
+const entries=['full-power-pitching-e2e.mjs','international-personal-stats-e2e.mjs','smallschool-c-e2e.mjs'];
 for(const [index,file]of entries.entries()){
  const source=await readFile(new URL('../tests/'+file,import.meta.url),'utf8');
  assert(source.includes(refs[index][1]),file+' keeps its original fixed baseline');
  assert.equal(source.split('if(old)await routeHistoricalShareTheme(p,baseline);').length,2,file+' routes only the historical side exactly once');
 }
-console.log('PASS 4 actual entry wiring/baseline contracts');
+{const source=await readFile(new URL('../tests/trait-display-e2e.mjs',import.meta.url),'utf8');assert(!source.includes('routeHistoricalShareTheme')&&!source.includes(refs[3][1]),'trait-display-e2e no longer uses the historical palette route or its old baseline');}
+console.log('PASS 3 actual entry wiring/baseline contracts; trait-display-e2e off the historical route');
 let routed=0;
 for(const ref of ['HEAD','main','../bad','0'.repeat(40)])await assert.rejects(()=>routeHistoricalShareTheme({route:async()=>routed++},ref));
 assert.equal(routed,0,'invalid/unavailable baseline cannot fall back to current source');

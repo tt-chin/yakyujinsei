@@ -1,3 +1,4 @@
+import {markInjurySeasonStart,recordInjuryCheck} from '../docs/src/engine/injury-risk-policy.js';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {execFileSync} from 'node:child_process';
@@ -23,13 +24,13 @@ let pass=0;const test=(id,fn)=>{fn();pass++;console.log('PASS '+id);};
 
 const stats={G:30,IP:120.1,W:9,L:7,SO:110,PA:410,AB:360,H:101,HR:12,RBI:55};
 const fixtures={
-  'P minimal':{pos:'P',ab:{sta:40,vel:41,ctl:42,brk:43},year:2030,log:[]},
-  'P full':{pos:'P',ab:{sta:61,vel:1,ctl:1,brk:1},pot:{sta:80,vel:54},seasonFactor:.5,injNext:3,tmpInj:2,bigInj:5,rehab:1,skipMid:true,tj:13.47,tjCount:1,traits:{rubber:true,glass:false,mrteam:true},removed:['ジャーニーマン','yips',{name:'clutch'}],
+  'P minimal':{pos:'P',ab:{sta:40,vel:41,ctl:42,brk:43},year:2030,log:[],traits:{},age:22,injNext:0},
+  'P full':{pos:'P',age:30,ab:{sta:61,vel:1,ctl:1,brk:1},pot:{sta:80,vel:54},seasonFactor:.5,injNext:3,tmpInj:2,bigInj:5,rehab:1,skipMid:true,tj:13.47,tjCount:1,traits:{rubber:true,glass:false,mrteam:true},removed:['ジャーニーマン','yips',{name:'clutch'}],
     statsByLevel:{NPB1:stats,NPB_DEV:{G:55,IP:301.1,W:18,L:25,SO:167},A3:stats},log:[{y:2030,age:22,tm:'東京',line:'x'},{y:2031,age:23,tm:'大阪'}],intlCount:2,year:2032,honors:['2031 新人王'],
     ct:{startYear:2031,endYear:2033,contractType:'ROOKIE',remainingYears:2,guaranteedTotal:120000000,postingFee:5000000,annualSchedule:[{year:2031,amount:40000000,paid:true},{year:2032,amount:40000000}]},
     salaryDecisionHistory:[{salaryYear:2031,finalSalary:40000000},{decisionYear:2032,finalSalary:0},{}],currentSalary:40000000,careerSigningBonus:1e8,careerDevelopmentStipend:0,careerOutsideIncome:5,yearOutsideIncome:1,corpIncome:2,incomeLedger:[{year:2031,amountYen:3}],careerEarnings:9},
-  'IF contract without schedule':{pos:'IF',ab:{sta:50,con:60,pow:55,spd:45,eye:52,rng:48,fld:50,arm:47},statsByLevel:{KBO2:{PA:0,AB:0},CORP:stats,IND:null},ct:{contractType:'NORMAL',annualSchedule:[]},year:2040,traits:{},removed:[]},
-  'OF rehab season':{pos:'OF',ab:{},pot:{con:70},rehab:2,skipMid:true,seasonFactor:0,ct:null,log:null},
+  'IF contract without schedule':{pos:'IF',age:25,injNext:0,ab:{sta:50,con:60,pow:55,spd:45,eye:52,rng:48,fld:50,arm:47},statsByLevel:{KBO2:{PA:0,AB:0},CORP:stats,IND:null},ct:{contractType:'NORMAL',annualSchedule:[]},year:2040,traits:{},removed:[]},
+  'OF rehab season':{pos:'OF',traits:{},age:28,injNext:0,ab:{},pot:{con:70},rehab:2,skipMid:true,seasonFactor:0,ct:null,log:null},
 };
 for(const [name,state] of Object.entries(fixtures))test(name+': presenter equals 097e212 builders',()=>{
   const presenter=new CareerPresenter({getState:()=>state,labels,...helpers});
@@ -50,6 +51,22 @@ for(const [name,state] of Object.entries(fixtures))test(name+': presenter equals
   // EVT-01 E3 (1.16.12): career() adds events; these fixtures have no processedEventIDs, so it is the missing-record model
   // (content is covered by career-event-history.test). Every other career field stays exact.
   expected.career=Object.freeze({...expected.career,events:Object.freeze({status:'missing',afterRow:Object.freeze({}),current:Object.freeze([])})});
+  // INT-01: career() adds international (played tournaments); these fixtures have no intlTraitResults (content in international-history.test).
+  expected.career=Object.freeze({...expected.career,international:Object.freeze([])});
+  // INJ-UI-01: ability().condition inserts the health check risk row after シーズン稼働率 (breakdown content in
+  // injury-risk-policy.test). These states never passed phasePre in this session, so the stale tmpInj counts as reset.
+  // The fixtures gained traits/age/injNext only where missing; the 097e212 builders do not read them.
+  // P full and OF rehab season have rehab>0 before phasePre, so the season has no health check.
+  const riskValue={'P minimal':'15%','P full':'今季は健康診断なし（リハビリ中）','IF contract without schedule':'15%','OF rehab season':'今季は健康診断なし（リハビリ中）'}[name];
+  const riskRow=presenter.ability().condition[1];
+  assert.equal(riskRow.label,'健康診断時の故障リスク');assert.equal(riskRow.value,riskValue);
+  if(/%$/.test(riskValue))assert.equal(riskRow.breakdown.rows.at(-1).value,riskValue);else assert.equal(riskRow.breakdown,undefined);
+  for(const model of [expected.ability,expected.player.ability]){
+    const rows=[...model.condition];rows.splice(1,0,riskRow);
+    const replacement=Object.freeze({...model,condition:rows});
+    if(model===expected.ability)expected.ability=replacement;
+    else expected.player=Object.freeze({...expected.player,ability:replacement});
+  }
   for(const method of ['player','career','ability','traits','record'])assert.deepEqual(shape(presenter[method]()),shape(expected[method]),method);
 });
 // EVT-01 E3 (1.16.12): career().events uses the injected ABL labels and fmtMoney (wiring check; content in career-event-history.test).
@@ -70,7 +87,7 @@ const boardStart=boardGame.indexOf('\nfunction boardModel('),boardEnd=boardGame.
 assert.ok(boardStart>0&&boardEnd>boardStart);const oldBoard=boardGame.slice(boardStart,boardEnd);
 const boardDeps={DPN:{SS:'DP:SS',CF:'DP:CF'},POSN:{P:'PN:P',IF:'PN:IF'},TEAM_COLOR:{red:'#AA0000',white:'#FFFFFF',shortWhite:'#fff'},roleN:role=>'R:'+role,playerType:()=>'TYPE',ovr:()=>77};
 const {DPN,POSN,TEAM_COLOR,...boardHelpers}=boardDeps;
-const boardState=over=>({name:'選手',pos:'IF',dpos:null,role:null,traits:{},stage:'PRO',stageYr:1,team:'高校',orgTeamId:null,age:20,year:2030,currentSalary:12345678,teamName:()=>'球団',...over});
+const boardState=over=>({name:'選手',pos:'IF',dpos:null,role:null,traits:{},stage:'PRO',stageYr:1,team:'高校',orgTeamId:null,age:20,year:2030,currentSalary:12345678,injNext:0,teamName:()=>'球団',...over});
 const boardFixtures={
   ...Object.fromEntries([1,2,3].map(n=>['HS year '+n,{stage:'HS',stageYr:n}])),...Object.fromEntries([1,2,3,4].map(n=>['U year '+n,{stage:'U',stageYr:n}])),
   CORP:{stage:'CORP'},IND:{stage:'IND'},'amateur with team color':{stage:'CORP',orgTeamId:'red'},
@@ -96,7 +113,20 @@ for(const [name,over] of Object.entries(boardFixtures))for(const phase of [0,1,2
   // Approved UI-BOARD-SHADOW-01: only the two invalid rgba separators change.
   expected.teamHtml=expected.teamHtml.replaceAll('rgba(0、0、0、0.4)','rgba(0,0,0,0.4)').replaceAll('rgba(0、0、0、0.2)','rgba(0,0,0,0.2)');
   expected.teamHtml=approvedTeamBadgeClasses(expected.teamHtml);
+  // UI 2.0 adds read-only mobile summary fields; all existing board fields stay exact.
+  expected.isAmateur=state.stage!=='PRO';expected.injuryRiskText='15%';expected.isPitcher=state.pos==='P';expected.tjGaugeText=state.pos==='P'?'0.0 / 50':null;
+  // PLY-01 (J1/J6): board() adds the number badge text and the menu availability; these fixtures have no jerseyHistory.
+  Object.assign(expected,{numberText:'',numberChangeEnabled:false});
   assert.deepEqual(shape(presenter.board(phase)),shape(expected));
 });
 assert.equal(Object.keys(boardFixtures).length,18);
+
+
+for(const pos of ['P','IF'])test('header risk and TJ read-only '+pos,()=>{
+ const state=boardState({pos,ab:{},age:33,injNext:10,tmpInj:5,tj:18.26});const presenter=new CareerPresenter({getState:()=>state,labels:{...labels,POSN,DPN},TEAM_COLOR,...helpers,...boardHelpers,tjCap:()=>73});
+ assert.equal(presenter.board(0).injuryRiskText,'31%');markInjurySeasonStart(state);assert.equal(presenter.board(1).injuryRiskText,'36%');recordInjuryCheck(state);state.injNext=0;state.tmpInj=0;const before=JSON.stringify(state);assert.equal(presenter.board(2).injuryRiskText,'36%','recorded check survives cleared additions');assert.equal(JSON.stringify(state),before);
+ assert.equal(presenter.board(1).tjGaugeText,pos==='P'?'18.3 / 73':null);if(pos==='P')assert.equal(presenter.ability().condition.find(x=>x.label==='TJゲージ').value,presenter.board(1).tjGaugeText);
+ state.year++;state.rehab=1;state.skipMid=true;state.seasonFactor=0;markInjurySeasonStart(state);const rest=JSON.stringify(state);assert.equal(presenter.board(1).injuryRiskText,'-');assert.equal(presenter.board(1).tjGaugeText,pos==='P'?'18.3 / 73':null);assert.equal(JSON.stringify(state),rest);
+});
+
 console.log(`career-presenter: ${pass} cases PASS.`);

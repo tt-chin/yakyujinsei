@@ -1,3 +1,4 @@
+import {allocationComparisonHook} from './support/allocation-comparison.mjs';
 // Focused new-career names: real runtime/save/PNG, no complete career or Full run.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -14,15 +15,15 @@ const oldFiles=new Map(),errors=[],results=[];
 const hook=`
 const nameTrace=[];careerRng.onDraw=value=>nameTrace.push({before:(S.rngState-0x6D2B79F5)>>>0,after:S.rngState,value});
 window.__nameTest={
- get:()=>({state:JSON.parse(JSON.stringify(S)),rng:JSON.parse(JSON.stringify(nameTrace)),choices:[...$('act').querySelectorAll('.abrow,button')].map(b=>({text:b.textContent,disabled:b.disabled??b.getAttribute('aria-disabled')}))}),
- step:()=>{const row=$('act').querySelector('.abrow[aria-disabled="false"]:not(.capped)'),buttons=[...$('act').querySelectorAll('button')].filter(b=>!b.disabled&&!/元に戻す|すべてリセット/.test(b.textContent));const choice=buttons.find(b=>/配分を確定|配分完了|次へ|完了/.test(b.textContent))||row||buttons[0];if(!choice)throw Error('NO_ACTION');const text=choice.textContent;choice.click();return text;},
+ get:()=>({state:JSON.parse(JSON.stringify(S)),rng:JSON.parse(JSON.stringify(nameTrace)),choices:[...$('act').querySelectorAll('.abrow,button')].map(b=>({text:b.textContent,disabled:b.disabled??b.getAttribute('aria-disabled')})),comparisonChoices:window.__allocationComparison.choices()}),
+ step:()=>{const row=$('act').querySelector('.abrow[aria-disabled="false"]:not(.capped)'),buttons=[...$('act').querySelectorAll('button')].filter(b=>!b.disabled&&!/元に戻す|すべてリセット/.test(b.textContent));const choice=buttons.find(b=>/配分を確定|配分完了|次へ|完了/.test(b.textContent))||row||buttons[0];if(!choice)throw Error('NO_ACTION');const text=window.__allocationComparison.action(choice);choice.click();return text;},
  image:async()=>{const out=document.createElement('div'),texts=[],native=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(text,...args){texts.push(String(text));return native.call(this,text,...args);};try{await shareImage([],out);return {texts,png:out.querySelector('img').src};}finally{CanvasRenderingContext2D.prototype.fillText=native;}}
 };`;
 const server=createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://local');if(url.pathname==='/favicon.ico'){res.statusCode=204;return res.end();}
  const old=url.pathname.startsWith('/baseline/'),relative=url.pathname.replace(/^\/(?:baseline\/)?/,'')||'index.html';if(relative.includes('..'))throw Error('path');
  let data;if(old){if(!oldFiles.has(relative))oldFiles.set(relative,execFileSync('git',['show',baseline+':docs/'+relative],{cwd:root,maxBuffer:20e6}));data=oldFiles.get(relative);}else data=await readFile(path.join(root,'docs',relative));
- if(relative==='src/engine/game.js')data=data.toString()+hook;
+ if(relative==='src/engine/game.js')data=data.toString()+allocationComparisonHook+hook;
  res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css':relative.endsWith('.webp')?'image/webp':'text/html; charset=utf-8');res.end(data);
 }catch(e){res.statusCode=404;res.end(String(e));}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright'),browser=await chromium.launch({channel:arg('browser')||'chrome',headless:true});
@@ -30,11 +31,31 @@ const currentVersion=(await readFile(path.join(root,'docs/src/config.js'),'utf8'
 const oldVersion=execFileSync('git',['show',baseline+':docs/src/config.js'],{cwd:root}).toString().match(/VERSION = '([^']+)'/)[1];
 const wire=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});p.on('response',r=>{if(r.status()>=400&&r.url().startsWith(base))errors.push(r.status()+' '+r.url());});};
 const snapshot=p=>p.evaluate(()=>window.__nameTest.get());
-const projection=(v,version,name)=>{const copy=structuredClone(v);assert.equal(copy.state.name,name);assert.equal(copy.state.version,version);delete copy.state.name;delete copy.state.version;if(copy.state.birthHighSchool){assert.equal(copy.state.birthHighSchool.createdVersion,version);delete copy.state.birthHighSchool.createdVersion;}return copy;};
+const projection=(v,version,name)=>{const copy=structuredClone(v);copy.choices=copy.comparisonChoices;delete copy.comparisonChoices;assert.equal(copy.state.name,name);assert.equal(copy.state.version,version);delete copy.state.name;delete copy.state.version;if(copy.state.birthHighSchool){assert.equal(copy.state.birthHighSchool.createdVersion,version);delete copy.state.birthHighSchool.createdVersion;}return copy;};
 const cases=[{id:'empty',raw:'',indices:[0,0],expected:'王貞治'},{id:'spaces',raw:'   ',indices:[1,17],expected:'長嶋秀喜'},{id:'fullwidth',raw:'　　',indices:[PLAYER_FAMILY_NAMES.indexOf('ダルビッシュ'),PLAYER_GIVEN_NAMES.indexOf('慎之助')],expected:'ダルビッシュ慎之助'},{id:'typed',raw:' 山田太郎 ',expected:'山田太郎'},{id:'normalization',raw:'ＡＢＣ太郎',expected:'ABC太郎'},{id:'length',raw:'abcdefghijklmnop',expected:'abcdefghij'}];
 let failure;
 try{
- for(const pos of ['P','IF'])for(const spec of cases){
+ const replays=[];
+ for(const width of [320,375,390,1280])for(const theme of ['standard','night','classic','scoreboard']){
+  const ctx=await browser.newContext({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500});await ctx.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));
+  await ctx.addInitScript(()=>{window.__buttonEntropy=0;const words=[0,0,0,0,1,1,2,2,3,3],native=crypto.getRandomValues.bind(crypto);crypto.getRandomValues=array=>{if(array instanceof Uint32Array&&array.length===1){if(window.__buttonEntropy>=words.length)throw Error('EXTRA_NAME_DRAW');array[0]=words[window.__buttonEntropy++];return array;}return native(array);};});
+  const page=await ctx.newPage();wire(page);await page.goto(base+'/?seed=button-fixed-seed');await page.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await page.locator('#seg-pos [data-v="IF"]').click();await page.locator('#in-name').fill('山田太郎');await page.locator('#in-name').blur();
+  await page.evaluate(async theme=>{document.documentElement.dataset.theme=theme;const {bindRandomPlayerName}=await import('/src/ui/random-player-name.js');const input=document.getElementById('in-name'),button=document.getElementById('btn-random-name');bindRandomPlayerName({input,button});bindRandomPlayerName({input,button});window.__fieldEvents=[];for(const name of ['input','change'])document.addEventListener(name,e=>{if(e.target===input)window.__fieldEvents.push([e.type,e.bubbles]);});},theme);
+  const button=page.getByRole('button',{name:'名前をランダムに生成',exact:true});assert.equal(await button.getAttribute('type'),'button');assert.equal(await button.getAttribute('title'),'名前をランダムに生成');
+  const home=()=>page.evaluate(()=>({seed:document.getElementById('seed-show').value,pos:document.querySelector('#seg-pos .on').dataset.v,preferences:localStorage.getItem('yakyujinsei.display.v1'),theme:document.documentElement.dataset.theme,url:location.href}));const before=await snapshot(page),beforeHome=await home();
+  const b=await button.boundingBox(),a=await page.locator('#in-name').boundingBox();assert.ok(b.width>=44&&b.height>=44);assert.ok(b.x>=a.x+a.width&&Math.abs(b.y-a.y)<1);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await (width<500?button.tap():button.click());assert.equal(await page.locator('#in-name').inputValue(),'王貞治');await (width<500?button.tap():button.click());assert.equal(await page.locator('#in-name').inputValue(),'長嶋茂雄');assert.equal(await page.evaluate(()=>window.__buttonEntropy),6,'exact duplicate retry without extra handlers');
+  await page.locator('#in-name').focus();await page.keyboard.press('Tab');assert.equal(await button.evaluate(e=>e===document.activeElement),true);assert.ok(parseFloat(await button.evaluate(e=>getComputedStyle(e).outlineWidth))>0);
+  await page.keyboard.press('Enter');assert.equal(await page.locator('#in-name').inputValue(),'野村克也');await page.keyboard.press('Space');assert.equal(await page.locator('#in-name').inputValue(),'落合博満');
+  assert.deepEqual(await page.evaluate(()=>window.__fieldEvents),Array(4).fill([['input',true],['change',true]]).flat());assertSameCareer(await snapshot(page),before,'no career/start/S/RNG effects');assert.deepEqual(await home(),beforeHome);
+  if(theme==='standard')await page.screenshot({path:path.join(output,'button-'+width+'.png')});
+  await page.locator('#in-name').fill('山田太郎');await page.locator('#btn-start').click();const first=await snapshot(page);assert.equal(first.state.name,'山田太郎');assert.equal(first.state.pos,'IF');assert.ok((await page.locator('#bd-name').innerText()).includes('山田太郎'));assert.equal(await page.evaluate(()=>window.__buttonEntropy),10);
+  if(width===320&&theme==='standard'){const frames=[first],actions=[];for(let i=0;i<3;i++){actions.push(await page.evaluate(()=>window.__nameTest.step()));frames.push(await snapshot(page));}replays.push({frames,actions});}
+  results.push({id:'button-'+width+'-'+theme,status:'PASS'});await ctx.close();
+ }
+ {const ctx=await browser.newContext({viewport:{width:320,height:844}});await ctx.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));const page=await ctx.newPage();wire(page);await page.goto(base+'/?seed=button-fixed-seed');await page.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await page.locator('#seg-pos [data-v="IF"]').click();await page.locator('#in-name').fill('山田太郎');await page.locator('#btn-start').click();const frames=[await snapshot(page)],actions=[];for(let i=0;i<3;i++){actions.push(await page.evaluate(()=>window.__nameTest.step()));frames.push(await snapshot(page));}assertSameCareer(replays[0],{frames,actions},'zero vs four name clicks: complete S/choices/RNG exact with same final manual input');await ctx.close();results.push({id:'button-RNG-zero-vs-four',status:'PASS'});}
+ console.log('PASS button: 16 viewport/themes, touch/Enter/Space, focus, events, idempotence, exact state/RNG replay');
+ if(!process.argv.includes('--button-only'))for(const pos of ['P','IF'])for(const spec of cases){
   const pair=[];
   for(const old of [true,false]){
    const context=await browser.newContext({viewport:{width:pos==='P'?390:1280,height:844}});await context.route('https://fonts.googleapis.com/**',r=>r.fulfill({body:'',contentType:'text/css'}));

@@ -1,0 +1,71 @@
+/* UI 2.0: a single reading column on phones and short windows. */
+#app{max-width:1440px}
+html{scroll-padding-top:var(--game-header-height,0px)}
+#board{position:sticky;top:0}
+#bd-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 var(--space-xs);align-items:center}
+#bd-name{grid-column:1;white-space:normal;overflow-wrap:anywhere;letter-spacing:0}
+#bd-name small{display:none}
+#bd-team{grid-column:1;white-space:normal;overflow-wrap:anywhere;letter-spacing:0}
+#board-menu{grid-column:2;grid-row:1 / 3}
+#bd-tj:empty{display:none}
+#bd-period{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-xs);font-size:var(--fs-sm);color:var(--dim)}
+#lamps{margin:0;justify-content:start}
+#lamps .lamp:not(.on){display:none}
+#bd-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:var(--space-3xs)}
+#bd-grid[data-pitcher="true"]{grid-template-columns:minmax(0,.7fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.1fr)}
+#bd-tj-gauge-cell[hidden]{display:none!important}
+#bd-grid .bd-cell{min-width:0}
+#bd-grid .bd-cell b,#bd-grid .bd-cell span{white-space:nowrap;letter-spacing:0}
+#bd-grid[data-pitcher="true"] :is(#bd-sal,#bd-tj-gauge){font-size:clamp(10px,2.8vw,var(--fs-lg))}
+.bd-cell{padding:var(--space-4xs)}
+.bd-cell b{font-size:clamp(10px,3.8vw,var(--fs-lg))}
+#salary-detail-trigger small{display:none}
+
+#game-body,#game-main{min-width:0;min-height:0}
+#game-main{display:flex;flex-direction:column;flex:1}
+#game-body{display:flex;flex:1;flex-direction:column}
+#view-host{min-height:0}
+#act{position:static;max-height:none;overflow:visible}
+#act-toggle{position:sticky;bottom:0;z-index:20}
+#log>.card,#log>.yr-block{width:100%;max-width:65ch;margin-inline:auto}
+.desktop-overview{display:none}
+#desktop-player .ui-data-list{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+#desktop-player .ui-ability-list{grid-template-columns:minmax(0,1fr) auto}
+#desktop-player .ui-data-list dd{min-width:0;overflow-wrap:anywhere}
+#desktop-player details{margin-bottom:var(--space-xs);font-size:var(--fs-sm)}
+#desktop-player summary{cursor:pointer;color:var(--dim)}
+#desktop-player #salary-detail-trigger small{display:block}
+#desktop-career .ui-data-list{grid-template-columns:minmax(0,1fr)}
+#desktop-career .ui-data-list dd{text-align:left}
+#board-menu-panel{position:fixed;inset:var(--space-lg) var(--space-lg) auto auto;margin:0;width:min(360px,calc(100vw - 32px));max-width:none;max-height:85dvh;padding:0;overflow:hidden;flex-direction:column}
+#board-menu-panel[open]{display:flex}
+#board-menu-panel::backdrop{background:rgb(0 0 0 / .45)}
+html:has(#board-menu-panel[open]){overflow:hidden}
+.board-menu-heading{display:flex;align-items:center;justify-content:space-between;gap:var(--space-xs);padding:var(--space-xs);flex:none;border-bottom:1px solid var(--edge)}
+.board-menu-heading h2{font-size:var(--fs-lg);margin:0}
+#board-menu-panel #board-menu-close{width:auto;flex:none}
+.board-menu-items{overflow-y:auto;min-height:0;padding:var(--space-2xs);overscroll-behavior:contain}
+@media(max-width:1099px){
+ #board-menu-panel{inset:auto 0 0;width:100%;border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+ #board{padding:var(--space-2xs) var(--space-md)}
+}
+@media(min-width:1100px) and (min-height:700px){
+ #app{height:100dvh;min-height:0;padding:var(--space-lg);gap:var(--space-lg);overflow:hidden}
+ #board{flex:none;border:1px solid var(--edge);border-radius:var(--radius-lg)}
+ #bd-top{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+ #bd-name small{display:inline}
+ #bd-team{grid-column:2;grid-row:1}
+ #board-menu{grid-column:3;grid-row:1}
+ #bd-grid{display:none}
+ #bd-period{margin-top:var(--space-3xs)}
+ #game-body{display:grid;grid-template-columns:clamp(280px,23vw,320px) minmax(0,1fr);gap:var(--space-lg);overflow:hidden}
+ #desktop-player:not([hidden]){display:block;position:static;width:auto;overflow-y:auto;min-height:0;container-type:inline-size;overscroll-behavior:contain;padding:0 var(--space-3xs) 0 0}
+ #desktop-player .ui-panel{margin-bottom:var(--space-md)}
+ #game-main{overflow:hidden;border:1px solid var(--edge);border-radius:var(--radius-lg);background:var(--bg)}
+ #main-nav{position:relative;top:0;flex:none}
+ #view-host{overflow-y:auto;overscroll-behavior:contain}
+ #view-home{height:100%;min-height:0;overflow:hidden;flex:none}
+ #view-home #log{overflow-y:auto;min-height:100px;overscroll-behavior:contain}
+ #act{max-height:50%;overflow-y:auto;flex-shrink:0}
+ #act-toggle{position:static}
+}

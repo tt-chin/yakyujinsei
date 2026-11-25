@@ -1,7 +1,9 @@
+import {allocationComparisonHook} from './support/allocation-comparison.mjs';
 import {TEAM_NICKNAMES} from '../docs/src/data/team-nicknames.js';
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
 import {sourceText} from './support/source-text.mjs';
-import {projectHofLog,removeEventBadges} from './support/dom-snapshot.mjs';
+import {projectHofLog,removeEventBadges,removeJerseyDisplay} from './support/dom-snapshot.mjs';
+import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
 import {openBoardAction} from './support/board-menu.mjs';
 // No project dependency: pass --playwright=<installed package directory> when needed.
 import assert from 'node:assert/strict';
@@ -9,7 +11,7 @@ import {historicalCareer,franchiseComparisonProof} from '../tools/development-b/
 import {baselineNeedsChampionmakerProjection} from '../tools/development-b/championmaker-state-oracle.mjs';
 import {assertSameCareer} from './support/first-difference.mjs';
 import {createServer} from 'node:http';
-import {readFile, mkdir} from 'node:fs/promises';
+import {readFile, mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
@@ -31,6 +33,8 @@ const baselineHof=execFileSync('git',['show',`${baselineRef}:docs/src/engine/hal
 const legacyHofProjection=!baselineHof.includes("from './hof-evaluation-policy.js'");
 // EVT-01 (1.16.11): baselines without the badge module get the approved badge removal on the candidate side only.
 const eventBadge=!execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/event-category-badge.js'],{cwd:root,encoding:'utf8'}).trim();
+// PLY-01 (jersey numbers): baselines without #bd-number get the approved number projection on the candidate side only.
+const jersey=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('id="bd-number"');
 let hofOracleRequests=0;
 const server=createServer(async(req,res)=>{
   try{
@@ -48,9 +52,10 @@ const server=createServer(async(req,res)=>{
       content=original.replace(dependency,"'/src/engine/award-consumer-policy.js'");
     }
     if(relative==='src/engine/game.js'){
-      let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls');
+      let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls')+allocationComparisonHook;
+      if(!baseline)script+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
       script+='\nwindow.__approvedMrTeamNames='+JSON.stringify(TEAM_NICKNAMES)+';window.__displayMrPair=()=>{if(!S.traits.mrteam)return null;const expected=\'ミスター\'+(typeof S.mrTeamName===\'string\'&&Object.hasOwn(window.__approvedMrTeamNames,S.mrTeamName)?window.__approvedMrTeamNames[S.mrTeamName]:\'\');if(displayTrait(\'mrteam\')!==expected)throw Error(\'MR_COPY_CONTRACT\');return[expected,teamNick(S.mrTeamName||\'\')+\'ミスター\'];};window.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
-      if(!baseline&&legacyHofProjection)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScore(S.stats[b]),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
+      if(!baseline&&legacyHofProjection)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScoreFor(S.stats[b],S.pos),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       content=script;
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
@@ -79,16 +84,23 @@ try{
   if(!process.argv.includes('--careers-only')){
   const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();wire(page);
   await page.goto(`${target}/?seed=display-settings-test`);await page.locator('#btn-start').waitFor();
+  // Normal settings coverage starts after engine/save initialization; the separate
+  // delayed-engine case below still verifies input entered during loading.
+  await page.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
+  await page.evaluate(()=>{const input=document.getElementById('in-name');window.__displayNameProbe={input,events:[],stage:'before-fill'};for(const type of ['input','change','focus','blur'])document.addEventListener(type,event=>{if(event.target===input){const p=window.__displayNameProbe;p.events.push({type,value:input.value,stage:p.stage,time:performance.now()});p.events=p.events.slice(-30);}},true);});
+  const checkName=async stage=>{const data=await page.evaluate(stage=>{const p=window.__displayNameProbe,input=document.getElementById('in-name');p.stage=stage;return{stage,value:input?.value,sameNode:input===p.input,connected:p.input.isConnected,attribute:input?.getAttribute('value'),type:input?.type,formHidden:document.getElementById('home-create').hidden,startDisabled:document.getElementById('btn-start').disabled,engineHook:typeof window.__displayRegression,active:{id:document.activeElement.id,name:document.activeElement.name},theme:document.documentElement.dataset.theme,fontSize:document.documentElement.dataset.fontSize,density:document.documentElement.dataset.density,viewport:[innerWidth,innerHeight],events:p.events};},stage);if(data.value!=='長い名前テスト'){const file=path.join(artifacts,'name-preservation-failure.json');await writeFile(file,JSON.stringify(data,null,2));console.error('Name preservation diagnostic: '+JSON.stringify(data));await page.screenshot({path:path.join(artifacts,'name-preservation-failure.png')}).catch(error=>console.error('Name diagnostic screenshot failed: '+error.message));}assert.equal(data.value,'長い名前テスト','name preserved at '+stage);};
   await page.locator('#in-name').fill('長い名前テスト');
+  await checkName('after-fill');
   await page.locator('[data-open-preferences]').first().click();
+  await checkName('dialog-open');
   for(const theme of THEME_IDS)for(const fontSize of ['small','medium','large'])for(const density of ['standard','compact']){
-    await setPreferences(page,theme,fontSize,density);combinations++;
+    for(const [key,value] of Object.entries({theme,fontSize,density})){await page.evaluate(stage=>window.__displayNameProbe.stage=stage,'change '+key+'='+value);await page.locator('[name="'+key+'"][value="'+value+'"]').check();await checkName('after '+key+'='+value);}combinations++;
     for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[560,800],[1280,800]]){
-      await page.setViewportSize({width,height});const size=await fits(page);assert.ok(size.width<=width,`${theme}/${fontSize}/${density} overflow ${JSON.stringify(size)}`);assert.ok(size.dialog<=size.dialogClient+1,'dialog overflow');
+      await page.evaluate(stage=>window.__displayNameProbe.stage=stage,'resize '+width+'x'+height);await page.setViewportSize({width,height});await checkName('viewport '+width+'x'+height);const size=await fits(page);assert.ok(size.width<=width,`${theme}/${fontSize}/${density} overflow ${JSON.stringify(size)}`);assert.ok(size.dialog<=size.dialogClient+1,'dialog overflow');
     }
     if([1,4,6,12,18,24].includes(combinations)){await page.setViewportSize({width:combinations%2?320:390,height:844});await page.screenshot({path:path.join(artifacts,`settings-${theme}-${fontSize}-${density}.png`)});screenshots++;}
   }
-  await page.locator('#preferences-close').click();assert.equal(await page.locator('#in-name').inputValue(),'長い名前テスト');
+  await page.locator('#preferences-close').click();await checkName('dialog-close');assert.equal(await page.locator('#in-name').inputValue(),'長い名前テスト');
   assert.equal(await page.evaluate(()=>document.activeElement.hasAttribute('data-open-preferences')),true);
   await page.reload();assert.equal(await page.locator('html').getAttribute('data-theme'),'scoreboard');
   await page.locator('#btn-start').click();await openBoardAction(page,'board-preferences');
@@ -157,23 +169,29 @@ try{
       for(const variant of ['baseline','candidate']){
         const ctx=await browser.newContext({viewport:{width:390,height:844}}),p=await ctx.newPage();wire(p);
         await p.goto(`${local}/${variant==='baseline'?'baseline/':''}?seed=${seed}`);await p.waitForFunction(()=>!document.querySelector('#btn-start').disabled);await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#in-name').fill('回帰テスト');await p.locator('#btn-start').click();
-        const records=[];
+        const records=[],jerseyTotals={skips:0,pro:0,table:0,season:0};
         for(let step=0;step<2000;step++){
           if(variant==='candidate'&&step%17===0){
             const before=await p.evaluate(()=>window.__displayRegression());
             await openBoardAction(p,'board-preferences');await setPreferences(p,THEME_IDS[step%THEME_IDS.length],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
             assertSameCareer(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
-          const result=await p.evaluate(({labels,texts,copySource,badgeSource})=>{
+          const result=await p.evaluate(({labels,texts,copySource,badgeSource,jerseySource})=>{
+            // PLY-01: the year-start number prompt is the only approved new step; confirm it with its main button, unrecorded.
+            const jb=[...document.querySelectorAll('#act button')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.innerText.trim()));if(jb){jb.click();return {skip:true};}
             const snapshot=window.__displayRegression();delete snapshot.state.version;if(snapshot.state.birthHighSchool)delete snapshot.state.birthHighSchool.createdVersion;
             for(const r of Object.values(snapshot.state.intlTraitResults||{}))delete r.personalStats;
             const action=document.querySelector('#act');
             // Compare all non-trait copy and full S/RNG. Only the approved trait
             // explanation lifetime/summary changes are normalized on a detached clone.
-            const log=document.querySelector('#log').cloneNode(true);
+            let log=document.querySelector('#log').cloneNode(true);
+            if(window.__projectDecisionPresentation){const template=document.createElement('template');template.innerHTML=window.__projectDecisionPresentation(log.outerHTML,'log',snapshot.state);log=template.content.firstElementChild;}
             const removeBadges=badgeSource?eval('('+badgeSource+')'):null;if(removeBadges)removeBadges(log);
             // #act stays live (innerText needs layout): strip the one verified title badge from the text only.
-            let choices=action.innerText;if(removeBadges){const [label,...more]=removeBadges(action.cloneNode(true));if(more.length)throw Error('EVENT_BADGE_UNEXPECTED');if(label){if(!choices.startsWith(label+'イベント｜'))throw Error('EVENT_BADGE_TEXT');choices=choices.slice(label.length);}}
+            let choices=window.__allocationComparison.areaText();if(removeBadges){const [label,...more]=removeBadges(action.cloneNode(true));if(more.length)throw Error('EVENT_BADGE_UNEXPECTED');if(label){if(!choices.startsWith(label+'イベント｜'))throw Error('EVENT_BADGE_TEXT');choices=choices.slice(label.length);}}
+            // Candidate only: validate, remove the approved number display, then drop jerseyHistory (the only new state).
+            const jerseyCounts=jerseySource?eval('('+jerseySource+')')(log,snapshot.state):null;if(jerseySource)delete snapshot.state.jerseyHistory;
+            const pro=snapshot.state.stage==='PRO';
             if(window.__hofDisplay&&snapshot.state.done)window.__projectHofLog(log,window.__hofDisplay());
             // Only the approved per-event statistics block; old result copy remains compared.
             for(const block of log.querySelectorAll('.intl-personal-stats'))block.remove();
@@ -195,17 +213,22 @@ try{
               }
             }
             const state={...snapshot,text:(copySource?eval('('+copySource+')')(log.textContent,window.__displayMrPair()):log.textContent).replace(/\s+/g,''),choices};
-            if(snapshot.state.done)return {state,done:true};
+            if(snapshot.state.done)return {state,done:true,pro,jerseyCounts};
             const rows=[...action.querySelectorAll('.abrow')].filter(el=>el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('capped'));
             const buttons=[...action.querySelectorAll('button')].filter(el=>!el.disabled&&!/元に戻す|すべてリセット/.test(el.innerText));
             const button=buttons.find(el=>el.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(el=>/配分を確定|配分完了|次へ|完了/.test(el.innerText))||buttons.find(el=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(el.innerText))||buttons[0];
             if(!button)throw new Error('No actionable choice');
-            button.click();return {state,done:false};
-          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT,copySource:variant==='candidate'&&projectNames?projectDisplayNameCopy.toString():null,badgeSource:variant==='candidate'&&eventBadge?removeEventBadges.toString():null});
+            button.click();return {state,done:false,pro,jerseyCounts};
+          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT,copySource:variant==='candidate'&&projectNames?projectDisplayNameCopy.toString():null,badgeSource:variant==='candidate'&&eventBadge?removeEventBadges.toString():null,jerseySource:variant==='candidate'&&jersey?removeJerseyDisplay.toString():null});
+          if(result.skip){jerseyTotals.skips++;continue;}
+          if(result.pro)jerseyTotals.pro++;if(result.jerseyCounts){jerseyTotals.table+=result.jerseyCounts.table;jerseyTotals.season+=result.jerseyCounts.season;}
           records.push(result.state);
           if(result.done)break;
           if(step===1999)throw new Error(`Career did not finish: ${seed}`);
         }
+        // PLY-01 projection contract: the baseline never shows the prompt; the candidate shows it exactly when the career is professional and every projection ran.
+        if(variant==='baseline')assert.equal(jerseyTotals.skips,0,'baseline has no number step');
+        else if(jersey){assert.equal(jerseyTotals.skips>0,jerseyTotals.pro>0,seed+' number step appears exactly when the career reaches a professional team');if(jerseyTotals.pro>0){assert.ok(jerseyTotals.season>0&&jerseyTotals.table>0,seed+' number display projection ran');}}
         snapshots.push(records);await ctx.close();
       }
       assertSameCareer(historicalCareer(snapshots[1],{championmaker,franchiseProof:franchiseComparisonProof(snapshots[1])}),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);

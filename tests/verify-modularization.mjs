@@ -64,7 +64,7 @@ for(const line of [
     '\nfunction advance(){return yearFlow.advance();}\n',
     '\n  function reportFlowOutcome(outcome){return yearFlow.reportFlowOutcome(outcome);}\n  const flowHooks={advance:null,endGame:null};\n',
     '\n  function phaseIntlPre(){return yearFlow.phaseIntlPre();}\n  function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}\n'+
-      '  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[phasePre,phaseIntlPre,phaseMid,phaseEnd]});\n',
+      '  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[jerseyStep,phasePre,phaseIntlPre,phaseMid,phaseEnd]});\n',
     "\nimport { YearFlow } from './year-flow.js';\n",
   ])assert.equal(text.split(line).length,2,'year flow wiring, once: '+line.trim().slice(0,50));
   for(const name of ['new YearFlow(','yearFlow.nextStep(','yearFlow.advance(','yearFlow.reportFlowOutcome(','yearFlow.phaseIntlPre(','yearFlow.startYear(','function nextStep(','function advance(','function reportFlowOutcome(','function phaseIntlPre(','function startYear('])assert.equal(text.split(name).length,2,'year flow wiring only once: '+name);
@@ -90,7 +90,7 @@ for(const line of [
   for(const line of [
     "\nimport { SeasonPhases } from './season-phases.js';\n",
     '\n/* シーズン開幕前。 */\nfunction phasePre(){return seasonPhases.phasePre();}\n/* シーズン中。 */\nfunction phaseMid(){return seasonPhases.phaseMid();}\n'+
-      'const seasonPhases=new SeasonPhases({getState:()=>S,POS_AB,ABL,LV,clamp,board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),buyoutRemaining:rate=>buyoutRemaining(rate),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),declineForSeason:(state,amount)=>declineForSeason(state,amount),checkGoldclothSeason:()=>checkGoldclothSeason(),stageLabel:()=>stageLabel(),addAb:(k,v)=>addAb(k,v),dposReview:cont=>dposReview(cont),allocUI:(mode,label,done)=>allocUI(mode,label,done),nextStep:()=>nextStep(),tjCap:()=>tjCap(),ovr:()=>ovr(),signTo:(...args)=>signTo(...args),daibaFarewell:cont=>daibaFarewell(cont),loveEvent:next=>loveEvent(next),drawEvents:(n,done)=>drawEvents(n,done),rollInjury:()=>rollInjury(),proSeason:()=>proSeason(),amateurSeason:()=>amateurSeason(),rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});\n',
+      'const seasonPhases=new SeasonPhases({getState:()=>S,POS_AB,ABL,LV,clamp,board:p=>board(p),card:(cls,title,html)=>card(cls,title,html),choose:(title,opts)=>choose(title,opts),buyoutRemaining:rate=>buyoutRemaining(rate),reportFlowOutcome:outcome=>reportFlowOutcome(outcome),declineForSeason:(state,amount)=>declineForSeason(state,amount),checkGoldclothSeason:()=>checkGoldclothSeason(),stageLabel:()=>stageLabel(),addAb:(k,v)=>addAb(k,v),dposReview:cont=>dposReview(cont),allocUI:(mode,label,done)=>allocUI(mode,label,done),nextStep:()=>nextStep(),tjCap:()=>tjCap(),ovr:()=>ovr(),signTo:(...args)=>signTo(...args),daibaFarewell:cont=>daibaFarewell(cont),loveEvent:next=>loveEvent(next),drawEvents:(n,done)=>drawEvents(n,done),rollInjury:()=>rollInjury(),markSeasonStart:state=>markInjurySeasonStart(state),proSeason:()=>proSeason(),amateurSeason:()=>amateurSeason(),rng:{R:()=>R(),chance:p=>chance(p),ri:(a,b)=>ri(a,b)}});\n',
   ])assert.equal(text.split(line).length,2,'season phases wiring, once: '+line.trim().slice(0,50));
   for(const name of ['new SeasonPhases(','seasonPhases.phasePre(','seasonPhases.phaseMid(','function phasePre(','function phaseMid('])assert.equal(text.split(name).length,2,'season phases wiring only once: '+name);
   for(const gone of ['シーズン前特訓','let afterAsk=','const preAsk=afterAsk','開幕前の投球プラン','シーズン半ばの健康診断','PRESEASON_'])assert.ok(!text.includes(gone),'moved into SeasonPhases: '+gone);
@@ -102,7 +102,7 @@ for(const line of [
     "\nimport { ProfessionalSeason } from './professional-season.js';\n",
     '\nconst choiceViews=new WeakMap(),yearHandoffs=new WeakMap();\n',
     '\nfunction rollInjury(){playerInjury.rollInjury();}\nfunction proSeason(){return professionalSeason.proSeason();}\n'+
-      "const professionalSeason=new ProfessionalSeason({getState:()=>S,LV,clamp,simSeason:lv=>simSeason(lv),applyEventSeason:(st,options)=>applyEventSeason(st,options),consumeEventSeason:state=>consumeEventSeason(state),normalizeEventSeason:(st,options)=>normalizeEventSeason(st,options),bucketOf:lv=>bucketOf(lv),accStat:(bucket,st)=>accStat(bucket,st),accLevelStat:(levelKey,st)=>accLevelStat(levelKey,st),card:(cls,title,html)=>card(cls,title,html),statLine:st=>statLine(st),isSP:()=>isSP(),toolGap:()=>toolGap(),careerAllStars:()=>careerAllStars(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),removeTrait:(key,label)=>removeTrait(key,label),board:phase=>board(phase),awards:(bucket,st)=>awards(bucket,st),classifyMarketInjury:input=>classifyMarketInjury(input),recordSalaryEvaluation:st=>recordSalaryEvaluation(st),captureSeasonChampionship:state=>captureSeasonChampionship(state),tjAccrue:()=>tjAccrue(),tjGamble:cont=>tjGamble(cont),demotionAudit:cont=>demotionAudit(cont),tradeCheck:cont=>tradeCheck(cont),maybeIntl:done=>maybeIntl(done),nextStep:()=>nextStep(),resumeSeasonEnd:()=>resumeSeasonEnd(),restorePendingChoice:()=>restorePendingChoice(),seasonRng:{R:()=>R()}});\n"+'function awards(bucket,st){',
+      "const professionalSeason=new ProfessionalSeason({getState:()=>S,jerseyLabel:()=>jerseyLabelText(),LV,clamp,simSeason:lv=>simSeason(lv),applyEventSeason:(st,options)=>applyEventSeason(st,options),consumeEventSeason:state=>consumeEventSeason(state),normalizeEventSeason:(st,options)=>normalizeEventSeason(st,options),bucketOf:lv=>bucketOf(lv),accStat:(bucket,st)=>accStat(bucket,st),accLevelStat:(levelKey,st)=>accLevelStat(levelKey,st),card:(cls,title,html)=>card(cls,title,html),statLine:st=>statLine(st),isSP:()=>isSP(),toolGap:()=>toolGap(),careerAllStars:()=>careerAllStars(),traitCard:(key,name,desc,tone)=>traitCard(key,name,desc,tone),removeTrait:(key,label)=>removeTrait(key,label),board:phase=>board(phase),awards:(bucket,st)=>awards(bucket,st),classifyMarketInjury:input=>classifyMarketInjury(input),recordSalaryEvaluation:st=>recordSalaryEvaluation(st),captureSeasonChampionship:state=>captureSeasonChampionship(state),tjAccrue:()=>tjAccrue(),tjGamble:cont=>tjGamble(cont),demotionAudit:cont=>demotionAudit(cont),tradeCheck:cont=>tradeCheck(cont),maybeIntl:done=>maybeIntl(done),nextStep:()=>nextStep(),resumeSeasonEnd:()=>resumeSeasonEnd(),restorePendingChoice:()=>restorePendingChoice(),seasonRng:{R:()=>R()}});\n"+'function awards(bucket,st){',
   ])assert.equal(text.split(line).length,2,'professional season wiring, once: '+line.trim().slice(0,50));
   for(const name of ['new ProfessionalSeason(','professionalSeason.proSeason(','function proSeason('])assert.equal(text.split(name).length,2,'professional season wiring only once: '+name);
   for(const gone of ['function resumeProfessionalSeason(','function runSeasonPipeline(','function portionOf(','seasonContinuations','STALE_SEASON_CONTINUATION','PRO_SEASON_AMBIGUOUS','SEASON_CONTINUATION_AMBIGUOUS','シーズン途中の移籍','隠し特性解放：鉄人','一芸特化を返上'])assert.ok(!text.includes(gone),'moved into ProfessionalSeason: '+gone);
@@ -163,22 +163,18 @@ for(const line of [
   for(const gone of ["getElementById('btn-restart')",'(0).toString(36)',"$('seed-show').value=SEED;",'人生のこの部分を放棄して'])assert.ok(!text.includes(gone),'dead binding removed: '+gone);
 }
 {// Phase 40 (L): the LEGACY overlay is gone. board, movement and endGame are single module-level function declarations
-  // above the overlay marker (stage10-risk-e2e rebinds them there); board patches the name and salary itself and endGame
-  // keeps the text-node replacement after the retirement scene.
+  // above the overlay marker (stage10-risk-e2e rebinds them there); board patches the name and salary itself.
   const text=sourceText(game),marker=text.indexOf('\n/* ================= 日本版仕様オーバーレイ 1.0.4 ================= */\n');
   assert.ok(marker>0,'overlay marker');
   const boardDecl=`
 function board(phase){ gameView.renderBoard(boardModel(phase));gameView.patchBoard({name:S.name,salaryText:Math.round((S.currentSalary||0)/10000).toLocaleString()}); }
 `;
+  // UI phase 5 adds only the read-only review after the original retirement completes.
+  // ENDGAME-LOCALE-REWRITE-01: the Taiwan-build text replacement (台幣/中華隊/臺灣) is gone, so player names survive the end screen.
   const endGameDecl=`
-function endGame(reason){careerRetirement.endGame(reason);setTimeout(()=>{
-  /* innerHTML の再代入は共有ボタンのイベントリスナーを消すため、テキストノードだけを安全に更新する。 */
-  document.querySelectorAll('.card').forEach(c=>{
-    const walker=document.createTreeWalker(c,NodeFilter.SHOW_TEXT);
-    for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeValue=n.nodeValue.replace(/台幣/g,'円').replace(/中華隊/g,'日本代表').replace(/臺灣/g,'日本');
-  });
-},0);}
+function endGame(reason){careerRetirement.endGame(reason);gameView.careerReview?.finish();}
 `;
+  for(const gone of ['createTreeWalker','臺灣','中華隊','台幣'])assert.ok(!text.includes(gone),'endGame text replacement removed: '+gone);
   for(const decl of [boardDecl,endGameDecl]){assert.equal(text.split(decl).length,2,'merged declaration once: '+decl.slice(1,30));assert.ok(text.indexOf(decl)<marker,'above the overlay marker: '+decl.slice(1,30));}
   for(const name of ['\nfunction board(','\nfunction movement(','\nfunction endGame('])assert.equal(text.split(name).length,2,'one declaration: '+name.trim());
   assert.ok(text.indexOf('\nfunction movement(')<marker,'movement above the overlay marker');
@@ -188,7 +184,7 @@ assert.ok(game.includes('function newState(name,pos){return createInitialState(n
 assert.match(shareImage, /fillText\(VERSION,W-PAD,H-40\)/);
 assert.doesNotMatch(game, /rngVersion|rulesVersion/);
 assert.doesNotMatch(html, /id="ver-badge"/);
-assert.match(html, /<h1 id="logo-tap"><em>野球人生シミュレーター<\/em><span id="app-version"[^>]*><\/span><\/h1>/);
+assert.match(html, /<h1 id="logo-tap"><em><span>野球人生<\/span><span>シミュレーター<\/span><\/em><\/h1><p id="app-version"><\/p>/);
 assert.doesNotMatch(html, /v1\.0\.0/);
 assert.match(game, /appVersion\.textContent='v'\+VERSION/);
 
@@ -245,5 +241,11 @@ assert.deepEqual(actual, [
   '0.3018500586',
 ]);
 assert.equal(rngState, 2095430971);
+
+{// OOP plan §2ww (phase 45): game.js keeps no test-only delegates; tests and E2E hooks call the modules directly.
+  const text=sourceText(game);
+  for(const name of ['blankStat','afterGamble','applySeasonForm','defRuns','addStatTotal','buildRecordViewModel','buildAbilityViewModel','buildTraitsViewModel','eventChoiceSummary','renderEventResult','handleDemotion','retireBelowActiveMinimum','careerScore','capTeam','posLegendPhrase','honorScore','retireScene','appendContractExtension','enterDraftPath','draftFallback','pathChoiceHS','pathChoiceU4','overseasOffer','outOfOrg','deriveSeedInt'])
+    assert.equal(new RegExp('(?:^|\\n)[ \\t]*function '+name+'\\(').test(text),false,'no game.js declaration: '+name);
+}
 
 console.log('Version 1.13.0 modularization static and RNG checks passed.');

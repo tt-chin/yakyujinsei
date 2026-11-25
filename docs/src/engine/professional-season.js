@@ -12,7 +12,7 @@ export class ProfessionalSeason {
   proSeason(){return this.#rules.proSeason();}
 }
 
-function professionalSeasonRules({getState,LV,clamp,simSeason,applyEventSeason,consumeEventSeason,normalizeEventSeason,bucketOf,accStat,accLevelStat,card,statLine,isSP,toolGap,careerAllStars,traitCard,removeTrait,board,awards,classifyMarketInjury,recordSalaryEvaluation,captureSeasonChampionship,tjAccrue,tjGamble,demotionAudit,tradeCheck,maybeIntl,nextStep,resumeSeasonEnd,restorePendingChoice,seasonRng:{R}}){
+function professionalSeasonRules({getState,jerseyLabel,LV,clamp,simSeason,applyEventSeason,consumeEventSeason,normalizeEventSeason,bucketOf,accStat,accLevelStat,card,statLine,isSP,toolGap,careerAllStars,traitCard,removeTrait,board,awards,classifyMarketInjury,recordSalaryEvaluation,captureSeasonChampionship,tjAccrue,tjGamble,demotionAudit,tradeCheck,maybeIntl,nextStep,resumeSeasonEnd,restorePendingChoice,seasonRng:{R}}){
   const seasonContinuations=new WeakMap();
   function portionOf(st,r){
     const p={...st};
@@ -71,7 +71,7 @@ function professionalSeasonRules({getState,LV,clamp,simSeason,applyEventSeason,c
         `<span class="tag">${S.teamName()}</span><div class="statline">${statLine(p2)}</div>`+
         `<span class="tag">合計</span><div class="statline">${statLine(st)}</div>`);
     }
-    else card('','シーズン成績',`<span class="tag">${S.teamName()}${S.dpos?'｜'+S.dpos:''}</span><div class="statline">${statLine(st)}</div>`);
+    else card('','シーズン成績',`<span class="tag">${S.teamName()}${S.dpos?'｜'+S.dpos:''}${jerseyLabel?.()||''}</span><div class="statline">${statLine(st)}</div>`);
     /* 不調整年・キャリアハイ年の説明カード。 */
     if(st.form===-1){
       card('bad','深刻なスランプ',`体調は万全だったが、思うような成績を残せず、長いスランプに苦しんだ。`);

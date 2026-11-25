@@ -42,7 +42,7 @@ try{
     await credits.getByRole('button',{name:'閉じる',exact:true}).click();
     await p.locator('#btn-start').click();
     await p.locator('#board-menu-toggle').click();
-    const names=['遊び方','更新履歴','不具合報告','クレジット','表示設定','共有','開発を応援','タイトルに戻る'];
+    const names=['遊び方','更新履歴','不具合報告','クレジット','背番号変更','表示設定','共有','開発を応援','タイトルに戻る'];
     const panel=p.locator('#board-menu-panel');
     const items=await panel.locator('button,a').evaluateAll(nodes=>nodes.map(n=>{
       const bullet=n.querySelector('.menu-bullet'),r=bullet?.getBoundingClientRect();
@@ -54,10 +54,10 @@ try{
       check(items[i].bullet==='•'&&items[i].hidden==='true','decorative uniform bullet');
       check(Math.abs(items[i].x-items[0].x)<1&&Math.abs(items[i].textX-items[0].textX)<1,'bullet/text alignment');
       check(items[i].height>=44,'touch target');
-      const expectedName=names[i]+([2,6].includes(i)?' 別タブ ↗':'');
-      check(await panel.getByRole([2,6].includes(i)?'link':'button',{name:expectedName,exact:true}).count()===1,'accessible name excludes bullet: '+expectedName+' '+await panel.ariaSnapshot());
+      const expectedName=names[i]+([2,7].includes(i)?' 別タブ ↗':'');
+      check(await panel.getByRole([2,7].includes(i)?'link':'button',{name:expectedName,exact:true}).count()===1,'accessible name excludes bullet: '+expectedName+' '+await panel.ariaSnapshot());
     }
-    check(await p.locator('#board-menu-toggle').innerText()==='☰\nメニュー'||(await p.locator('#board-menu-toggle').innerText()).replace(/\s/g,'')==='☰メニュー','top menu unchanged');
+    check(await p.locator('#board-menu-toggle').innerText()==='☰'||(await p.locator('#board-menu-toggle').innerText()).replace(/\s/g,'')==='☰','top menu unchanged');
     const preserved=await p.evaluate(()=>{
       const support=document.querySelector('#board-support'),restart=document.querySelector('#btn-restart'),style=getComputedStyle(restart);
       return{target:support.target,rel:support.rel,href:support.href,hint:support.querySelector('.menu-external').textContent,color:style.color,bad:getComputedStyle(document.documentElement).getPropertyValue('--bad').trim(),border:style.borderTopWidth};

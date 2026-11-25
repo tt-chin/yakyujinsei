@@ -13,6 +13,7 @@ import { playerMarketCategory, rankTeamsByDemand, teamDemandLabel, teamDemandMul
 import { contractTypeLabel } from '../ui/contract-labels.js';
 import { traitLabel, TRAIT_TEXT, goldclothEligible } from './trait-policy.js';
 import { hasCurrentAwardEffect } from './award-consumer-policy.js';
+import {reconcileAmericanCareer} from './control-period-policy.js';
 
 export class CareerMovement {
   #rules;
@@ -125,8 +126,8 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
         if(alts.length){
           card('bad','降格通告',`成績が基準に届かず、球団は<b class="dn">${LV[targetLevel].n}</b>への降格を通告。しかし同時に、他リーグからオファーが届いた。`);
           choose('降格を受け入れるか、新天地を選ぶか？',[
-            {t:LV[targetLevel].n+'への降格を受け入れる',main:true,f:()=>{const S=getState();const fromLv=S.lv;S.lv=targetLevel;applyDemotionSalary(fromLv,targetLevel);board(2);reportFlowOutcome({kind:'DEMOTION_ACCEPTED'});}},...alts]);
-        }else{ const fromLv=S.lv;S.lv=targetLevel;applyDemotionSalary(fromLv,targetLevel);card('bad','降格通告',`成績が基準に届かず、<b class="dn">${LV[targetLevel].n}</b>への降格が決まった。`); board(2); reportFlowOutcome({kind:'DEMOTION_ACCEPTED'}); }
+            {t:LV[targetLevel].n+'への降格を受け入れる',main:true,f:()=>{const S=getState();const fromLv=S.lv;S.lv=targetLevel;reconcileAmericanCareer(S);applyDemotionSalary(fromLv,targetLevel);board(2);reportFlowOutcome({kind:'DEMOTION_ACCEPTED'});}},...alts]);
+        }else{ const fromLv=S.lv;S.lv=targetLevel;reconcileAmericanCareer(S);applyDemotionSalary(fromLv,targetLevel);card('bad','降格通告',`成績が基準に届かず、<b class="dn">${LV[targetLevel].n}</b>への降格が決まった。`); board(2); reportFlowOutcome({kind:'DEMOTION_ACCEPTED'}); }
       }
       else outOfOrg(o);
     };
@@ -251,6 +252,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
   }
   function movement(){
     const S=getState();
+    reconcileAmericanCareer(S);
     const o=ovr();
     /* プロ。 */
     if(isBelowActiveMinimum(o)){
@@ -260,9 +262,9 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
     if(S.skipMid){if(contractNeedsRenewal(S.ct))markClubInitiatedRenewal(1);reportFlowOutcome({kind:'REHAB_YEAR_COMPLETED'});return;} /* リハビリ全休年も満了契約の来季更新を飛ばさない。 */
     if(S.org==='NPB')S.npbYears++;
     if(LV[S.lv].top){ /* 轉換リーグ：直接解除球団 5 年控制期制限、往後のみ要契約満了就是自由球員。 */
-      if(S.svcOrg && S.svcOrg!==S.org){ S.faElig=true; }
+      if(S.org!=='MLB'&&S.svcOrg && S.svcOrg!==S.org){ S.faElig=true; }
       S.svcOrg=S.org;
-      S.svc=(S.svc||0)+1; if(S.svc>=5)S.faElig=true;
+      S.svc=(S.svc||0)+1; if(S.org==='MLB')S.faElig=contractStageFor('MLB')!=='CONTROL';else if(S.svc>=5)S.faElig=true;
     }
     /* 神主牌：同一球団での連続在籍年数(移籍でリセット、見 doTrade/signTo)。 */
     if(S.stage==='PRO'&&LV[S.lv].top){ S.teamYears=(S.teamYears||0)+1;
@@ -322,7 +324,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
         if(idx<path.length-2){ const nx2=path[idx+2];
           if(o>=LV[nx2].min+2&&(S.lastD||0)>=4)to=nx2; }
         const fromLv=S.lv;
-        S.lv=to; applyPromotionSalary(fromLv,to); card('good','昇格通知',`活躍が評価され、${to!==nx?'<b class="hl">二段階昇格</b>':'昇格'}！ 新天地は<b class="hl">${LV[to].n}</b>。`); board(2);
+        S.lv=to; reconcileAmericanCareer(S); applyPromotionSalary(fromLv,to); card('good','昇格通知',`活躍が評価され、${to!==nx?'<b class="hl">二段階昇格</b>':'昇格'}！ 新天地は<b class="hl">${LV[to].n}</b>。`); board(2);
         if(S.traits.yips){ removeTrait('yips','イップス'); card('good','イップス克服','本来の階級へ戻り、自分のリズムを取り戻した――<b class="hl">イップスを克服した</b>。'); } } }
     if(!S.ct)throw new Error('PRO_PLAYER_WITHOUT_CONTRACT');
     /* 所属球団との延長交渉は複数年契約の残り2年時点、または最終契約の残り1年で行う。 */

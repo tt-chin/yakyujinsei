@@ -16,8 +16,13 @@ const shared=['const ri=','const pick=','const chance=','const clamp=','const N0
   +between(old,'\nfunction pitcherRole(','\nfunction fmtIP(')+'\n'+line(old,/^function isSP\(\).*$/m)+'\n';
 const levels=vm.runInNewContext('('+old.match(/Object.assign\(LV,(\{[\s\S]*?\})\);/)[1]+')');
 const oldFunctions=line(old,/^function blankStat\(\).*$/m)+'\n'+between(old,'\nfunction simSeason(','\nfunction statLine(');
-const delegates=NAMES.map(n=>line(current,new RegExp('^function '+n+'\\(.*$','m'))).join('\n');
-assert.ok(NAMES.every(n=>delegates.includes('return seasonStats.'+n+'(')),'game.js keeps one-line delegates');
+// OOP plan §2ww: blankStat/applySeasonForm/defRuns/addStatTotal have no game.js caller; the new side calls the
+// SeasonStats methods directly through test-local names, so both sides run the same code strings.
+const MODULE_ONLY=['blankStat','applySeasonForm','defRuns','addStatTotal'];
+const delegates=NAMES.filter(n=>!MODULE_ONLY.includes(n)).map(n=>line(current,new RegExp('^function '+n+'\\(.*$','m'))).join('\n');
+assert.ok(NAMES.filter(n=>!MODULE_ONLY.includes(n)).every(n=>delegates.includes('return seasonStats.'+n+'(')),'game.js keeps one-line delegates');
+assert.ok(MODULE_ONLY.every(n=>typeof SeasonStats.prototype[n]==='function'),'SeasonStats exposes the module-only methods');
+const moduleCalls=MODULE_ONLY.map(n=>`function ${n}(...a){return seasonStats.${n}(...a);}`).join('\n');
 const wiring=line(current,/^const seasonStats=new SeasonStats\(.*$/m);
 // OOP plan §2i (7-A): addIntlStats joined SeasonStats; its game.js line is the same in ffb9e32 and 34ed23c.
 const oldIntl=line(old,/^  function addIntlStats\(\).*$/m);
@@ -29,7 +34,7 @@ function side(kind,state,seq){
   const ctx=vm.createContext({S:structuredClone(state),LV:levels,SeasonStats,draws,
     R:()=>{const v=seq[i++%seq.length];draws.push(v);return v;},
     checkGoldclothSeason:()=>{gold.push(ctx.S.statsByLevel?.NPB1?.yr??null);}});
-  vm.runInContext(shared+(kind==='old'?oldFunctions+'\n'+oldIntl:wiring+'\n'+delegates+'\n'+intlDelegate),ctx);
+  vm.runInContext(shared+(kind==='old'?oldFunctions+'\n'+oldIntl:wiring+'\n'+delegates+'\n'+moduleCalls+'\n'+intlDelegate),ctx);
   return {ctx,draws,gold,run:code=>vm.runInContext(code,ctx)};
 }
 const lcg=seed=>{let x=seed>>>0;return Array.from({length:97},()=>((x=Math.imul(x,1664525)+1013904223>>>0)/4294967296));};

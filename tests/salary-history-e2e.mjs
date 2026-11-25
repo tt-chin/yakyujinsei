@@ -48,7 +48,9 @@ const checkLayout=async(panel,p,width)=>{
   await items.first().scrollIntoViewIfNeeded();assert.ok(await items.first().isVisible());
   await items.last().scrollIntoViewIfNeeded();assert.ok(await items.last().isVisible());
   assert.ok(await items.last().evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}));
-  assert.ok(await p.evaluate(()=>document.scrollingElement.scrollTop>0));
+  const scroll=await p.evaluate(()=>{const desktop=matchMedia('(min-width:1100px) and (min-height:700px)').matches;return{desktop,document:document.scrollingElement.scrollTop,reading:document.getElementById('view-host').scrollTop};});
+  assert.ok((scroll.desktop?scroll.reading:scroll.document)>0,'last history item reached using the active reading scroll container: '+JSON.stringify(scroll));
+  if(scroll.desktop)assert.equal(scroll.document,0,'desktop shell does not scroll the document');
   assert.ok(await panel.evaluate(e=>getComputedStyle(e).maxHeight==='none'&&e.scrollHeight<=e.clientHeight+1));
   assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await p.screenshot({path:path.join(shots,(arg('preview')?'preview-':'local-')+width+'.png')});

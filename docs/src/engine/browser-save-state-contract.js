@@ -382,6 +382,9 @@ export const SAVE_STATE_CONTRACT = {
     "ironStreak": [
       "number"
     ],
+    "jerseyHistory": [
+      "array"
+    ],
     "lastArbitration": [
       "null",
       "object"

@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {execFileSync} from 'node:child_process';
 import * as defensePolicy from '../docs/src/engine/defense-position-policy.js';
 import * as abilityPolicy from '../docs/src/engine/ability-evaluation-policy.js';
+import {PlayerProfile} from '../docs/src/engine/player-profile.js';
 
 const game=fs.readFileSync(new URL('../docs/src/engine/game.js',import.meta.url),'utf8');
 const ability=fs.readFileSync(new URL('../docs/src/engine/player-ability.js',import.meta.url),'utf8');
@@ -26,10 +27,11 @@ assert.match(ability,/if\(cur>=pk\)cost\*=isP\?4:3/);
 // OOP §2l phase 10: f4a2894 toolGap/ovr/playerType/abCost vs current wrappers + ability-evaluation-policy.
 const abBaseline=execFileSync('git',['show','f4a289422e76591b17106ec07cf87c61170fa246:docs/src/engine/game.js'],{encoding:'utf8'});
 // Phase 42 (§2tt) moved dpScore into DefensePosition: the baseline still needs it, the current block must not reference it.
+// Phase 43 (§2uu) moved the wrapper bodies into PlayerProfile: the current block keeps the wrappers and constructs PlayerProfile in the vm.
 const abBlock=(source,{dpScore=true}={})=>[...(dpScore?[/^function dpScore\(.*$/m.exec(source)[0]]:[]),source.slice(source.indexOf('function toolGap('),source.indexOf('function tjAccrue(')),source.slice(source.indexOf('function ovr('),source.indexOf('function addAb('))].join('\n');
-const abContext=(source,opts)=>{const c=vm.createContext({...defensePolicy,...abilityPolicy,S:null});vm.runInContext(abBlock(source,opts)+'\nconst run=f=>{try{return f();}catch(e){return "E:"+e.constructor.name+":"+e.message;}};function cell(keys){const before=JSON.stringify(S),r={ovr:run(ovr),type:run(playerType),gap:run(toolGap),cost:keys.map(k=>run(()=>abCost(k)))};return JSON.stringify({r,unchanged:before===JSON.stringify(S)});}',c);return c;};
-const abOld=abContext(abBaseline),abNew=abContext(game,{dpScore:false});
-assert.match(abBlock(abBaseline),/const a=S\.ab;/);assert.match(abBlock(game,{dpScore:false}),/return overallRatingFor\(/);
+const abContext=(source,opts)=>{const c=vm.createContext({...defensePolicy,...abilityPolicy,PlayerProfile,S:null});vm.runInContext((opts?.profile?'const playerProfile=new PlayerProfile({getState:()=>S});\n':'')+abBlock(source,opts)+'\nconst run=f=>{try{return f();}catch(e){return "E:"+e.constructor.name+":"+e.message;}};function cell(keys){const before=JSON.stringify(S),r={ovr:run(ovr),type:run(playerType),gap:run(toolGap),cost:keys.map(k=>run(()=>abCost(k)))};return JSON.stringify({r,unchanged:before===JSON.stringify(S)});}',c);return c;};
+const abOld=abContext(abBaseline),abNew=abContext(game,{dpScore:false,profile:true});
+assert.match(abBlock(abBaseline),/const a=S\.ab;/);assert.match(abBlock(game,{dpScore:false}),/return playerProfile\.overall\(\);/);assert.match(fs.readFileSync(new URL('../docs/src/engine/player-profile.js',import.meta.url),'utf8'),/return overallRatingFor\(/);
 const abKeys=['sta','vel','ctl','brk','con','pow','spd','eye','rng','fld','arm','cat'],abUniform=v=>Object.fromEntries(abKeys.map(k=>[k,v]));
 const abCell=(c,state)=>{c.S=structuredClone(state);return c.cell(abKeys);};
 let abSeed=20261024;const abNext=()=>(abSeed=(Math.imul(abSeed,1664525)+1013904223)>>>0)%46+30;

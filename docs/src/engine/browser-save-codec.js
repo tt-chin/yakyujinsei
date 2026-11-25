@@ -1,12 +1,16 @@
 import {captureCompletedAwardProofs} from './award-transaction-policy.js';
 import {VERSION} from '../config.js';
 import {SAVE_STATE_CONTRACT} from './browser-save-state-contract.js';
+import {isValidJerseyHistory} from './jersey-policy.js';
+import {JP_DATA} from '../data/jp-data.js';
 // Annual-start data contract. Captured proof ownership is checked before sealing.
 export const SAVE_LIMITS=Object.freeze({bytes:2*1024*1024,depth:32,arrayLength:1024,nodes:131072});
 export const SAVE_COMPATIBILITY='year-start-v2-auth';
 const captures=new WeakMap();
 const blocked=new Set(['__proto__','prototype','constructor']);
 const fail=code=>{throw Object.assign(new Error(code),{code});};
+// PLY-01: jersey records name professional teams only (W6).
+const JERSEY_TEAM_IDS=new Set(JP_DATA.teams.filter(t=>!['CORP','IND'].includes(t.org)).map(t=>t.teamId));
 // Preserve shared references, but reject cycles and executable/host objects.
 export function copySaveData(value,{stateRoot=false}={}){
  const copies=new WeakMap(),active=new WeakSet();let estimated=0,nodes=0;
@@ -59,12 +63,13 @@ export function validateSaveEnvelope(input){
  for(const k of SAVE_STATE_CONTRACT.required)if(!Object.hasOwn(s,k))fail('SAVE_MISSING_FIELD');
  for(const [k,allowed]of Object.entries(SAVE_STATE_CONTRACT.types)){if(!Object.hasOwn(s,k))continue;const v=s[k],type=v===null?'null':Array.isArray(v)?'array':typeof v;if(!allowed.includes(type))fail('SAVE_FIELD_TYPE');}
  for(const k of ['year','age','stageYr'])if(!Number.isSafeInteger(s[k])||s[k]<0||c[k]!==s[k])fail('SAVE_YEAR');
+ if(Object.hasOwn(s,'jerseyHistory')&&!isValidJerseyHistory(s.jerseyHistory,{year:s.year,teamExists:id=>JERSEY_TEAM_IDS.has(id)}))fail('SAVE_JERSEY');
  if(s.championmakerAcquiredYear!==null&&(!Number.isSafeInteger(s.championmakerAcquiredYear)||s.championmakerAcquiredYear<1||s.championmakerAcquiredYear>s.year))fail('SAVE_CHAMPION_YEAR');
  if(s.year<1||s.year>9999||s.done!==false)fail('SAVE_STATE');
  if(!Number.isInteger(s.rngState)||s.rngState<0||s.rngState>0xffffffff)fail('SAVE_RNG');
  if(!['P','C','IF','OF'].includes(s.pos)||!['HS','U','CORP','IND','PRO'].includes(s.stage)||!['HS','U','CORP','IND','NPB1','NPB2','NPB_DEV','KBO1','KBO2','CPBL1','CPBL2','MLB','R','A1','A2','A3'].includes(s.lv))fail('SAVE_ROUTE');
  const amateur={HS:'AMATEUR',U:'AMATEUR',CORP:'CORP',IND:'IND'};const org=s.lv.startsWith('NPB')?'NPB':s.lv.startsWith('KBO')?'KBO':s.lv.startsWith('CPBL')?'CPBL':['R','A1','A2','A3'].includes(s.lv)?'MiLB':null;
- if(Object.hasOwn(amateur,s.lv)){if(s.stage!==s.lv||s.org!==amateur[s.lv])fail('SAVE_ROUTE_IDENTITY');}else if(s.stage!=='PRO'||(s.lv==='MLB'?!['MLB','MiLB'].includes(s.org):s.org!==org))fail('SAVE_ROUTE_IDENTITY');
+ if(Object.hasOwn(amateur,s.lv)){if(s.stage!==s.lv||s.org!==amateur[s.lv])fail('SAVE_ROUTE_IDENTITY');}else if(s.stage!=='PRO'||(['MLB','R','A1','A2','A3'].includes(s.lv)?!['MLB','MiLB'].includes(s.org):s.org!==org))fail('SAVE_ROUTE_IDENTITY');
  if(typeof s.name!=='string'||typeof s.seed!=='string'||!s.seed||!s.ab||!s.pot||!s.traits||!Array.isArray(s.log))fail('SAVE_REQUIRED');
  const keys=s.pos==='P'?['sta','vel','ctl','brk']:['sta','con','pow','spd','eye','rng','fld','arm',...(s.pos==='C'?['cat']:[])];
  for(const field of ['ab','pot']){if(keys.some(k=>typeof s[field][k]!=='number')||Object.values(s[field]).some(v=>typeof v!=='number'||!Number.isFinite(v)))fail('SAVE_ABILITY');}

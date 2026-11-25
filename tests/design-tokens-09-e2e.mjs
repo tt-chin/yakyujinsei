@@ -1,4 +1,11 @@
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
+import {readSourceText} from './support/source-text.mjs';
+// UI 2.0 intentionally replaces the board/sidebar layout. Keep this historical
+// spacing-migration oracle on its last accepted UI runtime, comparing today's
+// shared CSS against f8afd8e's independently rewritten values. The new shell
+// stylesheet is absent from that frozen HTML. Current runtime/layout is tested
+// separately by ui-redesign-shell-e2e; this suite is no longer that evidence.
+const spacingRuntime='ad8e77f53ede29de6a51c23708b2370eed7b414d';
 // UI-DESIGN-TOKENS-09 (tasks/DESIGN_SYSTEM_PLAN.md §17.8 T2): px margin/padding/gap became the 12 --space-* steps (§17.3
 // W8: nearest step, ties go down; W12 = A: a declaration with calc()/var()/env(), auto or a negative value stays whole).
 // The fixed pre-change tree (f8afd8e) is served with every such px literal in its stylesheets rewritten to the mapped px
@@ -32,13 +39,40 @@ const SP=/^(margin|padding|gap|row-gap|column-gap)(-(top|right|bottom|left|inlin
 function rewrite(css){return css.replace(/([{;]\s*)([a-z-]+)(\s*:\s*)([^;{}]+)/g,(all,pre,prop,colon,val)=>{
   if(!SP.test(prop)||/\(|(^|\s)-\d|\bauto\b/.test(val))return all;
   return pre+prop+colon+val.replace(/(^|\s)(\d+)px(?=\s|$|!)/g,(t,sp,px)=>sp+(MAP09[px]??px)+'px');});}
+// Approved 1.16.14 home-only delta: an independent fixed reference for the new name row.
+const oldNameField='<div class="field"><label>選手名</label><input id="in-name" maxlength="10" placeholder="例：山田太郎" value=""></div>';
+const nameField='<div class="field"><label for="in-name">選手名</label><div class="player-name-row"><input id="in-name" maxlength="10" placeholder="例：山田太郎" value=""><button type="button" class="btn random-name-button" id="btn-random-name" aria-label="名前をランダムに生成" title="名前をランダムに生成" disabled><span aria-hidden="true">🎲</span></button></div></div>';
+assert.ok((await readFile(path.join(root,'docs/index.html'),'utf8')).includes(nameField),'exact approved new name markup');
+const nameCss='.player-name-row{display:flex;align-items:stretch;gap:8px}.player-name-row input{flex:1;min-width:0}.random-name-button{flex:0 0 44px;min-width:44px;min-height:44px;margin-top:0;padding:0;text-align:center;font-size:var(--fs-5xl)}.random-name-button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}.random-name-button:disabled{opacity:.6;cursor:default}';
+// Approved header paint delta (235fd22827478884ad4a5b046002e62eb326ffe0).
+// Independent fixed expectations on the old side, not CSS copied from the candidate.
+// Keep all color/border/geometry comparisons active, and fail if these declarations drift.
+const headerPaintRules=[
+  '#board{background-color:var(--panel);background-image:linear-gradient(color-mix(in srgb,var(--panel) 88%,transparent),color-mix(in srgb,var(--panel) 88%,transparent)),url(\'../assets/escon-background/escon-desktop.webp\');background-position:center 65%;background-size:cover;background-repeat:no-repeat}',
+  '#board #bd-period,#board #bd-name small{color:var(--chalk)}',
+  '#board{background-image:linear-gradient(color-mix(in srgb,var(--panel) 88%,transparent),color-mix(in srgb,var(--panel) 88%,transparent)),url(\'../assets/escon-background/escon-mobile.webp\');background-position:center 75%}'
+];
+const stadiumCss=readSourceText(path.join(root,'docs/styles/stadium-background.css'));
+for(const rule of headerPaintRules)assert.equal(stadiumCss.split(rule).length,2,'exact approved header paint rule: '+rule);
+assert.ok(stadiumCss.includes('@media(max-width:699px){\n '+headerPaintRules[2]),'approved mobile header breakpoint');
+const headerPaintCss=headerPaintRules.slice(0,2).join('\n')+'\n@media(max-width:699px){'+headerPaintRules[2]+'}';
 const server=createServer(async(req,res)=>{try{
   const u=new URL(req.url,'http://localhost'),m=u.pathname.match(/^\/(old|new)-(P|IF)\//);if(!m)throw Error('route');
   const rel=decodeURIComponent(u.pathname.slice(m[0].length))||'index.html';if(rel.includes('..'))throw Error('path');
   if(rel==='favicon.ico'){res.writeHead(204);return res.end();}
   let body=m[1]==='old'?execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:30e6}):await readFile(path.join(root,'docs',rel));
-  if(rel==='src/engine/game.js')body=body.toString()+hook(m[2]);
+  if(m[1]==='new'&&(rel==='index.html'||rel.endsWith('.js')))body=execFileSync('git',['show',`${spacingRuntime}:docs/${rel}`],{cwd:root,maxBuffer:30e6});
+  if(m[1]==='new'&&rel==='styles/information.css'){
+    // Only the removed external-sidebars layout, as an explicit historical fixture.
+    const css=execFileSync('git',['show',`${spacingRuntime}:docs/${rel}`],{cwd:root,encoding:'utf8'});
+    const legacy=css.match(/@media\(min-width:1180px\)\{[\s\S]*?\n\}/);assert.ok(legacy);
+    body=body.toString()+'\n'+legacy[0];
+  }
+  if(m[1]==='old'&&rel==='index.html'){const text=body.toString();assert.equal(text.split(oldNameField).length,2);body=text.replace(oldNameField,nameField);}
+  if(rel==='src/engine/game.js')body=body.toString()+hook(m[2])+(m[1]==='old'?"document.getElementById('btn-random-name').disabled=false;":'');
   if(m[1]==='old'&&rel.startsWith('styles/')&&rel.endsWith('.css'))body=rewrite(body.toString());
+  if(m[1]==='old'&&rel==='styles/base.css')body=body.toString()+'\n'+nameCss;
+  if(m[1]==='old'&&rel==='styles/stadium-background.css')body=body.toString()+'\n'+headerPaintCss;
   const type={js:'text/javascript',css:'text/css',html:'text/html',png:'image/png',webp:'image/webp',svg:'image/svg+xml',woff2:'font/woff2'}[rel.split('.').pop()]||'application/octet-stream';
   res.writeHead(200,{'content-type':type+'; charset=utf-8'});res.end(body);
 }catch{res.writeHead(404);res.end();}});
@@ -81,6 +115,20 @@ async function compare(pages,label,roots){
   const W=pages.new.viewportSize().width;const counted=await pages.new.evaluate(([rules,roots,W])=>rules.map(r=>{if(r.startsWith('@360 ')){if(W>360)return 0;r=r.slice(5);}return roots.reduce((n,q)=>{const el=document.querySelector(q);if(!el)return n;return n+(el.matches(r)?1:0)+el.querySelectorAll(r).length;},0)}),[RULES,roots,W]);
   RULES.forEach((r,i)=>hits[r]+=counted[i]);
 }
+// UI redesign phase 1 intentionally replaces the home tree and layout. Historical
+// equality remains mandatory for every in-game root below. Home now uses the
+// approved behavior/layout contract rather than the obsolete 41-element tree.
+async function redesignedHome(page,label){
+ for(const c of combos){
+  await page.evaluate(c=>{const r=document.documentElement;r.dataset.theme=c.theme;r.dataset.fontSize=c.fontSize;r.dataset.density=c.density;},c);
+  const result=await page.evaluate(()=>{
+   const rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
+   return {position:getComputedStyle(document.getElementById('start')).position,overflow:document.documentElement.scrollWidth>innerWidth,card:rect(document.getElementById('home-create')),input:rect(document.getElementById('in-name')),dice:rect(document.getElementById('btn-random-name')),buttons:[...document.querySelectorAll('.start-information button')].map(e=>({text:e.textContent,...rect(e)})),seedInSettings:!!document.querySelector('#home-settings #seed-show'),versionOutsideTitle:!document.querySelector('h1 #app-version')&&!!document.querySelector('.home-title > #app-version')};
+  });
+  const at=label+' '+JSON.stringify(c);assert.equal(result.position,'relative',at+' natural page flow');assert.equal(result.overflow,false,at+' no page overflow');assert.ok(result.card.w<=560.1&&result.card.x>=0,at+' card bounds');assert.ok(result.input.w>0&&result.dice.w>=44&&result.dice.h>=44,at+' name controls');assert.equal(result.seedInSettings,true);assert.equal(result.versionOutsideTitle,true);assert.deepEqual(result.buttons.map(b=>b.text),['表示設定','遊び方','更新履歴','クレジット']);assert.equal(result.buttons[0].y,result.buttons[1].y);assert.equal(result.buttons[2].y,result.buttons[3].y);assert.ok(result.buttons[0].y<result.buttons[2].y&&result.buttons.every(b=>b.h>=44),at+' 2x2 touch targets');
+ }
+ const counted=await page.evaluate(rules=>rules.map(r=>r.startsWith('@360 ')?0:document.getElementById('start').querySelectorAll(r).length),RULES);RULES.forEach((r,i)=>hits[r]+=counted[i]);
+}
 let failure=null;
 try{
   const dlgFix=()=>{const b=document.getElementById('salary-detail-body');const add=h=>{const d=document.createElement('div');d.dataset.dt09='1';d.innerHTML=h;b.append(d);};
@@ -89,7 +137,7 @@ try{
   const viewFix=()=>{for(const [id,html] of [['player-content','<div class="ui-stat-level">検証</div><table class="ui-yearly-table"><tr><th>年</th><td>2026</td></tr></table>'],['career-content','<div class="contract-yearly-salaries"><span>2026</span><span>0万</span></div>']]){const el=document.getElementById(id);if(!el.querySelector('[data-dt09]')){const d=document.createElement('div');d.dataset.dt09='1';d.innerHTML=html;el.append(d);}}};
   for(const width of [1280,390,360])for(const pos of (width===360?['P']:['P','IF'])){
     const pages={old:await open('old',pos,width),new:await open('new',pos,width)};
-    if(width!==360)await compare(pages,`home ${pos}/${width}`,['#start']);
+    if(width!==360)await redesignedHome(pages.new,`home ${pos}/${width}`);
     const clicks={};
     for(const v of ['old','new']){const p=pages[v];
       await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#in-name').fill('画面回帰');await p.locator('#btn-start').click();
