@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 // One entry per executable; wider profiles replace, rather than repeat, quick runs.
 const browserProfiles = {
-  'american-service-e2e': {quick:[],seconds:90,reason:'Native US org/level, service accrual and actual arbitration/FA boundaries; exact declared deltas vs fixed pre-fix source, unchanged direct MLB and NPB/KBO/CPBL state/RNG, signing/trade/promotion/renewal.'},
+  'american-service-e2e': {quick:[],seconds:90,reason:'Native US org/level, service accrual and actual arbitration/FA boundaries; exact declared deltas vs fixed pre-fix source, exact FA entry vs b8bc49, same-league candidate deltas only after entry, cache/no reroll, signing/trade/promotion/renewal.'},
   'season-summary-e2e': {quick:[],seconds:90,reason:'Exact-year unified season income/contract UI: native payment, promotion/demotion/renewal/transfer/retirement, raw complete S/RNG vs frozen pre-change source, historical isolation and mobile/theme/font layouts.'},
   'fa-market-presentation-e2e': {quick:[],seconds:120,reason:'Read-only FA table/sorting/card navigation, retained native choice handlers and exact frozen-baseline state/RNG before and after signing; zero offers unchanged.'},
   'ui-redesign-review-e2e': {quick:['--fixtures-only'],seconds:240,reason:'UI phase 5: native P/IF season and retirement summaries, 128 layouts, missing/signed salary and original DOM/state/RNG; two frozen-phase-4 natural careers in the complete entry.'},
@@ -15,6 +15,7 @@ const browserProfiles = {
   'hof-retirement-policy-e2e': {seconds:180,reason:'Approved HOF-only deltas: full pre-retirement S/choice/RNG equality, P/IF deterministic replay and frozen-rule retirement oracle, no blanket ignore.'},
   'browser-save-store-e2e': {quick:[],seconds:15,reason:'Real IndexedDB revision, quota and stale-write fault checks.'},
   'browser-save-runtime-e2e': {quick:[],seconds:40,reason:'Real reload S/RNG, first-step failure/retry, two tabs and unavailable storage UI.'},
+  'home-year-history-e2e': {seconds:300,reason:'Two long careers, native fixed-seed old/current comparison, legacy v2 load, v3 annual history and historical salary links on mobile/desktop.'},
   'browser-save-routes-e2e': {seconds:600,reason:'Every annual checkpoint in two natural and thirteen controlled career routes, exact S/RNG after real reload.'},
   'information-dialog-e2e': {seconds:90,reason:'Shared help/update dialog: fixed regions, custom indicator, viewport/content resizing, scroll lock, focus and observer cleanup across mobile/desktop; no full-career replay.'},
   'income-display-e2e': {seconds:40,reason:'Native read-only income summary/detail/retirement/canvas, 30 role/viewport/financial fixtures with exact S/RNG checks.'},
@@ -56,7 +57,7 @@ const browserProfiles = {
   'championship-intl-e2e': {args:['--ui-only'], seconds:30},
 };
 const nonTests = {
-  'support/ui-version-comparison.mjs': ['support','Require unified 2.0.0 state and birth version stamps; retain complete snapshots including all metadata, gameplay and RNG.'],
+  'support/ui-version-comparison.mjs': ['support','Require current release state and birth version stamps; validate frozen 2.0.0 config alignment in UI-only comparisons; retain complete snapshots including all metadata, gameplay and RNG.'],
   'support/reader-disclosure.mjs': ['support','Native summary click and visible original body with complete state/RNG invariance; no forced DOM changes or archived-description bypass.'],
   'support/allocation-comparison.mjs': ['support','Validates phase-4 allocation presentation before legacy action/choice/text comparisons. Original states, RNG and historical baselines remain strict.'],
   'support/decision-dom-comparison.mjs':['support','Validates approved phase-3 reader wrappers, committed event effects and decision metadata before reconstructing historical DOM; no S/RNG projection.'],

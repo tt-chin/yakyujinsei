@@ -1,3 +1,4 @@
+import {projectLegacyYearHistory} from './support/dom-snapshot.mjs';
 import {allocationComparisonHook} from './support/allocation-comparison.mjs';
 import {TEAM_NICKNAMES} from '../docs/src/data/team-nicknames.js';
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
@@ -25,6 +26,7 @@ const modulePath=process.argv.find(v=>v.startsWith('--playwright='))?.slice(13);
 const require=createRequire(import.meta.url),{chromium}=require(modulePath||'playwright');
 const preview=process.argv.find(v=>v.startsWith('--preview='))?.slice(10);
 const baselineRef=process.argv.find(v=>v.startsWith('--baseline='))?.slice(11)||'8dd244b';
+const baselineYearHistory=Boolean(execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/year-history.js'],{cwd:root,encoding:'utf8'}).trim());
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
 const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/ability-evaluation-policy.js`],{cwd:root}).toString().includes('発展途上型');
 // Only pre-1.16 HOF baselines need the historical display projection.
@@ -35,6 +37,7 @@ const legacyHofProjection=!baselineHof.includes("from './hof-evaluation-policy.j
 const eventBadge=!execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/event-category-badge.js'],{cwd:root,encoding:'utf8'}).trim();
 // PLY-01 (jersey numbers): baselines without #bd-number get the approved number projection on the candidate side only.
 const jersey=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('id="bd-number"');
+const baselineDecisionPresentation=!!execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/decision-presentation.js'],{cwd:root,encoding:'utf8'}).trim();
 let hofOracleRequests=0;
 const server=createServer(async(req,res)=>{
   try{
@@ -53,7 +56,9 @@ const server=createServer(async(req,res)=>{
     }
     if(relative==='src/engine/game.js'){
       let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls')+allocationComparisonHook;
-      if(!baseline)script+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
+      if(!baseline&&!baselineYearHistory)script+=`
+window.__displayLegacyYearLog=()=> (${projectLegacyYearHistory.toString()})(gameView.yearHistory,document.getElementById('log'));`;
+      if(!baseline||baselineDecisionPresentation)script+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
       script+='\nwindow.__approvedMrTeamNames='+JSON.stringify(TEAM_NICKNAMES)+';window.__displayMrPair=()=>{if(!S.traits.mrteam)return null;const expected=\'ミスター\'+(typeof S.mrTeamName===\'string\'&&Object.hasOwn(window.__approvedMrTeamNames,S.mrTeamName)?window.__approvedMrTeamNames[S.mrTeamName]:\'\');if(displayTrait(\'mrteam\')!==expected)throw Error(\'MR_COPY_CONTRACT\');return[expected,teamNick(S.mrTeamName||\'\')+\'ミスター\'];};window.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
       if(!baseline&&legacyHofProjection)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScoreFor(S.stats[b],S.pos),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       content=script;
@@ -113,7 +118,7 @@ try{
   assert.equal(await page.locator('#act').evaluate(el=>el.innerHTML),act);
   for(const tab of ['player','career','home']){await page.locator(`[data-main-view="${tab}"]`).click();await openBoardAction(page,'board-preferences');await setPreferences(page,'night','large','compact');await page.locator('#preferences-close').click();assert.equal(await page.locator(`[data-main-view="${tab}"]`).getAttribute('aria-current'),'page');}
   // Exercise retained training DOM/listeners after a touch-based setting change.
-  for(let i=0;i<10&&await page.locator('#act .abrow').count()===0;i++)await page.locator('#act button:not(:disabled)').first().click();
+  for(let i=0;i<10&&await page.locator('#act .abrow').count()===0;i++)await page.locator('#act button:not([data-fa-sort]):not(:disabled)').first().click();
   assert.ok(await page.locator('#act .abrow').count()>0,'training allocation reached');
   await page.locator('#act .abrow[aria-disabled="false"]').first().click();
   const trainingMarkup=await page.locator('#act').evaluate(el=>el.innerHTML);
@@ -178,13 +183,13 @@ try{
           }
           const result=await p.evaluate(({labels,texts,copySource,badgeSource,jerseySource})=>{
             // PLY-01: the year-start number prompt is the only approved new step; confirm it with its main button, unrecorded.
-            const jb=[...document.querySelectorAll('#act button')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.innerText.trim()));if(jb){jb.click();return {skip:true};}
+            const jb=[...document.querySelectorAll('#act button:not([data-fa-sort])')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.innerText.trim()));if(jb){jb.click();return {skip:true};}
             const snapshot=window.__displayRegression();delete snapshot.state.version;if(snapshot.state.birthHighSchool)delete snapshot.state.birthHighSchool.createdVersion;
             for(const r of Object.values(snapshot.state.intlTraitResults||{}))delete r.personalStats;
             const action=document.querySelector('#act');
             // Compare all non-trait copy and full S/RNG. Only the approved trait
             // explanation lifetime/summary changes are normalized on a detached clone.
-            let log=document.querySelector('#log').cloneNode(true);
+            let log=window.__displayLegacyYearLog?.()??document.querySelector('#log').cloneNode(true);
             if(window.__projectDecisionPresentation){const template=document.createElement('template');template.innerHTML=window.__projectDecisionPresentation(log.outerHTML,'log',snapshot.state);log=template.content.firstElementChild;}
             const removeBadges=badgeSource?eval('('+badgeSource+')'):null;if(removeBadges)removeBadges(log);
             // #act stays live (innerText needs layout): strip the one verified title badge from the text only.
@@ -215,7 +220,7 @@ try{
             const state={...snapshot,text:(copySource?eval('('+copySource+')')(log.textContent,window.__displayMrPair()):log.textContent).replace(/\s+/g,''),choices};
             if(snapshot.state.done)return {state,done:true,pro,jerseyCounts};
             const rows=[...action.querySelectorAll('.abrow')].filter(el=>el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('capped'));
-            const buttons=[...action.querySelectorAll('button')].filter(el=>!el.disabled&&!/元に戻す|すべてリセット/.test(el.innerText));
+            const buttons=[...action.querySelectorAll('button:not([data-fa-sort])')].filter(el=>!el.disabled&&!/元に戻す|すべてリセット/.test(el.innerText));
             const button=buttons.find(el=>el.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(el=>/配分を確定|配分完了|次へ|完了/.test(el.innerText))||buttons.find(el=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(el.innerText))||buttons[0];
             if(!button)throw new Error('No actionable choice');
             button.click();return {state,done:false,pro,jerseyCounts};
@@ -226,9 +231,9 @@ try{
           if(result.done)break;
           if(step===1999)throw new Error(`Career did not finish: ${seed}`);
         }
-        // PLY-01 projection contract: the baseline never shows the prompt; the candidate shows it exactly when the career is professional and every projection ran.
-        if(variant==='baseline')assert.equal(jerseyTotals.skips,0,'baseline has no number step');
-        else if(jersey){assert.equal(jerseyTotals.skips>0,jerseyTotals.pro>0,seed+' number step appears exactly when the career reaches a professional team');if(jerseyTotals.pro>0){assert.ok(jerseyTotals.season>0&&jerseyTotals.table>0,seed+' number display projection ran');}}
+        // PLY-01: only pre-jersey baselines lack the prompt; modern baselines retain both sides and the existing projection checks.
+        if(variant==='baseline'&&jersey)assert.equal(jerseyTotals.skips,0,'pre-jersey baseline has no number step');
+        else{assert.equal(jerseyTotals.skips>0,jerseyTotals.pro>0,seed+' number step appears exactly when the career reaches a professional team');if(variant==='candidate'&&jersey&&jerseyTotals.pro>0){assert.ok(jerseyTotals.season>0&&jerseyTotals.table>0,seed+' number display projection ran');}}
         snapshots.push(records);await ctx.close();
       }
       assertSameCareer(historicalCareer(snapshots[1],{championmaker,franchiseProof:franchiseComparisonProof(snapshots[1])}),historicalCareer(snapshots[0]),`${seed} gameplay/RNG differs`);

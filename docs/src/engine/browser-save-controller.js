@@ -30,12 +30,12 @@ export class BrowserSaveController {
    this.#show(error.code==='SAVE_CONFLICT'?'別のタブでセーブデータが更新されました。上書きせずに停止しました。もう一度読み込んでください。':'新しい人生を始められませんでした。セーブデータは削除していません。もう一度読み込んでください。');return false;
   }
  }
- capture(state){
+ capture(state,readYearHistory){
   if(this.#restoring){this.#captured.set(state,state.year);return;}
   if(!this.state.writable||this.#captured.get(state)===state.year)return;
   const generation=this.#generation,careerId=this.state.careerId;
   this.#captured.set(state,state.year);
-  let snapshot;try{snapshot=createSaveEnvelope(state,{careerId,revision:this.state.revision,checkpointReady:true});}catch(error){console.warn('SAVE_CAPTURE_REJECTED',error.code||error.message);this.#show(this.#saveFailureMessage());return;}
+  let snapshot;try{snapshot=createSaveEnvelope(state,{careerId,revision:this.state.revision,checkpointReady:true,yearHistory:readYearHistory?.()});}catch(error){console.warn('SAVE_CAPTURE_REJECTED',error.code||error.message);this.#show(this.#saveFailureMessage());return;}
   const current=()=>generation===this.#generation&&this.state.writable&&careerId===this.state.careerId;
   this.#queue=this.#queue.then(async()=>{if(!current())return;try{const row=await this.#store.save(snapshot,this.state.revision,{isCurrent:current});if(!current())return;this.state.revision=row.revision;this.state.slot=row.save;this.#show(snapshot.checkpoint.year+'年の開始時点をセーブしました');}catch(error){if(!current())return;if(error.code==='SAVE_CONFLICT'){this.state.writable=false;++this.#generation;this.#store.cancelPendingWrites();this.#show('別のタブで進行状況が更新されました。このタブでは以後セーブされません。');}else{const quota=error.name==='QuotaExceededError'||error.code==='QuotaExceededError';if(!quota){this.state.writable=false;++this.#generation;this.#store.cancelPendingWrites();}this.#show(this.#saveFailureMessage()+(quota?'':'このタブでは以後セーブされません。'));}}});
  }

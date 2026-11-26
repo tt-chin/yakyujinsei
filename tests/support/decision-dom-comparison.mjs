@@ -48,9 +48,21 @@ export function projectDecisionPresentation(markup,area,state){
     const market=state.lastFaMarket,view=window.__phase3Pending(),wrapper=root.querySelector('[data-fa-comparison]');
     const offers=[...(market?.offers||[]),...(market?.stayOffer?[market.stayOffer]:[])],cards=[...root.querySelectorAll('.fa-offer-card')];
     if(view?.title!=='FA市場オファー比較'||!offers.length||cards.length!==offers.length||!wrapper)fail('FA_MARKET');
-    const field=wrapper.querySelector('select')?.value;if(!['annualSalary','years','guaranteedTotal'].includes(field))fail('FA_SORT');
+    const fields={annualSalary:'年俸',years:'年数',guaranteedTotal:'保証年俸総額'},legacySort=wrapper.querySelector('select');
+    let field=legacySort?.value,direction='descending';
+    if(!legacySort){
+      const headers=[...wrapper.querySelectorAll('thead th[data-fa-sort-header]')],active=headers.filter(th=>['ascending','descending'].includes(th.getAttribute('aria-sort')));
+      if(headers.length!==3||active.length!==1)fail('FA_SORT');field=active[0].dataset.faSortHeader;direction=active[0].getAttribute('aria-sort');
+      for(const [key,text] of Object.entries(fields)){
+        const th=headers.find(th=>th.dataset.faSortHeader===key),button=th?.querySelector('button'),indicator=button?.querySelector('.fa-sort-indicator'),selected=key===field;
+        if(!button||button.type!=='button'||button.dataset.faSort!==key||button.firstElementChild?.textContent!==text||th.getAttribute('aria-sort')!==(selected?direction:'none')||indicator?.getAttribute('aria-hidden')!=='true'||indicator.textContent!==(selected?(direction==='ascending'?'▲':'▼'):'▴▾')||button.getAttribute('aria-label')!==text+'を'+(selected&&direction==='descending'?'小さい順':'大きい順')+'に並べ替え')fail('FA_SORT');
+      }
+    }
+    if(!Object.hasOwn(fields,field))fail('FA_SORT');
     const rows=[...wrapper.querySelectorAll('tbody tr')],values=rows.map(r=>Number(r.dataset.faOfferIndex));
     if(rows.length!==offers.length||new Set(values).size!==offers.length||values.some(i=>!Number.isInteger(i)||i<0||i>=offers.length))fail('FA_ROWS');
+    const expectedOrder=offers.map((offer,index)=>({offer,index})).sort((a,b)=>{const x=a.offer[field],y=b.offer[field],valid=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0;return valid(x)!==valid(y)?valid(x)?-1:1:valid(x)&&x!==y?(direction==='ascending'?x-y:y-x):a.index-b.index;}).map(x=>x.index);
+    if(values.some((index,rank)=>index!==expectedOrder[rank])||cards.some((card,index)=>Number(card.style.order)!==expectedOrder.indexOf(index)))fail('FA_SORT_ORDER');
     for(const row of rows){const i=Number(row.dataset.faOfferIndex),offer=offers[i];if(row.querySelector('a')?.textContent!==view.opts[i].t)fail('FA_NAME');
       for(const cell of row.querySelectorAll('[data-fa-field]')){const key=cell.dataset.faField,value=offer[key],expected=Number.isFinite(value)&&value>=0?(key==='years'?value+'年':value.toLocaleString('ja-JP')+'円'):'詳細記録なし';if(cell.textContent!==expected)fail('FA_VALUE');}
     }
