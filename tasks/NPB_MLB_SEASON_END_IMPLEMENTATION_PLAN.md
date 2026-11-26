@@ -204,16 +204,18 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
 |---|---|---|
 | `game-view-dom-e2e`（8） | `jp3-pitcher-02`／P 第 232 步（2040）與 `4f39a73` 的 DOM 不同 | 已修正：第一個差異步須顯示基準該步沒有的已核准季末選項（ポスティング／韓台），之前嚴格；基準與現行背號步數比對只在無分歧時要求。本機 8／8 PASS |
 | `full-power-pitching-jp3-pitcher-02-e2e`（7） | 通常投球／省エネ投球 `same seed required for producer rename`（生涯長度不同） | 已修正：`seasonEndDivergence` 找第一個基準沒有的已核准季末選項，之前以 `assertApprovedProducerRenameCareer`（只容許 D2 名稱）＋RNG 數值嚴格比對。本機 3／3 PASS |
-| `international-personal-stats-e2e`（2） | `jp3-pitcher-02`／`-03`／`jp3-outfielder-01` 同上；`jp3-infielder-01` `FRANCHISE_NATIVE_GRANT_CONTRACT` | `seasonEndOpening` 同樣處理已改好，**尚未執行**；`jp3-infielder-01`（phoenixCase）待 11.2 |
-| `full-power-pitching-e2e`（5，`--part=fixtures`） | `S03-IF-unchanged` `FRANCHISE_NATIVE_GRANT_CONTRACT` | 待 11.2 |
+| `international-personal-stats-e2e`（2） | `jp3-pitcher-02`／`-03`／`jp3-outfielder-01` 同上；`jp3-infielder-01` `FRANCHISE_NATIVE_GRANT_CONTRACT` | 已修正：一般生涯以 `seasonEndOpening` 比到分歧點（`jp3-pitcher-02` 258、`-03` 173、`jp3-outfielder-01` 250，其餘全程）；`jp3-infielder-01` 依 11.2 有界 phoenix 比對。本機 50／50 PASS |
+| `full-power-pitching-e2e`（5，`--part=fixtures`） | `S03-IF-unchanged` `FRANCHISE_NATIVE_GRANT_CONTRACT` | 已修正（11.2）。本機 30／30 PASS |
 
 - `FRANCHISE_NATIVE_GRANT_CONTRACT`：新生涯 `jp3-infielder-01` 在 2048 年「今季の成績を見る」同一步奪冠並取得 franchise（`champThisTeam` false→true、`teamYears` 7→8），符合產品規則；`tools/development-b/historical-comparison.mjs` 的 `verifyFranchiseGrant` 假設奪冠在前一步，故丟例外。決定：不改共用工具，franchise 檢查只套用於分歧點之前。
 
-### 11.2 phoenix 自然路線（使用者決定採方案 (b)）
+### 11.2 phoenix 自然路線（2026-11-26 使用者決定：保留原 seed，比對到第一個新季末選單為止；取代原方案 (b)）
 
-- 問題：`assertApprovedPhoenixCareer`（`tests/support/first-difference.mjs`）要求 `jp3-infielder-01`／IF 於 2041 年首位打者自然觸發 phoenix，且現行生涯與「舊引擎＋`withApprovedPhoenixControl`」完全一致；寫死 seed、年度 2041、`2041 NPB首位打者`。新規則下該生涯 2040 年進入保有權年度（海外回歸），A1 使路線消失。
-- (a)（比對到 2040 年為止、phoenix 改依單元測試）未採用。(b)：另找 seed，在舊引擎＋已核准 phoenix 修補版上自然觸發 phoenix，且現行生涯全程不經新季末選單；兩測試的 phoenix 斷言改為以 seed 參數化（年度、稱號、位置）。`withApprovedPhoenixControl` 為原始碼通用修補，不綁 seed。
-- 掃描（2026-11-25，現行引擎，`international-personal-stats-e2e` 的 step 策略，IF，`phx-9`～`phx-370` 362 條完成、0 錯誤；之後 6 個 worker 卡在 `page.create` 約 88 分鐘，停止）：glass 122 條，phoenix 3 條：
+- 問題：`assertApprovedPhoenixCareer`（`tests/support/first-difference.mjs`）要求 `jp3-infielder-01`／IF 於 2041 年首位打者自然觸發 phoenix，且現行生涯與「舊引擎＋`withApprovedPhoenixControl`」全程一致。
+- **交接時的兩個前提有誤（2026-11-26 驗證）**：
+  1. `withApprovedPhoenixControl` 並非通用修補，條件寫死 `S.seed==='jp3-infielder-01'&&S.pos==='IF'&&S.year===2041&&x==='2041 NPB首位打者'`。候選 seed 第一輪的 approved 因此與 baseline 完全相同。
+  2. 2041 phoenix 路線沒有消失：現行引擎仍於 2041 第 265 步觸發（下一步「能力点を分配（8点）」）。第一個新季末選單在 2042（第 297 步「確定」後的 `現在の球団に残留`）；2041 的 `現在の球団に残留` 是既有選單，因 phoenix 分配後移 10 步。Full #289 的 `FRANCHISE_NATIVE_GRANT_CONTRACT` 是 `franchiseComparisonProof` 檢查全程時遇到 2048 franchise 取得所致；就算略過，全程一致比較也會在 2042 新選單失敗。
+- 原 (a)（比對到 2040 年為止、phoenix 改依單元測試）、(b)（另找 seed、全程不經新選單）不採用。
 
 | seed | glass | phoenix | 生涯中點選季末選項次數（含既有選單） |
 |---|---|---|---|
@@ -221,11 +223,23 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
 | `phx-207` | 2038（28 歲） | 2040 NPB1 首位打者 | 9 |
 | `phx-238` | 2041（31 歲） | 2043 NPB1 首位打者 | 5 |
 
-- 掃描器：未追蹤檔 `tests/_scan-phoenix-intl.mjs`（`international-personal-stats-e2e.mjs` 前 33 行＋平行掃描迴圈；`--seeds=a,b --pos=IF --conc=N --playwright=<shim>`，每 seed 輸出 `RES {seed,glass,phoenix,menus}`）。**不提交**；用完刪除。並行 6 會卡住，用 2～3 並監看 log 更新時間。
-- 下一步：
-  1. 每個候選 seed 以 `international-personal-stats-e2e` 的 phoenixCase 流程（baseline／current／approved／repeat）執行 `assertApprovedPhoenixCareer`：current 與 approved 全程一致、phoenix 為與 baseline 的第一個差異。可暫時把 `phoenixCase` 條件與 seed 清單改為候選 seed 試跑。
-  2. 合格者再以 `full-power-pitching-e2e` `S03-IF-unchanged`（`通常投球`）驗證；兩測試可用不同 seed。
-  3. 改寫 `assertApprovedPhoenixCareer` 的寫死值為參數（seed、pos、年度、稱號），兩測試傳入新 seed；`jp3-infielder-01` 仍保留於一般固定生涯（走 `seasonEndOpening`）。
-  4. 全不合格：降低並行數擴大掃描，必要時加 OF／C。
-  5. 本機個別執行 4 個入口（不用 Full profile），reviewer，commit／push `fix/season-end-full-compare`，開 PR 到 dev（繁中），以 Brave dispatch Full。BACKLOG／本節更新結果。
+- 掃描器（未追蹤檔 `tests/_scan-phoenix-intl.mjs`）已依使用者同意刪除。其 `menus` 欄含既有選單，不能判斷是否經過新選單。
+- 候選 seed 驗證（scratch worktree，control 暫時參數化）：三條全程都不合格。`phx-85` 在 phoenix 之前（2039 第 245 步）就遇到新選單；`phx-207`（2040 phoenix）、`phx-238`（2043 phoenix）的 phoenix 效果與 approved 一致，但之後分別在第 255、298 步遇到新選單。兩測試（策略相同）結果相同。IF 留在 NPB1 時，phoenix 後幾乎必定遇到新選單，全程一致不可行。
+- 實作（本分支，未 push）：
+  1. `first-difference.mjs`：新增 `APPROVED_PHOENIX_ROUTE`（`jp3-infielder-01`／IF／2041／`NPB首位打者`）；`withApprovedPhoenixControl(source,route)` 生成的原始碼與先前寫死版逐字相同。
+  2. `assertApprovedPhoenixCareer(...,route)`：以 `seasonEndOpening(expected,now)` 找出 approved 沒有的第一個 NPB1 季末選單的開啟步 k。有 k 時，current／approved 只比對 k 之前所有步、k 的 before-state（含 rngState）、`rngCallsBefore` 之前的 RNG 呼叫與 award 事件；baseline RNG 也截到同一長度；franchise 檢查只用於此範圍。current 與 repeat 仍全程一致。
+  3. `seasonEndOpening`／`rngCallsBefore`／`careerBefore` 從 helper export，`international-personal-stats-e2e`、`full-power-pitching-e2e` 的本地副本刪除後改 import。
+  4. reviewer 指出：舊引擎既有的韓台／残留選單文字相同，只比 label 會讓「同位置、文字不同的既有選單」被當成已核准差異而略過。改為 control 該位置只要是同年度季末選單就不算新選單。approved 第 298 步是 `トレーニング成果を割り振る`，路線仍成立。
+  5. 新增 `tests/season-end-opening.test.mjs`（22 個合成案例，自動列入 quick／full／audit）。
+- 本機驗證（macOS＋Brave 158，非 CI）：
+  - phoenix：第一個差異在第 265 步，opening 在第 297 步，比對 RNG 428 次。
+  - `international-personal-stats-e2e` 50／50、`full-power-pitching-e2e --part=fixtures` 30／30、`full-power-pitching-jp3-pitcher-02-e2e` 3／3、`game-view-dom-e2e` 8／8（未受第 4 項嚴格化影響）。
+  - 負向控制（scratch）：
+    - control 年度改 2042 → FAIL `the opening click is the control action`。這是 approved 失去 phoenix、既有選單錯位造成的，不是 phoenix 斷言本身攔下。
+    - 不設上限 → FAIL `FRANCHISE_NATIVE_GRANT_CONTRACT`。
+    - 上限 k+1 → FAIL `the opening click is the control action`。
+    - 恢復只比 label 的條件 → 單元測試 FAIL `control has a same-year choice with another label`。
+- 未處理（範圍外，待使用者決定）：`tests/contract-salary-e2e.mjs:13`、`tests/kbo-renewal-e2e.mjs:8` 也有同樣的「label 不同即放行」條件。
+- Quick 117 PASS（本機，含新單元測試）；reviewer 兩輪，第 2 輪無發現。
+- 下一步：commit／push `fix/season-end-full-compare`，開 PR 到 dev（繁中），以 Brave dispatch Full。BACKLOG 與本節同步更新結果。
 - 本機 E2E：Brave shim 依記憶 `local-e2e-brave-playwright` 重建（scratchpad 為對話專用）。

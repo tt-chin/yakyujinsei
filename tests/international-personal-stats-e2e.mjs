@@ -6,22 +6,15 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {routeHistoricalShareTheme,harness,arg,instrument} from './support/stage6-browser.mjs';
 import {withApprovedSchoolChanges} from './support/approved-school-oracle.mjs';
-import {withApprovedPhoenixControl,phoenixAwardProbe,assertApprovedPhoenixCareer} from './support/first-difference.mjs';
+import {APPROVED_PHOENIX_ROUTE,withApprovedPhoenixControl,phoenixAwardProbe,assertApprovedPhoenixCareer,seasonEndOpening} from './support/first-difference.mjs';
 import {openBoardAction} from './support/board-menu.mjs';
 import {injectOverlayHook} from './support/overlay-hook.mjs';
 import {THEME_IDS} from '../docs/src/ui/theme-catalog.js';
-// NPB-OFFER-WINDOW-01 / MLB-POSTING-DESIGN-01 (approved A1/A3): a natural career may reach a new NPB1 season-end choice;
-// its team draw shifts every later RNG value. Returns null when no such choice exists (the career must stay identical),
-// otherwise the index of the action whose click opened the first choice the baseline does not have. The strict
-// comparison then covers every earlier action and that action's before-state (which carries rngState).
-const approvedSeasonEndChoice=/^(韓国プロ野球への海外移籍：|台湾プロ野球への海外移籍：|ポスティングを申請|現在の球団に残留)/;
-function seasonEndOpening(old,now){
- const t=now.findIndex((s,i)=>i>0&&s.beforeState.lv==='NPB1'&&approvedSeasonEndChoice.test(s.action)&&s.beforeState.year===now[i-1].beforeState.year&&!(old[i]&&old[i].beforeState.year===s.beforeState.year&&old[i].action===s.action));
- return t<0?null:t-1;
-}
+// NPB-OFFER-WINDOW-01 / MLB-POSTING-DESIGN-01 (approved A1/A3): seasonEndOpening (support/first-difference.mjs) bounds the
+// baseline comparison at the first new NPB1 season-end choice.
 const baseline=execFileSync('git',['rev-parse',(arg('baseline')||'e602174a22d7472e1021d780388ad61adc6b11b6')+'^{commit}'],{encoding:'utf8'}).trim();
 const prior=withApprovedSchoolChanges(execFileSync('git',['show',baseline+':docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
-const approvedPhoenixPrior=withApprovedPhoenixControl(prior);
+const approvedPhoenixPrior=withApprovedPhoenixControl(prior,APPROVED_PHOENIX_ROUTE);
 const h=await harness('international-personal-stats');
 const hook=`window.__intlDisplay={
  fixture:v=>{window.__stage6.fixture({pos:v.pos||'P',ability:64,potential:80});Object.assign(S,{stage:'PRO',org:'NPB',lv:'NPB1',year:2035,role:'SP',rehab:0,seasonFactor:1,skipMid:false,...v});$('log').replaceChildren();_curYearBody=null;window.__intlContinued=0;},
@@ -64,7 +57,7 @@ try{
  if(!process.argv.includes('--fixtures-only')){
   let wbc=0,p12=0;
   for(const [seed,pos]of [['yakyo-test-001','P'],['jp3-pitcher-02','P'],['jp3-pitcher-03','P'],['jp3-catcher-01','C'],['jp3-infielder-01','IF'],['jp3-outfielder-01','OF']])await h.test('fixed-career-'+seed,{seed,pos,baseline,strategy:'balanced attacking abilities, stay with current team'},async e=>{
-   const phoenixCase=seed==='jp3-infielder-01'&&pos==='IF',runs=[];
+   const phoenixCase=seed===APPROVED_PHOENIX_ROUTE.seed&&pos===APPROVED_PHOENIX_ROUTE.pos,runs=[];
    for(const mode of [true,false,...(phoenixCase?['approved','repeat']:[])]){
     const old=mode===true||mode==='approved',p=await page(1280,pos,seed,old,mode==='approved'),actions=[];let skips=0;
     for(let n=0;n<2000;n++){const step=await p.evaluate(()=>window.__intlDisplay.step());if(step.done)break;if(step.skip){skips++;continue;}if(step.jersey)skips++;actions.push({action:step.action,before:digest(step.before),after:digest(step.after),beforeState:clean(step.before),afterState:clean(step.after)});if(n===1999)throw Error('CAREER_LIMIT');}
@@ -74,7 +67,7 @@ try{
     if(!old){const keys=Object.keys(result.state.intlTraitResults);if(mode===false){wbc+=keys.filter(k=>k.startsWith('WBC:')).length;p12+=keys.filter(k=>k.startsWith('P12:')).length;}for(const r of Object.values(result.state.intlTraitResults))assert.ok(r.personalStats);e.snapshots.push({actions:actions.length,rng:result.rng.length,international:keys});}
     await p.close();
    }
-   if(phoenixCase)e.phoenixComparison=assertApprovedPhoenixCareer(runs[0],runs[1],runs[2],runs[3],'actions',{championmaker:true});
+   if(phoenixCase)e.phoenixComparison=assertApprovedPhoenixCareer(runs[0],runs[1],runs[2],runs[3],'actions',{championmaker:true},APPROVED_PHOENIX_ROUTE);
    else{const k=seasonEndOpening(runs[0].actions,runs[1].actions);
     if(k===null)e.d2ProducerRenameComparison=assertApprovedProducerRenameCareer(runs[0],runs[1],{championmaker:true});
     else{assert.ok(k>0,seed+' approved NPB1 season-end choice step');assert.equal(runs[1].actions[k].action,runs[0].actions[k].action,'the opening click is the baseline action');
