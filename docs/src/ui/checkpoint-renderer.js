@@ -14,11 +14,11 @@ export class CheckpointRenderer {
     if(receipt?.status==='AMBIGUOUS')throw new Error('RESULT_RENDER_AMBIGUOUS');
     if(!receipt){receipt={status:'PLANNED'};receipts.set(key,receipt);}
     const target=typeof document!=='undefined'?this.#logTarget():null,count=target?.children.length;
-    try{this.#card(...args);receipt.status='COMMITTED';}
+    try{this.#card(...args);receipt.node=target?.lastElementChild;receipt.status='COMMITTED';}
     catch(error){
       // card appends synchronously before scrollBottom. An already appended owned card
       // may be acknowledged, but unexplained extra DOM writes must not be guessed.
-      if(target&&target.children.length===count+1&&target.lastElementChild.classList.contains('card')){receipt.status='COMMITTED';}
+      if(target&&target.children.length===count+1&&target.lastElementChild.classList.contains('card')){receipt.node=target.lastElementChild;receipt.status='COMMITTED';}
       else if(target&&target.children.length!==count)receipt.status='AMBIGUOUS';
       throw error;
     }

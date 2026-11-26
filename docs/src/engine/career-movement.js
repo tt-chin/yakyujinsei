@@ -14,7 +14,6 @@ import { contractTypeLabel } from '../ui/contract-labels.js';
 import { traitLabel, TRAIT_TEXT, goldclothEligible } from './trait-policy.js';
 import { hasCurrentAwardEffect } from './award-consumer-policy.js';
 import {reconcileAmericanCareer} from './control-period-policy.js';
-import {effectiveMarketOrg} from './cross-league-market-policy.js';
 
 export class CareerMovement {
   #rules;
@@ -83,7 +82,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
         cont(); }},
       {t:'黙ってプレーに集中する',main:true,s:'トレード確率は変わらない',f:()=>{
         if(chance(35)){ doTradeExec(); card('info','取引は完了しました',`あなたの沈黙にもかかわらず、チームは取引を完了しました。 '`); board(1); }
-        else card('info','トレードは成立せず','トレードの噂はあったものの、移籍は実現せず、引き続き同じ球団でプレーすることになった。');
+        else card('info','泊まった','噂はあくまで噂です。新しい野球シーズンでも、同じジャージを着ます。');
         cont(); }}]);
   }
   function buyoutRemaining(rate){ /* 残契約の支払いは選手都合の解除で70%、球団都合なら100%。 */
@@ -162,50 +161,16 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
     const rec=pickRecord(listByOrg(org)),candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:lv,contractMult:1});lv=candidate.targetLevel;const annual=candidate.annualSalary;
     return{t:`${label}：${rec.name}`,s:`${LV[lv].n}｜年俸${fmtMoney(annual)}${candidate.signingTerms.signingBonus>0?'｜契約金'+fmtMoney(candidate.signingTerms.signingBonus):''}`,f:()=>{buyoutRemaining();signTo(org,lv,rec.teamId,ri(1,3),1.3,'OVERSEAS',{contractType:'OVERSEAS_FA'});finish();}};
   }
-  // NPB season-end menu (MLB-POSTING-DESIGN-01 / NPB-OFFER-WINDOW-01): KBO→CPBL→MLB drawn at generation in the
-  // existing order. Before overseas FA (NPB years <9) the MLB route is a posting request; consent/bid draws happen
-  // only when the player applies. The menu state lives in this closure (MovementGate blocks same-year re-entry).
-  // Pending (plan §8 Q4): extensionOffer still reaches crossOffers after an accepted extension, as before.
-  const postingConsentRate=years=>years<3?20:years<5?40:years<7?60:80;
-  function postingOption(o,menu){
-    const S=getState();
-    if(o<60||(S.lastD||0)<2)return null;
-    const rec=pickRecord(listByOrg('MiLB')),candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:'MLB',contractMult:1}),lv=candidate.targetLevel,annual=candidate.annualSalary;
-    const terms=`${LV[lv].n}｜年俸${fmtMoney(annual)}${candidate.signingTerms.signingBonus>0?'｜契約金'+fmtMoney(candidate.signingTerms.signingBonus):''}`;
-    return{t:'ポスティングを申請',s:`球団の判断後に入札｜${LV[lv].n}契約の見込み｜年俸${fmtMoney(annual)}`,f:()=>{
-      if(menu.postingResolved){showNpbSeasonEndMenu(menu);return;} /* A restored view must not apply twice in a year. */
-      menu.postingResolved=true;
-      if(!chance(postingConsentRate(serviceYearsFor('NPB')))){card('bad','球団が申請を認めず','球団はポスティング申請を認めなかった。今季の申請はできない。');showNpbSeasonEndMenu(menu);return;}
-      card('good','球団が容認','球団がポスティング申請を認めた。');
-      if(!chance(90)){card('info','入札球団なし','入札する球団は現れなかった。今季の申請はできない。');showNpbSeasonEndMenu(menu);return;}
-      choose('ポスティング入札',[
-        {t:`ポスティングで${rec.name}と契約`,main:true,s:terms,f:()=>{signTo('MiLB',lv,rec.teamId,ri(1,3),1.3,'OVERSEAS',{contractType:'OVERSEAS_FA'});menu.finish();}},
-        {t:'契約せず他の選択肢に戻る',f:()=>showNpbSeasonEndMenu(menu)}]);
-    }};
-  }
-  function npbSeasonEndMenu(o,title,before,after,finish){
-    const menu={title,before,after,finish,offers:[],posting:null,postingResolved:false};
-    const k=overseasOffer('KBO','KBO1','韓国プロ野球への海外移籍',o,1,finish);
-    const c=overseasOffer('CPBL','CPBL1','台湾プロ野球への海外移籍',o,0,finish);
-    if(k)menu.offers.push(k);if(c)menu.offers.push(c);
-    if(serviceYearsFor('NPB')<9)menu.posting=postingOption(o,menu);
-    else{const m=overseasOffer('MiLB','MLB','MLBへの海外移籍',o,2,finish);if(m)menu.offers.push(m);}
-    return menu;
-  }
-  const npbSeasonEndHasMoves=menu=>menu.offers.length>0||!!menu.posting;
-  function showNpbSeasonEndMenu(menu){
-    choose(menu.title,[...menu.before,...menu.offers,...(menu.posting&&!menu.postingResolved?[menu.posting]:[]),...menu.after]);
-  }
-  let faReturn=null; /* Year-8 domestic FA declared from the integrated menu: restore point for cancelling the declaration. */
   function crossOffersRule(o){
     const S=getState();
     const finish=()=>reportFlowOutcome({kind:'CROSS_OFFER_RESOLVED'}),opts=[];
     let offerType='transfer';
     if(S.org==='NPB'&&S.lv==='NPB1'){
       offerType=crossOfferType(S.org,'MiLB');
-      const menu=npbSeasonEndMenu(o,crossOfferTitle(offerType),[],[{t:'現在の球団に残留',main:true,f:finish}],finish);
-      if(!npbSeasonEndHasMoves(menu)){finish();return;}
-      showNpbSeasonEndMenu(menu);return;
+      const k=overseasOffer('KBO','KBO1','韓国プロ野球への海外移籍',o,1,finish);
+      const c=overseasOffer('CPBL','CPBL1','台湾プロ野球への海外移籍',o,0,finish);
+      const m=overseasOffer('MiLB','MLB','MLBへの海外移籍',o,2,finish);
+      if(k)opts.push(k);if(c)opts.push(c);if(m)opts.push(m);
     }else if(['KBO','CPBL','MiLB','MLB'].includes(S.org)&&o>=47&&contractNeedsRenewal(S.ct)){
       // Keep the expired contract until selection; continuing/extended contracts never draw a team.
       if(careerSession.npbReturnOfferContext?.state===S&&careerSession.npbReturnOfferContext.year===S.year&&careerSession.npbReturnOfferContext.contract===S.ct){
@@ -232,42 +197,24 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
   function faFlow(o){
     const S=getState();
     migrateSalaryV130State();const stage=contractStageFor(S.org);
-    if(stage==='CONTROL'){
-      if(S.org==='NPB'&&S.lv==='NPB1'){
-        const finish=()=>reportFlowOutcome({kind:'CROSS_OFFER_RESOLVED'});
-        const menu=npbSeasonEndMenu(o,crossOfferTitle(crossOfferType('NPB','MiLB')),[],[{t:'現在の球団に残留',main:true,f:()=>renewAndAdvance(1,false,'CONTROL')}],finish);
-        if(npbSeasonEndHasMoves(menu)){showNpbSeasonEndMenu(menu);return;}
-      }
-      renewAndAdvance(1,false,'CONTROL');return;}
+    if(stage==='CONTROL'){renewAndAdvance(1,false,'CONTROL');return;}
     if(stage==='ARBITRATION'){arbitrationFlow();return;}
     if(S.org!=='NPB'){S.faType='OVERSEAS';faMarket(o,S.lastD||0);return;}
     if(serviceYearsFor('NPB')<8){renewAndAdvance(1,false,'CONTROL');return;}
-    let menu=null;
-    const declareFA=type=>{const S=getState();faReturn=menu?{state:S,year:S.year,menu,saved:{faType:S.faType,faUsed:S.faUsed,npbFaSeasons:S.npbFaSeasons}}:null;S.faType=type;S.faUsed=true;S.npbFaSeasons=0;faMarket(o,S.lastD||0);};
+    const declareFA=type=>{const S=getState();S.faType=type;S.faUsed=true;S.npbFaSeasons=0;faMarket(o,S.lastD||0);};
     const opts=[{t:'権利を行使せず残留',main:true,f:()=>renewAndAdvance(1)},{t:'国内FAを宣言',warn:true,f:()=>declareFA('DOMESTIC')}];
     if(serviceYearsFor('NPB')>=9)opts.push({t:'海外FAを宣言',warn:true,f:()=>declareFA('OVERSEAS')});
-    const title=`FA権取得・登録${serviceYearsFor('NPB')}シーズン`;
-    if(serviceYearsFor('NPB')<9&&S.lv==='NPB1'){
-      const candidate=npbSeasonEndMenu(o,title,opts,[],()=>reportFlowOutcome({kind:'CROSS_OFFER_RESOLVED'}));
-      if(npbSeasonEndHasMoves(candidate)){menu=candidate;showNpbSeasonEndMenu(menu);return;}
-    }
-    choose(title,opts);
+    choose(`FA権取得・登録${serviceYearsFor('NPB')}シーズン`,opts);
   }
   const faOfferText=offer=>`契約：${offer.years}年｜年俸：${fmtMoney(offer.annualSalary)}${offer.priceCandidate?.signingTerms?.signingBonus>0?'｜契約金：'+fmtMoney(offer.priceCandidate.signingTerms.signingBonus):''}<br>保証年俸総額：${fmtMoney(offer.guaranteedTotal)}｜出来高：最大${fmtMoney(offer.incentiveAnnualMax)}／年<br>球団の需要度：${teamDemandLabel(offer.demandScore)}｜契約種別：${contractTypeLabel(offer.contractType)}<br><small>市場基準額 ${fmtMoney(offer.breakdown.marketSalary)}／故障補正 ×${offer.breakdown.injuryMultiplier.toFixed(2)}／守備位置係数 ×${offer.breakdown.positionMultiplier.toFixed(2)}／契約種別係数 ×${offer.breakdown.contractTypeMultiplier.toFixed(2)}／球団の需要度 ×${offer.breakdown.teamDemandMultiplier.toFixed(3)}／競合補正 ×${offer.breakdown.competitionMultiplier.toFixed(3)}／最終年俸 ${fmtMoney(offer.annualSalary)}</small>`;
   function priceFaOffer(offer){const S=getState();const candidate=salaryCandidate({sourceLevel:S.lv,targetLevel:offer.level,marketSalary:offer.annualSalary,positionMult:1,transferType:'FA'});if(candidate.crossLeague){offer.annualSalary=candidate.annualSalary;offer.level=candidate.targetLevel;offer.guaranteedTotal=offer.annualSalary*offer.years;offer.breakdown={...offer.breakdown,crossLeague:candidate.crossLeague,finalAnnualSalary:offer.annualSalary};if(candidate.crossLeague.eligibilityType==='MLB_INTL_RESTRICTED'){offer.contractType='ROOKIE';offer.breakdown.marketSalary=candidate.baseSalary;}}offer.priceCandidate=candidate;}
   function acceptFaOffer(offer){const S=getState();S.lastFaMarket.acceptedOfferId=offer.offerId;const rec=teamRec(offer.teamId);signTo(offer.org,offer.level,offer.teamId,offer.years,1,'FA',{annualSalary:offer.annualSalary,contractType:offer.contractType,incentive:offer.incentive,offerBreakdown:offer.breakdown,candidate:offer.priceCandidate});card('gold','FA契約成立',`${escapeHTML(rec.name)}と${offer.years}年契約。保証年俸総額${fmtMoney(offer.guaranteedTotal)}、出来高は年最大${fmtMoney(offer.incentiveAnnualMax)}。`);reportFlowOutcome({kind:'FA_SIGNED'});}
-  function faCancelOption(){
-    const S=getState();
-    if(!faReturn||faReturn.state!==S||faReturn.year!==S.year)return [];
-    const entry=faReturn;
-    return [{t:'FA宣言を取り消して戻る',faAside:true,f:()=>{const S=getState();for(const [key,value] of Object.entries(entry.saved)){if(value===undefined)delete S[key];else S[key]=value;}faReturn=null;showNpbSeasonEndMenu(entry.menu);}}];
-  }
   function showFaMarket(market){
     const S=getState();
-    if(!market.offers.length){const rating=market.marketRating,injury=injurySalaryMultiplier(S.marketInjury,isRecentStar(S.salaryEvaluationHistory||[])),marketAnnual=salaryFor(S.lv,rating)*dpMult()*.9*injury,levelMinimum=salaryFor(S.lv,0),floorApplied=levelMinimum>marketAnnual,annual=S.org==='KBO'?applyKboForeignPackageCap({annualSalary:Math.max(marketAnnual,levelMinimum),isRenewal:true,previousPackage:kboPreviousPackage(),levelMinimum}).annualSalary:roundToTenThousandYen(Math.max(marketAnnual,levelMinimum)),incentive=createIncentiveTerms({org:S.org,annualSalary:annual});choose('FA市場・獲得オファーなし',[{t:`元球団と1年契約（年俸${fmtMoney(annual)}）`,main:true,s:'市場価×0.90。減俸保護は適用されない',f:()=>{const S=getState();const previousSalary=S.currentSalary,base=salaryCandidate(),candidate={...base,contractMult:.9*injury,annualSalary:annual};S.ct=fixedContract({org:S.org,teamId:S.orgTeamId,years:1,annualSalary:annual,contractType:'FA_RETURN',candidate,incentive});S.currentSalary=S.ct.annualSalary;market.acceptedOfferId='RETURN_NO_BID';saveSalaryDecision('RENEWAL',candidate,previousSalary,S.currentSalary,{floorApplied});reportFlowOutcome({kind:'FA_NO_BID_RETURNED'});}},{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'FA_RETIRED',reason:'FA市場で獲得オファーがなく、現役を引退した。'})},...faCancelOption()]);return;}
+    if(!market.offers.length){const rating=market.marketRating,injury=injurySalaryMultiplier(S.marketInjury,isRecentStar(S.salaryEvaluationHistory||[])),marketAnnual=salaryFor(S.lv,rating)*dpMult()*.9*injury,levelMinimum=salaryFor(S.lv,0),floorApplied=levelMinimum>marketAnnual,annual=S.org==='KBO'?applyKboForeignPackageCap({annualSalary:Math.max(marketAnnual,levelMinimum),isRenewal:true,previousPackage:kboPreviousPackage(),levelMinimum}).annualSalary:roundToTenThousandYen(Math.max(marketAnnual,levelMinimum)),incentive=createIncentiveTerms({org:S.org,annualSalary:annual});choose('FA市場・獲得オファーなし',[{t:`元球団と1年契約（年俸${fmtMoney(annual)}）`,main:true,s:'市場価×0.90。減俸保護は適用されない',f:()=>{const S=getState();const previousSalary=S.currentSalary,base=salaryCandidate(),candidate={...base,contractMult:.9*injury,annualSalary:annual};S.ct=fixedContract({org:S.org,teamId:S.orgTeamId,years:1,annualSalary:annual,contractType:'FA_RETURN',candidate,incentive});S.currentSalary=S.ct.annualSalary;market.acceptedOfferId='RETURN_NO_BID';saveSalaryDecision('RENEWAL',candidate,previousSalary,S.currentSalary,{floorApplied});reportFlowOutcome({kind:'FA_NO_BID_RETURNED'});}},{t:'現役を退く',warn:true,f:()=>reportFlowOutcome({kind:'FA_RETIRED',reason:'FA市場で獲得オファーがなく、現役を引退した。'})}]);return;}
     const choices=market.offers.map(offer=>({t:`${teamRec(offer.teamId).name}（${LV[offer.level].n}）`,s:faOfferText(offer),f:()=>acceptFaOffer(offer)}));
     if(market.stayOffer)choices.push({t:`宣言残留：${teamRec(market.stayOffer.teamId).name}`,main:true,s:faOfferText(market.stayOffer),f:()=>acceptFaOffer(market.stayOffer)});
-    choose('FA市場オファー比較',[...choices,...faCancelOption()]);
+    choose('FA市場オファー比較',choices);
   }
   function faMarketRule(o,d){
     const S=getState();
@@ -275,12 +222,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
     if(S.lastFaMarket?.marketKey===key){showFaMarket(S.lastFaMarket);return;}
     S.faMarketKey=key;const rating=currentMarketRating(),baseCount=baseFaOfferCount(rating),context=buildMarketContext({marketSalary:0,marketInjury:S.marketInjury,history:S.salaryEvaluationHistory||[],normalMaxYears:4,baseOfferCount:Math.max(0,baseCount-(S.traits.cancer?1:0))}),offerCount=context.offerCount,category=playerMarketCategory({pos:S.pos,role:S.role,dpos:S.dpos});
     const routes=S.faType==='DOMESTIC'?[{org:'NPB',level:'NPB1'}]:[{org:'NPB',level:'NPB1'},...(o>=47&&d>=1?[{org:'KBO',level:'KBO1'}]:[]),...(o>=45&&d>=0?[{org:'CPBL',level:'CPBL1'}]:[]),...(o>=60&&d>=2?[{org:'MiLB',level:'MLB'}]:[])];
-    // Domestic NPB FA stays domestic. Otherwise own-league clubs do not need
-    // the thresholds for moving abroad; retain the existing cross-league routes.
-    const currentOrg=effectiveMarketOrg(S.lv,S.org),ownLeague=currentOrg==='MiLB'?'MLB':currentOrg;
-    const ownRoute={NPB:{org:'NPB',level:'NPB1'},KBO:{org:'KBO',level:'KBO1'},CPBL:{org:'CPBL',level:'CPBL1'},MLB:{org:'MLB',level:'MLB'}}[ownLeague];
-    if(S.faType!=='DOMESTIC'&&ownRoute&&!routes.some(route=>effectiveMarketOrg(route.level,route.org)===ownLeague))routes.push(ownRoute);
-    const candidates=[...new Map(routes.flatMap(route=>listByOrg(route.org).filter(team=>team.teamId!==S.orgTeamId).map(team=>({team,...route}))).map(entry=>[entry.team.teamId,entry])).values()],ranked=rankTeamsByDemand({teams:candidates.map(x=>x.team),seed:S.seed,year:S.year,category});
+    const candidates=routes.flatMap(route=>listByOrg(route.org).filter(team=>team.teamId!==S.orgTeamId).map(team=>({team,...route}))),ranked=rankTeamsByDemand({teams:candidates.map(x=>x.team),seed:S.seed,year:S.year,category});
     const routeByTeam=new Map(candidates.map(x=>[x.team.teamId,x])),selected=ranked.slice(0,offerCount).map(x=>({...x,...routeByTeam.get(x.team.teamId)})).sort((a,b)=>a.team.teamId.localeCompare(b.team.teamId)),comp=competitionMultiplier(selected.length),offers=[],jitterByTeam=new Map(generateBidJitters(selected.map(x=>x.team.teamId),R).map(x=>[x.teamId,x.multiplier]));
     selected.forEach((entry,index)=>{const proof=context.preferProof,contractType=proof?'PROOF':index%2===0&&context.maxYears>=3?'LONG':'SHORT',years=proof?1:contractType==='LONG'?context.maxYears:Math.min(2,context.maxYears),converted=convertRatingBetweenLevels(rating,S.lv,entry.level,LV),marketSalary=salaryFor(entry.level,converted),breakdown={injuryMultiplier:context.injuryMultiplier,positionMultiplier:dpMult(),contractTypeMultiplier:contractTypeMultiplier(contractType),teamDemandMultiplier:teamDemandMultiplier(entry.demandScore),franchiseMultiplier:1,competitionMultiplier:comp,bidJitterMultiplier:jitterByTeam.get(entry.team.teamId)},incentive=createIncentiveTerms({org:entry.org,annualSalary:marketSalary});const offer=buildFaOffer({offerId:`${key}:${entry.team.teamId}`,teamId:entry.team.teamId,org:entry.org,level:entry.level,category,demandScore:entry.demandScore,years,contractType,marketSalary,levelMinimum:salaryFor(entry.level,0),breakdown,incentiveTerms:incentive});priceFaOffer(offer);offer.incentive=createIncentiveTerms({org:entry.org,annualSalary:offer.annualSalary});offer.incentiveAnnualMax=offer.incentive?.annualMax||0;offers.push(offer);});
     let stayOffer=null;if(offers.length&&S.orgTeamId){const demand=rankTeamsByDemand({teams:[teamRec(S.orgTeamId)],seed:S.seed,year:S.year,category})[0]?.demandScore||0,contractType=context.preferProof?'PROOF':'SHORT',years=context.preferProof?1:Math.min(2,context.maxYears),marketSalary=salaryFor(S.lv,rating),breakdown={injuryMultiplier:context.injuryMultiplier,positionMultiplier:dpMult(),contractTypeMultiplier:contractTypeMultiplier(contractType),teamDemandMultiplier:teamDemandMultiplier(demand),franchiseMultiplier:S.traits.franchise?1.04:1,competitionMultiplier:comp,bidJitterMultiplier:1},incentive=createIncentiveTerms({org:S.org,annualSalary:marketSalary});stayOffer=buildFaOffer({offerId:`${key}:STAY`,teamId:S.orgTeamId,org:S.org,level:S.lv,category,demandScore:demand,years,contractType:'RETURN',marketSalary,levelMinimum:salaryFor(S.lv,0),breakdown,incentiveTerms:incentive});priceFaOffer(stayOffer);stayOffer.incentive=createIncentiveTerms({org:S.org,annualSalary:stayOffer.annualSalary});stayOffer.incentiveAnnualMax=stayOffer.incentive?.annualMax||0;}

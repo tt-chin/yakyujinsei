@@ -34,19 +34,4 @@ check('reject deep object',()=>{let o={};for(let i=0;i<40;i++)o={o};assert.throw
 check('reject expanding aliased graph',()=>{let o={};for(let i=0;i<20;i++)o={a:o,b:o};assert.throws(()=>copySaveData(o));});
 for(const [name,mutate]of [['missing required data',e=>delete e.state.careerEarnings],['noncanonical date',e=>e.savedAt='2026/11/08'],['stage/league mismatch',e=>e.state.org='NPB'],['missing position ability',e=>delete e.state.ab.sta],['ability string',e=>e.state.pot.sta='80'],['trait type',e=>e.state.traits.genius=1],['already-paid current year',e=>e.state.lastSalaryPaidYear=e.state.year],['rng',e=>e.state.rngState=-1],['schema',e=>e.schemaVersion=99],['compatibility',e=>e.compatibilityId='unknown'],['year mismatch',e=>e.checkpoint.year++],['pending event',e=>e.state.pendingEvent={}],['done',e=>e.state.done=true],['revision',e=>e.revision=-1],['contract',e=>e.state.ct={}],['type',e=>e.state.ab.x=NaN]])check('reject '+name,()=>{const e=structuredClone(sample);mutate(e);assert.throws(()=>validateSaveEnvelope(e));});
 check('explicit checkpoint gate required',()=>assert.throws(()=>createSaveEnvelope(sample.state,{careerId:'test',revision:0})));
-check('v3 year history round-trips outside S and legacy v2 carries no history',()=>{
- const records=[{year:initial.year-1,title:(initial.year-1)+'年・年度記録',html:'<p>結果</p>',salaries:[]}];
- const e=createSaveEnvelope(initial,{careerId:'history',revision:0,checkpointReady:true,yearHistory:records});
- assert.equal(e.schemaVersion,3);
- assert.deepEqual(validateSaveEnvelope(e).yearHistory,records);
- assert.deepEqual(e.state,copySaveData(initial,{stateRoot:true}));
- assert.equal(validateSaveEnvelope(sample).schemaVersion,2);
- assert.equal(Object.hasOwn(sample,'yearHistory'),false);
- const reject=(mutate,code=/SAVE_YEAR_HISTORY/)=>{const changed=structuredClone(e);mutate(changed);assert.throws(()=>validateSaveEnvelope(changed),code);};
- reject(x=>delete x.yearHistory);
- reject(x=>x.yearHistory.push(x.yearHistory[0]));
- reject(x=>{x.yearHistory[0].year=x.state.year;});
- reject(x=>{x.yearHistory[0].salaries=[{currentSalary:'invalid'}];});
- reject(x=>{x.yearHistory[0].html='字'.repeat(SAVE_LIMITS.bytes);},/SAVE_SIZE/);
-});
 console.log('PASS '+passed+' codec checks');

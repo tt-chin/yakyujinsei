@@ -6,7 +6,6 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
-import {currentUiBaselineVersion} from './support/ui-version-comparison.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
 const baseline='cf88d1a9d621c354d64a2de5c427cd437a8094bf',output=path.resolve(arg('output')||'test-results/season-summary');await mkdir(output,{recursive:true});
 const hook=`
@@ -29,7 +28,7 @@ window.__summaryTest={
  amateur:stage=>{S.stage=stage;S.done=false;S.year=2040;careerSession.seasonEndContext=null;document.getElementById('log').replaceChildren();divider('2040年・シーズン終了');board(2);},
  later:()=>{S.year=2032;S.currentSalary=999999999;S.yearOutsideIncome=999;S.careerEarnings+=123;S.ct=createContract({contractId:'LATER',org:S.org,teamId:S.orgTeamId,signedYear:2031,startYear:2032,years:2,annualSalary:999999999});if(S.lastSalaryDecision)S.lastSalaryDecision={...S.lastSalaryDecision,decisionYear:2031,salaryYear:2032,finalSalary:999999999};},
 };`;
-const cache=new Map(),server=createServer(async(req,res)=>{try{let rel=new URL(req.url,'http://local').pathname.slice(1)||'index.html',old=rel.startsWith('baseline/');if(old)rel=rel.slice(9)||'index.html';if(rel==='favicon.ico'){res.statusCode=204;return res.end();}if(rel.split('/').includes('..'))throw Error('path');let body;if(old){if(!cache.has(rel))cache.set(rel,execFileSync('git',['show',baseline+':docs/'+rel],{cwd:root,maxBuffer:30e6}));body=cache.get(rel);}else body=await readFile(path.join(root,'docs',rel));if(old&&rel==='src/config.js')body=currentUiBaselineVersion(body);if(rel==='src/engine/game.js')body=body.toString()+hook;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const cache=new Map(),server=createServer(async(req,res)=>{try{let rel=new URL(req.url,'http://local').pathname.slice(1)||'index.html',old=rel.startsWith('baseline/');if(old)rel=rel.slice(9)||'index.html';if(rel==='favicon.ico'){res.statusCode=204;return res.end();}if(rel.split('/').includes('..'))throw Error('path');let body;if(old){if(!cache.has(rel))cache.set(rel,execFileSync('git',['show',baseline+':docs/'+rel],{cwd:root,maxBuffer:30e6}));body=cache.get(rel);}else body=await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=body.toString()+hook;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':'text/html');res.end(body);}catch(e){res.statusCode=404;res.end(String(e));}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||process.env.PLAYWRIGHT_MODULE||'playwright'),browser=await chromium.launch({headless:true,channel:arg('browser')||'chromium'}),errors=[],cases=[],layouts=[];
 const frames=p=>p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
 const get=p=>p.evaluate(()=>window.__summaryTest.get());

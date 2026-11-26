@@ -204,7 +204,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
       isBelowActiveMinimum:o=>{log.push(['isBelowActiveMinimum',o]);return !!below;},retireBelowActiveMinimum:()=>log.push(['retireBelowActiveMinimum']),
       advance:()=>log.push(['advance',S.org,S.lv,S.stage]),endGame:reason=>log.push(['endGame',reason])});
     const reporter=source.includes('yearFlow.reportFlowOutcome(')?[yearFlowReporter(yearFlowSource)]:source.includes('function reportFlowOutcome(')?[productionFunction('reportFlowOutcome',source)]:[];
-    runInContext("'use strict';\n"+[...reporter,...['overseasOffer','crossOffers','renewAndAdvance','arbitrationFlow','acceptFaOffer','showFaMarket','outOfOrg',...(source.includes("from './career-movement.js'")?['postingOption','npbSeasonEndMenu','showNpbSeasonEndMenu','faCancelOption']:[])].map(name=>marketFunction(name,source))].join('\n'),context);
+    runInContext("'use strict';\n"+[...reporter,...['overseasOffer','crossOffers','renewAndAdvance','arbitrationFlow','acceptFaOffer','showFaMarket','outOfOrg'].map(name=>marketFunction(name,source))].join('\n'),context);
     if(reporter.length)runInContext("'use strict';const reportOriginal=reportFlowOutcome;reportFlowOutcome=outcome=>{reported.push(outcome.kind);return reportOriginal(outcome);};",context);
     runInContext(entry,context);
     for(let k=0;k<picks.length;k++)choices[k][picks[k]].f();
@@ -240,30 +240,13 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
   /* 同じ結果名を持つ呼び出し箇所（戦力外の引退2）も理由で区別し、10 箇所すべての到達を確かめる。 */
   const site=(kind,log)=>kind+(kind==='RELEASE_RETIRED'?':'+log.at(-1)[1]:'');
   const kinds=[],sites=new Set();let leafCount=0;
-  /* MLB-POSTING-DESIGN-01 (approved A3/A4): before overseas FA the direct MLB offer becomes a posting request.
-     KBO/CPBL/stay leaves equal the base once the one option is swapped; each refused-posting leaf is the matching
-     base leaf plus the consent draw, the refusal card and the same menu without the MLB option. This stub's
-     chance() is falsy, so acceptance is covered by npb-season-end.test. */
-  function assertApprovedPosting(current,base){
-    const text=v=>JSON.stringify(v),firstChoose=log=>log.findIndex(e=>e[0]==='choose');
-    assert.equal(base.length,4,'base leaves: KBO, CPBL, MLB, stay');assert.equal(current.length,6,'current leaves: KBO, CPBL, 3 refused-posting, stay');
-    const baseMenu=base[0].log[firstChoose(base[0].log)],menu=current[0].log[firstChoose(current[0].log)],mlb=baseMenu[2][2],posting=menu[2][2];
-    assert.match(mlb[0],/^MLBへの海外移籍：/);assert.equal(text(posting),text(['ポスティングを申請','球団の判断後に入札｜L:MLB契約の見込み｜年俸40000000']));
-    const swap=leaf=>JSON.parse(text([leaf.log,leaf.state]).split(text(posting)).join(text(mlb)));
-    for(const [c,o] of [[0,0],[1,1],[5,3]])assert.equal(text(swap(current[c])),text([base[o].log,base[o].state]),'non-posting leaf '+c);
-    [0,1,3].forEach((o,k)=>{const leaf=current[2+k],[log,state]=swap(leaf),i=firstChoose(base[o].log);
-      assert.equal(text(log.slice(0,i+1)),text(base[o].log.slice(0,i+1)),'posting leaf prefix '+k);
-      assert.equal(text(log.slice(i+1,i+4)),text([['chance',40],['card','bad','球団が申請を認めず','球団はポスティング申請を認めなかった。今季の申請はできない。'],['choose',baseMenu[1],baseMenu[2].filter(x=>x!==mlb)]]),'posting refusal '+k);
-      assert.equal(text([log.slice(i+4),state]),text([base[o].log.slice(i+1),base[o].state]),'posting leaf tail '+k);});
-  }
   for(const scenario of scenarios){
     const current=marketLeaves(game,scenario),base=marketLeaves(baseSource,scenario);
-    if(scenario.entry==='crossOffers(65)'&&scenario.state.lastD===3)assertApprovedPosting(current,base);
-    else assert.equal(JSON.stringify(current.map(leaf=>[leaf.log,leaf.state])),JSON.stringify(base.map(leaf=>[leaf.log,leaf.state])),JSON.stringify(scenario));
+    assert.equal(JSON.stringify(current.map(leaf=>[leaf.log,leaf.state])),JSON.stringify(base.map(leaf=>[leaf.log,leaf.state])),JSON.stringify(scenario));
     for(const {log,state,reported} of current){assert.deepEqual(reported,expectedKinds(log,state,scenario.entry),JSON.stringify(log));kinds.push(...reported);reported.forEach(kind=>sites.add(site(kind,log)));}
     leafCount+=current.length;cases++;
   }
-  assert.equal(leafCount,46,'44 base leaves; the posting scenario adds 2 (3 refused paths replace 1 MLB path)');assert.equal(sites.size,10,[...sites].join());
+  assert.equal(leafCount,44);assert.equal(sites.size,10,[...sites].join());
   assert.deepEqual([...new Set(kinds)].sort(),['ARBITRATION_SETTLED','CONTRACT_RENEWED','CROSS_OFFER_RESOLVED','FA_NO_BID_RETURNED','FA_RETIRED','FA_SIGNED','RELEASE_JOINED_AMATEUR','RELEASE_RETIRED','RELEASE_SIGNED_PRO']);
 }
 // Phase 11-B batch 4: preseason/rehab year endings report named outcomes; every clicked path keeps the baseline call log and S.

@@ -63,7 +63,7 @@ for(const line of [
     '\nfunction nextStep(){return yearFlow.nextStep();}\n',
     '\nfunction advance(){return yearFlow.advance();}\n',
     '\n  function reportFlowOutcome(outcome){return yearFlow.reportFlowOutcome(outcome);}\n  const flowHooks={advance:null,endGame:null};\n',
-    '\n  function phaseIntlPre(){return yearFlow.phaseIntlPre();}\n  function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state,()=>gameView.captureYearHistory(state.year))):yearFlow.startYear();}\n'+
+    '\n  function phaseIntlPre(){return yearFlow.phaseIntlPre();}\n  function startYear(){return browserSave?yearFlow.startReadyYear(state=>browserSave.capture(state)):yearFlow.startYear();}\n'+
       '  const yearFlow=new YearFlow({getState:()=>S,careerSession,yearHandoffs,flowHooks,$:id=>$(id),finalizePendingOffseasonSalary:()=>finalizePendingOffseasonSalary(),startYear:()=>startYear(),nextStep:()=>nextStep(),advance:()=>advance(),endGame:reason=>endGame(reason),processIntlPhase:(phase,done)=>processIntlPhase(phase,done),divider:t=>divider(t),stageLabel:()=>stageLabel(),yearSteps:()=>[jerseyStep,phasePre,phaseIntlPre,phaseMid,phaseEnd]});\n',
     "\nimport { YearFlow } from './year-flow.js';\n",
   ])assert.equal(text.split(line).length,2,'year flow wiring, once: '+line.trim().slice(0,50));
@@ -125,8 +125,8 @@ for(const line of [
   const text=sourceText(game);
   for(const line of [
     "\nimport { ProfessionalSeason } from './professional-season.js';\nimport { CareerEntry } from './career-entry.js';\n",
-    "\n  function startJapanese(){careerEntry.startNew();}\n  const careerEntry=new CareerEntry({getState:()=>S,setState:state=>{S=state;},getSeed:()=>SEED,setSeed:seed=>{SEED=seed;},careerSession,CareerSession,POSN,restoreYearHistory:records=>{_curYearBody=null;gameView.restoreYearHistory(records);},$:id=>$(id),getNavigation:()=>navigation,normalizeSeed:raw=>normalizeSeed(raw),generateSeed:()=>generateSeed(),normalizePlayerName:(raw,seed,pos)=>normalizePlayerName(raw,seed,pos),seedInit:str=>seedInit(str),newState:(name,pos)=>newState(name,pos),escapeHTML:v=>escapeHTML(v),card:(...args)=>card(...args),actClear:()=>actClear(),startYear:()=>startYear()});\n",
-    "\n  const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});\n  careerEntry.resume(candidate,envelope.yearHistory??[]);\n }});\n",
+    "\n  function startJapanese(){careerEntry.startNew();}\n  const careerEntry=new CareerEntry({getState:()=>S,setState:state=>{S=state;},getSeed:()=>SEED,setSeed:seed=>{SEED=seed;},careerSession,CareerSession,POSN,$:id=>$(id),getNavigation:()=>navigation,normalizeSeed:raw=>normalizeSeed(raw),generateSeed:()=>generateSeed(),normalizePlayerName:(raw,seed,pos)=>normalizePlayerName(raw,seed,pos),seedInit:str=>seedInit(str),newState:(name,pos)=>newState(name,pos),escapeHTML:v=>escapeHTML(v),card:(...args)=>card(...args),actClear:()=>actClear(),startYear:()=>startYear()});\n",
+    "\n  const candidate=hydrateSavedState(envelope,{DATA,teamRec,teamDisplay,traitPresentation,authorization});\n  careerEntry.resume(candidate);\n }});\n",
   ])assert.equal(text.split(line).length,2,'career entry wiring, once: '+line.trim().slice(0,50));
   for(const name of ['new CareerEntry(','careerEntry.startNew(','careerEntry.resume(','function startJapanese('])assert.equal(text.split(name).length,2,'career entry wiring only once: '+name);
   for(const gone of ['選手誕生','S=newState(nm,pos)','S=candidate;SEED=S.seed','Object.keys(careerSession)','new CareerSession(),{choiceGeneration',"querySelector('#seg-pos button.on')","$('in-name').value"])assert.ok(!text.includes(gone),'moved into CareerEntry: '+gone);
