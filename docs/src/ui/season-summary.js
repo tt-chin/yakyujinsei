@@ -1,4 +1,3 @@
-import {rememberSalaryDetail} from './year-history.js';
 import {salaryReasonLabel} from '../engine/salary-explanation-policy.js';
 
 const money=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0;
@@ -32,7 +31,6 @@ export class SeasonSummary {
     this.doc=documentRef;this.getState=getState;this.getSeasonContext=getSeasonContext;this.openSalaryDetail=openSalaryDetail;this.formatMoney=formatMoney;this.onFirstDisplay=onFirstDisplay;this.careers=new WeakMap();
   }
   entries(state){let years=this.careers.get(state);if(!years){years=new Map();this.careers.set(state,years);}for(const [year,entry] of years)if(entry.root&&!entry.root.isConnected)years.delete(year);return years;}
-  releaseYear(year){const state=this.getState();if(state)this.careers.get(state)?.delete(year);}
   entry(year,body){const state=this.getState(),years=this.entries(state);let entry=years.get(year);if(!entry){entry={year,body,status:'pending',initialContractId:state.ct?.contractId||null};years.set(year,entry);}return entry;}
   node(tag,text){const n=this.doc.createElement(tag);if(text!==undefined)n.textContent=text;return n;}
   card(node,title){
@@ -88,14 +86,10 @@ export class SeasonSummary {
       root.append(this.node('p',d?.decisionType==='PROMOTION'&&d.reasonCodes?.includes('LEAGUE_MINIMUM_APPLIED')?'昇格に伴い、リーグ最低年俸を適用しました。':d?.reasonCodes?.length?salaryReasonLabel(d.reasonCodes[0]):contract.sameContract?'現契約を継続します。':'決定理由：記録なし'));
     }
     const button=this.node('button','年俸の内訳を見る');button.type='button';button.className='season-salary-detail';button.disabled=contract?.status!=='final';
-    if(contract?.status==='final'){
-      const saved=contract.contract;
-      const detailContract=saved?.schemaVersion===3&&Array.isArray(saved.annualSchedule)&&Array.isArray(saved.segments)?saved:null;
-      const snapshot={decision:contract.decision,currentSalary:contract.salary,salaryYear:year+1,contract:detailContract,income:null,isProfessional:true};
-      rememberSalaryDetail(button,snapshot);
-      button.addEventListener('click',()=>this.openSalaryDetail(snapshot));
-    }
-    root.append(button);
+    button.addEventListener('click',()=>{
+      const saved=contract.contract,detailContract=saved?.schemaVersion===3&&Array.isArray(saved.annualSchedule)&&Array.isArray(saved.segments)?saved:null;
+      this.openSalaryDetail({decision:contract.decision,currentSalary:contract.salary,salaryYear:year+1,contract:detailContract,income:null,isProfessional:true});
+    });root.append(button);
     const detail=disclosure('contract','契約の詳細');
     field(detail,'契約残り',Number.isInteger(contract?.remaining)?contract.remaining+'年':'記録なし');
     if(contract?.decision?.reasonCodes?.length)for(const reason of contract.decision.reasonCodes)detail.append(this.node('p',salaryReasonLabel(reason)));

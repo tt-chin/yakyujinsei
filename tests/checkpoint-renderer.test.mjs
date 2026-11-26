@@ -20,8 +20,6 @@ let body=oldFunction.split('\n').slice(1,-1).map(l=>l===''?l:'  '+l).join('\n')+
 body=once(body,'    const receipts=owner.renderReceipts||(owner.renderReceipts=new Map());','    let receipts=this.#receipts.get(owner);if(!receipts){receipts=new Map();this.#receipts.set(owner,receipts);}','receipts');
 body=once(body,'?logTarget():null','?this.#logTarget():null','logTarget');
 body=once(body,'try{card(...args);','try{this.#card(...args);','card');
-body=once(body,'receipt.node=target?.lastElementChild;','','do not retain the committed result DOM');
-body=once(body,'receipt.node=target.lastElementChild;','','do not retain DOM after an acknowledged append');
 const module=readSourceText(new URL('../docs/src/ui/checkpoint-renderer.js',import.meta.url));
 const HEADER=`// 結果カードの描画レシート（物件導向化 第36期）。owner ごと・key ごとに一度だけ描画し、失敗時に曖昧な DOM 書き込みを検出する。
 // レシートは owner を鍵とする WeakMap に持ち、owner（賞の計画・シーズン終了の entry）へ描画状態を書き込まない。

@@ -6,12 +6,12 @@ export class CareerEntry {
   #rules;
   constructor(deps){this.#rules=careerEntryRules(deps);}
   startNew(){this.#rules.startNew();}
-  resume(candidate,records){this.#rules.resume(candidate,records);}
+  resume(candidate){this.#rules.resume(candidate);}
 }
 
-function careerEntryRules({getState,setState,getSeed,setSeed,careerSession,CareerSession,POSN,$,getNavigation,normalizeSeed,generateSeed,normalizePlayerName,seedInit,newState,escapeHTML,card,actClear,startYear,restoreYearHistory=()=>$('log').replaceChildren()}){
+function careerEntryRules({getState,setState,getSeed,setSeed,careerSession,CareerSession,POSN,$,getNavigation,normalizeSeed,generateSeed,normalizePlayerName,seedInit,newState,escapeHTML,card,actClear,startYear}){
   function enter(){$('start').style.display='none';$('board').style.display='';$('act').style.display='';const navigation=getNavigation();navigation.reset();navigation.show();}
   function startNew(){let params=new URLSearchParams(location.search);let sv=normalizeSeed($('seed-show').value||params.get('seed'));if(!sv)sv=generateSeed();setSeed(sv);const pos=document.querySelector('#seg-pos button.on')?.dataset.v||'P';const nm=normalizePlayerName($('in-name').value,getSeed(),pos);setState({rngState:0});seedInit(getSeed());setState(newState(nm,pos));history.replaceState(null,'',`?seed=${encodeURIComponent(getSeed())}`);enter();const S=getState();card('info','選手誕生',`${S.year}年春、${POSN[S.pos]} <b class="hl">${escapeHTML(S.name)}</b>は<b class="hl">${escapeHTML(S.team)}</b>${S.schoolTier==='C'?'（C級・弱小校）':''}野球部に入部した。ここから、すべての選択が野球人生を変える。`);startYear();}
-  function resume(candidate,records=[]){const generation=careerSession.choiceGeneration+1;for(const k of Object.keys(careerSession))delete careerSession[k];Object.assign(careerSession,new CareerSession(),{choiceGeneration:generation});setState(candidate);setSeed(getState().seed);restoreYearHistory(records);actClear();$('app').style.display='flex';enter();history.replaceState(null,'',`?seed=${encodeURIComponent(getSeed())}`);startYear();}
+  function resume(candidate){const generation=careerSession.choiceGeneration+1;for(const k of Object.keys(careerSession))delete careerSession[k];Object.assign(careerSession,new CareerSession(),{choiceGeneration:generation});setState(candidate);setSeed(getState().seed);$('log').replaceChildren();actClear();$('app').style.display='flex';enter();history.replaceState(null,'',`?seed=${encodeURIComponent(getSeed())}`);startYear();}
   return {startNew,resume};
 }

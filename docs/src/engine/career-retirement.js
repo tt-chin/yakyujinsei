@@ -21,7 +21,7 @@ export class CareerRetirement {
   endGame(reason){this.#rules.endGame(reason);}
 }
 
-function careerRetirementRules({getState,jerseyPeriods,jerseyRetired,intlHistory,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,isReadingHistory=()=>false,rng:{R,ri}}){
+function careerRetirementRules({getState,jerseyPeriods,jerseyRetired,intlHistory,getSeed,LV,DPN,POSN,TIER_TH,LG_N,TEAM_COLOR,$,fmtMoney,fmtIP,slgOf,card,divider,choose,actClear,defShare,tierOf,traitNames,teamNick,archiveTraitResults,shareImage,rng:{R,ri}}){
   function roleName3(r){ return {SP:'先発投手',MR:'リリーバー',CL:'抑え'}[r]||'投手'; }
   function primaryPos(){ /* 通算の半数超を守った位置を主守備とし、該当なしなら年数順でユーティリティーまたはスイングマンと判定。 */
     const S=getState();
@@ -361,7 +361,6 @@ function careerRetirementRules({getState,jerseyPeriods,jerseyRetired,intlHistory
       {t:'同じシードでやり直す',s:'seed: '+getSeed(),f:()=>{location.href=location.pathname+'?seed='+getSeed();}}]);
     /* 結果画面のスクロール位置：既定の最下部スクロールを上書き、「現役生活に幕」の先頭へ移動、結果の1行目から読めるようにする。 */
     setTimeout(()=>{ try{
-      if(isReadingHistory())return;
       const heads=document.querySelectorAll('.yr-head');
       for(const h of heads){ if(h.textContent==='現役生活に幕'){ h.scrollIntoView({behavior:'auto',block:'start'}); break; } }
     }catch(e){} },250);
