@@ -1,3 +1,4 @@
+import {sourceText,readSourceText} from './support/source-text.mjs';
 import assert from 'node:assert/strict';
 import {baseFaOfferCount,buildFaOffer,calculateOfferAnnualSalary,competitionMultiplier,contractTypeMultiplier,generateBidJitters,resolveFaMarket} from '../docs/src/engine/market-policy.js';
 assert.deepEqual([6,3,1,-1,-2].map(baseFaOfferCount),[4,3,2,1,0]);assert.deepEqual([1,2,3,4].map(competitionMultiplier),[1,1.025,1.05,1.075]);assert.equal(contractTypeMultiplier('LONG'),.95);assert.equal(contractTypeMultiplier('SHORT'),1.05);assert.equal(contractTypeMultiplier('PROOF'),1.05);
@@ -70,7 +71,7 @@ assert.deepEqual(unique.state.lastFaMarket.offers.map(x=>x.teamId),top);
 // Frozen pre-fix module; same dependencies (unchanged), no golden replacement.
 const {execFileSync}=await import('node:child_process');
 const baseline='b8bc49b7b0cb14b24cec3b3499a57ecfb61e1a0d';
-const oldSource=execFileSync('git',['show',baseline+':docs/src/engine/career-movement.js'],{encoding:'utf8'});
+const oldSource=sourceText(execFileSync('git',['show',baseline+':docs/src/engine/career-movement.js'],{encoding:'utf8'}));
 const absoluteSource=oldSource.replace(/from '(\.\.?\/[^']+)'/g,(_m,p)=>'from '+JSON.stringify(new URL(p,new URL('../docs/src/engine/career-movement.js',import.meta.url)).href));
 const {CareerMovement:BeforeMovement}=await import('data:text/javascript;base64,'+Buffer.from(absoluteSource).toString('base64'));
 for(const org of ['NPB','MLB','KBO','CPBL']){
@@ -89,7 +90,6 @@ for(const org of ['MLB','MiLB','KBO','CPBL']){
 }
 console.log('PASS native FA candidates/gates, demand/limits/injuries, no-bid/stay/dedup/cache, frozen pre-market and permitted-difference controls');
 // Nothing before the market may change except the separately approved result copy.
-const {readFileSync}=await import('node:fs');
 const stripMarket=s=>s.replaceAll('\r\n','\n').replace(/  function faMarketRule\(o,d\)\{[\s\S]*?(?=  function outOfOrg\(o\))/,'');
 // MLB-POSTING-DESIGN-01 / NPB-OFFER-WINDOW-01 (approved R3): the season-end menu is reverted by exact text,
 // each hunk exactly once, so every other line still has to equal the pre-fix source.
@@ -105,7 +105,7 @@ const dropBlock=(s,start,end,label)=>{const i=s.indexOf(start),j=s.indexOf(end);
 const revertSeasonEnd=s=>{s=dropBlock(s,'  // NPB season-end menu (MLB-POSTING-DESIGN-01','  function crossOffersRule(o){','season-end helpers');
  s=dropBlock(s,'  function faCancelOption(){','  function showFaMarket(market){','FA cancel option');
  for(const [from,to,label] of SEASON_END_HUNKS)s=onceText(s,from,to,label);return s;};
-const currentSource=revertSeasonEnd(readFileSync(new URL('../docs/src/engine/career-movement.js',import.meta.url),'utf8'))
+const currentSource=revertSeasonEnd(readSourceText(new URL('../docs/src/engine/career-movement.js',import.meta.url)))
  .replace("import {effectiveMarketOrg} from './cross-league-market-policy.js';",'')
  .replace("card('info','トレードは成立せず','トレードの噂はあったものの、移籍は実現せず、引き続き同じ球団でプレーすることになった。')","card('info','泊まった','噂はあくまで噂です。新しい野球シーズンでも、同じジャージを着ます。')");
 assert.equal(stripMarket(currentSource).replace(/\n\n\nexport class/,'\n\nexport class'),stripMarket(oldSource),'outside FA market, source and pre-entry RNG sites unchanged except approved copy/import and season-end menu');

@@ -18,6 +18,7 @@ export async function captureGameView(full){
   const state=window.__expect1140?window.__projectChampionmaker(projected,window.__champTeams):projected;
   delete state.version;if(state.birthHighSchool)delete state.birthHighSchool.createdVersion;
   const dom=Object.fromEntries(['log','act','board'].map(id=>[id,document.getElementById(id)?.outerHTML??null]));
+  if(window.__projectYearHistoryLog)dom.log=window.__projectYearHistoryLog();
   if(window.__projectDecisionPresentation)for(const id of ['log','act'])dom[id]=window.__projectDecisionPresentation(dom[id],id,rawState);
   if(window.__expectBrowserSave){
     const board=document.getElementById('board').cloneNode(true),live=board.querySelector('#save-live');

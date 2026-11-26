@@ -6,6 +6,7 @@ import {JP_DATA} from '../data/jp-data.js';
 // Annual-start data contract. Captured proof ownership is checked before sealing.
 export const SAVE_LIMITS=Object.freeze({bytes:2*1024*1024,depth:32,arrayLength:1024,nodes:131072});
 export const SAVE_COMPATIBILITY='year-start-v2-auth';
+const HISTORY_COMPATIBILITY='year-start-v3-history-auth';
 const captures=new WeakMap();
 const blocked=new Set(['__proto__','prototype','constructor']);
 const fail=code=>{throw Object.assign(new Error(code),{code});};
@@ -52,7 +53,9 @@ export function copySaveData(value,{stateRoot=false}={}){
 }
 export function validateSaveEnvelope(input){
  const e=copySaveData(input);
- if(e.format!=='yakyujinsei-career-save'||e.schemaVersion!==2||e.compatibilityId!==SAVE_COMPATIBILITY)fail('SAVE_INCOMPATIBLE');
+ const legacy=e.schemaVersion===2&&e.compatibilityId===SAVE_COMPATIBILITY&&!Object.hasOwn(e,'yearHistory');
+ const history=e.schemaVersion===3&&e.compatibilityId===HISTORY_COMPATIBILITY;
+ if(e.format!=='yakyujinsei-career-save'||(!legacy&&!history))fail('SAVE_INCOMPATIBLE');
  if(typeof e.gameVersion!=='string'||!/^\d+\.\d+\.\d+$/.test(e.gameVersion))fail('SAVE_VERSION');
  if(typeof e.savedAt!=='string'||!Number.isFinite(Date.parse(e.savedAt))||new Date(e.savedAt).toISOString()!==e.savedAt)fail('SAVE_TIME');
  if(typeof e.careerId!=='string'||!e.careerId||e.careerId.length>128)fail('SAVE_ID');
@@ -66,6 +69,7 @@ export function validateSaveEnvelope(input){
  if(Object.hasOwn(s,'jerseyHistory')&&!isValidJerseyHistory(s.jerseyHistory,{year:s.year,teamExists:id=>JERSEY_TEAM_IDS.has(id)}))fail('SAVE_JERSEY');
  if(s.championmakerAcquiredYear!==null&&(!Number.isSafeInteger(s.championmakerAcquiredYear)||s.championmakerAcquiredYear<1||s.championmakerAcquiredYear>s.year))fail('SAVE_CHAMPION_YEAR');
  if(s.year<1||s.year>9999||s.done!==false)fail('SAVE_STATE');
+ if(history)validateYearHistory(e.yearHistory,s.year);
  if(!Number.isInteger(s.rngState)||s.rngState<0||s.rngState>0xffffffff)fail('SAVE_RNG');
  if(!['P','C','IF','OF'].includes(s.pos)||!['HS','U','CORP','IND','PRO'].includes(s.stage)||!['HS','U','CORP','IND','NPB1','NPB2','NPB_DEV','KBO1','KBO2','CPBL1','CPBL2','MLB','R','A1','A2','A3'].includes(s.lv))fail('SAVE_ROUTE');
  const amateur={HS:'AMATEUR',U:'AMATEUR',CORP:'CORP',IND:'IND'};const org=s.lv.startsWith('NPB')?'NPB':s.lv.startsWith('KBO')?'KBO':s.lv.startsWith('CPBL')?'CPBL':['R','A1','A2','A3'].includes(s.lv)?'MiLB':null;
@@ -80,10 +84,30 @@ export function validateSaveEnvelope(input){
  if(s.ct!==null){const ct=s.ct;if(!ct||ct.schemaVersion!==3||typeof ct.contractId!=='string'||!Array.isArray(ct.annualSchedule))fail('SAVE_CONTRACT');const seen=new Set();for(const row of ct.annualSchedule){if(!Number.isSafeInteger(row.year)||seen.has(row.year)||!Number.isFinite(row.amount)||row.amount<0||typeof row.paid!=='boolean'||(row.year===s.year&&row.paid))fail('SAVE_CONTRACT');seen.add(row.year);}}
  return e;
 }
-export function createSaveEnvelope(state,{careerId,revision,savedAt=new Date().toISOString(),checkpointReady=false}={}){
+function validateYearHistory(records,checkpointYear){
+ if(!Array.isArray(records))fail('SAVE_YEAR_HISTORY');
+ let previous=0;
+ for(const record of records){
+  if(!record||!Number.isSafeInteger(record.year)||record.year<=previous||record.year>=checkpointYear||
+     typeof record.title!=='string'||!record.title.startsWith(record.year+'年・')||typeof record.html!=='string'||
+     !Array.isArray(record.salaries))fail('SAVE_YEAR_HISTORY');
+  previous=record.year;
+  for(const snapshot of record.salaries){
+   if(snapshot===null)continue;
+   if(!snapshot||typeof snapshot!=='object'||Array.isArray(snapshot)||
+      !Number.isFinite(snapshot.currentSalary)||snapshot.currentSalary<0||
+      (snapshot.salaryYear!==null&&(!Number.isSafeInteger(snapshot.salaryYear)||snapshot.salaryYear<1))||
+      typeof snapshot.isProfessional!=='boolean'||
+      !['decision','contract','income'].every(key=>snapshot[key]===null||
+        (snapshot[key]&&typeof snapshot[key]==='object'&&!Array.isArray(snapshot[key]))))fail('SAVE_YEAR_HISTORY_SALARY');
+  }
+ }
+}
+
+export function createSaveEnvelope(state,{careerId,revision,savedAt=new Date().toISOString(),checkpointReady=false,yearHistory}={}){
  if(!checkpointReady)fail('SAVE_NOT_READY');
  const data=copySaveData(state,{stateRoot:true});
- const envelope=validateSaveEnvelope({format:'yakyujinsei-career-save',schemaVersion:2,compatibilityId:SAVE_COMPATIBILITY,gameVersion:VERSION,savedAt,careerId,revision,checkpoint:{kind:'YEAR_START_READY',year:data.year,age:data.age,stageYr:data.stageYr,eventYearInitialized:true},state:data,awardProofs:captureCompletedAwardProofs(state)});
+ const envelope=validateSaveEnvelope({format:'yakyujinsei-career-save',schemaVersion:yearHistory===undefined?2:3,compatibilityId:yearHistory===undefined?SAVE_COMPATIBILITY:HISTORY_COMPATIBILITY,gameVersion:VERSION,savedAt,careerId,revision,checkpoint:{kind:'YEAR_START_READY',year:data.year,age:data.age,stageYr:data.stageYr,eventYearInitialized:true},state:data,awardProofs:captureCompletedAwardProofs(state),...(yearHistory===undefined?{}:{yearHistory})});
  captures.set(envelope,JSON.stringify(envelope));return envelope;
 }
 

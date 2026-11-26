@@ -83,7 +83,7 @@ TJは投手だけに表示し、コンディション明細と同じtjGaugeText�
 
 新しい通常選択は展開、同じ選択肢配列の復元では折りたたみ状態を保持する。配点は本章の専用画面で常に表示し、完成時の確定欄表示と元の操作を変更しない。UI内のWeakMapで生涯・年度ごとの選択IDを管理し、既存choiceViews／tokenやSへ書き込まない。デスクトップの選択肢は1～2列、モバイルは1列で長文に応じて高さを増す。イベントの通常選択に最善を示すような主色強調を付けず、成功率・効果・代価は既存eventChoiceSummaryの出力をそのまま用いる。
 
-選手／キャリアを見ている間は「選択に戻る」を表示する。通常のホーム復帰では元のページ／ログ／操作欄のスクロール位置を復元し、専用入口では現在の選択を展開して見出しへ移動し焦点を戻す。履歴を読んでいる間の年度更新は読書位置を自動で末尾へ送らず、読んでいる旧年度を自動で畳まない。既存の履歴保持上限は維持する。選択肢や配点のノード・リスナー・草稿は再生成せず、矢印からゲームの選択ボタンをクリックしない。
+選手／キャリアを見ている間は「選択に戻る」を表示する。通常のホーム復帰では元のページ／ログ／操作欄のスクロール位置を復元し、専用入口では現在の選択を展開して見出しへ移動し焦点を戻す。履歴を読んでいる間の年度更新は読書位置を自動で末尾へ送らず、読んでいる旧年度を自動で畳まない。ホームの年度見出しは高校入学から引退まで保持する。過年度は通常閉じ、再展開時にその年度の記録から詳細を表示する。閉じた過年度の詳細ノードは保持しない。年俸の詳細は当時の保存値を使い、再計算しない。選択肢や配点のノード・リスナー・草稿は再生成せず、矢印からゲームの選択ボタンをクリックしない。
 
 イベント結果の能力・繰越は保存済みresult.abilityのbefore／after、成績点・能力上限超過・故障リスク加算・スポンサー収入は実際のresult値を表示する。故障リスク加算は確率として再計算しない。旧来の詳細文は「効果の詳細」に保持し、記録欠損は「詳細記録なし」、数値効果のない結果は「数値の変化なし」と表示する。既存イベント履歴へ再登録しない。
 
@@ -895,7 +895,7 @@ TJは既存上限（通常50、ゴムゴムの腕100）を共用判定し、小�
 設計書廃止後の現行契約。実装は`docs/src/engine/browser-save-{codec,state-contract,auth,store,controller,runtime}.js`、年度境界は`year-flow.js`、開始・復元入口は`career-entry.js`を参照。検証入口は`tests/browser-save-*.mjs`及び`scripts/test-browser-save-*.mjs`。旧設計はGit履歴にのみ保持し、現行仕様や取消済み第二・三期の実装指示にしない。
 
 - **年度境界**：初期化又は前年度の契約・付款・移籍・配分とhandoff COMMITTEDが確定し、年度イベント初期化後、新年度の衰退・骰子・抽選等の首步前をYEAR_START_READYとする。曖昧な途中状態を保存しない。独立した完全快照を同期取得し、その後のI/O成否でゲーム状態・RNGを変更しない。離脱時保存だけには依存せず、transaction complete前は成功としない。
-- **形式と容量**：format=yakyujinsei-career-save、schemaVersion=2、compatibilityId=year-start-v2-auth。gameVersion、savedAt、careerId、revision、checkpoint（year／age／stageYr／eventYearInitialized）、awardProofs、完全な純データstateを保存し、checkpointとstateの年度を一致させる。上限2MiB（UTF-8）、深度32、配列1024、節点131072。超過・未知型別を黙って切捨てず拒否し旧保存を保持する。
+- **形式と容量**：format=yakyujinsei-career-save、schemaVersion=3、compatibilityId=year-start-v3-history-auth。完了年度のホーム見出しと結果カード・当時の年俸明細を state 外の yearHistory として同時保存する。従来の v2 は元の形式で検証・読込し、続行した年度から記録を蓄積する。存在しない過年度や引退時点を補造・追加保存しない。gameVersion、savedAt、careerId、revision、checkpoint（year／age／stageYr／eventYearInitialized）、awardProofs、完全な純データstateを保存し、checkpointとstateの年度を一致させる。上限2MiB（UTF-8）、深度32、配列1024、節点131072。超過・未知型別を黙って切捨てず拒否し旧保存を保持する。
 - **型と復元**：null／boolean／finite number／string／密なarray／純object、及び合法な共有参照を扱い、cycle、疎配列、undefined、BigInt、Symbol、Date／Map／Set、危険キー、未許可prototypeや実行可能データを拒否する。途中で追加された有効S欄位も保存し、動的欄位の契約はstate-contractを用いる。関数、DOM、WeakMap、callback、closure、debug hook、scroll、表示設定は保存しない。許可されたaccessor／方法とCareerSession等は専用hydrateで再構築し、newState／seedInit／追加抽選でデータを補わない。
 - **保存・競合**：同originのIndexedDB `yakyujinsei-career` v1、career storeのautosave一枠。{revision,save,seal}を単一readwrite transactionでCAS更新。順序付き書込、careerId／generationで過期処理を拒否。内部削除はrevision tombstoneでABAを防ぐ。明示的削除UIは[2.0.0統合仕様](#v2-home)に従う。新規開始は確認後、最初の保存成功時だけ置換。生涯IDやI/O用IDは主RNGを消費しない。
 - **失敗保護**：読取不能／未知保存では明示確認した非保存プレイを許し、その生涯は回復後も自動書込を再開しない。多分頁CAS敗者は以後の書込を停止、強制覆書しない。戻って最新保存を読む時は未保存操作破棄を確認。配額不足や保存失敗は旧データを保持し成功扱いにしない。URLのseedで保存を自動読込／上書きせず、開発・本番・端末間で保存は共有しない。

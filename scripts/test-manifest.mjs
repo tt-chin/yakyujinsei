@@ -15,6 +15,7 @@ const browserProfiles = {
   'hof-retirement-policy-e2e': {seconds:180,reason:'Approved HOF-only deltas: full pre-retirement S/choice/RNG equality, P/IF deterministic replay and frozen-rule retirement oracle, no blanket ignore.'},
   'browser-save-store-e2e': {quick:[],seconds:15,reason:'Real IndexedDB revision, quota and stale-write fault checks.'},
   'browser-save-runtime-e2e': {quick:[],seconds:40,reason:'Real reload S/RNG, first-step failure/retry, two tabs and unavailable storage UI.'},
+  'home-year-history-e2e': {seconds:300,reason:'Two long careers, native fixed-seed old/current comparison, legacy v2 load, v3 annual history and historical salary links on mobile/desktop.'},
   'browser-save-routes-e2e': {seconds:600,reason:'Every annual checkpoint in two natural and thirteen controlled career routes, exact S/RNG after real reload.'},
   'information-dialog-e2e': {seconds:90,reason:'Shared help/update dialog: fixed regions, custom indicator, viewport/content resizing, scroll lock, focus and observer cleanup across mobile/desktop; no full-career replay.'},
   'income-display-e2e': {seconds:40,reason:'Native read-only income summary/detail/retirement/canvas, 30 role/viewport/financial fixtures with exact S/RNG checks.'},

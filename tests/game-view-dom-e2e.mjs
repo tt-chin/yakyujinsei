@@ -55,6 +55,24 @@ const server=createServer(async(req,res)=>{
     }
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
+      if(!baseline)content+=`
+window.__projectYearHistoryLog=()=>{
+        // Reconstruct the legacy DOM contract only for the frozen GameView oracle.
+        // Restore exact raw bodies, retain the old prelude location and project the old 8-block window.
+        const history=gameView.yearHistory,clone=document.getElementById('log').cloneNode(true);
+        if(!history)return clone.outerHTML;
+        const blocks=[...clone.querySelectorAll(':scope > .yr-block')];
+        blocks.forEach((block,index)=>{
+          const entry=history.years[index],body=block.querySelector('.yr-body');
+          if(!entry||entry.head.textContent!==block.querySelector('.yr-head').textContent)throw Error('YEAR_HISTORY_DOM_ALIGNMENT');
+          if(!body.hasChildNodes()&&entry.record)body.innerHTML=entry.record.html;
+        });
+        const first=blocks[0]?.querySelector('.yr-body');
+        const prelude=[...(first?.children??[])].find(node=>node.querySelector('h4')?.textContent==='選手誕生');
+        if(prelude)clone.prepend(prelude);
+        for(const block of blocks.slice(0,Math.max(0,blocks.length-8)))block.remove();
+        return clone.outerHTML;
+      };`;
       if(!baseline)content+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
       if(!baseline)content+='\n('+observeShellBoard.toString()+')(gameView,window);window.__projectShell2000='+projectShell2000.toString()+';window.__shellBoard2000='+JSON.stringify(SHELL_BOARD_2000)+';window.__shellBoard11615='+JSON.stringify(SHELL_BOARD_11615)+';';
       if(!baseline)content+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__verifyFranchise=${verifyFranchiseGrant.toString()};window.__projectFranchise=${projectFranchiseField.toString()};\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScoreFor(S.stats[b],S.pos),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;

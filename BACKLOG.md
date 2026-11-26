@@ -4,6 +4,8 @@
 
 ## 1. 最新進度總覽
 
+- ホーム年度履歴（2.1.0）：8年度上限廃止、閉じた年度の詳細DOMを解放、年初セーブv3に完了年度のカードと当時の年俸明細を保存。v2は読込以降の履歴を蓄積する。2 MiB上限維持。GitHub手動FullとPreview／実機受入待ち。
+
 - 2.1.0：[Full #286](https://github.com/tt-chin/yakyujinsei/actions/runs/45549669028)的10項失敗已修正，本地相關E2E及Quick（115 PASS）通過；尚待修正提交的GitHub手動Full及Safari實機排序確認。原失敗與修正範圍見[測試說明](scripts/TESTING.md)；PR #128入札方案與保有權年度海外報價已實作（2026-11-25，使用者授權），本地相關E2E及Quick（116 PASS）通過，尚待GitHub手動Full；延長交涉年的順序暫依現行（計畫§8 Q4待決）。
 - 2.0.0開發已告一段落，目前已交付功能的實機驗收已由使用者確認完成。未來依AGENTS第9章正常採番，不再固定2.0.0。
 - 受驗提交 `875a8af62189e7ddcc2eac27afd3c80783d45210` 的 [Quick #280](https://github.com/tt-chin/yakyujinsei/actions/runs/45510842813) 與 [Full #281](https://github.com/tt-chin/yakyujinsei/actions/runs/45512251900) 均成功；Full 146 PASS、0 FAIL／SKIP／BLOCKED。此結果只對應該提交，不代表後續提交已執行Full。
