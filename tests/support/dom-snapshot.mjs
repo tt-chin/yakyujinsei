@@ -1,3 +1,22 @@
+// Detached, test-only projection for baselines that kept the last eight result bodies in the DOM.
+// Restore the exact archived markup before discarding only the extra historical blocks.
+export function projectLegacyYearHistory(history,source){
+  const log=source.cloneNode(true);
+  const blocks=[...log.querySelectorAll(':scope > .yr-block')];
+  if(!history||blocks.length!==history.years.length)throw Error('YEAR_HISTORY_DOM_ALIGNMENT');
+  for(const [index,block] of blocks.entries()){
+    const entry=history.years[index],body=block.querySelector('.yr-body');
+    if(entry.head.textContent!==block.querySelector('.yr-head').textContent)throw Error('YEAR_HISTORY_DOM_ALIGNMENT');
+    if(!body.hasChildNodes()&&entry.record)body.innerHTML=entry.record.html;
+  }
+  const first=blocks[0]?.querySelector('.yr-body');
+  const prelude=[...(first?.children??[])].filter(node=>node.querySelector('h4')?.textContent==='選手誕生');
+  if(blocks.length&&prelude.length!==1)throw Error('YEAR_HISTORY_BIRTH_CARD');
+  if(prelude.length)log.prepend(prelude[0]);
+  for(const block of blocks.slice(0,Math.max(0,blocks.length-8)))block.remove();
+  return log;
+}
+
 // GameView refactor regression (OOP plan §2d.4): one step's #log/#act/#board DOM, S and RNG count;
 // since §2g.4 also the player/career view models (read-only; every baseline since 08d0759 has these builders).
 // game.js must be served with instrumentRng(...,'__rngCalls') and GAME_VIEW_HOOK appended.

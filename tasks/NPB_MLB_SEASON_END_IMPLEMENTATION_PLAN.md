@@ -191,3 +191,10 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
   - 修正後重跑：Quick 116 PASS／0 FAIL／SKIP／BLOCKED（116 入口）；`contract-salary-e2e --compare=b8bc49b` 381／0；`kbo-renewal-e2e` 完整模式、`global-contract-market-e2e --quick`、`fa-market-presentation-e2e` PASS。
   - 修正後負控制 5 個（移除 `postingResolved` 檢查、比較表改回嚴格按鈕數、移除 `faAside`、無報價畫面不加取消、取消按鈕不移到比較表後）皆於對應斷言 FAIL。
   - **Full：GitHub 手動、未執行**（AGENTS §6.2）。
+
+## 11. Full 歷史比對修正
+
+- [Full #289](https://github.com/tt-chin/yakyujinsei/actions/runs/45645665227) 保留 143 PASS／4 FAIL。PR #130 的四個入口修正以 [Tests #291](https://github.com/tt-chin/yakyujinsei/actions/runs/45778946981) 在 `197aef4f03be19b312d44c2421c6af2c7b6b4328` 驗證 Full PASS。該次 Quick job 為 skipped。
+- [Full #293](https://github.com/tt-chin/yakyujinsei/actions/runs/45826779978) 受測 `7d71c8cc11e66bf99bf77bb187a5c8f25387c315`，141 PASS／7 FAIL：前述四入口仍未含 PR #130 修正，另有年度歷史畫面投影及兩個靜態／DOM期待值。後兩項由 `808216cdf041bf18cf38fcf2b85be6d74606057a` 修正，該 SHA 的 [Quick #294](https://github.com/tt-chin/yakyujinsei/actions/runs/45827896512) PASS。
+- 剩餘五入口：移入 PR #130 的季末比較測試與22項 helper 案例；保留 phoenix 的2041原路線、RNG前綴及新版全程重播。顯示偏好與 GameView 共用測試投影，重建舊版最後8區塊的原始內容及出生卡位置；所有其他文字、DOM、S與RNG依原比較。新版完整年度紀錄由 `home-year-history-e2e` 驗證。比較基準維持，產品與版號仍為2.2.0。
+- 最終提交的 Full 必須由使用者在 GitHub 手動執行。保留舊 run 原結果。
