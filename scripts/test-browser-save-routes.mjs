@@ -1,11 +1,16 @@
+import {VERSION} from '../docs/src/config.js';
 import {execFileSync} from 'node:child_process';
 import os from 'node:os';
 import assert from 'node:assert/strict';import {createServer} from 'node:http';import {readFile,mkdir,writeFile} from 'node:fs/promises';import path from 'node:path';import {createRequire} from 'node:module';import {assertSameCareer} from '../tests/support/first-difference.mjs';
 const root=process.cwd(),out=process.argv.find(a=>a.startsWith('--output='))?.slice(9)||path.join(os.tmpdir(),'yakyujinsei-browser-save-routes-'+Date.now());await mkdir(out,{recursive:true});
 const probe=`\nwindow.__saveTrace=[];const saveObservedR=R;R=function(){const value=saveObservedR();window.__saveTrace.push({value,state:S.rngState});return value;};const saveObservedYear=yearFlow.startReadyYear.bind(yearFlow);yearFlow.startReadyYear=function(capture){return saveObservedYear(state=>{window.__saveTraceStart=window.__saveTrace.length;window.__saveRawBoundary=JSON.parse(JSON.stringify(state));capture(state);});};window.__saveAcceptance={get:()=>({state:JSON.parse(JSON.stringify(S)),rng:window.__saveTrace.slice(window.__saveTraceStart)}),failNextYear:()=>{const old=yearFlow.startReadyYear.bind(yearFlow);yearFlow.startReadyYear=function(capture){yearFlow.startReadyYear=old;old(capture);S.ab[Object.keys(S.ab)[0]]-=1;throw Error('SAVE_INJECTED_FIRST_STEP');};}};window.__historyMoney=fmtMoney;window.__saveRouteFixture=(lv,rehab=false)=>{const pos=S.pos;S=newState('保存route fixture',pos);Object.assign(S,{year:2032,age:22,stage:'PRO',stageYr:1,lv,org:LV[lv].org,rehab:rehab?1:0});const team=listByOrg(S.org)[0];S.orgTeamId=team.teamId;for(const k of Object.keys(S.ab)){S.ab[k]=70;S.pot[k]=80;}signTo(S.org,lv,team.teamId,3,1,'TRANSFER',{startYear:S.year});resetEventYear(S);startYear();};`;
 const historyBaseline='00fc40d460e706a8f994aebe936a41f1fc4d45a8',baselineFiles=new Map();
-const server=createServer(async(req,res)=>{try{const pathname=new URL(req.url,'http://local').pathname,old=pathname.startsWith('/old/');const rel=(old?pathname.slice(5):pathname.slice(1))||'index.html';if(rel.includes('..'))throw Error('path');if(old&&!baselineFiles.has(rel))baselineFiles.set(rel,execFileSync('git',['show',historyBaseline+':docs/'+rel],{maxBuffer:20*1024*1024}));
-let b=old?baselineFiles.get(rel):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')b=b.toString()+probe;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':'text/html');res.end(b);}catch{res.statusCode=404;res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const mod=process.argv.find(a=>a.startsWith('--playwright='))?.slice(13)||process.env.PLAYWRIGHT_MODULE||'playwright';const {chromium}=createRequire(import.meta.url)(mod),browser=await chromium.launch({channel:(process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||process.env.TEST_BROWSER||'chrome')==='chromium'?undefined:(process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||process.env.TEST_BROWSER||'chrome'),headless:true});const results=[];
+const server=createServer(async(req,res)=>{try{const pathname=new URL(req.url,'http://local').pathname,legacy=pathname.startsWith('/legacy/'),old=legacy||pathname.startsWith('/old/');const rel=(legacy?pathname.slice(8):old?pathname.slice(5):pathname.slice(1))||'index.html';if(rel.includes('..'))throw Error('path');if(old&&!baselineFiles.has(rel))baselineFiles.set(rel,execFileSync('git',['show',historyBaseline+':docs/'+rel],{maxBuffer:20*1024*1024}));
+let b=old?baselineFiles.get(rel):await readFile(path.join(root,'docs',rel));if(old&&!legacy&&rel==='src/config.js'){
+ const source=b.toString();assert.match(source,/^export const VERSION = '2\.1\.0';\s*$/);
+ b=source.replace("'2.1.0'",JSON.stringify(VERSION));
+}
+if(rel==='src/engine/game.js')b=b.toString()+probe;res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':'text/html');res.end(b);}catch{res.statusCode=404;res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const mod=process.argv.find(a=>a.startsWith('--playwright='))?.slice(13)||process.env.PLAYWRIGHT_MODULE||'playwright';const {chromium}=createRequire(import.meta.url)(mod),browser=await chromium.launch({channel:(process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||process.env.TEST_BROWSER||'chrome')==='chromium'?undefined:(process.argv.find(a=>a.startsWith('--browser='))?.slice(10)||process.env.TEST_BROWSER||'chrome'),headless:true});const results=[];
 const advanceYear=()=>{const actions=[];const start=window.__saveAcceptance.get().state.year;for(let i=0;i<1400;i++){const state=window.__saveAcceptance.get().state;if(state.done||state.year!==start)return actions;const a=document.querySelector('#act'),rows=[...a.querySelectorAll('.abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')).sort((x,y)=>parseInt(x.querySelector('.val').textContent)-parseInt(y.querySelector('.val').textContent)),bs=[...a.querySelectorAll('button:not([data-fa-sort])')].filter(b=>!b.disabled&&!/元に戻す|すべてリセット/.test(b.innerText));const b=bs.find(b=>/通常投球/.test(b.innerText))||rows[0]||bs.find(b=>/配分を確定|配分完了|次へ|完了/.test(b.innerText))||bs.find(b=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(b.innerText))||bs[0];if(!b)throw Error('NO_ACTION');actions.push(b.dataset.abilityKey??b.textContent);b.click();}throw Error('YEAR_ACTION_LIMIT');};
 const historyRun=process.argv.includes('--year-history');
 try{for(const [seed,pos,fixture]of historyRun?[['q77bi1jx','IF',null],['jp3-infielder-01','IF',null]]:[['jp3-infielder-01','IF',null],['jp3-pitcher-02','P',null],...['MLB','A3','A2','A1','R','NPB1','NPB2','NPB_DEV','KBO1','KBO2','CPBL1','CPBL2'].map((lv,i)=>['save-route-'+lv,i%2?'IF':'P',lv]),['save-rehab','P','REHAB']]){
@@ -99,18 +104,39 @@ try{for(const [seed,pos,fixture]of historyRun?[['q77bi1jx','IF',null],['jp3-infi
   const storedAfter=await live.evaluate(async()=>{const {BrowserSaveStore}=await import('/src/engine/browser-save-store.js');const st=new BrowserSaveStore(),row=await st.read();st.close();return JSON.stringify(row);});assert.equal(storedAfter,storedBefore,'retirement replay never overwrites annual checkpoint');retirementResumeVerified=true;
  }
  if(oldPage){
-  const legacy=await oldPage.evaluate(async()=>{
-   const {BrowserSaveStore}=await import('/old/src/engine/browser-save-store.js');
+  await oldContext.close();
+  const legacyContext=await browser.newContext({viewport:{width:390,height:900}});
+  const page=await legacyContext.newPage();
+  await page.goto('http://127.0.0.1:'+server.address().port+'/legacy/?seed='+seed);
+  await page.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
+  await page.locator('#seg-pos [data-v="'+pos+'"]').click();
+  await page.locator('#in-name').fill('年度比較太郎');
+  await page.locator('#btn-start').click();
+  await page.evaluate(advanceYear);
+  const expected=await page.evaluate(()=>window.__saveAcceptance.get());
+  await page.waitForFunction(y=>document.querySelector('#save-live').textContent.includes(y+'年の開始時点をセーブしました'),expected.state.year);
+  const legacy=await page.evaluate(async()=>{
+   const {BrowserSaveStore}=await import('/legacy/src/engine/browser-save-store.js');
    const store=new BrowserSaveStore();try{return (await store.read()).save;}finally{store.close();}
   });
   assert.equal(legacy.schemaVersion,2);
-  await oldPage.goto(url);
-  await oldPage.locator('#save-continue').click();
-  await oldPage.waitForFunction(()=>document.querySelector('#save-live').textContent.includes('年の最初から再開しました'));
-  assert.equal(await oldPage.locator('#log .yr-head').count(),1,'old checkpoint loads without inventing titles');
-  await oldPage.evaluate(advanceYear);
-  assertSameCareer(await oldPage.evaluate(()=>window.__saveAcceptance.get()),final,'legacy save replay reaches identical retirement');
-  await oldContext.close();
+  assert.equal(legacy.gameVersion,'2.1.0');
+  await page.goto(url);
+  await page.locator('#save-continue').click();
+  await page.waitForFunction(()=>document.querySelector('#save-live').textContent.includes('年の最初から再開しました'));
+  assert.equal(await page.locator('#log .yr-head').count(),1,'old checkpoint loads without inventing titles');
+  assertSameCareer(await page.evaluate(()=>window.__saveAcceptance.get()),expected,'legacy save reload preserves the original boundary state and RNG');
+  await page.evaluate(advanceYear);
+  await page.waitForFunction(y=>document.querySelector('#save-live').textContent.includes(y+'年の開始時点をセーブしました'),expected.state.year+1);
+  const upgraded=await page.evaluate(async()=>{
+   const {BrowserSaveStore}=await import('/src/engine/browser-save-store.js');
+   const store=new BrowserSaveStore();try{return (await store.read()).save;}finally{store.close();}
+  });
+  assert.equal(upgraded.schemaVersion,3);
+  assert.equal(upgraded.gameVersion,VERSION);
+  assert.equal(upgraded.state.birthHighSchool.createdVersion,'2.1.0');
+  assert.deepEqual(upgraded.yearHistory.map(entry=>entry.year),[expected.state.year]);
+  await legacyContext.close();
  }
  if(historyRun){
   assert.ok(verified>20&&final.state.age>=35&&final.state.done,'long career reaches retirement');

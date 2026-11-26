@@ -21,7 +21,8 @@ const stat={yr:1,G:30,IP:123+2/3,W:12,L:5,SO:150,H:100,BB:30,ER:40,SV:0,HLD:0,PA
 const PLY01_CORE={"src/engine/career-retirement.js":["jerseyPeriods,jerseyRetired,","  /* PLY-01 W2c: number history above the league tables; J3 periods come from professional log rows. */\n  function jerseyTable(periods){if(!periods.length)return '';\n    const rows=periods.map(p=>`<tr><td class=\"cell-left\">${p.team}</td><td class=\"cell-nowrap\">${p.from===p.to?p.from:p.from+'–'+p.to}</td><td class=\"cell-nowrap\">${p.number===null?'不明':'#'+p.number}</td></tr>`).join('');\n    return `<h4 class=\"jersey-heading\">背番号</h4><table class=\"fin jersey-table\">${rows}</table>`;}\n"," jerseyRetired?.(); /* PLY-01 J1: no number or menu change after retirement. */","jerseyTable(jerseyPeriods?.()||[])+"],"src/engine/professional-season.js":["jerseyLabel,","${jerseyLabel?.()||''}"]};
 // INT-01: optional intlHistory dep and the 国際大会出場履歴 block after the 国際大会通算 table (INT_01_INTL_HISTORY_PLAN §3.2).
 const INT01_CORE={"src/engine/career-retirement.js":["intlHistory,","+(intlHistory?.()||'')"]};
-const withoutPly01=(file,text)=>[...(PLY01_CORE[file]||[]),...(INT01_CORE[file]||[])].reduce((t,x)=>{assert.equal(t.split(x).length,2,file+' approved PLY-01/INT-01 insertion once');return t.replace(x,'');},text);
+const YEAR_HISTORY_CORE={"src/engine/career-retirement.js":["isReadingHistory=()=>false,","      if(isReadingHistory())return;\n"]};
+const withoutPly01=(file,text)=>[...(PLY01_CORE[file]||[]),...(INT01_CORE[file]||[]),...(YEAR_HISTORY_CORE[file]||[])].reduce((t,x)=>{assert.equal(t.split(x).length,2,file+' approved presentation insertion once');return t.replace(x,'');},text);
 let failure;
 try{
  for(const file of ['src/engine/career-retirement.js','src/engine/season-settlement.js','src/engine/professional-season.js','src/engine/season-payment-policy.js','src/engine/player-ability.js'])assert.equal(withoutPly01(file,(await readFile(path.join(root,'docs',file),'utf8')).replace(/\r\n/g,'\n')),execFileSync('git',['show',baseline+':docs/'+file],{maxBuffer:30e6}).toString().replace(/\r\n/g,'\n'),file+' core unchanged');
@@ -56,7 +57,13 @@ try{
   for(const q of [p,old])await q.evaluate(()=>window.__reviewTest.retire());await frames(p);await frames(old);
   assert.deepEqual(assertUi20VersionStamps(await snapshot(p)),assertUi20VersionStamps(await snapshot(old)),'native retirement complete S/RNG including HOF and fan draws');
   // PLY-01: the candidate retirement card carries the approved 背番号 table; after the phase-5 projection, remove it with its contract check (exactly one table).
-  const original=(q,jersey)=>q.evaluate(source=>{const state=window.__reviewTest.get().state,markup=window.__projectReview(document.getElementById('log').outerHTML,'log',state);if(!source)return markup;const t=document.createElement('template');t.innerHTML=markup;const log=t.content.firstElementChild;if(eval('('+source+')')(log,state).table!==1)throw Error('JERSEY_REVIEW_TABLE');return log.outerHTML;},jersey?removeJerseyDisplay.toString():null);assert.equal(await original(p,true),await original(old,false),'every original retirement node/text preserved');
+  const original=(q,jersey)=>q.evaluate(source=>{const state=window.__reviewTest.get().state,markup=window.__projectReview(document.getElementById('log').outerHTML,'log',state);if(!source)return markup;const t=document.createElement('template');t.innerHTML=markup;const log=t.content.firstElementChild;if(eval('('+source+')')(log,state).table!==1)throw Error('JERSEY_REVIEW_TABLE');
+    // Original result DOM is exact after projecting the birth card back to its pre-history position.
+    const firstYear=log.querySelector(':scope > .yr-block > .yr-body');
+    const birth=[...(firstYear?.children??[])].filter(node=>node.querySelector('h4')?.textContent==='選手誕生');
+    if(birth.length!==1)throw Error('YEAR_HISTORY_BIRTH_CARD');
+    log.prepend(birth[0]);
+    return log.outerHTML;},jersey?removeJerseyDisplay.toString():null);assert.equal(await original(p,true),await original(old,false),'every original retirement node/text preserved');
   const review=p.locator('[data-career-review="retirement"]');assert.equal(await review.count(),1);assert.match(await review.textContent(),/2026年｜野球人生の始まり/);assert.match(await review.textContent(),/2029年｜プロでの最初の記録/);assert.match(await review.textContent(),/2031年｜キャリアハイ/);assert.match(await review.textContent(),/2050年/);
   const totalLines=await review.locator('h3').filter({hasText:'主な通算成績'}).evaluate(h=>[...h.nextElementSibling.children].map(n=>n.textContent));
   assert.equal(totalLines.length,14);for(const label of ['NPB一軍','NPB二軍','NPB育成','KBO一軍','KBOフューチャース','台湾プロ野球一軍','台湾プロ野球二軍','MLB','MiLB｜3A','MiLB｜2A','MiLB｜1A','MiLB｜ルーキーリーグ','独立リーグ','社会人野球'])assert.equal(totalLines.filter(line=>line.startsWith(label+'｜')).length,1,label);
