@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "2.2.1｜2026/11/28",
+    "lines": [
+      "- 「シード」の表記を統一し、通算成績や年俸内訳、私生活などの日本語を読みやすく整えました。"
+    ]
+  },
+  {
     "title": "2.2.0｜2026/11/26",
     "lines": [
       "- ホームで過去の全年度を振り返れるようにしました。新しいセーブからは、保存済みの年度結果も復元できます。"

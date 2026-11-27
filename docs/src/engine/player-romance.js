@@ -154,7 +154,7 @@ function romanceRules({getState,clamp,POS_AB,ABL,addAb,addAbStat,card,board,choo
     board(1);
     card('bad','浮気発覚',`ドライブレコーダーの画面が流出し、タイムラインも綺麗に揃っていました。<b class="dn">${ABL[kk]} ${g}</b>。${extra}`);
     choose(`3日間の既読スルー後、${L.partner}がようやく会うことを承諾した`,[
-      {t:'謝罪してもう一度チャンスを彼女に懇願する',s:'成功＝関係を続ける｜失敗＝能力がさらに低下して別れる',f:()=>{const S=getState();
+      {t:'謝罪し、もう一度チャンスをくれるよう彼女に頼む',s:'成功＝関係を続ける｜失敗＝能力がさらに低下して別れる',f:()=>{const S=getState();
         if(chance(40)){
           card('info','どん底を越えて',`彼女は泣きながら怒りをぶつけ、最後に「これが最後」と言った。関係は続いたが、信頼の亀裂は消えない。`); next(); }
         else{ const k2=pick(POS_AB[S.pos]); const g2=addAb(k2,-2);
@@ -171,7 +171,7 @@ function romanceRules({getState,clamp,POS_AB,ABL,addAb,addAbStat,card,board,choo
     const over=(S.pendStat||0)-before;
     if(g>0&&over>0)return `<b class="up">${ABL[k]} +${g}</b>（上限超過${over}ポイントは今季成績ボーナスへ変換）`;
     if(g>0)return `<b class="up">${ABL[k]} +${g}</b>`;
-    if(over>0)return `<b class="up">今季成績ボーナス＋${over}</b>（${ABL[k]}潜在的な限界に達しました)`;
+    if(over>0)return `<b class="up">今季成績ボーナス＋${over}</b>（${ABL[k]}は潜在能力以上のため、ポイントを変換）`;
     return `${ABL[k]}の能力ポイントを蓄積したが、能力値の上昇には届かなかった`;
   }
   return {loveEvent};

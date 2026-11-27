@@ -39,7 +39,9 @@ const withoutDeadBlock=(fn,text)=>{if(fn!=='phasePre')return text;const a=text.i
 const withOriginalEndings=(fn,text)=>{if(fn!=='phasePre')return text;for(const [reported,original] of [
  ["reportFlowOutcome({kind:'PRESEASON_AGE_LIMIT_RETIRED',reason:'体はもう限界。'+S.year+' 年の春季キャンプ後に引退を発表した。'})","endGame('体はもう限界。'+S.year+' 年の春季キャンプ後に引退を発表した。')"],
  ["で日本球界へ復帰した。`);reportFlowOutcome({kind:'PRESEASON_RETURNED_NPB'});","で日本球界へ復帰した。`);advance();"],
- ["daibaFarewell(()=>reportFlowOutcome({kind:'PRESEASON_RETIRED',reason:'功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'}))","daibaFarewell(()=>endGame('功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'))"]
+ ["daibaFarewell(()=>reportFlowOutcome({kind:'PRESEASON_RETIRED',reason:'功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'}))","daibaFarewell(()=>endGame('功成り名を遂げ、 '+S.year+' 年に現役引退を発表。'))"],
+ // COPY-01 batch 2 (2.2.1): the approved decline card wording is the only text change in phasePre.
+ ['年齢による衰えは進みますが、追加トレーニングで能力を補うことはできます。','これまでどおり追加トレーニングはできますが、体が元に戻ることはありません。']
 ]){assert.equal(text.split(reported).length,2,reported);text=text.replace(reported,()=>original);}return text;};
 for(const fn of ['tjAccrue','tjCap','phasePre'])assert.equal(withOriginalEndings(fn,canonical(currentFunction(fn))),withoutDeadBlock(fn,canonical(productionFunction(fn,prior)).replace("S.effort='全力投';preAsk();","S.effort='全力投球';preAsk();")),'pitching rules unchanged except approved callback'+(fn==='phasePre'?' and deleted dead block':'')+': '+fn);
 // Calculation and accumulation body stays byte-exact; only authorized continuation wiring differs.

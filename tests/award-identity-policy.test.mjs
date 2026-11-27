@@ -21,6 +21,10 @@ const approvedShareThemeEdits={"docs/src/ui/share-theme.js":[["const palettes={\
 // UI-DESIGN-TOKENS-04 (DESIGN_SYSTEM_PLAN §11 D2): theme ids and labels come from theme-catalog.js.
 // INJ-UI-01 (D1=A): injury risk breakdown <details> under コンディション; no other ability-view change.
 const approvedInjuryRiskEdits={"docs/src/ui/ability-view.js": [["export function renderAbility(container,model){\n  container.replaceChildren();", "function conditionBreakdown(item,open){\n  const details=document.createElement('details');details.className='ui-condition-breakdown';details.open=open;\n  const summary=document.createElement('summary');summary.textContent=item.breakdown.summary;\n  const list=document.createElement('dl');list.className='ui-data-list';item.breakdown.rows.forEach(row=>addConditionRow(list,row));\n  const note=document.createElement('p');note.className='ui-ability-guide';note.textContent=item.breakdown.note;\n  details.append(summary,note,list);return details;\n}\n\nexport function renderAbility(container,model){\n  const breakdownOpen=container.querySelector('details.ui-condition-breakdown')?.open===true;\n  container.replaceChildren();"], ["model.condition.forEach(item=>addConditionRow(conditionList,item));condition.append(conditionHeading,conditionList);container.appendChild(condition);", "model.condition.forEach(item=>addConditionRow(conditionList,item));condition.append(conditionHeading,conditionList);\n  model.condition.filter(item=>item.breakdown).forEach(item=>condition.append(conditionBreakdown(item,breakdownOpen)));container.appendChild(condition);"]]};
+// COPY-01 batch 2 (2.2.1): approved Japanese display strings only; every other line stays frozen.
+approvedReplayShareEdits["docs/src/ui/seed-share.js"].push(['<label for="share-seed-value">現在のSeed</label>','<label for="share-seed-value">現在のシード</label>'],['<button type="button" id="share-copy-seed">Seedをコピー</button>','<button type="button" id="share-copy-seed">シードをコピー</button>'],['<p>同じSeedでも選択やバージョンが異なると結果は変わります。</p>','<p>同じシードでも、選択やバージョンが異なると結果は変わります。</p>'],['[\'share-copy-seed\',seedInput,\'Seed\']','[\'share-copy-seed\',seedInput,\'シード\']']);
+approvedIncomeEdits["docs/src/ui/salary-detail.js"].push(['<h3>跨リーグ年俸内訳</h3>','<h3>リーグ間移籍の年俸内訳</h3>'],['<dt>跨リーグ係数</dt>','<dt>リーグ間換算係数</dt>']);
+const approvedCopy01Edits={"docs/src/ui/record-view.js":[['title.textContent=\'階級別通算成績\'','title.textContent=\'カテゴリー別通算成績\''],['addPair(list,\'プレー年数\',`${value(model.seasons)}年`);','addPair(list,\'経過シーズン数\',`${value(model.seasons)}シーズン`);']],"docs/src/engine/salary-explanation-policy.js":[['\'跨リーグ移籍の上昇率上限を適用しました\'','\'リーグ間移籍の上昇率上限を適用しました\''],['\'年齢・認可一軍年資により外国プロ例外を適用しました\'','\'米国国際契約の制限対象外として扱いました\''],['\'過去年の詳細評価がないため旧方式の値を使用しました\'','\'過去の年度の詳細評価がないため、旧方式の値を使用しました\'']]};
 const approvedThemeCatalogEdits={"docs/src/ui/preferences.js":[["export const PREFERENCES_STORAGE_KEY = 'yakyujinsei.display.v1';","import { THEMES, THEME_IDS } from './theme-catalog.js';\nexport const PREFERENCES_STORAGE_KEY = 'yakyujinsei.display.v1';"],["theme:['standard','night','classic','scoreboard']","theme:THEME_IDS"],["['theme','テーマ',['スタンダード','ナイター','クラシック','スコアボード']]","['theme','テーマ',THEMES.map(theme=>theme.label)]"]]};
 let passed = 0;
 const check = (name, fn) => { fn(); passed++; console.log('PASS ' + name); };
@@ -247,6 +251,9 @@ check('frozen B1/A product-isolation evidence retained; B consumer contracts are
       assert.throws(()=>assert.equal(current+'\n// unexpected',expected));
       assert.throws(()=>assert.equal(current.replace('years>=6','years>=5'),expected),'MLB FA threshold remains frozen at six');
       assert.doesNotMatch(current,/\b(?:R|ri|chance|pick)\s*\(/,'reconciliation cannot draw RNG');
+    }else if(approvedCopy01Edits[file]){
+      let expected=acceptedA;for(const [before,after] of approvedCopy01Edits[file])expected=exactReplacement(expected,before,after);
+      assert.equal(current,expected,file+': exact approved COPY-01 wording, no other changes');
     }else if(!allowedB.has(path.basename(file)))assert.equal(current,acceptedA,file+': no unrelated B wiring');
   }
 });

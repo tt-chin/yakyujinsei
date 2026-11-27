@@ -129,7 +129,7 @@ function drawShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playerT
   const isPit = S.pos==='P';
   /* 名人堂入選資訊。 */
   if(S.hofInfo&&S.hofInfo.length){ S.hofInfo.forEach(h=>{
-    milestones.push(`${h.lg}殿堂入り・${h.yr}年目,得票率${h.pct}%`); }); }
+    milestones.push(`${h.lg}殿堂入り・${h.yr}年目、得票率${h.pct}%`); }); }
   /* 跨リーグキャリア合計里程碑。 */
   { let tG=0,tH=0,tHR=0,tRBI=0,tSB=0,tW=0,tSV=0,tHLD=0,tSO=0,tIP=0;
     ['CPBL','KBO','NPB','MLB'].forEach(b=>{ const st=S.stats[b]; if(!st)return;
@@ -294,7 +294,7 @@ function drawShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playerT
 
   // 国際大会通算成績。
   if(S.intlCount>0){ const IS=S.intlStat;
-    hr(); sectionTitle('国際大会通算（日本代表 '+S.intlCount+' 大会）');
+    hr(); sectionTitle('国際大会通算（日本代表・'+S.intlCount+'大会）');
     const rowIntl=(cells,head)=>{ let x=PAD; c.font=(head?'bold ':'')+'13px '+mono; c.fillStyle=head?imageColor.dim:imageColor.text;
       cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=ic[i][1]; }); y+=head?24:28; };
     var ic;
@@ -400,7 +400,7 @@ function drawShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playerT
       <button class="btn main" id="sh-save">💾 保存／画像を共有</button>
       <button class="btn" id="sh-dl">端末へダウンロード</button>
     </div>
-    <div class="statline share-image-hint">ボタンが使えない場合は,画像を長押しして保存できます</div>`;
+    <div class="statline share-image-hint">ボタンが使えない場合は、画像を長押しして保存してください。</div>`;
   /* ダウンロードリンク（PC・予備）。 */
   out.querySelector('#sh-dl').onclick=()=>{ const a=document.createElement('a'); a.href=url; a.download=fileName;
     document.body.appendChild(a); a.click(); a.remove(); };

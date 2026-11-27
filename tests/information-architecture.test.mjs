@@ -23,7 +23,7 @@ assert.match(read('../docs/src/engine/season-stats.js'),/\n  addStatTotal\(t,st\
 const seasonStats=game.includes('seasonStats.accLevelStat(')?read('../docs/src/engine/season-stats.js'):null;
 const levelAccumulator=seasonStats?seasonStats.slice(seasonStats.indexOf('accLevelStat(levelKey,st){')):game.slice(game.indexOf('function accLevelStat'),game.indexOf('function statLine'));
 assert.doesNotMatch(levelAccumulator,/\b(?:R|ri|pick|chance)\s*\(/);
-assert.match(record,/階級別通算成績/);
+assert.match(record,/カテゴリー別通算成績/);
 for(const label of ['NPB一軍','NPB二軍','NPB育成','KBO一軍','KBOフューチャース','台湾プロ野球一軍','台湾プロ野球二軍','3A','2A','1A','ルーキーリーグ'])assert.match(leagueCatalog,new RegExp(label));
 assert.doesNotMatch(ability,/能力[\s\S]*総合/);
 assert.doesNotMatch(game+presenter,/\{label:'スタミナ',value:/);

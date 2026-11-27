@@ -2,6 +2,7 @@ import {projectLegacyYearHistory} from './support/dom-snapshot.mjs';
 import {allocationComparisonHook} from './support/allocation-comparison.mjs';
 import {TEAM_NICKNAMES} from '../docs/src/data/team-nicknames.js';
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
+import {baselineNeedsCopy01Batch2,projectCopy01Batch2} from './support/copy-01-comparison.mjs';
 import {sourceText} from './support/source-text.mjs';
 import {projectHofLog,removeEventBadges,removeJerseyDisplay} from './support/dom-snapshot.mjs';
 import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
@@ -29,6 +30,8 @@ const baselineRef=process.argv.find(v=>v.startsWith('--baseline='))?.slice(11)||
 const baselineYearHistory=Boolean(execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/year-history.js'],{cwd:root,encoding:'utf8'}).trim());
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
 const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/ability-evaluation-policy.js`],{cwd:root}).toString().includes('発展途上型');
+// COPY-01 batch 2 (2.2.1): baselines without the new wording get the approved copy projection on the candidate side only.
+const copy01=baselineNeedsCopy01Batch2(baselineRef,root);
 // Only pre-1.16 HOF baselines need the historical display projection.
 // Modern baselines keep all retirement markup strict and load no old oracle.
 const baselineHof=execFileSync('git',['show',`${baselineRef}:docs/src/engine/hall-of-fame-policy.js`],{cwd:root,maxBuffer:20*1024*1024}).toString();
@@ -181,7 +184,7 @@ try{
             await openBoardAction(p,'board-preferences');await setPreferences(p,THEME_IDS[step%THEME_IDS.length],['small','medium','large'][step%3],step%2?'compact':'standard');await p.keyboard.press('Escape');
             assertSameCareer(await p.evaluate(()=>window.__displayRegression()),before,'preferences mutate game/RNG');
           }
-          const result=await p.evaluate(({labels,texts,copySource,badgeSource,jerseySource})=>{
+          const result=await p.evaluate(({labels,texts,copySource,copy01Source,badgeSource,jerseySource})=>{
             // PLY-01: the year-start number prompt is the only approved new step; confirm it with its main button, unrecorded.
             const jb=[...document.querySelectorAll('#act button:not([data-fa-sort])')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.innerText.trim()));if(jb){jb.click();return {skip:true};}
             const snapshot=window.__displayRegression();delete snapshot.state.version;if(snapshot.state.birthHighSchool)delete snapshot.state.birthHighSchool.createdVersion;
@@ -217,14 +220,15 @@ try{
                 }
               }
             }
-            const state={...snapshot,text:(copySource?eval('('+copySource+')')(log.textContent,window.__displayMrPair()):log.textContent).replace(/\s+/g,''),choices};
+            const copy01=copy01Source?eval('('+copy01Source+')'):text=>text;
+            const state={...snapshot,text:(copySource?eval('('+copySource+')')(copy01(log.textContent),window.__displayMrPair()):copy01(log.textContent)).replace(/\s+/g,''),choices:copy01(choices)};
             if(snapshot.state.done)return {state,done:true,pro,jerseyCounts};
             const rows=[...action.querySelectorAll('.abrow')].filter(el=>el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('capped'));
             const buttons=[...action.querySelectorAll('button:not([data-fa-sort])')].filter(el=>!el.disabled&&!/元に戻す|すべてリセット/.test(el.innerText));
             const button=buttons.find(el=>el.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(el=>/配分を確定|配分完了|次へ|完了/.test(el.innerText))||buttons.find(el=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(el.innerText))||buttons[0];
             if(!button)throw new Error('No actionable choice');
             button.click();return {state,done:false,pro,jerseyCounts};
-          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT,copySource:variant==='candidate'&&projectNames?projectDisplayNameCopy.toString():null,badgeSource:variant==='candidate'&&eventBadge?removeEventBadges.toString():null,jerseySource:variant==='candidate'&&jersey?removeJerseyDisplay.toString():null});
+          },{labels:TRAIT_LABELS,texts:TRAIT_TEXT,copySource:variant==='candidate'&&projectNames?projectDisplayNameCopy.toString():null,copy01Source:variant==='candidate'&&copy01?projectCopy01Batch2.toString():null,badgeSource:variant==='candidate'&&eventBadge?removeEventBadges.toString():null,jerseySource:variant==='candidate'&&jersey?removeJerseyDisplay.toString():null});
           if(result.skip){jerseyTotals.skips++;continue;}
           if(result.pro)jerseyTotals.pro++;if(result.jerseyCounts){jerseyTotals.table+=result.jerseyCounts.table;jerseyTotals.season+=result.jerseyCounts.season;}
           records.push(result.state);

@@ -50,6 +50,8 @@ for(const file of ['docs/src/engine/cross-league-market-policy.js','docs/src/eng
   assert.equal(current,execFileSync('git',['show','73d5a58:'+file],{encoding:'utf8'}).replace(/\r\n/g,'\n'),file);
 }
 const oldGame=execFileSync('git',['show','73d5a58:docs/src/engine/game.js'],{encoding:'utf8'}).replace(/\r\n/g,'\n');
+// COPY-01 batch 2 (2.2.1): the decline card wording is the only approved baseline text change.
+const approvedCopy01Decline=source=>{assert.equal(source.split('これまでどおり追加トレーニングはできますが、体が元に戻ることはありません。').length,2,'one COPY-01 decline site');return source.replace('これまでどおり追加トレーニングはできますが、体が元に戻ることはありません。',()=>'年齢による衰えは進みますが、追加トレーニングで能力を補うことはできます。');};
 let now=game.replace(/\r\n/g,'\n');
 // Phase 23: restore the moved bodies over their game.js wrappers, removing each inserted state read by exact string, so the text compares below stay verbatim.
 for(const [name,wrapper,reads,indent] of [
@@ -118,7 +120,7 @@ for(const [reported,original] of [
 for(const [start,end] of [['function handleDemotion','/* 再契約'],['function buyoutRemaining','function handleDemotion'],["  if(S.stage==='PRO'&&S.age>=36","/* シーズン中。 */"]]){assert.ok(now.includes(start));const finish=end==='/* 再契約'? 'function outOfOrg':end,finishNow=end==='/* 再契約'? '/* 長期契約/短期契約':end;assert.ok(now.includes(finishNow));assert.equal(now.slice(now.indexOf(start),now.indexOf(finishNow,now.indexOf(start))),approvedOldGame.slice(approvedOldGame.indexOf(start),approvedOldGame.indexOf(finish,approvedOldGame.indexOf(start))),start+' unchanged except deleted base farewell');}
 // Phase 11-B batch 2: demotion endings report named outcomes; every clicked path keeps the baseline call log and S.
 {
-  const baseSource=execFileSync('git',['show','026c5cd89e3b189cf2a93e9425f344f57fafc208:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
+  const baseSource=approvedCopy01Decline(execFileSync('git',['show','026c5cd89e3b189cf2a93e9425f344f57fafc208:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
   const levels={NPB1:{min:53,n:'NPB一軍',top:true},NPB2:{min:47,n:'NPB二軍'},CPBL1:{min:40,n:'台湾一軍',top:true},MLB:{n:'MLB',top:true},A3:{n:'3A'},A1:{n:'1A'}};
   function demotionRun(source,{state,overall,target,hit,entry},picks){
     const log=[],choices=[],reported=[];
@@ -177,7 +179,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
 }
 // Phase 11-B batch 3: FA/market endings report named outcomes; every clicked path keeps the baseline call log and S.
 {
-  const baseSource=execFileSync('git',['show','c2d8bb3c02b4825d3180f018c93bb97feb8bfbaf:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
+  const baseSource=approvedCopy01Decline(execFileSync('git',['show','c2d8bb3c02b4825d3180f018c93bb97feb8bfbaf:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
   // Phase 22: current sources keep renewAndAdvance/arbitrationFlow in career-contract.js; the factory's return line ends the last slice.
   const contractFunction=name=>productionFunction(name,contractSource).split('\n  return {')[0];
   const marketFunction=(name,source)=>source.includes("from './career-contract.js'")&&['renewAndAdvance','arbitrationFlow'].includes(name)?contractFunction(name):source.includes("from './career-movement.js'")?(name==='crossOffers'?movementFunction('crossOffersRule')+';var crossOffers=crossOffersRule;':movementFunction(name)):name==='outOfOrg'?source.slice(source.indexOf('function outOfOrg('),source.indexOf('const professionalEnds')).trim():productionFunction(name,source);
@@ -268,7 +270,7 @@ for(const [start,end] of [['function handleDemotion','/* 再契約'],['function 
 }
 // Phase 11-B batch 4: preseason/rehab year endings report named outcomes; every clicked path keeps the baseline call log and S.
 {
-  const baseSource=execFileSync('git',['show','c2d8bb3c02b4825d3180f018c93bb97feb8bfbaf:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6});
+  const baseSource=approvedCopy01Decline(execFileSync('git',['show','c2d8bb3c02b4825d3180f018c93bb97feb8bfbaf:docs/src/engine/game.js'],{encoding:'utf8',maxBuffer:20e6}));
   const levels={NPB1:{min:53},NPB2:{min:47}};
   function yearRun(source,{state,overall,renewal,entry},picks){
     const log=[],choices=[],reported=[];let draws=0;

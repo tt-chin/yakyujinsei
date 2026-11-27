@@ -23,6 +23,6 @@ assert.equal(formatRehabStatus({rehab:1,skipMid:false,seasonFactor:1}),'残り1�
 assert.equal(formatRehabStatus({rehab:0,skipMid:false,seasonFactor:1}),'なし');
 assert.match(presenter,/#rehabStatusText\(\)\{const S=this\.#getState\(\);return formatRehabStatus\(S\);\}/);
 assert.match(presenter,/大きな故障（通算）/);
-assert.match(record,/プレー年数/);assert.match(record,/階級別通算成績/);
+assert.match(record,/経過シーズン数/);assert.match(record,/\$\{value\(model\.seasons\)\}シーズン/);assert.match(record,/カテゴリー別通算成績/);
 assert.doesNotMatch(record,/競技シーズン|競技別通算/);
 console.log('Record classification and condition display checks passed.');

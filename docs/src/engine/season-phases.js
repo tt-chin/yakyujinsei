@@ -20,7 +20,7 @@ function seasonPhaseRules({getState,POS_AB,ABL,LV,clamp,board,card,choose,buyout
     const declAge=S.age-(S.traits.disc?2:0); /* 自律狂：衰えの開始を2年遅らせる。 */
     if(declAge>=32){ const dec=declineForSeason(S,declAge>=35?5+(declAge-35):2);
       POS_AB[S.pos].forEach(k=>S.ab[k]=clamp(S.ab[k]-dec,1,80));
-      card('bad','寄る年波には勝てない',`${declAge>=35?'第2段階（年々加速）':'第1段階'}の衰え：全能力<b class="dn">−${dec}</b>${S.traits.disc?'（自律の鬼：キャリアの衰えが2年遅延）':''}。これまでどおり追加トレーニングはできますが、体が元に戻ることはありません。`); board(0); }
+      card('bad','寄る年波には勝てない',`${declAge>=35?'第2段階（年々加速）':'第1段階'}の衰え：全能力<b class="dn">−${dec}</b>${S.traits.disc?'（自律の鬼：キャリアの衰えが2年遅延）':''}。年齢による衰えは進みますが、追加トレーニングで能力を補うことはできます。`); board(0); }
     if(S.rehab>0){ S.rehab--; S.skipMid=true; S.seasonFactor=0;
       if(S.stage==='PRO'&&S.lv==='NPB1')checkGoldclothSeason();
       card('bad','リハビリ年',`大けがが治らず、今季は<b class="dn">全休確定</b>。リハビリ施設で過ごすしかない。（サイコロは2個に減少）`);

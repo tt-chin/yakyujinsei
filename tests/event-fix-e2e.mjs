@@ -28,8 +28,8 @@ try{
     await verifyBoardMenu(p,{width,screenshot:path.join(shots,`menu-${width}.png`)});
     if(saved)assert.deepEqual(await p.evaluate(()=>window.__fix.get()),saved,'menu/support changed S/RNG');
     await openBoardAction(p,'board-share');assert.equal(await p.locator('#share-seed-value').inputValue(),saved?.state.seed||'日本語 +?&%/#"');
-    assert.match(await p.locator('#seed-share').innerText(),/同じSeedでも選択やバージョンが異なると結果は変わります/);
-    await p.locator('#share-copy-seed').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='Seedをコピーしました。');await p.locator('#share-copy-url').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='リプレイURLをコピーしました。');
+    assert.match(await p.locator('#seed-share').innerText(),/同じシードでも、選択やバージョンが異なると結果は変わります/);
+    await p.locator('#share-copy-seed').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='シードをコピーしました。');await p.locator('#share-copy-url').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='リプレイURLをコピーしました。');
     const copied=await p.evaluate(()=>window.__copies),url=await p.locator('#share-url-value').inputValue();assert.deepEqual(copied,[saved?.state.seed||'日本語 +?&%/#"',url]);assert.equal(new URL(url).origin,target);assert.deepEqual([...new URL(url).searchParams.keys()],['seed']);assert.equal(new URL(url).hash,'');
     const replay=await ctx.newPage();wire(replay);await replay.goto(url);await replay.waitForFunction(()=>!document.querySelector('#btn-start').disabled);assert.equal(await replay.locator('#seed-show').inputValue(),saved?.state.seed||'日本語 +?&%/#"');// A second tab shares the valid save: the approved home UI first offers resume/new.
     assert.deepEqual(await replay.locator('.save-actions button:visible').allTextContents(),['続きから','新しく始める']);

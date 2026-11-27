@@ -64,10 +64,10 @@ const LABELS = {
   CROSS_LEAGUE_MARKET_ADJUSTMENT:'移籍先リーグの市場基準で調整しました',
   PREVIOUS_SALARY_ANCHOR:'移籍前の契約年俸を基準額へ反映しました',
   PREVIOUS_SALARY_UNAVAILABLE:'確認できる移籍前の年俸がないため市場基準を使用しました',
-  CROSS_LEAGUE_RAISE_CAP:'跨リーグ移籍の上昇率上限を適用しました',
+  CROSS_LEAGUE_RAISE_CAP:'リーグ間移籍の上昇率上限を適用しました',
   LEAGUE_REGULATORY_CAP:'リーグ制度または市場の上限を適用しました',
   MLB_INTL_RESTRICTED:'米国国際契約の制限対象として扱いました',
-  FOREIGN_PRO_EXEMPT:'年齢・認可一軍年資により外国プロ例外を適用しました',
+  FOREIGN_PRO_EXEMPT:'米国国際契約の制限対象外として扱いました',
   LEAGUE_MINIMUM_APPLIED:'リーグ最低年俸が適用されました',
   STRONG_PERFORMANCE:'今季の実績が市場評価を押し上げました', POOR_PERFORMANCE:'今季の実績が市場評価を押し下げました',
   FULL_WORKLOAD:'十分な出場量が評価されました', LIMITED_WORKLOAD:'出場量が限られたため評価が下がりました',
@@ -75,7 +75,7 @@ const LABELS = {
   LEVEL_PAR_UPWARD_CONVERSION:'下位カテゴリー基準へ換算しました', PREMIUM_POSITION:'守備位置の加算係数が適用されました',
   DH_DISCOUNT:'指名打者の調整係数が適用されました', CONTRACT_PREMIUM:'契約条件の加算係数が適用されました',
   CONTRACT_DISCOUNT:'契約条件の調整係数が適用されました', NO_DECREASE_PROTECTION:'昇格・受賞などの減俸保護が適用されました',
-  ONE_YEAR_MARKET_SAMPLE:'評価履歴は1年分です', LEGACY_RATING_FALLBACK:'過去年の詳細評価がないため旧方式の値を使用しました',
+  ONE_YEAR_MARKET_SAMPLE:'評価履歴は1年分です', LEGACY_RATING_FALLBACK:'過去の年度の詳細評価がないため、旧方式の値を使用しました',
   MARKET_VALUE_MAINTAINED:'市場評価と契約条件に基づいて決定しました',
 };
 
