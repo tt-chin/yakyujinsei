@@ -144,7 +144,8 @@ assert.deepEqual(['R','ri','chance','pick'].map(f=>(amateurCareer.match(new RegE
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerContract.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,0,1,0],'CareerContract draw site moved verbatim');
 // Phase 29 moved newState into initial-state.js: R( -2, ri( -13 in game.js, the same 2/13/0/0 there. Its wrapper passes the current R and ri as values, so no bridge.
 assert.deepEqual(['R','ri','chance','pick'].map(f=>(initialState.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[2,13,0,0],'initial state draw sites moved verbatim');
-assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerMovement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,2,11,0],'CareerMovement draw sites moved verbatim');
+// MLB-POSTING-DESIGN-01 (approved R3): posting adds chance(consent), chance(90) for a bid and ri(1,3) on acceptance.
+assert.deepEqual(['R','ri','chance','pick'].map(f=>(careerMovement.match(new RegExp('\\b'+f+'\\(','g'))||[]).length),[0,3,13,0],'CareerMovement draw sites moved verbatim plus the three approved posting sites');
 
 // v1.4.5: NPB復帰候補は表示額を契約へ引き継ぎ、候補表示でRNGを追加消費しない。
 assert.match(careerMovement, /candidate=salaryCandidate\(\{sourceLevel:S\.lv,targetLevel:lv,contractMult:1\}\),annualSalary=candidate\.annualSalary/);
