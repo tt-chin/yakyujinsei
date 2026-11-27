@@ -1,5 +1,6 @@
 import {TEAM_NICKNAMES} from '../docs/src/data/team-nicknames.js';
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
+import {baselineNeedsCopy01Batch2,projectCopy01Batch2} from './support/copy-01-comparison.mjs';
 import {sourceText} from './support/source-text.mjs';
 // No project dependency: pass --playwright=<installed package directory> when needed.
 // GameView refactor guard (tasks/GAME_JS_OOP_REFACTOR_PLAN.md §2d.4): same seed/choices must give the same
@@ -27,6 +28,8 @@ const baselineRef=arg('baseline')||'4f39a73e23758b891bc24951225231792ab022b4';
 const baselineYearHistory=Boolean(execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/year-history.js'],{cwd:root,encoding:'utf8'}).trim());
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
 const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/ability-evaluation-policy.js`],{cwd:root}).toString().includes('発展途上型');
+// COPY-01 batch 2 (2.2.1): baselines without the new wording get the approved copy projection on the candidate side only.
+const copy01=baselineNeedsCopy01Batch2(baselineRef,root);
 // 1.14.1 added the credits menu button; older baselines lack it (see dom-snapshot.mjs).
 const credits1141=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('id="board-credits"');
 const menu1163=!execFileSync('git',['show',`${baselineRef}:docs/index.html`],{cwd:root,maxBuffer:20*1024*1024}).toString().includes('id="board-bug-report"');
@@ -62,6 +65,7 @@ window.__projectYearHistoryLog=()=> (${projectLegacyYearHistory.toString()})(gam
       if(!baseline)content+='\n('+observeShellBoard.toString()+')(gameView,window);window.__projectShell2000='+projectShell2000.toString()+';window.__shellBoard2000='+JSON.stringify(SHELL_BOARD_2000)+';window.__shellBoard11615='+JSON.stringify(SHELL_BOARD_11615)+';';
       if(!baseline)content+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__verifyFranchise=${verifyFranchiseGrant.toString()};window.__projectFranchise=${projectFranchiseField.toString()};\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScoreFor(S.stats[b],S.pos),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
       if(!baseline)content+='\nwindow.__projectDisplayNameCopy='+(projectNames?projectDisplayNameCopy.toString():'null')+';window.__approvedMrTeamNames='+JSON.stringify(TEAM_NICKNAMES)+';window.__mrDisplayPair=()=>{if(!S.traits.mrteam)return null;const expected=\'ミスター\'+(typeof S.mrTeamName===\'string\'&&Object.hasOwn(window.__approvedMrTeamNames,S.mrTeamName)?window.__approvedMrTeamNames[S.mrTeamName]:\'\');if(displayTrait(\'mrteam\')!==expected)throw Error(\'MR_COPY_CONTRACT\');return[expected,teamNick(S.mrTeamName||\'\')+\'ミスター\'];};\nwindow.__projectMenu1163='+projectMenu1163.toString()+';window.__projectEventBadges='+projectEventBadges.toString()+';window.__expectEventBadge='+eventBadge+';window.__expectJersey='+jersey+';window.__projectJerseyBoard='+projectJerseyBoard.toString()+';window.__expectMenu1163='+menu1163+';window.__expectBrowserSave=true;window.__expectIncomeDisplay=true;window.__expectIntlHistory=true;window.__expectInjuryRisk=true;window.__expect1140='+championmaker+';window.__expect1141='+credits1141+';window.__expectDesignTokens02='+designTokens02+';window.__expectDesignTokens06='+designTokens06+';window.__projectChampionmaker='+projectChampionmakerState.toString()+';window.__champTeams='+JSON.stringify(JP_DATA.teams.map(({teamId,org})=>({teamId,org})))+';';
+      if(!baseline)content+='\nwindow.__projectCopy01='+(copy01?projectCopy01Batch2.toString():'null')+';';
       if(negativeControl&&!baseline)content+='\nconst __negativeDivider=divider;divider=function(t){__negativeDivider(t+\' \');};';
     }
     res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript; charset=utf-8':relative.endsWith('.css')?'text/css; charset=utf-8':relative.endsWith('.html')?'text/html; charset=utf-8':'image/png');res.end(content);
@@ -91,7 +95,12 @@ async function career(variant,{seed,pos,balanced},viewport,stopAt=-1){
         const b=choose(balanced);if(!b)throw Error('No actionable choice at step '+step);b.click();
       }
       throw Error('CAREER_LIMIT');
-    },{capture:captureGameView.toString().replace('  const snapshot={dom,state,calls,views};',`  if(window.__projectDisplayNameCopy){
+    },{capture:captureGameView.toString().replace('  const snapshot={dom,state,calls,views};',`  if(window.__projectCopy01){
+    for(const key of Object.keys(dom))if(dom[key]!==null)dom[key]=window.__projectCopy01(dom[key]);
+    const visitCopy=v=>typeof v==='string'?window.__projectCopy01(v):Array.isArray(v)?v.map(visitCopy):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).map(([k,x])=>[k,visitCopy(x)])):v;
+    Object.assign(views,visitCopy(views));
+  }
+  if(window.__projectDisplayNameCopy){
     const pair=window.__mrDisplayPair();
     for(const key of Object.keys(dom))if(dom[key]!==null)dom[key]=window.__projectDisplayNameCopy(dom[key],pair);
     const visit=v=>typeof v==='string'?window.__projectDisplayNameCopy(v,pair):Array.isArray(v)?v.map(visit):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).map(([k,x])=>[k,visit(x)])):v;

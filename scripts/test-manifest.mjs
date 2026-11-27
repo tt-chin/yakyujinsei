@@ -61,6 +61,7 @@ const nonTests = {
   'support/reader-disclosure.mjs': ['support','Native summary click and visible original body with complete state/RNG invariance; no forced DOM changes or archived-description bypass.'],
   'support/allocation-comparison.mjs': ['support','Validates phase-4 allocation presentation before legacy action/choice/text comparisons. Original states, RNG and historical baselines remain strict.'],
   'support/decision-dom-comparison.mjs':['support','Validates approved phase-3 reader wrappers, committed event effects and decision metadata before reconstructing historical DOM; no S/RNG projection.'],
+  'support/copy-01-comparison.mjs':['support','COPY-01 batch 2 (2.2.1): maps the approved new Japanese wording back to the old text on the candidate side of historical DOM/text comparisons only; no S/RNG projection, every other string stays strict.'],
   'support/ui-shell-comparison.mjs':['support','Frozen approved UI 2.0 board markup projection; exact new summary/structure validation before historical board comparison. No S/RNG exclusions.'],
   'support/approved-hof-comparison.mjs':['support','Strict approved-retirement comparison used by dedicated unit and E2E tests; not a standalone suite.'],
   'support/source-text.mjs': ['support','Strict UTF-8 source reader; CRLF-to-LF normalization only for source comparisons. Never normalizes frozen hash/binary evidence.'],

@@ -21,7 +21,7 @@ export async function copyShareText(text,{windowRef=window,documentRef=document,
 }
 export function createSeedShareController({trigger,getSeed,documentRef=document,windowRef=window}) {
   const dialog=documentRef.createElement('dialog');dialog.id='seed-share';dialog.setAttribute('aria-labelledby','seed-share-title');
-  dialog.innerHTML='<h2 id="seed-share-title" tabindex="-1">共有</h2><label for="share-seed-value">現在のSeed</label><input id="share-seed-value" readonly><button type="button" id="share-copy-seed">Seedをコピー</button><label for="share-url-value">リプレイURL</label><input id="share-url-value" readonly><button type="button" id="share-url-copy">リプレイURLをコピー</button><button type="button" id="share-copy-url">リプレイURLを共有</button><p>同じSeedでも選択やバージョンが異なると結果は変わります。</p><p id="seed-share-status" role="status" aria-live="polite"></p><button type="button" id="seed-share-close">閉じる</button>';
+  dialog.innerHTML='<h2 id="seed-share-title" tabindex="-1">共有</h2><label for="share-seed-value">現在のシード</label><input id="share-seed-value" readonly><button type="button" id="share-copy-seed">シードをコピー</button><label for="share-url-value">リプレイURL</label><input id="share-url-value" readonly><button type="button" id="share-url-copy">リプレイURLをコピー</button><button type="button" id="share-copy-url">リプレイURLを共有</button><p>同じシードでも、選択やバージョンが異なると結果は変わります。</p><p id="seed-share-status" role="status" aria-live="polite"></p><button type="button" id="seed-share-close">閉じる</button>';
   documentRef.body.appendChild(dialog);
   const seedInput=dialog.querySelector('#share-seed-value'),urlInput=dialog.querySelector('#share-url-value'),status=dialog.querySelector('#seed-share-status');
   let scrollPosition,generation=0;
@@ -33,7 +33,7 @@ export function createSeedShareController({trigger,getSeed,documentRef=document,
     seedInput.value=seed;urlInput.value=replayURL(seed,windowRef.location.href);status.textContent='';dialog.scrollTop=0;
     scrollPosition=[windowRef.scrollX,windowRef.scrollY];dialog.showModal();documentRef.body.classList.add('seed-share-open');dialog.querySelector('h2').focus({preventScroll:true});
   });
-  for(const [id,input,label] of [['share-copy-seed',seedInput,'Seed'],['share-url-copy',urlInput,'リプレイURL']]){
+  for(const [id,input,label] of [['share-copy-seed',seedInput,'シード'],['share-url-copy',urlInput,'リプレイURL']]){
     const button=dialog.querySelector('#'+id);
     button.addEventListener('click',async()=>{
       if(button.disabled||!dialog.open)return;button.disabled=true;

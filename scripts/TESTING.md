@@ -39,6 +39,10 @@ fa-market-presentation-e2e驗證64組P／IF版面、三欄雙方向、同值穩�
 
 `event-history-e2e`保留自然年度與原事件展開／橫捲斷言，另用只讀呈現fixture檢查手機／桌面、P／IF、業餘文字／職業數字、四主題及標準／大字的每列四格font-family／font-size／font-weight一致，限定table的text-size-adjust為100%。這是Chromium模擬；Safari原生文字自動放大與工具列遮蔽仍須實機確認。
 
+## 2.2.1 COPY-01 日本語表記の射影
+
+`tests/support/copy-01-comparison.mjs` は承認済みの新しい文言（シード表記、カテゴリー別通算成績、経過シーズン数、衰えカード、私生活、年俸内訳など）を旧文言へ戻す候補側専用の射影。`game-view-dom-e2e` と `display-preferences-e2e` は基準の `docs/src` に新しい衰え文がない場合だけ適用し、その他の文字・DOM・S・RNGは従来どおり厳密に比較する。旧本体を直接比較する `season-phases.test` と `npb-return-ui.test` は衰え文1か所だけを基準側で置換し、`award-identity-policy.test` は凍結ファイルの承認済み文言差分を列挙する。共有画像のcanvas文字（殿堂行の読点・国際大会見出し）は射影しない。
+
 ## 2.2.0 ホーム年度履歴と年初セーブ v3
 
 `home-year-history-e2e` は `q77bi1jx`（390px）と `jp3-infielder-01`（1280px）を通常UIで引退まで進め、毎年の年初セーブを実際に読み直す。保存見出しの順序、10／22年目に最古のカードを再展開、給与が異なる過年度の「年俸の内訳を見る」、詳細DOMの解放とS／RNG不変を検証する。前者は固定基準 `00fc40d460e706a8f994aebe936a41f1fc4d45a8` と行動列・各年の実行状態・全RNG値と状態を比較する。版番号に依存する引退資格を混同しないよう、新規対照生涯の設定定数だけを2.2.0にそろえる。別に未変更の2.1.0が作った署名済みv2を実際に読み込み、旧出生版と状態／RNGを保持し、翌年度に履歴つきv3で保存されることを確認する。

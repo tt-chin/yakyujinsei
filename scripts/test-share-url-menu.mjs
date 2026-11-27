@@ -109,7 +109,7 @@ try{
     const status=p.locator('#seed-share-status'),copy=p.locator('#share-url-copy');
     await mock();await copy.click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='リプレイURLをコピーしました。');
     assert.deepEqual(await p.evaluate(()=>window.__copies),[url]);check(await p.evaluate(()=>window.__shares.length)===0,'copy never calls native share');
-    await p.locator('#share-copy-seed').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='Seedをコピーしました。');
+    await p.locator('#share-copy-seed').click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent==='シードをコピーしました。');
     assert.equal((await p.evaluate(()=>window.__copies)).at(-1),seed);cases++;
     await mock('failed');await copy.click();await p.waitForFunction(()=>document.querySelector('#seed-share-status').textContent.includes('選択してコピー'));
     check(await copy.isEnabled(),'failure unlocks copy');

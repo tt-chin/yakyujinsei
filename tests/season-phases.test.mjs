@@ -33,6 +33,7 @@ pre=once(pre,'    let afterAsk=()=>{\n','    let afterAsk=()=>{'+G+'\n','trainin
 pre=once(pre,'      afterAsk=()=>{\n','      afterAsk=()=>{'+G+'\n','pitching plan');
 for(const effort of ['全力投球','通常投球','省エネ投球'])pre=once(pre,`f:()=>{S.effort='${effort}';preAsk();}`,`f:()=>{${G}S.effort='${effort}';preAsk();}`,effort);
 pre=once(pre,"f:()=>{\n          const returnLv=","f:()=>{"+G+"\n          const returnLv=",'return to NPB');
+pre=once(pre,'これまでどおり追加トレーニングはできますが、体が元に戻ることはありません。','年齢による衰えは進みますが、追加トレーニングで能力を補うことはできます。','COPY-01 batch 2 decline copy');
 pre=once(pre,"s:'現役を引退する',f:()=>{buyoutRemaining();","s:'現役を引退する',f:()=>{"+G+"buyoutRemaining();",'retirement');
 // INJ-UI-01: the session-only season-start mark right after the tmpInj reset (no S write, no RNG).
 pre=once(pre,"S.prevD=S.lastD||0; S.lastD=0; /* 先保持上季 d 供投手定位判定。 */\n","S.prevD=S.lastD||0; S.lastD=0; /* 先保持上季 d 供投手定位判定。 */\n    markSeasonStart(S); /* INJ-UI-01：tmpInj リセット済みの印（本セッションのみ、S 不変）。 */\n",'INJ-UI-01 season start mark');
@@ -90,7 +91,7 @@ function oldHarness(){
   const run={log:[],cfg:{},S:null,choices:[],used:{}},stubs=makeStubs(run);
   const context=createContext({...stubs,POS_AB,ABL,LV,clamp});
   Object.defineProperty(context,'S',{get:()=>run.S});// the game.js global, read live like the real binding
-  runInContext("'use strict';\n"+oldPre+'\n'+oldMid+'\nglobalThis.__pre=()=>phasePre();globalThis.__mid=()=>phaseMid();',context);
+  runInContext("'use strict';\n"+once(oldPre,'これまでどおり追加トレーニングはできますが、体が元に戻ることはありません。','年齢による衰えは進みますが、追加トレーニングで能力を補うことはできます。','COPY-01 batch 2 decline copy (behaviour)')+'\n'+oldMid+'\nglobalThis.__pre=()=>phasePre();globalThis.__mid=()=>phaseMid();',context);
   return {run,pre:()=>context.__pre(),mid:()=>context.__mid()};
 }
 function newHarness(source=SeasonPhases){
