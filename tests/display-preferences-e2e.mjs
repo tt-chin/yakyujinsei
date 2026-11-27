@@ -122,7 +122,11 @@ try{
   assert.ok(await page.locator('#act .abrow').count()>0,'training allocation reached');
   await page.locator('#act .abrow[aria-disabled="false"]').first().click();
   const trainingMarkup=await page.locator('#act').evaluate(el=>el.innerHTML);
-  await openBoardAction(page,'board-preferences');await setPreferences(page,'classic','large','compact');await page.keyboard.press('Escape');
+  await openBoardAction(page,'board-preferences');await setPreferences(page,'classic','large','compact');
+  // The dialog's close event is queued after Escape and board-menu.js moves focus to the menu toggle there;
+  // wait for it so the row focus below is not taken back before Enter (TEST-DISPLAY-ENTER-TIMEOUT-01).
+  await page.evaluate(()=>{window.__preferencesClosed=false;document.getElementById('display-preferences').addEventListener('close',()=>{window.__preferencesClosed=true;},{once:true});});
+  await page.keyboard.press('Escape');await page.waitForFunction(()=>window.__preferencesClosed===true,null,{timeout:5000});
   assert.equal(await page.locator('#act').evaluate(el=>el.innerHTML),trainingMarkup,'training DOM was rebuilt');
   await page.locator('#act .abrow[aria-disabled="false"]').first().focus();await page.keyboard.press('Enter');
   await page.waitForFunction(markup=>document.querySelector('#act').innerHTML!==markup,trainingMarkup,{timeout:5000}).catch(e=>{if(e.name!=='TimeoutError')throw e;});
