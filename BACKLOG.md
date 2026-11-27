@@ -26,8 +26,8 @@
   - 依據：[稽核](docs/reviews/STAGE5_SPEC_ARCHITECTURE_AUDIT.md)、[重構路線](docs/reviews/STAGE5_REFACTOR_ROADMAP.md)、[分期計畫](tasks/GAME_JS_OOP_REFACTOR_PLAN.md)。
 
 - [ ] **COPY-01** — `IMPLEMENTED_UNVERIFIED`。
-  - 剩餘：全量可到達日文文案、術語及畫面位置待清查。COPY-001～005已完成，不重做；006～015及027～033等候選依報告處理，023／024已移除。
-  - 完成條件：依已決定方向確認011／012／031語義、013版面及029一軍合計範圍，取得相應授權後修正並驗證；文案方向決定不等於全面實作授權。
+  - 剩餘：全量可到達日文文案、術語及畫面位置待清查。COPY-001～005已完成，不重做；023／024已移除。第二批（2.2.1，2026-11-28使用者核准）已實作006～012、014、015、027（採「（能力名は潜在能力以上のため、ポイントを変換）」）、028、030～033；011／012／031採報告08:57建議，015不加「端末によって」。`fix/copy-01-batch2` `1b94de747614c194a34e62f4735d88c5d0689d53` 經[Tests #302](https://github.com/tt-chin/yakyujinsei/actions/runs/46040174220) Full 149 PASS／0 FAIL，本機Quick 117 PASS；dev Preview與390px「Nシーズン」換行尚未確認。
+  - 完成條件：013版面試排（320／375／390／430px、字級與密度、巨額年俸）通過才採「年俸（万円）」；029「主要4リーグ一軍通算」須另行確認現行合計是否混入其他階級並核准資料來源調整（不視為純文案）；第二批Preview確認；其後完成全量清查。文案方向決定不等於全面實作授權。
   - 依據：[文案稽核與決定](docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md)、[已完成五項](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)。
 
 ### 2.2 殿堂研究（2項）
