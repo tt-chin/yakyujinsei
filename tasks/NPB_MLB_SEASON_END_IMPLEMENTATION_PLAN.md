@@ -197,4 +197,5 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
 - [Full #289](https://github.com/tt-chin/yakyujinsei/actions/runs/45645665227) 保留 143 PASS／4 FAIL。PR #130 的四個入口修正以 [Tests #291](https://github.com/tt-chin/yakyujinsei/actions/runs/45778946981) 在 `197aef4f03be19b312d44c2421c6af2c7b6b4328` 驗證 Full PASS。該次 Quick job 為 skipped。
 - [Full #293](https://github.com/tt-chin/yakyujinsei/actions/runs/45826779978) 受測 `7d71c8cc11e66bf99bf77bb187a5c8f25387c315`，141 PASS／7 FAIL：前述四入口仍未含 PR #130 修正，另有年度歷史畫面投影及兩個靜態／DOM期待值。後兩項由 `808216cdf041bf18cf38fcf2b85be6d74606057a` 修正，該 SHA 的 [Quick #294](https://github.com/tt-chin/yakyujinsei/actions/runs/45827896512) PASS。
 - 剩餘五入口：移入 PR #130 的季末比較測試與22項 helper 案例；保留 phoenix 的2041原路線、RNG前綴及新版全程重播。顯示偏好與 GameView 共用測試投影，重建舊版最後8區塊的原始內容及出生卡位置；所有其他文字、DOM、S與RNG依原比較。新版完整年度紀錄由 `home-year-history-e2e` 驗證。比較基準維持，產品與版號仍為2.2.0。
-- 最終提交的 Full 必須由使用者在 GitHub 手動執行。保留舊 run 原結果。
+- PR #130 後續（code owner 2026-11-26 留言第1項）：`contract-salary-e2e`、`kbo-renewal-e2e` 原以「選項文字或球團名不同」判定已核准分歧，改用共用 `seasonEndOpening`，基準同一步若為同年度季末選單（文字或球團不同亦同）即不算新選單；分歧前照常嚴格比對。兩入口停止步與修正前相同（`jp3-infielder-01`／IF 第257步，其餘全程一致）。本機（macOS＋Brave 158）：`contract-salary-e2e` 381／0、`kbo-renewal-e2e` 完整及 `--quick` PASS。負向控制：上限 +1 於兩入口 FAIL；將基準第257步改為同年度、文字不同的韓國選單時，舊判定 PASS、新判定 FAIL。
+- 最終提交的 Full 必須由使用者在 GitHub 手動執行。保留舊 run 原結果。#291 只對應 `197aef4`，不作為後續提交的 Full 證據。

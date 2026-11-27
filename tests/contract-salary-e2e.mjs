@@ -4,13 +4,16 @@ import {historicalCareer} from '../tools/development-b/historical-comparison.mjs
 import {isDeepStrictEqual} from 'node:util';
 // NPB-OFFER-WINDOW-01 / MLB-POSTING-DESIGN-01 (approved A1/A3): a natural career may reach a new NPB1 season-end
 // choice; its new team draw shifts every later RNG value. Compare strictly up to that step, which must be the first
-// difference and must be a step the baseline does not have (a shared offer menu is no excuse); a career that never
-// reaches it must stay identical.
-const approvedSeasonEndChoice=/^(韓国プロ野球への海外移籍：|台湾プロ野球への海外移籍：|ポスティングを申請|現在の球団に残留)/;
+// difference and must be a step the baseline does not have: a baseline season-end choice of the same year at that step
+// (even with another label or team) is no excuse; a career that never reaches it must stay identical.
+import {seasonEndOpening} from './support/first-difference.mjs';
+// seasonEndOpening (support/first-difference.mjs) reads rows shaped {action,beforeState:{year,lv}}.
+const seasonEndRows=records=>records.map(r=>({action:r.action,beforeState:{year:r.year,lv:r.level}}));
 function assertSameUntilSeasonEndChoice(current,old,message){
  const a=current.records,b=old.records;let k=0;while(k<a.length&&k<b.length&&isDeepStrictEqual(a[k],b[k]))k++;
  if(k===a.length&&k===b.length){assertSameCareer(current,old,message);return null;}
- assert.ok(k>0&&k<a.length&&approvedSeasonEndChoice.test(a[k].action)&&a[k].level==='NPB1'&&a[k].year===b[k-1].year&&(k>=b.length||b[k].year!==a[k].year||b[k].action!==a[k].action),message+': first difference at step '+k+' must be an approved NPB1 season-end choice, got '+JSON.stringify([a[k]?.year,a[k]?.level,String(a[k]?.action).slice(0,40)]));
+ const t=seasonEndOpening(seasonEndRows(b),seasonEndRows(a));
+ assert.ok(t!==null&&k===t+1,message+': first difference at step '+k+' must be the first NPB1 season-end choice the baseline lacks (opening step '+t+'), got '+JSON.stringify([a[k]?.year,a[k]?.level,String(a[k]?.action).slice(0,40)]));
  return k;
 }
 import {assertSameCareer} from './support/first-difference.mjs';
