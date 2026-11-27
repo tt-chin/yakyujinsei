@@ -3,9 +3,12 @@ import {assertChampionmakerCareer} from '../tools/development-b/championmaker-co
 import {assertSameCareer} from './support/first-difference.mjs';
 // NPB-OFFER-WINDOW-01 / MLB-POSTING-DESIGN-01 (approved A1/A3): a natural career may reach a new NPB1 season-end choice
 // (e.g. an overseas returnee's control year); its team draw shifts every later RNG value. The first such step that the
-// baseline does not share bounds the strict prefix comparison.
-const approvedSeasonEndChoice=/^(韓国プロ野球への海外移籍：|台湾プロ野球への海外移籍：|ポスティングを申請|現在の球団に残留)/;
-const seasonEndChoiceStep=(current,old)=>current.findIndex((r,i)=>r.level==='NPB1'&&approvedSeasonEndChoice.test(r.action)&&(i>=old.length||old[i].action!==r.action||old[i].year!==r.year));
+// baseline does not share bounds the strict prefix comparison; a baseline season-end choice of the same year at that step
+// (even with another label or team) is shared.
+import {seasonEndOpening} from './support/first-difference.mjs';
+// seasonEndOpening (support/first-difference.mjs) reads rows shaped {action,beforeState:{year,lv}}.
+const seasonEndRows=records=>records.map(r=>({action:r.action,beforeState:{year:r.year,lv:r.level}}));
+const seasonEndChoiceStep=(current,old)=>{const t=seasonEndOpening(seasonEndRows(old),seasonEndRows(current));return t===null?-1:t+1;};
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
