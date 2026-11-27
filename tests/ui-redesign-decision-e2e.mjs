@@ -1,4 +1,4 @@
-import {assertUi20VersionStamps} from './support/ui-version-comparison.mjs';
+import {assertUi20VersionStamps,currentUiBaselineVersion} from './support/ui-version-comparison.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -15,7 +15,7 @@ const hook=`\nwindow.__decisionDraws=[];careerRng.onDraw=value=>window.__decisio
 const errors=[],cases=[],checks=[];
 const server=createServer(async(req,res)=>{let rel=new URL(req.url,'http://local').pathname.slice(1)||'index.html';const old=rel.startsWith('baseline/');if(old)rel=rel.slice(9)||'index.html';
   if(rel==='favicon.ico'){res.statusCode=204;return res.end();}
-  try{if(rel.split('/').includes('..'))throw Error('path');let body=old?execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:30e6}):await readFile(path.join(root,'docs',rel));if(rel==='src/engine/game.js')body=body.toString()+hook;
+  try{if(rel.split('/').includes('..'))throw Error('path');let body=old?execFileSync('git',['show',`${baseline}:docs/${rel}`],{cwd:root,maxBuffer:30e6}):await readFile(path.join(root,'docs',rel));if(old&&rel==='src/config.js')body=currentUiBaselineVersion(body);if(rel==='src/engine/game.js')body=body.toString()+hook;
     if(!old&&rel==='src/engine/game.js')body+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
     res.setHeader('Content-Type',rel.endsWith('.js')?'text/javascript; charset=utf-8':rel.endsWith('.css')?'text/css':rel.endsWith('.webp')?'image/webp':rel.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(body);
   }catch(e){res.statusCode=404;res.end(String(e));}});

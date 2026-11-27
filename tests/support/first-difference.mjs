@@ -46,13 +46,14 @@ export function assertSameCareer(actual,expected,message='strict comparison') {
   assert.fail(String(message).slice(0,400)+' at '+(d?.path||'$').slice(0,400)+': '+(d?preview(d.before)+' -> '+preview(d.after):'<non-JSON structural difference>'));
 }
 
-// G1-A positive control ONLY for the verified jp3-infielder-01 / 2041 route.
+// G1-A positive control ONLY for the verified jp3-infielder-01 / 2041 route (APPROVED_PHOENIX_ROUTE).
 // The raw historical run is retained. This is an explicit counterfactual native
 // control, not old-version replay, a golden replacement, or a product adapter.
-export function withApprovedPhoenixControl(source) {
+export const APPROVED_PHOENIX_ROUTE=Object.freeze({seed:'jp3-infielder-01',pos:'IF',year:2041,award:'NPB首位打者'});
+export function withApprovedPhoenixControl(source,route=APPROVED_PHOENIX_ROUTE) {
   const original='const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x));';
   assert.equal(source.split(original).length,2,'Recognized historical phoenix predicate required');
-  return source.replace(original,"const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x)||(S.seed==='jp3-infielder-01'&&S.pos==='IF'&&S.year===2041&&S.org==='NPB'&&S.lv==='NPB1'&&x==='2041 NPB首位打者'));");
+  return source.replace(original,()=>`const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x)||(S.seed==='${route.seed}'&&S.pos==='${route.pos}'&&S.year===${route.year}&&S.org==='NPB'&&S.lv==='NPB1'&&x==='${route.year} ${route.award}'));`);
 }
 
 // Read-only browser observer; no S writes, replaced decisions or extra RNG.
@@ -64,16 +65,44 @@ awards=(...args)=>{const before=JSON.parse(JSON.stringify(S)),callsBefore=window
  window.__phoenixAwardEvents.push({before,after:JSON.parse(JSON.stringify(S)),callsBefore,callsAfter:window.__stage6.get().rng.length});return result;};
 `;
 
-export function assertApprovedPhoenixCareer(old,now,expected,repeat,actionsKey,options={}) {
+// NPB-OFFER-WINDOW-01 / MLB-POSTING-DESIGN-01 (approved A1/A3): a natural career may reach a new NPB1 season-end choice
+// the historical control (baseline or approved old engine) does not have; its team draw shifts every later RNG value
+// (phoenix route: 2042). Rows carry beforeState. Returns null when no such choice exists (the career must stay
+// identical), otherwise the index of the row whose click opened it; strict comparisons then cover every earlier row and
+// that row's before-state (which carries rngState). The control row at that index must not be a same-year season-end
+// choice at all: the old engine's KBO/CPBL/stay menu has the same labels, so a different label there is a real difference.
+export const approvedSeasonEndChoice=/^(韓国プロ野球への海外移籍：|台湾プロ野球への海外移籍：|ポスティングを申請|現在の球団に残留)/;
+export function seasonEndOpening(control,now){
+  const t=now.findIndex((s,i)=>i>0&&s.beforeState.lv==='NPB1'&&approvedSeasonEndChoice.test(s.action)&&s.beforeState.year===now[i-1].beforeState.year&&!(control[i]&&control[i].beforeState.year===s.beforeState.year&&approvedSeasonEndChoice.test(control[i].action)));
+  return t<0?null:t-1;
+}
+// Number of RNG draws before a row whose before-state carries rngState; rng entries are {before,after,value}.
+export function rngCallsBefore(rng,rngState){
+  let calls=rng.findIndex(r=>r.before===rngState);if(calls<0)calls=rng.length;
+  if(calls>0)assert.equal(rng[calls-1].after,rngState,'RNG prefix ends at the opening state');
+  return calls;
+}
+// Career cut before row k: earlier rows, row k's before-state (S incl. rngState), the RNG draws and award calls before it.
+export function careerBefore(career,actionsKey,k,calls){
+  return {[actionsKey]:career[actionsKey].slice(0,k),opening:career[actionsKey][k].beforeState,rng:career.rng.slice(0,calls),awards:career.awards.filter(e=>e.callsBefore<calls)};
+}
+export function assertApprovedPhoenixCareer(old,now,expected,repeat,actionsKey,options={},route=APPROVED_PHOENIX_ROUTE) {
   assertSameCareer(now,repeat,'Same current engine / seed / strategy exact replay');
+  assert.equal(now.state.seed,route.seed);
+  assert.equal(now.state.pos,route.pos);
+  const k=seasonEndOpening(expected[actionsKey],now[actionsKey]);let calls=now.rng.length;
+  if(k!==null){
+    assert.ok(k>0,'approved NPB1 season-end choice step');
+    assert.equal(now[actionsKey][k].action,expected[actionsKey][k].action,'the opening click is the control action');
+    calls=rngCallsBefore(now.rng,now[actionsKey][k].beforeState.rngState);
+    now=careerBefore(now,actionsKey,k,calls);expected=careerBefore(expected,actionsKey,k,calls);old={...old,rng:old.rng.slice(0,calls)};
+  }
   const franchiseProof=franchiseComparisonProof(now);
   old=historicalCareer(old);now=historicalCareer(now,{...options,franchiseProof});expected=historicalCareer(expected);
-  assertSameCareer(now,expected,'Full native historical control with ONLY the approved phoenix effect');
+  assertSameCareer(now,expected,'Full native historical control with ONLY the approved phoenix effect'+(k===null?'':' (until the first approved season-end choice)'));
   assertSameCareer(now.rng,old.rng,'All main RNG values and before/after states unchanged');
-  assert.equal(now.state.seed,'jp3-infielder-01');
-  assert.equal(now.state.pos,'IF');
   const first=now[actionsKey].findIndex((step,i)=>step.after!==old[actionsKey][i]?.after);
-  assert.ok(first>=0,'The known route must actually exercise phoenix');
+  assert.ok(first>=0,'The known route must actually exercise phoenix'+(k===null?'':' before the first approved season-end choice'));
   assertSameCareer(now[actionsKey].slice(0,first),old[actionsKey].slice(0,first),'Complete state/action prefix unchanged');
   assert.equal(now[actionsKey][first].before,old[actionsKey][first].before);
   assert.equal(now[actionsKey][first].action,old[actionsKey][first].action);
@@ -83,9 +112,9 @@ export function assertApprovedPhoenixCareer(old,now,expected,repeat,actionsKey,o
   assertSameCareer(now.awards.slice(0,index),old.awards.slice(0,index),'Prior awards and states unchanged');
   const event=now.awards[index],prior=old.awards[index];
   assertSameCareer(event.before,prior.before,'Full pre-award state unchanged');
-  assert.equal(event.before.year,2041);assert.equal(event.before.lv,'NPB1');
+  assert.equal(event.before.year,route.year);assert.equal(event.before.lv,'NPB1');
   assert.equal(event.before.traits.glass,true);assert.equal(event.before.traits.phoenix,false);
-  assert.ok(event.after.honors.includes('2041 NPB首位打者'));
+  assert.ok(event.after.honors.includes(route.year+' '+route.award));
   assertSameCareer(event.after.honors,prior.after.honors,'Producer results unchanged');
   const effect=structuredClone(prior.after);
   effect.traits.glass=false;effect.traits.phoenix=true;effect.pool+=8;effect.removed.push('スペランカー');
@@ -93,5 +122,5 @@ export function assertApprovedPhoenixCareer(old,now,expected,repeat,actionsKey,o
   assert.equal(event.callsBefore,prior.callsBefore);assert.equal(event.callsAfter,prior.callsAfter);
   assert.equal(now[actionsKey][first].after,expected[actionsKey][first].after,'First action is explained by the native approved effect');
   assert.equal(now.awards.filter(e=>!e.before.traits.phoenix&&e.after.traits.phoenix).length,1,'Phoenix transition occurs once');
-  return {firstStep:first,year:2041,award:'NPB首位打者',poolIncrease:8,rngCalls:now.rng.length,rawHistoricalActions:old[actionsKey].length,currentActions:now[actionsKey].length,fullApprovedControl:'PASS',currentReplay:'PASS'};
+  return {seed:route.seed,firstStep:first,year:route.year,award:route.award,poolIncrease:8,seasonEndOpening:k,rngCalls:calls,rawHistoricalActions:old[actionsKey].length,comparedActions:now[actionsKey].length,fullApprovedControl:'PASS',currentReplay:'PASS'};
 }

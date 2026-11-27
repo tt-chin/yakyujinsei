@@ -13,7 +13,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {findFirstDifference} from './support/first-difference.mjs';
 import {instrumentRng} from './support/rng-instrument.mjs';
-import {GAME_VIEW_HOOK,captureGameView,projectHofLog,projectMenu1163,projectEventBadges,projectJerseyBoard} from './support/dom-snapshot.mjs';
+import {GAME_VIEW_HOOK,captureGameView,projectHofLog,projectMenu1163,projectEventBadges,projectJerseyBoard,projectLegacyYearHistory} from './support/dom-snapshot.mjs';
 import {projectShell2000,observeShellBoard,SHELL_BOARD_2000,SHELL_BOARD_11615} from './support/ui-shell-comparison.mjs';
 import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
 import {verifyFranchiseGrant,projectFranchiseField} from '../tools/development-b/historical-comparison.mjs';
@@ -24,6 +24,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const baselineRef=arg('baseline')||'4f39a73e23758b891bc24951225231792ab022b4';
+const baselineYearHistory=Boolean(execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/year-history.js'],{cwd:root,encoding:'utf8'}).trim());
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
 const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/ability-evaluation-policy.js`],{cwd:root}).toString().includes('発展途上型');
 // 1.14.1 added the credits menu button; older baselines lack it (see dom-snapshot.mjs).
@@ -55,6 +56,8 @@ const server=createServer(async(req,res)=>{
     }
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
+      if(!baseline&&!baselineYearHistory)content+=`
+window.__projectYearHistoryLog=()=> (${projectLegacyYearHistory.toString()})(gameView.yearHistory,document.getElementById('log')).outerHTML;`;
       if(!baseline)content+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
       if(!baseline)content+='\n('+observeShellBoard.toString()+')(gameView,window);window.__projectShell2000='+projectShell2000.toString()+';window.__shellBoard2000='+JSON.stringify(SHELL_BOARD_2000)+';window.__shellBoard11615='+JSON.stringify(SHELL_BOARD_11615)+';';
       if(!baseline)content+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__verifyFranchise=${verifyFranchiseGrant.toString()};window.__projectFranchise=${projectFranchiseField.toString()};\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScoreFor(S.stats[b],S.pos),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
@@ -68,7 +71,7 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const local=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({channel:arg('browser')||'chrome',headless:true});
 const errors=[];
-function careerAction(balanced){const rows=[...document.querySelectorAll('#act .abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...document.querySelectorAll('#act button')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));if(balanced)rows.sort((a,b)=>{const priority=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return priority(a)-priority(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});return buttons.find(e=>e.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];}
+function careerAction(balanced){const rows=[...document.querySelectorAll('#act .abrow')].filter(e=>e.getAttribute('aria-disabled')!=='true'&&!e.classList.contains('capped')),buttons=[...document.querySelectorAll('#act button:not([data-fa-sort])')].filter(e=>!e.disabled&&!/元に戻す|すべてリセット/.test(e.innerText));if(balanced)rows.sort((a,b)=>{const priority=x=>['vel','ctl','brk','con','pow','eye','spd'].includes(x.dataset.abilityKey)?0:1;return priority(a)-priority(b)||parseInt(a.querySelector('.val').textContent)-parseInt(b.querySelector('.val').textContent);});return buttons.find(e=>e.innerText.trim().startsWith('通常投球'))||rows[0]||buttons.find(e=>/配分を確定|配分完了|次へ|完了/.test(e.innerText))||buttons.find(e=>/NPBドラフト|プロ志望|オファーを受ける|契約を結|指名を受け|入団/.test(e.innerText))||buttons[0];}
 // Plays one career; returns per-step digests, or the full snapshot at step stopAt.
 async function career(variant,{seed,pos,balanced},viewport,stopAt=-1){
   const context=await browser.newContext({viewport}),page=await context.newPage();
@@ -81,7 +84,7 @@ async function career(variant,{seed,pos,balanced},viewport,stopAt=-1){
       const snap=new Function('return '+capture)(),choose=new Function('return '+action)(),steps=[];let jerseySkips=0;
       for(let step=0;step<2500;step++){
         // PLY-01: the year-start number prompt is the only approved new step; confirm it with its main button, unrecorded, before the snapshot.
-        const jb=[...document.querySelectorAll('#act button')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.innerText.trim()));if(jb){jb.click();jerseySkips++;}
+        const jb=[...document.querySelectorAll('#act button:not([data-fa-sort])')].find(e=>!e.disabled&&/^背番号 \S+ (で入団する|にする)$/.test(e.innerText.trim()));if(jb){jb.click();jerseySkips++;}
         const s=await snap(step===stopAt);
         if(step===stopAt)return {full:s};
         steps.push(s);if(s.done)return {steps,tokens06:{board:window.__designTokens06Board||0,log:window.__designTokens06Log||0},jersey:{skips:jerseySkips,...window.__jerseyCounts}};
@@ -119,22 +122,29 @@ try{
   for(const viewport of viewports)for(const c of cases){
     const label=`${c.seed}/${c.pos}/${c.balanced?'balanced':'first-row'}/${viewport.width}`;
     const [base,head]=[await career('baseline',c,viewport),await career('candidate',c,viewport)];
-    const step=base.steps.findIndex((s,i)=>s.digest!==head.steps[i]?.digest);
+    const step=base.steps.findIndex((s,i)=>s.digest!==head.steps[i]?.digest);let seasonEndStep=null;
     if(step>=0||base.steps.length!==head.steps.length){
       const at=step>=0?step:Math.min(base.steps.length,head.steps.length);
       const [b,h]=[await career('baseline',c,viewport,at),await career('candidate',c,viewport,at)];
+      // NPB-OFFER-WINDOW-01 / MLB-POSTING-DESIGN-01 (approved A1/A3): a natural career may reach a new NPB1 season-end
+      // choice whose team draw shifts every later RNG value. Everything before that step stays strict; the first
+      // differing step must show an approved season-end option the baseline step does not show.
+      const approvedOptions=['ポスティングを申請','韓国プロ野球への海外移籍：','台湾プロ野球への海外移籍：'],newOptions=approvedOptions.filter(t=>String(h.full.dom.act).includes(t)&&!String(b.full.dom.act).includes(t));
+      if(step>0&&newOptions.length&&h.full.state.lv==='NPB1'&&h.full.state.year===base.steps[at-1].year){seasonEndStep=at;}
+      else{
       const d=findFirstDifference(h.full,b.full);
       // outerHTML strings are long; show the region around the first differing character.
       const near=(x,y)=>{if(typeof x!=='string'||typeof y!=='string')return [x,y].map(v=>JSON.stringify(v)?.slice(0,300));let i=0;while(x[i]===y[i])i++;return [x,y].map(v=>JSON.stringify(v.slice(Math.max(0,i-80),i+160)));};
       assert.fail(`${label} differs from ${baselineRef} at step ${at} (year ${base.steps[at]?.year}) ${d?d.path+': '+near(d.before,d.after).join(' -> '):'(length only)'}`);
+      }
     }
     const last=base.steps.at(-1);assert.ok(last.calls>0,'Actual game RNG must be instrumented');
-    // PLY-01 projection contract: the baseline never shows the prompt; on the candidate the prompt appears exactly when the career is professional, and every projection ran on every step.
-    assert.equal(base.jersey.skips,0,'baseline has no number step');
+    // PLY-01: only pre-jersey baselines lack the prompt; modern baselines retain both sides and the existing projection checks.
+    if(jersey)assert.equal(base.jersey.skips,0,'pre-jersey baseline has no number step');else if(seasonEndStep===null)assert.equal(base.jersey.skips,head.jersey.skips,'modern baseline retains the same number steps');
     if(jersey){assert.equal(head.jersey.board,head.steps.length,'JERSEY_BOARD_PROJECTION_COUNT');assert.equal(head.jersey.skips>0,head.jersey.pro>0,'number step appears exactly when the career reaches a professional team');if(head.jersey.pro>0){assert.ok(head.jersey.season>0,'JERSEY_SEASON_PROJECTION_COUNT');assert.ok(head.jersey.yearly>0,'JERSEY_YEARLY_PROJECTION_COUNT');assert.ok(head.jersey.table>0,'JERSEY_TABLE_PROJECTION_COUNT');}}
     // UI-DESIGN-TOKENS-06 projection must actually run: #bd-tj on every step, retirement-card elements at least once.
     if(designTokens06){assert.equal(head.tokens06.board,head.steps.length,'DESIGN_TOKENS_06_BOARD_PROJECTION_COUNT');assert.ok(head.tokens06.log>0,'DESIGN_TOKENS_06_LOG_PROJECTION_COUNT');}
-    console.log(`PASS ${label}: ${base.steps.length} steps, RNG ${last.calls}, retirement ${last.year}, verified approved HOF/provenance display${designTokens06?`, tokens-06 projection board ${head.tokens06.board}/log ${head.tokens06.log}`:''}; remaining DOM/S/RNG strict`);
+    console.log(`PASS ${label}: ${base.steps.length} steps, RNG ${last.calls}, retirement ${last.year}, verified approved HOF/provenance display${designTokens06?`, tokens-06 projection board ${head.tokens06.board}/log ${head.tokens06.log}`:''}; ${seasonEndStep===null?'remaining DOM/S/RNG strict':'DOM/S/RNG strict until the approved season-end choice at step '+seasonEndStep}`);
   }
   assert.deepEqual(errors,[],'Console or page errors');
   console.log(`GameView DOM E2E passed: ${cases.length*viewports.length} careers vs ${baselineRef}`);
