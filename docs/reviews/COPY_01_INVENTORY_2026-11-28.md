@@ -4,7 +4,8 @@
 
 - 本文件為 BACKLOG COPY-01「全量清查」的前置作業紀錄。
 - 只做清查，不提出最終文案，不構成實作授權。
-- 掃描基準：`fix/copy-01-batch2` `54aa2ce`（PR #134，尚未併入 dev）。
+- 掃描基準：`fix/copy-01-batch2` `54aa2ce`（[PR #134](https://github.com/tt-chin/yakyujinsei/pull/134)，已合併至 dev）。
+- 本次僅更新合併狀態與專名分類；實際掃描基準仍為 `54aa2ce`，不代表重新掃描。TSV 與既有統計不變。
 - 掃描對象：`docs/index.html` 與 `docs/src/**`，排除 `release-notes.js`。
 
 ## 方法
@@ -15,7 +16,7 @@
 
 ## 總數
 
-抽出 3310 筆；COVERED 63；HIDDEN 92；NOT_COVERED 3155。
+抽出 3,310 筆＝63 筆已涵蓋（COVERED）＋92 筆標為不顯示（HIDDEN）＋3,155 筆未涵蓋（NOT_COVERED）。
 
 ### NOT_COVERED 依類別
 
@@ -131,7 +132,7 @@
 
 ## 待審候選
 
-以下為審閱提示，不含建議文案。「text」欄為原文截斷，「reason」欄為掃描時的一行判斷理由（原文如此，未翻譯）。
+以下為審閱提示，不含建議文案。「text」欄為原文截斷，「reason」欄保留掃描判斷理由；第 12 項改為本次人工審閱分類，TSV 原始 flags 不變。
 
 | # | file:line | text (truncated) | reason |
 |---|---|---|---|
@@ -146,7 +147,7 @@
 | 9 | docs/src/engine/career-retirement.js:227 | キャリア年表 (キャリアの実績) | half-width ( ) with space; sibling heading at :202 uses （アマチュア成績） |
 | 10 | docs/src/engine/career-retirement.js:35,43 | スイングマン( / ユーティリティープレーヤー( | fragments ending in half-width "(" (check assembled string); 「プレーヤー」 (2) vs 「選手」 (53) |
 | 11 | docs/src/engine/award-consumer-policy.js:80 | 中繼王 | traditional-Chinese 繼 (JP 継); probably an alias key (displayed name is 中継ぎ), confirm not displayed |
-| 12 | docs/src/data/jp-data.js:1 | 國學院皇典大学 | traditional 學/國 in a university name (rest of table is shinjitai) |
+| 12 | docs/src/data/jp-data.js:1 | 國學院皇典大学 | 需確認遊戲內專名；不能僅憑「國」「學」字形判定中文混入，不直接替換遊戲內名稱 |
 | 13 | docs/src/engine/season-settlement.js:87 | 社会人給与 / 企業給与 / 独立リーグ年間報酬 | income vocabulary mixed: 年俸 (79) / 給与 (2) / 報酬 (2) / 給料 (7, mostly 給料泥棒) |
 | 14 | docs/src/ui/income-summary.js:6 | 年俸・報酬 | 年俸 vs 報酬 grouping; check against 給与 in season-settlement.js:87 |
 | 15 | docs/src/engine/career-movement.js:175,180,181 | ポスティング入札 / 入札球団なし / 入札する球団は現れなかった | 入札 (4) vs ポスティング (10) for same flow; 入札 is a less usual baseball term |
@@ -278,7 +279,7 @@
 - `career-movement.js:46` 與 `:82`
 - `award-consumer-policy.js:80`「中繼王」
 - `player-ability.js:123`「(最大潜在力+10 →…）」
-- `jp-data.js`「國學院皇典大学」
+- `jp-data.js`「國學院皇典大学」：僅確認原字串存在，需確認遊戲內專名，不代表已判定中文混入。
 
 其餘候選尚未逐一抽查。
 
