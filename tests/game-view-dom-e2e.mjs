@@ -13,7 +13,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {findFirstDifference} from './support/first-difference.mjs';
 import {instrumentRng} from './support/rng-instrument.mjs';
-import {GAME_VIEW_HOOK,captureGameView,projectHofLog,projectMenu1163,projectEventBadges,projectJerseyBoard} from './support/dom-snapshot.mjs';
+import {GAME_VIEW_HOOK,captureGameView,projectHofLog,projectMenu1163,projectEventBadges,projectJerseyBoard,projectLegacyYearHistory} from './support/dom-snapshot.mjs';
 import {projectShell2000,observeShellBoard,SHELL_BOARD_2000,SHELL_BOARD_11615} from './support/ui-shell-comparison.mjs';
 import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
 import {verifyFranchiseGrant,projectFranchiseField} from '../tools/development-b/historical-comparison.mjs';
@@ -24,6 +24,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const arg=k=>process.argv.find(a=>a.startsWith('--'+k+'='))?.slice(k.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const baselineRef=arg('baseline')||'4f39a73e23758b891bc24951225231792ab022b4';
+const baselineYearHistory=Boolean(execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/year-history.js'],{cwd:root,encoding:'utf8'}).trim());
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
 const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/ability-evaluation-policy.js`],{cwd:root}).toString().includes('発展途上型');
 // 1.14.1 added the credits menu button; older baselines lack it (see dom-snapshot.mjs).
@@ -55,6 +56,8 @@ const server=createServer(async(req,res)=>{
     }
     if(relative==='src/engine/game.js'){
       content=instrumentRng(content.toString(),'__rngCalls')+GAME_VIEW_HOOK;
+      if(!baseline&&!baselineYearHistory)content+=`
+window.__projectYearHistoryLog=()=> (${projectLegacyYearHistory.toString()})(gameView.yearHistory,document.getElementById('log')).outerHTML;`;
       if(!baseline)content+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
       if(!baseline)content+='\n('+observeShellBoard.toString()+')(gameView,window);window.__projectShell2000='+projectShell2000.toString()+';window.__shellBoard2000='+JSON.stringify(SHELL_BOARD_2000)+';window.__shellBoard11615='+JSON.stringify(SHELL_BOARD_11615)+';';
       if(!baseline)content+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__verifyFranchise=${verifyFranchiseGrant.toString()};window.__projectFranchise=${projectFranchiseField.toString()};\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScoreFor(S.stats[b],S.pos),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;

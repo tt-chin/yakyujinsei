@@ -30,8 +30,9 @@ startNew=once(startNew,"$('in-name').value,SEED,pos)","$('in-name').value,getSee
 startNew=once(startNew,'S={rngState:0};seedInit(SEED);S=newState(nm,pos);','setState({rngState:0});seedInit(getSeed());setState(newState(nm,pos));','state');
 startNew=once(startNew,'encodeURIComponent(SEED)','encodeURIComponent(getSeed())','url seed');
 startNew=once(startNew,ENTER+'card(','enter();const S=getState();card(','enter');
-let resume='  function resume(candidate){'+oldReset+oldEnter+'}';
+let resume='  function resume(candidate,records=[]){'+oldReset+oldEnter+'}';
 resume=once(resume,'S=candidate;SEED=S.seed;','setState(candidate);setSeed(getState().seed);','resume state');
+resume=once(resume,"$('log').replaceChildren();","restoreYearHistory(records);","restore persisted presentation before the annual first step");
 resume=once(resume,ENTER+'history.','enter();history.','resume enter');
 resume=once(resume,'encodeURIComponent(SEED)','encodeURIComponent(getSeed())','resume url seed');
 const enter='  function enter(){'+once(ENTER,'navigation.reset();','const navigation=getNavigation();navigation.reset();','enter navigation')+'}';
@@ -44,10 +45,10 @@ export class CareerEntry {
   #rules;
   constructor(deps){this.#rules=careerEntryRules(deps);}
   startNew(){this.#rules.startNew();}
-  resume(candidate){this.#rules.resume(candidate);}
+  resume(candidate,records){this.#rules.resume(candidate,records);}
 }
 
-function careerEntryRules({getState,setState,getSeed,setSeed,careerSession,CareerSession,POSN,$,getNavigation,normalizeSeed,generateSeed,normalizePlayerName,seedInit,newState,escapeHTML,card,actClear,startYear}){
+function careerEntryRules({getState,setState,getSeed,setSeed,careerSession,CareerSession,POSN,$,getNavigation,normalizeSeed,generateSeed,normalizePlayerName,seedInit,newState,escapeHTML,card,actClear,startYear,restoreYearHistory=()=>$('log').replaceChildren()}){
 `;
 assert.equal(module,HEADER+enter+'\n'+startNew+'\n'+resume+'\n  return {startNew,resume};\n}\n','module is the header plus the base bodies with the listed edits');
 

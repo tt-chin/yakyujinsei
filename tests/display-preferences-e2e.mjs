@@ -1,3 +1,4 @@
+import {projectLegacyYearHistory} from './support/dom-snapshot.mjs';
 import {allocationComparisonHook} from './support/allocation-comparison.mjs';
 import {TEAM_NICKNAMES} from '../docs/src/data/team-nicknames.js';
 import {projectDisplayNameCopy} from './support/display-name-comparison.mjs';
@@ -25,6 +26,7 @@ const modulePath=process.argv.find(v=>v.startsWith('--playwright='))?.slice(13);
 const require=createRequire(import.meta.url),{chromium}=require(modulePath||'playwright');
 const preview=process.argv.find(v=>v.startsWith('--preview='))?.slice(10);
 const baselineRef=process.argv.find(v=>v.startsWith('--baseline='))?.slice(11)||'8dd244b';
+const baselineYearHistory=Boolean(execFileSync('git',['ls-tree','--name-only',baselineRef,'docs/src/ui/year-history.js'],{cwd:root,encoding:'utf8'}).trim());
 const championmaker=baselineNeedsChampionmakerProjection(baselineRef,root);
 const projectNames=!execFileSync('git',['show',`${baselineRef}:docs/src/engine/ability-evaluation-policy.js`],{cwd:root}).toString().includes('発展途上型');
 // Only pre-1.16 HOF baselines need the historical display projection.
@@ -54,6 +56,8 @@ const server=createServer(async(req,res)=>{
     }
     if(relative==='src/engine/game.js'){
       let script=instrumentRng(baseline?withApprovedBirthSnapshot(content.toString()):content.toString(),'__rngCalls')+allocationComparisonHook;
+      if(!baseline&&!baselineYearHistory)script+=`
+window.__displayLegacyYearLog=()=> (${projectLegacyYearHistory.toString()})(gameView.yearHistory,document.getElementById('log'));`;
       if(!baseline||baselineDecisionPresentation)script+='\nwindow.__projectDecisionPresentation='+projectDecisionPresentation.toString()+';window.__phase3Events=EVENTS;window.__phase3Labels=ABL;window.__phase3Money=value=>fmtMoney(value);window.__phase3Pending=()=>choiceViews.get(S);';
       script+='\nwindow.__approvedMrTeamNames='+JSON.stringify(TEAM_NICKNAMES)+';window.__displayMrPair=()=>{if(!S.traits.mrteam)return null;const expected=\'ミスター\'+(typeof S.mrTeamName===\'string\'&&Object.hasOwn(window.__approvedMrTeamNames,S.mrTeamName)?window.__approvedMrTeamNames[S.mrTeamName]:\'\');if(displayTrait(\'mrteam\')!==expected)throw Error(\'MR_COPY_CONTRACT\');return[expected,teamNick(S.mrTeamName||\'\')+\'ミスター\'];};window.__displayRegression=()=>({state:JSON.parse(JSON.stringify(S)),rng:_s,calls:window.__rngCalls||0,seed:SEED});';
       if(!baseline&&legacyHofProjection)script+=`\nimport {honorScoreFor as __oldHonor} from '/hof-oracle/hall-of-fame-policy.js';\nwindow.__projectHofLog=${projectHofLog.toString()};window.__hofDisplay=()=>Object.fromEntries(['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]).map(b=>[b,{current:tierOf(b),old:hallOfFameTier({baseScore:careerScoreFor(S.stats[b],S.pos),honor:__oldHonor({bucket:b,honors:S.honors,position:S.pos,intlCount:S.intlCount||0,franchise:S.traits.franchise,awardState:S}),thresholds:TIER_TH[b],leagueName:LG_N[b]}),label:LG_N[b]}]));`;
@@ -185,7 +189,7 @@ try{
             const action=document.querySelector('#act');
             // Compare all non-trait copy and full S/RNG. Only the approved trait
             // explanation lifetime/summary changes are normalized on a detached clone.
-            let log=document.querySelector('#log').cloneNode(true);
+            let log=window.__displayLegacyYearLog?.()??document.querySelector('#log').cloneNode(true);
             if(window.__projectDecisionPresentation){const template=document.createElement('template');template.innerHTML=window.__projectDecisionPresentation(log.outerHTML,'log',snapshot.state);log=template.content.firstElementChild;}
             const removeBadges=badgeSource?eval('('+badgeSource+')'):null;if(removeBadges)removeBadges(log);
             // #act stays live (innerText needs layout): strip the one verified title badge from the text only.

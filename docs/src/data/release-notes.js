@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "2.2.0｜2026/11/26",
+    "lines": [
+      "- ホームで過去の全年度を振り返れるようにしました。新しいセーブからは、保存済みの年度結果も復元できます。"
+    ]
+  },
+  {
     "title": "2.1.0｜2026/11/25",
     "lines": [
       "- FAで同じリーグの他球団が候補から外れる問題を修正。海外移籍の条件と、評価・故障によるオファー数は従来どおりです。",
