@@ -72,8 +72,9 @@
   - 修正：分支`fix/display-preferences-close-race`在Escape前註冊一次性`close`旗標，最多等5秒後才focus列；斷言與5秒等待不變，不改產品焦點行為（真人無法在約10ms內按鍵）。負向控制：插入20ms延遲時舊測試3/3 FAIL（`retained row listener works`）、新測試3/3 PASS；`close`不觸發時5秒內`TimeoutError`。
   - 完成條件：修正併入dev。原位置、來源及失敗紀錄見整理前紀錄。
 
-- [ ] **TEST-RELEASE-NOTES-LIMITS-01** — `CONTENT_USER_ACCEPTED / CI_GATE_NOT_IMPLEMENTED`。
-  - 剩餘：將`scripts/test-release-notes.mjs`接入正式test manifest／Quick；摘要內容已驗收，不再列文案待驗。
+- [ ] **TEST-RELEASE-NOTES-LIMITS-01** — `CI_GATE_IMPLEMENTED / 待併dev・2.1.0摘要待確認`（2026-11-28）。
+  - 實作：依code owner決定採A案，新增唯讀`tests/release-notes.test.mjs`（Quick／Full／Audit），既有`scripts/test-release-notes.mjs`保留原用途。Full入口149→150；`scripts/ci-full-batches.test.mjs`三處寫死的106（已過期，dev上實為149）改為150。
+  - 2.1.0：接入時發現摘要有5條，違反1～3條規則；已合併為3條並重新產生`release-notes.js`，不升版本。文案與不升版需code owner確認。
   - 完成條件：另案確認接入並實作，驗證1～3條／每條80字、生成一致性及不合法摘要會令CI失敗；不放寬既有規則。
   - 依據：[現行摘要規格](CURRENT_SPEC.md)、[測試入口說明](scripts/TESTING.md)。
 
