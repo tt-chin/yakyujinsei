@@ -14,7 +14,7 @@
    - (a) `tmp/yakyujinsei-*`：符合 CI 上傳 glob。
    - (b) `tmp/<name>`（stage6 harness，`tests/support/stage6-browser.mjs:58`）：**不符合** glob。除文件已列的 4 個目錄外，`hof-retirement-policy`（`tests/hof-retirement-policy-e2e.mjs:30`）是第 5 個。
    - (c) `test-results/<name>`（repo 相對、不在 run 目錄內、跨 run 覆寫）：只有 `summary.json` 偶然符合 `test-results/*/summary.json`，Full 分批完全不收。
-4. **PRIVATE_PATH 規則排除 `/home/runner`。** `collect-ci-evidence.mjs:27` 的判定為 `/Users/<name>`、`<drive>:\Users\`、`/home/<非 runner>`。文件中 Quick 3／62、Full 13／81 被拒的數字來自 Windows 本機（保存缺口 :56、:77、:86）；真正 Linux CI 輸出是否觸發仍為 NOT_RUN（:139）。
+4. **PRIVATE_PATH 規則排除 `/home/runner`。** `collect-ci-evidence.mjs:27` 的判定為 `/Users/<name>`、`<drive>:\Users\`、`/home/<非 runner>`。文件中 Quick 3／62、Full 13／81 被拒的數字來自 Windows 本機（保存缺口 :56、:77、:86）；真正 Linux CI 輸出是否觸發仍為 NOT_RUN（:139）。Linux CI 既有 artifact 實測為 0 筆，見 §4-1。
 
 ## 2. 分類草案
 
@@ -34,10 +34,35 @@
 ## 3. 待決事項
 
 1. **C 的前提。** 依入口及輸出類別，以相同受測 SHA、基準 SHA、seed、執行參數與環境（含 Node／瀏覽器版本）實測重產，事先定義並核對必要內容是否一致。測試 PASS 或原件未被測試讀取，不能單獨證明可重產；未驗證的輸出先保留原件，正式指定原件仍按既有規則保存。
-2. **B 超過 64 MiB。** 最大單檔約 237.88 MiB（`full-power-pitching` 生涯 JSON，保存缺口 :89），48 檔超過 64 MiB（:88）。這些數字來自 Windows 1.12.0 B Full，已過期，Linux CI 未量測。失敗時需另定：分段、另一儲存通道，或提高上限（上限不可由 CLI 調高，:44）。
+2. **B 超過 64 MiB。** 最大單檔約 237.88 MiB（`full-power-pitching` 生涯 JSON，保存缺口 :89），48 檔超過 64 MiB（:88）。這些數字來自 Windows 1.12.0 B Full，已過期；Linux CI 實測見 §4-2。失敗時需另定：分段、另一儲存通道，或提高上限（上限不可由 CLI 調高，:44）。
 3. **入口→目錄對照的來源。** 附錄由程式碼掃描得出，若要讓 collector 依此縮小保存範圍，對照應改由 manifest 宣告（例如各入口的輸出目錄欄位），並以測試確認每個入口實際寫入的位置與宣告一致。這是測試基盤變更，需另行核准。
-4. **§1-3 (b)、(c) 的位置。** (b) 的 5 個目錄與 (c) 的 `test-results/<name>` 不在 CI 上傳範圍。若 B 需要它們，應先決定改輸出位置（測試變更）或擴大 glob（workflow 變更，需核准）。
-5. **Linux 實測。** PRIVATE_PATH、容量與 GitHub 下載／還原仍為 NOT_RUN；接入前需在真實 CI 量測。
+4. **§1-3 (b)、(c) 的位置。** (b) 的 5 個目錄與 (c) 的 `test-results/<name>` 不在 CI 上傳範圍。若 B 需要它們，應先決定改輸出位置（測試變更）或擴大 glob（workflow 變更，需核准）。Linux CI 失敗 run 中，失敗入口的原件因此未上傳，見 §4-3。
+5. **Linux 實測。** 已以既有 CI artifact 離線量測 PRIVATE_PATH、容量與下載／還原（§4）；collector 在真實 CI 上執行仍為 NOT_RUN，接入前需在 CI 確認。
+
+## 4. Linux CI 既有 artifact 實測（2026-11-28）
+
+未重跑 Full。對象為保留期限內（`retention-days: 14`，`test.yml:68`、:106、:152、:199）的兩次 GitHub Full，artifact 以登入瀏覽器下載，解壓後在本機唯讀掃描及執行 collector（輸出只寫至暫存目錄），量測後刪除。
+
+| Run | 受測 SHA | 結果 | 下載 artifact | 解壓後 |
+|---|---|---|---|---|
+| [Full #293](https://github.com/tt-chin/yakyujinsei/actions/runs/45826779978) | `7d71c8cc11e66bf99bf77bb187a5c8f25387c315`（dev） | 141 PASS／7 FAIL | 10／10 | 1,330 檔、2.0 GiB |
+| [Tests #319](https://github.com/tt-chin/yakyujinsei/actions/runs/46124622303) | `34712bf59a0424fff3386c76d94f4b12b99d50cd`（`test/aud-02-low-cost`） | 152 PASS | 10／10 | 1,338 檔、2.1 GiB |
+
+1. **PRIVATE_PATH／敏感內容。** 以 `collect-ci-evidence.mjs:27-28` 的同一 regex 掃描所有 `.json`／`.log`／`.txt`／`.ndjson`／`.md`：兩次 run 皆 PRIVATE_PATH 0、SENSITIVE 0、非 UTF-8 0；collector 實跑亦無這兩種代碼。§1-4 的 Windows 數字不適用於 Linux CI。
+2. **容量。** #293：超過 64 MiB 共 11 檔，最大 140.89 MiB（`yakyujinsei-contract-salary/local/all/career-IF.json`），其餘為 contract-salary `career-P.json`、kbo-renewal `fixed-career.json`、draft-income 6 個生涯 JSON、act-audit 2 個 run JSON（皆 64.29～136.96 MiB）。#319：同樣 11 檔，最大 182.08 MiB（同一 `career-IF.json`，兩次 run 間增加約 41 MiB）。以上取代 §3-2 的 Windows 數字（237.88 MiB／48 檔）。
+   - collector 對 #293 失敗 batch-6 回報 `FILE_LIMIT` 9 筆，**全部屬於同 batch 內 PASS 的入口**（contract-salary、draft-income、kbo-renewal）；原因是有 FAIL 時 collector 把全部 `tmp/` 列為必須（`collect-ci-evidence.mjs:113`）。PASS batch（#319 batch-4、batch-6）的大檔只存索引，無 `FILE_LIMIT`。這是 §3-3 入口→目錄對照的直接用途。
+3. **B 類缺口（#293 的 7 個 FAIL 入口）。**
+
+   | 入口 | 原件位置 | 是否上傳 |
+   |---|---|---|
+   | `display-preferences-e2e` | (a) `yakyujinsei-v170-e2e` | 是 |
+   | `full-power-pitching-e2e`、`full-power-pitching-jp3-pitcher-02-e2e`、`international-personal-stats-e2e` | (b) `tmp/<name>` | **否，只有 log** |
+   | `ui-redesign-review-e2e` | (c) `test-results/<name>` | **否，只有 log** |
+   | `game-view-dom-e2e`、`verify-modularization` | 未發現寫檔（入口檔 grep `mkdtemp`／`tmpdir`／`test-results`／`writeFile`） | 只有 log（含第一差異） |
+
+   即 §3-4 不只是選項：現行 glob 下，失敗入口的原件有 4 個未保存。
+4. **下載／還原。** 20 個 zip 的 sha256 與 API `digest` 一致，`unzip -t` 全部通過。collector 的 collect → verify → restore 在 #293 batch-1（全 PASS）還原 26 檔，逐檔 `cmp` 與輸入一致。
+   - 限制：summary 的 `log` 為 CI 絕對路徑 `/__w/yakyujinsei/yakyujinsei/test-results/…`，離線執行一律得 `LOG_OUTSIDE_INPUT` 而 `EVIDENCE_BLOCKED`，restore 拒絕；上述 round-trip 是在副本上把 17 個 `log` 改為本機路徑後執行的**模擬**。CI 內以原路徑執行時預期不發生，但仍為 NOT_RUN。
 
 ## 附錄：入口 → 輸出位置 → 內容
 
