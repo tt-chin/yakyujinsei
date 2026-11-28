@@ -52,7 +52,7 @@ try{
    const ext={org:'NPB',lv:'NPB1',years:2,lastD:3,npbFaSeasons:7,serviceTime:{NPB:7,MLB:0,KBO:0,CPBL:0}};
    const k=await p.evaluate(v=>{const t=window.__returnTest;for(let k=1;k<=2000;k++){t.fixture(v);t.setRng(k);t.move();if(t.get().state.ct?.extOffered)return k;}return 0;},ext);
    assert.ok(k>0,'no RNG state reached the NPB1 extension year');
-   const open=()=>p.evaluate(({v,k})=>{const t=window.__returnTest;t.fixture(v);t.setRng(k);const before=t.get();t.move();return{before,after:t.get()};},{v:ext,k});
+   const open=(state=k)=>p.evaluate(({v,k})=>{const t=window.__returnTest;t.fixture(v);t.setRng(k);const before=t.get();t.move();return{before,after:t.get()};},{v:ext,k:state});
    const twice=locator=>locator.evaluate(b=>{b.click();b.click();});
    // Stay, then accept: menu without the extension talk, then the talk once, then no overseas menu.
    let o=await open();let text=await p.locator('#act').innerText();
@@ -60,21 +60,40 @@ try{
    const menuDraws=o.after.calls-o.before.calls;
    await twice(p.locator('#act button').filter({hasText:'現在の球団に残留'}));
    text=await p.locator('#act').innerText();assert.match(text,/契約延長オファー/);assert.doesNotMatch(text,/海外移籍|ポスティング/);
-   const talk=await p.evaluate(()=>window.__returnTest.get());assert.equal(talk.adv,0);assert.equal(talk.state.ct.endYear,o.before.state.ct.endYear);
+   const talk=await p.evaluate(()=>window.__returnTest.get());assert.equal(talk.adv,0);assert.equal(talk.state.ct.endYear,o.before.state.ct.endYear);assert.equal(talk.calls,o.after.calls,'staying opens the extension talk without an RNG draw');
    await twice(p.locator('#act button').filter({hasText:'短期契約'}));
-   const done=await p.evaluate(()=>window.__returnTest.get());assert.equal(done.adv,1);assert.ok(done.state.ct.endYear>o.before.state.ct.endYear);assert.equal(done.state.careerBuyout,0);
+   const done=await p.evaluate(()=>window.__returnTest.get());assert.equal(done.adv,1);assert.ok(done.state.ct.endYear>o.before.state.ct.endYear);assert.equal(done.state.careerBuyout,0);assert.equal(done.calls,talk.calls,'accepting the extension draws no RNG');
    assert.equal(done.state.salaryDecisionHistory.length,1);assert.equal(await p.locator('#act button').filter({hasText:/海外移籍|ポスティング|現在の球団に残留/}).count(),0);
-   const extensionDraws=done.calls-talk.calls;cases++;
+   cases++;
    // Stay, then decline: the talk once, the original contract kept, no overseas menu.
-   o=await open();await twice(p.locator('#act button').filter({hasText:'現在の球団に残留'}));await twice(p.locator('#act button').filter({hasText:'契約延長を断り'}));
-   const declined=await p.evaluate(()=>window.__returnTest.get());assert.equal(declined.adv,1);assert.equal(declined.state.ct.endYear,o.before.state.ct.endYear);assert.equal(declined.state.salaryDecisionHistory.length,0);
+   o=await open();await twice(p.locator('#act button').filter({hasText:'現在の球団に残留'}));
+   const declineTalk=await p.evaluate(()=>window.__returnTest.get());assert.equal(declineTalk.calls,o.after.calls,'staying opens the extension talk without an RNG draw');
+   await twice(p.locator('#act button').filter({hasText:'契約延長を断り'}));
+   const declined=await p.evaluate(()=>window.__returnTest.get());assert.equal(declined.calls,declineTalk.calls,'declining the extension draws no RNG');assert.equal(declined.adv,1);assert.equal(declined.state.ct.endYear,o.before.state.ct.endYear);assert.equal(declined.state.salaryDecisionHistory.length,0);
    assert.equal(await p.locator('#act button').filter({hasText:/海外移籍|ポスティング|現在の球団に残留/}).count(),0);cases++;
    // Leave for KBO: 70% buyout of the contract in force (no extension years), no extension card or decision.
    o=await open();const expected=calculateScheduledBuyout(o.after.state.ct,0.7).buyoutAmount,agreed=async()=>((await p.locator('#log').innerText()).match(/延長に合意/g)||[]).length,agreedBefore=await agreed();assert.ok(expected>0);
    await twice(p.locator('#act button').filter({hasText:'韓国プロ野球への海外移籍'}));
    const kbo=await p.evaluate(()=>window.__returnTest.get());assert.equal(kbo.adv,1);assert.equal(kbo.state.org,'KBO');assert.equal(kbo.state.careerBuyout,expected);
    assert.equal(await agreed(),agreedBefore,'no extension agreement when leaving');cases++;
-   console.log('extension year: RNG state '+k+', season-end menu draws '+menuDraws+', extension talk+accept draws '+extensionDraws+', KBO buyout '+expected);}
+   // Posting refused (code owner PR #140 comment): the consent draw only, the same KBO/CPBL offers without the handled posting option, then staying opens the extension talk once.
+   const refusedCards=()=>((document.querySelector('#log')?.innerText||'').match(/球団が申請を認めず/g)||[]).length;
+   const kr=await p.evaluate(v=>{const t=window.__returnTest,cards=()=>((document.querySelector('#log')?.innerText||'').match(/球団が申請を認めず/g)||[]).length;for(let k=1;k<=4000;k++){t.fixture(v);t.setRng(k);t.move();if(!t.get().state.ct?.extOffered)continue;const b=[...document.querySelectorAll('#act button')].find(e=>e.innerText.includes('ポスティングを申請'));if(!b)continue;const n=cards();b.click();if(cards()===n+1)return k;}return 0;},ext);
+   assert.ok(kr>0,'no RNG state reached a refused posting request in the extension year');
+   o=await open(kr);const offerTexts=()=>p.locator('#act button').filter({hasText:/韓国プロ野球への海外移籍|台湾プロ野球への海外移籍/}).allInnerTexts();
+   const offersBefore=await offerTexts();assert.equal(offersBefore.length,2,'KBO and CPBL offers shown');
+   const refusedBefore=await p.evaluate(refusedCards);
+   await twice(p.locator('#act button').filter({hasText:'ポスティングを申請'}));
+   const refused=await p.evaluate(()=>window.__returnTest.get());text=await p.locator('#act').innerText();
+   assert.equal(await p.evaluate(refusedCards),refusedBefore+1,'one refusal card');assert.equal(refused.calls,o.after.calls+1,'only the consent draw');assert.equal(refused.adv,0);
+   assert.deepEqual(await offerTexts(),offersBefore,'same KBO/CPBL offers, no reroll');assert.doesNotMatch(text,/ポスティングを申請/,'handled posting option not shown again');assert.match(text,/現在の球団に残留/);assert.doesNotMatch(text,/契約延長オファー/);
+   await twice(p.locator('#act button').filter({hasText:'現在の球団に残留'}));
+   const refusedTalk=await p.evaluate(()=>window.__returnTest.get());text=await p.locator('#act').innerText();
+   assert.match(text,/契約延長オファー/);assert.doesNotMatch(text,/海外移籍|ポスティング/);assert.equal(refusedTalk.calls,refused.calls,'staying after the refusal draws no RNG');assert.equal(refusedTalk.adv,0);
+   await twice(p.locator('#act button').filter({hasText:'短期契約'}));
+   const refusedDone=await p.evaluate(()=>window.__returnTest.get());assert.equal(refusedDone.calls,refusedTalk.calls,'accepting the extension draws no RNG');assert.equal(refusedDone.adv,1);assert.ok(refusedDone.state.ct.endYear>o.before.state.ct.endYear);assert.equal(refusedDone.state.salaryDecisionHistory.length,1);assert.equal(refusedDone.state.careerBuyout,0);
+   assert.equal(await p.locator('#act button').filter({hasText:/海外移籍|ポスティング|現在の球団に残留/}).count(),0);cases++;
+   console.log('extension year: RNG states '+k+'/'+kr+' (refused), season-end menu draws '+menuDraws+', stay/accept/decline draws 0 asserted, refusal +1, KBO buyout '+expected);}
   // Actual FA route is independent of the ordinary return gate.
   await p.evaluate(()=>{window.__returnTest.fixture({org:'MLB',lv:'MLB',serviceTime:{NPB:0,MLB:6,KBO:0,CPBL:0}});window.__returnTest.move();});assert.ok(await p.locator('#act').innerText());assert.equal(await p.locator('#act button').filter({hasText:'NPBへ復帰'}).count(),0);assert.match(await p.locator('#act').innerText(),/FA市場/);assert.ok((await p.evaluate(()=>window.__returnTest.get())).state.lastFaMarket.offers.some(o=>o.org==='NPB'));cases++;
   // NPB demotion/release and voluntary veteran return keep their own choices.

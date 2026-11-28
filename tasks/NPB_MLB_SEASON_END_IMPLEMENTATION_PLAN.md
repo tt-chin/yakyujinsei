@@ -204,7 +204,7 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
 
 ## 12. Q4 (a) 實作計畫：延長交涉移到季末選單之後
 
-狀態：**已實作，Full PASS**（2026-11-28，計畫經使用者同意；[PR #140](https://github.com/tt-chin/yakyujinsei/pull/140) 待併 dev 與 Preview）。依據：code owner 2026-11-28 決定 (a)（[待決事項](CODE_OWNER_DECISIONS_2026-11-28.md) §1）。分支 `feat/season-end-extension-order`（基準 `origin/dev` `21e1e33`）。R3／MINOR，版本 2.2.1→2.3.0。
+狀態：**已實作，最終 SHA 待 GitHub 手動 Full**（2026-11-28，計畫經使用者同意；[PR #140](https://github.com/tt-chin/yakyujinsei/pull/140) 依 code owner 留言補測後待 Full、併 dev 與 Preview）。依據：code owner 2026-11-28 決定 (a)（[待決事項](CODE_OWNER_DECISIONS_2026-11-28.md) §1）。分支 `feat/season-end-extension-order`（基準 `origin/dev` `21e1e33`）。R3／MINOR，版本 2.2.1→2.3.0。
 
 ### 讀碼事實（`21e1e33`）
 
@@ -255,3 +255,8 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
 - 固定 seed 比對：31 個入口直接執行（基準 `origin/main` `489430d`）全 PASS。新路徑在這些生涯中未到達，到達由上述 E2E 證明。
 - Quick：118 PASS／0 FAIL（`e0fc269` 加未提交修改）。
 - Full：[Tests #311](https://github.com/tt-chin/yakyujinsei/actions/runs/46105290500)（workflow_dispatch，full）受測 `1524687d44a198bafbe02d7dbea839a4cf995311`：8 個 full-batch 均 PASS，`full-aggregate` expected 150、acceptedPass 150，0 FAIL／SKIP／BLOCKED。只對應該 SHA。
+- code owner PR #140 留言（2026-11-28）後補測（只改 `tests/npb-return-e2e.mjs`）：
+  - 新增入札被拒案例，走真實 `movement()`：申請入札只多 1 次 RNG（同意判定）；回到同一份選單，韓國／台灣按鈕文字（球團、年俸）與申請前相同；不再出現當年已處理的入札選項；留隊後延長交涉開啟一次；接受延長後不再出現海外選單。
+  - 留隊路線的 RNG 消耗由 log 改為斷言：選擇留隊開啟延長交涉、接受延長、拒絕延長各 +0。
+  - 負向控制 4 項均 FAIL `ERR_ASSERTION`，各落在預期斷言：被拒後重新產生選單（only the consent draw）、不設定 `postingResolved`（handled posting option not shown again）、留隊時多抽 1 次（staying … without an RNG draw）、接受延長時多抽 1 次（accepting the extension draws no RNG）。
+  - 本機：`npb-return-e2e` 26 案 PASS、Quick 118 PASS／0 FAIL。Tests #311 只對應 `1524687`；最終 SHA 的 Full 由 code owner 在 GitHub 手動執行。
