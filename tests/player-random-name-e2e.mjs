@@ -6,11 +6,12 @@ import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import path from 'node:path';
+import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {assertSameCareer} from './support/first-difference.mjs';
 import {PLAYER_FAMILY_NAMES,PLAYER_GIVEN_NAMES} from '../docs/src/data/player-names.js';
 const root=fileURLToPath(new URL('../',import.meta.url)),baseline='f3bffeee49cd6a9cca3f56b9118bf164992bd8af';
-const arg=n=>process.argv.find(v=>v.startsWith('--'+n+'='))?.slice(n.length+3),output=path.resolve(arg('output')||'test-results/player-random-name');await mkdir(output,{recursive:true});
+const arg=n=>process.argv.find(v=>v.startsWith('--'+n+'='))?.slice(n.length+3),output=path.resolve(arg('output')||path.join(os.tmpdir(),'player-random-name'));await mkdir(output,{recursive:true});
 const oldFiles=new Map(),errors=[],results=[];
 const hook=`
 const nameTrace=[];careerRng.onDraw=value=>nameTrace.push({before:(S.rngState-0x6D2B79F5)>>>0,after:S.rngState,value});

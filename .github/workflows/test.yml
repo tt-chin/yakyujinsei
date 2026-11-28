@@ -53,6 +53,7 @@ jobs:
       - name: Validate workflow
         run: node scripts/check-workflow.mjs
       - name: Run test profile
+        id: profile
         if: env.TEST_MODE != 'full' && env.TEST_MODE != 'linux-smoke'
         run: node scripts/test.mjs "$TEST_MODE" --output=test-results/ci
       - name: Linux Chromium smoke
@@ -74,6 +75,23 @@ jobs:
             test-results/*/tmp/yakyujinsei-*.json
             test-results/*/tmp/runner-contract-*/**
             test-results/linux-smoke/**
+      # Raw tmp outputs outside the yakyujinsei-*/runner-contract-* globs, only when the run failed or the job was
+      # cancelled (job timeout skips failure(); D2-CI-ARTIFACT-01 §5-2). The always() upload above stays next to the run.
+      - name: Save failed run tmp outputs
+        if: ${{ always() && (steps.profile.outcome == 'failure' || steps.profile.outcome == 'cancelled') }}
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-${{ github.event_name }}-${{ github.run_id }}-${{ github.run_attempt }}-failure-tmp
+          retention-days: 14
+          if-no-files-found: ignore
+          compression-level: 1
+          path: |
+            test-results/*/tmp/**
+            !test-results/*/tmp/yakyujinsei-*/**
+            !test-results/*/tmp/yakyujinsei-*.json
+            !test-results/*/tmp/runner-contract-*/**
+            !test-results/*/tmp/playwright*/**
   full-plan:
     if: ${{ github.event_name == 'pull_request' || inputs.mode == 'full' }}
     runs-on: ubuntu-24.04
@@ -143,6 +161,7 @@ jobs:
           name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-plan
           path: test-results/ci-full
       - name: Run Full batch
+        id: batch
         run: node scripts/ci-full-batches.mjs run ${{ matrix.batch }}
       - name: Save Full batch evidence
         if: always()
@@ -159,6 +178,22 @@ jobs:
             test-results/ci-full/batch-${{ matrix.batch }}/tmp/yakyujinsei-*/**
             test-results/ci-full/batch-${{ matrix.batch }}/tmp/yakyujinsei-*.json
             test-results/ci-full/batch-${{ matrix.batch }}/tmp/runner-contract-*/**
+      # Same rule as the tests job. The name must not contain "-batch-": full-aggregate downloads that pattern.
+      - name: Save failed batch tmp outputs
+        if: ${{ always() && (steps.batch.outcome == 'failure' || steps.batch.outcome == 'cancelled') }}
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tests-full-${{ github.run_id }}-${{ github.run_attempt }}-failure-tmp-${{ matrix.batch }}
+          retention-days: 14
+          if-no-files-found: ignore
+          compression-level: 1
+          path: |
+            test-results/ci-full/batch-${{ matrix.batch }}/tmp/**
+            !test-results/ci-full/batch-${{ matrix.batch }}/tmp/yakyujinsei-*/**
+            !test-results/ci-full/batch-${{ matrix.batch }}/tmp/yakyujinsei-*.json
+            !test-results/ci-full/batch-${{ matrix.batch }}/tmp/runner-contract-*/**
+            !test-results/ci-full/batch-${{ matrix.batch }}/tmp/playwright*/**
   full-aggregate:
     needs: [full-plan, full-batch]
     if: ${{ always() && needs.full-plan.result == 'success' }}

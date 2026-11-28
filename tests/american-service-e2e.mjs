@@ -5,9 +5,10 @@ import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import os from 'node:os';
 import {currentUiBaselineVersion} from './support/ui-version-comparison.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=n=>process.argv.find(v=>v.startsWith('--'+n+'='))?.slice(n.length+3);
-const baseline='8964d627a1f2dff5f38da31bd3a092eeaa903a6e',output=path.resolve(arg('output')||'test-results/american-service-native');await mkdir(output,{recursive:true});
+const baseline='8964d627a1f2dff5f38da31bd3a092eeaa903a6e',output=path.resolve(arg('output')||path.join(os.tmpdir(),'american-service-native'));await mkdir(output,{recursive:true});
 const hook=`
 window.__usDraws=[];careerRng.onDraw=value=>window.__usDraws.push({value,state:S.rngState});
 flowHooks.advance=()=>{};

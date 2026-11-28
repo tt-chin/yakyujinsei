@@ -14,11 +14,12 @@ import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import os from 'node:os';
 import {themeColors,legacyShareColors,SHARE_TOKEN_NAMES} from './support/theme-colors.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=name=>process.argv.find(a=>a.startsWith('--'+name+'='))?.slice(name.length+3);
 const {chromium}=createRequire(import.meta.url)(arg('playwright')||'playwright');
 const baseline=arg('baseline')||'9956ca3',legacyTree='629addc';
-const output=path.resolve(arg('output')||'test-results/design-tokens-03-copy-control');await mkdir(output,{recursive:true});
+const output=path.resolve(arg('output')||path.join(os.tmpdir(),'design-tokens-03-copy-control'));await mkdir(output,{recursive:true});
 
 const special=['legend','taiwan','goldcloth','genius','mrteam','glass','scum','yips','distract','cancer','ambience','thief','latepractice'];
 const hook=`\nwindow.__shareColorTest={rich:()=>{S.removed=['旧特性'];Object.assign(S.traits,{legend:true,taiwan:true,goldcloth:true,genius:true,glass:true,mrteam:true});S.mrTeamName='NPB_PL_FUK';const plain=Object.keys(traitNames()).find(k=>!${JSON.stringify(special)}.includes(k));S.traits[plain]=true;return plain;},copy:()=>({mrteam:displayTrait('mrteam'),type:playerType(),position:primaryPos()}),state:()=>JSON.parse(JSON.stringify(S)),setApprovedCopy:label=>{const original=displayTrait,originalType=playerType;displayTrait=key=>key==='mrteam'?label:original(key);playerType=()=>{const value=originalType();return value==='期待の若手'?'発展途上型':value;};},image:async()=>{const out=document.createElement('div');document.body.appendChild(out);await shareImage([],out);return out.querySelector('img').src;}};`;

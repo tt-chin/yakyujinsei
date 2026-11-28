@@ -137,7 +137,7 @@ CI 的 Full 透過 `scripts/ci-full-batches.mjs` 依 `test-manifest.mjs` 的 `se
 
 本地工具驗證：`node scripts/ci-full-batches.test.mjs`（合成故障案例＋一個明示原生Runner案例；不是完整Full）。Workflow檢查仍使用 `node scripts/check-workflow.mjs --playwright=<外部模組>`。新工具測試是CI工具的獨立驗證，不新增遊戲Full入口。
 
-每批artifact名稱含Run ID、attempt及批次號，保存14天；保留既有tmp證據allowlist，不將全部大型／可能含敏感資料的tmp自動上傳。既有 `D2-CI-ARTIFACT-01 / ARTIFACT_COVERAGE_BLOCKED` 仍有效；summary／log保存不等於完整原始S/RNG可重播封存。Runner突然關閉時，只有之前已完成上傳的批次可期待保留，正在執行的批次及後續批次仍可能遺失；`always()`不能保證失去runner後仍能執行。正常測試失敗後後續批次仍會執行，原失敗step不會被最終彙整或上傳掩蓋。
+每批artifact名稱含Run ID、attempt及批次號，保存14天；保留既有tmp證據allowlist，不將全部大型／可能含敏感資料的tmp自動上傳。既有 `D2-CI-ARTIFACT-01 / ARTIFACT_COVERAGE_BLOCKED` 仍有效；summary／log保存不等於完整原始S/RNG可重播封存。Runner突然關閉時，只有之前已完成上傳的批次可期待保留，正在執行的批次及後續批次仍可能遺失；`always()`不能保證失去runner後仍能執行。正常測試失敗後後續批次仍會執行，原失敗step不會被最終彙整或上傳掩蓋。執行step失敗或被取消（含job逾時；逾時時`failure()`為false）時，另上傳該次tmp的其餘原件（`tests-full-<run_id>-<attempt>-failure-tmp-<N>`；Quick等為`tests-<event>-<run_id>-<attempt>-failure-tmp`），排除已上傳的`yakyujinsei-*`、`runner-contract-*`與`playwright*` browser profile，名稱不含`-batch-`以免被彙整下載。PASS時不上傳（D2-CI-ARTIFACT-01 §5）。
 
 平行執行（2026-10-23起）：Full 以 `full-plan`（`plan`，上傳 `tests-full-<run_id>-<attempt>-plan`）→ `full-batch`（matrix 1～8、`fail-fast: false`，各自下載 plan 後執行 `run N` 並上傳批次證據）→ `full-aggregate`（`always()`，下載 plan 與8批證據後 `aggregate`）三段 job 執行；非 Full 由 `tests` job 執行。上述分批、彙整條件與 artifact 名稱不變。`plan.json` 記錄 `runAttempt`，以「Re-run failed jobs」只重跑部分批次時 attempt 與 plan 不一致而無法彙整；重跑 Full 一律使用「**Re-run all jobs**」。
 
@@ -225,7 +225,7 @@ Node.js 24.15.0、Git 完整歷史；瀏覽器入口另需已安裝的 Playwrigh
 
 ## 輸出與結果
 
-預設寫入忽略的 `test-results/<時間>-<模式>/`。每個入口一個 `.log`，`summary.json` 保存指令、exit code、秒數、環境、HEAD、基準、來源 fingerprint。原 E2E 的 JSON／截圖在同目錄 tmp 中，方便 CI 上傳。
+預設寫入忽略的 `test-results/<時間>-<模式>/`。每個入口一個 `.log`，`summary.json` 保存指令、exit code、秒數、環境、HEAD、基準、來源 fingerprint。原 E2E 的 JSON／截圖在同目錄 tmp 中，方便 CI 上傳。未指定 `--output` 的 E2E 預設寫入 `os.tmpdir()`（Runner 設為該次的 `tmp/`），不寫入 repo 的 `test-results/<name>`。因此 PASS 的 Quick 不再上傳這些入口的 `summary.json`（舊位置偶然符合 `test-results/*/summary.json`），只在失敗或取消時隨 tmp 原件上傳。
 
 PASS 僅表示入口实际執行 exit 0；FAIL 包含非零 exit／逾時；BLOCKED 表示必要依賴不足；SKIP 是明示非自動項目。FAIL／BLOCKED 令整體 exit 非零；一次失敗仍繼續其餘預定入口。統計是入口數，不是假稱所有唯一斷言／遊戲分支數。
 

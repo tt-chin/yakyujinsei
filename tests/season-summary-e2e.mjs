@@ -4,11 +4,12 @@ import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import path from 'node:path';
+import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {projectDecisionPresentation} from './support/decision-dom-comparison.mjs';
 import {currentUiBaselineVersion} from './support/ui-version-comparison.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
-const baseline='cf88d1a9d621c354d64a2de5c427cd437a8094bf',output=path.resolve(arg('output')||'test-results/season-summary');await mkdir(output,{recursive:true});
+const baseline='cf88d1a9d621c354d64a2de5c427cd437a8094bf',output=path.resolve(arg('output')||path.join(os.tmpdir(),'season-summary'));await mkdir(output,{recursive:true});
 const hook=`
 window.__summaryProjection=${projectDecisionPresentation.toString()};
 window.__summaryDraws=[];careerRng.onDraw=value=>window.__summaryDraws.push({value,state:S.rngState});
