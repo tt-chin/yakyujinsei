@@ -1,16 +1,16 @@
 # 待決事項（2026-11-28）
 
-本檔整理四項需由 code owner 決定的事項：現況證據、選項、各選項影響與開發端建議。**本檔不構成實作授權**；決定後依 AGENTS 第6章分類、另開分支實作，並同步更新 BACKLOG、CURRENT_SPEC 與相關設計文件。
+本檔整理四項需由 code owner 決定的事項：現況證據、選項、各選項影響與開發端建議。四項已於 2026-11-28 由 code owner 決定（[PR #135 留言](https://github.com/tt-chin/yakyujinsei/pull/135)），內容記在各項的「決定」小節。實作依 AGENTS 第6章分類，各自另開分支，並同步更新 BACKLOG、CURRENT_SPEC 與相關設計文件。
 
 - 調查基準：`origin/dev` `a4fb1b8e49f673c7159a437904e2154a2b17b0f4`（VERSION 2.2.0）。行號以此為準。
-- PR #134（COPY-01 第二批，2.2.1）尚未合併。第1～3項會改產品、版本接在 2.2.1 之後，建議於 #134 合併後再實作；第4項只動測試基盤，可直接自 dev 開分支。
+- PR #134（COPY-01 第二批，2.2.1）已合併至 dev（`bf1c348`）；PR #136、#137 亦已合併（dev `158ffff`）。第1～3項會改產品，版本接在 2.2.1 之後；第4項只動測試基盤。
 
-| # | 事項 | 選項 | 開發端建議 |
-|---|---|---|---|
-| 1 | 延長交涉年的處理順序（實作計畫 §8 Q4） | (a)／(b)／(c) | (a) |
-| 2 | COPY-01 029「主要4リーグ一軍通算」 | A／B／C | A |
-| 3 | COPY-01 013「年俸（万円）」 | 採用／維持 | 採用 |
-| 4 | TEST-RELEASE-NOTES-LIMITS-01 接入方式 | A／B／C | A |
+| # | 事項 | 選項 | 開發端建議 | 決定 |
+|---|---|---|---|---|
+| 1 | 延長交涉年的處理順序（實作計畫 §8 Q4） | (a)／(b)／(c) | (a) | (a) |
+| 2 | COPY-01 029「主要4リーグ一軍通算」 | A／B／C | A | A |
+| 3 | COPY-01 013「年俸（万円）」 | 採用／維持 | 採用 | 有條件採用（Preview 驗證通過才採用） |
+| 4 | TEST-RELEASE-NOTES-LIMITS-01 接入方式 | A／B／C | A | A |
 
 ---
 
@@ -74,6 +74,16 @@
 
 **開發端建議：(a)**。它同時滿足 P6 與 Q1，也與 NPB-OFFER-WINDOW-01「留隊後才續約」一致，附帶問題隨之消失。
 
+### 決定（2026-11-28，code owner）：採用 (a)
+
+- 先顯示當年度符合資格的海外移籍選項：入札或 MLB 報價，以及韓國、台灣報價。
+- 選擇「現在の球団に残留」後，才進入延長交涉。
+- 入札被拒、無球團出價，或玩家放棄簽約時，回到同一份選單；保留既有報價，不重抽。
+- 留隊後只進入一次延長交涉，不再顯示同一批海外報價。
+- 選擇離隊時，適用的 70% 買斷按當時有效的合約計算，不含尚未簽署的延長年數。
+- 實作前列明預期的 RNG 差異，並以固定 seed 比對。
+- 完整 Full 由 code owner 在 GitHub 手動執行；實作完成後提供驗證用的 commit SHA。
+
 ### 不論選哪一案都要做
 
 - 更正 `tasks/MLB_POSTING_DESIGN.md` §2.2（:33）與 §4 第1點（:112）「延長合約 offer 那年不走到 `crossOffers`」的讀碼錯誤。
@@ -111,6 +121,13 @@
 | C | 維持現狀「リーグ横断通算」 | 不改，從 COPY-01 剩餘清單移除或保留為 NEEDS_REVIEW |
 
 **開發端建議：A**。這是決定表已核准的方向，且有 CURRENT_SPEC:916 的舊統計先例可循。未調查：1.16.0 之前的存檔 `statsByLevel` 的實際完整度，列入 A 案細部計畫。
+
+### 決定（2026-11-28，code owner）：採用 A
+
+- 同時修改名稱與統計來源：現行「リーグ横断通算」會混入 NPB 二軍／育成、KBO フューチャース與台灣二軍。
+- 統計來源：`statsByLevel` 的 `NPB1`／`MLB`／`KBO1`／`CPBL1` 合計可確認的一軍成績。
+- 舊存檔若無法確認任何一軍紀錄，就隱藏這一行，不從聯盟總計推算。
+- 範圍只限 PNG「通算タイトル」中的這一行。上方「通算成績」表、原始統計、獎項、年俸與殿堂判定維持原樣。
 
 ---
 
@@ -152,6 +169,14 @@
 
 **開發端建議：採用**。試排已符合決定表條件。
 
+### 決定（2026-11-28，code owner）：有條件採用「年俸（万円）」
+
+- 在 Preview 用 iPhone Safari 驗證 390px。
+- 另驗證 320px、投手四欄、大字級與巨額年俸同時出現的情況。
+- 標籤和數值都完整顯示，無截斷、換行、重疊或橫向捲動，才採用。
+- 任一條件不通過，就維持「年俸（万）」。
+- 上列 Brave 試排只作參考，仍需完成上述驗證。
+
 ---
 
 ## 4. TEST-RELEASE-NOTES-LIMITS-01 接入方式
@@ -174,13 +199,13 @@
 - :36-50 是一次性守衛，拿 3 個檔案和 `git show HEAD:` 比對；之後正當修改這些檔案時就會失敗，不適合作為常設 CI 條件。
 - 目前沒有任何入口執行它。manifest 只掃描 `tests/`，`syntax` 是唯一寫死在 `scripts/test.mjs:14` 的入口。
 
-連動：`scripts/ci-full-batches.test.mjs:49` 斷言 Full 入口數為 106（由 linux-smoke 執行）。新增 Full 入口時須改為 107。CI workflow 依 manifest 自動分配，不需修改。
+連動：`scripts/ci-full-batches.test.mjs` 寫死 106 的地方有三處：測試名稱（:46）、入口總數（:49）、全部通過時的 PASS 數（:62）。這支測試由 linux-smoke 執行。dev `158ffff` 上 `fullIds()`（含 `syntax`）實為 149（code owner 以 [Tests #302 的 Full 彙總](https://github.com/tt-chin/yakyujinsei/actions/runs/46040174220/job/140653679431) 確認 149 項全部通過），新增 Full 入口後應為 150，三處須同步更新。CI workflow 依 manifest 自動分配，不需修改。
 
 ### 選項
 
 | 選項 | 內容 | 影響 |
 |---|---|---|
-| A | 新增 `tests/release-notes.test.mjs`，只放常設規則（上列五項＋標題格式），不寫入任何檔案；現有 script 保留不動 | 自動進 Quick／Full／audit；106→107；`scripts/TESTING.md` 補一行 |
+| A | 新增 `tests/release-notes.test.mjs`，只放常設規則（上列五項＋標題格式），不寫入任何檔案；現有 script 保留不動 | 自動進 Quick／Full／audit；Full 入口 149→150；`scripts/TESTING.md` 補一行 |
 | B | 比照 `syntax`，在 `scripts/test.mjs` 寫死一個入口執行現有 script | 不進 `fullIds()`，CI Full 不會執行；仍需先去掉寫檔與 HEAD 守衛 |
 | C | 改寫現有 script（移除寫檔與 HEAD 守衛），移到 `tests/` 註冊 | 與 A 相同，但失去一次性守衛的歷史紀錄 |
 
@@ -188,6 +213,16 @@
 
 - 驗證：
   - 4 種故意出錯的情況（4 條、81 字、不同步、標題格式錯誤）都要確認 exit 非 0 且是 `ERR_ASSERTION`；
-  - 本機跑 Quick 和 `ci-full-batches.test`；
+  - 本機只跑新增的唯讀測試與 Quick；
   - Full 的入口數和分批會變，需在 GitHub 手動跑 Full。
 - 屬 R2，不升版本（AGENTS §9.3）。
+
+### 決定（2026-11-28，code owner）：採用 A
+
+- 新增唯讀的 `tests/release-notes.test.mjs`，檢查更新履歷的格式與產出檔是否同步。
+- 測試只回報錯誤，不改寫檔案；既有產生腳本維持原用途。
+- 只調整測試，不升遊戲版本。
+- 本機只跑新增的唯讀測試與 Quick，不啟動任何 Full 模式（包含 `full --only`）。
+- `ci-full-batches.test.mjs` 會實際啟動 `full --only=choice-action.test`，交由 GitHub 的 `linux-smoke` 執行。
+- Full 入口數 149→150；同步更新 `ci-full-batches.test.mjs` 的測試名稱與兩處寫死 `106` 的斷言。
+- 完整 Full 由 code owner 在 GitHub 手動執行；實作完成後提供驗證用的 commit SHA。
