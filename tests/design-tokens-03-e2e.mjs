@@ -160,4 +160,8 @@ finally{
   catch(e){if(e.message==='BROWSER_CLOSE_TIMEOUT'&&!browser.isConnected()){cleanupWarning='Disconnected browser profile cleanup timed out';console.warn(cleanupWarning);}else failure??=e;}finally{clearTimeout(timer);}
   await writeFile(path.join(output,'summary.json'),JSON.stringify({checks,copyChecks,negativeChecks,mixChecks,PASS:failure?0:checks,FAIL:failure?1:0,baseline,legacyTree,copyEvidence,rawEvidence,errors,cleanupWarning,failure:failure?.stack},null,2));
 }
-if(failure){console.error(failure.stack);process.exit(1);}process.exit(0);
+if(failure){console.error(failure.stack);process.exit(1);}
+// Temporary D2 acceptance probe: hash the actual output before failing the entry.
+const probeBytes=await readFile(path.join(output,'summary.json'));
+console.log('D2_PRE_UPLOAD_SHA256 '+JSON.stringify({path:path.basename(output)+'/summary.json',bytes:probeBytes.length,sha256:createHash('sha256').update(probeBytes).digest('hex')}));
+throw new Error('D2 failure-path probe: intentional failure after recording the original summary SHA-256 (temporary branch only)');
