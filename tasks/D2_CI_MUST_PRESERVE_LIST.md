@@ -13,7 +13,7 @@
 3. **輸出位置有三種。** runner 把 TEMP／TMP／TMPDIR 設為 `<output>/tmp`（`scripts/test.mjs:45-47`），manifest 不傳 `--output`。
    - (a) `tmp/yakyujinsei-*`：符合 CI 上傳 glob。
    - (b) `tmp/<name>`（stage6 harness，`tests/support/stage6-browser.mjs:58`）：**不符合** glob。除文件已列的 4 個目錄外，`hof-retirement-policy`（`tests/hof-retirement-policy-e2e.mjs:30`）是第 5 個。
-   - (c) `test-results/<name>`（repo 相對、不在 run 目錄內、跨 run 覆寫）：只有 `summary.json` 偶然符合 `test-results/*/summary.json`，Full 分批完全不收。
+   - (c) `test-results/<name>`（repo 相對、不在 run 目錄內、跨 run 覆寫）：只有 `summary.json` 偶然符合 `test-results/*/summary.json`，Full 分批完全不收。PR-1（§5-3）後 9 個入口改寫入 `os.tmpdir()/<name>`，即 (b) 同類位置。
 4. **PRIVATE_PATH 規則排除 `/home/runner`。** `collect-ci-evidence.mjs:27` 的判定為 `/Users/<name>`、`<drive>:\Users\`、`/home/<非 runner>`。文件中 Quick 3／62、Full 13／81 被拒的數字來自 Windows 本機（保存缺口 :56、:77、:86）；真正 Linux CI 輸出是否觸發仍為 NOT_RUN（:139）。Linux CI 既有 artifact 實測為 0 筆，見 §4-1。
 
 ## 2. 分類草案
@@ -66,7 +66,7 @@
 
 ## 5. §3-3／§3-4 實作計畫（2026-11-28，方向已由使用者核准）
 
-**狀態：未實作。** 本節記錄已核准的方向與實作前提，供後續分支依此進行；各 PR 的程式變更仍依 AGENTS 第6章分類、驗證。基準 `dev` `a56ea9c`。
+**狀態：PR-1 已實作（分支 `ci/d2-failure-tmp-upload`，本機驗證見 §5-3 末），PR-2 未實作。** 本節記錄已核准的方向與實作前提，供後續分支依此進行；各 PR 的程式變更仍依 AGENTS 第6章分類、驗證。基準 `dev` `a56ea9c`。
 
 ### 5-1. 已決定事項
 
@@ -108,6 +108,8 @@
 - **正式原件**：失敗專用上傳只用於一般回歸測試的補充證據。正式驗收或發布指定的原始 S／RNG／Decision／Receipt、代表截圖等仍依 §2 走保留原件的流程，PASS 也不能省略。若變更預設輸出位置，需確認這些原件仍能從指定的保存管道取得。
 - **文件**：`scripts/TESTING.md`（(c) 預設位置、失敗上傳規則）、本檔 §1-3／附錄、`BACKLOG.md`。
 - 分類 R2（workflow＋測試基盤），不升版本。本機：`node scripts/check-workflow.mjs`、可在本機執行的 (c) 入口、Quick。**Full 實行が必要（GitHub 手動・未実行）**，另加 §5-1 的失敗路徑驗證。
+- **本機驗證結果（2026-11-28，macOS＋Brave，非 CI）**：`node scripts/check-workflow.mjs` PASS。負向控制 7 種（名稱含 `-batch-`、只用 `failure()`、缺 `cancelled`、run 步驟無 id、缺 `playwright*` 排除、未排除既有證據、缺 `continue-on-error`）於副本上皆 exit 1／`ERR_ASSERTION`，未修改的副本 exit 0；名稱含 `-batch-` 由「只有 batch 證據可符合 aggregate pattern」斷言擋下。Quick 120 PASS／0 FAIL，其中 8 個 (c) 入口的 `summary.json` 寫在該次 `tmp/<name>/`；Full 專用的 `player-random-name-e2e` 以相同 TMPDIR 單獨執行 PASS，輸出於 `tmp/player-random-name/`。實際 CI 的失敗時上傳仍為 NOT_RUN。
+- **行為變化**：PASS 的 Quick 不再上傳 (c) 入口的 `summary.json`（舊位置偶然符合 `test-results/*/summary.json`），依 §5-1 只在失敗／取消時上傳。
 
 ### 5-4. PR-2：runner 記錄 `tmpOutputs`（PR-1 之後）
 
@@ -138,6 +140,6 @@
 | | `smallschool-c-e2e`（:11） | 生涯 JSON {initial,steps,state,rng}、PNG、summary | **否** |
 | | `trait-display-e2e`（:16） | 生涯 JSON（before／after state、rng）、PNG、summary | **否** |
 | | `hof-retirement-policy-e2e`（:30） | `<seed>.json`、causality、approved-summary、PNG、summary | **否** |
-| (c) `test-results/<name>` | `american-service-e2e`、`ui-redesign-shell-e2e`、`ui-redesign-allocation-e2e`、`ui-redesign-decision-e2e`、`ui-redesign-review-e2e`、`season-summary-e2e`、`fa-market-presentation-e2e`、`player-random-name-e2e`、`design-tokens-03-e2e` | summary（cases／checks）、PNG | 只有 summary（非 Full 分批） |
+| (c) `test-results/<name>`（PR-1 後為 `tmp/<name>`，失敗時上傳） | `american-service-e2e`、`ui-redesign-shell-e2e`、`ui-redesign-allocation-e2e`、`ui-redesign-decision-e2e`、`ui-redesign-review-e2e`、`season-summary-e2e`、`fa-market-presentation-e2e`、`player-random-name-e2e`、`design-tokens-03-e2e` | summary（cases／checks）、PNG | PR-1 前只有 summary（非 Full 分批，偶然符合 `test-results/*/summary.json`）；PR-1 後 PASS 時不上傳，失敗／取消時全部上傳（含 Full 分批） |
 
 未確認：(c) 各 `summary.json` 的 cases 是否內嵌完整 S／RNG；`bug-act` run 物件、`draft-income` history、harness `awards`／`trace`／`final` 的完整鍵。若 B 要依賴這些檔，需先確認。

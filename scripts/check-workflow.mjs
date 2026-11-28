@@ -98,7 +98,24 @@ const aggregate=aggJob.steps.findIndex(s=>s.run==='node scripts/ci-full-batches.
 assert.ok(aggPlan>=0&&aggBatches>=0&&Math.max(aggPlan,aggBatches)<aggregate,'full-aggregate: load plan and batches before aggregate');
 assert.equal(aggJob.steps[aggregate].if,undefined);assert.equal(aggJob.steps[aggregate]['continue-on-error'],undefined);
 assert.ok(aggJob.steps.slice(aggregate+1).some(s=>s.if==='always()'&&s.uses?.startsWith('actions/upload-artifact@')&&s.with.path.includes('test-results/ci-full/summary.json')));
+// D2-CI-ARTIFACT-01 §5-3: other raw tmp outputs are uploaded only when the run step failed or was cancelled
+// (a job timeout cancels and skips failure(), §5-2), after the always() upload and never instead of it.
+const failureTmp=(steps,runName,id,name,root)=>{
+ const run=steps.findIndex(s=>s.name===runName),always=steps.findIndex(s=>s.if==='always()'&&s.uses?.startsWith('actions/upload-artifact@'));
+ assert.equal(steps[run]?.id,id,runName+' needs id '+id);
+ const at=steps.findIndex(s=>s.with?.name===name),s=steps[at];
+ assert.ok(s&&always>run&&at>always,'failure tmp upload must follow the always() upload: '+name);
+ assert.equal(s.if,"${{ always() && (steps."+id+".outcome == 'failure' || steps."+id+".outcome == 'cancelled') }}");
+ assert.ok(s.uses.startsWith('actions/upload-artifact@'));assert.equal(s['continue-on-error'],true);
+ assert.equal(s.with['if-no-files-found'],'ignore');assert.equal(s.with['retention-days'],14);assert.equal(s.with['compression-level'],1);
+ assert.deepEqual(s.with.path.trim().split('\n'),[root+'/tmp/**',...['yakyujinsei-*/**','yakyujinsei-*.json','runner-contract-*/**','playwright*/**'].map(x=>'!'+root+'/tmp/'+x)]);
+};
+const batchPrefix=aggJob.steps[aggBatches].with.pattern.replace(/\*$/,'');
+assert.deepEqual(batchJob.steps.filter(s=>s.with?.name?.startsWith(batchPrefix)).map(s=>s.name),[save.name],'only the batch evidence upload may match the full-aggregate download pattern');
+failureTmp(job.steps,'Run test profile','profile','tests-${{ github.event_name }}-${{ github.run_id }}-${{ github.run_attempt }}-failure-tmp','test-results/*');
+failureTmp(batchJob.steps,'Run Full batch','batch','tests-full-${{ github.run_id }}-${{ github.run_attempt }}-failure-tmp-${{ matrix.batch }}','test-results/ci-full/batch-${{ matrix.batch }}');
 assert.ok(!allSteps.some(s=>/git push|rsync|DEPLOY_REPO_TOKEN/.test(s.run||'')));
 console.log('PASS workflow YAML parse: dev quick, main PR full, dispatch choices, pinned tools and Playwright image, full history, read-only permissions, artifacts, no deployment');
 console.log('PASS exact dev evidence allowlist and mixed-change checks; PR and dispatch remain unfiltered (GitHub event execution verified separately)');
 console.log('PASS parallel Full 8 batch jobs: shared attempt-scoped plan, unique batch uploads, fail-fast off, strict final aggregation after all batches; quick/audit unchanged');
+console.log('PASS failed/cancelled-only tmp uploads in tests and full-batch: after the always() upload, existing evidence excluded, outside the aggregate pattern');
