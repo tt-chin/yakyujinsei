@@ -10,7 +10,7 @@
 - TEST-RELEASE-NOTES-LIMITS-01已結案（2026-11-28）：唯讀`tests/release-notes.test.mjs`納入Quick／Full／Audit（PR #138，dev `e0fc269`）；每版1～3條、每條80字、生成一致等9種不合法輸入於本機負向控制均exit 1／`ERR_ASSERTION`；CI已執行（[Tests #308](https://github.com/tt-chin/yakyujinsei/actions/runs/46101274962) Full、#309、#310，其後Full #312／#314亦含此入口），測試失敗即令CI失敗。未曾在CI實際注入不合法摘要。2.1.0依code owner決定合併為3條，未放寬規則。
 - 2.0.0開發已告一段落，目前已交付功能的實機驗收已由使用者確認完成。未來依AGENTS第9章正常採番，不再固定2.0.0。
 - 受驗提交 `875a8af62189e7ddcc2eac27afd3c80783d45210` 的 [Quick #280](https://github.com/tt-chin/yakyujinsei/actions/runs/45510842813) 與 [Full #281](https://github.com/tt-chin/yakyujinsei/actions/runs/45512251900) 均成功；Full 146 PASS、0 FAIL／SKIP／BLOCKED。此結果只對應該提交，不代表後續提交已執行Full。
-- 目前有 **8項未完成工作**，列於下節。已完成功能不重列待驗收；研究、全量稽核及CI證據封存仍各自保留。本次整理不構成新實作或正式發布授權。
+- 目前有 **6項未完成工作**，列於下節。已完成功能不重列待驗收；研究、全量稽核及CI證據封存仍各自保留。本次整理不構成新實作或正式發布授權。
 
 ## 2. 未完成工作
 
@@ -26,17 +26,9 @@
   - 完成條件：先另定範圍、分批方式與優先度並經核准，再依批實作，每批屬R2／PATCH；範圍決定不等於全面實作授權。
   - 依據：[盤點](docs/reviews/COPY_01_INVENTORY_2026-11-28.md)、[文案稽核](docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md)、[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §6。
 
-### 2.2 殿堂研究（2項）
+### 2.2 殿堂研究（0項）
 
-- [ ] **HOF-NATURAL-SAMPLE-01** — `IMPLEMENTED_UNVERIFIED`。
-  - 現況：S1～S4已完成；S2採研究計畫§8b D1～D7及已批准追加修正，S3a／S3b結果保留。四聯盟自然樣本品質及4,000有效生涯目標尚未完成。
-  - 完成條件：先決定後續研究範圍，再補足四聯盟／投手與野手樣本及限制說明。S5仍未授權，不執行4,000條或其他擴大批次，不修改殿堂規則。
-  - 依據：[研究計畫](tasks/HOF_NATURAL_SAMPLE_PLAN.md)、[S3b](docs/reviews/HOF_NATURAL_SAMPLE_S3B.md)、[S4](docs/reviews/HOF_NATURAL_SAMPLE_S4.md)。
-
-- [ ] **HOF-PITCHER-BALANCE-01** — `RESEARCH_ONLY / NOT_IMPLEMENTED`。
-  - 現況：SP／MR／CL角色分析S4已完成，配對樣本及角色轉換限制仍適用；尚未採用任何係數／門檻修改方案。
-  - 完成條件：由使用者決定維持現制並以研究結案，或另批後續方案；不得自行套用HOF A／B／C假說係數。
-  - 依據：[批准範圍](tasks/HOF_JERSEY_APPROVED_SPEC.md)、[S4分析](docs/reviews/HOF_NATURAL_SAMPLE_S4.md)。
+- HOF-NATURAL-SAMPLE-01、HOF-PITCHER-BALANCE-01已依code owner決定以本輪研究結案（2026-11-28），見§3。
 
 ### 2.3 已批准設計、實作待驗證（2項）
 
@@ -55,7 +47,7 @@
 - [ ] **PLY-02** — `DESIGN_DEFERRED / NOT_IMPLEMENTED`。
   - 剩餘：永久欠番設計。PLY-01背號已完成；本項只依同球團一軍年資、成績、榮譽另案討論。
   - 完成條件：先批准門檻與判定規格，再授權實作及驗證。目前不設門檻、不抽選、不加效果。
-  - 依據：[批准範圍](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
+  - 依據：[批准範圍](tasks/HOF_JERSEY_APPROVED_SPEC.md)；code owner決定A維持保留（PR #142，2026-11-28）：[待決事項B](tasks/CODE_OWNER_DECISIONS_2026-11-28B.md) §3。日後若重啟，另案決定同球團一軍年資算法、判定依據及欠番是否影響選號。
 
 ### 2.5 測試環境與證據保存（1項）
 
@@ -71,6 +63,8 @@
 - 2026-11-28結案：REFACTOR-AUDIT-01 依[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §5（使用者核准）以決定結案：overlay與21個舊本體已刪除（`22e33e0`、`34c9c7b`，靜態確認）；`S.*`以外的動態寫入、頂層覆寫與各市場路線callback可達性列為已接受風險，日後若再重構由該計畫自行提出證據。
 - 2026-11-28結案：TEST-EVENT-SIGSEGV-01 依[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §1（A案，使用者核准），統一runner只在darwin-arm64執行`event-integration.test`時加`--no-sparkplug`（PR #144，dev `d3ade55`）。Node 24.14.0 darwin-arm64平行32量測：不加參數1,280次中23次SIGSEGV（負向對照），加參數1,280次0次；本機Quick 119 PASS／0 FAIL；dev push的[Tests #46124389692](https://github.com/tt-chin/yakyujinsei/actions/runs/46124389692) Quick 119 PASS／0 FAIL，Linux上此入口仍以`node tests/event-integration.test.mjs`執行。V8 SIGSEGV本身未修正，只以停用Sparkplug迴避。
 - 2026-11-28結案：AUD-02 依[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §3、§4（使用者核准）：4項差異以文件處理（#143）；「成本低」群組03a／03b／03c、06d、14c的測試由PR #146（`34712bf`，dev `f20260b`）補上，GitHub手動Full [Tests #46124622303](https://github.com/tt-chin/yakyujinsei/actions/runs/46124622303) 152 PASS／0 FAIL（`expected`／`acceptedPass` 152）；其餘需實際執行的列記為殘餘未驗證，不宣稱已驗收。列別、觀察（浮點x.5邊界等）與殘餘清單見[AUD-02分類](docs/reviews/AUD_02_TRIAGE_2026-11-28.md)末段追記。
+- 2026-11-28結案：HOF-PITCHER-BALANCE-01 依code owner決定A（PR #142留言，[待決事項B](tasks/CODE_OWNER_DECISIONS_2026-11-28B.md) §1）維持現行投手殿堂評分，本輪研究結案：現行公式不計HLD；S4樣本中繼投手每季分數中位數83、先發197；25組配對只有13組由偏先發策略得分較高，且受一軍季數、角色轉換與樣本規模影響，證據不足以決定新的HLD權重或門檻。不改評分公式、係數或門檻。依據：[S4](docs/reviews/HOF_NATURAL_SAMPLE_S4.md)、[批准範圍](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
+- 2026-11-28結案：HOF-NATURAL-SAMPLE-01 依code owner決定A（PR #142留言，[待決事項B](tasks/CODE_OWNER_DECISIONS_2026-11-28B.md) §2）停在S4、記錄限制後結案：保留S1～S4結果；以MLB為目標的36條生涯有24條未赴美、取樣早於海外報價修正、MLB樣本不足、未達4,000條有效生涯目標。延續#120，S5保留未授權，不執行4,000條或其他擴大批次；日後重啟需另案核准研究範圍與執行環境。依據：[研究計畫](tasks/HOF_NATURAL_SAMPLE_PLAN.md)、[S3b](docs/reviews/HOF_NATURAL_SAMPLE_S3B.md)、[S4](docs/reviews/HOF_NATURAL_SAMPLE_S4.md)。
 - 實機驗收為使用者回報，不補造裝置／OS與逐項紀錄；CI PASS只對應實際受驗SHA。
 - 詳細設計及未實作定案放在`tasks/`，驗證過程放在`docs/reviews/`或固定Git證據；封存資料只供追溯，不自動成為現行規則。
 - 共同開發、測試、RNG、版本與公開流程引用AGENTS，不在本檔重訂。後續工作需按各項既有授權與完成條件進行。
