@@ -30,7 +30,7 @@ code owner 的決定（PR #120）：現實中尚未取得海外 FA 權的球員�
 - MLB offer 條件：ovr ≥60 且前季 `lastD` ≥2（`overseasOffer`，`:156-162`；`:171` 的 `minD=2`）。offer 產生時即以 `pickRecord` 抽球團，接受時 `ri(1,3)` 決定年數。
 - **合約期間中每一季**都會走到 `:340`，所以合約未到期也會收到 MLB offer；接受時以選手都合解約處理（`buyoutRemaining()`，`:87-92`，預設 70%）。
 - svc 1～4 年合約到期：NPB 先 `S.ct=null`，再 `markClubInitiatedRenewal(1)`（`:336`）。後者只寫入 `careerSession.pendingOffseasonSalary`（`career-contract.js:199-201`），下年度合約由 `finalizePendingOffseasonSalary`（`:171`）之後建立，因此 `crossOffers` 時沒有現約，接受 offer 不付買斷金。
-- 例外（不走到 `:340`）：低於現役下限引退（`:256`）、全休年（`:260`）、降格（`:313`、`:316`）、延長合約 offer 那年（`:329-330`）；合約到期且 `S.faElig`（一軍年數 ≥5 或換過聯盟，`:262-265`）時改走 `faFlow`（`:334`）。
+- 例外（不走到 `:340`）：低於現役下限引退（`:256`）、全休年（`:260`）、降格（`:313`、`:316`）、延長合約 offer 那年（`:329-330`）（2026-11-28 更正：此處讀碼有誤，`extensionOffer` 接受或拒絕延長後都呼叫 `crossOffers`，`career-contract.js:92-103`；2.3.0 依 code owner 決定 (a) 改為季末選單在前、留隊後才延長，見[實作計畫](NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md) §12）；合約到期且 `S.faElig`（一軍年數 ≥5 或換過聯盟，`:262-265`）時改走 `faFlow`（`:334`）。
 - `faFlow`（`:196-207`）對 NPB：年資 <8 時 `contractStageFor('NPB')` 為 `CONTROL`，在 `:199` 以 `renewAndAdvance(1,false,'CONTROL')` 立即建立下年度合約（草案原記 `:202`，對 NPB 不會執行到）；8 年可宣告國內 FA；≥9 年才可宣告海外 FA（`:205`）。這是 `NPB-OFFER-WINDOW-01` 的空窗：該期間 KBO／CPBL／MLB offer 都不出現。
 - 赴美契約條件沿用 `salaryCandidate`；無美國經驗且非（25 歲以上且年資 ≥6）者為 `MLB_INTL_RESTRICTED`（`cross-league-market-policy.js:24-25`），以既有規則處理契約金與級別。
 
@@ -109,7 +109,7 @@ code owner 的決定（PR #120）：現實中尚未取得海外 FA 權的球員�
 
 以下由 §2 讀碼與 §3 定案推導，**不是 code owner 的個別決定**。實作計畫須逐項提出處理方式，未決者先確認再實作。
 
-1. **提前 return 的年度**：P3 為「每年季末」，但現行全休年（`:260`）、降格（`:313`、`:316`）、延長合約 offer 那年（`:329-330`）都不走到 `crossOffers`。降格後已非一軍，不符合 P2；全休年與延長交涉年是否可申請，須在計畫中提出。
+1. **提前 return 的年度**：P3 為「每年季末」，但現行全休年（`:260`）、降格（`:313`、`:316`）、延長合約 offer 那年（`:329-330`）都不走到 `crossOffers`（2026-11-28 更正：延長合約 offer 那年實際上會走到 `crossOffers`；處理順序由 code owner 決定 (a)，見實作計畫 §12）。降格後已非一軍，不符合 P2；全休年與延長交涉年是否可申請，須在計畫中提出。
 2. **已取得海外 FA 權（NPB 年資 ≥9）**：P1 的範圍是「未取得海外 FA 前」。依字面，≥9 年合約期間中 `crossOffers` 的「MLBへの海外移籍」（不需同意、fee=0、70% 買斷）及到期時 `faMarket` 的海外 FA 路線維持現狀；是否另改用語（P7「海外 FA 路線使用獨立用語」）須在計畫中確認。
 3. **RNG 順序**：現行 MLB offer 在 `crossOffers` 產生時即 `pickRecord`。新流程新增同意抽選 1 次、報價有無 1 次；球團與條件在哪一步抽取、與 KBO／CPBL offer 的抽取先後，決定同 seed 差異的起點，須列入許可差異。
 4. **不重抽**：每年一次及拒絕後不重抽，須以當年度狀態保存結果，重繪、重開選單、重新進入付款入口都不得再抽（參考 `crossOffersRule` 既有 `npbReturnOfferContext` 的防重入模式，`:175-186`）。
