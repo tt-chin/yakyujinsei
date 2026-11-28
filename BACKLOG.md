@@ -67,9 +67,10 @@
   - 剩餘：macOS arm64的`event-integration.test`間歇V8 SIGSEGV，根因未確認；原量測與crash線索見整理前紀錄。
   - 完成條件：升級Node後完成arm64平行量測且不再出現，或批准調整入口執行參數後驗證。未批准修改入口；發生時比對最新crash report並保留FAIL，不用重跑PASS覆寫。
 
-- [ ] **TEST-DISPLAY-ENTER-TIMEOUT-01** — `LOCAL_LOAD_ONLY / 未修正`。
-  - 剩餘：本機4組平行Full負載下，`display-preferences-e2e`按Enter後等待內容變化逾時；單獨重測通過不足以確診。
-  - 完成條件：釐清負載延遲或按鍵未處理，再決定修正；不放寬斷言。原位置、來源及失敗紀錄見整理前紀錄。
+- [ ] **TEST-DISPLAY-ENTER-TIMEOUT-01** — `ROOT_CAUSE_FOUND / 測試修正待併dev`（2026-11-28）。
+  - 原因：按鍵未被列處理，不是負載延遲。Escape關閉`#display-preferences`後，`close`事件排入佇列（約6～11ms後），`docs/src/ui/board-menu.js:43-45`在其中把焦點移到`#board-menu-toggle`；若落在測試focus列與按Enter之間，Enter會開啟看板選單，`#act`不變而逾時。本機高負載80次中6次重現，6次全為此序列；在focus與Enter之間插入20ms可穩定重現。只要Enter到達列，`#act`在2.4ms內改變。
+  - 修正：分支`fix/display-preferences-close-race`在Escape前註冊一次性`close`旗標，最多等5秒後才focus列；斷言與5秒等待不變，不改產品焦點行為（真人無法在約10ms內按鍵）。負向控制：插入20ms延遲時舊測試3/3 FAIL（`retained row listener works`）、新測試3/3 PASS；`close`不觸發時5秒內`TimeoutError`。
+  - 完成條件：修正併入dev。原位置、來源及失敗紀錄見整理前紀錄。
 
 - [ ] **TEST-RELEASE-NOTES-LIMITS-01** — `CONTENT_USER_ACCEPTED / CI_GATE_NOT_IMPLEMENTED`。
   - 剩餘：將`scripts/test-release-notes.mjs`接入正式test manifest／Quick；摘要內容已驗收，不再列文案待驗。
