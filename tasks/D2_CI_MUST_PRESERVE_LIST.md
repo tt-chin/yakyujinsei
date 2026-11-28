@@ -109,6 +109,10 @@
 - **文件**：`scripts/TESTING.md`（(c) 預設位置、失敗上傳規則）、本檔 §1-3／附錄、`BACKLOG.md`。
 - 分類 R2（workflow＋測試基盤），不升版本。本機：`node scripts/check-workflow.mjs`、可在本機執行的 (c) 入口、Quick。**Full 實行が必要（GitHub 手動・未実行）**，另加 §5-1 的失敗路徑驗證。
 - **本機驗證結果（2026-11-28，macOS＋Brave，非 CI）**：`node scripts/check-workflow.mjs` PASS。負向控制 7 種（名稱含 `-batch-`、只用 `failure()`、缺 `cancelled`、run 步驟無 id、缺 `playwright*` 排除、未排除既有證據、缺 `continue-on-error`）於副本上皆 exit 1／`ERR_ASSERTION`，未修改的副本 exit 0；名稱含 `-batch-` 由「只有 batch 證據可符合 aggregate pattern」斷言擋下。Quick 120 PASS／0 FAIL，其中 8 個 (c) 入口的 `summary.json` 寫在該次 `tmp/<name>/`；Full 專用的 `player-random-name-e2e` 以相同 TMPDIR 單獨執行 PASS，輸出於 `tmp/player-random-name/`。實際 CI 的失敗時上傳仍為 NOT_RUN。
+- **GitHub 手動 Full（[Tests #324](https://github.com/tt-chin/yakyujinsei/actions/runs/46149315772)，`16e10beeb055172b65d560950452a73f72588ea3`）**：
+  - attempt 1：`FAIL_OR_INCOMPLETE`，expected 152／acceptedPass 146（FAIL 2、BLOCKED 4）。原因不在本 PR：同日刪除已合併分支後，歷史基準 `ad8e77f`、`eddc464`、`ce5f732`、`4ba12c5` 無法從 origin 到達（manifest 55 個歷史 ref 中只有這 4 個），`fetch-depth: 0` 取不到。`design-tokens-09-e2e` 的 log 為 `git show ad8e77f:docs/index.html` 失敗；`ui-redesign-shell-e2e` 引用同一 ref，推定同因（未下載確認）。已推送 tag `fixture/ad8e77f`、`fixture/eddc464`、`fixture/ce5f732`、`fixture/4ba12c5`（使用者核准）使其可到達；防止刪除的 ruleset 需 code owner 設定。
+  - attempt 1 的失敗 batch 3、4、5、8 各產生 `tests-full-46149315772-1-failure-tmp-<N>`（約 76 MB、46 MB、123 MB、0.6 MB），PASS batch 未產生；內容未下載檢查。Re-run all jobs 後 attempt 1 的 artifact 已無法取得（API 與網頁皆無），因此不能代替 §5-1 的失敗路徑驗證。
+  - attempt 2（Re-run all jobs）：8 batch 與 aggregate 皆 success，`{"status":"PASS","expected":152,"acceptedPass":152,"issues":[]}`；`failure-tmp` artifact 0 個。
 - **行為變化**：PASS 的 Quick 不再上傳 (c) 入口的 `summary.json`（舊位置偶然符合 `test-results/*/summary.json`），依 §5-1 只在失敗／取消時上傳。
 
 ### 5-4. PR-2：runner 記錄 `tmpOutputs`（PR-1 之後）
