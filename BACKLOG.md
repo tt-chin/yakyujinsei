@@ -27,9 +27,9 @@
   - 依據：[文案稽核與決定](docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md)、[已完成五項](docs/reviews/COPY_01_P1_IMPLEMENTATION_ACCEPTANCE.md)；[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §6。
 
 - [ ] **COPY-02** — `SCOPE_PENDING / NOT_IMPLEMENTED`（2026-11-28，自COPY-01分出）。
-  - 剩餘：全量可到達日文文案、術語及畫面位置清查。盤點TSV（基準`54aa2ce`，早於第三批）扣除事件卡與人名、隊名、主資料後剩1,724行；另併入018（原「維持」判斷已失效，現行選項見`career-movement.js:253-254`）及25個未編號待審候選。020／021依賴D2獎項設計，繼續等待。
+  - 剩餘：全量可到達日文文案、術語及畫面位置清查。盤點TSV（基準`54aa2ce`，早於第三批）扣除事件卡與人名、隊名、主資料後剩1,724行；另併入018（原「維持」判斷已失效，現行選項見`career-movement.js:253-254`）及25個未編號待審候選。020／021經查投手個人賞D2已於1.13.0實作，原「等待D2」前提不成立，提案以「維持」結案；另發現殿堂評價理由文字N1（沢村賞也顯示「最優秀投手賞受賞による評価」，讀碼推論未實跑）。範圍、分批與優先度提案見[COPY-02範圍提案](tasks/COPY_02_SCOPE_PROPOSAL.md)，待核准。
   - 完成條件：先另定範圍、分批方式與優先度並經核准，再依批實作，每批屬R2／PATCH；範圍決定不等於全面實作授權。
-  - 依據：[盤點](docs/reviews/COPY_01_INVENTORY_2026-11-28.md)、[文案稽核](docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md)、[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §6。
+  - 依據：[盤點](docs/reviews/COPY_01_INVENTORY_2026-11-28.md)、[文案稽核](docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md)、[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §6、[COPY-02範圍提案](tasks/COPY_02_SCOPE_PROPOSAL.md)。
 
 ### 2.2 殿堂研究（2項）
 
