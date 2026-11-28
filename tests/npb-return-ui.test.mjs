@@ -37,7 +37,7 @@ for(const [org,level] of [['MLB','MLB'],['MiLB','A3'],['KBO','KBO1'],['CPBL','CP
   const nextYear=fixture(org,level);nextYear.draw(65);nextYear.buttons()[1].f();nextYear.s.year++;nextYear.draw(65);assert.equal(nextYear.calls.draw,2);assert.equal(nextYear.buttons().length,2);cases++;
 }
 const html=readFileSync(new URL('../docs/index.html',import.meta.url),'utf8'),css=readFileSync(new URL('../docs/styles/ui-navigation.css',import.meta.url),'utf8');
-assert.match(html,/<span>年俸（万）<\/span>/);assert.match(html,/aria-label="年俸、単位は万円/);assert.match(css,/padding:calc\(4px \* var\(--nav-scale\)\)/);
+assert.match(html,/<span>年俸（万円）<\/span>/);assert.match(html,/aria-label="年俸、単位は万円/);assert.match(css,/padding:calc\(4px \* var\(--nav-scale\)\)/);
 // Preserve the historical baseline except the explicitly tested KBO floor fix
 // and the two MiLB-demotion salary snapshots covered below and by native E2E.
 for(const file of ['docs/src/engine/cross-league-market-policy.js','docs/src/engine/contract-policy.js']){

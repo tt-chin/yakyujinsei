@@ -260,3 +260,4 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
   - 留隊路線的 RNG 消耗由 log 改為斷言：選擇留隊開啟延長交涉、接受延長、拒絕延長各 +0。
   - 負向控制 4 項均 FAIL `ERR_ASSERTION`，各落在預期斷言：被拒後重新產生選單（only the consent draw）、不設定 `postingResolved`（handled posting option not shown again）、留隊時多抽 1 次（staying … without an RNG draw）、接受延長時多抽 1 次（accepting the extension draws no RNG）。
   - 本機：`npb-return-e2e` 26 案 PASS、Quick 118 PASS／0 FAIL。Tests #311 只對應 `1524687`；最終 SHA 的 Full 由 code owner 在 GitHub 手動執行。
+- 最終 SHA 的 Full：[Tests #312](https://github.com/tt-chin/yakyujinsei/actions/runs/46109049151)（workflow_dispatch，full）受測 `36c44680d338310c5890fe50ecf8d88136e57e07`：8 個 full-batch 均 PASS，`full-aggregate` expected 150、acceptedPass 150。PR #140 已併 dev（`f02b7cde7a8fca9389d3adeb2e1832a6b41dd7d6`），dev push 的 Quick（Tests #313）PASS；Preview 待使用者確認。

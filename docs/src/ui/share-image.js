@@ -3,6 +3,7 @@ import {incomeSummary} from './income-summary.js';
 import { getDisplayPreferences } from './preferences.js';
 import { shareTagPalette } from './share-theme.js';
 import {removedTraitLabel} from '../engine/trait-policy.js';
+import {firstTeamStats} from '../engine/hof-evaluation-policy.js';
 
 // Share image colors come from the current theme's CSS tokens (UI-DESIGN-TOKENS-03, DESIGN_SYSTEM_PLAN §10 D1).
 // A hidden probe resolves var(--token). An opaque rgb() (every hex token) is parsed exactly, without a canvas,
@@ -103,6 +104,15 @@ export class ShareImage {
   render(evals,out){return renderShareImage(this.#deps,this.#previews,evals,out);}
 }
 
+// COPY-029: sums only NPB1／MLB／KBO1／CPBL1 that firstTeamStats can verify; never infers from S.stats.
+export function firstTeamCareerMilestone(state){
+  const t={H:0,HR:0,SB:0,W:0,SV:0,HLD:0,SO:0};
+  for(const bucket of ['CPBL','KBO','NPB','MLB']){ const st=firstTeamStats(state,bucket); if(!st)continue;
+    for(const k of Object.keys(t))t[k]+=st[k]||0; }
+  if(state.pos==='P')return t.W>0||t.SO>0?`主要4リーグ一軍通算：${t.W}勝 ${t.SO}奪三振 ${t.SV}セーブ ${t.HLD}ホールド`:null;
+  return t.H>0?`主要4リーグ一軍通算：${t.HR}本塁打 ${t.H}安打 ${t.SB}盗塁`:null;
+}
+
 async function renderShareImage(deps,shareImagePreviews,evals,out){
   const seq=(shareRenderSeq.get(out)||0)+1;shareRenderSeq.set(out,seq);
   const textsByFont=new Map();
@@ -126,21 +136,11 @@ function drawShareImage({getState,getSeed,LG_N,TEAM_COLOR,teamNick,roleN,playerT
   const leagues=['MLB','NPB','KBO','CPBL'].filter(b=>S.stats[b]);
   /* キャリア里程碑 + 名人堂資訊(加在栄誉最前面)。 */
   const milestones = [];
-  const isPit = S.pos==='P';
   /* 名人堂入選資訊。 */
   if(S.hofInfo&&S.hofInfo.length){ S.hofInfo.forEach(h=>{
     milestones.push(`${h.lg}殿堂入り・${h.yr}年目、得票率${h.pct}%`); }); }
-  /* 跨リーグキャリア合計里程碑。 */
-  { let tG=0,tH=0,tHR=0,tRBI=0,tSB=0,tW=0,tSV=0,tHLD=0,tSO=0,tIP=0;
-    ['CPBL','KBO','NPB','MLB'].forEach(b=>{ const st=S.stats[b]; if(!st)return;
-      tH+=st.H||0;tHR+=st.HR||0;tRBI+=st.RBI||0;tSB+=st.SB||0;
-      tW+=st.W||0;tSV+=st.SV||0;tHLD+=st.HLD||0;tSO+=st.SO||0;tIP+=st.IP||0; });
-    if(isPit){
-      if(tW>0||tSO>0)milestones.push(`リーグ横断通算：${tW}勝 ${tSO}奪三振 ${tSV}セーブ ${tHLD}ホールド`);
-    }else{
-      if(tH>0)milestones.push(`リーグ横断通算：${tHR}本塁打 ${tH}安打 ${tSB}盗塁`);
-    }
-  }
+  /* 主要4リーグ一軍通算(COPY-029)。 */
+  { const line=firstTeamCareerMilestone(S); if(line)milestones.push(line); }
   /* 栄誉グループ化(に応じて年份)。 */
   const honors = milestones.slice();
   const aMap = {};

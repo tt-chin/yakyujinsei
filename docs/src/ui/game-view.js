@@ -87,7 +87,7 @@ export class GameView {
   patchBoard(p){ /* game.js の board 上書き（renderBoard の後に実行）の追加書き込み。 */
     this.byId('bd-name').firstChild.textContent=p.name;
     const amateur=this.byId('board').dataset.amateur==='true',salary=this.byId('bd-sal');salary.textContent=amateur?'アマ':p.salaryText;
-    const lbl=salary.nextElementSibling;if(lbl)lbl.textContent=amateur?'年俸対象外':'年俸（万）';
+    const lbl=salary.nextElementSibling;if(lbl)lbl.textContent=amateur?'年俸対象外':'年俸（万円）';
     this.byId('salary-detail-trigger')?.setAttribute('aria-label',amateur?'アマチュア。収入の内訳を見る':'年俸、単位は万円。年俸の内訳を見る');
   }
   renderChoices(title,opts){ /* 選択肢ボタンを作って返す。onclick と choiceViews への登録は ChoicePrompt の choose が行う。 */
