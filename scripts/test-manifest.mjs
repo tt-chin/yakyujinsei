@@ -83,6 +83,11 @@ const nonTests = {
   'fixed-seed-regression.json': ['fixture','Historical fixture, not currently imported; preserve for external consumers.'],
   'fixtures/draft-income-routes.json': ['fixture','Recorded positive and negative route choices, consumed by draft-income E2E.'],
 };
+// Node flags by `${process.platform}-${process.arch}` (TEST-EVENT-SIGSEGV-01): Node 24.14/24.15 on macOS arm64 crashes intermittently
+// (SIGSEGV in the Sparkplug prologue under vm.runInContext). Parallel-32 runs without/with --no-sparkplug: 294e4be 62/1,280 vs 0/320;
+// 2026-11-28 (3885d83 tree) 23/1,280 vs 0/1,280; see scripts/TESTING.md. NODE_OPTIONS rejects the flag, and Linux CI gets none.
+const nodeArgsByPlatform = {'event-integration.test':{'darwin-arm64':['--no-sparkplug']}};
+export function nodeArgsFor(entry,key=process.platform+'-'+process.arch){ return entry.nodeArgsByPlatform?.[key]||[]; }
 export function inventory(root) {
   const files = readdirSync(new URL('tests/',root), {recursive:true,withFileTypes:true})
     .filter(f=>f.isFile()).map(f=>path.relative(fileURLToPath(root),path.join(f.parentPath,f.name)).replaceAll('\\','/')).sort();
@@ -95,7 +100,7 @@ export function inventory(root) {
     if(relative.endsWith('.test.mjs') || ['career-movement-policy.mjs','domestic-tournament-policy.mjs','hall-of-fame-policy.mjs','salary-promotion-policy.mjs','verify-modularization.mjs'].includes(relative)) {
       const source=readFileSync(new URL(file,root),'utf8');
       const category=id.includes('fixed-seed')?'fixed-seed / static':/node:vm|runInNewContext|integration|salary-flow/.test(source+' '+id)?'integration / native fixture / static':/\.\.\/docs.*(?:from|import)/.test(source)?'unit / static':'unit / static (see source assertions)';
-      return {id,file,category,modes:['quick','full','audit'],seconds:2,dependencies:'Node + repository files'+(/execFileSync|node:child_process/.test(source)?' + Git history':''),browser:false,network:false};
+      return {id,file,category,modes:['quick','full','audit'],seconds:2,...(nodeArgsByPlatform[id]?{nodeArgsByPlatform:nodeArgsByPlatform[id]}:{}),dependencies:'Node + repository files'+(/execFileSync|node:child_process/.test(source)?' + Git history':''),browser:false,network:false};
     }
     throw Error('Unclassified tests file: '+file);
   });

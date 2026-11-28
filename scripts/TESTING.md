@@ -180,6 +180,12 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 `injury-risk-policy.test`與`injury-risk-e2e`為Quick／Full／Audit（`tasks/INJ_UI_01_INJURY_RISK_PLAN.md`）。以`8a4f765`的`player-injury.js` `injuryProb`本體在vm中與`injuryRiskBreakdown().total`逐格比較（特性7組合×年齡15～48×`injNext`×`tmpInj`），並驗證步驟順序與凍結、年齡邊界、特性規則先於`tmpInj`、3／95%夾限、診斷後（本session記錄）、`phasePre`前（`tmpInj`視為重置）與復健季的顯示，以及`rollInjury`以`total`抽選並在抽選前記錄。E2E（約20秒）以真實賽季打到健康診斷，比對診斷前顯示值與結果卡「故障率」、診斷後「判定済み」，再以hook檢查年初（`phasePre`前）、`phasePre`後、復健季與年初待復健；桌面側欄重繪時細目與「潜在能力について」各自保留展開狀態；查看與展開前後S（含`rngState`）不變，1280／390 px與4主題。
 既有測試的核准差異：`award-identity-policy.test`的`ability-view.js`兩組逐字修改、`career-presenter.test`的condition第1列（fixture只補缺欄）、`phasePre`的`markSeasonStart(S)`一行（`season-phases.test`插入清單、`verify-modularization`建構行、`full-power-pitching.test`／`npb-return-ui.test`的stub、`full-power-pitching-e2e`剝除清單）、`dom-snapshot`驗證並刪除condition的風險列（`game-view-dom-e2e`以`window.__expectInjuryRisk`要求受測版必須有該列）。
 
+## 平台別 node 參數（TEST-EVENT-SIGSEGV-01）
+
+`event-integration.test`在macOS arm64（Node 24.14／24.15）會間歇發生V8 SIGSEGV（`vm.runInContext`→Sparkplug prologue→mark-compact，exit=null、log空）。`NODE_OPTIONS`不接受`--no-sparkplug`，因此由`scripts/test-manifest.mjs`的`nodeArgsByPlatform`只對此入口、只在`darwin-arm64`加上該參數；`scripts/test.mjs`以`nodeArgsFor`放在檔名之前，`list`與summary的`command`會顯示。其他平台（含Linux CI）回傳空陣列，指令不變。`test-runner.test`斷言只有此入口帶參數、只對`darwin-arm64`生效。
+
+量測（darwin-arm64，同一樹、平行32，不加／加`--no-sparkplug`）：`294e4be`為Node 24.14 62／1,280對0／320（Node 24.15不加參數52／1,280）；2026-11-28以`3885d83`的樹、Node 24.14.0為23／1,280對0／1,280。升級Node後若要移除，需先在arm64以相同方式量測不加參數為0。
+
 ## 生涯RNG（`Rng`）
 
 `rng.test`為Quick／Full／Audit：以`650e4dd21718b4abec3876fc9ef6148714c21d4f`舊`seedInit`／`R`產生的golden值，驗證`docs/src/engine/rng.js`的種子、步進、hash為0時的退回值、每次重讀`S`，以及`game.js`的`seedInit`／`R`委派與`_s`同步。不是完整生涯比較；E2E的RNG計數經`tests/support/rng-instrument.mjs`：現行原始碼以`careerRng.onDraw`計數，沒有`careerRng`的舊基準原始碼仍以`R`定義文字替換，兩者皆不符時丟`RNG_INSTRUMENT_MISS`；`rng-instrument.test`（Quick／Full／Audit）驗證這三種情況。vm harness仍抽取`seedInit`／`R`單行（見`tasks/GAME_JS_OOP_REFACTOR_PLAN.md` §2.2、§2b）。
@@ -200,6 +206,12 @@ quick 執行全部快速原生／單元入口、JS 語法、KBO quick、ACT 入�
 五個既有功能 E2E 以 `--ui-only`／`--quick` 執行完整的原生功能 fixture／UI／候選 RNG 矩陣；不在每項重新跑相同的舊版生涯比較。完整生涯由 ACT、contract、draft、display、event 的專門入口覆蓋，保留各自不同的契約／收入／UI重繪／事件斷言。需要重查原歷史生涯時可明確使用 `--legacy-careers --only=<id>`；不刪除或改寫舊斷言。`npb-return-e2e` 例外：其對 `73d5a58` 的生涯比較已經批准移除（`18820f0`），常規 full 執行不帶參數的完整模式（fixture／UI＋現行版 4 seed 各重播兩次一致）；與 `73d5a58` 的 return-gate 路線比較由 `npb-return-rng-e2e`（`--rng-only`）執行。
 
 display 的常規 full 執行全部設定／尺寸／DOM 保持矩陣，加 P／IF 各一條每17操作切換設定的完整生涯。其餘4條不重複，原六條完整設定生涯仍可用 `--legacy-careers --only=display-preferences-e2e` 執行。
+
+## 總合能力與導覽（AUD-02 03a～03c、06d、14c）
+
+`ability-evaluation-policy.test`為Quick／Full／Audit：以`CURRENT_SPEC.md` §3的式子精確計算（有理數、四捨五入）寫成固定期望值，直接驗證`overallRatingFor`與`defenseScoreFor`：投手三項排序、sta權重與不入排序、x.5進位；野手打擊排序、sta不計、yips −3；各守位dpScore係數、各dw、DH＝1B−12（以兩組落在.5附近的輸入夾住12）、未知key（dw 0.22、dpScore 99為現行值）、未設定時C／CF／SS。新舊等價仍由`ability-allocation.test`負責。§3以v1.6.2 game.js的ovr為基準，球速＝制球＝変化球＝55時精確值x.5經浮點為x.4999…而捨去，測試固定現行值並註明。以21個產品變異（係數、排序、捨入、dw、DH懲罰11／13與改用SS、未設定守位改為2B／RF／SS、yips量、未知key）確認20個以`ERR_ASSERTION`失敗；非整數懲罰11.5存活（規格為整數12）。yips在捨入前或後扣整數3結果相同，無法由輸出觀測。
+
+`ui-redesign-shell-e2e`另斷言導覽、縮放與選單操作後URL不變（06d），並在320／390／1280px×3字級×2密度量測`#main-nav`：上下padding＝4px×`--nav-scale`、按鈕≥44px、高度不超過最高按鈕＋padding＋邊框、標準中字級約53px（實測標準53、compact 51.78，字級不影響）、`--board-height`／`--game-header-height`與實測border-box一致（14c）。量測後還原viewport與dataset，並再確認S／RNG與URL不變。負向對照（導覽時`history.replaceState`、padding不乘`--nav-scale`、按鈕40px、不觀測nav）均由對應斷言失敗。
 
 ## 依賴與可再現基準
 
