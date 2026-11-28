@@ -5,7 +5,7 @@
 - 掃描基準：`dev` `a56ea9cc4c5bda64da23a7f2b0ce4f58de8b4a5a`（PR #147 合併後）。行號以此為準。
 - 範圍：`docs/index.html` 與 `docs/src/**` 的 `.js`，排除 `release-notes.js`（與 [COPY-01 盤點](COPY_01_INVENTORY_2026-11-28.md) 相同）。共 118 檔。
 - 明細：[COPY_02_INVENTORY_2026-11-28.tsv](COPY_02_INVENTORY_2026-11-28.tsv)（欄位：file、line、category、status、usage、usage_reason、flags、covered_by_fragment、text）。
-- 腳本：`tools/copy-inventory/scan.mjs`（本批起納入版控）。不是 Runner 入口，不安裝套件；acorn 以 `--acorn=<acorn.mjs>` 指定本機既有檔案。重跑：`node tools/copy-inventory/scan.mjs --acorn=<acorn.mjs> --output=<新目錄> [--root=<乾淨的 checkout>] [--audit=<稽核 md>]`。`--root` 的 `docs/` 有未提交變更、`--output` 已存在或位於 `--root` 內（含符號連結與大小寫差異）、稽核檔不存在時都會中止。
+- 腳本：`tools/copy-inventory/scan.mjs`（本批起納入版控）。不是 Runner 入口，不安裝套件；acorn 以 `--acorn=<acorn.mjs>` 指定本機既有檔案。重跑：`node tools/copy-inventory/scan.mjs --acorn=<acorn.mjs> --output=<新目錄> [--root=<乾淨的 checkout>] [--audit=<稽核 md>]`。`--root` 的 `docs/` 有未提交變更、`--output` 已存在或位於 `--root` 內（含符號連結與大小寫差異）、稽核檔不存在時都會中止。掃描對象與稽核檔（位於 `--root` 內時，含預設的 `docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md`）的內容都必須與 HEAD 相同：以 `git hash-object` 與 HEAD 的 blob 比對，因此 skip-worktree／assume-unchanged 也會被偵測；路徑比較使用磁碟上的實際大小寫。`--root` 以外的稽核檔視為額外輸入：`stats.json` 記錄 `external: true`、路徑與 SHA-256（`stats.json` 為本機紀錄，不提交），TSV 第一行另加 `# external audit … sha256=…` 註解。本次使用的稽核檔為 `a56ea9c` 的預設檔，SHA-256 `eacc6f27bc905957b00905829571ce3c6b5c2dc25f16c9b5696228ba1ebcfc62`。
 - TSV 不使用引號；欄位內的 `\`、tab、CR、LF 寫成 `\\`、`\t`、`\r`、`\n`。以 CSV 工具讀取時請關閉引號處理（例如 Python `csv.QUOTE_NONE`）。
 
 ## 1. 方法
@@ -25,7 +25,7 @@
 ## 2. 方法驗證
 
 - **確定性**：同一 checkout 連跑兩次，TSV 與 stats.json 逐位元組一致。
-- **安全檢查的負向控制**：`--output` 位於 root 內、經 `/tmp` 符號連結或大小寫不同的路徑指向 root 內、名稱以 `..` 開頭的 root 內目錄、已存在的 `--output`、不存在的稽核檔、root 的 `docs/` 有未提交變更，7 種皆以 exit 1 中止且未留下檔案。
+- **安全檢查的負向控制**：`--output` 位於 root 內、經 `/tmp` 符號連結或大小寫不同的路徑指向 root 內、名稱以 `..` 開頭的 root 內目錄、已存在的 `--output`、不存在的稽核檔、root 的 `docs/` 有未提交變更，7 種皆以 exit 1 中止且未留下檔案。另加 6 種負向控制（PR #148 code owner 指摘後追加）：預設稽核檔有未提交變更、以大小寫不同的路徑指定同一份有變更的稽核檔、fixture 上只改未提交的稽核檔使某筆可由 NOT_COVERED 變 COVERED、以 `--audit` 指定 root 內未追蹤的檔案、稽核檔設為 skip-worktree 後修改（`git status` 無輸出）、`docs/src` 檔案設為 skip-worktree 後修改，皆以 exit 1 中止；指定 root 外的稽核檔則正常完成並記錄為外部輸入。修正後重跑，TSV 與修正前逐位元組一致。
 - **判定規則的 fixture**：以暫存 repo 逐一放入 `new Map` 鍵、`Object.fromEntries` 鍵、日文 identifier 鍵、陣列 `.includes()` 成員、樣板 `===`、`.has()`、子字串 `.includes()`（含 1 字）、regex 的案例，各自與對應的顯示字串皆判為 JUDGMENT；負向控制 `/[ぁ-ん]/` 這類只有字元類別的 regex 不作為比對種子，一般顯示字串與 `${n}優勝${m}` 維持 DISPLAY。
 - **與 COPY-01 對照**：以本腳本重掃 COPY-01 的基準 `54aa2ce`，舊 TSV 3,310 筆中有 3,261 筆（98.5%）的 file、line、text（前 80 字、空白正規化）完全一致（不計本腳本新增的 regex 列）。其餘差異來自舊腳本的處理，不影響判讀：
   - 舊腳本合併同檔重複字串（`league-catalog.js` 的隊名、`player-romance.js` 同行重複字串）；本腳本逐筆列出。

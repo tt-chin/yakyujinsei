@@ -3,6 +3,8 @@
 // Usage: node tools/copy-inventory/scan.mjs --acorn=<acorn.mjs> --output=<new dir> [--root=<clean checkout>] [--audit=<audit md>]
 // Writes <output>/inventory.tsv and <output>/stats.json; never writes inside --root.
 // TSV: no quoting; backslash, tab, CR and LF inside fields are written as \\ \t \r \n.
+// The audit file decides COVERED. Inside --root it must be tracked and clean; an audit outside --root is an extra input,
+// recorded in stats.json with its absolute path and SHA-256 (stats.json is a local record; do not commit it).
 import {readFileSync,writeFileSync,mkdirSync,existsSync,realpathSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
@@ -11,31 +13,54 @@ import {pathToFileURL} from 'node:url';
 
 const args=Object.fromEntries(process.argv.slice(2).map(a=>{const m=a.match(/^--([^=]+)=(.*)$/);if(!m)throw new Error('Bad argument: '+a);return[m[1],m[2]];}));
 for(const k of ['acorn','output'])if(!args[k])throw new Error('Missing --'+k);
-const root=realpathSync(path.resolve(args.root||'.'));
+// realpathSync.native returns the on-disk spelling (case included), so path comparisons and git paths agree.
+const real=p=>realpathSync.native(p);
+const root=real(path.resolve(args.root||'.'));
 const output=path.resolve(args.output);
 if(existsSync(output))throw new Error('--output must not exist: '+output);
-function nearestReal(p){let q=p;while(!existsSync(q))q=path.dirname(q);return path.join(realpathSync(q),path.relative(q,p));}
+function nearestReal(p){let q=p;while(!existsSync(q))q=path.dirname(q);return path.join(real(q),path.relative(q,p));}
 {
   const fold=s=>process.platform==='darwin'||process.platform==='win32'?s.toLowerCase():s;
   const rel=path.relative(fold(root),fold(nearestReal(output)));
   if(rel===''||(rel!=='..'&&!rel.startsWith('..'+path.sep)&&!path.isAbsolute(rel)))throw new Error('--output must be outside --root');
 }
-const git=(...a)=>execFileSync('git',['-C',root,...a],{encoding:'utf8'});
-if(git('status','--porcelain','--','docs/index.html','docs/src').trim())throw new Error('--root has uncommitted changes under docs/; the inventory would not match HEAD');
-const head=git('rev-parse','HEAD').trim();
+const git=(a,input)=>execFileSync('git',['-C',root,'--literal-pathspecs',...a],{encoding:'utf8',input});
+// The scanned content must equal HEAD: compare worktree hashes with HEAD blobs (git status misses skip-worktree/assume-unchanged).
+function assertMatchesHead(paths,what){
+  const inHead=new Map(git(['ls-tree','-r','-z','HEAD','--',...paths]).split('\0').filter(Boolean).map(l=>{const t=l.indexOf('\t');return[l.slice(t+1),l.slice(0,t).split(' ')[2]];}));
+  return files=>{
+    const missing=files.filter(f=>!inHead.has(f));
+    if(missing.length)throw new Error(what+' not in HEAD: '+missing.slice(0,3).join(', '));
+    const hashes=git(['hash-object','--stdin-paths'],files.join('\n')+'\n').trim().split('\n');
+    const changed=files.filter((f,i)=>hashes[i]!==inHead.get(f));
+    if(changed.length)throw new Error(what+' differs from HEAD; the inventory would not match HEAD: '+changed.slice(0,3).join(', '));
+  };
+}
+if(git(['status','--porcelain','--','docs/index.html','docs/src']).trim())throw new Error('--root has uncommitted changes under docs/; the inventory would not match HEAD');
+const head=git(['rev-parse','HEAD']).trim();
 const auditArg=args.audit?path.resolve(args.audit):path.join(root,'docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md');
 if(!existsSync(auditArg))throw new Error('Audit file not found: '+auditArg);
-const auditPath=realpathSync(auditArg);
+const auditPath=real(auditArg);
 const auditRel=path.relative(root,auditPath);
-const auditLabel=auditRel&&!auditRel.startsWith('..')&&!path.isAbsolute(auditRel)?auditRel.replaceAll('\\','/'):path.basename(auditPath)+' (outside --root)';
+const auditInside=auditRel!==''&&auditRel!=='..'&&!auditRel.startsWith('..'+path.sep)&&!path.isAbsolute(auditRel);
+let auditInfo;
+if(auditInside){
+  const rel=auditRel.replaceAll('\\','/');
+  assertMatchesHead([rel],'Audit file')([rel]);
+  auditInfo={path:rel,external:false};
+}else{
+  console.error('NOTICE: external audit file (extra input, not part of --root HEAD): '+auditPath);
+  auditInfo={path:auditPath,external:true};
+}
 const audit=readFileSync(auditPath,'utf8');
 const {parse}=await import(pathToFileURL(path.resolve(args.acorn)).href);
 
 const JP=/[\u3040-\u30ff\u3400-\u9fff\uff66-\uff9f]/;
 // Characters that are not used in modern Japanese text; a hit is a review hint, not a verdict (proper nouns may use them).
 const NON_JP_CHARS=/[體們這說個嗎麼聯賽與輕盤節練點對夠讓團隊員勝場緒]/;
-const files=git('ls-files','-z','docs/index.html','docs/src').split('\0')
+const files=git(['ls-files','-z','docs/index.html','docs/src']).split('\0')
   .filter(f=>f&&(f==='docs/index.html'||f.endsWith('.js'))&&!f.endsWith('/release-notes.js')).sort();
+assertMatchesHead(['docs/index.html','docs/src'],'Scanned file')(files);
 
 const rows=[];
 // Seeds for the second pass: texts that code compares or uses as keys.
@@ -191,10 +216,10 @@ for(const r of rows){
 }
 rows.sort((a,b)=>a.file<b.file?-1:a.file>b.file?1:a.line-b.line);
 const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/\t/g,'\\t').replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-const tsv=['file\tline\tcategory\tstatus\tusage\tusage_reason\tflags\tcovered_by_fragment\ttext',
+const tsv=[...(auditInfo.external?['# external audit (extra input, not in HEAD) sha256='+createHash('sha256').update(audit).digest('hex')]:[]),'file\tline\tcategory\tstatus\tusage\tusage_reason\tflags\tcovered_by_fragment\ttext',
   ...rows.map(r=>[r.file,r.line,r.category,r.status,r.usage,r.usageReason,r.flags,r.covered,r.text].map(esc).join('\t'))].join('\n')+'\n';
 const count=f=>Object.fromEntries(Object.entries(rows.reduce((m,r)=>{const k=f(r);m[k]=(m[k]||0)+1;return m;},{})).sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:1)));
-const stats={head,files:files.length,rows:rows.length,audit:{path:auditLabel,sha256:createHash('sha256').update(audit).digest('hex')},
+const stats={head,files:files.length,rows:rows.length,audit:{...auditInfo,sha256:createHash('sha256').update(audit).digest('hex')},
   status:count(r=>r.status),usage:count(r=>r.usage),
   judgmentReasons:count(r=>r.usage==='JUDGMENT'?r.usageReason.replace(/ at .*$/,'').replace(/「.*」/,'「…」').replace(/matched by .*/,'matched by regex'):'-'),
   seeds:{exact:exact.size,substring:substr.size,regex:regexes.length}};
