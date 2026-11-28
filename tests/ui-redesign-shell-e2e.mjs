@@ -38,7 +38,7 @@ try{
   await p.locator('#in-name').fill('長い名前の検証選手');await p.locator(`#seg-pos [data-v="${pos}"]`).click();await p.locator('#btn-start').click();
   await p.locator('#act button').filter({hasText:'トレーニング成果を割り振る'}).click();
   await p.locator('#act .abrow').first().click();await p.evaluate(()=>window.__shell.settle());
-  const before=await get(p);
+  const before=await get(p),startUrl=p.url();
   const baselineContext=await browser.newContext({viewport:{width:1440,height:900}});await baselineContext.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.fulfill({contentType:'text/css',body:''}));
   const old=await baselineContext.newPage();old.on('pageerror',e=>errors.push('baseline '+e.message));await old.goto(`http://127.0.0.1:${server.address().port}/baseline/?seed=${before.state.seed}`);await old.waitForFunction(()=>!document.querySelector('#btn-start').disabled);
   await old.locator('#in-name').fill('長い名前の検証選手');await old.locator(`#seg-pos [data-v="${pos}"]`).click();await old.locator('#btn-start').click();await old.locator('#act button').filter({hasText:'トレーニング成果を割り振る'}).click();await old.locator('#act .abrow').first().click();await old.evaluate(()=>window.__shell.settle());
@@ -88,9 +88,31 @@ try{
    await p.locator('#board-menu-toggle').click();await p.mouse.click(2,2);assert.equal(await p.locator('#board-menu-panel').isVisible(),false);assert.equal(await p.evaluate(()=>document.activeElement.id),'board-menu-toggle');
    assert.equal(await p.evaluate(()=>window.__shellAct===document.querySelector('#act')&&window.__shellDraft===document.querySelector('#act').innerHTML&&window.__shellRows.every(n=>n.isConnected)&&window.__shellButtons.every(n=>n.isConnected)),true,'allocation DOM/draft retained');
    assert.deepEqual(await get(p),before,'navigation/resize/menu must preserve complete S and RNG');
+   assert.equal(p.url(),startUrl,'navigation/resize/menu must not change the URL (AUD-02 06d)');
    await p.evaluate(()=>{const board=document.querySelector('#board').cloneNode(true);board.querySelector('#save-live').remove();window.__projectShell2000(window.__projectJerseyBoard(board.outerHTML,window.__shell.get().state),window.__shellRenderedBoard);const risk=board.querySelector('#bd-risk');risk.textContent='999%';let rejected=false;try{window.__projectShell2000(window.__projectJerseyBoard(board.outerHTML,window.__shell.get().state),window.__shellRenderedBoard);}catch(e){rejected=e.message.startsWith('UI_SHELL_2000_STATIC_BOARD_CONTRACT');}if(!rejected)throw Error('board negative control was accepted');});
    if([320,390,1100,1440,844].includes(width))await p.screenshot({path:path.join(out,`${pos}-${width}x${height}.png`),fullPage:true});
   }
+  // AUD-02 14c (CURRENT_SPEC 2.0 shell): #main-nav vertical padding is calc(4px * --nav-scale), every button is at least 44px, the standard
+  // row is about 53px, and a padding-only density change re-syncs --board-height／--game-header-height through the border-box ResizeObserver.
+  const shown=await p.evaluate(()=>({...document.documentElement.dataset})),shownViewport=p.viewportSize();const navRows=[];
+  for(const width of [320,390,1280]){
+   await p.setViewportSize({width,height:900});
+   for(const font of ['small','medium','large'])for(const density of ['standard','compact']){
+    await p.evaluate(({font,density})=>{const d=document.documentElement.dataset;d.theme='standard';d.fontSize=font;d.density=density;},{font,density});
+    await p.evaluate(()=>document.fonts.ready);await frames(p);
+    const m=await p.evaluate(()=>{const nav=document.getElementById('main-nav'),s=getComputedStyle(nav),root=getComputedStyle(document.documentElement),board=document.getElementById('board').getBoundingClientRect().height,height=nav.getBoundingClientRect().height;
+     return {height,board,padTop:parseFloat(s.paddingTop),padBottom:parseFloat(s.paddingBottom),border:parseFloat(s.borderTopWidth)+parseFloat(s.borderBottomWidth),scale:parseFloat(root.getPropertyValue('--nav-scale')),buttons:[...nav.querySelectorAll('button')].filter(b=>b.getClientRects().length).map(b=>b.getBoundingClientRect().height),boardVar:parseFloat(nav.style.getPropertyValue('--board-height')),headerVar:parseFloat(document.documentElement.style.getPropertyValue('--game-header-height'))};});
+    const label=JSON.stringify({pos,width,font,density,m}),scale=density==='compact'?0.85:1;navRows.push({pos,width,font,density,height:m.height});
+    assert.ok(Math.abs(m.scale-scale)<1e-6&&Math.abs(m.padTop-4*scale)<0.01&&Math.abs(m.padBottom-4*scale)<0.01,'nav padding is 4px × --nav-scale '+label);
+    assert.equal(m.buttons.length,3,label);assert.ok(m.buttons.every(h=>h>=44-0.01),'nav buttons are at least 44px '+label);
+    assert.ok(Math.abs(m.height-(Math.max(...m.buttons)+m.padTop+m.padBottom+m.border))<0.5,'nav has no height beyond its tallest button, padding and border '+label);
+    if(font==='medium'&&density==='standard')assert.ok(Math.abs(m.height-53)<=1,'standard row is about 53px '+label);
+    assert.ok(Math.abs(m.boardVar-m.board)<0.5&&Math.abs(m.headerVar-(m.board+m.height))<0.5,'--board-height／--game-header-height follow the measured border boxes '+label);
+   }
+  }
+  cases.push({pos,navRows});
+  await p.setViewportSize(shownViewport);await p.evaluate(shown=>{const d=document.documentElement.dataset;for(const key of ['theme','fontSize','density'])if(shown[key]===undefined)delete d[key];else d[key]=shown[key];},shown);await frames(p);
+  assert.deepEqual(await get(p),before,'14c measurements preserve complete S and RNG');assert.equal(p.url(),startUrl,'14c measurements keep the URL');
   // Undo remains bound to the original allocation closure after all navigation/resizes.
   await p.locator('#act button').filter({hasText:'元に戻す'}).click();
   assert.notDeepEqual((await get(p)).state.ab,before.state.ab);assert.deepEqual((await get(p)).rng,before.rng);
