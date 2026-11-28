@@ -22,16 +22,18 @@
 |---|---|---|---|---|
 | A | runner `summary.json`、各入口 `<id>.log`、Full `plan.json`／batch receipt／aggregate | 每次 run | **必須保存原件** | 判定結果本身；含時間與環境，無法重產。現行已上傳（`test.yml:70-76`、:155-161、:194-205） |
 | B | FAIL／BLOCKED／timeout 入口的全部輸出（S、RNG、Decision、Receipt、生涯 JSON、per-case JSON、PNG） | 依入口→目錄對照（附錄） | **必須保存原件** | 失敗可能來自環境或間歇問題（例：SIGSEGV、exit 143 OOM），同 SHA 重跑不保證重現。對應發布準備 §5「失敗case優先保留」 |
-| C | PASS 入口的生涯／S／RNG／Decision／Receipt JSON（含 §1-3 (b) 的 5 個大目錄） | 依入口→目錄對照 | **可重產**：只保存索引（path、size、sha256）＋受驗 head／baseline／browser 版本 | §1-1、§1-2：判定不讀檔，內容由 seed＋樹＋基準 SHA 決定，且 E2E 自身斷言 repeat 一致。重產＝同 SHA、同 `--baseline`、同 browser 重跑該入口 |
-| D | PASS 入口的 PNG | 同上 | **非判定證據**：不保存，或只保存已人工審核 hash 者 | write-only；保存缺口 :47 已規定 PNG 只接受審核過的 hash |
+| C | 一般回歸測試中 PASS 入口的生涯／S／RNG／Decision／Receipt JSON（含 §1-3 (b) 的 5 個大目錄；正式指定原件除外） | 依入口→目錄對照 | **確認可重產後**：只保存索引（path、size、sha256）＋受驗 head／baseline／browser 版本 | §1-1、§1-2：判定不讀檔，內容由 seed＋樹＋基準 SHA 決定，且 E2E 自身斷言 repeat 一致。重產＝同 SHA、同 `--baseline`、同 browser 重跑該入口 |
+| D | 一般回歸測試中 PASS 入口的 PNG（正式指定或人工驗收所需的截圖除外） | 同上 | **非判定證據**：不保存，或只保存已人工審核 hash 者 | write-only；保存缺口 :47 已規定 PNG 只接受審核過的 hash |
 | E | `browser-progress-*.json`、browser profile、`test-results/<name>`（§1-3 (c)） | 全部 | **診斷／非證據** | 牆鐘檔名與內容；profile 不可讀（保存缺口 :79、:88）；(c) 跨 run 覆寫，不能當作單次 run 的證據 |
 | F | D2 獎項 G0～G9 的封存（A 三份封存、v2、A→B 完整 S／選擇／RNG、B Decision／Receipt revisions） | 發布證據 | **不在 CI collector 範圍** | G0～G9 是 D2 實作批次（`tasks/PITCHER_AWARDS_D2_PHASED_IMPLEMENTATION_PLAN.md` §3），其保存依 G9 保存分層 §6（兩處獨立儲存、刪除前需候選清單與核准），與每次 CI run 的 artifact 分開管理 |
 
-依此分類，**PASS 的 run 只需保存 A**；FAIL 的 run 保存 A＋失敗入口的 B，其餘入口只入索引。這取代保存缺口 :45「root run 有 FAIL 時保守要求所有 tmp 原件」的做法；前提是入口→目錄對照可信（§3-3）。
+**正式驗收或發布要求優先。** 已由正式驗收條件或發布規則指定的原始 S／RNG／Decision／Receipt、代表截圖等，即使 run 為 PASS，仍依既有規則保存原件。C、D 的一般分類不適用於此類原件；索引、摘要、雜湊或事後重跑都不能取代原件。D2 G0～G9 的封存仍依 F 分開管理。
+
+**一般回歸測試。** PASS 的 run 至少保存 A；C 類輸出只有在證明可重產後才改為只保存索引，未證實前保留原件。FAIL／BLOCKED／timeout 的 run 另保留 B 類失敗入口的已產出原件；其餘入口仍依 A、C、D 與正式驗收要求分類。只有入口→目錄對照已驗證且可追溯時（§3-3），才能縮小保存缺口 :45 所述的失敗 run 保守保存範圍；在此之前維持現行做法。
 
 ## 3. 待決事項
 
-1. **C 的前提。** 接受「PASS 原件可由同 SHA＋同基準＋同 browser 重跑重產」。限制：browser 版本不同可能改變 DOM／PNG，但比較型 E2E 斷言的是 S／RNG；Linux CI 的 browser 版本需記入索引。
+1. **C 的前提。** 依入口及輸出類別，以相同受測 SHA、基準 SHA、seed、執行參數與環境（含 Node／瀏覽器版本）實測重產，事先定義並核對必要內容是否一致。測試 PASS 或原件未被測試讀取，不能單獨證明可重產；未驗證的輸出先保留原件，正式指定原件仍按既有規則保存。
 2. **B 超過 64 MiB。** 最大單檔約 237.88 MiB（`full-power-pitching` 生涯 JSON，保存缺口 :89），48 檔超過 64 MiB（:88）。這些數字來自 Windows 1.12.0 B Full，已過期，Linux CI 未量測。失敗時需另定：分段、另一儲存通道，或提高上限（上限不可由 CLI 調高，:44）。
 3. **入口→目錄對照的來源。** 附錄由程式碼掃描得出，若要讓 collector 依此縮小保存範圍，對照應改由 manifest 宣告（例如各入口的輸出目錄欄位），並以測試確認每個入口實際寫入的位置與宣告一致。這是測試基盤變更，需另行核准。
 4. **§1-3 (b)、(c) 的位置。** (b) 的 5 個目錄與 (c) 的 `test-results/<name>` 不在 CI 上傳範圍。若 B 需要它們，應先決定改輸出位置（測試變更）或擴大 glob（workflow 變更，需核准）。
