@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {spawn,execFileSync} from 'node:child_process';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {inventory,manual} from './test-manifest.mjs';
+import {inventory,manual,nodeArgsFor} from './test-manifest.mjs';
 
 const rootURL=new URL('../',import.meta.url),root=fileURLToPath(rootURL);
 const mode=process.argv[2],arg=n=>process.argv.find(a=>a.startsWith('--'+n+'='))?.slice(n.length+3);
@@ -13,7 +13,7 @@ for(const a of process.argv.slice(3))if(!allowed.has(a.slice(2).split('=')[0])&&
 if(!['list','quick','full','audit'].includes(mode))throw Error('Usage: node scripts/test.mjs list|quick|full|audit [--only=id,...] [--baseline=ref] [--playwright=module] [--browser=chrome|chromium]');
 const entries=[{id:'syntax',file:'scripts/check-syntax.mjs',category:'static',modes:['quick','full','audit'],dependencies:'Node',seconds:8,browser:false,network:false},...inventory(rootURL)];
 if(mode==='list') {
-  for(const e of entries)console.log(`${e.id}\n  ${e.category}; modes=${e.modes.join(',')||'manual/import only'}; ~${e.seconds}s; browser=${e.browser}; network=${e.network}\n  ${e.modes.length?'node '+e.file+' '+(e.args||[]).join(' '):'Not executed'}\n  Dependencies: ${e.dependencies}${e.reason?'\n  '+e.reason:''}${e.quick?'\n  quick: '+e.quick.join(' '):''}${e.comparison?'\n  Comparison: resolved --baseline, passed as --'+e.comparison:''}\n  Historical fixtures/default refs: ${(e.historicalRefs||[]).join(',')||'none'}`);
+  for(const e of entries)console.log(`${e.id}\n  ${e.category}; modes=${e.modes.join(',')||'manual/import only'}; ~${e.seconds}s; browser=${e.browser}; network=${e.network}\n  ${e.modes.length?'node '+[...nodeArgsFor(e),e.file].join(' ')+' '+(e.args||[]).join(' '):'Not executed'}\n  Dependencies: ${e.dependencies}${e.reason?'\n  '+e.reason:''}${e.quick?'\n  quick: '+e.quick.join(' '):''}${e.comparison?'\n  Comparison: resolved --baseline, passed as --'+e.comparison:''}\n  Historical fixtures/default refs: ${(e.historicalRefs||[]).join(',')||'none'}`);
   for(const e of manual)console.log(`${e.id}: SKIP (manual) — ${e.reason}`);
   console.log(`Inventory: ${entries.length-1} tests files, ${entries.filter(e=>e.modes.length).length} registered automatic entries including syntax.`);
   process.exit(0);
@@ -67,7 +67,7 @@ for(const e of selected) {
   const reason=!e.modes.length?e.reason:e.browser&&browserError?browserError:e.comparison&&baselineError?baselineError:historyError;
   if(reason){const status=e.modes.length?'BLOCKED':'SKIP';report.results.push({id:e.id,status,reason,exitCode:null,seconds:0});console.log(`${status} ${e.id}: ${reason}`);continue;}
   const flags=process.argv.includes('--legacy-careers')&&e.args?.some(a=>a==='--ui-only'||a==='--quick'||a.startsWith('--only-seed='))?[]:mode==='quick'&&e.quick?e.quick:e.args||[];
-  const args=[e.file,...flags];
+  const args=[...nodeArgsFor(e),e.file,...flags];
   if(e.browser)args.push('--playwright='+modulePath,'--browser='+channel);
   if(e.comparison)args.push('--'+e.comparison+'='+report.baseline);
   const previous=reuse?.results.find(r=>r.id===e.id&&r.status==='PASS'&&r.exitCode===0&&JSON.stringify(r.command)===JSON.stringify([process.execPath,...args]));
