@@ -204,7 +204,7 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
 
 ## 12. Q4 (a) 實作計畫：延長交涉移到季末選單之後
 
-狀態：**已實作、待 GitHub 手動 Full**（2026-11-28，計畫經使用者同意）。依據：code owner 2026-11-28 決定 (a)（[待決事項](CODE_OWNER_DECISIONS_2026-11-28.md) §1）。分支 `feat/season-end-extension-order`（基準 `origin/dev` `21e1e33`）。R3／MINOR，版本 2.2.1→2.3.0。
+狀態：**已實作，Full PASS**（2026-11-28，計畫經使用者同意；[PR #140](https://github.com/tt-chin/yakyujinsei/pull/140) 待併 dev 與 Preview）。依據：code owner 2026-11-28 決定 (a)（[待決事項](CODE_OWNER_DECISIONS_2026-11-28.md) §1）。分支 `feat/season-end-extension-order`（基準 `origin/dev` `21e1e33`）。R3／MINOR，版本 2.2.1→2.3.0。
 
 ### 讀碼事實（`21e1e33`）
 
@@ -253,4 +253,5 @@ Q3、Q5 屬開發端整理範圍（AGENTS §2 沿用既有用語；`tasks/MLB_PO
 - 期待值變更：`fa-market-policy.test` `SEASON_END_HUNKS` 增 `movement()` 延長分歧一行的還原段（限一次）。這是 B1 的許可差異；負向控制把條件改成只判 `S.org==='NPB'` 時，FAIL `ERR_ASSERTION`（movement extension year）。
 - 負向控制：單元 3 項、E2E 2 項（舊順序、未傳 `next`）均 FAIL `ERR_ASSERTION`。
 - 固定 seed 比對：31 個入口直接執行（基準 `origin/main` `489430d`）全 PASS。新路徑在這些生涯中未到達，到達由上述 E2E 證明。
-- Quick：118 PASS／0 FAIL（`e0fc269` 加未提交修改）。Full：未執行，需在 GitHub 手動執行。
+- Quick：118 PASS／0 FAIL（`e0fc269` 加未提交修改）。
+- Full：[Tests #311](https://github.com/tt-chin/yakyujinsei/actions/runs/46105290500)（workflow_dispatch，full）受測 `1524687d44a198bafbe02d7dbea839a4cf995311`：8 個 full-batch 均 PASS，`full-aggregate` expected 150、acceptedPass 150，0 FAIL／SKIP／BLOCKED。只對應該 SHA。
