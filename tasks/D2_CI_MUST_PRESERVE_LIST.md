@@ -113,6 +113,11 @@
   - attempt 1：`FAIL_OR_INCOMPLETE`，expected 152／acceptedPass 146（FAIL 2、BLOCKED 4）。原因不在本 PR：同日刪除已合併分支後，歷史基準 `ad8e77f`、`eddc464`、`ce5f732`、`4ba12c5` 無法從 origin 到達（manifest 55 個歷史 ref 中只有這 4 個），`fetch-depth: 0` 取不到。`design-tokens-09-e2e` 的 log 為 `git show ad8e77f:docs/index.html` 失敗；`ui-redesign-shell-e2e` 引用同一 ref，推定同因（未下載確認）。已推送 tag `fixture/ad8e77f`、`fixture/eddc464`、`fixture/ce5f732`、`fixture/4ba12c5`（使用者核准）使其可到達；防止刪除的 ruleset 需 code owner 設定。
   - attempt 1 的失敗 batch 3、4、5、8 各產生 `tests-full-46149315772-1-failure-tmp-<N>`（約 76 MB、46 MB、123 MB、0.6 MB），PASS batch 未產生；內容未下載檢查。Re-run all jobs 後 attempt 1 的 artifact 已無法取得（API 與網頁皆無），因此不能代替 §5-1 的失敗路徑驗證。
   - attempt 2（Re-run all jobs）：8 batch 與 aggregate 皆 success，`{"status":"PASS","expected":152,"acceptedPass":152,"issues":[]}`；`failure-tmp` artifact 0 個。
+- **§5-1 失敗路徑驗證（[Tests #326](https://github.com/tt-chin/yakyujinsei/actions/runs/46155001491)，暫時分支 `tmp/d2-failure-path-probe` `7632421ef72739289f3cead701465999189bb72a`，驗證後刪除）**：只在 `design-tokens-03-e2e` 寫完全部輸出後加入故意失敗。
+  - aggregate `{"status":"FAIL_OR_INCOMPLETE","expected":152,"acceptedPass":151}`，issues 只有 batch 5；FAIL 只有該入口（訊息為故意失敗），其餘 7 batch success。
+  - 只產生 `tests-full-46155001491-1-failure-tmp-5`（20 檔、125 MB，`unzip -t` 通過）；PASS batch 無；aggregate 照常只彙整 8 個 batch 證據。
+  - 內容：失敗入口的 `design-tokens-03-copy-control/summary.json`（未指定 `--shots` 時只寫此檔）；同 batch 的 (b) `full-power-pitching-yakyo-test-001/`（生涯 JSON 等 16 檔）與 (c) `ui-redesign-review/`（summary、PNG 4 張）。同 batch 一般證據中的 4 個 `yakyujinsei-*` 目錄未重複上傳。
+  - 未確認：該次 tmp 是否有 `playwright*` profile（排除僅能推定）。故意失敗在 summary 寫入後才發生，summary 仍記 PASS。同 batch 中 PASS 入口的原件也會上傳，容量隨 batch 組成變動。
 - **行為變化**：PASS 的 Quick 不再上傳 (c) 入口的 `summary.json`（舊位置偶然符合 `test-results/*/summary.json`），依 §5-1 只在失敗／取消時上傳。
 
 ### 5-4. PR-2：runner 記錄 `tmpOutputs`（PR-1 之後）
