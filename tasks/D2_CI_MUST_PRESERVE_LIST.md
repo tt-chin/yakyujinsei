@@ -72,10 +72,10 @@
 
 | 項目 | 決定 |
 |---|---|
-| §3-4 (b)／(c) 原件 | **只在失敗時上傳**（不採每次上傳）。`tmp/yakyujinsei-*`、`tmp/runner-contract-*` 維持每次上傳 |
+| §3-4 (b)／(c) 原件 | 一般回歸測試的補充原件**只在失敗或取消時上傳**（不採每次上傳）。`tmp/yakyujinsei-*`、`tmp/runner-contract-*` 維持每次上傳；正式驗收或發布指定原件仍依 §2 保存，即使 PASS 也不例外 |
 | §3-3 入口→目錄對照 | **2a**：runner 觀測各入口實際寫入的 tmp 第一層名稱，記入 `summary.json`；不加 manifest 宣告欄位 |
 | Full | 兩個 PR **各跑一次**（GitHub 手動，由使用者執行） |
-| 失敗路徑驗證 | 暫時分支故意讓 1 個入口失敗，由使用者手動跑一次 Full，確認失敗時的 artifact 內容 |
+| 失敗路徑驗證 | 在暫時分支讓 1 個入口先寫出內容已知的原件，再故意失敗。由使用者手動跑一次 Full，下載失敗專用 artifact 核對原件（驗收條件見 §5-3） |
 
 容量判斷依據：本 repo 目前有 572 個未過期 artifact、約 15.8 GB（2026-11-28 以 API 合計），遠超 GitHub Free 的 500 MB 而上傳未被封鎖；官方文件未明示公開 repo 的 artifact 儲存是否計費，儲存計入 repo 擁有者帳號。只在失敗時上傳可避免 PASS run 增加容量。
 
@@ -93,7 +93,7 @@
 | `always() && steps.<id>.outcome != 'success'` | 執行 | 執行 |
 | `always()` 的 upload-artifact | — | 上傳成功 |
 
-結論：只用 `failure()` 時，job 逾時（`timeout-minutes: 120`）不會上傳。單一入口逾時由 runner 自行 SIGKILL 並記為 FAIL（`scripts/test.mjs:55-58`），屬一般失敗。官方文件未明示逾時時 `failure()` 的值；cancel 後有 5 分鐘緩衝期。
+結論：只用 `failure()` 時，job 逾時（`timeout-minutes: 120`）不會上傳。單一入口逾時由 runner 自行 SIGKILL 並記為 FAIL（`scripts/test.mjs:55-58`），屬一般失敗。官方文件未明示逾時時 `failure()` 的值；cancel 後有 5 分鐘緩衝期。本次探測只證明該情境下上傳步驟可以執行、且能上傳小檔（artifact 140 bytes），不證明取消後的大型原件可以完整傳完。
 
 ### 5-3. PR-1：失敗時上傳 tmp 原件
 
@@ -104,6 +104,8 @@
   - 名稱：`tests-full-${{ github.run_id }}-${{ github.run_attempt }}-failure-tmp-${{ matrix.batch }}`。**不可含 `-batch-`**：aggregate 以 `pattern: tests-full-<id>-<attempt>-batch-*` 下載全部 batch artifact（`test.yml:184-189`、`check-workflow.mjs:95`）。
   - 路徑：`…/tmp/**`，排除 `tmp/yakyujinsei-*/**`、`tmp/yakyujinsei-*.json`、`tmp/runner-contract-*/**`（已另行上傳）與 `tmp/playwright*/**`（browser profile 可能不可讀）。`retention-days: 14`、`compression-level: 1`、`if-no-files-found: ignore`、`continue-on-error: true`。
 - **`scripts/check-workflow.mjs`**：新增斷言（兩個 job 都有新步驟、條件、名稱不符合 aggregate pattern、路徑與排除項），並做負向控制（名稱含 `-batch-`、移除條件時 FAIL）。
+- **失敗路徑驗收**：在 (b) 或 (c) 的輸出目錄寫入內容已知的測試原件後再故意失敗。確認原入口仍為 FAIL；以該 run／attempt／batch 下載失敗專用 artifact，核對預期相對路徑、檔名及內容（逐位元組或 SHA-256），並確認它不被 aggregate 的一般分批下載規則選中。新步驟執行、job 結論或出現 artifact 名稱都不能單獨算通過；因無檔而略過、上傳失敗、無法下載、缺檔或內容不符時，證據保存驗收記為未通過，即使用了 `if-no-files-found: ignore` 或 `continue-on-error: true` 也一樣。故意失敗的 Full 與正常 Full 分開記錄；大型原件在 job 逾時／取消時能否完整保存，保留為未驗證。
+- **正式原件**：失敗專用上傳只用於一般回歸測試的補充證據。正式驗收或發布指定的原始 S／RNG／Decision／Receipt、代表截圖等仍依 §2 走保留原件的流程，PASS 也不能省略。若變更預設輸出位置，需確認這些原件仍能從指定的保存管道取得。
 - **文件**：`scripts/TESTING.md`（(c) 預設位置、失敗上傳規則）、本檔 §1-3／附錄、`BACKLOG.md`。
 - 分類 R2（workflow＋測試基盤），不升版本。本機：`node scripts/check-workflow.mjs`、可在本機執行的 (c) 入口、Quick。**Full 實行が必要（GitHub 手動・未実行）**，另加 §5-1 的失敗路徑驗證。
 
@@ -111,7 +113,8 @@
 
 - `scripts/test.mjs`：runner 依序執行入口（迴圈 `await execute(e,args)`），每個 Full batch 有獨立 tmp。於每個入口執行前後列出 `tempRoot` 第一層名稱，差集排序後記為該 result 的 `tmpOutputs`；重用結果（`reusedFrom`）不加。
 - 不改 manifest、collector。實作前確認 `tests/test-runner.test.mjs`、`scripts/ci-full-batches.mjs` aggregate（:71-95 驗證 result 欄位）與 collector 對未知欄位的處理。
-- `test-runner.test` 加 `tmpOutputs` 斷言與負向控制。
+- **對照限制與回退**：第一層名稱差集只記錄新出現的名稱；寫入已存在的目錄或檔案不一定會被記錄。若 job 取消、runner 提前退出或結果重用，完整的 `summary.json` 或單一入口的對照也可能缺失。空陣列或缺少欄位不代表沒有原件。日後 collector 只有在對照已驗證完整、可追溯時才可縮小保存範圍；若對照缺失、未完成或內容不確定，維持現行保守保存（§2、§3-3），不得據此省略原件。
+- `test-runner.test` 加 `tmpOutputs` 斷言與負向控制，至少覆蓋新增目錄與寫入既有目錄的差異，並確認缺少對照不會被當成已驗證沒有原件。
 - 分類 R2（共通測試基盤），不升版本。本機：`test-runner.test`、`ci-full-batches.test`、`check-workflow`、Quick。**Full 實行が必要（GitHub 手動・未実行）**。
 - collector 依 `tmpOutputs` 縮小 FAIL 時的必須範圍（§4-2 的 `FILE_LIMIT` 誤擋）是之後的步驟，不在本 PR。
 
