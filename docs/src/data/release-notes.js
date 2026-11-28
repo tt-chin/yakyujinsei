@@ -1,6 +1,13 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "2.3.1｜2026/11/28",
+    "lines": [
+      "- 共有画像の通算行を「主要4リーグ一軍通算」とし、一軍の成績だけを合計するようにしました。",
+      "- 年俸の見出しを「年俸（万円）」に変更しました。"
+    ]
+  },
+  {
     "title": "2.3.0｜2026/11/28",
     "lines": [
       "- 契約延長の打診がある年も、先に海外移籍やポスティングを選べるようにしました。残留を選ぶと延長交渉に進みます。"

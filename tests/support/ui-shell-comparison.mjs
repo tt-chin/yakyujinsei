@@ -18,7 +18,8 @@ export function projectShell2000(markup,rendered){
   const amateur=rendered.isAmateur,salaryText=rendered.salaryText;
   const expectedSalary=q(expected,'salary-detail-trigger');
   q(expected,'bd-sal').textContent=amateur?'アマ':salaryText;
-  q(expected,'bd-sal').nextElementSibling.textContent=amateur?'年俸対象外':'年俸（万）';
+  // Approved COPY-013 label (2.3.1); the frozen templates below keep their historical text.
+  q(expected,'bd-sal').nextElementSibling.textContent=amateur?'年俸対象外':'年俸（万円）';
   expectedSalary.setAttribute('aria-label',amateur?'アマチュア。収入の内訳を見る':'年俸、単位は万円。年俸の内訳を見る');
   if(salary.outerHTML!==expectedSalary.outerHTML)throw Error('UI_SHELL_2000_SALARY_CONTRACT');
   q(expected,'bd-risk').textContent=rendered.injuryRiskText;
