@@ -52,9 +52,9 @@
 ### 2.5 測試環境與證據保存（1項）
 
 - [ ] **D2-CI-ARTIFACT-01** — `ARTIFACT_COVERAGE_BLOCKED`。
-  - 剩餘：bounded collector未接入正式CI，原始S／RNG／Decision／Receipt的安全封存與可還原保證未完成。這是證據保存缺口，不代表Full漏測或功能驗收失敗。
+  - 剩餘：bounded collector未接入正式CI，原始S／RNG／Decision／Receipt的安全封存與可還原保證未完成。這是證據保存缺口，不代表Full漏測或功能驗收失敗。必須保存原件清單草案已起草（PR #145，基準`3885d83`），待核准；待決事項見該檔§3（C類可重產實測、B類超過64 MiB、入口→目錄對照改由manifest宣告、(b)／(c)輸出位置不在上傳glob、Linux實測）。
   - 完成條件：先起草必須保存的原件清單（A案，使用者核准，2026-11-28；文件，不改workflow），再確認容量與敏感路徑處理，接入並完成真實CI下載／還原驗證；不可用summary／log或hash代替原件。不得僅為本項重跑Full或刪除舊證據。
-  - 依據：[保存缺口](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)、[分批限制](docs/reviews/LINUX_CI_FULL_1130_STABILITY_ACCEPTANCE.md)；[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §2。
+  - 依據：[保存缺口](docs/reviews/D2_G9_CI_EVIDENCE_ACCEPTANCE.md)、[分批限制](docs/reviews/LINUX_CI_FULL_1130_STABILITY_ACCEPTANCE.md)；[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §2、[原件清單草案](tasks/D2_CI_MUST_PRESERVE_LIST.md)。
 
 ## 3. 文件與歷史索引
 
