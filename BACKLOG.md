@@ -9,7 +9,7 @@
 - 2.1.0：[Full #286](https://github.com/tt-chin/yakyujinsei/actions/runs/45549669028)的10項失敗已修正，本地相關E2E及Quick（115 PASS）通過；修正提交的Full已由[Full #297](https://github.com/tt-chin/yakyujinsei/actions/runs/45838234691)（`1477317`）涵蓋，尚待Safari實機排序確認。原失敗與修正範圍見[測試說明](scripts/TESTING.md)；PR #128入札方案與保有權年度海外報價已實作（2026-11-25，使用者授權），已合併dev（`00fc40d`）；[Full #289](https://github.com/tt-chin/yakyujinsei/actions/runs/45645665227)為143 PASS／4 FAIL（歷史生涯比對），PR #130修正於`197aef4f03be19b312d44c2421c6af2c7b6b4328`經[Tests #291](https://github.com/tt-chin/yakyujinsei/actions/runs/45778946981) Full PASS；PR #130後續收緊`contract-salary-e2e`／`kbo-renewal-e2e`的季末比對判定，`f4215c553cbe0d11d17293ad38ddc1912a946543`經[Tests #300](https://github.com/tt-chin/yakyujinsei/actions/runs/46021284417) Full 149 PASS／0 FAIL（見[實作計畫](tasks/NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md) §11）；延長交涉年的順序暫依現行（計畫§8 Q4待決）。
 - 2.0.0開發已告一段落，目前已交付功能的實機驗收已由使用者確認完成。未來依AGENTS第9章正常採番，不再固定2.0.0。
 - 受驗提交 `875a8af62189e7ddcc2eac27afd3c80783d45210` 的 [Quick #280](https://github.com/tt-chin/yakyujinsei/actions/runs/45510842813) 與 [Full #281](https://github.com/tt-chin/yakyujinsei/actions/runs/45512251900) 均成功；Full 146 PASS、0 FAIL／SKIP／BLOCKED。此結果只對應該提交，不代表後續提交已執行Full。
-- 目前有 **12項未完成工作**，列於下節。已完成功能不重列待驗收；研究、全量稽核及CI證據封存仍各自保留。本次整理不構成新實作或正式發布授權。
+- 目前有 **11項未完成工作**，列於下節。已完成功能不重列待驗收；研究、全量稽核及CI證據封存仍各自保留。本次整理不構成新實作或正式發布授權。
 
 ## 2. 未完成工作
 
@@ -61,16 +61,11 @@
   - 完成條件：先批准門檻與判定規格，再授權實作及驗證。目前不設門檻、不抽選、不加效果。
   - 依據：[批准範圍](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
 
-### 2.5 測試環境與證據保存（4項）
+### 2.5 測試環境與證據保存（3項）
 
 - [ ] **TEST-EVENT-SIGSEGV-01** — `LOCAL_ARM64_ONLY / 未修正`。
   - 剩餘：macOS arm64的`event-integration.test`間歇V8 SIGSEGV，根因未確認；原量測與crash線索見整理前紀錄。
   - 完成條件：升級Node後完成arm64平行量測且不再出現，或批准調整入口執行參數後驗證。未批准修改入口；發生時比對最新crash report並保留FAIL，不用重跑PASS覆寫。
-
-- [ ] **TEST-DISPLAY-ENTER-TIMEOUT-01** — `ROOT_CAUSE_FOUND / 測試修正待併dev`（2026-11-28）。
-  - 原因：按鍵未被列處理，不是負載延遲。Escape關閉`#display-preferences`後，`close`事件排入佇列（約6～11ms後），`docs/src/ui/board-menu.js:43-45`在其中把焦點移到`#board-menu-toggle`；若落在測試focus列與按Enter之間，Enter會開啟看板選單，`#act`不變而逾時。本機高負載80次中6次重現，6次全為此序列；在focus與Enter之間插入20ms可穩定重現。只要Enter到達列，`#act`在2.4ms內改變。
-  - 修正：分支`fix/display-preferences-close-race`在Escape前註冊一次性`close`旗標，最多等5秒後才focus列；斷言與5秒等待不變，不改產品焦點行為（真人無法在約10ms內按鍵）。負向控制：插入20ms延遲時舊測試3/3 FAIL（`retained row listener works`）、新測試3/3 PASS；`close`不觸發時5秒內`TimeoutError`。
-  - 完成條件：修正併入dev。原位置、來源及失敗紀錄見整理前紀錄。
 
 - [ ] **TEST-RELEASE-NOTES-LIMITS-01** — `CONTENT_USER_ACCEPTED / CI_GATE_NOT_IMPLEMENTED`。
   - 剩餘：將`scripts/test-release-notes.mjs`接入正式test manifest／Quick；摘要內容已驗收，不再列文案待驗。
@@ -85,6 +80,7 @@
 ## 3. 文件與歷史索引
 
 - 已完成80項的ID、結案範圍、歷史PASS／FAIL、開發過程與原始量測，保留於[整理前固定Git版本](https://github.com/tt-chin/yakyujinsei/blob/b56b5c4f6188ce002ac0037608469286c8e3753d/BACKLOG.md)。不在待辦檔重複收錄已完成清單。
+- 2026-11-28結案：TEST-DISPLAY-ENTER-TIMEOUT-01 由 PR #137（`3a4495d`）修正並併入dev（`158ffff`）；原因、修正與負向控制見該commit的BACKLOG條目與PR說明。
 - 實機驗收為使用者回報，不補造裝置／OS與逐項紀錄；CI PASS只對應實際受驗SHA。
 - 詳細設計及未實作定案放在`tasks/`，驗證過程放在`docs/reviews/`或固定Git證據；封存資料只供追溯，不自動成為現行規則。
 - 共同開發、測試、RNG、版本與公開流程引用AGENTS，不在本檔重訂。後續工作需按各項既有授權與完成條件進行。
