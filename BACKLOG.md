@@ -10,7 +10,7 @@
 - TEST-RELEASE-NOTES-LIMITS-01已結案（2026-11-28）：唯讀`tests/release-notes.test.mjs`納入Quick／Full／Audit（PR #138，dev `e0fc269`）；每版1～3條、每條80字、生成一致等9種不合法輸入於本機負向控制均exit 1／`ERR_ASSERTION`；CI已執行（[Tests #308](https://github.com/tt-chin/yakyujinsei/actions/runs/46101274962) Full、#309、#310，其後Full #312／#314亦含此入口），測試失敗即令CI失敗。未曾在CI實際注入不合法摘要。2.1.0依code owner決定合併為3條，未放寬規則。
 - 2.0.0開發已告一段落，目前已交付功能的實機驗收已由使用者確認完成。未來依AGENTS第9章正常採番，不再固定2.0.0。
 - 受驗提交 `875a8af62189e7ddcc2eac27afd3c80783d45210` 的 [Quick #280](https://github.com/tt-chin/yakyujinsei/actions/runs/45510842813) 與 [Full #281](https://github.com/tt-chin/yakyujinsei/actions/runs/45512251900) 均成功；Full 146 PASS、0 FAIL／SKIP／BLOCKED。此結果只對應該提交，不代表後續提交已執行Full。
-- 目前有 **10項未完成工作**，列於下節。已完成功能不重列待驗收；研究、全量稽核及CI證據封存仍各自保留。本次整理不構成新實作或正式發布授權。
+- 目前有 **9項未完成工作**，列於下節。已完成功能不重列待驗收；研究、全量稽核及CI證據封存仍各自保留。本次整理不構成新實作或正式發布授權。
 
 ## 2. 未完成工作
 
@@ -62,12 +62,7 @@
   - 完成條件：先批准門檻與判定規格，再授權實作及驗證。目前不設門檻、不抽選、不加效果。
   - 依據：[批准範圍](tasks/HOF_JERSEY_APPROVED_SPEC.md)。
 
-### 2.5 測試環境與證據保存（2項）
-
-- [ ] **TEST-EVENT-SIGSEGV-01** — `LOCAL_ARM64_ONLY / 未修正`。
-  - 剩餘：macOS arm64的`event-integration.test`間歇V8 SIGSEGV，根因未確認；原量測與crash線索見整理前紀錄。
-  - 完成條件：依A案（使用者核准，2026-11-28）另案只在darwin-arm64執行此入口時加`--no-sparkplug`，完成arm64平行量測0崩潰及Quick；CI（Linux x64）行為不變。實作前發生時比對最新crash report並保留FAIL，不用重跑PASS覆寫。
-  - 依據：[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §1。
+### 2.5 測試環境與證據保存（1項）
 
 - [ ] **D2-CI-ARTIFACT-01** — `ARTIFACT_COVERAGE_BLOCKED`。
   - 剩餘：bounded collector未接入正式CI，原始S／RNG／Decision／Receipt的安全封存與可還原保證未完成。這是證據保存缺口，不代表Full漏測或功能驗收失敗。
@@ -79,6 +74,7 @@
 - 已完成80項的ID、結案範圍、歷史PASS／FAIL、開發過程與原始量測，保留於[整理前固定Git版本](https://github.com/tt-chin/yakyujinsei/blob/b56b5c4f6188ce002ac0037608469286c8e3753d/BACKLOG.md)。不在待辦檔重複收錄已完成清單。
 - 2026-11-28結案：TEST-DISPLAY-ENTER-TIMEOUT-01 由 PR #137（`3a4495d`）修正並併入dev（`158ffff`）；原因、修正與負向控制見該commit的BACKLOG條目與PR說明。
 - 2026-11-28結案：REFACTOR-AUDIT-01 依[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §5（使用者核准）以決定結案：overlay與21個舊本體已刪除（`22e33e0`、`34c9c7b`，靜態確認）；`S.*`以外的動態寫入、頂層覆寫與各市場路線callback可達性列為已接受風險，日後若再重構由該計畫自行提出證據。
+- 2026-11-28結案：TEST-EVENT-SIGSEGV-01 依[開發端決定](tasks/DEV_DECISIONS_2026-11-28.md) §1（A案，使用者核准），統一runner只在darwin-arm64執行`event-integration.test`時加`--no-sparkplug`（PR #144，dev `d3ade55`）。Node 24.14.0 darwin-arm64平行32量測：不加參數1,280次中23次SIGSEGV（負向對照），加參數1,280次0次；本機Quick 119 PASS／0 FAIL；dev push的[Tests #46124389692](https://github.com/tt-chin/yakyujinsei/actions/runs/46124389692) Quick 119 PASS／0 FAIL，Linux上此入口仍以`node tests/event-integration.test.mjs`執行。V8 SIGSEGV本身未修正，只以停用Sparkplug迴避。
 - 實機驗收為使用者回報，不補造裝置／OS與逐項紀錄；CI PASS只對應實際受驗SHA。
 - 詳細設計及未實作定案放在`tasks/`，驗證過程放在`docs/reviews/`或固定Git證據；封存資料只供追溯，不自動成為現行規則。
 - 共同開發、測試、RNG、版本與公開流程引用AGENTS，不在本檔重訂。後續工作需按各項既有授權與完成條件進行。
