@@ -1,0 +1,228 @@
+# 待決事項（2026-11-28）
+
+本檔整理四項需由 code owner 決定的事項：現況證據、選項、各選項影響與開發端建議。四項已於 2026-11-28 由 code owner 決定（[PR #135 留言](https://github.com/tt-chin/yakyujinsei/pull/135)），內容記在各項的「決定」小節。實作依 AGENTS 第6章分類，各自另開分支，並同步更新 BACKLOG、CURRENT_SPEC 與相關設計文件。
+
+- 調查基準：`origin/dev` `a4fb1b8e49f673c7159a437904e2154a2b17b0f4`（VERSION 2.2.0）。行號以此為準。
+- PR #134（COPY-01 第二批，2.2.1）已合併至 dev（`bf1c348`）；PR #136、#137 亦已合併（dev `158ffff`）。第1～3項會改產品，版本接在 2.2.1 之後；第4項只動測試基盤。
+
+| # | 事項 | 選項 | 開發端建議 | 決定 |
+|---|---|---|---|---|
+| 1 | 延長交涉年的處理順序（實作計畫 §8 Q4） | (a)／(b)／(c) | (a) | (a) |
+| 2 | COPY-01 029「主要4リーグ一軍通算」 | A／B／C | A | A |
+| 3 | COPY-01 013「年俸（万円）」 | 採用／維持 | 採用 | 有條件採用（Preview 驗證通過才採用） |
+| 4 | TEST-RELEASE-NOTES-LIMITS-01 接入方式 | A／B／C | A | A |
+
+---
+
+## 1. 延長交涉年的處理順序（§8 Q4）
+
+依據：[實作計畫](NPB_MLB_SEASON_END_IMPLEMENTATION_PLAN.md) §8 Q4（:161）、D7（:83 起）、[MLB_POSTING_DESIGN](MLB_POSTING_DESIGN.md) §2.2（:33）、§4 第1點（:112）。
+
+### 現況
+
+1. 季末 `movement()` 在 `S.ct.remainingYears===1`、一軍、`S.faElig`、`lastD>=1` 且 `chance(45)` 時進入延長交涉（`docs/src/engine/career-movement.js:389-390`），之後直接 return。
+2. `extensionOffer`（`docs/src/engine/career-contract.js:92-103`）：**接受**延長時先把延長年數併入 `S.ct`、記錄年俸決定，再呼叫 `crossOffers(o)`（:99）；**拒絕**時也呼叫 `crossOffers(o)`（:102）。
+3. NPB一軍的 `crossOffers` 顯示季末選單（`career-movement.js:186` `npbSeasonEndMenu`）：KBO／CPBL 報價；NPB 年資 <9 時顯示入札申請（`postingOption`，:170），≥9 時顯示 MLB 報價；以及「現在の球団に残留」。
+4. 選單產生時依序抽 KBO、CPBL、入札（或 MLB）球團各一次 `R()`；點選入札時再抽同意 `chance`、`chance(90)`（有無報價，:180）與合約年數 `ri(1,3)`。
+5. 接受延長後轉往韓台，`buyoutRemaining` 以併入延長後的 `S.ct` 計算 70% 買斷，含延長年數（計畫 D7，2026-11-25 以實際執行確認）。
+6. 程式註解 `career-movement.js:168`：「Pending (plan §8 Q4)」。
+
+### 與既有原則的衝突
+
+依計畫 D7：在現行順序下，玩家可以先簽延長，再入札成功赴美，於是剛簽、尚未開始的延長合約就被取代。這與下列兩項原則衝突：
+
+- #126 P6：入札結果確定前不完成續約，避免先簽續約再赴美。
+- #127 Q1：不可先續約，再立即買斷剛建立、尚未開始的合約。
+
+### 實測頻率（2026-11-28，scratch，未改檔）
+
+計畫 D7 的頻率原為讀碼推定，本次以固定 seed 批次生涯實測。
+
+- **條件**：
+  - 產品碼 `a4fb1b8`；本機 Brave headless。
+  - seed `probe33-1`～`8`＋`q4scan-001`～`150`，各跑投手與野手，共 316 生涯。
+  - 兩種點選策略各跑一次，皆 316／316 完成，0 錯誤。
+- **點選策略**：
+  - 「預設」：沿用 `tests/game-view-dom-e2e.mjs` 的 `careerAction(balanced=true)`。NPB 一軍季末會點第一個選項（KBO 報價），因此球員會在 KBO／CPBL 與 NPB 之間來回。
+  - 「留隊」：NPB 一軍季末一律選「現在の球団に残留」。
+  - 兩者共通：延長交涉時，seed 編號偶數接受、奇數拒絕；延長之後的季末選單一律選留隊。
+
+| 項目 | 預設 | 留隊 |
+|---|---|---|
+| 有 NPB 一軍季數的生涯（NPB 一軍季數） | 266（752） | 266（3,135） |
+| 延長交涉總數（KBO1／CPBL1／MLB／NPB1） | 193（97／70／5／21） | 38（5／32／0／1） |
+| 有 NPB 一軍延長交涉年的生涯＝選 (a) 會改變抽籤順序 | **21／316** | **1／316** |
+| 接受延長、NPB 年資 <9 且選單出現入札＝選 (b) 會改變結果 | **3／316**（全數接受時上限 8／316） | 0／316 |
+
+- **NPB 一軍延長年全部來自換過聯盟的球員**：
+  - 21 例都是從 KBO／CPBL 回歸後的第一個 NPB 一軍季，回歸時簽的是 2～3 年的多年約（2 年約 20 例、3 年約 1 例），NPB 年資 0～2 年（1 年 18 例）。
+  - 一直待在 NPB 的球員續約都是 1 年約，碰不到 `remainingYears===1` 的條件。「留隊」策略跑了 3,135 個 NPB 一軍季，只出現 1 次。這證實了 D7 的讀碼推定。
+- **延長之後的季末選單**：21 例全部出現 KBO 與 CPBL 報價，其中 8 例另有入札申請（接受後 3 例、拒絕後 5 例）。選單產生時會抽 2～3 次球團，所以選 (a) 時，這 21 例的同 seed 結果都會改變。
+- **限制**：
+  - 以上是自動點選下的次數，不是玩家的實際比例。
+  - 自動點選在延長後一律選留隊，所以入札同意與報價的抽籤沒有被執行到。
+
+### 選項
+
+| 選項 | 內容 | 遊戲結果 | 分類／驗證 |
+|---|---|---|---|
+| (a) | 先顯示入札與韓台報價；選「残留」後才進行延長交涉 | 延長年的抽籤順序改變，同 seed 生涯在到達延長年時分歧 | R3／MINOR：固定 seed 比對＋許容差分事前明示＋Quick＋GitHub Full |
+| (b) | 接受延長後，當年不顯示入札（拒絕延長則照一般年度） | 接受延長的年度少一次入札球團抽籤；韓台報價與含延長年數的 70% 買斷仍存在 | R3／MINOR：同上 |
+| (c) | 維持現行（目前暫用此案） | 無變化 | 不改程式；需在規格中明載接受上述衝突 |
+
+附帶問題「接受延長後轉韓台，70% 買斷是否含延長年數」：在 (a) 下不會發生（離隊時尚未簽延長）；選 (b) 或 (c) 須另行決定。
+
+**開發端建議：(a)**。它同時滿足 P6 與 Q1，也與 NPB-OFFER-WINDOW-01「留隊後才續約」一致，附帶問題隨之消失。
+
+### 決定（2026-11-28，code owner）：採用 (a)
+
+- 先顯示當年度符合資格的海外移籍選項：入札或 MLB 報價，以及韓國、台灣報價。
+- 選擇「現在の球団に残留」後，才進入延長交涉。
+- 入札被拒、無球團出價，或玩家放棄簽約時，回到同一份選單；保留既有報價，不重抽。
+- 留隊後只進入一次延長交涉，不再顯示同一批海外報價。
+- 選擇離隊時，適用的 70% 買斷按當時有效的合約計算，不含尚未簽署的延長年數。
+- 實作前列明預期的 RNG 差異，並以固定 seed 比對。
+- 完整 Full 由 code owner 在 GitHub 手動執行；實作完成後提供驗證用的 commit SHA。
+
+### 不論選哪一案都要做
+
+- 更正 `tasks/MLB_POSTING_DESIGN.md` §2.2（:33）與 §4 第1點（:112）「延長合約 offer 那年不走到 `crossOffers`」的讀碼錯誤。
+- 更新 CURRENT_SPEC 第33行「処理順序は未決」。
+- 會碰到這個順序的測試：`tests/contract-salary-e2e.mjs`（延長後點「現在の球団に残留」）、`tests/npb-return-e2e.mjs`、`tests/american-service.test.mjs`。
+
+---
+
+## 2. COPY-01 029「主要4リーグ一軍通算」
+
+依據：[文案稽核](../docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md) COPY-029（:420）、決定表（:488）。
+
+### 現況
+
+- 顯示位置：只有分享圖 PNG 的里程碑。程式在 `docs/src/ui/share-image.js:133-143`，現行標籤為「リーグ横断通算：」（:139、:141）。
+- 合計方式：把 `S.stats` 的 `CPBL`／`KBO`／`NPB`／`MLB` 四個 bucket 相加，沒有階級篩選。
+- bucket 涵蓋的階級（`docs/src/engine/league-catalog.js` 的 `statBucket`）：
+  - NPB = NPB一軍＋NPB二軍＋NPB育成
+  - KBO = KBO一軍＋KBOフューチャース
+  - CPBL = 台湾一軍＋二軍
+  - MLB = MLB 而已
+  - MiLB、獨立聯盟、社會人在其他 bucket，不計入。
+- **結論：現行合計含二軍、育成、フューチャース。** 決定表的範圍是「各聯盟一軍，排除二軍、育成、MiLB、獨立聯盟、社會人」，因此不能只改名，必須改資料來源。
+- 可參考的既有實作：
+  - `S.statsByLevel` 分階級累積，與 `S.stats` 使用同一份 `st`（CURRENT_SPEC:359）。
+  - `docs/src/engine/hof-evaluation-policy.js:5` 已有四聯盟一軍對應 `{NPB:'NPB1',MLB:'MLB',KBO:'KBO1',CPBL:'CPBL1'}`。
+  - CURRENT_SPEC:916 已規定舊統計的處理：階級不明或數值缺失時，不推測，視為「一軍成績の記録なし」。
+
+### 選項
+
+| 選項 | 內容 | 分類／驗證 |
+|---|---|---|
+| A | 依決定表：改讀 `statsByLevel` 的 NPB1／KBO1／CPBL1／MLB，標籤改為「主要4リーグ一軍通算」，無一軍紀錄時不顯示；舊存檔比照 CURRENT_SPEC:916 不推測 | R2（純顯示、唯讀合算；不改 `S.stats`、獎項、年俸、殿堂）／PATCH。需另寫細部計畫：舊存檔 `statsByLevel` 缺失的處理、各階級排除、跨聯盟合計的測試 |
+| B | 維持現行合計（含二軍等），只把標籤改成不會誤導的名稱（例：「NPB・MLB・KBO・CPBL通算」，二軍也計入） | R2 純文案／PATCH。偏離決定表的範圍，須另行核准措辭 |
+| C | 維持現狀「リーグ横断通算」 | 不改，從 COPY-01 剩餘清單移除或保留為 NEEDS_REVIEW |
+
+**開發端建議：A**。這是決定表已核准的方向，且有 CURRENT_SPEC:916 的舊統計先例可循。未調查：1.16.0 之前的存檔 `statsByLevel` 的實際完整度，列入 A 案細部計畫。
+
+### 決定（2026-11-28，code owner）：採用 A
+
+- 同時修改名稱與統計來源：現行「リーグ横断通算」會混入 NPB 二軍／育成、KBO フューチャース與台灣二軍。
+- 統計來源：`statsByLevel` 的 `NPB1`／`MLB`／`KBO1`／`CPBL1` 合計可確認的一軍成績。
+- 舊存檔若無法確認任何一軍紀錄，就隱藏這一行，不從聯盟總計推算。
+- 範圍只限 PNG「通算タイトル」中的這一行。上方「通算成績」表、原始統計、獎項、年俸與殿堂判定維持原樣。
+
+---
+
+## 3. COPY-01 013「年俸（万円）」
+
+依據：[文案稽核](../docs/reviews/COPY_01_JAPANESE_TEXT_AUDIT.md) COPY-013（:179）、決定表（:482）。
+
+決定表的採用條件：在 320／375／390／430px、各字級與密度下，標籤不截斷、不換行、不擠壓鄰近資訊，巨大年俸不溢出，就可採用；否則維持「年俸（万）」。
+
+### 試排（2026-11-28，本機 Brave，scratch，未改檔）
+
+- **方法**：開始生涯後，在頁面上把看板標籤改成新舊兩種文字，同時注入年俸數值，量測各項指標。看板只在寬度 ≤1099px 或高度 <700px 時顯示。
+- **條件**：4 種寬度 × 投手／野手（投手為4欄）× 4 種主題 × 3 種字級 × 2 種密度 × 年俸 `999,999`／`1,000,000`／`9,999,999`。新舊標籤各 576 種組合；Google Fonts 載入與擋掉各跑一次。
+- **量測項目**：
+  - 標籤：是否超出格子內緣、是否換行
+  - 數值：是否超出格子
+  - 版面：格子之間是否重疊、頁面是否出現橫向捲動
+- **結果**：新舊標籤在兩種字型下，以上各項全部 0 件。
+
+| 寬度／守位 | 新標籤左右最小餘白 | 舊標籤 |
+|---|---|---|
+| 320px／投手（大字級） | 4.2px（標籤 69px／內寬 77.4px） | 10px |
+| 320px／野手 | 9.8px | — |
+| 375px／投手 | 12.5px | — |
+| 390px／投手 | 14.7px | — |
+| 430px／投手 | 20.7px | — |
+
+- 標籤是全形字，寬度固定為 6em，與字型無關，因此兩次量測相同。年俸數值的寬度在兩次量測中確實不同，表示字型切換有生效。
+- **限制**：本機 Brave 的結果，不等於 CI 的 Linux Chromium 或 Safari 實機。量測 script 含環境絕對路徑，依 AGENTS §6.2 不提交。實作後須在 Preview 確認 390px。
+
+### 選項
+
+| 選項 | 內容 | 分類 |
+|---|---|---|
+| 採用 | `docs/index.html:91` 與 `docs/src/ui/game-view.js:90` 改為「年俸（万円）」；aria-label 不變；更新測試期待值 `tests/npb-return-ui.test.mjs:40`、`tests/support/ui-shell-comparison.mjs:21` 及 `SHELL_BOARD_2000`／`SHELL_BOARD_11615`（:51-52） | R2 純顯示例外／PATCH |
+| 維持 | 保留「年俸（万）」，結束 013 | 不改 |
+
+稽核影響範圍列出的「PNG」，查證後不受影響：`share-image.js` 目前沒有「年俸」字串，稽核所引的 `game.js:2862` 是舊行號。
+
+**開發端建議：採用**。試排已符合決定表條件。
+
+### 決定（2026-11-28，code owner）：有條件採用「年俸（万円）」
+
+- 在 Preview 用 iPhone Safari 驗證 390px。
+- 另驗證 320px、投手四欄、大字級與巨額年俸同時出現的情況。
+- 標籤和數值都完整顯示，無截斷、換行、重疊或橫向捲動，才採用。
+- 任一條件不通過，就維持「年俸（万）」。
+- 上列 Brave 試排只作參考，仍需完成上述驗證。
+
+---
+
+## 4. TEST-RELEASE-NOTES-LIMITS-01 接入方式
+
+依據：BACKLOG 該項；`scripts/test-release-notes.mjs`、`scripts/test-manifest.mjs`、`scripts/ci-full-batches.test.mjs`。
+
+### 現況
+
+`scripts/test-release-notes.mjs` 檢查的內容：
+
+- 版本與日期和 CHANGELOG 一致
+- 每版 1～3 條，每條最多 80 字（以 code point 計）
+- 禁用詞
+- 第一筆為現行 `VERSION`
+- 原始檔和產生出的 `docs/src/data/release-notes.js` 一致
+
+但現有 script 有三個問題，無法直接接入：
+
+- 執行時會跑 `update-release-notes.mjs` 兩次，**改寫** `release-notes.js`（:51-57）。
+- :36-50 是一次性守衛，拿 3 個檔案和 `git show HEAD:` 比對；之後正當修改這些檔案時就會失敗，不適合作為常設 CI 條件。
+- 目前沒有任何入口執行它。manifest 只掃描 `tests/`，`syntax` 是唯一寫死在 `scripts/test.mjs:14` 的入口。
+
+連動：`scripts/ci-full-batches.test.mjs` 寫死 106 的地方有三處：測試名稱（:46）、入口總數（:49）、全部通過時的 PASS 數（:62）。這支測試由 linux-smoke 執行。dev `158ffff` 上 `fullIds()`（含 `syntax`）實為 149（code owner 以 [Tests #302 的 Full 彙總](https://github.com/tt-chin/yakyujinsei/actions/runs/46040174220/job/140653679431) 確認 149 項全部通過），新增 Full 入口後應為 150，三處須同步更新。CI workflow 依 manifest 自動分配，不需修改。
+
+### 選項
+
+| 選項 | 內容 | 影響 |
+|---|---|---|
+| A | 新增 `tests/release-notes.test.mjs`，只放常設規則（上列五項＋標題格式），不寫入任何檔案；現有 script 保留不動 | 自動進 Quick／Full／audit；Full 入口 149→150；`scripts/TESTING.md` 補一行 |
+| B | 比照 `syntax`，在 `scripts/test.mjs` 寫死一個入口執行現有 script | 不進 `fullIds()`，CI Full 不會執行；仍需先去掉寫檔與 HEAD 守衛 |
+| C | 改寫現有 script（移除寫檔與 HEAD 守衛），移到 `tests/` 註冊 | 與 A 相同，但失去一次性守衛的歷史紀錄 |
+
+**開發端建議：A**。
+
+- 驗證：
+  - 4 種故意出錯的情況（4 條、81 字、不同步、標題格式錯誤）都要確認 exit 非 0 且是 `ERR_ASSERTION`；
+  - 本機只跑新增的唯讀測試與 Quick；
+  - Full 的入口數和分批會變，需在 GitHub 手動跑 Full。
+- 屬 R2，不升版本（AGENTS §9.3）。
+
+### 決定（2026-11-28，code owner）：採用 A
+
+- 新增唯讀的 `tests/release-notes.test.mjs`，檢查更新履歷的格式與產出檔是否同步。
+- 測試只回報錯誤，不改寫檔案；既有產生腳本維持原用途。
+- 只調整測試，不升遊戲版本。
+- 本機只跑新增的唯讀測試與 Quick，不啟動任何 Full 模式（包含 `full --only`）。
+- `ci-full-batches.test.mjs` 會實際啟動 `full --only=choice-action.test`，交由 GitHub 的 `linux-smoke` 執行。
+- Full 入口數 149→150；同步更新 `ci-full-batches.test.mjs` 的測試名稱與兩處寫死 `106` 的斷言。
+- 完整 Full 由 code owner 在 GitHub 手動執行；實作完成後提供驗證用的 commit SHA。
