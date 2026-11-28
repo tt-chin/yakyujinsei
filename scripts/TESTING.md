@@ -167,7 +167,7 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 ## 更新履歴摘要（TEST-RELEASE-NOTES-LIMITS-01）
 
-`release-notes.test`為Quick／Full／Audit的唯讀檢查：`RELEASE_NOTES.md`的標題格式與段落內容（只允許「- 」條目與空行）、版號／日期與`CHANGELOG.md`一致（1.0.3為已記載的例外）、每版1～3條、每條含「- 」在80 code points以內、不含內部用語、首筆為現行`VERSION`，以及`docs/src/data/release-notes.js`與原稿一致。只回報錯誤、不寫檔；不同步時以`node scripts/update-release-notes.mjs`重新產生。既有`scripts/test-release-notes.mjs`保留原用途，不是入口；其中以Git比對舊CHANGELOG逐位元組不變、對話框檔案與重複產生的檢查只在該手動script，不在CI。
+`release-notes.test`為Quick／Full／Audit的唯讀檢查：`RELEASE_NOTES.md`的標題格式與段落內容（頂層標題前後不得有其他文字；只允許有內容的「- 」條目與空行）、版號／日期與`CHANGELOG.md`一致（1.0.3為已記載的例外）、每版1～3條、每條含「- 」在80 code points以內、不含內部用語、首筆為現行`VERSION`，以及`docs/src/data/release-notes.js`與原稿一致。只回報錯誤、不寫檔；不同步時以`node scripts/update-release-notes.mjs`重新產生。既有`scripts/test-release-notes.mjs`保留原用途，不是入口；其中以Git比對舊CHANGELOG逐位元組不變、對話框檔案與重複產生的檢查只在該手動script，不在CI。
 
 ## 国際大会出場履歴（INT-01）
 

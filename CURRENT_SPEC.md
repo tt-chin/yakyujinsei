@@ -1,6 +1,10 @@
-# 現行規格（v2.2.1）
+# 現行規格（v2.2.2）
 
 本書は実装済みの現行仕様を管理する。作業規則・採番は[AGENTS](AGENTS.md)、未完了・未実装設計は[BACKLOG](BACKLOG.md)、版別変更は[CHANGELOG](CHANGELOG.md)、検証方法は[TESTING](scripts/TESTING.md)を参照する。旧試験結果・承認過程は[整理前の固定記録](https://github.com/tt-chin/yakyujinsei/blob/b56b5c4f6188ce002ac0037608469286c8e3753d/CURRENT_SPEC.md)と各検証報告に保持し、現行仕様や新しいPASSとして扱わない。
+
+## 2.2.2 更新履歴の要約検査
+
+更新履歴の2.1.0の要約は3項目とし（詳細はCHANGELOG.mdに保持）、`tests/release-notes.test.mjs`で全版の要約規則と配信データの一致をQuick／Full／Audit時に検査する。ゲームの判定・計算・状態・RNGは変更しない。
 
 ## 2.2.1 日本語表記の整理（COPY-01）
 

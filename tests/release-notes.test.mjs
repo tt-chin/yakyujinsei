@@ -11,12 +11,16 @@ const summaries=[...source.matchAll(/^### (\d+\.\d+\.\d+)｜(\d{4}\/\d{2}\/\d{2}
 const omitted=new Map([['1.0.3','Only consolidates already recorded 1.0.2 changes; no new player-facing change.']]);
 
 // Headings and section bodies: the generator silently skips malformed headings and non-"- " lines.
+assert.ok(source.startsWith('## 更新履歴\n'),'nothing before the top heading');
 const headings=source.split('\n').filter(line=>line.startsWith('#'));
 assert.equal(headings[0],'## 更新履歴','top heading');
 assert.equal(source.slice(source.indexOf('## 更新履歴\n')+'## 更新履歴\n'.length,source.indexOf('\n### ')+1).trim(),'','nothing between the top heading and the first version');
 for(const line of headings.slice(1))assert.match(line,/^### \d+\.\d+\.\d+｜\d{4}\/\d{2}\/\d{2}$/,'version heading format: '+line);
 assert.equal(summaries.length,headings.length-1,'every version heading is parsed');
-for(const m of summaries)for(const line of m[3].split('\n'))assert.ok(line===''||line.startsWith('- '),'only "- " bullets or blank lines in '+m[1]+': '+line);
+for(const m of summaries)for(const line of m[3].split('\n')){
+  assert.ok(line===''||line.startsWith('- '),'only "- " bullets or blank lines in '+m[1]+': '+line);
+  if(line.startsWith('-'))assert.notEqual(line.slice(1).trim(),'','bullet has text in '+m[1]);
+}
 
 assert.ok(detailed.length>10&&summaries.length>10,'do not truncate to a latest-N list');
 assert.equal(new Set(detailed.map(m=>m[1])).size,detailed.length,'unique official versions');
