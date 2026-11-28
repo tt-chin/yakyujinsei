@@ -67,8 +67,9 @@
   - 剩餘：macOS arm64的`event-integration.test`間歇V8 SIGSEGV，根因未確認；原量測與crash線索見整理前紀錄。
   - 完成條件：升級Node後完成arm64平行量測且不再出現，或批准調整入口執行參數後驗證。未批准修改入口；發生時比對最新crash report並保留FAIL，不用重跑PASS覆寫。
 
-- [ ] **TEST-RELEASE-NOTES-LIMITS-01** — `CONTENT_USER_ACCEPTED / CI_GATE_NOT_IMPLEMENTED`。
-  - 剩餘：將`scripts/test-release-notes.mjs`接入正式test manifest／Quick；摘要內容已驗收，不再列文案待驗。
+- [ ] **TEST-RELEASE-NOTES-LIMITS-01** — `CI_GATE_IMPLEMENTED / 待併dev`（2026-11-28）。
+  - 實作：依code owner決定採A案，新增唯讀`tests/release-notes.test.mjs`（Quick／Full／Audit），既有`scripts/test-release-notes.mjs`保留原用途。Full入口149→150；`scripts/ci-full-batches.test.mjs`三處寫死的106（已過期，dev上實為149）改為150。
+  - 2.1.0：接入時發現摘要有5條，違反1～3條規則；依code owner決定（PR #138留言，2026-11-28）合併為3條、不開例外，升PATCH 2.2.2並重新產生`release-notes.js`。
   - 完成條件：另案確認接入並實作，驗證1～3條／每條80字、生成一致性及不合法摘要會令CI失敗；不放寬既有規則。
   - 依據：[現行摘要規格](CURRENT_SPEC.md)、[測試入口說明](scripts/TESTING.md)。
 

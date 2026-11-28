@@ -165,6 +165,10 @@ support/approved-school-oracle僅給歷史正向控制套用已批准高校／CO
 
 `jersey-flow.test`與`player-profile.test`為Quick／Full／Audit（重構第43期，`tasks/GAME_JS_OOP_REFACTOR_PLAN.md` §2uu）：以`159dbf2b293c6087df6a8f3713a19e6e61ad4a74`的舊`game.js`本體對照`JerseyFlow`（`teamName`／`unknownTeam`／`label`）與`PlayerProfile`（`allStars`／`pitcherRole`／`isStarter`），並以spy確認`game.js`的一行包裝委派到對應方法；`jersey-flow.test`另驗證對話框延遲回呼在state被替換後不再提示或寫入。`ovr`／`playerType`／`toolGap`／`abCost`的等價仍由`ability-allocation.test`負責。
 
+## 更新履歴摘要（TEST-RELEASE-NOTES-LIMITS-01）
+
+`release-notes.test`為Quick／Full／Audit的唯讀檢查：`RELEASE_NOTES.md`的標題格式與段落內容（頂層標題前後不得有其他文字；只允許有內容的「- 」條目與空行）、版號／日期與`CHANGELOG.md`一致（1.0.3為已記載的例外）、每版1～3條、每條含「- 」在80 code points以內、不含內部用語、首筆為現行`VERSION`，以及`docs/src/data/release-notes.js`與原稿一致。只回報錯誤、不寫檔；不同步時以`node scripts/update-release-notes.mjs`重新產生。既有`scripts/test-release-notes.mjs`保留原用途，不是入口；其中以Git比對舊CHANGELOG逐位元組不變、對話框檔案與重複產生的檢查只在該手動script，不在CI。
+
 ## 国際大会出場履歴（INT-01）
 
 `international-history.test`與`international-history-e2e`為Quick／Full／Audit（`tasks/INT_01_INTL_HISTORY_PLAN.md`）。單元測試以fixture驗證只列`S.intlTraitResults`的實際出場、依年度與實際日程排序（同年WBC先於プレミア12，自然生涯不會發生，只能在此驗證）、未知大會名「国際大会」、舊結果無個人成績顯示「記録なし」、跳脫、列凍結與狀態不變。E2E（約4秒）以hook注入結果，檢查「キャリア → 実績」與引退「通算成績」卡（緊接国際大会通算表之後）的收合列、展開內容、0屆時不加任何節點、查看與展開前後S（含`rngState`）不變，1280／390 px與4主題。
