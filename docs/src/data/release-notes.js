@@ -1,6 +1,12 @@
 // Generated from RELEASE_NOTES.md (curated summary of CHANGELOG.md); run node scripts/update-release-notes.mjs.
 export const releaseNotes = [
   {
+    "title": "2.3.0｜2026/11/28",
+    "lines": [
+      "- 契約延長の打診がある年も、先に海外移籍やポスティングを選べるようにしました。残留を選ぶと延長交渉に進みます。"
+    ]
+  },
+  {
     "title": "2.2.2｜2026/11/28",
     "lines": [
       "- 更新履歴の2.1.0の説明を3項目に整理しました。"

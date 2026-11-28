@@ -7,13 +7,13 @@ import {productionFunction} from './retirement-hof-test-support.mjs';
 
 const source=readSourceText(new URL('../docs/src/engine/career-movement.js',import.meta.url));
 const movementFunction=name=>productionFunction(name,source).split('\n  return {')[0];
-const body=['overseasOffer','postingOption','npbSeasonEndMenu','showNpbSeasonEndMenu','faFlow','faCancelOption'].map(movementFunction).join('\n');
+const body=['overseasOffer','postingOption','npbSeasonEndMenu','showNpbSeasonEndMenu','faFlow','faCancelOption','extensionYearMenu'].map(movementFunction).join('\n');
 // vm arrays come from another realm; compare their JSON text.
 const eq=(actual,expected,message)=>assert.equal(JSON.stringify(actual),JSON.stringify(expected),message);
 const STAY='現在の球団に残留',POSTING='ポスティングを申請';
 
-function run({svc=5,o=65,lastD=3,stage='CONTROL',hits=[],picks=[],state={}}={}){
-  const log=[],choices=[];let hit=0;
+function run({svc=5,o=65,lastD=3,stage='CONTROL',hits=[],picks=[],state={},entry='faFlow'}={}){
+  const log=[],choices=[],extensions=[];let hit=0;
   const S={year:2040,org:'NPB',lv:'NPB1',lastD,faType:undefined,faUsed:false,npbFaSeasons:3,ct:{expired:true},traits:{},...state};
   const context=createContext({S,getState:()=>S,LV:{KBO1:{n:'KBO'},CPBL1:{n:'CPBL'},MLB:{n:'MLB'}},
     pickRecord:list=>{log.push(['pickRecord',list[0].teamId]);return list[0];},listByOrg:org=>[{teamId:org+'-T',name:org+'球団'}],
@@ -23,11 +23,12 @@ function run({svc=5,o=65,lastD=3,stage='CONTROL',hits=[],picks=[],state={}}={}){
     buyoutRemaining:()=>log.push(['buyout']),signTo:(...args)=>log.push(['signTo',args[0],args[1],args[5]]),
     reportFlowOutcome:outcome=>log.push(['report',outcome.kind]),renewAndAdvance:(...args)=>log.push(['renew',...args]),
     serviceYearsFor:()=>svc,contractStageFor:()=>stage,migrateSalaryV130State:()=>{},arbitrationFlow:()=>log.push(['arbitration']),
-    faMarket:()=>log.push(['faMarket',S.faType,S.faUsed,S.npbFaSeasons]),crossOfferTitle:type=>'T:'+type,crossOfferType:(a,b)=>a+'>'+b});
-  runInContext("'use strict';\n"+body+'\nglobalThis.faFlow=faFlow;globalThis.faCancelOption=faCancelOption;',context);
-  context.faFlow(o);
+    faMarket:()=>log.push(['faMarket',S.faType,S.faUsed,S.npbFaSeasons]),crossOfferTitle:type=>'T:'+type,crossOfferType:(a,b)=>a+'>'+b,
+    extensionOffer:(value,next)=>{log.push(['extension',value,typeof next]);extensions.push(next);}});
+  runInContext("'use strict';\n"+body+'\nglobalThis.faFlow=faFlow;globalThis.faCancelOption=faCancelOption;globalThis.extensionYearMenu=extensionYearMenu;',context);
+  context[entry](o);
   for(const index of picks)choices.at(-1)[index].f();
-  return {log,S,choices,context};
+  return {log,S,choices,context,extensions};
 }
 const draws=log=>log.filter(e=>['pickRecord','chance','ri'].includes(e[0])).length;
 const labels=opts=>opts.map(x=>x.t);
@@ -79,4 +80,29 @@ for(const input of [{o:59},{lastD:1}]){const r=run(input);assert.equal(labels(r.
 // Window flow only for NPB first team; other CONTROL leagues renew immediately.
 {const r=run({state:{org:'KBO',lv:'KBO1'}});eq(r.log,[['renew',1,false,'CONTROL']]);cases++;}
 
-console.log(cases+' NPB season-end menu cases passed (posting consent/bid/decline, window offers, year-8 FA cancel, no reroll).');
+// Extension year (plan §12, code owner Q4 (a)): the season-end menu comes first and the extension talk opens only after staying.
+const ext=input=>run({entry:'extensionYearMenu',state:{ct:{remainingYears:1}},...input});
+// Menu first: KBO, CPBL, posting, stay; 3 draws at generation; no extension yet.
+{const r=ext();assert.equal(r.log.some(e=>e[0]==='extension'),false,'extension talk waits for the menu');assert.equal(r.choices.length,1);eq(labels(r.choices[0]),['韓国プロ野球への海外移籍：KBO球団','台湾プロ野球への海外移籍：CPBL球団',POSTING,STAY]);
+ assert.equal(r.choices[0].length,4);assert.equal(draws(r.log),3);assert.equal(r.log.some(e=>e[0]==='extension'),false);assert.equal(r.log.some(e=>e[0]==='report'),false);cases++;}
+// Stay: extension talk once with the same rating; finishing it reports once and shows no overseas menu again.
+{const r=ext({picks:[3]});eq(r.log.filter(e=>e[0]==='extension'),[['extension',65,'function']]);assert.equal(r.extensions.length,1);assert.equal(r.log.some(e=>e[0]==='report'),false,'no report before the extension ends');
+ r.extensions[0]();eq(r.log.filter(e=>e[0]==='report'),[['report','CROSS_OFFER_RESOLVED']]);assert.equal(r.choices.length,1,'no second season-end menu');
+ assert.equal(draws(r.log),3);assert.equal(r.log.some(e=>e[0]==='renew'),false);cases++;}
+// KBO accepted: buyout on the current contract, signing, one report; no extension talk.
+{const r=ext({picks:[0]});eq(r.log.slice(-4),[['buyout'],['ri',1,3],['signTo','KBO','KBO1','OVERSEAS'],['report','CROSS_OFFER_RESOLVED']]);assert.equal(r.log.some(e=>e[0]==='extension'),false);cases++;}
+// Posting refused: same menu without posting, offers kept, no reroll; staying then opens the extension talk.
+{const r=ext({picks:[2,2]});eq(labels(r.choices[1]),labels(r.choices[0]).filter(t=>t!==POSTING));assert.equal(r.choices[1][0],r.choices[0][0],'KBO option object kept');
+ assert.equal(draws(r.log),4);eq(r.log.filter(e=>e[0]==='extension'),[['extension',65,'function']]);cases++;}
+// Consented but no bid: back to the menu; staying opens the extension talk.
+{const r=ext({hits:[true,false],picks:[2,2]});eq(r.log.filter(e=>e[0]==='card').map(e=>e[1]),['球団が容認','入札球団なし']);eq(r.log.filter(e=>e[0]==='extension'),[['extension',65,'function']]);cases++;}
+// Bid declined: back to the same offers; staying opens the extension talk.
+{const r=ext({hits:[true,true],picks:[2,1,2]});assert.equal(r.choices[2][0],r.choices[0][0]);eq(r.log.filter(e=>e[0]==='extension'),[['extension',65,'function']]);assert.equal(r.log.some(e=>e[0]==='signTo'),false);cases++;}
+// Bid accepted: no buyout, no extension talk, one report.
+{const r=ext({hits:[true,true],picks:[2,0]});assert.equal(r.log.some(e=>e[0]==='buyout'||e[0]==='extension'),false);eq(r.log.filter(e=>e[0]==='report'),[['report','CROSS_OFFER_RESOLVED']]);cases++;}
+// No qualifying move: straight to the extension talk, no menu, no draw.
+{const r=ext({o:40,lastD:0});eq(r.log,[['extension',40,'function']]);assert.equal(r.choices.length,0);r.extensions[0]();eq(r.log.at(-1),['report','CROSS_OFFER_RESOLVED']);cases++;}
+// NPB years 9+: direct MLB offer instead of posting, stay last.
+{const r=ext({svc:9});eq(labels(r.choices[0]),['韓国プロ野球への海外移籍：KBO球団','台湾プロ野球への海外移籍：CPBL球団','MLBへの海外移籍：MiLB球団',STAY]);cases++;}
+
+console.log(cases+' NPB season-end menu cases passed (posting consent/bid/decline, window offers, year-8 FA cancel, extension year, no reroll).');

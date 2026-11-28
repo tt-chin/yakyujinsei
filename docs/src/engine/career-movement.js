@@ -165,7 +165,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
   // NPB season-end menu (MLB-POSTING-DESIGN-01 / NPB-OFFER-WINDOW-01): KBO→CPBL→MLB drawn at generation in the
   // existing order. Before overseas FA (NPB years <9) the MLB route is a posting request; consent/bid draws happen
   // only when the player applies. The menu state lives in this closure (MovementGate blocks same-year re-entry).
-  // Pending (plan §8 Q4): extensionOffer still reaches crossOffers after an accepted extension, as before.
+  // Extension year (plan §12, code owner Q4 (a)): the NPB1 menu comes first; staying opens the extension talk once.
   const postingConsentRate=years=>years<3?20:years<5?40:years<7?60:80;
   function postingOption(o,menu){
     const S=getState();
@@ -197,6 +197,12 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
     choose(menu.title,[...menu.before,...menu.offers,...(menu.posting&&!menu.postingResolved?[menu.posting]:[]),...menu.after]);
   }
   let faReturn=null; /* Year-8 domestic FA declared from the integrated menu: restore point for cancelling the declaration. */
+  function extensionYearMenu(o){
+    const finish=()=>reportFlowOutcome({kind:'CROSS_OFFER_RESOLVED'}),stay=()=>extensionOffer(o,finish);
+    const menu=npbSeasonEndMenu(o,crossOfferTitle(crossOfferType('NPB','MiLB')),[],[{t:'現在の球団に残留',main:true,f:stay}],finish);
+    if(!npbSeasonEndHasMoves(menu)){stay();return;}
+    showNpbSeasonEndMenu(menu);
+  }
   function crossOffersRule(o){
     const S=getState();
     const finish=()=>reportFlowOutcome({kind:'CROSS_OFFER_RESOLVED'}),opts=[];
@@ -387,7 +393,7 @@ function careerMovementRules({getState,LV,PATHS,careerSession,faMarket,crossOffe
     if(!S.ct)throw new Error('PRO_PLAYER_WITHOUT_CONTRACT');
     /* 所属球団との延長交渉は複数年契約の残り2年時点、または最終契約の残り1年で行う。 */
     if(S.ct.remainingYears===1&&LV[S.lv].top&&!S.ct.extOffered&&S.faElig&&(S.lastD||0)>=1&&chance(45)){
-      S.ct.extOffered=true; extensionOffer(o); return;
+      S.ct.extOffered=true; if(S.org==='NPB'&&S.lv==='NPB1')extensionYearMenu(o); else extensionOffer(o); return;
     }
     if(S.ct.remainingYears<=0){
       if(LV[S.lv].top){

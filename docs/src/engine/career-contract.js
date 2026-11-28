@@ -19,7 +19,7 @@ import { effectiveMarketOrg, marketTier, foreignProSeasons, getCrossLeaguePolicy
 export class CareerContract {
   #rules;
   constructor(deps){this.#rules=careerContractRules(deps);}
-  extensionOffer(o){return this.#rules.extensionOffer(o);}
+  extensionOffer(o,next){return this.#rules.extensionOffer(o,next);}
   ageGateJP(){return this.#rules.ageGateJP();}
   salaryFor(lv,d){return this.#rules.salaryFor(lv,d);}
   migrateSalaryV130State(){return this.#rules.migrateSalaryV130State();}
@@ -89,17 +89,17 @@ function careerContractRules({getState,LV,PATHS,careerSession,salaryDetailContro
     choose(baseTitle,opts);
   }
   /* 母球団延長契約更新：契約満了前に囲い込む。 */
-  function extensionOffer(o){
+  function extensionOffer(o,next=()=>crossOffers(o)){
     const S=getState();
     const d=S.lastD||0;
     termChoice(o,d,`所属球団からの契約延長オファー・${S.teamName()}（契約残り1年）`,(y,m)=>{
       const S=getState();
       appendContractExtension(y,m);
       card('gold','契約延長',`<b class="hl">${S.teamName()}</b>と延長に合意し、契約を<b class="hl">${y}年</b>追加した（年俸係数×${m.toFixed(2)}）。`); board(1);
-      crossOffers(o);
+      next();
     }, ()=>{ /* 拒決して延長：維持原契約繼継続跑。 */
       card('info','延長を断る',`所属球団からの早期延長を断り、現在の契約を継続することにした。`);
-      crossOffers(o);
+      next();
     });
   }
   function ageGateJP(){ /* NPB挑戦：年齢条件は緩め、31 歳（衰え前）まで可能性あり。 */
