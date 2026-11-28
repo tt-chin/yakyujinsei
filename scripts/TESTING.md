@@ -207,6 +207,12 @@ quick 執行全部快速原生／單元入口、JS 語法、KBO quick、ACT 入�
 
 display 的常規 full 執行全部設定／尺寸／DOM 保持矩陣，加 P／IF 各一條每17操作切換設定的完整生涯。其餘4條不重複，原六條完整設定生涯仍可用 `--legacy-careers --only=display-preferences-e2e` 執行。
 
+## 總合能力與導覽（AUD-02 03a～03c、06d、14c）
+
+`ability-evaluation-policy.test`為Quick／Full／Audit：以`CURRENT_SPEC.md` §3的式子精確計算（有理數、四捨五入）寫成固定期望值，直接驗證`overallRatingFor`與`defenseScoreFor`：投手三項排序、sta權重與不入排序、x.5進位；野手打擊排序、sta不計、yips −3；各守位dpScore係數、各dw、DH＝1B−12（以兩組落在.5附近的輸入夾住12）、未知key（dw 0.22、dpScore 99為現行值）、未設定時C／CF／SS。新舊等價仍由`ability-allocation.test`負責。§3以v1.6.2 game.js的ovr為基準，球速＝制球＝変化球＝55時精確值x.5經浮點為x.4999…而捨去，測試固定現行值並註明。以21個產品變異（係數、排序、捨入、dw、DH懲罰11／13與改用SS、未設定守位改為2B／RF／SS、yips量、未知key）確認20個以`ERR_ASSERTION`失敗；非整數懲罰11.5存活（規格為整數12）。yips在捨入前或後扣整數3結果相同，無法由輸出觀測。
+
+`ui-redesign-shell-e2e`另斷言導覽、縮放與選單操作後URL不變（06d），並在320／390／1280px×3字級×2密度量測`#main-nav`：上下padding＝4px×`--nav-scale`、按鈕≥44px、高度不超過最高按鈕＋padding＋邊框、標準中字級約53px（實測標準53、compact 51.78，字級不影響）、`--board-height`／`--game-header-height`與實測border-box一致（14c）。量測後還原viewport與dataset，並再確認S／RNG與URL不變。負向對照（導覽時`history.replaceState`、padding不乘`--nav-scale`、按鈕40px、不觀測nav）均由對應斷言失敗。
+
 ## 依賴與可再現基準
 
 Node.js 24.15.0、Git 完整歷史；瀏覽器入口另需已安裝的 Playwright 1.62.1 及 Chrome 或 Chromium。不會自動安裝套件。
